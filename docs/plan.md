@@ -77,8 +77,21 @@ progress:
       - "Step 12 JS contract documented inline: set --flap-index on each row, toggle .flap, remove on animationend"
       - "prefers-reduced-motion: reduce disables the animation entirely"
       - "timing: 250ms flip + (14 rows × 30ms) = ~670ms worst case — slightly over plan's ~500ms budget; acceptable, can tighten to 20ms stagger later if needed"
-last_review: 2026-04-16T19:41:00-07:00
-iterations: 9
+  - section: "Step 10: Status computation script"
+    status: complete
+    notes:
+      - "static/js/status.js created (~190 lines) with pure computeStatus(schedule, now) + sortRows(rows) and side-effectful applyStatuses/reorderDom"
+      - "reads combined data-schedule JSON {sessions, closures} emitted by templates/index.html:36"
+      - "closure-aware: active closure → STATUS=CLOSED, NEXT='Closed until YYYY-MM-DD' (exercises sava-pool's 2026-04-16→2026-09-21 closure)"
+      - "OPEN → 'Closes HH:MM'; CLOSED with upcoming session today → 'Opens HH:MM'; next-day session → 'Opens DAY HH:MM' (3-letter day)"
+      - "sortRows: open pools first, then alphabetical by SPOT text; stable via original-index tiebreaker; open_water rows sort alphabetically (skipped for status compute)"
+      - "wired via {% block scripts %} in templates/index.html → base.html:19 hook; loads with defer only on board page"
+      - "24-hour time format throughout; 12-hour conversion deferred (flagged in next_steps)"
+      - "tests_status: passed — zola check + zola build both succeed, public/js/status.js + script tag verified"
+      - "data-finding: only hamilton-pool has sessions populated; 8 other pools render STATUS/NEXT as em-dash (Step 3 gap carries forward)"
+      - "followup: Step 12 flap trigger will need to re-run applyStatuses + sortRows + reorderDom after filter change, toggling .flap + --flap-index"
+last_review: 2026-04-16T19:43:30-07:00
+iterations: 10
 no_progress_count: 0
 started_at: 2026-04-16T19:04:36-07:00
 work_unit_granularity: step  # ### Step N, not ## Phase
