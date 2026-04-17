@@ -177,8 +177,20 @@ progress:
       - "worker/README.md: link out to docs/deploy.md"
       - "tests_status: passed — zola build green (14 pages, public/_redirects copied); npm run typecheck green"
       - "no deploy performed — all manual Cloudflare dashboard steps are documented in deploy.md (user action)"
-last_review: 2026-04-16T20:02:30-07:00
-iterations: 18
+  - section: "Step 18: README and final touches"
+    status: complete
+    notes:
+      - "README.md created at repo root (~65 lines): what, architecture, repo layout, local dev, deploy (links to docs/deploy.md), adding spots, tech stack, known gaps, license TBD, links"
+      - "full verification sweep: zola check 14 pages 0 orphans 0 errors; zola build 14 pages 0 errors; worker typecheck 0 errors"
+      - "content file count: 9 pools + 5 open-water + _index = 15 files (14 pages)"
+      - "public/js/ has all 5 scripts (status, conditions, filters, map, expand)"
+      - "pool detail page (hamilton-pool) spot-check: schedule table, official link, map link — no JS-critical scripts attached (correct)"
+      - "open-water detail page (aquatic-park) spot-check: conditions section with data-field hooks, hazards, clubs, common_distances; conditions.js attached (correct), filters/status/map.js NOT attached (correct)"
+      - "css hooks verified present in public/main.css: .flap, .row-detail, .noscript-notice, #map-view"
+      - "tests_status: passed"
+      - "known gap: 8/9 pools have empty sessions[] — flagged in README; filling them is out of scope for v1 scaffold"
+last_review: 2026-04-16T20:05:00-07:00
+iterations: 19
 no_progress_count: 0
 started_at: 2026-04-16T19:45:00-07:00
 work_unit_granularity: step  # ### Step N, not ## Phase
