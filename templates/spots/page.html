@@ -130,6 +130,6 @@
 {% endblock %}
 {% block scripts %}
   {% if page.extra.type == "open_water" %}
-    <script src="{{ get_url(path='js/conditions.js') }}" defer></script>
+    <script type="module" src="{{ get_url(path='js/conditions.js') }}"></script>
   {% endif %}
 {% endblock %}

@@ -1,4 +1,11 @@
 {% extends "base.html" %}
+{% block extra_head %}
+  {% set_global is_map_view = section.extra.view | default(value='') == 'map' %}
+  {% if is_map_view %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  {% endif %}
+{% endblock %}
+
 {% block title %}SwimFrancisco — where to swim right now{% endblock %}
 {% block content %}
   <header>
@@ -8,23 +15,31 @@
 
   <noscript>
     <p class="noscript-notice">
-      JAVASCRIPT IS DISABLED — LIVE STATUS, FILTERS, AND MAP ARE UNAVAILABLE.
+      JAVASCRIPT IS DISABLED — LIVE STATUS AND FILTERS ARE UNAVAILABLE.
       ALL SPOT DETAIL PAGES STILL WORK.
     </p>
   </noscript>
 
-  <div class="filters">
-    <button type="button" data-filter="open-now">OPEN NOW</button>
-    <button type="button" data-filter="type" data-type="lap_swim">LAP</button>
-    <button type="button" data-filter="type" data-type="open_swim">OPEN</button>
-    <button type="button" data-filter="type" data-type="family_swim">FAMILY</button>
-    <button type="button" data-filter="type" data-type="open_water">OPEN WATER</button>
-    <button type="button" data-action="near-me">NEAR ME</button>
-    <button type="button" data-action="toggle-map">MAP</button>
+  <div class="board-controls">
+    <div class="filters" role="group" aria-label="Filters">
+      <button type="button" data-filter="open-now">OPEN NOW</button>
+      <button type="button" data-filter="type" data-type="lap_swim">LAP</button>
+      <button type="button" data-filter="type" data-type="open_swim">OPEN</button>
+      <button type="button" data-filter="type" data-type="family_swim">FAMILY</button>
+      <button type="button" data-filter="type" data-type="open_water">BEACH</button>
+      <button type="button" data-action="near-me">NEAR ME</button>
+    </div>
+    <div class="view-switcher" role="group" aria-label="View">
+      {% if is_map_view %}
+        <a href="/" data-target-path="/" class="view-switcher-link">VIEW BOARD</a>
+      {% else %}
+        <a href="/map/" data-target-path="/map/" class="view-switcher-link">VIEW MAP</a>
+      {% endif %}
+    </div>
   </div>
 
   {% set spots = get_section(path='spots/_index.md') %}
-  <table class="board">
+  <table class="board"{% if is_map_view %} hidden{% endif %}>
     <thead>
       <tr>
         <th>SPOT</th>
@@ -54,7 +69,7 @@
             {% if page.extra.type == 'pool' %}
               {{ page.extra.subtype | default(value='') | upper }}
             {% elif page.extra.type == 'open_water' %}
-              OPEN WATER
+              BEACH
             {% else %}
               {{ page.extra.type | upper }}
             {% endif %}
@@ -67,12 +82,14 @@
     </tbody>
   </table>
 
-  <div id="map-view" hidden></div>
+  <div id="map-view"{% if not is_map_view %} hidden{% endif %}></div>
 {% endblock %}
 {% block scripts %}
-  <script src="{{ get_url(path='js/status.js') }}" defer></script>
-  <script src="{{ get_url(path='js/conditions.js') }}" defer></script>
-  <script src="{{ get_url(path='js/filters.js') }}" defer></script>
-  <script src="{{ get_url(path='js/map.js') }}" defer></script>
-  <script src="{{ get_url(path='js/expand.js') }}" defer></script>
+  <script type="module" src="{{ get_url(path='js/status.js') }}"></script>
+  <script type="module" src="{{ get_url(path='js/conditions.js') }}"></script>
+  <script type="module" src="{{ get_url(path='js/filters.js') }}"></script>
+  {% if is_map_view %}
+    <script type="module" src="{{ get_url(path='js/map.js') }}"></script>
+  {% endif %}
+  <script type="module" src="{{ get_url(path='js/expand.js') }}"></script>
 {% endblock %}

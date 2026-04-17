@@ -21,6 +21,61 @@
 const POOL_SESSION_TYPES = new Set(["lap_swim", "open_swim", "family_swim"]);
 const EARTH_RADIUS_MILES = 3958.8;
 
+// Hash routing: short tokens in window.location.hash, joined by "+".
+// Filters own the hash. The `/map/` vs `/` switch is a real navigation
+// (plain <a href>), not a hash token — see view-switcher in the template.
+const TYPE_TOKENS = {
+  lap: "lap_swim",
+  open: "open_swim",
+  family: "family_swim",
+  beach: "open_water",
+};
+const TYPE_TO_TOKEN = Object.fromEntries(
+  Object.entries(TYPE_TOKENS).map(([token, type]) => [type, token]),
+);
+const FILTER_TOKENS = new Set([
+  "open-now",
+  "near-me",
+  ...Object.keys(TYPE_TOKENS),
+]);
+
+function readHashTokens() {
+  const raw = window.location.hash.replace(/^#/, "");
+  return new Set(raw.split("+").filter(Boolean));
+}
+
+function writeHashTokens(tokens) {
+  const sorted = Array.from(tokens).sort();
+  const hash = sorted.length ? `#${sorted.join("+")}` : "";
+  const url = window.location.pathname + window.location.search + hash;
+  history.replaceState(null, "", url);
+}
+
+// Remove this module's tokens from hash, then add the ones currently active.
+function syncStateToHash(state) {
+  const tokens = readHashTokens();
+  for (const token of FILTER_TOKENS) tokens.delete(token);
+  if (state.openNow) tokens.add("open-now");
+  if (state.nearMe) tokens.add("near-me");
+  for (const type of state.types) {
+    const token = TYPE_TO_TOKEN[type];
+    if (token) tokens.add(token);
+  }
+  writeHashTokens(tokens);
+  updateViewSwitcherHref();
+}
+
+// Keep the VIEW MAP / VIEW BOARD link's href in sync with the current
+// filter hash so navigating preserves filter state. Middle-click / cmd-click
+// work naturally because we update the actual attribute.
+function updateViewSwitcherHref() {
+  const link = document.querySelector(".view-switcher-link");
+  if (!link) return;
+  const target = link.dataset.targetPath;
+  if (!target) return;
+  link.setAttribute("href", target + window.location.hash);
+}
+
 // Parse a row's data-schedule JSON (same shape as status.js expects).
 function readSchedule(row) {
   const raw = row.getAttribute("data-schedule");
@@ -57,18 +112,22 @@ function rowMatchesType(row, type) {
   );
 }
 
-// Pure: return true iff the row's STATUS cell text is exactly "CLOSED".
-// Open-water rows (whose STATUS is an em-dash) are NOT hidden by Open Now.
-function rowIsClosed(row) {
+// Pure: can this spot be used right now?
+// - Open-water spots (Aquatic Park, Ocean Beach, …) pass because the water
+//   is always there; no schedule constraint.
+// - Pool rows pass only if status.js computed STATUS === "OPEN". A status
+//   of "CLOSED" or "—" (no schedule data yet, or closed all week) fails.
+function rowIsOpenNow(row) {
+  if (row.getAttribute("data-type") === "open_water") return true;
   const cells = row.querySelectorAll("td");
   if (cells.length < 3) return false;
-  return cells[2].textContent.trim() === "CLOSED";
+  return cells[2].textContent.trim() === "OPEN";
 }
 
 // Pure: apply all active filter predicates. If no type pills are pressed,
 // every type passes. Type pills OR together (union).
 function rowPassesFilters(row, state) {
-  if (state.openNow && rowIsClosed(row)) return false;
+  if (state.openNow && !rowIsOpenNow(row)) return false;
   if (state.types.size > 0) {
     let anyMatch = false;
     for (const type of state.types) {
@@ -157,6 +216,9 @@ function applyFilters(tbody, state) {
   ordered.forEach((row) => tbody.appendChild(row));
 
   triggerFlap(ordered);
+
+  // Broadcast so other modules (map.js) can react to the new visible set.
+  document.dispatchEvent(new CustomEvent("sf:filters-applied"));
 }
 
 // Wire click handlers. Returns the state object (handlers close over it).
@@ -175,6 +237,7 @@ function attachHandlers(tbody, filtersRoot) {
       state.openNow = !state.openNow;
       openNowButton.setAttribute("aria-pressed", String(state.openNow));
       applyFilters(tbody, state);
+      syncStateToHash(state);
     });
   }
 
@@ -192,6 +255,7 @@ function attachHandlers(tbody, filtersRoot) {
         button.setAttribute("aria-pressed", "true");
       }
       applyFilters(tbody, state);
+      syncStateToHash(state);
     });
   });
 
@@ -205,6 +269,7 @@ function attachHandlers(tbody, filtersRoot) {
         state.userCoords = null;
         nearMeButton.setAttribute("aria-pressed", "false");
         applyFilters(tbody, state);
+        syncStateToHash(state);
         return;
       }
       if (!("geolocation" in navigator)) {
@@ -220,6 +285,7 @@ function attachHandlers(tbody, filtersRoot) {
             longitude: position.coords.longitude,
           };
           applyFilters(tbody, state);
+          syncStateToHash(state);
         },
         () => {
           state.nearMe = false;
@@ -230,16 +296,47 @@ function attachHandlers(tbody, filtersRoot) {
     });
   }
 
-  return state;
+  return { state, openNowButton, typeButtons, nearMeButton };
+}
+
+// Apply hash tokens by dispatching clicks on buttons whose desired pressed-
+// state differs from current. Reuses existing handlers (which also sync hash,
+// idempotently).
+function restoreFromHash(controls) {
+  const tokens = readHashTokens();
+  const { state, openNowButton, typeButtons, nearMeButton } = controls;
+
+  if (openNowButton) {
+    const want = tokens.has("open-now");
+    if (want !== state.openNow) openNowButton.click();
+  }
+  typeButtons.forEach((button) => {
+    const type = button.getAttribute("data-type");
+    const token = TYPE_TO_TOKEN[type];
+    if (!token) return;
+    const want = tokens.has(token);
+    const have = state.types.has(type);
+    if (want !== have) button.click();
+  });
+  if (nearMeButton) {
+    const want = tokens.has("near-me");
+    if (want !== state.nearMe) nearMeButton.click();
+  }
 }
 
 function init() {
   const tbody = document.querySelector("table.board tbody");
   const filtersRoot = document.querySelector(".filters");
   if (!tbody || !filtersRoot) return;
-  attachHandlers(tbody, filtersRoot);
-  // No initial applyFilters call — status.js has already run the baseline
-  // sort, and no filters are pressed yet, so the DOM is already correct.
+  const controls = attachHandlers(tbody, filtersRoot);
+  // Apply any filter tokens present in the URL hash on load.
+  restoreFromHash(controls);
+  updateViewSwitcherHref();
+  // Keep state in sync if the hash changes (back/forward, manual edit).
+  window.addEventListener("hashchange", () => {
+    restoreFromHash(controls);
+    updateViewSwitcherHref();
+  });
 }
 
 // Wait until status.js has populated STATUS cells + baseline-sorted rows.

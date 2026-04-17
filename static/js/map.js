@@ -1,7 +1,8 @@
-// SwimFrancisco map view toggle (Step 13).
-// Leaflet is lazy-loaded from a CDN on first MAP click so non-map pageviews
-// don't pay for it. On subsequent clicks we just flip `hidden` on the map
-// container and the board table.
+// SwimFrancisco map view.
+// Only loaded on /map/. Initializes Leaflet, renders one marker per spot
+// that is visible under the current filters, and re-renders on
+// `sf:filters-applied`. No client-side view toggling — the VIEW BOARD link
+// is a plain <a href="/"> and the browser handles navigation.
 
 const LEAFLET_JS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
 const LEAFLET_JS_INTEGRITY =
@@ -9,35 +10,22 @@ const LEAFLET_JS_INTEGRITY =
 const SF_CENTER = [37.7749, -122.4459];
 const SF_ZOOM = 12;
 
-let leafletPromise = null;
-let mapInstance = null;
-
 // Lazy-load Leaflet JS. Resolves to the global `L` or rejects on load error.
-function ensureLeaflet() {
-  if (typeof window !== "undefined" && window.L) {
-    return Promise.resolve(window.L);
-  }
-  if (leafletPromise) return leafletPromise;
-  leafletPromise = new Promise((resolve, reject) => {
+function loadLeaflet() {
+  if (window.L) return Promise.resolve(window.L);
+  return new Promise((resolve, reject) => {
     const script = document.createElement("script");
     script.src = LEAFLET_JS_URL;
     script.integrity = LEAFLET_JS_INTEGRITY;
     script.crossOrigin = "";
     script.async = true;
-    script.onload = () => {
-      if (window.L) resolve(window.L);
-      else reject(new Error("Leaflet loaded but window.L missing"));
-    };
-    script.onerror = () => {
-      leafletPromise = null;
-      reject(new Error("Failed to load Leaflet"));
-    };
+    script.onload = () =>
+      window.L ? resolve(window.L) : reject(new Error("Leaflet missing"));
+    script.onerror = () => reject(new Error("Failed to load Leaflet"));
     document.head.appendChild(script);
   });
-  return leafletPromise;
 }
 
-// Parse a numeric data-* attribute; null if absent/non-finite.
 function readNumber(row, attr) {
   const raw = row.getAttribute(attr);
   if (!raw) return null;
@@ -45,27 +33,24 @@ function readNumber(row, attr) {
   return Number.isFinite(value) ? value : null;
 }
 
-// Collect spot data from the board. Skips rows with invalid coords.
-function collectSpots(root) {
-  const rows = root.querySelectorAll("table.board tbody tr");
+// Visible rows only — filters.js sets [hidden] on rows that don't match.
+function collectVisibleSpots() {
+  const rows = document.querySelectorAll("table.board tbody tr:not([hidden])");
   const spots = [];
   rows.forEach((row) => {
     const lat = readNumber(row, "data-lat");
     const lng = readNumber(row, "data-lng");
     if (lat === null || lng === null) return;
     const slug = row.getAttribute("data-slug") || "";
-    const type = row.getAttribute("data-type") || "";
     const cells = row.querySelectorAll("td");
-    const nameEl = cells.length > 0 ? cells[0].querySelector("a") : null;
-    const name = nameEl ? nameEl.textContent.trim() : "";
-    const typeLabel = cells.length > 1 ? cells[1].textContent.trim() : "";
-    const status = cells.length > 2 ? cells[2].textContent.trim() : "";
-    spots.push({ slug, name, lat, lng, type, typeLabel, status });
+    const name = cells[0]?.querySelector("a")?.textContent.trim() ?? "";
+    const typeLabel = cells[1]?.textContent.trim() ?? "";
+    const status = cells[2]?.textContent.trim() ?? "";
+    spots.push({ slug, name, lat, lng, typeLabel, status });
   });
   return spots;
 }
 
-// Escape HTML special characters for safe interpolation into popup strings.
 function escapeHTML(value) {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -75,7 +60,6 @@ function escapeHTML(value) {
     .replace(/'/g, "&#39;");
 }
 
-// Build popup HTML for a spot (name, type, status, link to detail page).
 function createPopupHTML(spot) {
   const name = escapeHTML(spot.name);
   const typeLabel = escapeHTML(spot.typeLabel);
@@ -90,64 +74,39 @@ function createPopupHTML(spot) {
   );
 }
 
-// Create the Leaflet map instance inside `container` with markers for each spot.
-function initMap(L, container, spots) {
+function renderMarkers(L, layer, spots) {
+  layer.clearLayers();
+  spots.forEach((spot) => {
+    const marker = L.marker([spot.lat, spot.lng]);
+    marker.bindPopup(createPopupHTML(spot));
+    layer.addLayer(marker);
+  });
+}
+
+async function init() {
+  const container = document.getElementById("map-view");
+  if (!container) return;
+
+  let L;
+  try {
+    L = await loadLeaflet();
+  } catch (err) {
+    console.error("[swimfrancisco] map load failed", err);
+    return;
+  }
+
   const map = L.map(container).setView(SF_CENTER, SF_ZOOM);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   }).addTo(map);
-  spots.forEach((spot) => {
-    const marker = L.marker([spot.lat, spot.lng]).addTo(map);
-    marker.bindPopup(createPopupHTML(spot));
-  });
-  return map;
-}
+  const markerLayer = L.layerGroup().addTo(map);
+  renderMarkers(L, markerLayer, collectVisibleSpots());
 
-// Toggle handler wired to the MAP button.
-function toggleMap(button, mapContainer, boardTable) {
-  const showingMap = !mapContainer.hidden;
-  if (showingMap) {
-    mapContainer.hidden = true;
-    if (boardTable) boardTable.hidden = false;
-    button.setAttribute("aria-pressed", "false");
-    return;
-  }
-  // Switching to map view.
-  mapContainer.hidden = false;
-  if (boardTable) boardTable.hidden = true;
-  button.setAttribute("aria-pressed", "true");
-
-  if (mapInstance) {
-    // Leaflet needs an invalidateSize after the container becomes visible.
-    mapInstance.invalidateSize();
-    return;
-  }
-
-  ensureLeaflet()
-    .then((L) => {
-      const spots = collectSpots(document);
-      mapInstance = initMap(L, mapContainer, spots);
-      // Post-show size recalculation (container was hidden during init).
-      mapInstance.invalidateSize();
-    })
-    .catch((err) => {
-      console.error("[swimfrancisco] map load failed", err);
-      mapContainer.hidden = true;
-      if (boardTable) boardTable.hidden = false;
-      button.setAttribute("aria-pressed", "false");
-    });
-}
-
-function init() {
-  const button = document.querySelector('button[data-action="toggle-map"]');
-  const mapContainer = document.getElementById("map-view");
-  const boardTable = document.querySelector("table.board");
-  if (!button || !mapContainer) return;
-  button.setAttribute("aria-pressed", "false");
-  button.addEventListener("click", () => {
-    toggleMap(button, mapContainer, boardTable);
+  // Filters update row.hidden; we re-render markers to match.
+  document.addEventListener("sf:filters-applied", () => {
+    renderMarkers(L, markerLayer, collectVisibleSpots());
   });
 }
 

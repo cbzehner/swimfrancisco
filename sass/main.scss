@@ -62,13 +62,23 @@ a {
   letter-spacing: 0.05em;
 }
 
+// --- Controls row (filters + view switcher) -----------------------------
+
+.board-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin: 1rem 0;
+}
+
 // --- Filter pills --------------------------------------------------------
 
 .filters {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin: 1rem 0;
 
   button {
     background: transparent;
@@ -81,6 +91,10 @@ a {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     cursor: pointer;
+    transition:
+      background-color 180ms ease,
+      color 180ms ease,
+      border-color 180ms ease;
 
     &:hover,
     &:focus {
@@ -91,6 +105,34 @@ a {
       background: var(--accent);
       color: var(--bg);
     }
+  }
+}
+
+// --- View switcher (BOARD ↔ MAP) ----------------------------------------
+// Distinct visual identity from filters: rectangular button, not a pill,
+// because this is a view-mode toggle, not a filter predicate.
+
+.view-switcher .view-switcher-link {
+  display: inline-block;
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--fg);
+  border-radius: 2px;
+  padding: 0.35rem 1rem;
+  font: inherit;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+
+  &:hover,
+  &:focus {
+    background: rgba(245, 197, 24, 0.12);
+    text-decoration: none;
   }
 }
 
@@ -233,8 +275,8 @@ table.board tbody tr.flap {
   backface-visibility: hidden;
 
   td {
-    animation: flap 250ms ease-in-out both;
-    animation-delay: calc(var(--flap-index, 0) * 30ms);
+    animation: flap 360ms ease-in-out both;
+    animation-delay: calc(var(--flap-index, 0) * 40ms);
     transform-origin: center;
     backface-visibility: hidden;
   }
@@ -279,7 +321,8 @@ table.board tbody tr.flap {
     padding: 1rem 0.75rem;
   }
 
-  .filters button {
+  .filters button,
+  .view-switcher .view-switcher-link {
     font-size: 0.75rem;
     padding: 0.3rem 0.7rem;
   }
