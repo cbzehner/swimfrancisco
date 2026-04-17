@@ -134,8 +134,20 @@ progress:
       - "TS diagnostics expected (KVNamespace, Request, Response, etc.) — will resolve after npm install"
       - "site still builds clean (zola build passes)"
       - "user-action: create KV namespaces via `wrangler kv:namespace create CONDITIONS` (plus --preview), fill REPLACE_ME ids in wrangler.toml before first deploy"
-last_review: 2026-04-16T19:51:30-07:00
-iterations: 14
+  - section: "Step 15: Worker implementation"
+    status: complete
+    notes:
+      - "worker/src split into focused modules: spots.ts (5-spot→station map, NOAA fallback 9414750 for bay spots), cors.ts (https://swimfrancisco.com + Vary: Origin + 204 preflight), noaa.ts (CO-OPS water_temperature latest + predictions hilo with primary→fallback), ndbc.ts (realtime2.txt parser, WTMP column, C→F), kv.ts (conditions:<slug> + all bulk), assemble.ts (keep-last-good fallback, stale=true flag, shared tide station cached across spots), index.ts (fetch + scheduled handlers)"
+      - "npm install ran (wrangler + typescript + @cloudflare/workers-types installed; package-lock.json committed, node_modules ignored)"
+      - "tests_status: passed — npm run typecheck exits 0 with no TS errors"
+      - "routes: GET /api/conditions → all KV (503 if absent), GET /api/conditions/:slug → per-spot (404 if absent), OPTIONS → 204 preflight, else 404 (405 on non-GET)"
+      - "cache-control: public, max-age=60, s-maxage=300"
+      - "scheduled() uses ctx.waitUntil(assembleAndPersist); per-spot last-good reuse means a single upstream failure doesn't empty the bulk blob"
+      - "gap: NOAA timestamps are station-local (lst_ldt); Worker emits as-is — consumers should treat temp_observed_at accordingly. NDBC is already UTC."
+      - "gap: tide data is in KV records but static/js/conditions.js does not yet populate <dd data-field='tide'> — deferred"
+      - "user-action: REPLACE_ME KV ids in wrangler.toml must be filled after `wrangler kv:namespace create CONDITIONS`"
+last_review: 2026-04-16T19:54:00-07:00
+iterations: 15
 no_progress_count: 0
 started_at: 2026-04-16T19:45:00-07:00
 work_unit_granularity: step  # ### Step N, not ## Phase
