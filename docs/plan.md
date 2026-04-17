@@ -58,8 +58,18 @@ progress:
       - "data-model gap: pool sessions frontmatter uses key `day` (not `day_of_week` as plan text described) — template matches actual content"
       - "data-model gap: pool subtype values are `indoor`, not the `lap|family|open` listed in Step 3 brief — template does not depend on subtype so harmless, but Step 6 filter pills assume `lap_swim|open_swim|family_swim` (session.type), not subtype"
       - "data-model gap: Sava 2026-04-16→2026-09-21 closure noted in Step 3 is not yet encoded as structured extra.closures data; closures section renders empty"
-last_review: 2026-04-16T19:34:00-07:00
-iterations: 7
+  - section: "Step 8: Departure board CSS"
+    status: complete
+    notes:
+      - "sass/main.scss (242 lines) compiles to public/main.css (~2.9KB)"
+      - "CSS custom properties mirror base.html inline colors (--bg #1a1a2e, --fg #f5c518, --fg-dim, --row-sep, --accent)"
+      - "monospace stack only (ui-monospace, Share Tech Mono fallback); no webfont @import"
+      - "active pill convention: button[aria-pressed=\"true\"] (amber-on-dark inversion) — documented at top of main.scss so Step 12 JS knows what to toggle"
+      - "mobile @media (max-width:640px) hides TYPE (col 2) and NEXT (col 4); stacks conditions dl to single column"
+      - "tap-to-expand hook: tbody tr[aria-expanded=true] + tr.row-detail reveal — Step 12 JS must inject <tr class=row-detail> with colspan cell"
+      - "no animations beyond hover color shifts — split-flap keyframes are Step 9"
+last_review: 2026-04-16T19:40:00-07:00
+iterations: 8
 no_progress_count: 0
 started_at: 2026-04-16T19:04:36-07:00
 work_unit_granularity: step  # ### Step N, not ## Phase

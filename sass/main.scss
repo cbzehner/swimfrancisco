@@ -1,0 +1,242 @@
+// SwimFrancisco — departure board styles (Step 8)
+// Active filter convention: button[aria-pressed="true"].
+// Step 12 JS will toggle aria-pressed on filter buttons and aria-expanded on
+// tbody rows for mobile tap-to-expand. No HTML changes needed here.
+
+:root {
+  --bg: #1a1a2e;
+  --fg: #f5c518;
+  --fg-dim: rgba(245, 197, 24, 0.6);
+  --row-sep: rgba(245, 197, 24, 0.15);
+  --accent: #f5c518;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: ui-monospace, "Share Tech Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  line-height: 1.4;
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+h1, h2, h3 {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.75rem;
+}
+
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.1rem; }
+
+a {
+  color: var(--fg);
+  text-decoration: none;
+
+  &:hover,
+  &:focus {
+    text-decoration: underline;
+  }
+}
+
+// --- Filter pills --------------------------------------------------------
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+
+  button {
+    background: transparent;
+    color: var(--fg);
+    border: 1px solid var(--fg);
+    border-radius: 999px;
+    padding: 0.35rem 0.9rem;
+    font: inherit;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+
+    &:hover,
+    &:focus {
+      background: rgba(245, 197, 24, 0.12);
+    }
+
+    &[aria-pressed="true"] {
+      background: var(--accent);
+      color: var(--bg);
+    }
+  }
+}
+
+// --- Departure board -----------------------------------------------------
+
+table.board {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0 2rem;
+
+  th,
+  td {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.9rem;
+  }
+
+  thead th {
+    color: var(--fg);
+    border-bottom: 1px solid var(--fg);
+    font-weight: 700;
+  }
+
+  tbody td {
+    border-bottom: 1px solid var(--row-sep);
+  }
+
+  tbody tr:hover td {
+    background: rgba(245, 197, 24, 0.05);
+  }
+
+  th:first-child,
+  td:first-child {
+    min-width: 14ch;
+  }
+}
+
+// Mobile tap-to-expand hook (Step 12 JS toggles aria-expanded on <tr>, and
+// optionally inserts a following <tr class="row-detail">). Hidden by default.
+.row-detail {
+  display: none;
+}
+
+// --- Detail page --------------------------------------------------------
+
+.back,
+.address,
+.official {
+  margin: 0.5rem 0;
+}
+
+.description {
+  margin: 1rem 0;
+}
+
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0 1.5rem;
+
+  th,
+  td {
+    text-align: left;
+    padding: 0.4rem 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.85rem;
+  }
+
+  thead th {
+    border-bottom: 1px solid var(--fg);
+  }
+
+  tbody td {
+    border-bottom: 1px solid var(--row-sep);
+  }
+}
+
+.conditions dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.35rem 1rem;
+  margin: 0.5rem 0;
+
+  dt {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--fg-dim);
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.hazards ul,
+.clubs ul,
+.distances ul,
+.closures ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+
+  li {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid var(--row-sep);
+    font-size: 0.9rem;
+  }
+}
+
+.meta,
+.notes {
+  color: var(--fg-dim);
+  font-size: 0.85rem;
+  margin-top: 1.5rem;
+}
+
+// --- Responsive ---------------------------------------------------------
+
+@media (max-width: 640px) {
+  main {
+    padding: 1rem 0.75rem;
+  }
+
+  .filters button {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.7rem;
+  }
+
+  // Hide TYPE (col 2) and NEXT (col 4); keep SPOT, STATUS, TEMP.
+  table.board {
+    th:nth-child(2),
+    td:nth-child(2),
+    th:nth-child(4),
+    td:nth-child(4) {
+      display: none;
+    }
+  }
+
+  // Tap-to-expand: when a row is marked expanded, reveal the following
+  // detail row (Step 12 JS will inject / manage it).
+  table.board tbody tr[aria-expanded="true"] + tr.row-detail {
+    display: table-row;
+
+    td {
+      grid-column: 1 / -1;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 0.85rem;
+      color: var(--fg-dim);
+    }
+  }
+
+  .conditions dl {
+    grid-template-columns: 1fr;
+  }
+}
