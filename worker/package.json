@@ -5,13 +5,13 @@
   "type": "module",
   "description": "SwimFrancisco conditions Worker — hourly cron fetches NOAA/NDBC, serves /api/conditions.",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "wrangler dev --test-scheduled",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250101.0",
     "typescript": "^5.5.0",
-    "wrangler": "^3.90.0"
+    "wrangler": "^4.83.0"
   }
 }

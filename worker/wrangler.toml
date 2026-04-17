@@ -7,6 +7,15 @@ compatibility_date = "2025-01-01"
 [triggers]
 crons = ["0 * * * *"]
 
+# Static site + Worker on one origin. In dev, `wrangler dev` serves the built
+# Zola output at http://localhost:8787 and invokes the Worker for /api/*.
+# In prod the Worker is bound to swimfrancisco.com/api/* (see routes below)
+# and the static site is served by Pages — same origin either way.
+[assets]
+directory = "../public"
+not_found_handling = "404-page"
+run_worker_first = ["/api/*", "/__scheduled"]
+
 # KV namespace for per-spot conditions.
 # Before first deploy, create the namespaces with:
 #   wrangler kv:namespace create CONDITIONS
