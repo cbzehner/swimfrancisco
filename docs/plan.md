@@ -22,9 +22,18 @@ progress:
       - "gap: SF Rec & Parks publishes schedules as PDFs (DocumentCenter/View/27964) — WebFetch couldn't extract; sessions TBD for 7 of 9 pools"
       - "gap: lat/lng are best-estimate geocodes, should be re-verified"
       - "gap: subagent claims config.toml has highlight_code bug, but it's under [markdown] as documented — verify with zola check later"
-      - "followup option: install poppler/pdftotext via devenv to extract schedule PDFs"
-last_review: 2026-04-16T19:15:00-07:00
-iterations: 3
+      - "user-accepted: session extraction deferred to later iteration"
+  - section: "Step 4: Create content files for all 5 open water spots"
+    status: complete
+    notes:
+      - "5 files: aquatic-park, crissy-field, baker-beach, ocean-beach, china-beach"
+      - "Aquatic Park copied verbatim from spec.md canonical example"
+      - "temp_station_type: noaa for bay spots (9414290), ndbc for ocean spots (46237)"
+      - "noaa_tide_station=9414290 on all 5"
+      - "Ocean Beach flagged with strong hazard list (rips, sneaker waves)"
+      - "gap: lat/lng are best-estimate; carry-over with pool lat/lng re-verification"
+last_review: 2026-04-16T19:25:00-07:00
+iterations: 4
 no_progress_count: 0
 started_at: 2026-04-16T19:04:36-07:00
 work_unit_granularity: step  # ### Step N, not ## Phase
