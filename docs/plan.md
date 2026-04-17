@@ -38,8 +38,28 @@ progress:
       - "templates/base.html with Tera blocks, dark inline theme, CSS link via get_url"
       - "sidecar fix: removed invalid [markdown] highlight_code key from config.toml (iter 2 bug)"
       - "zola check passes; orphan warnings on pages (expected until Step 6)"
-last_review: 2026-04-16T19:35:00-07:00
-iterations: 5
+  - section: "Step 6: Create homepage / departure board template"
+    status: complete
+    notes:
+      - "templates/index.html extends base.html with filter UI + board table"
+      - "rows carry data-slug, data-type, data-lat, data-lng, data-schedule (JSON of sessions+closures)"
+      - "STATUS/NEXT/TEMP columns render placeholder dashes — JS will compute (Steps 10/11)"
+      - "map container stubbed with <div id=map-view hidden> for Step 13"
+      - "followup: default sort is doc order; open-first sort deferred to JS (Step 10)"
+  - section: "Step 7: Create detail page template"
+    status: complete
+    notes:
+      - "templates/spots/page.html branches on extra.type (pool | open_water)"
+      - "content/spots/_index.md now sets page_template = spots/page.html so Zola picks it up"
+      - "pool branch: Google Maps link (address), official site link, Mon–Sun schedule table, closures list, schedule_effective + last_verified_at footer"
+      - "open_water branch: conditions stub <section class=conditions data-slug> with <dd data-field=water_temp> and data-field=tide hooks for Step 11 JS; then hazards/clubs/common_distances lists"
+      - "both branches render page.content via | safe in a notes section and a back-link to / (departure board)"
+      - "zola check + zola build pass; 14 /spots/<slug>/index.html produced"
+      - "data-model gap: pool sessions frontmatter uses key `day` (not `day_of_week` as plan text described) — template matches actual content"
+      - "data-model gap: pool subtype values are `indoor`, not the `lap|family|open` listed in Step 3 brief — template does not depend on subtype so harmless, but Step 6 filter pills assume `lap_swim|open_swim|family_swim` (session.type), not subtype"
+      - "data-model gap: Sava 2026-04-16→2026-09-21 closure noted in Step 3 is not yet encoded as structured extra.closures data; closures section renders empty"
+last_review: 2026-04-16T19:34:00-07:00
+iterations: 7
 no_progress_count: 0
 started_at: 2026-04-16T19:04:36-07:00
 work_unit_granularity: step  # ### Step N, not ## Phase

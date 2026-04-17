@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}{{ page.title }} — SwimFrancisco{% endblock %}
+{% block content %}
+  {% set extra = page.extra %}
+  {% set map_href = "https://www.google.com/maps/search/?api=1&query=" ~ extra.lat ~ "," ~ extra.lng %}
+
+  <p class="back"><a href="{{ config.base_url }}/">&larr; DEPARTURE BOARD</a></p>
+
+  <header>
+    <h1>{{ page.title }}</h1>
+    {% if extra.address %}
+      <p class="address">
+        <a href="{{ map_href }}" target="_blank" rel="noopener">{{ extra.address }}</a>
+      </p>
+    {% endif %}
+  </header>
+
+  {% if extra.type == "pool" %}
+    {% if extra.website %}
+      <p class="official"><a href="{{ extra.website }}" target="_blank" rel="noopener">Official page</a></p>
+    {% endif %}
+
+    <section class="schedule">
+      <h2>Weekly schedule</h2>
+      {% set sessions = extra.sessions | default(value=[]) %}
+      {% if sessions | length > 0 %}
+        {% set days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] %}
+        <table class="schedule-table">
+          <thead>
+            <tr><th>DAY</th><th>START</th><th>END</th><th>TYPE</th><th>LANES</th></tr>
+          </thead>
+          <tbody>
+            {% for day in days %}
+              {% set day_sessions = sessions | filter(attribute="day", value=day) %}
+              {% for s in day_sessions %}
+                <tr>
+                  <td>{{ day | upper }}</td>
+                  <td>{{ s.start }}</td>
+                  <td>{{ s.end }}</td>
+                  <td>{{ s.type | upper }}</td>
+                  <td>{{ s.lanes | default(value="—") }}</td>
+                </tr>
+              {% endfor %}
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>Schedule not yet verified.</p>
+      {% endif %}
+    </section>
+
+    {% set closures = extra.closures | default(value=[]) %}
+    {% if closures | length > 0 %}
+      <section class="closures">
+        <h2>Closures</h2>
+        <ul>
+          {% for c in closures %}
+            <li>{{ c }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+
+    <footer class="meta">
+      {% if extra.schedule_effective %}<p>Schedule effective: {{ extra.schedule_effective }}</p>{% endif %}
+      {% if extra.last_verified_at %}<p>Last verified: {{ extra.last_verified_at }}</p>{% endif %}
+    </footer>
+
+  {% elif extra.type == "open_water" %}
+    {% if extra.description_short %}
+      <p class="description">{{ extra.description_short }}</p>
+    {% endif %}
+
+    <section class="conditions" data-slug="{{ page.slug }}">
+      <h2>Current conditions</h2>
+      <dl>
+        <dt>Water temp</dt>
+        <dd data-field="water_temp">—</dd>
+        <dt>Tide</dt>
+        <dd data-field="tide">—</dd>
+      </dl>
+    </section>
+
+    {% set hazards = extra.hazards | default(value=[]) %}
+    {% if hazards | length > 0 %}
+      <section class="hazards">
+        <h2>Hazards</h2>
+        <ul>
+          {% for h in hazards %}
+            <li>{{ h }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+
+    {% set clubs = extra.clubs | default(value=[]) %}
+    {% if clubs | length > 0 %}
+      <section class="clubs">
+        <h2>Clubs</h2>
+        <ul>
+          {% for c in clubs %}
+            <li>{{ c }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+
+    {% set distances = extra.common_distances | default(value=[]) %}
+    {% if distances | length > 0 %}
+      <section class="distances">
+        <h2>Common distances</h2>
+        <ul>
+          {% for d in distances %}
+            <li>{{ d }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+
+    <footer class="meta">
+      {% if extra.last_verified_at %}<p>Last verified: {{ extra.last_verified_at }}</p>{% endif %}
+    </footer>
+  {% endif %}
+
+  {% if page.content %}
+    <section class="notes">
+      {{ page.content | safe }}
+    </section>
+  {% endif %}
+{% endblock %}
