@@ -115,8 +115,19 @@ progress:
       - "tests_status: passed — zola build green; script order verified status→conditions→filters"
       - "gap: most pools still have empty sessions[] (Step 3 gap) — type pills match few rows in practice"
       - "followup: manual browser smoke test for pill toggle + geolocation reorder; Step 13 MAP button handler still stubbed"
-last_review: 2026-04-16T19:48:30-07:00
-iterations: 12
+  - section: "Step 13: Map view toggle"
+    status: complete
+    notes:
+      - "Leaflet 1.9.4 via unpkg CDN; CSS in base.html <head> (integrity + crossorigin); JS lazy-loaded on first MAP click from map.js"
+      - "static/js/map.js: ensureLeaflet(), collectSpots() (filters out invalid lat/lng), createPopupHTML(spot), initMap() centered on SF (~37.78,-122.45 z12) with OSM tiles, toggleMap() caches single instance and calls invalidateSize() after show"
+      - "MAP button aria-pressed + flips hidden on #map-view and table.board; Leaflet load failure un-presses button, restores board, console.error"
+      - "sass/main.scss: #map-view { height:70vh; min-height:400px; amber border } + .sf-map-popup styles"
+      - "popups show name, type, STATUS (captured at open time — no live refresh) and link to /spots/{slug}/"
+      - "tests_status: passed — zola build green; index.html has leaflet.css + map.js; detail pages have leaflet.css (base.html) but NOT map.js (scripts block is index-only)"
+      - "gap: map markers not filtered by active Open Now/type/Near Me state — plan said skip; flagged for future"
+      - "gap: filter buttons remain visible when map is shown (left as-is per plan simplification)"
+last_review: 2026-04-16T19:50:00-07:00
+iterations: 13
 no_progress_count: 0
 started_at: 2026-04-16T19:45:00-07:00
 work_unit_granularity: step  # ### Step N, not ## Phase
