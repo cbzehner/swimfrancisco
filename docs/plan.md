@@ -7,8 +7,14 @@ progress:
       - "devenv.nix rewritten for Python+uv, JS+npm, zola, git"
       - "gitignore expanded for public/, node_modules/, .wrangler/, dist/, .venv/, __pycache__/, *.pyc, .DS_Store"
       - "project-finding: codex-adapter runs read-only on this host — Claude applies Write on Codex's behalf"
-last_review: 2026-04-16T19:04:36-07:00
-iterations: 1
+  - section: "Step 2: Initialize Zola site"
+    status: complete
+    notes:
+      - "config.toml created with base_url, title, description, compile_sass, minify_html"
+      - "dir structure: content/spots/, templates/, static/, sass/ (all with .gitkeep)"
+      - "followup: run `zola check` from devenv shell once templates/content exist"
+last_review: 2026-04-16T19:05:00-07:00
+iterations: 2
 no_progress_count: 0
 started_at: 2026-04-16T19:04:36-07:00
 work_unit_granularity: step  # ### Step N, not ## Phase

@@ -1,0 +1,10 @@
+base_url = "https://swimfrancisco.com"
+title = "SwimFrancisco"
+description = "Live-updating database of all the places to swim in San Francisco"
+default_language = "en"
+compile_sass = true
+build_search_index = false
+minify_html = true
+
+[markdown]
+highlight_code = false
