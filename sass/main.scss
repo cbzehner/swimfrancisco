@@ -200,6 +200,40 @@ table.board {
   margin-top: 1.5rem;
 }
 
+// --- Split-flap animation ----------------------------------------------
+// Step 12 JS contract:
+//   - JS sets inline `style="--flap-index: <N>"` on each <tr> to stagger
+//     the flip (N = row's new sorted position).
+//   - JS adds `.flap` to trigger the animation, and removes it on
+//     `animationend` so the class can be re-applied on the next change.
+// Animation is applied to <td> cells rather than <tr>, because rows use
+// `display: table-row` which does not honor 3D transforms reliably.
+// Budget: 30ms stagger × ~14 rows = 420ms + 250ms flip ≈ 670ms worst case.
+
+@keyframes flap {
+  0%   { transform: rotateX(0); }
+  50%  { transform: rotateX(-90deg); }
+  100% { transform: rotateX(0); }
+}
+
+table.board tbody tr.flap {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+
+  td {
+    animation: flap 250ms ease-in-out both;
+    animation-delay: calc(var(--flap-index, 0) * 30ms);
+    transform-origin: center;
+    backface-visibility: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  table.board tbody tr.flap td {
+    animation: none;
+  }
+}
+
 // --- Responsive ---------------------------------------------------------
 
 @media (max-width: 640px) {

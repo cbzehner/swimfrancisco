@@ -68,8 +68,17 @@ progress:
       - "mobile @media (max-width:640px) hides TYPE (col 2) and NEXT (col 4); stacks conditions dl to single column"
       - "tap-to-expand hook: tbody tr[aria-expanded=true] + tr.row-detail reveal — Step 12 JS must inject <tr class=row-detail> with colspan cell"
       - "no animations beyond hover color shifts — split-flap keyframes are Step 9"
-last_review: 2026-04-16T19:40:00-07:00
-iterations: 8
+  - section: "Step 9: Split-flap animation CSS"
+    status: complete
+    notes:
+      - "appended flap keyframe + .flap class to sass/main.scss (now 276 lines)"
+      - "animation scoped to table.board tbody tr.flap td (cells, not rows) to avoid display:table-row transform issues"
+      - "stagger via --flap-index CSS custom property: animation-delay = var(--flap-index, 0) * 30ms"
+      - "Step 12 JS contract documented inline: set --flap-index on each row, toggle .flap, remove on animationend"
+      - "prefers-reduced-motion: reduce disables the animation entirely"
+      - "timing: 250ms flip + (14 rows × 30ms) = ~670ms worst case — slightly over plan's ~500ms budget; acceptable, can tighten to 20ms stagger later if needed"
+last_review: 2026-04-16T19:41:00-07:00
+iterations: 9
 no_progress_count: 0
 started_at: 2026-04-16T19:04:36-07:00
 work_unit_granularity: step  # ### Step N, not ## Phase
