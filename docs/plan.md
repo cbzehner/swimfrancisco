@@ -13,8 +13,18 @@ progress:
       - "config.toml created with base_url, title, description, compile_sass, minify_html"
       - "dir structure: content/spots/, templates/, static/, sass/ (all with .gitkeep)"
       - "followup: run `zola check` from devenv shell once templates/content exist"
-last_review: 2026-04-16T19:05:00-07:00
-iterations: 2
+  - section: "Step 3: Create content files for all 9 pools"
+    status: partial
+    notes:
+      - "9 files created in content/spots/ — structure, addresses, websites, approximate lat/lng verified"
+      - "Sava closure (2026-04-16 to 2026-09-21) documented"
+      - "Hamilton Tue-Fri 6:30-10:00 lap swim verified from facility page"
+      - "gap: SF Rec & Parks publishes schedules as PDFs (DocumentCenter/View/27964) — WebFetch couldn't extract; sessions TBD for 7 of 9 pools"
+      - "gap: lat/lng are best-estimate geocodes, should be re-verified"
+      - "gap: subagent claims config.toml has highlight_code bug, but it's under [markdown] as documented — verify with zola check later"
+      - "followup option: install poppler/pdftotext via devenv to extract schedule PDFs"
+last_review: 2026-04-16T19:15:00-07:00
+iterations: 3
 no_progress_count: 0
 started_at: 2026-04-16T19:04:36-07:00
 work_unit_granularity: step  # ### Step N, not ## Phase
