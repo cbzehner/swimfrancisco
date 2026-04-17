@@ -1,0 +1,21 @@
+name = "swimfrancisco-worker"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+
+# Hourly cron — populates KV with NOAA 9414290 (bay) + NDBC 46237 (ocean) data.
+# Implemented in Step 15.
+[triggers]
+crons = ["0 * * * *"]
+
+# KV namespace for per-spot conditions.
+# Before first deploy, create the namespaces with:
+#   wrangler kv:namespace create CONDITIONS
+#   wrangler kv:namespace create CONDITIONS --preview
+# Then replace REPLACE_ME below with the ids wrangler prints.
+[[kv_namespaces]]
+binding = "CONDITIONS"
+id = "REPLACE_ME"
+preview_id = "REPLACE_ME"
+
+# CORS: HTTP handlers (Step 15) must allow origin https://swimfrancisco.com
+# (plus https://*.swimfrancisco.pages.dev preview deployments if needed).

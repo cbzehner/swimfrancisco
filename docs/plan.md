@@ -126,8 +126,16 @@ progress:
       - "tests_status: passed — zola build green; index.html has leaflet.css + map.js; detail pages have leaflet.css (base.html) but NOT map.js (scripts block is index-only)"
       - "gap: map markers not filtered by active Open Now/type/Near Me state — plan said skip; flagged for future"
       - "gap: filter buttons remain visible when map is shown (left as-is per plan simplification)"
-last_review: 2026-04-16T19:50:00-07:00
-iterations: 13
+  - section: "Step 14: Worker scaffold"
+    status: complete
+    notes:
+      - "worker/ with package.json (type=module, scripts: dev/deploy/typecheck, devDeps wrangler+typescript+@cloudflare/workers-types), tsconfig.json (ES2022, ESNext, bundler, strict, noEmit), wrangler.toml (name, main=src/index.ts, compatibility_date=2025-01-01, hourly cron 0 * * * *, KV binding CONDITIONS with REPLACE_ME placeholders), src/index.ts (minimal fetch+scheduled skeleton), .gitignore"
+      - "tests_status: not_run — @cloudflare/workers-types unresolved until `cd worker && npm install` in Step 15"
+      - "TS diagnostics expected (KVNamespace, Request, Response, etc.) — will resolve after npm install"
+      - "site still builds clean (zola build passes)"
+      - "user-action: create KV namespaces via `wrangler kv:namespace create CONDITIONS` (plus --preview), fill REPLACE_ME ids in wrangler.toml before first deploy"
+last_review: 2026-04-16T19:51:30-07:00
+iterations: 14
 no_progress_count: 0
 started_at: 2026-04-16T19:45:00-07:00
 work_unit_granularity: step  # ### Step N, not ## Phase
