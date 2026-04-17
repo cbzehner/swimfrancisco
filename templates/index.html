@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}SwimFrancisco — where to swim right now{% endblock %}
+{% block content %}
+  <header>
+    <h1>{{ config.title }}</h1>
+    <p>{{ config.description }}</p>
+  </header>
+
+  <div class="filters">
+    <button type="button" data-filter="open-now">OPEN NOW</button>
+    <button type="button" data-filter="type" data-type="lap_swim">LAP</button>
+    <button type="button" data-filter="type" data-type="open_swim">OPEN</button>
+    <button type="button" data-filter="type" data-type="family_swim">FAMILY</button>
+    <button type="button" data-filter="type" data-type="open_water">OPEN WATER</button>
+    <button type="button" data-action="near-me">NEAR ME</button>
+    <button type="button" data-action="toggle-map">MAP</button>
+  </div>
+
+  {% set spots = get_section(path='spots/_index.md') %}
+  <table class="board">
+    <thead>
+      <tr>
+        <th>SPOT</th>
+        <th>TYPE</th>
+        <th>STATUS</th>
+        <th>NEXT</th>
+        <th>TEMP</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for page in spots.pages %}
+        {% set sessions = page.extra.sessions | default(value=[]) %}
+        {% set closures = page.extra.closures | default(value=[]) %}
+        {% set sessions_json = sessions | json_encode %}
+        {% set closures_json = closures | json_encode %}
+        {% set schedule_json = '{"sessions":' ~ sessions_json ~ ',"closures":' ~ closures_json ~ '}' %}
+        <tr
+          data-slug="{{ page.slug }}"
+          data-type="{{ page.extra.type }}"
+          data-subtype="{{ page.extra.subtype | default(value='') }}"
+          data-lat="{{ page.extra.lat }}"
+          data-lng="{{ page.extra.lng }}"
+          data-schedule='{{ schedule_json | safe }}'
+        >
+          <td><a href="{{ page.permalink }}">{{ page.title | upper }}</a></td>
+          <td>
+            {% if page.extra.type == 'pool' %}
+              {{ page.extra.subtype | default(value='') | upper }}
+            {% elif page.extra.type == 'open_water' %}
+              OPEN WATER
+            {% else %}
+              {{ page.extra.type | upper }}
+            {% endif %}
+          </td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div id="map-view" hidden></div>
+{% endblock %}
