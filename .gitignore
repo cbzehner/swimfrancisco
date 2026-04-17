@@ -1,0 +1,26 @@
+# Devenv
+.devenv*
+devenv.local.nix
+devenv.local.yaml
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
+
+# Zola
+public/
+
+# Node
+node_modules/
+.wrangler/
+dist/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Editor/OS
+.DS_Store
