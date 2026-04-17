@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="{{ config.default_language }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="{{ config.description }}">
+  <meta name="theme-color" content="#1a1a2e">
+  <title>{% block title %}SwimFrancisco{% endblock %}</title>
+  <link rel="stylesheet" href="{{ get_url(path='main.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body style="background:#1a1a2e;color:#f5c518;margin:0;font-family:ui-monospace,monospace;">
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  <script>
+    // Progressive enhancement entry point — populated in later steps.
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
