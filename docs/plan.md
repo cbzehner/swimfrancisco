@@ -32,8 +32,14 @@ progress:
       - "noaa_tide_station=9414290 on all 5"
       - "Ocean Beach flagged with strong hazard list (rips, sneaker waves)"
       - "gap: lat/lng are best-estimate; carry-over with pool lat/lng re-verification"
-last_review: 2026-04-16T19:25:00-07:00
-iterations: 4
+  - section: "Step 5: Create base layout template"
+    status: complete
+    notes:
+      - "templates/base.html with Tera blocks, dark inline theme, CSS link via get_url"
+      - "sidecar fix: removed invalid [markdown] highlight_code key from config.toml (iter 2 bug)"
+      - "zola check passes; orphan warnings on pages (expected until Step 6)"
+last_review: 2026-04-16T19:35:00-07:00
+iterations: 5
 no_progress_count: 0
 started_at: 2026-04-16T19:04:36-07:00
 work_unit_granularity: step  # ### Step N, not ## Phase
