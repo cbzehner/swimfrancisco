@@ -19,3 +19,18 @@ preview_id = "REPLACE_ME"
 
 # CORS: HTTP handlers (Step 15) must allow origin https://swimfrancisco.com
 # (plus https://*.swimfrancisco.pages.dev preview deployments if needed).
+
+# Routes — uncomment ONE of the two options below once the swimfrancisco.com
+# zone exists in this Cloudflare account. See docs/deploy.md for full setup.
+#
+# Option A (recommended, single-origin): bind the Worker under the apex so
+# the static site and API share an origin. No CORS needed for production.
+# [[routes]]
+# pattern = "swimfrancisco.com/api/*"
+# zone_name = "swimfrancisco.com"
+#
+# Option B (dedicated subdomain): expose the Worker at api.swimfrancisco.com.
+# Requires a DNS record and CORS allow-list already covers this host.
+# [[routes]]
+# pattern = "api.swimfrancisco.com/*"
+# zone_name = "swimfrancisco.com"

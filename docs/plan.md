@@ -168,8 +168,17 @@ progress:
       - "tests_status: passed — zola build green; public/js/ has all 5 scripts; noscript + expand.js both present in public/index.html"
       - "gap noted but out-of-scope: table has no overflow-x wrapper (existing mobile CSS hides TYPE+NEXT cols, sufficient for SF spot name widths)"
       - "gap noted but out-of-scope: map-view filter buttons visible when map is open (pre-existing from Step 13)"
-last_review: 2026-04-16T20:00:30-07:00
-iterations: 17
+  - section: "Step 17: Deploy setup"
+    status: complete
+    notes:
+      - "docs/deploy.md created: Pages build config (command=zola build, output=public, ZOLA_VERSION pinned), Worker deploy flow (wrangler login → kv:namespace create CONDITIONS + --preview, fill ids, wrangler deploy), route options (A Pages proxy, B window.SWIMFRANCISCO_API override, C single-origin via routes binding), custom domain (swimfrancisco.com + www redirect), verification, rollback"
+      - "worker/wrangler.toml: added two commented [[routes]] stanzas (apex /api/* single-origin vs api.swimfrancisco.com/* subdomain)"
+      - "static/_redirects created with commented /api/* rewrite (activates only if Worker lives on a separate subdomain)"
+      - "worker/README.md: link out to docs/deploy.md"
+      - "tests_status: passed — zola build green (14 pages, public/_redirects copied); npm run typecheck green"
+      - "no deploy performed — all manual Cloudflare dashboard steps are documented in deploy.md (user action)"
+last_review: 2026-04-16T20:02:30-07:00
+iterations: 18
 no_progress_count: 0
 started_at: 2026-04-16T19:45:00-07:00
 work_unit_granularity: step  # ### Step N, not ## Phase

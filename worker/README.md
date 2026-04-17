@@ -19,6 +19,8 @@ A cron trigger runs hourly (`0 * * * *`, see `wrangler.toml`). The scheduled han
 2. Paste the returned `id` (and optionally `preview_id`) into `wrangler.toml` under `[[kv_namespaces]]`.
 3. `wrangler deploy`
 
+See [`../docs/deploy.md`](../docs/deploy.md) for the end-to-end flow (Pages + Worker + custom domain).
+
 ## First-deploy bootstrap
 
 After the initial deploy, KV is empty and `/api/conditions` returns `503 conditions not yet available` until the first cron tick (up to an hour later).
