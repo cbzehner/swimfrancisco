@@ -101,8 +101,22 @@ progress:
       - "tests_status: passed — zola build green, public/js has both scripts, guards confirmed"
       - "gap: Worker /api/conditions does not exist yet (Steps 14-15) — script degrades silently until then"
       - "followup: tide <dd data-field='tide'> hook exists on detail pages but is not populated this step"
-last_review: 2026-04-16T19:46:30-07:00
-iterations: 11
+  - section: "Step 12: Filter logic"
+    status: complete
+    notes:
+      - "static/js/filters.js implements Open Now, Type pills (lap_swim/open_swim/family_swim/open_water, multi-select OR), Near Me (geolocation + haversine distance sort)"
+      - "pure helpers: rowMatchesType, rowIsClosed, rowPassesFilters, haversineMiles, sortByDistance, triggerFlap"
+      - "type-pill convention: lap_swim/open_swim/family_swim look inside data-schedule sessions[].type; open_water matches row.dataset.type"
+      - "Open Now hides rows where STATUS cell text === 'CLOSED' (open-water em-dash rows remain visible — plan-aligned)"
+      - "Near Me gracefully no-ops on unsupported/denied geolocation (un-presses button)"
+      - "flap retrigger via reflow (void row.offsetWidth) + sequential --flap-index; once-listener on animationend bubbling from td"
+      - "coordination: added one dispatchEvent('sf:status-applied') line to status.js; filters.js listens (with requestAnimationFrame fallback) before attaching handlers"
+      - "wired into templates/index.html {% block scripts %} after status.js + conditions.js, all defer"
+      - "tests_status: passed — zola build green; script order verified status→conditions→filters"
+      - "gap: most pools still have empty sessions[] (Step 3 gap) — type pills match few rows in practice"
+      - "followup: manual browser smoke test for pill toggle + geolocation reorder; Step 13 MAP button handler still stubbed"
+last_review: 2026-04-16T19:48:30-07:00
+iterations: 12
 no_progress_count: 0
 started_at: 2026-04-16T19:45:00-07:00
 work_unit_granularity: step  # ### Step N, not ## Phase

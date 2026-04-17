@@ -182,6 +182,9 @@ function init() {
   const rows = Array.from(tbody.querySelectorAll("tr"));
   const sorted = sortRows(rows);
   reorderDom(tbody, sorted);
+  // Signal to filters.js (Step 12) that status cells are populated and rows
+  // are in their baseline (open-first, alphabetical) order.
+  document.dispatchEvent(new CustomEvent("sf:status-applied"));
 }
 
 if (document.readyState === "loading") {
