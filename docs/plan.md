@@ -157,8 +157,19 @@ progress:
       - "worker/README.md created: routes, cron, KV bootstrap (wrangler triggers deploy + wrangler cron trigger to avoid 1h cold-start 503), local dev commands"
       - "tests_status: passed — npm run typecheck zero errors, zola build still green"
       - "deferred: Cache API in front of KV (magi #6) — scale-dependent, skipped per reviewer note"
-last_review: 2026-04-16T19:58:00-07:00
-iterations: 16
+  - section: "Step 16: Mobile polish"
+    status: complete
+    notes:
+      - "static/js/expand.js: mobile-only tap-to-expand gated by matchMedia('(max-width: 640px)'); row click toggles aria-expanded + injects/removes sibling <tr class='row-detail'> with colspan=5; anchor clicks in the row pass through; viewport-crossing back to desktop collapses any expanded rows"
+      - "dropped deprecated mql.addListener fallback — addEventListener is universally supported in current Safari/Chrome/Firefox"
+      - "templates/index.html: <noscript> notice at top of filters div explaining that live status/filters/map are unavailable but detail pages still work"
+      - "sass/main.scss: .noscript-notice (amber border, dim text, uppercase); existing .row-detail + aria-expanded rules from Step 8 CSS suffice (verified)"
+      - "wired expand.js into index.html scripts block"
+      - "tests_status: passed — zola build green; public/js/ has all 5 scripts; noscript + expand.js both present in public/index.html"
+      - "gap noted but out-of-scope: table has no overflow-x wrapper (existing mobile CSS hides TYPE+NEXT cols, sufficient for SF spot name widths)"
+      - "gap noted but out-of-scope: map-view filter buttons visible when map is open (pre-existing from Step 13)"
+last_review: 2026-04-16T20:00:30-07:00
+iterations: 17
 no_progress_count: 0
 started_at: 2026-04-16T19:45:00-07:00
 work_unit_granularity: step  # ### Step N, not ## Phase

@@ -50,6 +50,18 @@ a {
   }
 }
 
+// --- No-JS notice --------------------------------------------------------
+
+.noscript-notice {
+  border: 1px solid var(--fg);
+  color: var(--fg-dim);
+  padding: 0.5rem 0.75rem;
+  margin: 1rem 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 // --- Filter pills --------------------------------------------------------
 
 .filters {

@@ -6,6 +6,13 @@
     <p>{{ config.description }}</p>
   </header>
 
+  <noscript>
+    <p class="noscript-notice">
+      JAVASCRIPT IS DISABLED — LIVE STATUS, FILTERS, AND MAP ARE UNAVAILABLE.
+      ALL SPOT DETAIL PAGES STILL WORK.
+    </p>
+  </noscript>
+
   <div class="filters">
     <button type="button" data-filter="open-now">OPEN NOW</button>
     <button type="button" data-filter="type" data-type="lap_swim">LAP</button>
@@ -67,4 +74,5 @@
   <script src="{{ get_url(path='js/conditions.js') }}" defer></script>
   <script src="{{ get_url(path='js/filters.js') }}" defer></script>
   <script src="{{ get_url(path='js/map.js') }}" defer></script>
+  <script src="{{ get_url(path='js/expand.js') }}" defer></script>
 {% endblock %}
