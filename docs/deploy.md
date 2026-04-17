@@ -93,7 +93,7 @@ Rules → Redirect Rules → Create:
 
 Pick **one** of the two options below (both are already stubbed as commented `[[routes]]` blocks in `worker/wrangler.toml` — uncomment the one you choose, then `wrangler deploy`).
 
-#### Option C — single origin (recommended)
+#### Option A — single origin (recommended)
 
 Bind the Worker to `swimfrancisco.com/api/*`:
 
@@ -130,11 +130,11 @@ After both services are live:
 
 ```sh
 curl -sSf https://swimfrancisco.com/ | head -5
-curl -sSf https://swimfrancisco.com/api/conditions | head -c 400   # Option C
+curl -sSf https://swimfrancisco.com/api/conditions | head -c 400   # Option A
 curl -sSf https://api.swimfrancisco.com/api/conditions | head -c 400  # Option B
 ```
 
-The API response should include a `generated_at` ISO timestamp and a `spots` array with current NOAA bay + NDBC ocean readings.
+The API response is a JSON object keyed by spot slug (e.g. `{ "aquatic-park": { water_temp_f, water_temp_c, temp_observed_at, tide, updated_at, stale, ... }, ... }`). Each record carries its own `updated_at` ISO timestamp and either a NOAA bay or NDBC ocean reading depending on the spot.
 
 Then load `https://swimfrancisco.com/` in a browser and confirm the departure-board populates within a few seconds (the JS fetches `/api/conditions` on page load).
 

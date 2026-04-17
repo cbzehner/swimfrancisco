@@ -142,7 +142,8 @@ Airport departure board aesthetic. Split-flap animation.
 
 **Detail pages (`/spots/:slug/`):**
 - Pools: full weekly schedule table, address, static map image, link to official page
-- Open water: live conditions panel (water temp, tide, air temp), hazards, safety notes, address, static map image
+- Open water: live conditions panel (water temp, tide), hazards, safety notes, address, static map image
+  - (v2) air temperature alongside water temp
 - Progressive enhancement — works without JS
 
 ### Progressive Enhancement

@@ -1,5 +1,5 @@
 ---
-status: in_progress
+status: archived
 progress:
   - section: "Step 1: Initialize project"
     status: complete
@@ -189,9 +189,16 @@ progress:
       - "css hooks verified present in public/main.css: .flap, .row-detail, .noscript-notice, #map-view"
       - "tests_status: passed"
       - "known gap: 8/9 pools have empty sessions[] — flagged in README; filling them is out of scope for v1 scaffold"
-last_review: 2026-04-16T20:05:00-07:00
-iterations: 19
+  - section: "Final magi review + archive (2026-04-16)"
+    status: complete
+    notes:
+      - "magi final verdict: SHIP / ARCHIVE / high confidence (3/3 advisors agree, no blockers, no security issues, no accidental secrets)"
+      - "doc-drift fixes landed: renamed deploy.md 'Option C' → 'Option A' (matches worker/wrangler.toml); corrected /api/conditions response shape (slug-keyed object, not {generated_at, spots[]}); marked air-temp as (v2) in docs/spec.md"
+      - "follow-up plan: PDF extraction pipeline for pool schedules (GitHub Actions + Python extractor) — new plan to be written separately"
+last_review: 2026-04-16T20:08:00-07:00
+iterations: 20
 no_progress_count: 0
+archived_at: 2026-04-16T20:08:00-07:00
 started_at: 2026-04-16T19:45:00-07:00
 work_unit_granularity: step  # ### Step N, not ## Phase
 ---
