@@ -146,8 +146,19 @@ progress:
       - "gap: NOAA timestamps are station-local (lst_ldt); Worker emits as-is — consumers should treat temp_observed_at accordingly. NDBC is already UTC."
       - "gap: tide data is in KV records but static/js/conditions.js does not yet populate <dd data-field='tide'> — deferred"
       - "user-action: REPLACE_ME KV ids in wrangler.toml must be filled after `wrangler kv:namespace create CONDITIONS`"
-last_review: 2026-04-16T19:54:00-07:00
-iterations: 15
+  - section: "Phase 6 review follow-ups (magi 2026-04-16)"
+    status: complete
+    notes:
+      - "magi verdict on Phase 6: needs_work (CORS, stale ceiling, toIsoLike, bootstrap, NOAA application param)"
+      - "cors.ts: regex allow-list {prod, *.swimfrancisco.pages.dev, http://localhost:*} via isAllowedOrigin(); corsHeaders/preflight now take Request and echo matched origin (or omit ACAO entirely for disallowed origins)"
+      - "index.ts: threaded Request through jsonResponse/notFound/serviceUnavailable/preflight/405 paths"
+      - "assemble.ts: added isFreshEnough(previous) gating both temp and tide last-good reuse on previous.updated_at < 24h ago — prevents unbounded stale fallbacks"
+      - "noaa.ts: toIsoLike → toLocalIso; interface docs corrected to 'Station-local time, zoneless ISO (NOAA lst_ldt)'; appended &application=SwimFrancisco to temp + tide URLs"
+      - "worker/README.md created: routes, cron, KV bootstrap (wrangler triggers deploy + wrangler cron trigger to avoid 1h cold-start 503), local dev commands"
+      - "tests_status: passed — npm run typecheck zero errors, zola build still green"
+      - "deferred: Cache API in front of KV (magi #6) — scale-dependent, skipped per reviewer note"
+last_review: 2026-04-16T19:58:00-07:00
+iterations: 16
 no_progress_count: 0
 started_at: 2026-04-16T19:45:00-07:00
 work_unit_granularity: step  # ### Step N, not ## Phase

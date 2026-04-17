@@ -2,16 +2,17 @@
 // Docs: https://api.tidesandcurrents.noaa.gov/api/prod/
 
 const BASE = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter";
+const APPLICATION = "SwimFrancisco";
 
 export interface NoaaTempReading {
   stationId: string;
   waterTempF: number;
   waterTempC: number;
-  observedAt: string; // ISO 8601 UTC
+  observedAt: string; // Station-local time, zoneless ISO (NOAA lst_ldt)
 }
 
 export interface NoaaTidePrediction {
-  time: string; // ISO 8601 UTC
+  time: string; // Station-local time, zoneless ISO (NOAA lst_ldt)
   type: "H" | "L";
   valueFt: number;
 }
@@ -31,14 +32,12 @@ interface NoaaPredictionsResponse {
   error?: { message?: string };
 }
 
-// Parse NOAA's "YYYY-MM-DD HH:MM" local-time-of-station into an ISO UTC string.
-// The API returns times in `time_zone=lst_ldt` (local standard/daylight). We
-// cannot precisely convert without a tz database; emit the timestamp with a
-// trailing "Z" assumption would be wrong. Instead, treat it as opaque local
-// and append a " local" marker. For v1 consumers only render the date/time as
-// received; we preserve the original string in the `observed_at_local` field
-// upstream. Here we emit an ISO-ish string by replacing the space with "T".
-function toIsoLike(ts: string): string {
+// Normalize NOAA's "YYYY-MM-DD HH:MM" station-local timestamp into an
+// ISO-like form "YYYY-MM-DDTHH:MM:SS" (no trailing zone). We do NOT assume
+// UTC — the API returns `time_zone=lst_ldt` (local standard / daylight) and
+// we lack a tz database to convert precisely. Downstream consumers tolerate
+// zoneless strings.
+function toLocalIso(ts: string): string {
   // Input like "2026-04-16 14:30". Return "2026-04-16T14:30:00" (no zone).
   const trimmed = ts.trim();
   const withT = trimmed.replace(" ", "T");
@@ -46,7 +45,7 @@ function toIsoLike(ts: string): string {
 }
 
 async function fetchNoaaTemp(stationId: string): Promise<NoaaTempReading | null> {
-  const url = `${BASE}?product=water_temperature&station=${stationId}&units=english&time_zone=lst_ldt&format=json&date=latest`;
+  const url = `${BASE}?product=water_temperature&station=${stationId}&units=english&time_zone=lst_ldt&format=json&date=latest&application=${APPLICATION}`;
   const res = await fetch(url, { headers: { accept: "application/json" } });
   if (!res.ok) throw new Error(`NOAA temp ${stationId} HTTP ${res.status}`);
   const body = (await res.json()) as NoaaTempResponse;
@@ -60,7 +59,7 @@ async function fetchNoaaTemp(stationId: string): Promise<NoaaTempReading | null>
     stationId,
     waterTempF: Math.round(waterTempF * 10) / 10,
     waterTempC: Math.round(waterTempC * 10) / 10,
-    observedAt: toIsoLike(latest.t),
+    observedAt: toLocalIso(latest.t),
   };
 }
 
@@ -85,7 +84,7 @@ export async function fetchTempWithFallback(
 }
 
 export async function fetchNoaaTides(stationId: string): Promise<NoaaTideData | null> {
-  const url = `${BASE}?product=predictions&station=${stationId}&units=english&time_zone=lst_ldt&datum=MLLW&format=json&date=today&interval=hilo`;
+  const url = `${BASE}?product=predictions&station=${stationId}&units=english&time_zone=lst_ldt&datum=MLLW&format=json&date=today&interval=hilo&application=${APPLICATION}`;
   const res = await fetch(url, { headers: { accept: "application/json" } });
   if (!res.ok) throw new Error(`NOAA tides ${stationId} HTTP ${res.status}`);
   const body = (await res.json()) as NoaaPredictionsResponse;
@@ -96,7 +95,7 @@ export async function fetchNoaaTides(stationId: string): Promise<NoaaTideData | 
       const valueFt = Number(row.v);
       const type = row.type === "H" || row.type === "L" ? row.type : null;
       if (!Number.isFinite(valueFt) || !type) return null;
-      return { time: toIsoLike(row.t), type, valueFt: Math.round(valueFt * 100) / 100 };
+      return { time: toLocalIso(row.t), type, valueFt: Math.round(valueFt * 100) / 100 };
     })
     .filter((p): p is NoaaTidePrediction => p !== null);
   return { stationId, predictions };

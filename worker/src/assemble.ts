@@ -25,6 +25,18 @@ export interface SpotConditions {
 
 export type AllConditions = Record<string, SpotConditions>;
 
+const FRESHNESS_CEILING_MS = 24 * 60 * 60 * 1000;
+
+// Gate all last-good reuse on assembly age. `updated_at` is always a proper
+// UTC ISO (set by `assembleAndPersist`), safe to parse regardless of whether
+// individual upstream timestamps are zoneless (NOAA) or UTC (NDBC).
+function isFreshEnough(previous: SpotConditions | null): boolean {
+  if (!previous) return false;
+  const ts = Date.parse(previous.updated_at);
+  if (!Number.isFinite(ts)) return false;
+  return Date.now() - ts < FRESHNESS_CEILING_MS;
+}
+
 function tideToSummary(data: NoaaTideData | null): TideSummary | null {
   if (!data) return null;
   return {
@@ -46,6 +58,7 @@ async function assembleSpot(
   kv: KVNamespace,
 ): Promise<SpotConditions> {
   const previous = await readSpot(kv, spot.slug);
+  const fresh = isFreshEnough(previous);
   let stale = false;
 
   // Temperature
@@ -77,7 +90,7 @@ async function assembleSpot(
     console.error(`Temp fetch failed for ${spot.slug}:`, err);
   }
 
-  if (waterTempF === null && previous) {
+  if (waterTempF === null && previous && fresh) {
     waterTempF = previous.water_temp_f;
     waterTempC = previous.water_temp_c;
     tempObservedAt = previous.temp_observed_at;
@@ -100,7 +113,7 @@ async function assembleSpot(
     tideCache.set(spot.tideStationId, tide);
   }
 
-  if (tide === null && previous?.tide) {
+  if (tide === null && previous?.tide && fresh) {
     tide = previous.tide;
     stale = true;
   }

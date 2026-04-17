@@ -13,51 +13,51 @@ export interface Env {
 
 const JSON_CACHE_CONTROL = "public, max-age=60, s-maxage=300";
 
-function jsonResponse(body: string, status = 200): Response {
+function jsonResponse(request: Request, body: string, status = 200): Response {
   return new Response(body, {
     status,
     headers: {
       "content-type": "application/json; charset=utf-8",
       "cache-control": JSON_CACHE_CONTROL,
-      ...corsHeaders(),
+      ...corsHeaders(request),
     },
   });
 }
 
-function notFound(message: string): Response {
+function notFound(request: Request, message: string): Response {
   return new Response(message, {
     status: 404,
-    headers: { "content-type": "text/plain; charset=utf-8", ...corsHeaders() },
+    headers: { "content-type": "text/plain; charset=utf-8", ...corsHeaders(request) },
   });
 }
 
-function serviceUnavailable(message: string): Response {
+function serviceUnavailable(request: Request, message: string): Response {
   return new Response(message, {
     status: 503,
-    headers: { "content-type": "text/plain; charset=utf-8", ...corsHeaders() },
+    headers: { "content-type": "text/plain; charset=utf-8", ...corsHeaders(request) },
   });
 }
 
-async function handleAll(env: Env): Promise<Response> {
+async function handleAll(request: Request, env: Env): Promise<Response> {
   const raw = await readAllRaw(env.CONDITIONS);
-  if (!raw) return serviceUnavailable("conditions not yet available");
-  return jsonResponse(raw);
+  if (!raw) return serviceUnavailable(request, "conditions not yet available");
+  return jsonResponse(request, raw);
 }
 
-async function handleSpot(env: Env, slug: string): Promise<Response> {
+async function handleSpot(request: Request, env: Env, slug: string): Promise<Response> {
   const raw = await readSpotRaw(env.CONDITIONS, slug);
-  if (!raw) return notFound(`no conditions for slug ${slug}`);
-  return jsonResponse(raw);
+  if (!raw) return notFound(request, `no conditions for slug ${slug}`);
+  return jsonResponse(request, raw);
 }
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    if (request.method === "OPTIONS") return preflight();
+    if (request.method === "OPTIONS") return preflight(request);
 
     if (request.method !== "GET") {
       return new Response("method not allowed", {
         status: 405,
-        headers: { "content-type": "text/plain; charset=utf-8", ...corsHeaders() },
+        headers: { "content-type": "text/plain; charset=utf-8", ...corsHeaders(request) },
       });
     }
 
@@ -65,15 +65,15 @@ export default {
     const path = url.pathname.replace(/\/+$/, "");
 
     if (path === "/api/conditions") {
-      return handleAll(env);
+      return handleAll(request, env);
     }
 
     const spotMatch = path.match(/^\/api\/conditions\/([a-z0-9-]+)$/);
     if (spotMatch) {
-      return handleSpot(env, spotMatch[1]);
+      return handleSpot(request, env, spotMatch[1]);
     }
 
-    return notFound("not found");
+    return notFound(request, "not found");
   },
 
   async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
