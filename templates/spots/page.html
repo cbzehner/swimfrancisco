@@ -128,3 +128,8 @@
     </section>
   {% endif %}
 {% endblock %}
+{% block scripts %}
+  {% if page.extra.type == "open_water" %}
+    <script src="{{ get_url(path='js/conditions.js') }}" defer></script>
+  {% endif %}
+{% endblock %}

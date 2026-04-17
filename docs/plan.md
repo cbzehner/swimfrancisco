@@ -90,10 +90,21 @@ progress:
       - "tests_status: passed — zola check + zola build both succeed, public/js/status.js + script tag verified"
       - "data-finding: only hamilton-pool has sessions populated; 8 other pools render STATUS/NEXT as em-dash (Step 3 gap carries forward)"
       - "followup: Step 12 flap trigger will need to re-run applyStatuses + sortRows + reorderDom after filter change, toggling .flap + --flap-index"
-last_review: 2026-04-16T19:43:30-07:00
-iterations: 10
+  - section: "Step 11: Conditions fetch script"
+    status: complete
+    notes:
+      - "static/js/conditions.js: pure extractTemp(record), async fetchConditions(url), applyConditions(root, conditions)"
+      - "endpoint configurable via window.SWIMFRANCISCO_API, default /api/conditions"
+      - "accepts water_temp_f or water_temp_c (converted); renders integer °F; silent on any failure (network/non-2xx/bad JSON)"
+      - "wired into templates/index.html {% block scripts %} next to status.js"
+      - "wired into templates/spots/page.html {% block scripts %} guarded by extra.type == 'open_water' — verified only 5 ocean detail pages include it"
+      - "tests_status: passed — zola build green, public/js has both scripts, guards confirmed"
+      - "gap: Worker /api/conditions does not exist yet (Steps 14-15) — script degrades silently until then"
+      - "followup: tide <dd data-field='tide'> hook exists on detail pages but is not populated this step"
+last_review: 2026-04-16T19:46:30-07:00
+iterations: 11
 no_progress_count: 0
-started_at: 2026-04-16T19:04:36-07:00
+started_at: 2026-04-16T19:45:00-07:00
 work_unit_granularity: step  # ### Step N, not ## Phase
 ---
 
