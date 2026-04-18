@@ -64,6 +64,48 @@ export function closureCopy(closure) {
   return `Closed through ${closure.end}`;
 }
 
+const DROP_IN_TYPES = new Set(["lap_swim", "family_swim", "senior_swim"]);
+
+// Return the next drop-in session (lap / family / senior) that starts strictly
+// after `now`, scanning up to 7 days ahead. Skips lessons and facility-wide
+// closed days. Returns `{ program, day, start }` (start in minutes-of-day) or
+// null if none found within the window.
+export function findNextDropIn(schedule, now) {
+  if (!schedule || typeof schedule !== "object") return null;
+  const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
+  const closures = Array.isArray(schedule.closures) ? schedule.closures : [];
+  if (sessions.length === 0) return null;
+
+  const normalized = [];
+  for (const session of sessions) {
+    if (!session || typeof session !== "object") continue;
+    if (!DROP_IN_TYPES.has(session.type)) continue;
+    const day = typeof session.day === "string" ? session.day.toLowerCase() : null;
+    const start = parseHHMM(session.start);
+    if (!day || !DAY_KEYS.includes(day) || start === null) continue;
+    normalized.push({ program: session.type, day, start });
+  }
+  if (normalized.length === 0) return null;
+
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  // Scan offset 0..7 inclusive: today plus each of the next 7 days. The
+  // inclusive upper bound covers the "only-Wednesday lap swim, today is
+  // Wednesday, session already ended" case — without it, the same-weekday
+  // recurrence one week away is missed and the function returns null.
+  for (let offset = 0; offset <= 7; offset += 1) {
+    const date = new Date(now);
+    date.setDate(date.getDate() + offset);
+    if (findActiveClosure(closures, date)) continue;
+    const dayKey = DAY_KEYS[date.getDay()];
+    const candidates = normalized
+      .filter((s) => s.day === dayKey)
+      .filter((s) => offset > 0 || s.start > nowMinutes)
+      .sort((a, b) => a.start - b.start);
+    if (candidates.length > 0) return candidates[0];
+  }
+  return null;
+}
+
 export function computeStatus(schedule, now) {
   const empty = { status: PLACEHOLDER, next: PLACEHOLDER };
   if (!schedule || typeof schedule !== "object") return empty;
