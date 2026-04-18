@@ -14,11 +14,14 @@ progress:
   - section: "Task 3: freshnessLabel helper"
     status: complete
     commit: f0d715d
+  - section: "Task 4: computeDetailStatus basic states"
+    status: complete
+    commit: e0a6bb6
     notes:
       - "gap: plan's reference freshnessLabel body uses now.getTime() directly, failing the 'exactly 30 days' test at 10:00:00 since age = 30.4d > 30. Codex correctly zeroed `now` to local midnight. Consider updating plan source or tightening test's `now` to midnight."
       - "infra: piping codex output through `| tail -N` hangs the invocation; redirect to a file instead"
 last_review: 2026-04-18T01:00:00-07:00
-iterations: 3
+iterations: 4
 no_progress_count: 0
 started_at: 2026-04-18T00:00:00-07:00
 engine: codex
@@ -418,7 +421,7 @@ verification. Powers the Trust Layer freshness dot on detail pages."
 }
 ```
 
-- [ ] **Step 1: Add failing tests for the three basic states**
+- [x] **Step 1: Add failing tests for the three basic states** (Task 4 done — e0a6bb6)
 
 ```js
 import {
