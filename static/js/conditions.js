@@ -3,6 +3,8 @@
 // matching rows on the departure board and the detail page panel.
 // Fails silently — missing data leaves the existing em-dash placeholders.
 
+import { formatTideSummary } from "./helpers/tide.mjs";
+
 const DEFAULT_ENDPOINT = "/api/conditions";
 
 // Format a Fahrenheit temperature from a conditions record.
@@ -51,14 +53,22 @@ function applyConditions(root, conditions) {
     cells[4].textContent = temp;
   });
 
+  const now = new Date();
   const panels = root.querySelectorAll("section.conditions[data-slug]");
   panels.forEach((panel) => {
     const slug = panel.getAttribute("data-slug");
     if (!slug) return;
-    const temp = extractTemp(conditions[slug]);
-    if (!temp) return;
-    const field = panel.querySelector('[data-field="water_temp"]');
-    if (field) field.textContent = temp;
+    const record = conditions[slug];
+    const temp = extractTemp(record);
+    if (temp) {
+      const tempField = panel.querySelector('[data-field="water_temp"]');
+      if (tempField) tempField.textContent = temp;
+    }
+    const tideSummary = formatTideSummary(record, now);
+    if (tideSummary) {
+      const tideField = panel.querySelector('[data-field="tide"]');
+      if (tideField) tideField.textContent = tideSummary;
+    }
   });
 }
 

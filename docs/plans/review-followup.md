@@ -1,5 +1,5 @@
 ---
-status: in_progress
+status: done
 progress:
   - step: 1
     status: done
@@ -16,10 +16,14 @@ progress:
   - step: 5
     status: done
     date: 2026-04-17
+  - step: 6
+    status: done
+    date: 2026-04-17
 last_review: null
 iterations: 2
 no_progress_count: 0
 started_at: 2026-04-17
+completed_at: 2026-04-17
 work_unit_granularity: step
 ---
 
@@ -340,7 +344,7 @@ Definition of done:
 - Active closure copy says `Closed through YYYY-MM-DD`.
 - `node --test tests/js/*.test.mjs` green in CI-friendly form.
 
-### Step 6: Surface tide data on open-water detail pages (finding 3)
+### Step 6: Surface tide data on open-water detail pages (finding 3) — DONE 2026-04-17
 
 Why last: isolated, additive, benefits from the JS helpers added in
 Step 5.
