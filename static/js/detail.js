@@ -1,14 +1,13 @@
 // SwimFrancisco pool detail page.
 // Reads the schedule embedded in .detail-root[data-schedule], hydrates the
-// status slab, injects the today block, marks today's column in the weekly
+// status slab, decorates the today block, marks today's column in the weekly
 // grid, and updates the freshness dot. Pure computation lives in
 // ./helpers/board.mjs (exercised by node:test).
 
 import {
-  DAY_KEYS,
   computeDetailStatus,
-  freshnessLabel,
   formatHHMM,
+  parseHHMM,
 } from "./helpers/board.mjs";
 
 const PROGRAM_LABEL = {
@@ -26,6 +25,10 @@ const DAY_LABEL_SHORT = {
   friday: "FRI",
   saturday: "SAT",
 };
+
+function parseHHMMSafe(value) {
+  return parseHHMM(typeof value === "string" ? value : "");
+}
 
 function readSchedule(root) {
   const raw = root.getAttribute("data-schedule");
@@ -88,13 +91,63 @@ function applyStatusSlab(root, schedule, now) {
   return result;
 }
 
+function decorateTodayBlock(root, now, statusResult) {
+  const suppressedKinds = new Set([
+    "CLOSED_TODAY",
+    "NOT_VERIFIED",
+    "NO_DROPIN_WEEK",
+    "NO_DROPIN_TODAY",
+  ]);
+
+  const block = root.querySelector(".today-block");
+  if (!block) return;
+  if (suppressedKinds.has(statusResult.kind)) {
+    block.remove();
+    return;
+  }
+
+  const rows = block.querySelectorAll(".today-block-list li");
+  if (rows.length === 0) return;
+
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const parsedRows = Array.from(rows, (row) => {
+    const start = parseHHMMSafe(row.getAttribute("data-start"));
+    const end = parseHHMMSafe(row.getAttribute("data-end"));
+    return { row, start, end };
+  });
+
+  const nextRow = parsedRows.find(({ start, end }) => (
+    start !== null && end !== null && start > nowMinutes
+  ))?.row || null;
+
+  for (const { row, start, end } of parsedRows) {
+    if (start === null || end === null) continue;
+    const timeEl = row.querySelector(".time");
+    const labelEl = row.querySelector(".row-label");
+    if (!timeEl || !labelEl) continue;
+
+    if (start <= nowMinutes && nowMinutes < end) {
+      if (!timeEl.textContent.startsWith("● ")) {
+        timeEl.textContent = `● ${timeEl.textContent}`;
+      }
+      labelEl.textContent = "NOW";
+      continue;
+    }
+
+    if (row === nextRow) {
+      labelEl.textContent = "NEXT";
+    }
+  }
+}
+
 function init() {
   const root = document.querySelector(".detail-root");
   if (!root) return;
   const schedule = readSchedule(root);
   if (!schedule) return;
   const now = new Date();
-  applyStatusSlab(root, schedule, now);
+  const result = applyStatusSlab(root, schedule, now);
+  decorateTodayBlock(root, now, result);
 }
 
 if (document.readyState === "loading") {
