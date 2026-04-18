@@ -190,29 +190,6 @@ table.board {
   margin: 1rem 0;
 }
 
-.schedule-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 0.5rem 0 1.5rem;
-
-  th,
-  td {
-    text-align: left;
-    padding: 0.4rem 0.6rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-size: 0.85rem;
-  }
-
-  thead th {
-    border-bottom: 1px solid var(--fg);
-  }
-
-  tbody td {
-    border-bottom: 1px solid var(--row-sep);
-  }
-}
-
 .conditions dl {
   display: grid;
   grid-template-columns: max-content 1fr;
@@ -232,8 +209,7 @@ table.board {
 
 .hazards ul,
 .clubs ul,
-.distances ul,
-.closures ul {
+.distances ul {
   list-style: none;
   padding: 0;
   margin: 0.5rem 0;
@@ -559,4 +535,67 @@ table.board tbody tr.flap {
   .weekly-grid-cell[data-empty="true"] {
     display: none;
   }
+}
+
+// Closure banners ---------------------------------------------------------
+
+.closure-banners {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.closure-banner {
+  border-left: 3px solid var(--fg);
+  background: rgba(245, 197, 24, 0.08);
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.closure-banner-date,
+.closure-banner-zone {
+  color: var(--fg);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+.closure-banner-reason {
+  color: var(--fg-dim);
+  flex: 1 1 auto;
+}
+
+// Freshness dot + meta ----------------------------------------------------
+
+.meta-effective,
+.meta-freshness {
+  margin: 0.25rem 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-dim);
+}
+
+.meta-freshness .freshness-dot {
+  color: var(--fg);
+  margin-right: 0.25rem;
+}
+
+.meta-freshness[data-freshness="stale"] .freshness-dot {
+  color: var(--fg-dim);
+}
+
+// Description block (moved from .notes) ----------------------------------
+
+.description {
+  color: var(--fg-dim);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-top: 1.5rem;
+  // Prose stays natural case — do NOT uppercase.
+  text-transform: none;
 }
