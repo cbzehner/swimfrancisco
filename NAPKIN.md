@@ -16,7 +16,7 @@
 
 ## Shell & Command Reliability
 1. **[2026-04-17] `schedules` CLI does not autoload `.env`**
-   Do instead: prefix with `set -a && source .env && set +a &&` when running `uv run schedules extract` with `--compare-with` or any provider call, or the run fails with `GOOGLE_API_KEY is not set.`.
+   Do instead: prefix with `set -a && source .env && set +a &&` when running `uv run schedules extract` or `uv run schedules debug bakeoff` or any provider call, or the run fails with `GOOGLE_API_KEY is not set.`.
 
 ## Domain Behavior Guardrails
 1. **[2026-04-17] Reviewed schedule truth lives in `data/adjudications/`, not in provider output**

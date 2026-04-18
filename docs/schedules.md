@@ -69,17 +69,18 @@ uv run schedules extract
 Run a provider bakeoff on a flagged pool:
 
 ```sh
-uv run schedules extract --provider gemini --compare-with anthropic --only hamilton-pool --force
+uv run schedules debug bakeoff --provider gemini --compare-with anthropic --only hamilton-pool --force
 ```
 
-Useful flags:
+Useful flags on `extract`:
 
 - `--provider anthropic|gemini`
-- `--compare-with anthropic|gemini` — always observational; never writes to
-  `content/spots/` or `data/extraction-state.json`.
 - `--only slug1,slug2`
 - `--force`
-- `--dry-run` — skip all writes even without `--compare-with`.
+- `--dry-run` — skip content/state writes but still produce the report.
+
+`schedules debug bakeoff` is always observational — it never writes to
+`content/spots/` or `data/extraction-state.json`.
 
 **Exit codes:** the `extract` command exits non-zero when any pool failed
 (hard-blocked or errored). Partial failure never exits 0; shell automation
