@@ -2,7 +2,7 @@
 // Pure helpers live in ./helpers/board.mjs and are exercised by node:test;
 // this file handles the DOM glue.
 
-import { PLACEHOLDER, computeStatus, captureBaselineRanks } from "./helpers/board.mjs";
+import { PLACEHOLDER, computeStatus, captureBaselineRanks, nowInPacific } from "./helpers/board.mjs";
 
 // Read and parse the data-schedule attribute; returns null on error.
 function readSchedule(row) {
@@ -59,7 +59,9 @@ function reorderDom(tbody, sortedRows) {
 function init() {
   const tbody = document.querySelector("table.board tbody");
   if (!tbody) return;
-  const now = new Date();
+  // All SF pools are in Pacific; reason about "now" in PT regardless of the
+  // visitor's browser timezone.
+  const now = nowInPacific();
   applyStatuses(document, now);
   const rows = Array.from(tbody.querySelectorAll("tr"));
   const sorted = sortRows(rows);

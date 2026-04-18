@@ -9,6 +9,7 @@ import {
   DAY_KEYS,
   formatHHMM,
   freshnessLabel,
+  nowInPacific,
   parseHHMM,
 } from "./helpers/board.mjs";
 
@@ -165,7 +166,10 @@ function init() {
   if (!root) return;
   const schedule = readSchedule(root);
   if (!schedule) return;
-  const now = new Date();
+  // Every SF pool is in Pacific — reason about time in PT regardless of the
+  // visitor's browser timezone, so the server-rendered today block and the
+  // client-side "NOW" marker agree for non-PT visitors.
+  const now = nowInPacific();
   const result = applyStatusSlab(root, schedule, now);
   decorateTodayBlock(root, now, result);
   markTodayColumn(root, now);

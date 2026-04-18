@@ -3,6 +3,7 @@
 // matching rows on the departure board and the detail page panel.
 // Fails silently — missing data leaves the existing em-dash placeholders.
 
+import { nowInPacific } from "./helpers/board.mjs";
 import { formatTideSummary } from "./helpers/tide.mjs";
 
 const DEFAULT_ENDPOINT = "/api/conditions";
@@ -53,7 +54,10 @@ function applyConditions(root, conditions) {
     cells[4].textContent = temp;
   });
 
-  const now = new Date();
+  // Tide predictions arrive as zoneless station-local (Pacific) ISO strings.
+  // Pinning `now` to PT wall-clock keeps the "past" filter correct for
+  // visitors whose browser is outside Pacific time.
+  const now = nowInPacific();
   const panels = root.querySelectorAll("section.conditions[data-slug]");
   panels.forEach((panel) => {
     const slug = panel.getAttribute("data-slug");
