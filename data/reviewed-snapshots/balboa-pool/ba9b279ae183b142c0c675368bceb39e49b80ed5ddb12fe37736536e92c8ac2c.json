@@ -1,4 +1,22 @@
 {
+  "version": 1,
+  "slug": "balboa-pool",
+  "pdf_sha256": "ba9b279ae183b142c0c675368bceb39e49b80ed5ddb12fe37736536e92c8ac2c",
+  "reviewed_at": "2026-04-17",
+  "summary": "Manual review of the Spring 2026 Balboa PDF. Keep Gemini's deeper pool/family split, add the Tuesday parent-child intro block as lessons, extend Tuesday lap swim through 16:00 per 'Lap until 4pm', and add the Friday masters block as lap swim while omitting SFUSD-only rows.",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28547",
+  "reviewed_against": [
+    {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-6",
+      "artifact_relpath": "data/artifacts/balboa-pool/ba9b279ae183/anthropic-claude-sonnet-4-6.json"
+    },
+    {
+      "provider": "gemini",
+      "model": "gemini-3-1-flash-lite-preview",
+      "artifact_relpath": "data/artifacts/balboa-pool/ba9b279ae183/gemini-gemini-3-1-flash-lite-preview.json"
+    }
+  ],
   "payload": {
     "closures": [
       {
@@ -169,13 +187,5 @@
         "type": "lap_swim"
       }
     ]
-  },
-  "pdf_sha256": "ba9b279ae183b142c0c675368bceb39e49b80ed5ddb12fe37736536e92c8ac2c",
-  "reviewed_at": "2026-04-17",
-  "slug": "balboa-pool",
-  "source_artifacts": {
-    "anthropic": "data/artifacts/balboa-pool/ba9b279ae183/anthropic-claude-sonnet-4-6.json",
-    "gemini": "data/artifacts/balboa-pool/ba9b279ae183/gemini-gemini-3-1-flash-lite-preview.json"
-  },
-  "summary": "Manual review of the Spring 2026 Balboa PDF. Keep Gemini's deeper pool/family split, add the Tuesday parent-child intro block as lessons, extend Tuesday lap swim through 16:00 per 'Lap until 4pm', and add the Friday masters block as lap swim while omitting SFUSD-only rows."
+  }
 }

@@ -1,4 +1,22 @@
 {
+  "version": 1,
+  "slug": "garfield-pool",
+  "pdf_sha256": "f8aa854fe49746a1091e39998486a25e709afab95d80844c4f3db440f7b85dbc",
+  "reviewed_at": "2026-04-17",
+  "summary": "Manual review of the Garfield Spring 2026 PDF. Keep the public lap/family/senior structure from Gemini, preserve small-pool public exercise rows, and drop school-only / misaligned lesson rows that do not correspond to public programs in the PDF.",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28495",
+  "reviewed_against": [
+    {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-6",
+      "artifact_relpath": "data/artifacts/garfield-pool/f8aa854fe497/anthropic-claude-sonnet-4-6.json"
+    },
+    {
+      "provider": "gemini",
+      "model": "gemini-3-1-flash-lite-preview",
+      "artifact_relpath": "data/artifacts/garfield-pool/f8aa854fe497/gemini-gemini-3-1-flash-lite-preview.json"
+    }
+  ],
   "payload": {
     "closures": [
       {
@@ -254,13 +272,5 @@
         "type": "family_swim"
       }
     ]
-  },
-  "pdf_sha256": "f8aa854fe49746a1091e39998486a25e709afab95d80844c4f3db440f7b85dbc",
-  "reviewed_at": "2026-04-17",
-  "slug": "garfield-pool",
-  "source_artifacts": {
-    "anthropic": "data/artifacts/garfield-pool/f8aa854fe497/anthropic-claude-sonnet-4-6.json",
-    "gemini": "data/artifacts/garfield-pool/f8aa854fe497/gemini-gemini-3-1-flash-lite-preview.json"
-  },
-  "summary": "Manual review of the Garfield Spring 2026 PDF. Keep the public lap/family/senior structure from Gemini, preserve small-pool public exercise rows, and drop school-only / misaligned lesson rows that do not correspond to public programs in the PDF."
+  }
 }

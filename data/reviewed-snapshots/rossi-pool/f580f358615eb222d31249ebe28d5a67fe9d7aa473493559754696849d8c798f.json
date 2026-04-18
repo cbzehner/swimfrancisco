@@ -1,4 +1,22 @@
 {
+  "version": 1,
+  "slug": "rossi-pool",
+  "pdf_sha256": "f580f358615eb222d31249ebe28d5a67fe9d7aa473493559754696849d8c798f",
+  "reviewed_at": "2026-04-17",
+  "summary": "Manual review of the Rossi Spring 2026 PDF. Keep the public lap/senior/lesson rows, and represent the evening shared family/lap blocks as both family and lap on Tuesday, Wednesday, and Thursday.",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28501",
+  "reviewed_against": [
+    {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-6",
+      "artifact_relpath": "data/artifacts/rossi-pool/f580f358615e/anthropic-claude-sonnet-4-6.json"
+    },
+    {
+      "provider": "gemini",
+      "model": "gemini-3-1-flash-lite-preview",
+      "artifact_relpath": "data/artifacts/rossi-pool/f580f358615e/gemini-gemini-3-1-flash-lite-preview.json"
+    }
+  ],
   "payload": {
     "closures": [
       {
@@ -169,13 +187,5 @@
         "type": "lap_swim"
       }
     ]
-  },
-  "pdf_sha256": "f580f358615eb222d31249ebe28d5a67fe9d7aa473493559754696849d8c798f",
-  "reviewed_at": "2026-04-17",
-  "slug": "rossi-pool",
-  "source_artifacts": {
-    "anthropic": "data/artifacts/rossi-pool/f580f358615e/anthropic-claude-sonnet-4-6.json",
-    "gemini": "data/artifacts/rossi-pool/f580f358615e/gemini-gemini-3-1-flash-lite-preview.json"
-  },
-  "summary": "Manual review of the Rossi Spring 2026 PDF. Keep the public lap/senior/lesson rows, and represent the evening shared family/lap blocks as both family and lap on Tuesday, Wednesday, and Thursday."
+  }
 }
