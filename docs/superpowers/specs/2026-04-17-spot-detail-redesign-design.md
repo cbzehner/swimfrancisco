@@ -35,12 +35,12 @@ a redesigned detail page instead.
 - Preserve the departure-board aesthetic (monospace, yellow-on-dark, uppercase)
   — extending it with subtle structure (program group headers, status slab,
   banners) but not breaking with it.
-- Land the smallest viable version of two product directions inline:
+- Land the smallest viable version of one product direction inline:
   - Trust Layer → a facility-level freshness indicator next to
     `LAST VERIFIED`.
-  - Time Scrubber → a `TODAY / TOMORROW` toggle on the Today block.
-- Add cross-nav from each program group back to the homepage board
-  filtered by that program.
+- Add cross-nav from LAP and FAMILY program groups back to the homepage
+  board filtered by that program. (SENIOR cross-nav is deferred — the
+  homepage has no SENIOR filter; adding one is out of scope here.)
 - Work at 1200px desktop and 375px mobile.
 
 ## Non-goals
@@ -50,15 +50,20 @@ a redesigned detail page instead.
 - No full Trust Layer. The footer freshness dot is the only Trust Layer
   element in this spec; per-session freshness / verified / inferred labels
   are a separate project.
-- No full Time Scrubber. The `TODAY / TOMORROW` toggle is the only
-  time-shifting element; arbitrary offsets, presets, and URL-shared state
-  are a separate project.
+- No Time Scrubber of any kind. Neither a `TODAY / TOMORROW` toggle nor
+  date offsets nor presets. The detail page renders today's state only.
+  Time shifting is a separate project.
 - No changes to the homepage board layout or `templates/index.html`. The
   only homepage-adjacent changes are: (1) zone-scoped closure logic in
   `helpers/board.mjs`, (2) `filters.js` accepts a `?filter=<type>` URL
-  parameter on load so the cross-nav links from detail pages work.
+  parameter on load so the cross-nav links from detail pages work. No
+  new filter buttons on the homepage (in particular, no SENIOR filter).
 - No open-water detail page changes. The `extra.type == "open_water"` branch
   in `page.html` is untouched.
+- No sub-day / overnight closure handling. The `closure` schema is
+  `YYYY-MM-DD`-only (whole-day granularity). If SF Rec & Parks publishes
+  an "afternoon only" closure, it is modeled as a full-day closure or
+  omitted — not rendered as a partial banner.
 
 ## User journey framing
 
@@ -70,6 +75,11 @@ The detail page is a **planning surface with a real-time header**.
   program-grouped grid).
 - The tail of the page answers "anything I should know?" (upcoming closures,
   description, meta).
+
+The page renders today only. Planning further ahead — "what about next
+Saturday?" — is a Time Scrubber concern, out of scope here. For today's
+schedule the weekly grid suffices: it shows every day's sessions at a
+glance.
 
 Program is the primary dimension because users arrive with a program
 preference (lap / family / senior) and want to intersect it with their
@@ -87,11 +97,10 @@ Top to bottom:
 3. **Status slab** — bordered block with two rows: `STATUS` and `NEXT`.
    Server-rendered placeholder (`—`); JS hydrates at load.
 4. **Today block** — today's drop-in sessions (lap / family / senior) in a
-   compact list. A `TODAY / TOMORROW` toggle sits just above the session
-   list; flipping it swaps the list to tomorrow's sessions without changing
-   any other part of the page. JS marks the current session `● NOW` and
-   the next one `NEXT` (today view only; tomorrow view has no `NOW`).
-   Server-rendered without decorations; JS adds them and handles the toggle.
+   compact list with a day heading (`TODAY · <WEEKDAY>`). JS marks the
+   current session `● NOW` and the next one `NEXT`. Server-rendered without
+   decorations; JS adds them. No toggle, no tomorrow, no date offset — the
+   page renders today only.
 5. **Weekly grid** — the `WEEKLY · BY PROGRAM` section. Three program rows
    (LAP, FAMILY, SENIOR) × seven day columns (MON–SUN). Sessions stack
    vertically within each cell. Today's column is subtly highlighted. Each
@@ -100,7 +109,10 @@ Top to bottom:
    the homepage board with that program's filter preselected
    (`/?filter=lap_swim`).
 6. **Upcoming closure banner(s)** — one yellow left-border banner per
-   closure falling within the next 14 days. Omitted if none.
+   closure whose `[start, end]` range overlaps `[today, today+14]`. This
+   includes closures already underway (started before today but ending in
+   the window) as well as upcoming closures starting within the window.
+   Omitted if none.
 7. **Description** — existing `{{ page.content }}` prose body, placed below
    the schedule.
 8. **Footer meta** — `SCHEDULE EFFECTIVE <start> → <end>` and
@@ -119,45 +131,74 @@ Rendered server-side with placeholder values; JS replaces them at load. Two
 key-value rows:
 
 - `STATUS` — one of:
-  - `OPEN — <program> UNTIL HH:MM` (drop-in session currently running)
-  - `LESSONS UNTIL HH:MM` (lessons session blocking drop-in)
-  - `CLOSED TODAY — <reason>` (today matches a closure)
-  - `CLOSED — NEXT <program> <day> HH:MM` (outside hours)
+  - `OPEN — <program> UNTIL HH:MM` — a single drop-in program is currently
+    running. Example: `OPEN — LAP UNTIL 14:00`.
+  - `OPEN — <program> + <program> UNTIL HH:MM` — two or more drop-in
+    programs run concurrently (different zones, same facility). Programs
+    listed in schedule order; `UNTIL` is the earliest end time among the
+    overlapping sessions. Example (Balboa Wed): `OPEN — LAP + FAMILY
+    UNTIL 15:00`. This is a real state; see `content/spots/balboa-pool.md`
+    Wednesday where `lap_swim 12:30–15:00` overlaps `family_swim
+    14:00–15:00`.
+  - `LESSONS UNTIL HH:MM` — a lessons session is active and no drop-in
+    session is concurrently active. (If a drop-in session *is* also active,
+    prefer the `OPEN — <program> UNTIL …` form; lessons do not mask
+    drop-in availability.)
+  - `CLOSED TODAY — <reason>` — today falls inside a facility-wide closure.
+  - `CLOSED — NEXT <program> <day> HH:MM` — outside hours on a regular day
+    with drop-in sessions elsewhere this week.
+  - `NO DROP-IN TODAY — NEXT <program> <day> HH:MM` — today is scheduled
+    as lessons-only (no drop-in sessions of any type today). Distinguished
+    from `CLOSED` because the facility is not closed, and distinguished
+    from `OPEN` because no drop-in program is available.
+  - `SCHEDULE NOT YET VERIFIED` — the pool has `last_verified_at` unset or
+    the `sessions` array is empty in the verified content. Distinct from
+    `NO DROP-IN THIS WEEK`.
+  - `NO DROP-IN THIS WEEK` — the pool is verified, but the weekly schedule
+    contains zero drop-in sessions (lessons-only pools or off-season).
 - `NEXT` — the next drop-in session, as `<PROGRAM> · <DAY> HH:MM`. Suppressed
-  when `STATUS` already communicates that info (e.g., `CLOSED TODAY`).
+  when `STATUS` already communicates that info (`CLOSED TODAY`,
+  `CLOSED — NEXT …`, `NO DROP-IN TODAY — NEXT …`, `SCHEDULE NOT YET
+  VERIFIED`, `NO DROP-IN THIS WEEK`).
 
-When a lessons session is active, `STATUS` reads e.g.
-`LESSONS UNTIL 17:30` and `NEXT` reads `FAMILY · TUE 17:30` — the next
-drop-in program after the blocking lessons session.
+State resolution order (first match wins):
+
+1. `SCHEDULE NOT YET VERIFIED` → unverified / empty content.
+2. `CLOSED TODAY` → today intersects a facility-wide (no-zone) closure.
+3. `OPEN — …` → at least one drop-in session is currently active. Prefer
+   over `LESSONS UNTIL …` when any drop-in session overlaps now.
+4. `LESSONS UNTIL …` → a lessons session is active and no drop-in session
+   is concurrently active.
+5. `NO DROP-IN TODAY` → today has lessons sessions but no drop-in sessions
+   and no currently-active session.
+6. `CLOSED — NEXT …` → today has drop-in sessions but none is active and
+   a future drop-in exists this week.
+7. `NO DROP-IN THIS WEEK` → verified schedule contains zero drop-in
+   sessions of any kind.
+
+All boundary comparisons (active-now, next-session) are evaluated in the
+pool's local timezone (America/Los_Angeles) so DST transitions do not
+shift perceived session times.
 
 ## Today block
 
-Renders only `lap_swim`, `family_swim`, `senior_swim` sessions for the current
-day. Suppressed entirely if today is a closed day (the status slab handles
-that). A small `TODAY / TOMORROW` toggle sits above the list:
+Renders only `lap_swim`, `family_swim`, `senior_swim` sessions for the
+current day. Heading: `TODAY · <WEEKDAY>`. Suppressed entirely if today
+is a closed day (the status slab handles that) or if today has zero
+drop-in sessions (the status slab handles that too, via `NO DROP-IN
+TODAY`).
 
 ```
-[TODAY] [TOMORROW]     TUESDAY
+TODAY · TUESDAY
 07:00–08:00   LAP
 10:30–12:00   SENIOR
 ● 12:30–14:00 LAP           NOW
 14:30–15:30   FAMILY        NEXT
 ```
 
-Toggle behavior:
-
-- Default: `TODAY` selected; list shows today's sessions.
-- `TOMORROW` selected: list swaps to tomorrow's sessions; heading changes
-  to `TOMORROW · <WEEKDAY>`; `NOW` prefix/label is suppressed (nothing is
-  "now" tomorrow); `NEXT` label is suppressed (every tomorrow session is
-  equally future).
-- Toggle state is client-side only; not persisted; not URL-reflected.
-- If tomorrow is a full closure day, the list is replaced with
-  `CLOSED TOMORROW — <reason>`.
-
-JS adds the `● NOW` prefix, the `NOW` / `NEXT` right-column labels, and the
-toggle handler. Without JS, the toggle is hidden (CSS default), today's
-sessions render statically, and the decorations are absent.
+JS adds the `● NOW` prefix and the `NOW` / `NEXT` right-column labels.
+Without JS, today's sessions render statically as a plain list with no
+decorations. There is no toggle; the detail page renders today only.
 
 ## Weekly grid (desktop ≥ 760px)
 
@@ -244,7 +285,11 @@ consistently without duplicating the type check.
 ## Aesthetic
 
 - Palette and typography unchanged from the current template: monospace,
-  primary yellow `#f3c640` on dark `#131728`, uppercase for chrome.
+  primary yellow `#f3c640` on dark `#131728`. Uppercase applies to **chrome
+  only** — status lines, program headers, day labels, cross-nav, footer
+  meta. Prose renders in its natural case: closure reasons (e.g.
+  "Aquatic division training"), descriptions (`{{ page.content }}` body),
+  and error fallbacks are not uppercased.
 - New structural elements:
   - Status slab: 1px solid primary border, 10–14px padding, two-column grid.
   - Program group headers: yellow, uppercase, 2px letter-spacing, 1px solid
@@ -263,8 +308,8 @@ consistently without duplicating the type check.
 
 - `templates/spots/page.html` — pool branch rewritten; open-water branch
   unchanged; common header unchanged.
-- `static/js/detail.js` — new module. Handles status slab, today
-  decorations, `TODAY / TOMORROW` toggle, and freshness indicator.
+- `static/js/detail.js` — new module. Handles status slab hydration,
+  today-block `● NOW` / `NEXT` decorations, and freshness indicator.
   Imports `computeStatus`, `findNextDropIn`, and `freshnessLabel`.
 - `static/js/helpers/board.mjs` — add `findNextDropIn(sessions, closures,
   now)`; add `freshnessLabel(last_verified_at, now)` returning
@@ -272,8 +317,8 @@ consistently without duplicating the type check.
   classification and drop-in lesson handling; change closure logic to
   respect `closure.pool`.
 - `static/main.css` (or wherever the current CSS lives) — add rules for the
-  slab, today block, today/tomorrow toggle, weekly grid, cross-nav link,
-  freshness dot, closure banner, mobile breakpoint.
+  slab, today block, weekly grid, cross-nav link, freshness dot, closure
+  banner, mobile breakpoint.
 - `static/js/filters.js` — on page load, read `?filter=<type>` from
   `location.search` and activate the matching filter button. Enables the
   detail page's `→ OTHER LAP POOLS` cross-nav links. Behavior when the
@@ -293,9 +338,27 @@ consistently without duplicating the type check.
 - **Unit (`node:test`)** — `static/js/helpers/board.mjs`:
   - `findNextDropIn`: drop-in later today, drop-in rolls to tomorrow, no
     drop-in this week (open water spot-like edge case), skips lessons,
-    skips facility-wide closed days.
-  - `computeStatus`: active lessons returns `is_drop_in: false`; zone-scoped
-    closure does NOT mark facility closed; facility-wide closure still does.
+    skips facility-wide closed days, skips today when today is a
+    lessons-only day (but returns tomorrow's first drop-in).
+  - `computeStatus`:
+    - Active lessons with no overlapping drop-in → `LESSONS UNTIL HH:MM`
+      with `is_drop_in: false`.
+    - Active lessons with a concurrent drop-in session → `OPEN — <program>
+      UNTIL HH:MM` (drop-in wins over lessons).
+    - Two concurrent drop-in sessions → `OPEN — <a> + <b> UNTIL HH:MM` with
+      the earliest end time (Balboa Wed 14:30 case).
+    - Lessons-only day, no currently-active session → `NO DROP-IN TODAY —
+      NEXT <program> <day> HH:MM`.
+    - Zone-scoped closure (non-empty `closure.pool`) does NOT mark facility
+      closed; `computeStatus` returns the normal open/closed-by-hours
+      result.
+    - Facility-wide closure (empty `closure.pool`) returns `CLOSED TODAY`.
+    - Verified pool with zero drop-in sessions returns `NO DROP-IN THIS
+      WEEK`; unverified pool returns `SCHEDULE NOT YET VERIFIED`.
+    - DST transition: a session spec of `10:00–11:00` on the day clocks
+      jump forward (second Sunday in March) or fall back (first Sunday in
+      November) is evaluated against local wall-clock time, not UTC
+      offset. At `now = 10:30 local`, the session is active on both days.
   - `freshnessLabel`: returns `"fresh"` for dates within 30 days of `now`,
     `"stale"` for older, boundary behavior at exactly 30 days.
 - **Integration** — `zola build` passes for all nine pools plus all open-water
@@ -331,9 +394,9 @@ None blocking. Noted follow-ons (out of scope for this spec):
   natural future footer action. They require a feed-generation endpoint
   (likely via the existing worker), which is out of scope here. Placeholder
   for the link belongs in the footer area next to schedule / freshness meta.
-- A fuller Time Scrubber (arbitrary date offset, "after work" presets,
-  shared URL state) is a separate spec. The `TODAY / TOMORROW` toggle
-  included here is the single-pool, detail-page-sized subset.
+- A Time Scrubber (arbitrary date offset, "after work" presets, shared URL
+  state, even a `TODAY / TOMORROW` toggle) is a separate spec. This page
+  renders today only.
 
 ## Acceptance
 
