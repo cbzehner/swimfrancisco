@@ -124,12 +124,14 @@ def deserialize_flags(raw_flag_details: list | None, raw_messages: list | None =
     return flags
 
 
-def _session_key(session: dict) -> tuple[str, str, str, str]:
+def _session_key(session: dict) -> tuple[str, str, str, str, str, str]:
     return (
         str(session.get("day")),
         str(session.get("type")),
         str(session.get("start")),
         str(session.get("end")),
+        str(session.get("pool", "")),
+        str(session.get("notes", "")),
     )
 
 

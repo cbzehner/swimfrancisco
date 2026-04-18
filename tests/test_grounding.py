@@ -133,3 +133,27 @@ def test_start_variants_with_minutes_skip_hour_only_form():
 
 def test_normalize_strips_periods_and_collapses_whitespace():
     assert _normalize("Lap  Swim   6:00 a.m.") == "lap swim 6:00 am"
+
+
+def test_paraphrased_evidence_with_matching_type_and_time_is_not_grounded():
+    # Evidence is plausible prose containing the right type+time tokens but is
+    # NOT a verbatim substring of the PDF. The grounding check must reject it.
+    pdf_text = _normalize("Lap Swim Monday 6:00 - 7:30 AM")
+    payload = {
+        "sessions": [
+            {
+                "day": "monday",
+                "type": "lap_swim",
+                "start": "06:00",
+                "end": "07:30",
+                "evidence": "Lap Swim Monday from 6am until 7:30am",
+            }
+        ]
+    }
+    result = grounding_from_text(pdf_text, payload)
+    entry = result.sessions[0]
+    assert entry.evidence_in_pdf is False
+    assert entry.start_in_evidence is True
+    assert entry.type_in_evidence is True
+    assert entry.type_in_pdf_text is True
+    assert entry.grounded is False, "paraphrased evidence must not pass grounding"

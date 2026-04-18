@@ -7,6 +7,9 @@ progress:
   - step: 2
     status: done
     date: 2026-04-17
+  - step: 3
+    status: done
+    date: 2026-04-17
 last_review: null
 iterations: 2
 no_progress_count: 0
@@ -217,7 +220,7 @@ Definition of done:
 - Partial failures exit non-zero.
 - `docs/schedules.md` documents the behavior.
 
-### Step 3: Tighten extraction-review correctness (findings 6 + 9)
+### Step 3: Tighten extraction-review correctness (findings 6 + 9) — DONE 2026-04-17
 
 Why now: honest exit codes + safe compare are worth less if grounding
 rubber-stamps fabricated evidence and diffs miss multi-zone disagreement.

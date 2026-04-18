@@ -58,7 +58,7 @@ def grounding_from_text(pdf_text_normalized: str, payload: dict) -> GroundingRes
 
         type_in_evidence = bool(tokens) and any(token in evidence for token in tokens)
 
-        ok = type_in_evidence and start_in_evidence and type_in_pdf_text
+        ok = all((evidence_in_pdf, type_in_evidence, start_in_evidence, type_in_pdf_text))
         if ok:
             grounded += 1
 
