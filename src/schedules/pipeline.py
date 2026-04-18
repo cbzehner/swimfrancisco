@@ -8,10 +8,15 @@ from .fetch import fetch_pdf
 from .grounding import grounding_from_text, normalize_pdf_text
 from .merge import merge, read_schedule_snapshot
 from .models import Failed, GroundingResult, PoolEntry, PoolResult, Proposed, ReviewNote, Skipped, Unchanged
-from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH
+from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH, relative_to_repo
 from .providers import extract as extract_with_provider
 from .registry import load_registry
-from .reviewed_snapshots import load_reviewed_snapshot
+from .reviewed_snapshots import (
+    canonicalize_payload,
+    find_snapshots_for_slug,
+    load_reviewed_snapshot,
+    write_ratified_snapshot,
+)
 from .review import compare_payloads
 from .report import write_report
 from .schema import EXTRACTION_SCHEMA
@@ -125,6 +130,7 @@ def run_pipeline(
             continue
 
         try:
+            write_allowed_pre = not (dry_run or compare_with is not None)
             fetch_result = fetch_pdf(entry.slug, entry.pdf_url, force=force)
             snapshot, snapshot_sha256, snapshot_path = load_reviewed_snapshot(entry.slug, fetch_result.sha256)
             if (
@@ -195,6 +201,41 @@ def run_pipeline(
                     cost_estimate=cost_estimate,
                     grounding=primary_grounding,
                 )
+
+                if snapshot is None:
+                    ratified_from_sha256: str | None = None
+                    canonical_payload = canonicalize_payload(payload)
+                    for existing_snapshot_path in find_snapshots_for_slug(entry.slug):
+                        try:
+                            existing_sha = existing_snapshot_path.stem
+                            existing, _, _ = load_reviewed_snapshot(entry.slug, existing_sha)
+                        except ValueError:
+                            continue
+                        if existing and canonicalize_payload(existing["payload"]) == canonical_payload:
+                            ratified_from_sha256 = existing_sha
+                            break
+
+                    if ratified_from_sha256 and write_allowed_pre:
+                        new_snapshot_path = write_ratified_snapshot(
+                            slug=entry.slug,
+                            pdf_sha256=fetch_result.sha256,
+                            source_pdf_url=entry.pdf_url,
+                            payload=payload,
+                            reviewed_against=[{"provider": provider, "model": model}],
+                            ratified_from_sha256=ratified_from_sha256,
+                        )
+                        result_provider = "reviewed-snapshot"
+                        model = "manual-review"
+                        cost_estimate = "ratified"
+                        artifact_paths["reviewed-snapshot"] = relative_to_repo(new_snapshot_path)
+                        snapshot_notes = f"Auto-ratified against {ratified_from_sha256[:12]}."
+                        review_notes.append(
+                            ReviewNote(
+                                kind="ratified",
+                                message=f"Provider payload canonicalizes to reviewed snapshot {ratified_from_sha256[:12]}.",
+                                severity="info",
+                            )
+                        )
             validation = validate(payload, prior_sessions_count=prior_sessions_count)
 
             if compare_with:

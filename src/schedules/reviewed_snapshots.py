@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from datetime import date
 from pathlib import Path
 
 from .paths import REVIEWED_SNAPSHOTS_DIR, relative_to_repo
@@ -95,3 +96,40 @@ def canonicalize_payload(payload: dict) -> dict:
     if "schedule_effective_end" in payload and payload["schedule_effective_end"] is not None:
         canonical["schedule_effective_end"] = payload["schedule_effective_end"]
     return canonical
+
+
+def find_snapshots_for_slug(slug: str, *, root: Path = REVIEWED_SNAPSHOTS_DIR) -> list[Path]:
+    """Return every snapshot file for a slug, regardless of pdf_sha256."""
+    slug_dir = root / slug
+    if not slug_dir.is_dir():
+        return []
+    return sorted(slug_dir.glob("*.json"))
+
+
+def write_ratified_snapshot(
+    *,
+    slug: str,
+    pdf_sha256: str,
+    source_pdf_url: str,
+    payload: dict,
+    reviewed_against: list[dict],
+    ratified_from_sha256: str,
+    root: Path = REVIEWED_SNAPSHOTS_DIR,
+) -> Path:
+    """Write a new snapshot that was auto-ratified by matching a prior one."""
+    path = reviewed_snapshot_path(slug, pdf_sha256, root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    envelope = {
+        "version": REVIEWED_SNAPSHOT_VERSION,
+        "slug": slug,
+        "pdf_sha256": pdf_sha256,
+        "reviewed_at": date.today().isoformat(),
+        "reviewed_by": "ratification",
+        "source_pdf_url": source_pdf_url,
+        "reviewed_against": reviewed_against,
+        "ratified_from_sha256": ratified_from_sha256,
+        "summary": f"Auto-ratified: canonical payload matches {ratified_from_sha256[:12]}.",
+        "payload": payload,
+    }
+    path.write_text(json.dumps(envelope, indent=2) + "\n")
+    return path
