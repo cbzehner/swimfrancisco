@@ -4,6 +4,7 @@ import os
 
 import click
 
+from .models import Failed, PoolResult, Proposed, Skipped, Unchanged
 from .pipeline import run_pipeline
 
 
@@ -25,13 +26,13 @@ def _parse_slugs(only: str | None) -> list[str] | None:
     return slugs
 
 
-def _summary_line(results: list) -> str:
+def _summary_line(results: list[PoolResult]) -> str:
     return (
         f"{len(results)} pools processed; "
-        f"{sum(result.status == 'success' for result in results)} succeeded, "
-        f"{sum(result.status == 'unchanged' for result in results)} unchanged, "
-        f"{sum(result.status == 'skipped' for result in results)} skipped, "
-        f"{sum(result.status == 'failed' for result in results)} failed."
+        f"{sum(isinstance(result, Proposed) for result in results)} succeeded, "
+        f"{sum(isinstance(result, Unchanged) for result in results)} unchanged, "
+        f"{sum(isinstance(result, Skipped) for result in results)} skipped, "
+        f"{sum(isinstance(result, Failed) for result in results)} failed."
     )
 
 
