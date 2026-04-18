@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 
 import {
   computeStatus,
+  computeDetailStatus, // NEW
   sortByRank,
   captureBaselineRanks,
   findNextDropIn,
@@ -192,4 +193,88 @@ test("freshnessLabel: missing or invalid input is stale", () => {
   assert.equal(freshnessLabel(null, now), "stale");
   assert.equal(freshnessLabel("", now), "stale");
   assert.equal(freshnessLabel("not-a-date", now), "stale");
+});
+
+const BASIC_SCHEDULE = {
+  sessions: [
+    { day: "tuesday", type: "lap_swim",    start: "07:00", end: "08:00" },
+    { day: "tuesday", type: "lap_swim",    start: "12:30", end: "14:00" },
+    { day: "tuesday", type: "family_swim", start: "14:30", end: "15:30" },
+    { day: "wednesday", type: "lap_swim", start: "09:00", end: "10:15" },
+  ],
+  closures: [],
+};
+
+test("computeDetailStatus OPEN during a single drop-in session", () => {
+  const now = new Date("2026-04-14T13:00:00"); // Tue 13:00 — inside lap 12:30-14:00
+  const r = computeDetailStatus(BASIC_SCHEDULE, now);
+  assert.equal(r.kind, "OPEN");
+  assert.deepEqual(r.activePrograms, ["lap_swim"]);
+  assert.equal(r.activeUntil, 14 * 60);
+  assert.equal(r.is_drop_in, true);
+  assert.equal(r.closureReason, null);
+});
+
+test("computeDetailStatus CLOSED_HOURS between sessions with next drop-in today", () => {
+  const now = new Date("2026-04-14T08:30:00"); // Tue 08:30 — after 07-08 lap, before 12:30 lap
+  const r = computeDetailStatus(BASIC_SCHEDULE, now);
+  assert.equal(r.kind, "CLOSED_HOURS");
+  assert.deepEqual(r.activePrograms, []);
+  assert.equal(r.activeUntil, null);
+  assert.equal(r.is_drop_in, false);
+  assert.deepEqual(r.nextDropIn, { program: "lap_swim", day: "tuesday", start: 12 * 60 + 30 });
+});
+
+test("computeDetailStatus CLOSED_TODAY for facility-wide closure", () => {
+  const withClosure = {
+    sessions: BASIC_SCHEDULE.sessions,
+    closures: [{ start: "2026-04-14", end: "2026-04-14", reason: "In-service training" }],
+  };
+  const now = new Date("2026-04-14T10:00:00");
+  const r = computeDetailStatus(withClosure, now);
+  assert.equal(r.kind, "CLOSED_TODAY");
+  assert.equal(r.closureReason, "In-service training");
+  assert.equal(r.is_drop_in, false);
+  assert.equal(r.nextDropIn.day, "wednesday");
+});
+
+test("computeDetailStatus ignores zone-scoped closures", () => {
+  const zoneOnly = {
+    sessions: BASIC_SCHEDULE.sessions,
+    closures: [{ start: "2026-04-14", end: "2026-04-14", reason: "deep end down", pool: "deep" }],
+  };
+  const now = new Date("2026-04-14T13:00:00");
+  const r = computeDetailStatus(zoneOnly, now);
+  assert.equal(r.kind, "OPEN");
+  assert.equal(r.closureReason, null);
+});
+
+test("computeDetailStatus boundary: now === start is OPEN", () => {
+  // Tue 07:00 exactly — first minute of the 07:00-08:00 lap session.
+  const now = new Date("2026-04-14T07:00:00");
+  const r = computeDetailStatus(BASIC_SCHEDULE, now);
+  assert.equal(r.kind, "OPEN");
+  assert.deepEqual(r.activePrograms, ["lap_swim"]);
+});
+
+test("computeDetailStatus boundary: now === end is CLOSED_HOURS", () => {
+  // Tue 08:00 exactly — the 07:00-08:00 session has ended (half-open
+  // interval). Next session is 12:30 same day.
+  const now = new Date("2026-04-14T08:00:00");
+  const r = computeDetailStatus(BASIC_SCHEDULE, now);
+  assert.equal(r.kind, "CLOSED_HOURS");
+  assert.deepEqual(r.nextDropIn, { program: "lap_swim", day: "tuesday", start: 12 * 60 + 30 });
+});
+
+test("computeDetailStatus NOT_VERIFIED wins over active closure", () => {
+  // A pool with empty sessions + an active facility-wide closure is
+  // "we don't know yet", not "closed today" — Mission Community and
+  // Sava are the real cases.
+  const unverifiedWithClosure = {
+    sessions: [],
+    closures: [{ start: "2026-04-14", end: "2026-04-14", reason: "training" }],
+  };
+  const now = new Date("2026-04-14T10:00:00");
+  const r = computeDetailStatus(unverifiedWithClosure, now);
+  assert.equal(r.kind, "NOT_VERIFIED");
 });

@@ -213,3 +213,79 @@ export function freshnessLabel(isoDate, now) {
   const ageDays = ageMs / 86_400_000;
   return ageDays <= FRESH_WINDOW_DAYS ? "fresh" : "stale";
 }
+
+const EMPTY_DETAIL = Object.freeze({
+  kind: "NOT_VERIFIED",
+  activePrograms: [],
+  activeUntil: null,
+  activeLessonsUntil: null,
+  nextDropIn: null,
+  closureReason: null,
+  is_drop_in: false,
+});
+
+// Normalize the session list into { day, type, start, end } with minute-of-day
+// ints and lowercased day names. Skips malformed rows.
+function normalizeSessions(sessions) {
+  const out = [];
+  for (const session of sessions) {
+    if (!session || typeof session !== "object") continue;
+    const day = typeof session.day === "string" ? session.day.toLowerCase() : null;
+    const type = typeof session.type === "string" ? session.type : null;
+    const start = parseHHMM(session.start);
+    const end = parseHHMM(session.end);
+    if (!day || !DAY_KEYS.includes(day) || !type || start === null || end === null) continue;
+    if (end <= start) continue;
+    out.push({ day, type, start, end });
+  }
+  return out;
+}
+
+export function computeDetailStatus(schedule, now) {
+  if (!schedule || typeof schedule !== "object") return { ...EMPTY_DETAIL };
+
+  const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
+  const closures = Array.isArray(schedule.closures) ? schedule.closures : [];
+
+  // Resolution order (spec): NOT_VERIFIED wins before any closure check.
+  // A pool with empty `sessions` is treated as "we don't know yet", not
+  // "closed today", even if a facility-wide closure is active.
+  const normalized = normalizeSessions(sessions);
+  if (normalized.length === 0) {
+    return { ...EMPTY_DETAIL, kind: "NOT_VERIFIED" };
+  }
+
+  const activeClosure = findActiveClosure(closures, now);
+  if (activeClosure) {
+    return {
+      ...EMPTY_DETAIL,
+      kind: "CLOSED_TODAY",
+      closureReason: typeof activeClosure.reason === "string" ? activeClosure.reason : null,
+      nextDropIn: findNextDropIn(schedule, now),
+    };
+  }
+
+  const todayKey = DAY_KEYS[now.getDay()];
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const activeDropIn = normalized.filter(
+    (s) => s.day === todayKey && DROP_IN_TYPES.has(s.type) && s.start <= nowMinutes && nowMinutes < s.end,
+  );
+
+  if (activeDropIn.length > 0) {
+    return {
+      ...EMPTY_DETAIL,
+      kind: "OPEN",
+      activePrograms: activeDropIn.map((s) => s.type),
+      activeUntil: Math.min(...activeDropIn.map((s) => s.end)),
+      is_drop_in: true,
+      nextDropIn: findNextDropIn(schedule, now),
+    };
+  }
+
+  return {
+    ...EMPTY_DETAIL,
+    kind: "CLOSED_HOURS",
+    nextDropIn: findNextDropIn(schedule, now),
+  };
+}
