@@ -63,3 +63,35 @@ def load_reviewed_snapshot(
 
     fingerprint = hashlib.sha256(json.dumps(raw, sort_keys=True).encode("utf-8")).hexdigest()
     return raw, fingerprint, relative_to_repo(path)
+
+
+_SESSION_COMPARE_KEYS = ("day", "type", "start", "end", "pool")
+_CLOSURE_COMPARE_KEYS = ("start", "end", "reason")
+
+
+def _project(source: dict, keys: tuple[str, ...]) -> dict:
+    return {key: source[key] for key in keys if key in source}
+
+
+def canonicalize_payload(payload: dict) -> dict:
+    """Return a comparison-stable form of an extracted payload.
+
+    Sorts sessions and closures, and strips fields that legitimately vary
+    between a reviewed snapshot and a fresh provider extraction (e.g.
+    `evidence`, free-form `notes`). Used by the ratification check: two
+    payloads with identical canonical forms represent the same schedule.
+    """
+    sessions = [_project(session, _SESSION_COMPARE_KEYS) for session in payload.get("sessions") or []]
+    sessions.sort(key=lambda s: tuple(s.get(key, "") for key in _SESSION_COMPARE_KEYS))
+
+    closures = [_project(closure, _CLOSURE_COMPARE_KEYS) for closure in payload.get("closures") or []]
+    closures.sort(key=lambda c: tuple(c.get(key, "") for key in _CLOSURE_COMPARE_KEYS))
+
+    canonical: dict = {
+        "schedule_effective": payload.get("schedule_effective"),
+        "sessions": sessions,
+        "closures": closures,
+    }
+    if "schedule_effective_end" in payload and payload["schedule_effective_end"] is not None:
+        canonical["schedule_effective_end"] = payload["schedule_effective_end"]
+    return canonical

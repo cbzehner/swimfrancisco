@@ -103,3 +103,78 @@ def test_load_reviewed_snapshot_rejects_mismatched_slug(tmp_path):
     _write_snapshot(root, "hamilton-pool", pdf_sha256, envelope)
     with pytest.raises(ValueError, match="slug"):
         load_reviewed_snapshot("hamilton-pool", pdf_sha256, root=root)
+
+
+from schedules.reviewed_snapshots import canonicalize_payload
+
+
+def test_canonicalize_payload_sorts_sessions():
+    payload = {
+        "schedule_effective": "2026-03-17",
+        "sessions": [
+            {"day": "tuesday", "type": "lap_swim", "start": "12:30", "end": "15:00"},
+            {"day": "monday", "type": "lap_swim", "start": "07:30", "end": "08:30"},
+        ],
+        "closures": [],
+    }
+    canonical = canonicalize_payload(payload)
+    assert [s["day"] for s in canonical["sessions"]] == ["monday", "tuesday"]
+
+
+def test_canonicalize_payload_strips_session_evidence_and_notes():
+    payload = {
+        "schedule_effective": "2026-03-17",
+        "sessions": [
+            {
+                "day": "monday",
+                "type": "lap_swim",
+                "start": "07:30",
+                "end": "08:30",
+                "evidence": "LAP SWIM 7:30-8:30 AM",
+                "notes": "closed 3rd thursday",
+            }
+        ],
+        "closures": [],
+    }
+    canonical = canonicalize_payload(payload)
+    assert "evidence" not in canonical["sessions"][0]
+    assert "notes" not in canonical["sessions"][0]
+
+
+def test_canonicalize_payload_preserves_pool_field():
+    payload = {
+        "schedule_effective": "2026-03-17",
+        "sessions": [
+            {"day": "monday", "type": "lap_swim", "start": "07:30", "end": "08:30", "pool": "deep"}
+        ],
+        "closures": [],
+    }
+    canonical = canonicalize_payload(payload)
+    assert canonical["sessions"][0]["pool"] == "deep"
+
+
+def test_canonicalize_payload_identical_on_equivalent_inputs():
+    a = {
+        "schedule_effective": "2026-03-17",
+        "schedule_effective_end": None,
+        "sessions": [
+            {"day": "monday", "type": "lap_swim", "start": "07:30", "end": "08:30",
+             "evidence": "LAP 7:30-8:30"},
+            {"day": "tuesday", "type": "family_swim", "start": "15:30", "end": "17:00",
+             "evidence": "REC 3:30-5"},
+        ],
+        "closures": [
+            {"start": "2026-05-25", "end": "2026-05-25", "reason": "Holiday Closure"},
+        ],
+    }
+    b = {
+        "sessions": [
+            {"day": "tuesday", "type": "family_swim", "start": "15:30", "end": "17:00"},
+            {"day": "monday", "type": "lap_swim", "start": "07:30", "end": "08:30"},
+        ],
+        "closures": [
+            {"start": "2026-05-25", "end": "2026-05-25", "reason": "Holiday Closure"},
+        ],
+        "schedule_effective": "2026-03-17",
+    }
+    assert canonicalize_payload(a) == canonicalize_payload(b)
