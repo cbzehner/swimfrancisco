@@ -109,8 +109,8 @@ def _normalize_sessions(raw_sessions: list[dict]) -> list[dict[str, str]]:
 
 
 def _normalize_closures(raw_closures: list[dict]) -> list[dict[str, str]]:
-    # Closures are facility-wide, all-day, date-only per the v1 contract; see
-    # docs/schedules.md and docs/plans/review-followup.md Step 1.
+    # Closures are facility-wide, all-day, date-only per the v1 contract
+    # (see docs/schedules.md).
     normalized = []
     for closure in raw_closures:
         item: dict[str, str] = {

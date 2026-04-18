@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from io import BytesIO
 
 from pypdf import PdfReader
@@ -19,8 +20,11 @@ _WS_RE = re.compile(r"\s+")
 
 def compute_grounding(pdf_bytes: bytes, payload: dict) -> GroundingResult:
     reader = PdfReader(BytesIO(pdf_bytes))
-    pdf_text = _normalize("\n".join((page.extract_text() or "") for page in reader.pages))
-    return grounding_from_text(pdf_text, payload)
+    return grounding_from_text(normalize_pdf_text((page.extract_text() or "") for page in reader.pages), payload)
+
+
+def normalize_pdf_text(page_texts: Iterable[str]) -> str:
+    return _normalize("\n".join(page_texts))
 
 
 def grounding_from_text(pdf_text_normalized: str, payload: dict) -> GroundingResult:

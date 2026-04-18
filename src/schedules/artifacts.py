@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .models import GroundingResult, PdfSignals
-from .paths import ARTIFACTS_DIR, REPO_ROOT
+from .paths import ARTIFACTS_DIR, relative_to_repo
 
 
 def save_artifact_bundle(
@@ -79,20 +79,13 @@ def save_artifact_bundle(
     provider_path.write_text(json.dumps(provider_payload, indent=2, sort_keys=True) + "\n")
 
     return {
-        "meta": _relative(meta_path),
-        provider: _relative(provider_path),
+        "meta": relative_to_repo(meta_path),
+        provider: relative_to_repo(provider_path),
     }
 
 
 def _sha256_text(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
-
-
-def _relative(path: Path) -> str:
-    try:
-        return str(path.relative_to(REPO_ROOT))
-    except ValueError:
-        return str(path)
 
 
 def slugify(value: str) -> str:

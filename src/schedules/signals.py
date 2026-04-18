@@ -18,10 +18,13 @@ TIME_RANGE_RE = re.compile(
 )
 
 
-def analyze_pdf(pdf_bytes: bytes) -> PdfSignals:
+def extract_page_texts(pdf_bytes: bytes) -> list[str]:
     reader = PdfReader(BytesIO(pdf_bytes))
-    page_texts = [(page.extract_text() or "") for page in reader.pages]
-    return analyze_page_texts(page_texts)
+    return [(page.extract_text() or "") for page in reader.pages]
+
+
+def analyze_pdf(pdf_bytes: bytes) -> PdfSignals:
+    return analyze_page_texts(extract_page_texts(pdf_bytes))
 
 
 def analyze_page_texts(page_texts: list[str]) -> PdfSignals:

@@ -6,7 +6,7 @@ from .adjudications import load_adjudication
 from .artifacts import save_artifact_bundle
 from .delta import check_delta
 from .fetch import fetch_pdf
-from .grounding import compute_grounding
+from .grounding import grounding_from_text, normalize_pdf_text
 from .merge import merge, read_schedule_snapshot
 from .models import DeltaResult, GroundingResult, PoolResult, ReviewFlag
 from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH
@@ -15,7 +15,7 @@ from .registry import load_registry
 from .review import compare_payloads, string_flags
 from .report import write_report
 from .schema import EXTRACTION_SCHEMA
-from .signals import analyze_pdf, source_flags_for_payload
+from .signals import analyze_page_texts, extract_page_texts, source_flags_for_payload
 from .state import build_state_entry, flags_for_entry, load_state, save_state
 from .validate import validate
 
@@ -157,7 +157,9 @@ def run_pipeline(
                 )
                 continue
 
-            pdf_signals = analyze_pdf(fetch_result.bytes)
+            page_texts = extract_page_texts(fetch_result.bytes)
+            pdf_signals = analyze_page_texts(page_texts)
+            pdf_text_normalized = normalize_pdf_text(page_texts)
             if adjudication and not compare_with:
                 payload = adjudication["payload"]
                 model = "manual-review"
@@ -177,7 +179,7 @@ def run_pipeline(
                 result_provider = provider
                 review_flags = []
                 review_flags.extend(source_flags_for_payload(pdf_signals, payload))
-                primary_grounding = compute_grounding(fetch_result.bytes, payload)
+                primary_grounding = grounding_from_text(pdf_text_normalized, payload)
                 review_flags.extend(_grounding_flags(provider, primary_grounding))
                 adjudication_notes = None
                 review_flags.extend(string_flags(check_delta(payload, prior_state).flags))
@@ -210,7 +212,7 @@ def run_pipeline(
                         prompt,
                         EXTRACTION_SCHEMA,
                     )
-                    compare_grounding = compute_grounding(fetch_result.bytes, compare_payload)
+                    compare_grounding = grounding_from_text(pdf_text_normalized, compare_payload)
                     review_flags.extend(_grounding_flags(compare_with, compare_grounding))
                     artifact_paths.update(
                         save_artifact_bundle(

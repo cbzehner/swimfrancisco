@@ -35,8 +35,11 @@ def fetch_pdf(
         cached_name = cache_index.get(cache_key)
         if isinstance(cached_name, str):
             cached_path = cache_dir / cached_name
-            if cached_path.exists():
+            try:
                 payload = cached_path.read_bytes()
+            except FileNotFoundError:
+                payload = None
+            if payload is not None:
                 sha256 = hashlib.sha256(payload).hexdigest()
                 return FetchResult(
                     path=cached_path,
@@ -57,8 +60,7 @@ def fetch_pdf(
                 sha256 = hashlib.sha256(payload).hexdigest()
                 filename = f"{slug}-{sha256[:12]}.pdf"
                 path = cache_dir / filename
-                if not path.exists():
-                    path.write_bytes(payload)
+                path.write_bytes(payload)
                 cache_index[cache_key] = filename
                 _save_cache_index(index_path, cache_index)
                 return FetchResult(

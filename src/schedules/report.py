@@ -19,7 +19,7 @@ def write_report(results: list[PoolResult], path: Path = REPORT_PATH) -> Path:
         "# Extraction Report",
         "",
         (
-            f"{len(results)}/9 pools processed, {succeeded} succeeded, {unchanged} unchanged, "
+            f"{len(results)} pools processed, {succeeded} succeeded, {unchanged} unchanged, "
             f"{skipped} skipped, {failed} failed, {flagged} flagged for manual review"
         ),
         "",

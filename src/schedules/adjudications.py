@@ -4,7 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from .paths import ADJUDICATIONS_DIR, REPO_ROOT
+from .paths import ADJUDICATIONS_DIR, relative_to_repo
 
 
 def adjudication_path(slug: str, pdf_sha256: str, root: Path = ADJUDICATIONS_DIR) -> Path:
@@ -29,11 +29,4 @@ def load_adjudication(
         raise ValueError(f"{path} is missing a payload object.")
 
     fingerprint = hashlib.sha256(json.dumps(raw, sort_keys=True).encode("utf-8")).hexdigest()
-    return raw, fingerprint, _relative(path)
-
-
-def _relative(path: Path) -> str:
-    try:
-        return str(path.relative_to(REPO_ROOT))
-    except ValueError:
-        return str(path)
+    return raw, fingerprint, relative_to_repo(path)
