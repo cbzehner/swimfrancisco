@@ -1,5 +1,5 @@
 ---
-status: in_progress
+status: complete
 progress:
   - section: "Task 1: Rename the module, directory, state field, and in-repo references"
     status: complete
@@ -28,8 +28,13 @@ progress:
       - "Committed f143030; 71 tests pass (3 new ratification tests + 68)"
       - "Codex subagent refused, mistakenly applying malware-reminder to benign application code. Outer session implemented directly."
       - "Skipped plan Step 7 (single-pool pipeline verification) + Step 8 (full dry-run) because .env is not present in this worktree. Unit tests cover the ratification helpers and pipeline integration."
-last_review: 2026-04-18T09:40:00-07:00
-iterations: 5
+  - section: "Task 6: Document the mental model"
+    status: complete
+    notes:
+      - "Committed 406b582 (docs) + 1074d29 (north-beach summary prose). 71 tests pass."
+      - "Rollout verification: no adjudicat in src/tests/data. Only self-referential mentions remain in this plan file's state-tracking notes."
+last_review: 2026-04-18T10:00:00-07:00
+iterations: 6
 no_progress_count: 0
 started_at: 2026-04-18T08:06:43-07:00
 work_unit_granularity: task
