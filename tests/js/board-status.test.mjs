@@ -345,3 +345,19 @@ test("computeDetailStatus NO_DROPIN_WEEK when all sessions are lessons", () => {
   assert.equal(r.kind, "NO_DROPIN_WEEK");
   assert.equal(r.nextDropIn, null);
 });
+
+test("computeDetailStatus concurrent drop-in (Balboa Wednesday case)", () => {
+  const balboaWed = {
+    sessions: [
+      { day: "wednesday", type: "lap_swim",    start: "12:30", end: "15:00" },
+      { day: "wednesday", type: "family_swim", start: "14:00", end: "15:00" },
+    ],
+    closures: [],
+  };
+  const now = new Date("2026-04-15T14:30:00"); // Wed 14:30 — both active
+  const r = computeDetailStatus(balboaWed, now);
+  assert.equal(r.kind, "OPEN");
+  assert.deepEqual(r.activePrograms.sort(), ["family_swim", "lap_swim"]);
+  assert.equal(r.activeUntil, 15 * 60);
+  assert.equal(r.is_drop_in, true);
+});
