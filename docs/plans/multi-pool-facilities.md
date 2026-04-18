@@ -1,3 +1,13 @@
+> **Superseded — 2026-04-18.** Frontend work (zone rendering on detail pages,
+> zone-scoped closure logic on the homepage, detail-page layout) landed via
+> [`docs/superpowers/plans/2026-04-18-spot-detail-redesign.md`](../superpowers/plans/2026-04-18-spot-detail-redesign.md)
+> and the design spec
+> [`docs/superpowers/specs/2026-04-17-spot-detail-redesign-design.md`](../superpowers/specs/2026-04-17-spot-detail-redesign-design.md).
+> Backend extractor work in this plan (populating `session.pool` from PDFs
+> for multi-zone facilities) remains open as a separate data task.
+
+---
+
 ---
 status: pending
 progress: []
