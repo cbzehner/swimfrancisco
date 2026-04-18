@@ -88,17 +88,35 @@ can trust the exit code.
 
 ## Review Flow
 
+The source of truth for a pool's schedule is `content/spots/<slug>.md`. The
+extractor and reviewed-snapshot machinery are regeneration aids — they
+help produce and verify that file, but they are not parallel authorities.
+
 1. Run `uv run schedules extract`.
 2. Read `tmp/extraction-report.md`.
 3. Review `git diff content/spots/`.
-4. For any pool with `review_note[...]` lines, inspect the raw provider outputs under `data/artifacts/<slug>/<pdf_sha>/`.
-5. If a pool needs a durable manual override, commit a reviewed snapshot under `data/reviewed-snapshots/<slug>/<pdf_sha256>.json`.
-6. Spot-check flagged pools against the source PDF before accepting a content diff.
-7. Commit `content/spots/`, `data/extraction-state.json`, and any new `data/reviewed-snapshots/` files only after the diff looks trustworthy.
+4. For any pool with `review_note[...]` lines, inspect the raw provider
+   outputs under `data/artifacts/<slug>/<pdf_sha>/`.
+5. If a pool needs a durable manual override, commit a reviewed snapshot
+   under `data/reviewed-snapshots/<slug>/<pdf_sha256>.json`. The envelope
+   schema is enforced on load — see `src/schedules/reviewed_snapshots.py`
+   for the required fields.
+6. If the provider catches up to the reviewed payload on a future PDF
+   (same schedule, re-exported PDF), ratification fires automatically and
+   writes a new snapshot at the new hash — no re-review needed.
+7. Spot-check flagged pools against the source PDF before accepting a
+   content diff.
+8. Commit `content/spots/`, `data/extraction-state.json`, and any new
+   `data/reviewed-snapshots/` files only after the diff looks trustworthy.
 
-`data/artifacts/` is a local review cache. Keep it around when you are comparing providers or debugging a bad extraction, but do not commit it by default.
+`data/artifacts/` is a local review cache. Keep it around when comparing
+providers or debugging a bad extraction, but do not commit it by default.
 
-`data/reviewed-snapshots/` is the opposite: it is committed source of truth for PDF hashes that have been manually reviewed. When the extractor sees the same `slug + pdf_sha256` again, it reuses that reviewed payload instead of asking the provider to reinterpret the PDF.
+`data/reviewed-snapshots/` is the opposite: committed, schema-enforced,
+and used by the pipeline to skip re-extraction when the same
+`slug + pdf_sha256` is seen again. Its payloads pass through the same
+validation and grounding that provider output does — human review
+protects against misinterpretation, not typos.
 
 ## Registry Maintenance
 
