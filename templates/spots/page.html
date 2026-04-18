@@ -28,59 +28,40 @@
   </header>
 
   {% if extra.type == "pool" %}
-    {% if extra.website %}
-      <p class="official"><a href="{{ extra.website }}" target="_blank" rel="noopener">Official page</a></p>
-    {% endif %}
-
-    <section class="schedule">
-      <h2>Weekly schedule</h2>
-      {% set sessions = extra.sessions | default(value=[]) %}
-      {% if sessions | length > 0 %}
-        {% set days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] %}
-        <table class="schedule-table">
-          <thead>
-            <tr><th>DAY</th><th>START</th><th>END</th><th>PROGRAM</th><th>POOL</th><th>NOTES</th></tr>
-          </thead>
-          <tbody>
-            {% for day in days %}
-              {% set day_sessions = sessions | filter(attribute="day", value=day) %}
-              {% for s in day_sessions %}
-                <tr>
-                  <td>{{ day | capitalize }}</td>
-                  <td>{{ s.start }}</td>
-                  <td>{{ s.end }}</td>
-                  <td>{{ s.type | replace(from="_", to=" ") | title }}</td>
-                  <td>{{ s.pool | default(value="—") | capitalize }}</td>
-                  <td>{{ s.notes | default(value="—") }}</td>
-                </tr>
-              {% endfor %}
-            {% endfor %}
-          </tbody>
-        </table>
-      {% else %}
-        <p>Schedule not yet verified.</p>
-      {% endif %}
-    </section>
-
+    {% set sessions = extra.sessions | default(value=[]) %}
     {% set closures = extra.closures | default(value=[]) %}
-    {% if closures | length > 0 %}
-      <section class="closures">
-        <h2>Closures</h2>
-        <ul>
-          {% for c in closures %}
-            <li>
-              {% if c.start == c.end %}{{ c.start }}{% else %}{{ c.start }} – {{ c.end }}{% endif %}:
-              {{ c.reason }}
-            </li>
-          {% endfor %}
-        </ul>
-      </section>
-    {% endif %}
+    {% set sessions_json = sessions | json_encode %}
+    {% set closures_json = closures | json_encode %}
+    {% set schedule_json = '{"sessions":' ~ sessions_json ~ ',"closures":' ~ closures_json ~ '}' %}
 
-    <footer class="meta">
-      {% if extra.schedule_effective %}<p>Schedule effective: {{ extra.schedule_effective }}</p>{% endif %}
-      {% if extra.last_verified_at %}<p>Last verified: {{ extra.last_verified_at }}</p>{% endif %}
-    </footer>
+    <div class="detail-root"
+         data-schedule='{{ schedule_json | safe }}'
+         data-last-verified="{{ extra.last_verified_at | default(value='') }}">
+
+      {% if extra.subtype or extra.website %}
+        <p class="official">
+          {% if extra.subtype %}<span class="subtype">{{ extra.subtype | upper }}</span>{% endif %}
+          {% if extra.subtype and extra.website %} · {% endif %}
+          {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">OFFICIAL PAGE</a>{% endif %}
+        </p>
+      {% endif %}
+
+      <section class="status-slab" aria-live="polite">
+        <div class="status-slab-row">
+          <span class="status-slab-label">STATUS</span>
+          <span class="status-slab-value" data-field="status">—</span>
+        </div>
+        <div class="status-slab-row">
+          <span class="status-slab-label">NEXT</span>
+          <span class="status-slab-value" data-field="next">—</span>
+        </div>
+      </section>
+
+      {# Weekly grid, closure banners, footer meta filled in by later tasks. #}
+      <section class="weekly-grid" data-placeholder="weekly"></section>
+      <section class="closure-banners" data-placeholder="closures"></section>
+      <footer class="meta" data-placeholder="meta"></footer>
+    </div>
 
   {% elif extra.type == "open_water" %}
     {% if extra.description_short %}
