@@ -12,8 +12,13 @@ progress:
     notes:
       - "Committed 1649677; 63 tests pass; all 7 snapshots upgraded to v1 envelope"
       - "Codex reformatted snapshot JSON to multi-line sessions (noisier diff, payload byte-equivalent)"
-last_review: 2026-04-18T08:45:00-07:00
-iterations: 2
+  - section: "Task 3: Add canonicalize_payload() helper"
+    status: complete
+    notes:
+      - "Committed 2cc1a71; 67 tests pass"
+      - "Pyright false positives on pytest import + narrow-type None checks in tests — runtime correct"
+last_review: 2026-04-18T09:00:00-07:00
+iterations: 3
 no_progress_count: 0
 started_at: 2026-04-18T08:06:43-07:00
 work_unit_granularity: task
