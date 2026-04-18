@@ -14,10 +14,6 @@ export async function writeSpot(kv: KVNamespace, slug: string, value: SpotCondit
   await kv.put(`${PREFIX}${slug}`, JSON.stringify(value));
 }
 
-export async function readAll(kv: KVNamespace): Promise<AllConditions | null> {
-  return kv.get<AllConditions>(ALL_KEY, "json");
-}
-
 export async function writeAll(kv: KVNamespace, value: AllConditions): Promise<void> {
   await kv.put(ALL_KEY, JSON.stringify(value));
 }

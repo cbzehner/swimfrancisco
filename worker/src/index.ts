@@ -11,7 +11,9 @@ export interface Env {
   CONDITIONS: KVNamespace;
 }
 
-const JSON_CACHE_CONTROL = "public, max-age=60, s-maxage=300";
+// Data refreshes hourly via cron; bound clients to 5min and edge to 15min.
+const JSON_CACHE_CONTROL = "public, max-age=300, s-maxage=900";
+const NEGATIVE_CACHE_CONTROL = "public, max-age=60";
 
 function jsonResponse(request: Request, body: string, status = 200): Response {
   return new Response(body, {
@@ -27,14 +29,22 @@ function jsonResponse(request: Request, body: string, status = 200): Response {
 function notFound(request: Request, message: string): Response {
   return new Response(message, {
     status: 404,
-    headers: { "content-type": "text/plain; charset=utf-8", ...corsHeaders(request) },
+    headers: {
+      "content-type": "text/plain; charset=utf-8",
+      "cache-control": NEGATIVE_CACHE_CONTROL,
+      ...corsHeaders(request),
+    },
   });
 }
 
 function serviceUnavailable(request: Request, message: string): Response {
   return new Response(message, {
     status: 503,
-    headers: { "content-type": "text/plain; charset=utf-8", ...corsHeaders(request) },
+    headers: {
+      "content-type": "text/plain; charset=utf-8",
+      "cache-control": NEGATIVE_CACHE_CONTROL,
+      ...corsHeaders(request),
+    },
   });
 }
 

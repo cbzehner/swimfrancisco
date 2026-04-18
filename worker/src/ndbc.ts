@@ -24,9 +24,11 @@ function parseTimestampUtc(year: string, mo: string, dy: string, hr: string, mn:
   return date.toISOString();
 }
 
+const FETCH_TIMEOUT_MS = 10_000;
+
 export async function fetchNdbc(stationId: string): Promise<NdbcReading | null> {
   const url = `https://www.ndbc.noaa.gov/data/realtime2/${stationId}.txt`;
-  const res = await fetch(url, { headers: { accept: "text/plain" } });
+  const res = await fetch(url, { headers: { accept: "text/plain" }, signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
   if (!res.ok) throw new Error(`NDBC ${stationId} HTTP ${res.status}`);
   const text = await res.text();
   const lines = text.split("\n");

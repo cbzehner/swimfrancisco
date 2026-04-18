@@ -3,6 +3,7 @@
 
 const BASE = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter";
 const APPLICATION = "SwimFrancisco";
+const FETCH_TIMEOUT_MS = 10_000;
 
 export interface NoaaTempReading {
   stationId: string;
@@ -44,12 +45,34 @@ function toLocalIso(ts: string): string {
   return withT.length === 16 ? `${withT}:00` : withT;
 }
 
+async function noaaGet<T extends { error?: { message?: string } }>(
+  label: string,
+  stationId: string,
+  params: Record<string, string>,
+): Promise<T> {
+  const query = new URLSearchParams({
+    station: stationId,
+    units: "english",
+    time_zone: "lst_ldt",
+    format: "json",
+    application: APPLICATION,
+    ...params,
+  });
+  const res = await fetch(`${BASE}?${query}`, {
+    headers: { accept: "application/json" },
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+  });
+  if (!res.ok) throw new Error(`${label} ${stationId} HTTP ${res.status}`);
+  const body = (await res.json()) as T;
+  if (body.error) throw new Error(`${label} ${stationId}: ${body.error.message ?? "unknown error"}`);
+  return body;
+}
+
 async function fetchNoaaTemp(stationId: string): Promise<NoaaTempReading | null> {
-  const url = `${BASE}?product=water_temperature&station=${stationId}&units=english&time_zone=lst_ldt&format=json&date=latest&application=${APPLICATION}`;
-  const res = await fetch(url, { headers: { accept: "application/json" } });
-  if (!res.ok) throw new Error(`NOAA temp ${stationId} HTTP ${res.status}`);
-  const body = (await res.json()) as NoaaTempResponse;
-  if (body.error) throw new Error(`NOAA temp ${stationId}: ${body.error.message ?? "unknown error"}`);
+  const body = await noaaGet<NoaaTempResponse>("NOAA temp", stationId, {
+    product: "water_temperature",
+    date: "latest",
+  });
   const latest = body.data?.[body.data.length - 1];
   if (!latest) return null;
   const waterTempF = Number(latest.v);
@@ -84,11 +107,12 @@ export async function fetchTempWithFallback(
 }
 
 export async function fetchNoaaTides(stationId: string): Promise<NoaaTideData | null> {
-  const url = `${BASE}?product=predictions&station=${stationId}&units=english&time_zone=lst_ldt&datum=MLLW&format=json&date=today&interval=hilo&application=${APPLICATION}`;
-  const res = await fetch(url, { headers: { accept: "application/json" } });
-  if (!res.ok) throw new Error(`NOAA tides ${stationId} HTTP ${res.status}`);
-  const body = (await res.json()) as NoaaPredictionsResponse;
-  if (body.error) throw new Error(`NOAA tides ${stationId}: ${body.error.message ?? "unknown error"}`);
+  const body = await noaaGet<NoaaPredictionsResponse>("NOAA tides", stationId, {
+    product: "predictions",
+    datum: "MLLW",
+    date: "today",
+    interval: "hilo",
+  });
   const rows = body.predictions ?? [];
   const predictions: NoaaTidePrediction[] = rows
     .map((row) => {
