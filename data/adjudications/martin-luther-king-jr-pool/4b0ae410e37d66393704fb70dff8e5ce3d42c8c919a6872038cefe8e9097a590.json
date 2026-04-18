@@ -1,0 +1,231 @@
+{
+  "payload": {
+    "closures": [
+      {
+        "end": "2026-04-16",
+        "reason": "Inservice Training Closure",
+        "start": "2026-04-16"
+      },
+      {
+        "end": "2026-05-21",
+        "reason": "Inservice Training Closure",
+        "start": "2026-05-21"
+      },
+      {
+        "end": "2026-06-06",
+        "reason": "Inservice Training Closure",
+        "start": "2026-06-06"
+      }
+    ],
+    "schedule_effective": "2026-04-07",
+    "schedule_effective_end": "2026-06-06",
+    "sessions": [
+      {
+        "day": "tuesday",
+        "end": "09:00",
+        "start": "07:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "11:00",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "11:00",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "12:00",
+        "start": "11:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:30",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:30",
+        "start": "12:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "19:00",
+        "start": "18:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "10:30",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "10:30",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "12:00",
+        "start": "10:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "12:00",
+        "start": "10:30",
+        "type": "lessons"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:30",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:30",
+        "start": "12:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "20:00",
+        "start": "18:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "09:00",
+        "start": "07:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "11:00",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "11:00",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "12:00",
+        "start": "11:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "15:30",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "15:30",
+        "start": "12:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "19:00",
+        "start": "18:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "10:30",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "10:30",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "friday",
+        "end": "12:00",
+        "start": "10:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "12:00",
+        "start": "10:30",
+        "type": "lessons"
+      },
+      {
+        "day": "friday",
+        "end": "15:30",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "15:30",
+        "start": "12:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "20:00",
+        "start": "18:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "08:30",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "11:00",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "12:00",
+        "start": "09:00",
+        "type": "lessons"
+      },
+      {
+        "day": "saturday",
+        "end": "15:00",
+        "start": "13:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "17:00",
+        "start": "15:30",
+        "type": "lap_swim"
+      }
+    ]
+  },
+  "pdf_sha256": "4b0ae410e37d66393704fb70dff8e5ce3d42c8c919a6872038cefe8e9097a590",
+  "reviewed_at": "2026-04-17",
+  "slug": "martin-luther-king-jr-pool",
+  "source_artifacts": {
+    "anthropic": "data/artifacts/martin-luther-king-jr-pool/4b0ae410e37d/anthropic-claude-sonnet-4-6.json",
+    "gemini": "data/artifacts/martin-luther-king-jr-pool/4b0ae410e37d/gemini-gemini-3-1-flash-lite-preview.json"
+  },
+  "summary": "Manual review of the MLK Jr. Pool Spring 2026 pt.2 PDF. Add Bayview Safety Swim & Splash as open swim on Tue-Fri 16:00-18:00, and drop the incorrectly inferred Tue/Thu 19:00-20:30 open-swim rows because those blocks are adult water polo rather than public rec swim."
+}

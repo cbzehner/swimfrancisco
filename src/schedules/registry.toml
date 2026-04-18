@@ -1,0 +1,49 @@
+[[pool]]
+slug = "balboa-pool"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/28547"
+official_page_url = "https://sfrecpark.org/facilities/facility/details/Balboa-Pool-212"
+
+[[pool]]
+slug = "coffman-pool"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/28553"
+official_page_url = "https://sfrecpark.org/facilities/facility/details/Coffman-Pool-213"
+
+[[pool]]
+slug = "garfield-pool"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/28495"
+official_page_url = "https://sfrecpark.org/facilities/facility/details/Garfield-Pool-214"
+
+[[pool]]
+slug = "hamilton-pool"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/28496"
+official_page_url = "https://sfrecpark.org/facilities/facility/details/Hamilton-Pool-215"
+
+[[pool]]
+slug = "martin-luther-king-jr-pool"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/28771"
+official_page_url = "https://sfrecpark.org/facilities/facility/details/Martin-Luther-King-Jr-Pool-216"
+
+[[pool]]
+slug = "mission-community-pool"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/26289"
+official_page_url = "https://sfrecpark.org/facilities/facility/details/Mission-Community-Pool-217"
+source_status = "missing_current_schedule"
+notes = "As of 2026-04-17 the facility page announced the 2026 opening date but exposed no 2026 schedule PDF; this URL is the last linked Mission PDF and should stay skipped until a current schedule is published."
+
+[[pool]]
+slug = "north-beach-pool"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/28503"
+official_page_url = "https://sfrecpark.org/facilities/facility/details/North-Beach-Pool-218"
+
+[[pool]]
+slug = "rossi-pool"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/28501"
+official_page_url = "https://sfrecpark.org/Facilities/Facility/Details/Rossi-Pool-219"
+
+[[pool]]
+slug = "sava-pool"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/27654"
+official_page_url = "https://sfrecpark.org/facilities/facility/details/Sava-Pool-220"
+source_status = "closed_without_current_schedule"
+notes = "As of 2026-04-17 Sava Pool remained closed for repairs and the facility page only exposed an old Fall 2025 PDF; keep this entry skipped until the pool reopens with a current schedule."
+

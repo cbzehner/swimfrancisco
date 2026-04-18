@@ -1,0 +1,51 @@
+{
+  "slug": "hamilton-pool",
+  "pdf_sha256": "adab5f0df897db91aba3ecfa9499e267fe5341c90843b5db93a425f55c2729ed",
+  "reviewed_at": "2026-04-17",
+  "summary": "Manual hybrid for the Spring 2026 PDF: keep Gemini's masters-to-lap coverage, keep the Tuesday/Thursday lesson blocks, and drop the Wednesday/Friday 15:00-18:00 rows because the source PDF labels those as high school swim meets rather than lessons.",
+  "source_artifacts": {
+    "gemini": "data/artifacts/hamilton-pool/adab5f0df897/gemini-gemini-3-1-flash-lite-preview.json",
+    "anthropic": "data/artifacts/hamilton-pool/adab5f0df897/anthropic-claude-sonnet-4-6.json"
+  },
+  "payload": {
+    "schedule_effective": "2026-03-17",
+    "schedule_effective_end": "2026-06-06",
+    "sessions": [
+      { "day": "tuesday", "type": "lap_swim", "start": "09:00", "end": "11:00" },
+      { "day": "tuesday", "type": "lap_swim", "start": "11:00", "end": "12:30" },
+      { "day": "tuesday", "type": "family_swim", "start": "13:00", "end": "15:00" },
+      { "day": "tuesday", "type": "lap_swim", "start": "13:00", "end": "15:00" },
+      { "day": "tuesday", "type": "lessons", "start": "15:30", "end": "18:00" },
+      { "day": "tuesday", "type": "lap_swim", "start": "18:30", "end": "20:00" },
+      { "day": "wednesday", "type": "lap_swim", "start": "06:30", "end": "08:30" },
+      { "day": "wednesday", "type": "lap_swim", "start": "09:00", "end": "11:00" },
+      { "day": "wednesday", "type": "lap_swim", "start": "11:00", "end": "12:30" },
+      { "day": "wednesday", "type": "family_swim", "start": "13:00", "end": "14:30" },
+      { "day": "wednesday", "type": "lap_swim", "start": "13:00", "end": "14:30" },
+      { "day": "wednesday", "type": "lap_swim", "start": "18:30", "end": "20:00" },
+      { "day": "thursday", "type": "lap_swim", "start": "06:45", "end": "08:15" },
+      { "day": "thursday", "type": "lap_swim", "start": "09:00", "end": "11:00" },
+      { "day": "thursday", "type": "lap_swim", "start": "11:00", "end": "12:30" },
+      { "day": "thursday", "type": "family_swim", "start": "13:00", "end": "14:30" },
+      { "day": "thursday", "type": "lap_swim", "start": "13:00", "end": "14:30" },
+      { "day": "thursday", "type": "lessons", "start": "15:30", "end": "18:00" },
+      { "day": "thursday", "type": "lap_swim", "start": "18:30", "end": "20:00" },
+      { "day": "friday", "type": "lap_swim", "start": "06:30", "end": "08:30" },
+      { "day": "friday", "type": "lap_swim", "start": "09:00", "end": "11:00" },
+      { "day": "friday", "type": "lap_swim", "start": "11:00", "end": "12:30" },
+      { "day": "friday", "type": "family_swim", "start": "13:00", "end": "14:30" },
+      { "day": "friday", "type": "lap_swim", "start": "13:00", "end": "14:30" },
+      { "day": "friday", "type": "family_swim", "start": "18:30", "end": "20:00" },
+      { "day": "saturday", "type": "lap_swim", "start": "09:00", "end": "10:30" },
+      { "day": "saturday", "type": "lessons", "start": "09:00", "end": "12:00" },
+      { "day": "saturday", "type": "family_swim", "start": "13:30", "end": "15:30" },
+      { "day": "saturday", "type": "lap_swim", "start": "16:00", "end": "17:00" }
+    ],
+    "closures": [
+      { "start": "2026-03-19", "end": "2026-03-19", "reason": "Department Training" },
+      { "start": "2026-04-16", "end": "2026-04-16", "reason": "Department Training" },
+      { "start": "2026-05-21", "end": "2026-05-21", "reason": "Department Training" },
+      { "start": "2026-06-06", "end": "2026-06-06", "reason": "Aquatics In Service Training" }
+    ]
+  }
+}

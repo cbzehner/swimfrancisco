@@ -1,5 +1,5 @@
 // SwimFrancisco departure-board filters (Step 12).
-// Wires up the Open Now toggle, Type pills (lap_swim / open_swim /
+// Wires up the Open Now toggle, Type pills (lap_swim /
 // family_swim / open_water), and Near Me button. Each change re-applies
 // visibility + sort and retriggers the split-flap animation on visible rows.
 //
@@ -18,7 +18,7 @@
 // No frameworks, plain DOM APIs, progressive enhancement: without JS the
 // board still renders and all rows remain visible.
 
-const POOL_SESSION_TYPES = new Set(["lap_swim", "open_swim", "family_swim"]);
+const POOL_SESSION_TYPES = new Set(["lap_swim", "family_swim"]);
 const EARTH_RADIUS_MILES = 3958.8;
 
 // Hash routing: short tokens in window.location.hash, joined by "+".
@@ -26,7 +26,6 @@ const EARTH_RADIUS_MILES = 3958.8;
 // (plain <a href>), not a hash token — see view-switcher in the template.
 const TYPE_TOKENS = {
   lap: "lap_swim",
-  open: "open_swim",
   family: "family_swim",
   beach: "open_water",
 };
@@ -97,7 +96,7 @@ function readNumber(row, attr) {
 
 // Pure: does this row match a single type-pill selection?
 // For `open_water` → match rows whose data-type is "open_water".
-// For pool session types (lap_swim/open_swim/family_swim) → true iff any
+// For pool session types (lap_swim/family_swim) → true iff any
 // session inside data-schedule has a matching `type` field.
 function rowMatchesType(row, type) {
   if (type === "open_water") {

@@ -12,6 +12,8 @@
 
   languages.javascript.enable = true;
   languages.javascript.npm.enable = true;
+  dotenv.enable = true;
+  dotenv.filename = [ ".env" ".env.local" ];
 
   # `devenv up` starts both: a Zola build-on-change watcher and wrangler dev.
   # Wrangler serves ./public as static assets and handles /api/* via the Worker,

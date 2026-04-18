@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "swimfrancisco-schedules"
+version = "0.1.0"
+description = "Local PDF schedule extraction pipeline for SwimFrancisco pool content."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+  "anthropic",
+  "click",
+  "google-genai",
+  "httpx",
+  "pypdf",
+  "pytest",
+  "tomlkit",
+]
+
+[project.scripts]
+schedules = "schedules.cli:cli"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/schedules"]
+
+[tool.uv]
+package = true
+

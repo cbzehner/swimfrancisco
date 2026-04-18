@@ -45,13 +45,15 @@ Create a new file at `content/spots/<slug>.md` with TOML frontmatter. See `docs/
 
 For new **open-water** spots, also edit `worker/src/spots.ts` to map the slug to its NOAA temperature station and tide station. Pools do not need worker changes.
 
+For pool schedule refreshes, use the local extractor in `docs/schedules.md`. It is `uv`-managed, reads provider credentials from a gitignored `.env` or `.env.local` loaded by `devenv`'s built-in dotenv integration, can run a `--compare-with` provider pass that saves raw local review artifacts under `data/artifacts/`, and can lock manually reviewed payloads to a specific PDF hash via committed files in `data/adjudications/`.
+
 ## Tech stack
 
 Zola, plain JS (no build step for frontend), Leaflet (lazy-loaded for map view), Cloudflare Pages + Workers + KV, devenv/Nix for the dev shell.
 
 ## Known gaps
 
-- Only `hamilton-pool` has a verified `sessions[]` schedule today. The other 8 pools have empty sessions and need their data backfilled from SF Rec & Parks PDF schedules.
+- All 7 pools with current published schedule PDFs now have manually adjudicated `sessions[]` data. `mission-community-pool` and `sava-pool` still depend on upstream publishing a current schedule PDF.
 - Lat/lng for all spots are best-estimate geocodes; re-verify before any distance-critical UX work.
 - Worker bootstrap: after first deploy `/api/conditions` returns 503 until the first hourly cron fires — see `docs/deploy.md` for the manual trigger command.
 
@@ -62,6 +64,6 @@ TBD.
 ## Links
 
 - [`docs/spec.md`](docs/spec.md) — product spec and content schema
-- [`docs/plan.md`](docs/plan.md) — implementation plan
+- [`docs/schedules.md`](docs/schedules.md) — pool schedule extraction workflow
 - [`docs/deploy.md`](docs/deploy.md) — deploy runbook
 - [`worker/README.md`](worker/README.md) — Worker-specific notes

@@ -1,0 +1,33 @@
+Extract the weekly pool schedule from this SF Recreation and Parks PDF.
+
+Return only structured data that matches the provided JSON schema.
+
+Allowed session types:
+- `lap_swim` — LAP SWIM
+- `family_swim` — REC/FAMILY SWIM, REC SWIM, RECREATION SWIM, FAMILY SWIM (all of these are the same program; always emit `family_swim`)
+- `senior_swim` — SENIOR SWIM, SENIOR/THERAPY, SENIOR ACCESS SWIM
+- `lessons` — SWIM LESSONS, LEARN TO SWIM, ADULT LESSONS, PARENT/CHILD INTRO, PRE-SCHOOL LESSONS
+
+Programs to ignore (do NOT emit as sessions):
+- WATER EXERCISE, DEEP WATER EXERCISE, EXERCISE, DEEP WATER H2O AEROBICS, AEROBICS — these are instructor-led aerobics classes.
+- SELF GUIDED EXERCISE, SENIOR/SELF GUIDED EXERCISE — access-controlled exercise programs, not drop-in swim.
+- MASTERS SWIMMING, MASTERS SWIM TEAM, YOUTH SYNCHRO, ADULT SYNCHRO, ADULT HOCKEY, ADULT WATER POLO, PIRANHAS SWIM, JUNIOR PIRANHAS SWIM — private team/club bookings.
+- SFUSD CLASS, SFUSD — school-only bookings. Record these as a closure entry for that day and time instead, with reason "SFUSD class".
+
+Rules:
+- Emit sessions exactly as the PDF shows; do not infer missing programs or dates.
+- Never invent a new session type. If a program is not in the allowed list and not in the ignore list, omit it.
+- Times must use 24-hour HH:MM format.
+- If a session ends at midnight, use 23:59.
+- If the PDF lists holiday, maintenance, training, or seasonal closures, include them in closures[].
+- If no closures are listed, return an empty closures array.
+- schedule_effective is the schedule start date.
+- If the PDF explicitly lists an end date for the schedule period, set schedule_effective_end to that ISO date. Otherwise return null.
+- closures.start and closures.end must be ISO dates (YYYY-MM-DD).
+- Preserve distinct sessions even if they share the same day or type.
+- Do not emit the same (day, type, start, end) tuple more than once.
+- If a cell contains two session types separated by `/` or `&` (e.g. `REC/FAMILY SWIM / LAP SWIM`), emit one session per type. If the cell notes a different end time for one of them (e.g. `Lap until 4pm`), apply that end time to the matching session.
+- If a cell labels a pool section in parentheses (e.g. `(shallow pool)`, `(deep)`, `(deep / shallow)`, `(Lap/Therapy)`), set the session's `pool` field to that label, lowercased and stripped of the word "pool" (e.g. `shallow`, `deep`, `deep / shallow`, `lap/therapy`). Leave `pool` absent when the PDF shows no section label.
+- If a cell has a visible caveat that applies to that specific session (e.g. `Closed every 3rd Thursday of the month for training`), put the caveat verbatim in the session's `notes` field. Do not put whole-facility closure text in `notes`.
+- For each session, set `evidence` to the exact line of text from the PDF that contained this row's time and type. Copy characters verbatim; do not paraphrase, summarize, or translate. If a session is represented by more than one visible line on the PDF, concatenate those lines with a single space.
+
