@@ -6,8 +6,13 @@ progress:
     status: complete
     commit: a63d24b
     notes: []
-last_review: 2026-04-18T00:05:00-07:00
-iterations: 1
+  - section: "Task 2: findNextDropIn helper"
+    status: complete
+    commit: 1aaaa32
+    notes:
+      - "infra: codex-adapter.sh companion transport is read-only; CLI works via stdin without --ephemeral"
+last_review: 2026-04-18T00:45:00-07:00
+iterations: 2
 no_progress_count: 0
 started_at: 2026-04-18T00:00:00-07:00
 engine: codex
@@ -147,7 +152,7 @@ detail-page banners and no longer mark the homepage CLOSED."
 
 Detail-page helper: given a schedule and a reference time, return the next drop-in session (lap / family / senior) that will begin after `now`, or `null` if none within the next 7 days. Skips lessons sessions. Skips days where a facility-wide closure is active.
 
-- [ ] **Step 1: Add failing test**
+- [x] **Step 1: Add failing test** ✅
 
 ```js
 import {
@@ -233,12 +238,12 @@ test("findNextDropIn rolls to the same weekday one week away", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `node --test tests/js/board-status.test.mjs`
 Expected: five FAILures with "findNextDropIn is not a function" / ReferenceError.
 
-- [ ] **Step 3: Implement `findNextDropIn`**
+- [x] **Step 3: Implement `findNextDropIn`**
 
 Append to `static/js/helpers/board.mjs` (after `closureCopy`):
 
@@ -286,12 +291,12 @@ export function findNextDropIn(schedule, now) {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `node --test tests/js/board-status.test.mjs`
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit** — 1aaaa32
 
 ```bash
 git add static/js/helpers/board.mjs tests/js/board-status.test.mjs
