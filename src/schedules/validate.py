@@ -5,10 +5,15 @@ from datetime import date
 from .models import ValidationResult
 
 
-def validate(payload: dict) -> ValidationResult:
+def validate(payload: dict, *, prior_sessions_count: int | None = None) -> ValidationResult:
     sessions = payload.get("sessions") if isinstance(payload.get("sessions"), list) else []
     closures = payload.get("closures") if isinstance(payload.get("closures"), list) else []
     violations: list[str] = []
+    catastrophic = False
+
+    if prior_sessions_count and len(sessions) == 0:
+        violations.append("sessions_count dropped to 0 from a previously non-zero state")
+        catastrophic = True
 
     if len(sessions) < 5:
         violations.append("fewer than 5 weekly sessions extracted")
@@ -37,5 +42,6 @@ def validate(payload: dict) -> ValidationResult:
         ok=not violations,
         violations=violations,
         stats={"sessions": len(sessions), "closures": len(closures)},
+        catastrophic=catastrophic,
     )
 

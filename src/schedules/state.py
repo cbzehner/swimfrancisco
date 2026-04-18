@@ -4,9 +4,9 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from .models import ReviewFlag
+from .models import ReviewNote
 from .paths import STATE_PATH
-from .review import deserialize_flags, serialize_flag
+from .review import deserialize_notes, serialize_note
 
 
 def load_state(path: Path = STATE_PATH) -> dict[str, dict]:
@@ -37,7 +37,7 @@ def build_state_entry(
     provider: str,
     model: str,
     invariants_passed: bool,
-    flags: list[ReviewFlag],
+    notes: list[ReviewNote],
     artifact_paths: dict[str, str],
     pdf_page_count: int,
     pdf_text_sha256: str,
@@ -53,8 +53,8 @@ def build_state_entry(
         "provider": provider,
         "model": model,
         "invariants_passed": invariants_passed,
-        "flags": [flag.message for flag in flags],
-        "flag_details": [serialize_flag(flag) for flag in flags],
+        "notes": [note.message for note in notes],
+        "note_details": [serialize_note(note) for note in notes],
         "artifact_paths": artifact_paths,
         "pdf_page_count": pdf_page_count,
         "pdf_text_sha256": pdf_text_sha256,
@@ -62,7 +62,11 @@ def build_state_entry(
     }
 
 
-def flags_for_entry(entry: dict | None) -> list[ReviewFlag]:
+def notes_for_entry(entry: dict | None) -> list[ReviewNote]:
     if not entry:
         return []
-    return deserialize_flags(entry.get("flag_details"), entry.get("flags"))
+    # Read both key schemes during the rename transition. Older state files
+    # used ``flags``/``flag_details``; once Step 5 lands the old keys disappear.
+    details = entry.get("note_details") or entry.get("flag_details")
+    messages = entry.get("notes") or entry.get("flags")
+    return deserialize_notes(details, messages)

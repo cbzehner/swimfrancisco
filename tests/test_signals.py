@@ -1,4 +1,4 @@
-from schedules.signals import analyze_page_texts, source_flags_for_payload
+from schedules.signals import analyze_page_texts, source_notes_for_payload
 
 
 def test_analyze_page_texts_detects_multi_grid_and_timed_lessons():
@@ -12,7 +12,7 @@ def test_analyze_page_texts_detects_multi_grid_and_timed_lessons():
     assert signals.grid_header_pages == [1, 2]
     assert signals.timed_lesson_line_count == 2
 
-    flags = source_flags_for_payload(
+    notes = source_notes_for_payload(
         signals,
         {
             "sessions": [{"day": "saturday", "type": "lessons", "start": "09:00", "end": "09:30"}],
@@ -20,7 +20,6 @@ def test_analyze_page_texts_detects_multi_grid_and_timed_lessons():
             "schedule_effective": "2026-03-17",
         },
     )
-    messages = [flag.message for flag in flags]
+    messages = [note.message for note in notes]
     assert any("repeated day-grid pages" in message for message in messages)
     assert any("timed lesson-like lines" in message for message in messages)
-

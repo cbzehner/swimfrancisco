@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import Counter
 
-from .models import ReviewFlag
+from .models import ReviewNote
 
 
 def compare_payloads(
@@ -10,8 +10,8 @@ def compare_payloads(
     primary_payload: dict,
     secondary_provider: str,
     secondary_payload: dict,
-) -> list[ReviewFlag]:
-    flags: list[ReviewFlag] = []
+) -> list[ReviewNote]:
+    notes: list[ReviewNote] = []
 
     primary_sessions = Counter(_session_key(session) for session in primary_payload.get("sessions") or [])
     secondary_sessions = Counter(_session_key(session) for session in secondary_payload.get("sessions") or [])
@@ -19,8 +19,8 @@ def compare_payloads(
     secondary_closures = Counter(_closure_key(closure) for closure in secondary_payload.get("closures") or [])
 
     if sum(primary_sessions.values()) != sum(secondary_sessions.values()):
-        flags.append(
-            ReviewFlag(
+        notes.append(
+            ReviewNote(
                 kind="provider_session_count_disagreement",
                 message=(
                     f"{primary_provider} and {secondary_provider} disagree on session count "
@@ -36,8 +36,8 @@ def compare_payloads(
     only_primary = sorted((primary_sessions - secondary_sessions).elements())
     only_secondary = sorted((secondary_sessions - primary_sessions).elements())
     if only_primary or only_secondary:
-        flags.append(
-            ReviewFlag(
+        notes.append(
+            ReviewNote(
                 kind="provider_session_diff",
                 message=(
                     f"{primary_provider} and {secondary_provider} produced different session sets "
@@ -51,8 +51,8 @@ def compare_payloads(
         )
 
     if primary_closures != secondary_closures:
-        flags.append(
-            ReviewFlag(
+        notes.append(
+            ReviewNote(
                 kind="provider_closure_diff",
                 message=f"{primary_provider} and {secondary_provider} produced different closure sets",
                 evidence={
@@ -65,8 +65,8 @@ def compare_payloads(
     primary_effective = primary_payload.get("schedule_effective")
     secondary_effective = secondary_payload.get("schedule_effective")
     if primary_effective != secondary_effective:
-        flags.append(
-            ReviewFlag(
+        notes.append(
+            ReviewNote(
                 kind="provider_schedule_effective_diff",
                 message=(
                     f"{primary_provider} and {secondary_provider} disagree on schedule_effective "
@@ -79,38 +79,34 @@ def compare_payloads(
             )
         )
 
-    return flags
+    return notes
 
 
-def string_flags(messages: list[str], *, kind: str = "delta", severity: str = "warning") -> list[ReviewFlag]:
-    return [ReviewFlag(kind=kind, message=message, severity=severity) for message in messages]
-
-
-def serialize_flag(flag: ReviewFlag) -> dict:
+def serialize_note(note: ReviewNote) -> dict:
     return {
-        "kind": flag.kind,
-        "message": flag.message,
-        "severity": flag.severity,
-        "evidence": flag.evidence,
+        "kind": note.kind,
+        "message": note.message,
+        "severity": note.severity,
+        "evidence": note.evidence,
     }
 
 
-def deserialize_flags(raw_flag_details: list | None, raw_messages: list | None = None) -> list[ReviewFlag]:
-    flags: list[ReviewFlag] = []
-    if isinstance(raw_flag_details, list):
-        for raw_flag in raw_flag_details:
-            if not isinstance(raw_flag, dict):
+def deserialize_notes(raw_note_details: list | None, raw_messages: list | None = None) -> list[ReviewNote]:
+    notes: list[ReviewNote] = []
+    if isinstance(raw_note_details, list):
+        for raw in raw_note_details:
+            if not isinstance(raw, dict):
                 continue
-            message = raw_flag.get("message")
-            kind = raw_flag.get("kind")
+            message = raw.get("message")
+            kind = raw.get("kind")
             if not isinstance(message, str) or not isinstance(kind, str):
                 continue
-            severity = raw_flag.get("severity", "warning")
-            evidence = raw_flag.get("evidence", {})
+            severity = raw.get("severity", "warning")
+            evidence = raw.get("evidence", {})
             if not isinstance(evidence, dict):
                 evidence = {}
-            flags.append(
-                ReviewFlag(
+            notes.append(
+                ReviewNote(
                     kind=kind,
                     message=message,
                     severity=str(severity),
@@ -120,8 +116,8 @@ def deserialize_flags(raw_flag_details: list | None, raw_messages: list | None =
     elif isinstance(raw_messages, list):
         for message in raw_messages:
             if isinstance(message, str):
-                flags.append(ReviewFlag(kind="legacy_flag", message=message))
-    return flags
+                notes.append(ReviewNote(kind="legacy_note", message=message))
+    return notes
 
 
 def _session_key(session: dict) -> tuple[str, str, str, str, str, str]:

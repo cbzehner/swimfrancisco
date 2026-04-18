@@ -13,40 +13,81 @@ helpers and is exercised here.
 
 from __future__ import annotations
 
-from schedules.models import PoolEntry, PoolResult, PoolResultStatus
+from schedules.models import Failed, PoolEntry, PoolResult, Proposed, Skipped, Unchanged
 from schedules.pipeline import (
     _identity_kwargs,
-    _snapshot_kwargs,
     compute_exit_code,
     should_write,
 )
 
 
-def _pool_result(slug: str, status: PoolResultStatus) -> PoolResult:
-    return PoolResult(
+def _skipped(slug: str) -> Skipped:
+    return Skipped(slug=slug, official_page_url="", pdf_url="", source_status="published")
+
+
+def _unchanged(slug: str) -> Unchanged:
+    return Unchanged(
         slug=slug,
-        status=status,
         official_page_url="",
         pdf_url="",
         source_status="published",
+        provider="anthropic",
+        model="claude",
+        pdf_sha256="x",
+        page_count=1,
+        sessions_count=0,
+        closures_count=0,
+        schedule_effective="2026-01-01",
+        invariants_passed=True,
+    )
+
+
+def _proposed(slug: str, *, written: bool = True) -> Proposed:
+    return Proposed(
+        slug=slug,
+        official_page_url="",
+        pdf_url="",
+        source_status="published",
+        provider="anthropic",
+        model="claude",
+        pdf_sha256="x",
+        page_count=1,
+        sessions_count=5,
+        prior_sessions_count=5,
+        closures_count=0,
+        schedule_effective="2026-01-01",
+        invariants_passed=True,
+        cost_estimate="$0.01",
+        pdf_text_sha256="y",
+        written=written,
+    )
+
+
+def _failed(slug: str) -> Failed:
+    return Failed(
+        slug=slug,
+        official_page_url="",
+        pdf_url="",
+        source_status="published",
+        error="boom",
     )
 
 
 class TestComputeExitCode:
     def test_zero_for_all_success(self) -> None:
-        results = [_pool_result("a", "success"), _pool_result("b", "success")]
+        results: list[PoolResult] = [_proposed("a"), _proposed("b")]
         assert compute_exit_code(results) == 0
 
     def test_zero_for_unchanged_and_skipped(self) -> None:
-        results = [_pool_result("a", "unchanged"), _pool_result("b", "skipped")]
+        results: list[PoolResult] = [_unchanged("a"), _skipped("b")]
         assert compute_exit_code(results) == 0
 
     def test_nonzero_when_any_pool_failed(self) -> None:
-        results = [_pool_result("a", "success"), _pool_result("b", "failed")]
+        results: list[PoolResult] = [_proposed("a"), _failed("b")]
         assert compute_exit_code(results) == 1
 
     def test_nonzero_when_all_failed(self) -> None:
-        results = [_pool_result("a", "failed")]
+        results: list[PoolResult] = [_failed("a")]
         assert compute_exit_code(results) == 1
 
     def test_zero_for_empty(self) -> None:
@@ -55,23 +96,23 @@ class TestComputeExitCode:
 
 class TestShouldWrite:
     def test_writes_when_live_run(self) -> None:
-        assert should_write(dry_run=False, compare_with=None, hard_block=False) is True
+        assert should_write(dry_run=False, compare_with=None, catastrophic=False) is True
 
     def test_dry_run_blocks_writes(self) -> None:
-        assert should_write(dry_run=True, compare_with=None, hard_block=False) is False
+        assert should_write(dry_run=True, compare_with=None, catastrophic=False) is False
 
-    def test_hard_block_blocks_writes(self) -> None:
-        assert should_write(dry_run=False, compare_with=None, hard_block=True) is False
+    def test_catastrophic_blocks_writes(self) -> None:
+        assert should_write(dry_run=False, compare_with=None, catastrophic=True) is False
 
     def test_compare_mode_blocks_writes(self) -> None:
         # Compare mode is observational by default — operator trust property.
-        assert should_write(dry_run=False, compare_with="anthropic", hard_block=False) is False
+        assert should_write(dry_run=False, compare_with="anthropic", catastrophic=False) is False
 
-    def test_compare_mode_blocks_writes_even_with_no_hard_block(self) -> None:
-        assert should_write(dry_run=False, compare_with="gemini", hard_block=False) is False
+    def test_compare_mode_blocks_writes_even_when_validation_ok(self) -> None:
+        assert should_write(dry_run=False, compare_with="gemini", catastrophic=False) is False
 
 
-class TestResultBuilders:
+class TestIdentityKwargs:
     def test_identity_kwargs_carries_entry_identity(self) -> None:
         entry = PoolEntry(
             slug="rossi-pool",
@@ -86,20 +127,7 @@ class TestResultBuilders:
             "source_status": "published",
         }
 
-    def test_snapshot_kwargs_derives_counts_from_prior(self) -> None:
-        snapshot = {
-            "sessions": [{"type": "lap_swim"}, {"type": "family_swim"}],
-            "closures": [{"reason": "maintenance"}],
-            "schedule_effective": "2026-04-01",
-        }
-        assert _snapshot_kwargs(snapshot) == {
-            "prior_sessions_count": 2,
-            "sessions_count": 2,
-            "closures_count": 1,
-            "schedule_effective": "2026-04-01",
-        }
-
-    def test_builders_compose_into_a_valid_PoolResult(self) -> None:
+    def test_skipped_variant_carries_entry_notes_and_reason(self) -> None:
         entry = PoolEntry(
             slug="rossi-pool",
             pdf_url="https://example.test/rossi.pdf",
@@ -107,15 +135,12 @@ class TestResultBuilders:
             source_status="missing_current_schedule",
             notes="no PDF published",
         )
-        snapshot = {"sessions": [], "closures": [], "schedule_effective": None}
-        result = PoolResult(
+        result = Skipped(
             **_identity_kwargs(entry),
-            **_snapshot_kwargs(snapshot),
-            status="skipped",
+            reason="No current schedule PDF is available for this pool.",
             notes=entry.notes,
         )
         assert result.slug == "rossi-pool"
-        assert result.status == "skipped"
-        assert result.sessions_count == 0
         assert result.source_status == "missing_current_schedule"
         assert result.notes == "no PDF published"
+        assert "No current schedule PDF" in result.reason

@@ -1,5 +1,5 @@
-from schedules.models import ReviewFlag
-from schedules.state import build_state_entry, entry_for, flags_for_entry, load_state, save_state
+from schedules.models import ReviewNote
+from schedules.state import build_state_entry, entry_for, load_state, notes_for_entry, save_state
 
 
 def test_state_round_trip(tmp_path):
@@ -14,7 +14,7 @@ def test_state_round_trip(tmp_path):
             provider="gemini",
             model="gemini-3.1-flash-lite-preview",
             invariants_passed=True,
-            flags=[ReviewFlag(kind="manual_review", message="manual review")],
+            notes=[ReviewNote(kind="manual_review", message="manual review")],
             artifact_paths={"gemini": "data/artifacts/balboa/abc123/gemini.json"},
             pdf_page_count=1,
             pdf_text_sha256="textsha",
@@ -26,4 +26,4 @@ def test_state_round_trip(tmp_path):
     assert entry_for("balboa-pool", path=path) == loaded["balboa-pool"]
     assert loaded["balboa-pool"]["sessions_count"] == 7
     assert loaded["balboa-pool"]["adjudication_sha256"] == "adjsha"
-    assert flags_for_entry(loaded["balboa-pool"])[0].message == "manual review"
+    assert notes_for_entry(loaded["balboa-pool"])[0].message == "manual review"

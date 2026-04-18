@@ -6,7 +6,7 @@ from io import BytesIO
 
 from pypdf import PdfReader
 
-from .models import PdfSignals, ReviewFlag
+from .models import PdfSignals, ReviewNote
 
 DAY_TOKEN_RE = re.compile(
     r"\b(mon(?:day)?|tue(?:s|sday)?|wed(?:nesday)?|thu(?:rs|rsday)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)\b",
@@ -45,12 +45,12 @@ def analyze_page_texts(page_texts: list[str]) -> PdfSignals:
     )
 
 
-def source_flags_for_payload(signals: PdfSignals, payload: dict) -> list[ReviewFlag]:
-    flags: list[ReviewFlag] = []
+def source_notes_for_payload(signals: PdfSignals, payload: dict) -> list[ReviewNote]:
+    notes: list[ReviewNote] = []
 
     if len(signals.grid_header_pages) >= 2:
-        flags.append(
-            ReviewFlag(
+        notes.append(
+            ReviewNote(
                 kind="multi_grid_suspected",
                 message=(
                     f"PDF appears to contain repeated day-grid pages ({len(signals.grid_header_pages)} pages with day headers)"
@@ -65,8 +65,8 @@ def source_flags_for_payload(signals: PdfSignals, payload: dict) -> list[ReviewF
         if str(session.get("type")) == "lessons"
     )
     if signals.timed_lesson_line_count > extracted_lessons:
-        flags.append(
-            ReviewFlag(
+        notes.append(
+            ReviewNote(
                 kind="timed_lessons_under_extracted",
                 message=(
                     f"source PDF contains {signals.timed_lesson_line_count} timed lesson-like lines but extraction produced {extracted_lessons} lesson sessions"
@@ -78,7 +78,7 @@ def source_flags_for_payload(signals: PdfSignals, payload: dict) -> list[ReviewF
             )
         )
 
-    return flags
+    return notes
 
 
 def _has_grid_header(lines: list[str]) -> bool:

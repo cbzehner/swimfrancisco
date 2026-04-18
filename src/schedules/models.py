@@ -2,12 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 
 
 ExtractedPayload = dict[str, Any]
-
-PoolResultStatus = Literal["success", "unchanged", "failed", "skipped"]
 
 
 @dataclass(frozen=True)
@@ -34,12 +32,7 @@ class ValidationResult:
     ok: bool
     violations: list[str]
     stats: dict[str, int]
-
-
-@dataclass(frozen=True)
-class DeltaResult:
-    flags: list[str]
-    hard_block: bool
+    catastrophic: bool = False
 
 
 @dataclass(frozen=True)
@@ -60,7 +53,7 @@ class ProviderResult:
 
 
 @dataclass(frozen=True)
-class ReviewFlag:
+class ReviewNote:
     kind: str
     message: str
     severity: str = "warning"
@@ -102,13 +95,70 @@ class GroundingResult:
         return [session for session in self.sessions if not session.grounded]
 
 
-@dataclass
-class PoolResult:
+@dataclass(frozen=True)
+class PoolResultBase:
     slug: str
-    status: PoolResultStatus
     official_page_url: str
     pdf_url: str
     source_status: str
+
+
+@dataclass(frozen=True)
+class Skipped(PoolResultBase):
+    """No extraction attempted (e.g., no current schedule PDF published)."""
+
+    reason: str = ""
+    notes: str | None = None
+
+
+@dataclass(frozen=True)
+class Unchanged(PoolResultBase):
+    """PDF and adjudication both match the last successful run — no re-extraction."""
+
+    provider: str
+    model: str
+    pdf_sha256: str
+    page_count: int
+    sessions_count: int
+    closures_count: int
+    schedule_effective: str
+    invariants_passed: bool
+    review_notes: list[ReviewNote] = field(default_factory=list)
+    cost_estimate: str = "unchanged"
+    artifact_paths: dict[str, str] = field(default_factory=dict)
+    pdf_text_sha256: str | None = None
+
+
+@dataclass(frozen=True)
+class Proposed(PoolResultBase):
+    """Fresh extraction that validated cleanly. May or may not have been written."""
+
+    provider: str
+    model: str
+    pdf_sha256: str
+    page_count: int
+    sessions_count: int
+    prior_sessions_count: int
+    closures_count: int
+    schedule_effective: str | None
+    invariants_passed: bool
+    cost_estimate: str
+    pdf_text_sha256: str
+    violations: list[str] = field(default_factory=list)
+    review_notes: list[ReviewNote] = field(default_factory=list)
+    artifact_paths: dict[str, str] = field(default_factory=dict)
+    written: bool = False
+    adjudication_notes: str | None = None
+
+
+@dataclass(frozen=True)
+class Failed(PoolResultBase):
+    """Extraction failed — either by exception or by validation refusing the payload.
+
+    Rich fields are populated if extraction got far enough to produce them.
+    """
+
+    error: str = ""
     provider: str | None = None
     model: str | None = None
     pdf_sha256: str | None = None
@@ -117,21 +167,19 @@ class PoolResult:
     prior_sessions_count: int | None = None
     closures_count: int | None = None
     schedule_effective: str | None = None
-    invariants_passed: bool | None = None
     violations: list[str] = field(default_factory=list)
-    review_flags: list[ReviewFlag] = field(default_factory=list)
-    hard_block: bool = False
+    review_notes: list[ReviewNote] = field(default_factory=list)
     cost_estimate: str | None = None
-    error: str | None = None
-    written: bool = False
-    notes: str | None = None
     artifact_paths: dict[str, str] = field(default_factory=dict)
     pdf_text_sha256: str | None = None
 
-    @property
-    def needs_review(self) -> bool:
-        return bool(self.violations or self.review_flags or self.source_status != "published")
 
-    @property
-    def flag_messages(self) -> list[str]:
-        return [flag.message for flag in self.review_flags]
+PoolResult = Skipped | Unchanged | Proposed | Failed
+
+
+def needs_review(result: PoolResult) -> bool:
+    if isinstance(result, Skipped):
+        return result.source_status != "published"
+    if isinstance(result, Unchanged):
+        return bool(result.review_notes)
+    return bool(result.violations or result.review_notes or result.source_status != "published")

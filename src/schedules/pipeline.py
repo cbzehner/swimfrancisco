@@ -8,35 +8,35 @@ from .delta import check_delta
 from .fetch import fetch_pdf
 from .grounding import grounding_from_text, normalize_pdf_text
 from .merge import merge, read_schedule_snapshot
-from .models import DeltaResult, GroundingResult, PoolEntry, PoolResult, ReviewFlag
+from .models import Failed, GroundingResult, PoolEntry, PoolResult, Proposed, ReviewNote, Skipped, Unchanged
 from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH
 from .providers import extract as extract_with_provider
 from .registry import load_registry
-from .review import compare_payloads, string_flags
+from .review import compare_payloads
 from .report import write_report
 from .schema import EXTRACTION_SCHEMA
-from .signals import analyze_page_texts, extract_page_texts, source_flags_for_payload
-from .state import build_state_entry, flags_for_entry, load_state, save_state
+from .signals import analyze_page_texts, extract_page_texts, source_notes_for_payload
+from .state import build_state_entry, load_state, notes_for_entry, save_state
 from .validate import validate
 
 _GROUNDING_MIN_RATIO = 0.9
 _GROUNDING_EVIDENCE_SAMPLE = 5
 
 
-def should_write(*, dry_run: bool, compare_with: str | None, hard_block: bool) -> bool:
+def should_write(*, dry_run: bool, compare_with: str | None, catastrophic: bool) -> bool:
     """Return True iff the pipeline may mutate content or state.
 
     Gating invariants (all must be False for a write to happen):
     - dry_run: operator asked for a no-write pass
     - compare_with: bakeoff mode is observational by default
-    - hard_block: semantic delta refused the new payload
+    - catastrophic: validation refused the new payload (e.g. sessions dropped to 0)
     """
-    return not (dry_run or compare_with is not None or hard_block)
+    return not (dry_run or compare_with is not None or catastrophic)
 
 
 def compute_exit_code(results: list[PoolResult]) -> int:
     """Non-zero when any pool failed. Partial failure must not exit 0."""
-    return 1 if any(result.status == "failed" for result in results) else 0
+    return 1 if any(isinstance(result, Failed) for result in results) else 0
 
 
 def _identity_kwargs(entry: PoolEntry) -> dict:
@@ -48,17 +48,7 @@ def _identity_kwargs(entry: PoolEntry) -> dict:
     }
 
 
-def _snapshot_kwargs(prior_snapshot: dict) -> dict:
-    count = len(prior_snapshot["sessions"])
-    return {
-        "prior_sessions_count": count,
-        "sessions_count": count,
-        "closures_count": len(prior_snapshot["closures"]),
-        "schedule_effective": prior_snapshot["schedule_effective"],
-    }
-
-
-def _grounding_flags(provider: str, grounding: GroundingResult) -> list[ReviewFlag]:
+def _grounding_notes(provider: str, grounding: GroundingResult) -> list[ReviewNote]:
     if grounding.total == 0 or grounding.ratio >= _GROUNDING_MIN_RATIO:
         return []
 
@@ -82,7 +72,7 @@ def _grounding_flags(provider: str, grounding: GroundingResult) -> list[ReviewFl
 
     ungrounded_total = grounding.total - grounding.grounded_count
     return [
-        ReviewFlag(
+        ReviewNote(
             kind="grounding_coverage_low",
             message=(
                 f"{provider} grounding coverage is {grounding.ratio:.0%} "
@@ -126,12 +116,10 @@ def run_pipeline(
 
         if entry.source_status != "published":
             results.append(
-                PoolResult(
+                Skipped(
                     **_identity_kwargs(entry),
-                    **_snapshot_kwargs(prior_snapshot),
-                    status="skipped",
+                    reason="No current schedule PDF is available for this pool.",
                     notes=entry.notes,
-                    error="No current schedule PDF is available for this pool.",
                 )
             )
             continue
@@ -147,20 +135,17 @@ def run_pipeline(
                 and prior_state.get("adjudication_sha256") == adjudication_sha256
             ):
                 results.append(
-                    PoolResult(
+                    Unchanged(
                         **_identity_kwargs(entry),
-                        status="unchanged",
-                        provider=prior_state.get("provider"),
-                        model=prior_state.get("model"),
+                        provider=str(prior_state.get("provider")),
+                        model=str(prior_state.get("model")),
                         pdf_sha256=fetch_result.sha256,
                         page_count=fetch_result.page_count,
-                        sessions_count=prior_state.get("sessions_count"),
-                        prior_sessions_count=prior_state.get("sessions_count"),
+                        sessions_count=int(prior_state.get("sessions_count") or 0),
                         closures_count=len(prior_snapshot["closures"]),
-                        schedule_effective=prior_state.get("schedule_effective"),
-                        invariants_passed=prior_state.get("invariants_passed"),
-                        review_flags=flags_for_entry(prior_state),
-                        cost_estimate="unchanged",
+                        schedule_effective=str(prior_state.get("schedule_effective")),
+                        invariants_passed=bool(prior_state.get("invariants_passed")),
+                        review_notes=notes_for_entry(prior_state),
                         artifact_paths=dict(prior_state.get("artifact_paths") or {}),
                         pdf_text_sha256=prior_state.get("pdf_text_sha256"),
                     )
@@ -170,13 +155,16 @@ def run_pipeline(
             page_texts = extract_page_texts(fetch_result.bytes)
             pdf_signals = analyze_page_texts(page_texts)
             pdf_text_normalized = normalize_pdf_text(page_texts)
+            prior_sessions_count = (
+                int(prior_state.get("sessions_count") or 0) if prior_state else 0
+            )
             if adjudication and not compare_with:
                 payload = adjudication["payload"]
                 model = "manual-review"
                 usage = {}
                 cost_estimate = "adjudicated"
                 result_provider = "adjudicated"
-                review_flags: list[ReviewFlag] = []
+                review_notes: list[ReviewNote] = []
                 artifact_paths = {"adjudicated": str(adjudication_path)}
                 adjudication_notes = adjudication.get("summary")
             else:
@@ -186,12 +174,12 @@ def run_pipeline(
                 usage = primary.usage
                 cost_estimate = primary.cost_estimate
                 result_provider = provider
-                review_flags = []
-                review_flags.extend(source_flags_for_payload(pdf_signals, payload))
+                review_notes = []
+                review_notes.extend(source_notes_for_payload(pdf_signals, payload))
                 primary_grounding = grounding_from_text(pdf_text_normalized, payload)
-                review_flags.extend(_grounding_flags(provider, primary_grounding))
+                review_notes.extend(_grounding_notes(provider, primary_grounding))
                 adjudication_notes = None
-                review_flags.extend(string_flags(check_delta(payload, prior_state).flags))
+                review_notes.extend(check_delta(payload, prior_state))
                 artifact_paths = save_artifact_bundle(
                     slug=entry.slug,
                     provider=provider,
@@ -206,18 +194,13 @@ def run_pipeline(
                     cost_estimate=cost_estimate,
                     grounding=primary_grounding,
                 )
-            validation = validate(payload)
-            delta = (
-                DeltaResult(flags=[], hard_block=False)
-                if adjudication and not compare_with
-                else check_delta(payload, prior_state)
-            )
+            validation = validate(payload, prior_sessions_count=prior_sessions_count)
 
             if compare_with:
                 try:
                     compare = extract_with_provider(compare_with, fetch_result.bytes, prompt, EXTRACTION_SCHEMA)
                     compare_grounding = grounding_from_text(pdf_text_normalized, compare.payload)
-                    review_flags.extend(_grounding_flags(compare_with, compare_grounding))
+                    review_notes.extend(_grounding_notes(compare_with, compare_grounding))
                     artifact_paths.update(
                         save_artifact_bundle(
                             slug=entry.slug,
@@ -234,10 +217,10 @@ def run_pipeline(
                             grounding=compare_grounding,
                         )
                     )
-                    review_flags.extend(compare_payloads(provider, payload, compare_with, compare.payload))
+                    review_notes.extend(compare_payloads(provider, payload, compare_with, compare.payload))
                 except Exception as exc:  # noqa: BLE001
-                    review_flags.append(
-                        ReviewFlag(
+                    review_notes.append(
+                        ReviewNote(
                             kind="compare_provider_failed",
                             message=f"{compare_with} comparison run failed: {exc}",
                             severity="warning",
@@ -247,7 +230,7 @@ def run_pipeline(
             write_allowed = should_write(
                 dry_run=dry_run,
                 compare_with=compare_with,
-                hard_block=delta.hard_block,
+                catastrophic=validation.catastrophic,
             )
 
             if write_allowed:
@@ -265,7 +248,7 @@ def run_pipeline(
                     provider=result_provider,
                     model=model,
                     invariants_passed=validation.ok,
-                    flags=review_flags,
+                    notes=review_notes,
                     artifact_paths=artifact_paths,
                     pdf_page_count=pdf_signals.page_count,
                     pdf_text_sha256=pdf_signals.text_sha256,
@@ -273,39 +256,63 @@ def run_pipeline(
                 )
                 state_dirty = True
 
-            results.append(
-                PoolResult(
-                    **_identity_kwargs(entry),
-                    status="failed" if delta.hard_block else "success",
-                    provider=result_provider,
-                    model=model,
-                    pdf_sha256=fetch_result.sha256,
-                    page_count=fetch_result.page_count,
-                    sessions_count=validation.stats["sessions"],
-                    prior_sessions_count=int(prior_state.get("sessions_count") or len(prior_snapshot["sessions"]))
-                    if prior_state
-                    else len(prior_snapshot["sessions"]),
-                    closures_count=validation.stats["closures"],
-                    schedule_effective=payload.get("schedule_effective"),
-                    invariants_passed=validation.ok,
-                    violations=validation.violations,
-                    review_flags=review_flags,
-                    hard_block=delta.hard_block,
-                    cost_estimate=cost_estimate,
-                    error="Semantic delta validation blocked merge." if delta.hard_block else None,
-                    written=bool(merge_result and merge_result.written),
-                    artifact_paths=artifact_paths,
-                    pdf_text_sha256=pdf_signals.text_sha256,
-                    notes=adjudication_notes,
-                )
+            result_prior_sessions = (
+                int(prior_state.get("sessions_count") or len(prior_snapshot["sessions"]))
+                if prior_state
+                else len(prior_snapshot["sessions"])
             )
+            if validation.catastrophic:
+                results.append(
+                    Failed(
+                        **_identity_kwargs(entry),
+                        error="Validation refused the extracted payload.",
+                        provider=result_provider,
+                        model=model,
+                        pdf_sha256=fetch_result.sha256,
+                        page_count=fetch_result.page_count,
+                        sessions_count=validation.stats["sessions"],
+                        prior_sessions_count=result_prior_sessions,
+                        closures_count=validation.stats["closures"],
+                        schedule_effective=payload.get("schedule_effective"),
+                        violations=validation.violations,
+                        review_notes=review_notes,
+                        cost_estimate=cost_estimate,
+                        artifact_paths=artifact_paths,
+                        pdf_text_sha256=pdf_signals.text_sha256,
+                    )
+                )
+            else:
+                results.append(
+                    Proposed(
+                        **_identity_kwargs(entry),
+                        provider=result_provider,
+                        model=model,
+                        pdf_sha256=fetch_result.sha256,
+                        page_count=fetch_result.page_count,
+                        sessions_count=validation.stats["sessions"],
+                        prior_sessions_count=result_prior_sessions,
+                        closures_count=validation.stats["closures"],
+                        schedule_effective=payload.get("schedule_effective"),
+                        invariants_passed=validation.ok,
+                        violations=validation.violations,
+                        review_notes=review_notes,
+                        cost_estimate=cost_estimate,
+                        written=bool(merge_result and merge_result.written),
+                        artifact_paths=artifact_paths,
+                        pdf_text_sha256=pdf_signals.text_sha256,
+                        adjudication_notes=adjudication_notes,
+                    )
+                )
         except Exception as exc:  # noqa: BLE001
+            prior_count = len(prior_snapshot["sessions"])
             results.append(
-                PoolResult(
+                Failed(
                     **_identity_kwargs(entry),
-                    **_snapshot_kwargs(prior_snapshot),
-                    status="failed",
                     error=str(exc),
+                    prior_sessions_count=prior_count,
+                    sessions_count=prior_count,
+                    closures_count=len(prior_snapshot["closures"]),
+                    schedule_effective=prior_snapshot["schedule_effective"],
                 )
             )
 

@@ -2,18 +2,18 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .models import PoolResult
+from .models import Failed, PoolResult, Proposed, ReviewNote, Skipped, Unchanged, needs_review
 from .paths import REPORT_PATH
 
 
 def write_report(results: list[PoolResult], path: Path = REPORT_PATH) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    succeeded = sum(result.status == "success" for result in results)
-    unchanged = sum(result.status == "unchanged" for result in results)
-    skipped = sum(result.status == "skipped" for result in results)
-    failed = sum(result.status == "failed" for result in results)
-    flagged = sum(result.needs_review for result in results)
+    succeeded = sum(isinstance(result, Proposed) for result in results)
+    unchanged = sum(isinstance(result, Unchanged) for result in results)
+    skipped = sum(isinstance(result, Skipped) for result in results)
+    failed = sum(isinstance(result, Failed) for result in results)
+    flagged = sum(needs_review(result) for result in results)
 
     lines = [
         "# Extraction Report",
@@ -45,15 +45,33 @@ def write_report(results: list[PoolResult], path: Path = REPORT_PATH) -> Path:
     return path
 
 
+def _status_label(result: PoolResult) -> str:
+    if isinstance(result, Skipped):
+        return "skipped"
+    if isinstance(result, Unchanged):
+        return "unchanged"
+    if isinstance(result, Proposed):
+        return "success"
+    return "failed"
+
+
 def _render_pool_block(result: PoolResult) -> list[str]:
     lines = [
         f"## {result.slug}",
         "",
-        f"- status: {result.status}",
+        f"- status: {_status_label(result)}",
         f"- official_page_url: {result.official_page_url}",
         f"- pdf_url: {result.pdf_url}",
         f"- source_status: {result.source_status}",
     ]
+
+    if isinstance(result, Skipped):
+        if result.notes:
+            lines.append(f"- notes: {result.notes}")
+        if result.reason:
+            lines.append(f"- error: {result.reason}")
+        lines.append("")
+        return lines
 
     if result.provider:
         lines.append(f"- provider: {result.provider}")
@@ -63,39 +81,73 @@ def _render_pool_block(result: PoolResult) -> list[str]:
         lines.append(f"- pdf_sha256: {result.pdf_sha256[:12]}")
     if result.page_count is not None:
         lines.append(f"- pages: {result.page_count}")
+
     if result.sessions_count is not None:
-        delta_text = ""
-        if result.prior_sessions_count is not None:
-            delta = result.sessions_count - result.prior_sessions_count
-            delta_text = f" ({delta:+d} vs last run)"
+        prior = _prior_sessions_count(result)
+        delta_text = f" ({result.sessions_count - prior:+d} vs last run)" if prior is not None else ""
         lines.append(f"- sessions: {result.sessions_count}{delta_text}")
+
     if result.closures_count is not None:
         lines.append(f"- closures: {result.closures_count}")
     if result.schedule_effective:
         lines.append(f"- schedule_effective: {result.schedule_effective}")
 
-    if result.invariants_passed is not None:
-        if result.invariants_passed:
+    invariants_passed = _invariants_passed(result)
+    violations = _violations(result)
+    if invariants_passed is not None:
+        if invariants_passed:
             lines.append("- invariants: ok")
         else:
-            lines.append(f"- invariants: {', '.join(result.violations)}")
+            lines.append(f"- invariants: {', '.join(violations)}")
 
-    if result.review_flags:
-        for flag in result.review_flags:
-            lines.append(f"- review_flag[{flag.severity}::{flag.kind}]: {flag.message}")
+    review_notes = _review_notes(result)
+    if review_notes:
+        for note in review_notes:
+            lines.append(f"- review_note[{note.severity}::{note.kind}]: {note.message}")
     else:
-        lines.append("- review_flags: none")
+        lines.append("- review_notes: none")
 
     if result.cost_estimate:
         lines.append(f"- usage: {result.cost_estimate}")
     if result.pdf_text_sha256:
         lines.append(f"- pdf_text_sha256: {result.pdf_text_sha256[:12]}")
-    for name, path in sorted(result.artifact_paths.items()):
-        lines.append(f"- artifact[{name}]: {path}")
-    if result.notes:
-        lines.append(f"- notes: {result.notes}")
-    if result.error:
+    for name, pool_path in sorted(result.artifact_paths.items()):
+        lines.append(f"- artifact[{name}]: {pool_path}")
+
+    if isinstance(result, Proposed) and result.adjudication_notes:
+        lines.append(f"- notes: {result.adjudication_notes}")
+    if isinstance(result, Failed):
         lines.append(f"- error: {result.error}")
 
     lines.append("")
     return lines
+
+
+def _prior_sessions_count(result: PoolResult) -> int | None:
+    if isinstance(result, Unchanged):
+        return result.sessions_count
+    if isinstance(result, (Proposed, Failed)):
+        return result.prior_sessions_count
+    return None
+
+
+def _invariants_passed(result: PoolResult) -> bool | None:
+    if isinstance(result, Unchanged):
+        return result.invariants_passed
+    if isinstance(result, Proposed):
+        return result.invariants_passed
+    if isinstance(result, Failed) and result.violations:
+        return False
+    return None
+
+
+def _violations(result: PoolResult) -> list[str]:
+    if isinstance(result, (Proposed, Failed)):
+        return result.violations
+    return []
+
+
+def _review_notes(result: PoolResult) -> list[ReviewNote]:
+    if isinstance(result, (Unchanged, Proposed, Failed)):
+        return result.review_notes
+    return []

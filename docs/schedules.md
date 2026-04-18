@@ -91,7 +91,7 @@ can trust the exit code.
 1. Run `uv run schedules extract`.
 2. Read `tmp/extraction-report.md`.
 3. Review `git diff content/spots/`.
-4. For any pool with `review_flag[...]` lines, inspect the raw provider outputs under `data/artifacts/<slug>/<pdf_sha>/`.
+4. For any pool with `review_note[...]` lines, inspect the raw provider outputs under `data/artifacts/<slug>/<pdf_sha>/`.
 5. If a pool needs a durable manual override, commit an adjudication file under `data/adjudications/<slug>/<pdf_sha256>.json`.
 6. Spot-check flagged pools against the source PDF before accepting a content diff.
 7. Commit `content/spots/`, `data/extraction-state.json`, and any new `data/adjudications/` files only after the diff looks trustworthy.

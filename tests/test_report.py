@@ -2,7 +2,7 @@
 
 The report is what a human reads after a pipeline run. It drives the decision
 to approve or reject `git diff content/spots/`. A silent formatting regression
-(wrong delta sign, missing flag severity, stale header) leads operators to
+(wrong delta sign, missing note severity, stale header) leads operators to
 approve bad data or reject good data.
 """
 
@@ -10,20 +10,73 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from schedules.models import PoolResult, ReviewFlag
+from schedules.models import Failed, PoolResult, Proposed, ReviewNote, Skipped, Unchanged
 from schedules.report import write_report
 
 
-def _base_result(**overrides: object) -> PoolResult:
-    fields: dict[str, object] = {
+def _proposed(**overrides: object) -> Proposed:
+    defaults: dict[str, object] = {
         "slug": "rossi-pool",
-        "status": "success",
         "official_page_url": "https://example.test/rossi",
         "pdf_url": "https://example.test/rossi.pdf",
         "source_status": "published",
+        "provider": "anthropic",
+        "model": "claude",
+        "pdf_sha256": "a" * 64,
+        "page_count": 1,
+        "sessions_count": 5,
+        "prior_sessions_count": 5,
+        "closures_count": 0,
+        "schedule_effective": "2026-04-01",
+        "invariants_passed": True,
+        "cost_estimate": "$0.01",
+        "pdf_text_sha256": "b" * 64,
     }
-    fields.update(overrides)
-    return PoolResult(**fields)  # type: ignore[arg-type]
+    defaults.update(overrides)
+    return Proposed(**defaults)  # type: ignore[arg-type]
+
+
+def _unchanged(**overrides: object) -> Unchanged:
+    defaults: dict[str, object] = {
+        "slug": "rossi-pool",
+        "official_page_url": "https://example.test/rossi",
+        "pdf_url": "https://example.test/rossi.pdf",
+        "source_status": "published",
+        "provider": "anthropic",
+        "model": "claude",
+        "pdf_sha256": "a" * 64,
+        "page_count": 1,
+        "sessions_count": 5,
+        "closures_count": 0,
+        "schedule_effective": "2026-04-01",
+        "invariants_passed": True,
+    }
+    defaults.update(overrides)
+    return Unchanged(**defaults)  # type: ignore[arg-type]
+
+
+def _skipped(**overrides: object) -> Skipped:
+    defaults: dict[str, object] = {
+        "slug": "rossi-pool",
+        "official_page_url": "https://example.test/rossi",
+        "pdf_url": "https://example.test/rossi.pdf",
+        "source_status": "missing_current_schedule",
+        "reason": "No current schedule PDF is available for this pool.",
+    }
+    defaults.update(overrides)
+    return Skipped(**defaults)  # type: ignore[arg-type]
+
+
+def _failed(**overrides: object) -> Failed:
+    defaults: dict[str, object] = {
+        "slug": "rossi-pool",
+        "official_page_url": "https://example.test/rossi",
+        "pdf_url": "https://example.test/rossi.pdf",
+        "source_status": "published",
+        "error": "boom",
+    }
+    defaults.update(overrides)
+    return Failed(**defaults)  # type: ignore[arg-type]
 
 
 def _render(results: list[PoolResult], tmp_path: Path) -> str:
@@ -33,58 +86,61 @@ def _render(results: list[PoolResult], tmp_path: Path) -> str:
 
 class TestSummaryHeader:
     def test_counts_each_status_bucket(self, tmp_path: Path) -> None:
-        results = [
-            _base_result(slug="a", status="success"),
-            _base_result(slug="b", status="unchanged"),
-            _base_result(slug="c", status="skipped", source_status="missing_current_schedule"),
-            _base_result(slug="d", status="failed", error="boom"),
+        results: list[PoolResult] = [
+            _proposed(slug="a"),
+            _unchanged(slug="b"),
+            _skipped(slug="c"),
+            _failed(slug="d"),
         ]
         text = _render(results, tmp_path)
         assert "4 pools processed, 1 succeeded, 1 unchanged, 1 skipped, 1 failed" in text
 
     def test_flagged_count_reflects_needs_review(self, tmp_path: Path) -> None:
-        results = [
-            _base_result(slug="clean", status="success"),
-            _base_result(
+        results: list[PoolResult] = [
+            _proposed(slug="clean"),
+            _proposed(
                 slug="flagged",
-                status="success",
-                review_flags=[ReviewFlag(kind="k", message="m")],
+                review_notes=[ReviewNote(kind="k", message="m")],
             ),
-            _base_result(
-                slug="skipped-counts-too",
-                status="skipped",
-                source_status="missing_current_schedule",
-            ),
+            _skipped(slug="skipped-counts-too"),
         ]
         text = _render(results, tmp_path)
         # `needs_review` is true for the flagged row AND for any non-published
-        # source_status row.
+        # source_status row (skipped rows are non-published).
         assert "2 flagged for manual review" in text
 
 
 class TestPoolBlock:
     def test_sessions_delta_renders_with_sign(self, tmp_path: Path) -> None:
         text = _render(
-            [_base_result(sessions_count=12, prior_sessions_count=9)],
+            [_proposed(sessions_count=12, prior_sessions_count=9)],
             tmp_path,
         )
         assert "- sessions: 12 (+3 vs last run)" in text
 
-    def test_sessions_delta_omitted_without_prior(self, tmp_path: Path) -> None:
+    def test_unchanged_row_has_zero_delta(self, tmp_path: Path) -> None:
         text = _render(
-            [_base_result(sessions_count=12, prior_sessions_count=None)],
+            [_unchanged(sessions_count=7)],
             tmp_path,
         )
-        assert "- sessions: 12\n" in text
-        assert "vs last run" not in text
+        # Unchanged uses sessions_count as prior — delta is always 0.
+        assert "- sessions: 7 (+0 vs last run)" in text
 
     def test_invariants_ok_vs_violations(self, tmp_path: Path) -> None:
-        ok_text = _render([_base_result(slug="ok", invariants_passed=True)], tmp_path)
+        ok_text = _render([_proposed(slug="ok", invariants_passed=True)], tmp_path)
         bad_text = _render(
             [
-                _base_result(
+                _failed(
                     slug="bad",
-                    invariants_passed=False,
+                    error="Validation refused the extracted payload.",
+                    provider="anthropic",
+                    model="claude",
+                    pdf_sha256="a" * 64,
+                    page_count=1,
+                    sessions_count=0,
+                    prior_sessions_count=8,
+                    closures_count=0,
+                    schedule_effective=None,
                     violations=["session_ends_before_start", "duplicate_closure"],
                 )
             ],
@@ -93,13 +149,13 @@ class TestPoolBlock:
         assert "- invariants: ok" in ok_text
         assert "- invariants: session_ends_before_start, duplicate_closure" in bad_text
 
-    def test_review_flag_includes_severity_and_kind(self, tmp_path: Path) -> None:
+    def test_review_note_includes_severity_and_kind(self, tmp_path: Path) -> None:
         text = _render(
             [
-                _base_result(
-                    review_flags=[
-                        ReviewFlag(kind="grounding_coverage_low", message="70% grounded"),
-                        ReviewFlag(
+                _proposed(
+                    review_notes=[
+                        ReviewNote(kind="grounding_coverage_low", message="70% grounded"),
+                        ReviewNote(
                             kind="compare_provider_failed",
                             message="gemini failed",
                             severity="error",
@@ -109,29 +165,26 @@ class TestPoolBlock:
             ],
             tmp_path,
         )
-        assert "- review_flag[warning::grounding_coverage_low]: 70% grounded" in text
-        assert "- review_flag[error::compare_provider_failed]: gemini failed" in text
+        assert "- review_note[warning::grounding_coverage_low]: 70% grounded" in text
+        assert "- review_note[error::compare_provider_failed]: gemini failed" in text
 
-    def test_no_flags_renders_none_marker(self, tmp_path: Path) -> None:
-        text = _render([_base_result()], tmp_path)
-        assert "- review_flags: none" in text
+    def test_no_notes_renders_none_marker(self, tmp_path: Path) -> None:
+        text = _render([_proposed()], tmp_path)
+        assert "- review_notes: none" in text
 
     def test_pdf_sha256_truncated_to_12(self, tmp_path: Path) -> None:
         sha = "a" * 64
-        text = _render([_base_result(pdf_sha256=sha)], tmp_path)
+        text = _render([_proposed(pdf_sha256=sha)], tmp_path)
         assert "- pdf_sha256: " + "a" * 12 + "\n" in text
 
     def test_adjudicated_notes_and_error_render(self, tmp_path: Path) -> None:
         text = _render(
             [
-                _base_result(
-                    status="success",
-                    notes="manual override: pinned to hash deadbeef",
-                    error=None,
+                _proposed(
+                    adjudication_notes="manual override: pinned to hash deadbeef",
                 ),
-                _base_result(
+                _failed(
                     slug="broke",
-                    status="failed",
                     error="Semantic delta validation blocked merge.",
                 ),
             ],
@@ -143,7 +196,7 @@ class TestPoolBlock:
     def test_artifact_paths_sorted(self, tmp_path: Path) -> None:
         text = _render(
             [
-                _base_result(
+                _proposed(
                     artifact_paths={
                         "payload": "data/artifacts/x/payload.json",
                         "adjudicated": "data/adjudications/x.json",
