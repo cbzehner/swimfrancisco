@@ -301,6 +301,11 @@ export function computeDetailStatus(schedule, now) {
     };
   }
 
+  const anyDropInThisWeek = normalized.some((s) => DROP_IN_TYPES.has(s.type));
+  if (!anyDropInThisWeek) {
+    return { ...EMPTY_DETAIL, kind: "NO_DROPIN_WEEK" };
+  }
+
   return {
     ...EMPTY_DETAIL,
     kind: "CLOSED_HOURS",

@@ -323,3 +323,25 @@ test("computeDetailStatus NO_DROPIN_TODAY on lessons-only day with no active ses
   assert.equal(r.is_drop_in, false);
   assert.deepEqual(r.nextDropIn, { program: "lap_swim", day: "wednesday", start: 9 * 60 });
 });
+
+test("computeDetailStatus NOT_VERIFIED when sessions array is empty", () => {
+  const schedule = { sessions: [], closures: [] };
+  const now = new Date("2026-04-14T10:00:00");
+  const r = computeDetailStatus(schedule, now);
+  assert.equal(r.kind, "NOT_VERIFIED");
+  assert.equal(r.nextDropIn, null);
+});
+
+test("computeDetailStatus NO_DROPIN_WEEK when all sessions are lessons", () => {
+  const schedule = {
+    sessions: [
+      { day: "tuesday", type: "lessons", start: "15:30", end: "17:30" },
+      { day: "friday",  type: "lessons", start: "15:30", end: "17:30" },
+    ],
+    closures: [],
+  };
+  const now = new Date("2026-04-13T10:00:00"); // Monday 10:00
+  const r = computeDetailStatus(schedule, now);
+  assert.equal(r.kind, "NO_DROPIN_WEEK");
+  assert.equal(r.nextDropIn, null);
+});
