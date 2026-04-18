@@ -130,7 +130,7 @@ def run_pipeline(
             continue
 
         try:
-            write_allowed_pre = not (dry_run or compare_with is not None)
+            ratified_from_sha256: str | None = None
             fetch_result = fetch_pdf(entry.slug, entry.pdf_url, force=force)
             snapshot, snapshot_sha256, snapshot_path = load_reviewed_snapshot(entry.slug, fetch_result.sha256)
             if (
@@ -203,32 +203,31 @@ def run_pipeline(
                 )
 
                 if snapshot is None:
-                    ratified_from_sha256: str | None = None
                     canonical_payload = canonicalize_payload(payload)
+                    human_match: str | None = None
+                    ratification_match: str | None = None
                     for existing_snapshot_path in find_snapshots_for_slug(entry.slug):
+                        existing_sha = existing_snapshot_path.stem
                         try:
-                            existing_sha = existing_snapshot_path.stem
                             existing, _, _ = load_reviewed_snapshot(entry.slug, existing_sha)
-                        except ValueError:
+                        except ValueError as exc:
+                            review_notes.append(
+                                ReviewNote(
+                                    kind="reviewed_snapshot_malformed",
+                                    message=f"Skipping malformed reviewed snapshot {existing_sha[:12]}: {exc}",
+                                    severity="warning",
+                                )
+                            )
                             continue
                         if existing and canonicalize_payload(existing["payload"]) == canonical_payload:
-                            ratified_from_sha256 = existing_sha
-                            break
+                            if existing.get("reviewed_by") != "ratification":
+                                human_match = existing_sha
+                                break
+                            if ratification_match is None:
+                                ratification_match = existing_sha
+                    ratified_from_sha256 = human_match or ratification_match
 
-                    if ratified_from_sha256 and write_allowed_pre:
-                        new_snapshot_path = write_ratified_snapshot(
-                            slug=entry.slug,
-                            pdf_sha256=fetch_result.sha256,
-                            source_pdf_url=entry.pdf_url,
-                            payload=payload,
-                            reviewed_against=[{"provider": provider, "model": model}],
-                            ratified_from_sha256=ratified_from_sha256,
-                        )
-                        result_provider = "reviewed-snapshot"
-                        model = "manual-review"
-                        cost_estimate = "ratified"
-                        artifact_paths["reviewed-snapshot"] = relative_to_repo(new_snapshot_path)
-                        snapshot_notes = f"Auto-ratified against {ratified_from_sha256[:12]}."
+                    if ratified_from_sha256:
                         review_notes.append(
                             ReviewNote(
                                 kind="ratified",
@@ -274,6 +273,21 @@ def run_pipeline(
                 compare_with=compare_with,
                 catastrophic=validation.catastrophic,
             )
+
+            if write_allowed and ratified_from_sha256:
+                new_snapshot_path = write_ratified_snapshot(
+                    slug=entry.slug,
+                    pdf_sha256=fetch_result.sha256,
+                    source_pdf_url=entry.pdf_url,
+                    payload=payload,
+                    reviewed_against=[{"provider": provider, "model": model}],
+                    ratified_from_sha256=ratified_from_sha256,
+                )
+                result_provider = "reviewed-snapshot"
+                model = "manual-review"
+                cost_estimate = "ratified"
+                artifact_paths["reviewed-snapshot"] = relative_to_repo(new_snapshot_path)
+                snapshot_notes = f"Auto-ratified against {ratified_from_sha256[:12]}."
 
             if write_allowed:
                 merge_result = merge(CONTENT_SPOTS_DIR / f"{entry.slug}.md", payload)
