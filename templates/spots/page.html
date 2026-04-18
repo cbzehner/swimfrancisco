@@ -57,6 +57,34 @@
         </div>
       </section>
 
+      {% set today_ts_tb = now(timestamp=true) %}
+      {% set today_weekday = today_ts_tb | date(format="%A", timezone="America/Los_Angeles") | lower %}
+      {% set today_weekday_label = today_ts_tb | date(format="%A", timezone="America/Los_Angeles") | upper %}
+      {% set drop_in_types_tb = ["lap_swim", "family_swim", "senior_swim"] %}
+      {% set today_sessions = sessions | filter(attribute="day", value=today_weekday) %}
+      {% set today_drop_in = [] %}
+      {% for s in today_sessions %}
+        {% if s.type in drop_in_types_tb %}
+          {% set_global today_drop_in = today_drop_in | concat(with=s) %}
+        {% endif %}
+      {% endfor %}
+
+      {% if today_drop_in | length > 0 %}
+        <section class="today-block" data-field="today">
+          <p class="today-block-heading">TODAY · {{ today_weekday_label }}</p>
+          <ul class="today-block-list">
+            {% for s in today_drop_in %}
+              {% set plabel_tb = s.type | replace(from="_swim", to="") | upper %}
+              <li data-start="{{ s.start }}" data-end="{{ s.end }}" data-program="{{ s.type }}">
+                <span class="time">{{ s.start }}–{{ s.end }}</span>
+                <span class="program">{{ plabel_tb }}</span>
+                <span class="row-label"></span>
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endif %}
+
       {# Weekly grid, closure banners, footer meta filled in by later tasks. #}
       {% set day_order = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] %}
       {% set day_labels = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"] %}
