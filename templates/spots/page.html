@@ -1,5 +1,17 @@
 {% extends "base.html" %}
 {% block title %}{{ page.title }} — SwimFrancisco{% endblock %}
+
+{% macro item_list(title, class, items) %}
+  {% if items | length > 0 %}
+    <section class="{{ class }}">
+      <h2>{{ title }}</h2>
+      <ul>
+        {% for item in items %}<li>{{ item }}</li>{% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+{% endmacro item_list %}
+
 {% block content %}
   {% set extra = page.extra %}
   {% set map_href = "https://www.google.com/maps/search/?api=1&query=" ~ extra.lat ~ "," ~ extra.lng %}
@@ -85,41 +97,9 @@
       </dl>
     </section>
 
-    {% set hazards = extra.hazards | default(value=[]) %}
-    {% if hazards | length > 0 %}
-      <section class="hazards">
-        <h2>Hazards</h2>
-        <ul>
-          {% for h in hazards %}
-            <li>{{ h }}</li>
-          {% endfor %}
-        </ul>
-      </section>
-    {% endif %}
-
-    {% set clubs = extra.clubs | default(value=[]) %}
-    {% if clubs | length > 0 %}
-      <section class="clubs">
-        <h2>Clubs</h2>
-        <ul>
-          {% for c in clubs %}
-            <li>{{ c }}</li>
-          {% endfor %}
-        </ul>
-      </section>
-    {% endif %}
-
-    {% set distances = extra.common_distances | default(value=[]) %}
-    {% if distances | length > 0 %}
-      <section class="distances">
-        <h2>Common distances</h2>
-        <ul>
-          {% for d in distances %}
-            <li>{{ d }}</li>
-          {% endfor %}
-        </ul>
-      </section>
-    {% endif %}
+    {{ self::item_list(title="Hazards", class="hazards", items=extra.hazards | default(value=[])) }}
+    {{ self::item_list(title="Clubs", class="clubs", items=extra.clubs | default(value=[])) }}
+    {{ self::item_list(title="Common distances", class="distances", items=extra.common_distances | default(value=[])) }}
 
     <footer class="meta">
       {% if extra.last_verified_at %}<p>Last verified: {{ extra.last_verified_at }}</p>{% endif %}

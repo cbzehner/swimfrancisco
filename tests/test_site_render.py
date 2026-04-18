@@ -66,6 +66,25 @@ def test_schedule_table_uses_current_schema_fields(built_site: Path) -> None:
     assert "Lap Swim" in html
 
 
+def test_open_water_item_list_sections_render(built_site: Path) -> None:
+    # Hazards, clubs, and common distances share an `item_list` macro. Verify
+    # each section renders with its heading, class, and list items.
+    html = _read(built_site, "aquatic-park")
+    assert "<h2>Hazards</h2>" in html
+    assert "boat traffic outside cove" in html
+    assert "<h2>Clubs</h2>" in html
+    assert "South End Rowing Club" in html
+    assert "<h2>Common distances</h2>" in html
+    assert "1mi loop" in html
+
+
+def test_open_water_empty_item_lists_are_suppressed(built_site: Path) -> None:
+    # The macro must not render a section when its list is empty. Ocean Beach
+    # has no clubs configured — the heading must be absent.
+    html = _read(built_site, "ocean-beach")
+    assert "<h2>Clubs</h2>" not in html
+
+
 def test_closures_render_without_object_literal_across_all_pools(built_site: Path) -> None:
     # Defense in depth: no pool detail page should ever contain `[object]`.
     for slug_dir in (built_site / "spots").iterdir():
