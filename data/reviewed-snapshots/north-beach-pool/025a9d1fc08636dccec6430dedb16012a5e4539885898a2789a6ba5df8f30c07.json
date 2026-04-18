@@ -3,7 +3,7 @@
   "slug": "north-beach-pool",
   "pdf_sha256": "025a9d1fc08636dccec6430dedb16012a5e4539885898a2789a6ba5df8f30c07",
   "reviewed_at": "2026-04-17",
-  "summary": "Manual facility-level aggregate for the Spring 2026 PDF. The source contains two separate pool schedule pages, but the site schema is still flat. This adjudication keeps the clearer page-one therapy/family/lesson rows, omits school-only blocks, and adds the clearly labeled second-page lap-pool availability without trying to label sessions by pool.",
+  "summary": "Manual facility-level aggregate for the Spring 2026 PDF. The source contains two separate pool schedule pages, but the site schema is still flat. This reviewed snapshot keeps the clearer page-one therapy/family/lesson rows, omits school-only blocks, and adds the clearly labeled second-page lap-pool availability without trying to label sessions by pool.",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28503",
   "reviewed_against": [
     {
