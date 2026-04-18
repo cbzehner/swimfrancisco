@@ -29,30 +29,28 @@ def entry_for(slug: str, *, path: Path = STATE_PATH) -> dict | None:
 
 def build_state_entry(
     *,
-    pdf_url: str,
     pdf_sha256: str,
-    sessions_count: int,
-    session_types: list[str],
-    schedule_effective: str,
     provider: str,
     model: str,
-    invariants_passed: bool,
     notes: list[ReviewNote],
     artifact_paths: dict[str, str],
     pdf_page_count: int,
     pdf_text_sha256: str,
     adjudication_sha256: str | None = None,
 ) -> dict:
+    """Build a state entry carrying *provenance only*.
+
+    Anything derivable from ``content/spots/<slug>.md`` (sessions, closures,
+    schedule_effective, invariants_passed) lives there — duplicating it here
+    invites drift. State retains only data that cannot be reconstructed from
+    content: the fast-path pdf/adjudication hashes, the provider/model that
+    produced the extraction, and operator-facing notes/artifacts.
+    """
     return {
-        "pdf_url": pdf_url,
         "pdf_sha256": pdf_sha256,
-        "sessions_count": sessions_count,
-        "session_types": sorted(set(session_types)),
-        "schedule_effective": schedule_effective,
         "extracted_at": datetime.now(timezone.utc).isoformat(),
         "provider": provider,
         "model": model,
-        "invariants_passed": invariants_passed,
         "notes": [note.message for note in notes],
         "note_details": [serialize_note(note) for note in notes],
         "artifact_paths": artifact_paths,
@@ -65,8 +63,4 @@ def build_state_entry(
 def notes_for_entry(entry: dict | None) -> list[ReviewNote]:
     if not entry:
         return []
-    # Read both key schemes during the rename transition. Older state files
-    # used ``flags``/``flag_details``; once Step 5 lands the old keys disappear.
-    details = entry.get("note_details") or entry.get("flag_details")
-    messages = entry.get("notes") or entry.get("flags")
-    return deserialize_notes(details, messages)
+    return deserialize_notes(entry.get("note_details"), entry.get("notes"))

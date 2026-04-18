@@ -141,10 +141,10 @@ def run_pipeline(
                         model=str(prior_state.get("model")),
                         pdf_sha256=fetch_result.sha256,
                         page_count=fetch_result.page_count,
-                        sessions_count=int(prior_state.get("sessions_count") or 0),
+                        sessions_count=len(prior_snapshot["sessions"]),
                         closures_count=len(prior_snapshot["closures"]),
-                        schedule_effective=str(prior_state.get("schedule_effective")),
-                        invariants_passed=bool(prior_state.get("invariants_passed")),
+                        schedule_effective=str(prior_snapshot["schedule_effective"]),
+                        invariants_passed=True,  # merged content is by definition content that validated
                         review_notes=notes_for_entry(prior_state),
                         artifact_paths=dict(prior_state.get("artifact_paths") or {}),
                         pdf_text_sha256=prior_state.get("pdf_text_sha256"),
@@ -155,9 +155,7 @@ def run_pipeline(
             page_texts = extract_page_texts(fetch_result.bytes)
             pdf_signals = analyze_page_texts(page_texts)
             pdf_text_normalized = normalize_pdf_text(page_texts)
-            prior_sessions_count = (
-                int(prior_state.get("sessions_count") or 0) if prior_state else 0
-            )
+            prior_sessions_count = len(prior_snapshot["sessions"])
             if adjudication and not compare_with:
                 payload = adjudication["payload"]
                 model = "manual-review"
@@ -179,7 +177,7 @@ def run_pipeline(
                 primary_grounding = grounding_from_text(pdf_text_normalized, payload)
                 review_notes.extend(_grounding_notes(provider, primary_grounding))
                 adjudication_notes = None
-                review_notes.extend(check_delta(payload, prior_state))
+                review_notes.extend(check_delta(payload, prior_snapshot))
                 artifact_paths = save_artifact_bundle(
                     slug=entry.slug,
                     provider=provider,
@@ -240,14 +238,9 @@ def run_pipeline(
 
             if write_allowed:
                 state[entry.slug] = build_state_entry(
-                    pdf_url=entry.pdf_url,
                     pdf_sha256=fetch_result.sha256,
-                    sessions_count=len(payload.get("sessions") or []),
-                    session_types=[str(session.get("type")) for session in payload.get("sessions") or []],
-                    schedule_effective=str(payload.get("schedule_effective")),
                     provider=result_provider,
                     model=model,
-                    invariants_passed=validation.ok,
                     notes=review_notes,
                     artifact_paths=artifact_paths,
                     pdf_page_count=pdf_signals.page_count,
@@ -256,11 +249,7 @@ def run_pipeline(
                 )
                 state_dirty = True
 
-            result_prior_sessions = (
-                int(prior_state.get("sessions_count") or len(prior_snapshot["sessions"]))
-                if prior_state
-                else len(prior_snapshot["sessions"])
-            )
+            result_prior_sessions = len(prior_snapshot["sessions"])
             if validation.catastrophic:
                 results.append(
                     Failed(
