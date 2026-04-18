@@ -17,8 +17,13 @@ progress:
     notes:
       - "Committed 2cc1a71; 67 tests pass"
       - "Pyright false positives on pytest import + narrow-type None checks in tests — runtime correct"
-last_review: 2026-04-18T09:00:00-07:00
-iterations: 3
+  - section: "Task 4: Route reviewed payloads through validate() + grounding"
+    status: complete
+    notes:
+      - "Committed 89e8895; 68 tests pass"
+      - "Added grounding_from_text + check_delta to reviewed-snapshot branch; no existing tests asserted empty review_notes on snapshot path"
+last_review: 2026-04-18T09:15:00-07:00
+iterations: 4
 no_progress_count: 0
 started_at: 2026-04-18T08:06:43-07:00
 work_unit_granularity: task
