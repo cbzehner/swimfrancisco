@@ -201,6 +201,20 @@ test("findNextDropIn returns null when no drop-in sessions exist", () => {
   const now = new Date("2026-04-14T10:00:00");
   assert.equal(findNextDropIn(lessonsOnly, now), null);
 });
+
+test("findNextDropIn rolls to the same weekday one week away", () => {
+  // Only drop-in on Wednesday; today is Wednesday and the session has
+  // ended. Must not return null — must roll to next Wednesday.
+  const wednesdayOnly = {
+    sessions: [
+      { day: "wednesday", type: "lap_swim", start: "09:00", end: "10:15" },
+    ],
+    closures: [],
+  };
+  const now = new Date("2026-04-15T11:00:00"); // Wed after session ended
+  const next = findNextDropIn(wednesdayOnly, now);
+  assert.deepEqual(next, { program: "lap_swim", day: "wednesday", start: 9 * 60 });
+});
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
@@ -237,7 +251,11 @@ export function findNextDropIn(schedule, now) {
   if (normalized.length === 0) return null;
 
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  for (let offset = 0; offset < 7; offset += 1) {
+  // Scan offset 0..7 inclusive: today plus each of the next 7 days. The
+  // inclusive upper bound covers the "only-Wednesday lap swim, today is
+  // Wednesday, session already ended" case — without it, the same-weekday
+  // recurrence one week away is missed and the function returns null.
+  for (let offset = 0; offset <= 7; offset += 1) {
     const date = new Date(now);
     date.setDate(date.getDate() + offset);
     if (findActiveClosure(closures, date)) continue;
@@ -438,6 +456,36 @@ test("computeDetailStatus ignores zone-scoped closures", () => {
   assert.equal(r.kind, "OPEN");
   assert.equal(r.closureReason, null);
 });
+
+test("computeDetailStatus boundary: now === start is OPEN", () => {
+  // Tue 07:00 exactly — first minute of the 07:00-08:00 lap session.
+  const now = new Date("2026-04-14T07:00:00");
+  const r = computeDetailStatus(BASIC_SCHEDULE, now);
+  assert.equal(r.kind, "OPEN");
+  assert.deepEqual(r.activePrograms, ["lap_swim"]);
+});
+
+test("computeDetailStatus boundary: now === end is CLOSED_HOURS", () => {
+  // Tue 08:00 exactly — the 07:00-08:00 session has ended (half-open
+  // interval). Next session is 12:30 same day.
+  const now = new Date("2026-04-14T08:00:00");
+  const r = computeDetailStatus(BASIC_SCHEDULE, now);
+  assert.equal(r.kind, "CLOSED_HOURS");
+  assert.deepEqual(r.nextDropIn, { program: "lap_swim", day: "tuesday", start: 12 * 60 + 30 });
+});
+
+test("computeDetailStatus NOT_VERIFIED wins over active closure", () => {
+  // A pool with empty sessions + an active facility-wide closure is
+  // "we don't know yet", not "closed today" — Mission Community and
+  // Sava are the real cases.
+  const unverifiedWithClosure = {
+    sessions: [],
+    closures: [{ start: "2026-04-14", end: "2026-04-14", reason: "training" }],
+  };
+  const now = new Date("2026-04-14T10:00:00");
+  const r = computeDetailStatus(unverifiedWithClosure, now);
+  assert.equal(r.kind, "NOT_VERIFIED");
+});
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
@@ -483,6 +531,14 @@ export function computeDetailStatus(schedule, now) {
   const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
   const closures = Array.isArray(schedule.closures) ? schedule.closures : [];
 
+  // Resolution order (spec): NOT_VERIFIED wins before any closure check.
+  // A pool with empty `sessions` is treated as "we don't know yet", not
+  // "closed today", even if a facility-wide closure is active.
+  const normalized = normalizeSessions(sessions);
+  if (normalized.length === 0) {
+    return { ...EMPTY_DETAIL, kind: "NOT_VERIFIED" };
+  }
+
   const activeClosure = findActiveClosure(closures, now);
   if (activeClosure) {
     return {
@@ -493,7 +549,6 @@ export function computeDetailStatus(schedule, now) {
     };
   }
 
-  const normalized = normalizeSessions(sessions);
   const todayKey = DAY_KEYS[now.getDay()];
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
@@ -598,7 +653,7 @@ Expected: three FAILures (kind reports OPEN/CLOSED_HOURS in the current impl).
 
 - [ ] **Step 3: Extend `computeDetailStatus` with lessons handling**
 
-Replace the body of `computeDetailStatus` with this version (keeps the closure branch from Task 4, adds lessons + lessons-only-day after active drop-in check):
+Replace the body of `computeDetailStatus` with this version (keeps the NOT_VERIFIED-first + closure branches from Task 4, adds lessons + lessons-only-day after active drop-in check):
 
 ```js
 export function computeDetailStatus(schedule, now) {
@@ -606,6 +661,11 @@ export function computeDetailStatus(schedule, now) {
 
   const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
   const closures = Array.isArray(schedule.closures) ? schedule.closures : [];
+
+  const normalized = normalizeSessions(sessions);
+  if (normalized.length === 0) {
+    return { ...EMPTY_DETAIL, kind: "NOT_VERIFIED" };
+  }
 
   const activeClosure = findActiveClosure(closures, now);
   if (activeClosure) {
@@ -617,7 +677,6 @@ export function computeDetailStatus(schedule, now) {
     };
   }
 
-  const normalized = normalizeSessions(sessions);
   const todayKey = DAY_KEYS[now.getDay()];
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const todayAll = normalized.filter((s) => s.day === todayKey);
@@ -718,19 +777,26 @@ test("computeDetailStatus NO_DROPIN_WEEK when all sessions are lessons", () => {
 Run: `node --test tests/js/board-status.test.mjs`
 Expected: two FAILures (current impl falls through to CLOSED_HOURS).
 
-- [ ] **Step 3: Add verified/empty discrimination to `computeDetailStatus`**
+- [ ] **Step 3: Add NO_DROPIN_WEEK discrimination to `computeDetailStatus`**
 
-In `computeDetailStatus`, insert this block **immediately after** `const normalized = normalizeSessions(sessions);`:
+(`NOT_VERIFIED` already lands at the top of the function from Task 4. `NO_DROPIN_WEEK` is the tail-case: schedule is verified, no closure, no active drop-in today, no active lessons, no lessons-only day — AND zero drop-in sessions exist anywhere in the schedule.)
+
+In `computeDetailStatus`, replace the existing trailing `CLOSED_HOURS` return with:
 
 ```js
-  if (normalized.length === 0) {
-    return { ...EMPTY_DETAIL, kind: "NOT_VERIFIED" };
-  }
   const anyDropInThisWeek = normalized.some((s) => DROP_IN_TYPES.has(s.type));
   if (!anyDropInThisWeek) {
     return { ...EMPTY_DETAIL, kind: "NO_DROPIN_WEEK" };
   }
+
+  return {
+    ...EMPTY_DETAIL,
+    kind: "CLOSED_HOURS",
+    nextDropIn: findNextDropIn(schedule, now),
+  };
 ```
+
+Ordering rationale: LESSONS still fires for active lessons on a lessons-only pool (important for lessons-only pools when a lesson is running). NO_DROPIN_WEEK only triggers when nothing else has claimed the state.
 
 - [ ] **Step 4: Run tests to verify they pass**
 
@@ -912,25 +978,26 @@ Server-renders a 3-row × 7-col grid grouped by program (LAP / FAMILY / SENIOR) 
 
 - [ ] **Step 1: Replace the `<section class="weekly-grid" …></section>` stub with the rendering block**
 
+Nested array literals in Tera `{% set %}` fail to parse in Zola 0.22.1 — use parallel flat arrays and index into them. The grid is gated on "has drop-in sessions" (not "has any sessions") because a lessons-only pool should fall back to the `SCHEDULE NOT YET VERIFIED` / `NO DROP-IN THIS WEEK` copy rather than a grid full of em-dashes.
+
 ```html
       {% set day_order = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] %}
       {% set day_labels = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"] %}
       {% set lap_sessions = sessions | filter(attribute="type", value="lap_swim") %}
       {% set family_sessions = sessions | filter(attribute="type", value="family_swim") %}
       {% set senior_sessions = sessions | filter(attribute="type", value="senior_swim") %}
+      {% set drop_in_count = (lap_sessions | length) + (family_sessions | length) + (senior_sessions | length) %}
 
-      {% if sessions | length > 0 %}
+      {% if drop_in_count > 0 %}
+        {# Parallel flat arrays — Tera can't parse nested array literals in {% set %}. #}
         {% if senior_sessions | length > 0 %}
-          {% set programs = [
-            ["lap_swim",    "LAP SWIM",    lap_sessions,    "lap"],
-            ["family_swim", "FAMILY SWIM", family_sessions, "family"],
-            ["senior_swim", "SENIOR SWIM", senior_sessions, ""]
-          ] %}
+          {% set program_keys     = ["lap_swim", "family_swim", "senior_swim"] %}
+          {% set program_labels   = ["LAP SWIM", "FAMILY SWIM", "SENIOR SWIM"] %}
+          {% set program_crossnav = ["lap", "family", ""] %}
         {% else %}
-          {% set programs = [
-            ["lap_swim",    "LAP SWIM",    lap_sessions,    "lap"],
-            ["family_swim", "FAMILY SWIM", family_sessions, "family"]
-          ] %}
+          {% set program_keys     = ["lap_swim", "family_swim"] %}
+          {% set program_labels   = ["LAP SWIM", "FAMILY SWIM"] %}
+          {% set program_crossnav = ["lap", "family"] %}
         {% endif %}
 
         <section class="weekly-grid">
@@ -942,17 +1009,21 @@ Server-renders a 3-row × 7-col grid grouped by program (LAP / FAMILY / SENIOR) 
                 <span class="weekly-grid-dayhead" role="columnheader" data-day="{{ day_order[loop.index0] }}">{{ label }}</span>
               {% endfor %}
             </div>
-            {% for prog in programs %}
-              <div class="weekly-grid-row" role="row" data-program="{{ prog[0] }}">
+            {% for pkey in program_keys %}
+              {% set pi = loop.index0 %}
+              {% set plabel = program_labels[pi] %}
+              {% set pcross = program_crossnav[pi] %}
+              {% set psessions = sessions | filter(attribute="type", value=pkey) %}
+              <div class="weekly-grid-row" role="row" data-program="{{ pkey }}">
                 <span class="weekly-grid-rowlabel" role="rowheader">
-                  {{ prog[1] }}
-                  {% if prog[3] %}
-                    <a class="weekly-grid-crossnav" href="{{ config.base_url }}/#{{ prog[3] }}">→ OTHER {{ prog[3] | upper }} POOLS</a>
+                  {{ plabel }}
+                  {% if pcross %}
+                    <a class="weekly-grid-crossnav" href="{{ config.base_url }}/#{{ pcross }}">→ OTHER {{ pcross | upper }} POOLS</a>
                   {% endif %}
                 </span>
                 {% for day in day_order %}
-                  {% set cell = prog[2] | filter(attribute="day", value=day) %}
-                  <span class="weekly-grid-cell" role="cell" data-day="{{ day }}">
+                  {% set cell = psessions | filter(attribute="day", value=day) %}
+                  <span class="weekly-grid-cell" role="cell" data-day="{{ day }}" data-day-short="{{ day_labels[loop.index0] }}"{% if cell | length == 0 %} data-empty="true"{% endif %}>
                     {% if cell | length == 0 %}
                       <span class="weekly-grid-empty">—</span>
                     {% else %}
@@ -972,6 +1043,8 @@ Server-renders a 3-row × 7-col grid grouped by program (LAP / FAMILY / SENIOR) 
         <p class="fallback">Schedule not yet verified.</p>
       {% endif %}
 ```
+
+Note: `data-day-short` and `data-empty` attributes are emitted here (Task 15's mobile CSS depends on them). The Task 15 template-edit step to add them is therefore a no-op — skip it.
 
 - [ ] **Step 2: Verify `zola build`**
 
@@ -996,6 +1069,67 @@ nav links reuse the homepage hash filter tokens (#lap, #family)."
 
 ---
 
+## Task 10b: Template — server-rendered today block
+
+Spec requires the today block to be server-rendered ("without decorations; JS adds them"). Server uses Tera `now()` anchored to `America/Los_Angeles` to determine today's weekday, then emits the matching drop-in sessions. detail.js (Task 18) will add the `● NOW` / `NEXT` decorations. Without JS the today block still renders — just as a plain list of today's sessions.
+
+**Files:**
+- Modify: `templates/spots/page.html`
+
+- [ ] **Step 1: Insert the today block above the weekly grid**
+
+In `templates/spots/page.html`, insert this block **immediately after** the closing `</section>` of `.status-slab` and **before** the `{% set day_order ... %}` line of the weekly grid:
+
+```html
+      {% set today_ts_tb = now(timestamp=true) %}
+      {% set today_weekday = today_ts_tb | date(format="%A", timezone="America/Los_Angeles") | lower %}
+      {% set today_weekday_label = today_ts_tb | date(format="%A", timezone="America/Los_Angeles") | upper %}
+      {% set drop_in_types_tb = ["lap_swim", "family_swim", "senior_swim"] %}
+      {% set today_sessions = sessions | filter(attribute="day", value=today_weekday) %}
+      {% set today_drop_in = [] %}
+      {% for s in today_sessions %}
+        {% if s.type in drop_in_types_tb %}
+          {% set_global today_drop_in = today_drop_in | concat(with=s) %}
+        {% endif %}
+      {% endfor %}
+
+      {% if today_drop_in | length > 0 %}
+        <section class="today-block" data-field="today">
+          <p class="today-block-heading">TODAY · {{ today_weekday_label }}</p>
+          <ul class="today-block-list">
+            {% for s in today_drop_in %}
+              {% set plabel_tb = s.type | replace(from="_swim", to="") | upper %}
+              <li data-start="{{ s.start }}" data-end="{{ s.end }}" data-program="{{ s.type }}">
+                <span class="time">{{ s.start }}–{{ s.end }}</span>
+                <span class="program">{{ plabel_tb }}</span>
+                <span class="row-label"></span>
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endif %}
+```
+
+Note: `data-start`, `data-end`, `data-program` on each `<li>` are the contract that Task 18's JS reads to decide which row gets `● NOW` / `NEXT`.
+
+- [ ] **Step 2: Verify `zola build`**
+
+Run: `zola build`
+Expected: pool pages with today's drop-in sessions render a today block above the weekly grid. Pools whose schedule has no drop-in today render nothing (status slab covers the story).
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add templates/spots/page.html
+git commit -m "feat(spots): server-render today block above weekly grid
+
+Tera computes today's weekday in America/Los_Angeles and emits a
+plain list of today's drop-in sessions. detail.js will overlay NOW /
+NEXT decorations; without JS the block still renders statically."
+```
+
+---
+
 ## Task 11: Template — closure banners
 
 Server-renders one banner per closure whose `[start, end]` range overlaps `[today, today+14]`. Uses Tera's `now()` + timestamp arithmetic for the window bounds. Zone label is shown when non-empty.
@@ -1006,9 +1140,11 @@ Server-renders one banner per closure whose `[start, end]` range overlaps `[toda
 - [ ] **Step 1: Replace the `<section class="closure-banners">` stub**
 
 ```html
+      {# Anchor the 14-day window in America/Los_Angeles so the build host's
+         timezone can't shift the window by a day. 1209600 = 14 × 86400. #}
       {% set today_ts = now(timestamp=true) %}
-      {% set today_iso = today_ts | date(format="%Y-%m-%d") %}
-      {% set window_end_iso = (today_ts + 1209600) | date(format="%Y-%m-%d") %}
+      {% set today_iso = today_ts | date(format="%Y-%m-%d", timezone="America/Los_Angeles") %}
+      {% set window_end_iso = (today_ts + 1209600) | date(format="%Y-%m-%d", timezone="America/Los_Angeles") %}
       {% set upcoming_closures = [] %}
       {% for c in closures %}
         {% if c.start <= window_end_iso and c.end >= today_iso %}
@@ -1055,14 +1191,18 @@ those starting in the window."
 
 ---
 
-## Task 12: Template — footer meta with freshness dot
+## Task 12a: Template — footer meta with server-side freshness
 
-Server-renders `SCHEDULE EFFECTIVE … → …` when available, plus a freshness indicator `● FRESH · LAST VERIFIED <date>` / `· STALE · LAST VERIFIED <date>`. Initial class is computed server-side from `last_verified_at` at build time; detail.js re-computes at load so cached/stale deploys stay honest.
+Server-renders `SCHEDULE EFFECTIVE … → …` when available, plus a freshness indicator `● FRESH · LAST VERIFIED <date>` or `● STALE · LAST VERIFIED <date>`. The class and label are computed **server-side at build time** by comparing `extra.last_verified_at` (ISO `YYYY-MM-DD`) against a threshold date 30 days before today. Without JS, the page still tells the truth about freshness. detail.js (Task 19) re-evaluates on load so long-cached pages also stay honest.
+
+**Rationale:** `last_verified_at` is stored as an ISO `YYYY-MM-DD` string in TOML front matter (see `content/spots/balboa-pool.md`). ISO dates lexicographically sort as dates, so a string `>=` comparison against a computed threshold is equivalent to a date comparison. Tera does not ship a date-subtract function, so we build the threshold via `now(timestamp=true) - 2592000` (30 days in seconds) and format it with the `date` filter.
 
 **Files:**
 - Modify: `templates/spots/page.html`
 
 - [ ] **Step 1: Replace the `<footer class="meta">` stub**
+
+Insert before the closing `</div>` of `.detail-root`:
 
 ```html
       <footer class="meta">
@@ -1072,14 +1212,59 @@ Server-renders `SCHEDULE EFFECTIVE … → …` when available, plus a freshness
           </p>
         {% endif %}
         {% if extra.last_verified_at %}
-          <p class="meta-freshness" data-field="freshness">
+          {% set now_ts_fr = now(timestamp=true) %}
+          {% set threshold_ts = now_ts_fr - 2592000 %}
+          {% set threshold_date = threshold_ts | date(format="%Y-%m-%d", timezone="America/Los_Angeles") %}
+          {% if extra.last_verified_at >= threshold_date %}
+            {% set freshness_class = "fresh" %}
+            {% set freshness_label = "FRESH" %}
+          {% else %}
+            {% set freshness_class = "stale" %}
+            {% set freshness_label = "STALE" %}
+          {% endif %}
+          <p class="meta-freshness" data-field="freshness" data-freshness="{{ freshness_class }}">
             <span class="freshness-dot">●</span>
-            <span class="freshness-label">FRESH</span>
+            <span class="freshness-label">{{ freshness_label }}</span>
             · LAST VERIFIED {{ extra.last_verified_at | upper }}
           </p>
         {% endif %}
       </footer>
+```
 
+- [ ] **Step 2: Verify `zola build`**
+
+Run: `zola build`
+Expected: builds; on a pool with `last_verified_at` within 30 days of today (2026-04-17), the `<p class="meta-freshness">` carries `data-freshness="fresh"` and label "FRESH". On an older date, `data-freshness="stale"` and label "STALE".
+
+- [ ] **Step 3: Confirm both branches render**
+
+Manually inspect `public/spots/balboa-pool/index.html` and a pool with an older `last_verified_at` (if none exist, temporarily edit one) to verify both labels render.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add templates/spots/page.html
+git commit -m "feat(spots): server-render freshness dot from last_verified_at
+
+Computes fresh/stale server-side via Tera by comparing the ISO date
+against today - 30d. detail.js will re-evaluate on load so long-cached
+deploys can't silently lie about freshness."
+```
+
+---
+
+## Task 12b: Template — move description into detail root, guard open-water content block
+
+Relocates pool `page.content` into `.detail-root` so it sits under the footer, and guards the legacy trailing `.notes` section so it only renders for open-water pages (which still use the fall-through layout).
+
+**Files:**
+- Modify: `templates/spots/page.html`
+
+- [ ] **Step 1: Render pool description inside `.detail-root`**
+
+Insert just before the closing `</div>` of `.detail-root`, immediately after the `<footer class="meta">` block from Task 12a:
+
+```html
       {% if page.content %}
         <section class="description">
           {{ page.content | safe }}
@@ -1088,7 +1273,9 @@ Server-renders `SCHEDULE EFFECTIVE … → …` when available, plus a freshness
     </div>  {# /.detail-root #}
 ```
 
-Note: the pool description moves INSIDE `.detail-root` (above the closing `</div>`). Guard the trailing `.notes` section in the content block so it only fires for open-water pages (pool `page.content` is now rendered by the `.detail-root` block above). Change the end of `{% block content %}` from:
+- [ ] **Step 2: Guard the legacy trailing `.notes` section**
+
+Change the end of `{% block content %}` from:
 
 ```
   {% endif %}
@@ -1114,19 +1301,22 @@ to:
 {% endblock %}
 ```
 
-- [ ] **Step 2: Verify `zola build`**
+- [ ] **Step 3: Verify both page types**
 
 Run: `zola build`
-Expected: builds; footer shows schedule effective range and a freshness line with a default FRESH class.
+Expected:
+- Pool pages (e.g. `/spots/balboa-pool/`) render the description once, inside `.detail-root` after the footer.
+- Open-water pages (e.g. `/spots/aquatic-park/`) still render their `.notes` section unchanged.
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
 git add templates/spots/page.html
-git commit -m "feat(spots): add footer schedule meta + freshness dot
+git commit -m "refactor(spots): move pool description into detail root
 
-Server-renders initial 'FRESH' label; detail.js will re-evaluate at
-load time against last_verified_at."
+Pools now render page.content inside .detail-root below the footer;
+open-water pages keep rendering it through the legacy trailing .notes
+block."
 ```
 
 ---
@@ -1417,23 +1607,15 @@ Inside the existing `@media (max-width: 640px) { … }` in `sass/main.scss`, app
   }
 ```
 
-- [ ] **Step 3: Add `data-day-short` attributes in the template**
-
-In `templates/spots/page.html`, update the weekly-grid cell line to include a short-day label:
-
-```html
-                  <span class="weekly-grid-cell" role="cell" data-day="{{ day }}" data-day-short="{{ day_labels[loop.index0] }}"{% if cell | length == 0 %} data-empty="true"{% endif %}>
-```
-
-- [ ] **Step 4: Verify `zola build` + visual check at 375px viewport**
+- [ ] **Step 3: Verify `zola build` + visual check at 375px viewport**
 
 Run: `zola build && zola serve` → open `/spots/balboa-pool/` and resize to 375px.
 Expected: desktop shows 7-column grid; mobile stacks each program into a single column with day prefixes.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add sass/main.scss templates/spots/page.html
+git add sass/main.scss
 git commit -m "style(spots): weekly grid layout for desktop + mobile
 
 Seven-column grid above 640px; stacks into single-column program
@@ -1944,7 +2126,7 @@ git commit -m "docs(plans): mark multi-pool-facilities frontend as superseded"
 - Zone rendering inline → Task 10 (Tera emits `<span class="zone">`) + Task 15 (CSS)
 - Zone-scoped closures ignored on homepage → Task 1
 - Closure banner range-overlap window → Task 11
-- Freshness dot → Task 12 (server) + Task 19 (client)
+- Freshness dot → Task 12a (server) + Task 19 (client)
 - Cross-nav to homepage program filter → Task 10 (`/#lap`, `/#family`) — relies on existing hash handling, no `filters.js` change needed
 - Mobile collapse → Task 15
 - DST correctness → Task 8

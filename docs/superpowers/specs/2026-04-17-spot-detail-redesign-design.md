@@ -54,10 +54,11 @@ a redesigned detail page instead.
   date offsets nor presets. The detail page renders today's state only.
   Time shifting is a separate project.
 - No changes to the homepage board layout or `templates/index.html`. The
-  only homepage-adjacent changes are: (1) zone-scoped closure logic in
-  `helpers/board.mjs`, (2) `filters.js` accepts a `?filter=<type>` URL
-  parameter on load so the cross-nav links from detail pages work. No
-  new filter buttons on the homepage (in particular, no SENIOR filter).
+  only homepage-adjacent change is zone-scoped closure logic in
+  `helpers/board.mjs`. Cross-nav from detail pages reuses the existing
+  hash-token convention already supported by `filters.js` (e.g. `/#lap`,
+  `/#family`, `/#beach`) — no new filter code is required. No new filter
+  buttons on the homepage (in particular, no SENIOR filter).
 - No open-water detail page changes. The `extra.type == "open_water"` branch
   in `page.html` is untouched.
 - No sub-day / overnight closure handling. The `closure` schema is
@@ -106,8 +107,10 @@ Top to bottom:
    vertically within each cell. Today's column is subtly highlighted. Each
    program row header has a dim right-aligned cross-nav link —
    `→ OTHER LAP POOLS`, `→ OTHER FAMILY POOLS`, etc. — that deep-links to
-   the homepage board with that program's filter preselected
-   (`/?filter=lap_swim`).
+   the homepage board with that program's filter preselected via the
+   existing hash-token convention (`/#lap`, `/#family`). `filters.js`
+   already restores filter state from `location.hash` on load, so no
+   new filter code is required.
 6. **Upcoming closure banner(s)** — one yellow left-border banner per
    closure whose `[start, end]` range overlaps `[today, today+14]`. This
    includes closures already underway (started before today but ending in
@@ -261,10 +264,11 @@ Zone rendering rule, applied uniformly wherever sessions or closures print:
 
 Homepage status behavior change (smallest change outside the detail page):
 
-- `helpers/board.mjs` `computeStatus` currently treats any closure as closing
-  the facility. It must now treat a closure as facility-closed **only when
-  `closure.pool` is empty**. Closures with a non-empty `pool` do not mark the
-  facility closed; they only affect the detail page's banner.
+- `helpers/board.mjs` `findActiveClosure` (used by `computeStatus` on the
+  homepage) currently treats any closure as closing the facility. It must
+  now treat a closure as facility-closed **only when `closure.pool` is
+  empty**. Closures with a non-empty `pool` do not mark the facility
+  closed; they only affect the detail page's banner.
 - This is the homepage side of the multi-pool-facilities plan, now expressed
   as a single logic change in the existing helper.
 
@@ -278,9 +282,9 @@ Homepage status behavior change (smallest change outside the detail page):
   active session type, `STATUS` reads `LESSONS UNTIL HH:MM`, and `NEXT`
   points at the next non-lessons session.
 
-The `computeStatus` result gets a new classification field (`is_drop_in:
-boolean`) so the template and the slab renderer can treat lessons
-consistently without duplicating the type check.
+The `computeDetailStatus` result includes a classification field
+(`is_drop_in: boolean`) so the template and the slab renderer can treat
+lessons consistently without duplicating the type check.
 
 ## Aesthetic
 
@@ -310,19 +314,24 @@ consistently without duplicating the type check.
   unchanged; common header unchanged.
 - `static/js/detail.js` — new module. Handles status slab hydration,
   today-block `● NOW` / `NEXT` decorations, and freshness indicator.
-  Imports `computeStatus`, `findNextDropIn`, and `freshnessLabel`.
+  Imports `computeDetailStatus`, `findNextDropIn`, and `freshnessLabel`.
 - `static/js/helpers/board.mjs` — add `findNextDropIn(sessions, closures,
   now)`; add `freshnessLabel(last_verified_at, now)` returning
-  `"fresh" | "stale"`; extend `computeStatus` return with `is_drop_in`
-  classification and drop-in lesson handling; change closure logic to
-  respect `closure.pool`.
+  `"fresh" | "stale"`; add a separate `computeDetailStatus(schedule, now)`
+  function that returns the richer state-machine output required by the
+  detail page (`OPEN / LESSONS / CLOSED_TODAY / CLOSED_HOURS /
+  NO_DROPIN_TODAY / NO_DROPIN_WEEK / NOT_VERIFIED`, with drop-in
+  classification and active-program names). The existing `computeStatus`
+  used by the homepage board keeps its current shape so the homepage
+  doesn't need to change; both helpers share primitives like
+  `findActiveClosure`. Change closure logic to respect `closure.pool`
+  (used by both functions).
 - `static/main.css` (or wherever the current CSS lives) — add rules for the
   slab, today block, weekly grid, cross-nav link, freshness dot, closure
   banner, mobile breakpoint.
-- `static/js/filters.js` — on page load, read `?filter=<type>` from
-  `location.search` and activate the matching filter button. Enables the
-  detail page's `→ OTHER LAP POOLS` cross-nav links. Behavior when the
-  parameter is absent is unchanged.
+- `static/js/filters.js` — no change. Already restores filter state from
+  `location.hash` on load, so the detail page's `→ OTHER LAP POOLS`
+  cross-nav target `/#lap` works without modification.
 - `templates/base.html` — no change (already supports the `scripts` block;
   `detail.js` is included conditionally when `page.extra.type == "pool"`).
 
@@ -340,7 +349,7 @@ consistently without duplicating the type check.
     drop-in this week (open water spot-like edge case), skips lessons,
     skips facility-wide closed days, skips today when today is a
     lessons-only day (but returns tomorrow's first drop-in).
-  - `computeStatus`:
+  - `computeDetailStatus` (the detail-page state machine):
     - Active lessons with no overlapping drop-in → `LESSONS UNTIL HH:MM`
       with `is_drop_in: false`.
     - Active lessons with a concurrent drop-in session → `OPEN — <program>
@@ -350,11 +359,11 @@ consistently without duplicating the type check.
     - Lessons-only day, no currently-active session → `NO DROP-IN TODAY —
       NEXT <program> <day> HH:MM`.
     - Zone-scoped closure (non-empty `closure.pool`) does NOT mark facility
-      closed; `computeStatus` returns the normal open/closed-by-hours
-      result.
+      closed; the function returns the normal open/closed-by-hours result.
     - Facility-wide closure (empty `closure.pool`) returns `CLOSED TODAY`.
     - Verified pool with zero drop-in sessions returns `NO DROP-IN THIS
-      WEEK`; unverified pool returns `SCHEDULE NOT YET VERIFIED`.
+      WEEK`; unverified pool (empty `sessions`) returns `SCHEDULE NOT YET
+      VERIFIED`.
     - DST transition: a session spec of `10:00–11:00` on the day clocks
       jump forward (second Sunday in March) or fall back (first Sunday in
       November) is evaluated against local wall-clock time, not UTC
@@ -375,8 +384,9 @@ consistently without duplicating the type check.
   - A pool with only zone-scoped closures stays OPEN on the homepage.
   - A pool with a facility-wide closure still shows CLOSED TODAY on the
     homepage.
-  - Visiting `/?filter=lap_swim` preselects the LAP filter; visiting `/`
-    with no query params behaves identically to today.
+  - Visiting `/#lap` preselects the LAP filter (hash-token convention
+    already supported by `filters.js`); visiting `/` with no hash behaves
+    identically to today.
 
 ## Open questions
 
