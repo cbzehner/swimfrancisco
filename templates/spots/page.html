@@ -244,7 +244,32 @@
           {% endfor %}
         </section>
       {% endif %}
-      <footer class="meta" data-placeholder="meta"></footer>
+      <footer class="meta">
+        {% if extra.schedule_effective %}
+          <p class="meta-effective">
+            SCHEDULE EFFECTIVE {{ extra.schedule_effective | upper }}{% if extra.schedule_effective_end %} → {{ extra.schedule_effective_end | upper }}{% endif %}
+          </p>
+        {% endif %}
+        {% if extra.last_verified_at %}
+          {% set now_ts_fr = now(timestamp=true) %}
+          {% set threshold_ts = now_ts_fr - 2592000 %}
+          {% set threshold_date = threshold_ts | date(format="%Y-%m-%d", timezone="America/Los_Angeles") %}
+          {% set threshold_i = threshold_date | replace(from="-", to="") | int %}
+          {% set verified_i = extra.last_verified_at | replace(from="-", to="") | int %}
+          {% if verified_i >= threshold_i %}
+            {% set freshness_class = "fresh" %}
+            {% set freshness_label = "FRESH" %}
+          {% else %}
+            {% set freshness_class = "stale" %}
+            {% set freshness_label = "STALE" %}
+          {% endif %}
+          <p class="meta-freshness" data-field="freshness" data-freshness="{{ freshness_class }}">
+            <span class="freshness-dot">●</span>
+            <span class="freshness-label">{{ freshness_label }}</span>
+            · LAST VERIFIED {{ extra.last_verified_at | upper }}
+          </p>
+        {% endif %}
+      </footer>
     </div>
 
   {% elif extra.type == "open_water" %}
