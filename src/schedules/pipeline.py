@@ -170,12 +170,11 @@ def run_pipeline(
                 artifact_paths = {"adjudicated": str(adjudication_path)}
                 adjudication_notes = adjudication.get("summary")
             else:
-                payload, model, usage, cost_estimate = extract_with_provider(
-                    provider,
-                    fetch_result.bytes,
-                    prompt,
-                    EXTRACTION_SCHEMA,
-                )
+                primary = extract_with_provider(provider, fetch_result.bytes, prompt, EXTRACTION_SCHEMA)
+                payload = primary.payload
+                model = primary.model
+                usage = primary.usage
+                cost_estimate = primary.cost_estimate
                 result_provider = provider
                 review_flags = []
                 review_flags.extend(source_flags_for_payload(pdf_signals, payload))
@@ -206,31 +205,26 @@ def run_pipeline(
 
             if compare_with:
                 try:
-                    compare_payload, compare_model, compare_usage, compare_cost_estimate = extract_with_provider(
-                        compare_with,
-                        fetch_result.bytes,
-                        prompt,
-                        EXTRACTION_SCHEMA,
-                    )
-                    compare_grounding = grounding_from_text(pdf_text_normalized, compare_payload)
+                    compare = extract_with_provider(compare_with, fetch_result.bytes, prompt, EXTRACTION_SCHEMA)
+                    compare_grounding = grounding_from_text(pdf_text_normalized, compare.payload)
                     review_flags.extend(_grounding_flags(compare_with, compare_grounding))
                     artifact_paths.update(
                         save_artifact_bundle(
                             slug=entry.slug,
                             provider=compare_with,
-                            model=compare_model,
+                            model=compare.model,
                             pdf_url=entry.pdf_url,
                             pdf_sha256=fetch_result.sha256,
                             pdf_signals=pdf_signals,
                             prompt=prompt,
                             schema=EXTRACTION_SCHEMA,
-                            payload=compare_payload,
-                            usage=compare_usage,
-                            cost_estimate=compare_cost_estimate,
+                            payload=compare.payload,
+                            usage=compare.usage,
+                            cost_estimate=compare.cost_estimate,
                             grounding=compare_grounding,
                         )
                     )
-                    review_flags.extend(compare_payloads(provider, payload, compare_with, compare_payload))
+                    review_flags.extend(compare_payloads(provider, payload, compare_with, compare.payload))
                 except Exception as exc:  # noqa: BLE001
                     review_flags.append(
                         ReviewFlag(
