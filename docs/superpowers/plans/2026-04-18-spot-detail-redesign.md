@@ -1,3 +1,19 @@
+<!--
+---
+status: in_progress
+progress:
+  - section: "Task 1: Zone-aware findActiveClosure"
+    status: complete
+    commit: a63d24b
+    notes: []
+last_review: 2026-04-18T00:05:00-07:00
+iterations: 1
+no_progress_count: 0
+started_at: 2026-04-18T00:00:00-07:00
+engine: codex
+---
+-->
+
 # Spot Detail Page Redesign Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -40,7 +56,7 @@
 
 The homepage side of the multi-pool-facilities plan: a closure with a non-empty `pool` zone affects only its zone, so it must not mark the facility closed from the homepage's point of view. The detail page renders zone-scoped closures as banners separately.
 
-- [ ] **Step 1: Add failing test for zone-scoped closure ignored**
+- [x] **Step 1: Add failing test for zone-scoped closure ignored**
 
 Append to `tests/js/board-status.test.mjs`:
 
@@ -77,12 +93,12 @@ test("computeStatus honors facility-wide closures (empty closure.pool)", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --test tests/js/board-status.test.mjs`
 Expected: the first test FAILs (`status` is currently "CLOSED" because the zone closure still counts).
 
-- [ ] **Step 3: Make `findActiveClosure` zone-aware**
+- [x] **Step 3: Make `findActiveClosure` zone-aware**
 
 In `static/js/helpers/board.mjs`, replace the body of `findActiveClosure`:
 
@@ -105,12 +121,12 @@ export function findActiveClosure(closures, now) {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `node --test tests/js/board-status.test.mjs`
 Expected: all tests PASS, including the existing "Closed through" test.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit** — a63d24b
 
 ```bash
 git add static/js/helpers/board.mjs tests/js/board-status.test.mjs
