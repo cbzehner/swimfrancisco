@@ -400,6 +400,89 @@ table.board tbody tr.flap {
   justify-self: end;
 }
 
+// Weekly grid — desktop (default) -----------------------------------------
+
+.weekly-grid-title {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  color: var(--fg);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.weekly-grid-table {
+  display: grid;
+  grid-template-columns: 10ch repeat(7, minmax(7ch, 1fr));
+  border-top: 1px solid var(--fg);
+  font-size: 0.85rem;
+}
+
+.weekly-grid-head,
+.weekly-grid-row {
+  display: contents;
+}
+
+.weekly-grid-rowlabel,
+.weekly-grid-dayhead,
+.weekly-grid-cell {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--row-sep);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.weekly-grid-dayhead {
+  color: var(--fg-dim);
+  font-size: 0.8rem;
+  text-align: left;
+}
+
+.weekly-grid-rowlabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  color: var(--fg);
+  font-weight: 700;
+}
+
+.weekly-grid-crossnav {
+  color: var(--fg-dim);
+  font-size: 0.75rem;
+  font-weight: 400;
+
+  &:hover,
+  &:focus {
+    color: var(--fg);
+  }
+}
+
+.weekly-grid-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.weekly-grid-session {
+  white-space: nowrap;
+}
+
+.weekly-grid-empty {
+  color: var(--fg-dim);
+}
+
+.weekly-grid-cell[data-today="true"],
+.weekly-grid-dayhead[data-today="true"] {
+  background: rgba(245, 197, 24, 0.08);
+}
+
+.zone {
+  color: var(--fg-dim);
+  font-size: 0.85em;
+  text-transform: lowercase;
+  letter-spacing: 0;
+}
+
 // --- Responsive ---------------------------------------------------------
 
 @media (max-width: 640px) {
@@ -439,5 +522,41 @@ table.board tbody tr.flap {
 
   .conditions dl {
     grid-template-columns: 1fr;
+  }
+
+  // Weekly grid collapses to one-column stacks grouped by program.
+  // Row-label becomes a heading; day header row is hidden; each cell
+  // becomes a row prefixed by its weekday abbreviation.
+  .weekly-grid-table {
+    grid-template-columns: 1fr;
+    border-top: none;
+  }
+
+  .weekly-grid-head {
+    display: none;
+  }
+
+  .weekly-grid-rowlabel {
+    border-bottom: 1px solid var(--fg);
+    padding-top: 1rem;
+    flex-direction: row;
+  }
+
+  .weekly-grid-cell {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-left: 0.5rem;
+  }
+
+  .weekly-grid-cell::before {
+    content: attr(data-day-short);
+    color: var(--fg-dim);
+    min-width: 4ch;
+    text-transform: uppercase;
+  }
+
+  .weekly-grid-cell[data-empty="true"] {
+    display: none;
   }
 }
