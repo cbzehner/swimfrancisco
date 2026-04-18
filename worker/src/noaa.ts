@@ -38,7 +38,7 @@ interface NoaaPredictionsResponse {
 // UTC — the API returns `time_zone=lst_ldt` (local standard / daylight) and
 // we lack a tz database to convert precisely. Downstream consumers tolerate
 // zoneless strings.
-function toLocalIso(ts: string): string {
+export function toLocalIso(ts: string): string {
   // Input like "2026-04-16 14:30". Return "2026-04-16T14:30:00" (no zone).
   const trimmed = ts.trim();
   const withT = trimmed.replace(" ", "T");
