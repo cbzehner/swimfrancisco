@@ -11,8 +11,14 @@ progress:
     commit: 1aaaa32
     notes:
       - "infra: codex-adapter.sh companion transport is read-only; CLI works via stdin without --ephemeral"
-last_review: 2026-04-18T00:45:00-07:00
-iterations: 2
+  - section: "Task 3: freshnessLabel helper"
+    status: complete
+    commit: f0d715d
+    notes:
+      - "gap: plan's reference freshnessLabel body uses now.getTime() directly, failing the 'exactly 30 days' test at 10:00:00 since age = 30.4d > 30. Codex correctly zeroed `now` to local midnight. Consider updating plan source or tightening test's `now` to midnight."
+      - "infra: piping codex output through `| tail -N` hangs the invocation; redirect to a file instead"
+last_review: 2026-04-18T01:00:00-07:00
+iterations: 3
 no_progress_count: 0
 started_at: 2026-04-18T00:00:00-07:00
 engine: codex
@@ -315,7 +321,7 @@ facility-wide closed days."
 - Modify: `static/js/helpers/board.mjs`
 - Test: `tests/js/board-status.test.mjs`
 
-- [ ] **Step 1: Add failing test**
+- [x] **Step 1: Add failing test**
 
 ```js
 import {
@@ -346,12 +352,12 @@ test("freshnessLabel: missing or invalid input is stale", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `node --test tests/js/board-status.test.mjs`
 Expected: three FAILures with "freshnessLabel is not a function".
 
-- [ ] **Step 3: Implement `freshnessLabel`**
+- [x] **Step 3: Implement `freshnessLabel`**
 
 Append to `static/js/helpers/board.mjs`:
 
@@ -374,12 +380,12 @@ export function freshnessLabel(isoDate, now) {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `node --test tests/js/board-status.test.mjs`
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit** — f0d715d (Codex deviated: zeroed `now` to midnight to fix boundary-case bug)
 
 ```bash
 git add static/js/helpers/board.mjs tests/js/board-status.test.mjs
