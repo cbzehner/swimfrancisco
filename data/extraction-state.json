@@ -3,166 +3,630 @@
     "artifact_paths": {
       "reviewed-snapshot": "data/reviewed-snapshots/balboa-pool/ba9b279ae183b142c0c675368bceb39e49b80ed5ddb12fe37736536e92c8ac2c.json"
     },
-    "extracted_at": "2026-04-18T03:07:06.767747+00:00",
-    "flag_details": [],
-    "flags": [],
-    "invariants_passed": true,
+    "extracted_at": "2026-04-18T16:34:37.406499+00:00",
     "model": "manual-review",
+    "note_details": [
+      {
+        "evidence": {
+          "grounded_count": 0,
+          "provider": "reviewed-snapshot",
+          "ratio": 0.0,
+          "sample_ungrounded": [
+            {
+              "day": "tuesday",
+              "end": "08:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 0,
+              "missing_evidence": true,
+              "start": "07:00",
+              "start_in_evidence": false,
+              "type": "lap_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "tuesday",
+              "end": "12:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 1,
+              "missing_evidence": true,
+              "start": "10:30",
+              "start_in_evidence": false,
+              "type": "senior_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "tuesday",
+              "end": "14:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 2,
+              "missing_evidence": true,
+              "start": "12:30",
+              "start_in_evidence": false,
+              "type": "lap_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "tuesday",
+              "end": "15:30",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 3,
+              "missing_evidence": true,
+              "start": "14:30",
+              "start_in_evidence": false,
+              "type": "family_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "tuesday",
+              "end": "16:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 4,
+              "missing_evidence": true,
+              "start": "15:30",
+              "start_in_evidence": false,
+              "type": "lessons",
+              "type_in_evidence": false
+            }
+          ],
+          "total": 23
+        },
+        "kind": "grounding_coverage_low",
+        "message": "reviewed-snapshot grounding coverage is 0% (0/23 sessions grounded; 23 ungrounded)",
+        "severity": "warning"
+      }
+    ],
+    "notes": [
+      "reviewed-snapshot grounding coverage is 0% (0/23 sessions grounded; 23 ungrounded)"
+    ],
     "pdf_page_count": 1,
     "pdf_sha256": "ba9b279ae183b142c0c675368bceb39e49b80ed5ddb12fe37736536e92c8ac2c",
     "pdf_text_sha256": "80c834c26c932e3bc34ea6ab4c8d72b3db39c80a13aa86ddccb9653adcb41684",
-    "pdf_url": "https://sfrecpark.org/DocumentCenter/View/28547",
     "provider": "reviewed-snapshot",
-    "reviewed_snapshot_sha256": "654a918b380652b9f9432bd795761469ca3a43f5b0a17430386295eb164fdce1",
-    "schedule_effective": "2026-03-17",
-    "session_types": [
-      "family_swim",
-      "lap_swim",
-      "lessons",
-      "senior_swim"
-    ],
-    "sessions_count": 23
+    "reviewed_snapshot_sha256": "3cc2c9dbf335714489fead1313f6d8be4b09c2eab2c1853109f6c2bb6b32232b"
   },
   "coffman-pool": {
     "artifact_paths": {
       "reviewed-snapshot": "data/reviewed-snapshots/coffman-pool/18ada024e2b2e3539a9222d57a917cdfa52c6c346c632ee090b14321caf8ab53.json"
     },
-    "extracted_at": "2026-04-18T03:07:06.807576+00:00",
-    "flag_details": [],
-    "flags": [],
-    "invariants_passed": true,
+    "extracted_at": "2026-04-18T16:34:37.446068+00:00",
     "model": "manual-review",
+    "note_details": [
+      {
+        "evidence": {
+          "grounded_count": 0,
+          "provider": "reviewed-snapshot",
+          "ratio": 0.0,
+          "sample_ungrounded": [
+            {
+              "day": "tuesday",
+              "end": "08:30",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 0,
+              "missing_evidence": true,
+              "start": "07:00",
+              "start_in_evidence": false,
+              "type": "lap_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "tuesday",
+              "end": "10:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 1,
+              "missing_evidence": true,
+              "start": "08:45",
+              "start_in_evidence": false,
+              "type": "senior_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "tuesday",
+              "end": "13:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 2,
+              "missing_evidence": true,
+              "start": "11:30",
+              "start_in_evidence": false,
+              "type": "lap_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "tuesday",
+              "end": "16:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 3,
+              "missing_evidence": true,
+              "start": "14:00",
+              "start_in_evidence": false,
+              "type": "family_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "wednesday",
+              "end": "08:30",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 4,
+              "missing_evidence": true,
+              "start": "07:00",
+              "start_in_evidence": false,
+              "type": "lap_swim",
+              "type_in_evidence": false
+            }
+          ],
+          "total": 25
+        },
+        "kind": "grounding_coverage_low",
+        "message": "reviewed-snapshot grounding coverage is 0% (0/25 sessions grounded; 25 ungrounded)",
+        "severity": "warning"
+      }
+    ],
+    "notes": [
+      "reviewed-snapshot grounding coverage is 0% (0/25 sessions grounded; 25 ungrounded)"
+    ],
     "pdf_page_count": 1,
     "pdf_sha256": "18ada024e2b2e3539a9222d57a917cdfa52c6c346c632ee090b14321caf8ab53",
     "pdf_text_sha256": "92f122c75398252d77e613b785acde98f417868c7c793494e582b2cc1786781b",
-    "pdf_url": "https://sfrecpark.org/DocumentCenter/View/28553",
     "provider": "reviewed-snapshot",
-    "reviewed_snapshot_sha256": "eeadd3070c6d06eb3332b59717829dda6b33036eab4b527dc4952fbe06e8bf76",
-    "schedule_effective": "2026-03-17",
-    "session_types": [
-      "family_swim",
-      "lap_swim",
-      "senior_swim"
-    ],
-    "sessions_count": 25
+    "reviewed_snapshot_sha256": "153dc5dbc6f631f31a25241bbd13961f9ffa4bd890cbf0621c263e8929154eb1"
   },
   "garfield-pool": {
     "artifact_paths": {
       "reviewed-snapshot": "data/reviewed-snapshots/garfield-pool/f8aa854fe49746a1091e39998486a25e709afab95d80844c4f3db440f7b85dbc.json"
     },
-    "extracted_at": "2026-04-18T03:07:06.859133+00:00",
-    "flag_details": [],
-    "flags": [],
-    "invariants_passed": true,
+    "extracted_at": "2026-04-18T16:34:37.496530+00:00",
     "model": "manual-review",
+    "note_details": [
+      {
+        "evidence": {
+          "grounded_count": 0,
+          "provider": "reviewed-snapshot",
+          "ratio": 0.0,
+          "sample_ungrounded": [
+            {
+              "day": "monday",
+              "end": "08:45",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 0,
+              "missing_evidence": true,
+              "start": "07:00",
+              "start_in_evidence": false,
+              "type": "family_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "monday",
+              "end": "08:45",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 1,
+              "missing_evidence": true,
+              "start": "07:00",
+              "start_in_evidence": false,
+              "type": "lap_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "monday",
+              "end": "10:45",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 2,
+              "missing_evidence": true,
+              "start": "09:00",
+              "start_in_evidence": false,
+              "type": "lessons",
+              "type_in_evidence": false
+            },
+            {
+              "day": "monday",
+              "end": "10:45",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 3,
+              "missing_evidence": true,
+              "start": "09:00",
+              "start_in_evidence": false,
+              "type": "senior_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "monday",
+              "end": "13:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 4,
+              "missing_evidence": true,
+              "start": "11:00",
+              "start_in_evidence": false,
+              "type": "lap_swim",
+              "type_in_evidence": false
+            }
+          ],
+          "total": 38
+        },
+        "kind": "grounding_coverage_low",
+        "message": "reviewed-snapshot grounding coverage is 0% (0/38 sessions grounded; 38 ungrounded)",
+        "severity": "warning"
+      }
+    ],
+    "notes": [
+      "reviewed-snapshot grounding coverage is 0% (0/38 sessions grounded; 38 ungrounded)"
+    ],
     "pdf_page_count": 1,
     "pdf_sha256": "f8aa854fe49746a1091e39998486a25e709afab95d80844c4f3db440f7b85dbc",
     "pdf_text_sha256": "4643e384c1e9aecf4096b34209a7fe7ec10f22814c560cacfe3de5a4f49d14cd",
-    "pdf_url": "https://sfrecpark.org/DocumentCenter/View/28495",
     "provider": "reviewed-snapshot",
-    "reviewed_snapshot_sha256": "c0b0f89daafaa34c32c4e7e7f69340e81ce70103b108f4053437e804f2e759a9",
-    "schedule_effective": "2026-03-15",
-    "session_types": [
-      "family_swim",
-      "lap_swim",
-      "lessons",
-      "senior_swim"
-    ],
-    "sessions_count": 38
+    "reviewed_snapshot_sha256": "bf5eb7747cf8e0b277d8ab6406bfd3798ca9733262fa47735a5ebb15ff9113ab"
   },
   "hamilton-pool": {
     "artifact_paths": {
       "reviewed-snapshot": "data/reviewed-snapshots/hamilton-pool/adab5f0df897db91aba3ecfa9499e267fe5341c90843b5db93a425f55c2729ed.json"
     },
-    "extracted_at": "2026-04-18T01:14:54.817839+00:00",
-    "flag_details": [],
-    "flags": [],
-    "invariants_passed": true,
+    "extracted_at": "2026-04-18T16:34:37.544593+00:00",
     "model": "manual-review",
+    "note_details": [
+      {
+        "evidence": {
+          "grounded_count": 0,
+          "provider": "reviewed-snapshot",
+          "ratio": 0.0,
+          "sample_ungrounded": [
+            {
+              "day": "tuesday",
+              "end": "11:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 0,
+              "missing_evidence": true,
+              "start": "09:00",
+              "start_in_evidence": false,
+              "type": "lap_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "tuesday",
+              "end": "12:30",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 1,
+              "missing_evidence": true,
+              "start": "11:00",
+              "start_in_evidence": false,
+              "type": "lap_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "tuesday",
+              "end": "15:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 2,
+              "missing_evidence": true,
+              "start": "13:00",
+              "start_in_evidence": false,
+              "type": "family_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "tuesday",
+              "end": "15:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 3,
+              "missing_evidence": true,
+              "start": "13:00",
+              "start_in_evidence": false,
+              "type": "lap_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "tuesday",
+              "end": "18:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 4,
+              "missing_evidence": true,
+              "start": "15:30",
+              "start_in_evidence": false,
+              "type": "lessons",
+              "type_in_evidence": false
+            }
+          ],
+          "total": 29
+        },
+        "kind": "grounding_coverage_low",
+        "message": "reviewed-snapshot grounding coverage is 0% (0/29 sessions grounded; 29 ungrounded)",
+        "severity": "warning"
+      }
+    ],
+    "notes": [
+      "reviewed-snapshot grounding coverage is 0% (0/29 sessions grounded; 29 ungrounded)"
+    ],
     "pdf_page_count": 1,
     "pdf_sha256": "adab5f0df897db91aba3ecfa9499e267fe5341c90843b5db93a425f55c2729ed",
     "pdf_text_sha256": "668f12b5fa3b7997ef99f349090c124f3835d6af481249eea1d92d85a360a678",
-    "pdf_url": "https://sfrecpark.org/DocumentCenter/View/28496",
     "provider": "reviewed-snapshot",
-    "reviewed_snapshot_sha256": "ee0dfc38fdb5a24cc6a515559282e341c7b91d262f327f385d99bb277507fe2e",
-    "schedule_effective": "2026-03-17",
-    "session_types": [
-      "family_swim",
-      "lap_swim",
-      "lessons"
-    ],
-    "sessions_count": 29
+    "reviewed_snapshot_sha256": "fdf4ce9dba8eb23606fc94ab9779cc582f20eba6222206894f249d0df4abd8b9"
   },
   "martin-luther-king-jr-pool": {
     "artifact_paths": {
       "reviewed-snapshot": "data/reviewed-snapshots/martin-luther-king-jr-pool/4b0ae410e37d66393704fb70dff8e5ce3d42c8c919a6872038cefe8e9097a590.json"
     },
-    "extracted_at": "2026-04-18T03:07:06.927537+00:00",
-    "flag_details": [],
-    "flags": [],
-    "invariants_passed": true,
+    "extracted_at": "2026-04-18T16:34:37.607940+00:00",
     "model": "manual-review",
+    "note_details": [
+      {
+        "evidence": {
+          "grounded_count": 0,
+          "provider": "reviewed-snapshot",
+          "ratio": 0.0,
+          "sample_ungrounded": [
+            {
+              "day": "tuesday",
+              "end": "09:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 0,
+              "missing_evidence": true,
+              "start": "07:30",
+              "start_in_evidence": false,
+              "type": "lap_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "tuesday",
+              "end": "11:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 1,
+              "missing_evidence": true,
+              "start": "09:00",
+              "start_in_evidence": false,
+              "type": "lap_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "tuesday",
+              "end": "11:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 2,
+              "missing_evidence": true,
+              "start": "09:00",
+              "start_in_evidence": false,
+              "type": "senior_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "tuesday",
+              "end": "12:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 3,
+              "missing_evidence": true,
+              "start": "11:00",
+              "start_in_evidence": false,
+              "type": "lap_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "tuesday",
+              "end": "15:30",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 4,
+              "missing_evidence": true,
+              "start": "12:30",
+              "start_in_evidence": false,
+              "type": "family_swim",
+              "type_in_evidence": false
+            }
+          ],
+          "total": 33
+        },
+        "kind": "grounding_coverage_low",
+        "message": "reviewed-snapshot grounding coverage is 0% (0/33 sessions grounded; 33 ungrounded)",
+        "severity": "warning"
+      }
+    ],
+    "notes": [
+      "reviewed-snapshot grounding coverage is 0% (0/33 sessions grounded; 33 ungrounded)"
+    ],
     "pdf_page_count": 1,
     "pdf_sha256": "4b0ae410e37d66393704fb70dff8e5ce3d42c8c919a6872038cefe8e9097a590",
     "pdf_text_sha256": "d75d2b47ecae365c65c12e0b435f571588827c890217cce8965f685c08c33bcc",
-    "pdf_url": "https://sfrecpark.org/DocumentCenter/View/28771",
     "provider": "reviewed-snapshot",
-    "reviewed_snapshot_sha256": "d6181454fc7ab786444c7cd7f633523d0ff0b6a74af78d24d5c3a2bfc84f75b0",
-    "schedule_effective": "2026-04-07",
-    "session_types": [
-      "family_swim",
-      "lap_swim",
-      "lessons",
-      "senior_swim"
-    ],
-    "sessions_count": 33
+    "reviewed_snapshot_sha256": "13b1c7e14bf641c92719c657ee631b1bd216dcc580326283598e6567d22927c9"
   },
   "north-beach-pool": {
     "artifact_paths": {
       "reviewed-snapshot": "data/reviewed-snapshots/north-beach-pool/025a9d1fc08636dccec6430dedb16012a5e4539885898a2789a6ba5df8f30c07.json"
     },
-    "extracted_at": "2026-04-18T01:14:54.901959+00:00",
-    "flag_details": [],
-    "flags": [],
-    "invariants_passed": true,
+    "extracted_at": "2026-04-18T16:34:37.693903+00:00",
     "model": "manual-review",
+    "note_details": [
+      {
+        "evidence": {
+          "grounded_count": 0,
+          "provider": "reviewed-snapshot",
+          "ratio": 0.0,
+          "sample_ungrounded": [
+            {
+              "day": "tuesday",
+              "end": "08:30",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 0,
+              "missing_evidence": true,
+              "start": "07:30",
+              "start_in_evidence": false,
+              "type": "lap_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "tuesday",
+              "end": "10:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 1,
+              "missing_evidence": true,
+              "start": "07:30",
+              "start_in_evidence": false,
+              "type": "lap_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "tuesday",
+              "end": "10:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 2,
+              "missing_evidence": true,
+              "start": "08:45",
+              "start_in_evidence": false,
+              "type": "senior_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "tuesday",
+              "end": "15:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 3,
+              "missing_evidence": true,
+              "start": "12:30",
+              "start_in_evidence": false,
+              "type": "lap_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "tuesday",
+              "end": "15:30",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 4,
+              "missing_evidence": true,
+              "start": "12:30",
+              "start_in_evidence": false,
+              "type": "lap_swim",
+              "type_in_evidence": false
+            }
+          ],
+          "total": 45
+        },
+        "kind": "grounding_coverage_low",
+        "message": "reviewed-snapshot grounding coverage is 0% (0/45 sessions grounded; 45 ungrounded)",
+        "severity": "warning"
+      }
+    ],
+    "notes": [
+      "reviewed-snapshot grounding coverage is 0% (0/45 sessions grounded; 45 ungrounded)"
+    ],
     "pdf_page_count": 2,
     "pdf_sha256": "025a9d1fc08636dccec6430dedb16012a5e4539885898a2789a6ba5df8f30c07",
     "pdf_text_sha256": "c69719f45e2a44ee0ca8ecbe3eee3e1fc796d5c9ac5f0ad3af229edc9ecfa62c",
-    "pdf_url": "https://sfrecpark.org/DocumentCenter/View/28503",
     "provider": "reviewed-snapshot",
-    "reviewed_snapshot_sha256": "bc025a6413985ebbffd0c5866d96d01782f3e3f2098b650b3404cbefba5765ee",
-    "schedule_effective": "2026-03-17",
-    "session_types": [
-      "family_swim",
-      "lap_swim",
-      "lessons",
-      "senior_swim"
-    ],
-    "sessions_count": 45
+    "reviewed_snapshot_sha256": "9d36bcd57ac9bb9dc74b70f9e83a8fc7cf19597c74931dbc9a6b79436181883c"
   },
   "rossi-pool": {
     "artifact_paths": {
       "reviewed-snapshot": "data/reviewed-snapshots/rossi-pool/f580f358615eb222d31249ebe28d5a67fe9d7aa473493559754696849d8c798f.json"
     },
-    "extracted_at": "2026-04-18T01:34:13.600520+00:00",
-    "flag_details": [],
-    "flags": [],
-    "invariants_passed": true,
+    "extracted_at": "2026-04-18T16:34:37.725516+00:00",
     "model": "manual-review",
+    "note_details": [
+      {
+        "evidence": {
+          "grounded_count": 0,
+          "provider": "reviewed-snapshot",
+          "ratio": 0.0,
+          "sample_ungrounded": [
+            {
+              "day": "monday",
+              "end": "10:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 0,
+              "missing_evidence": true,
+              "start": "07:30",
+              "start_in_evidence": false,
+              "type": "lap_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "monday",
+              "end": "11:30",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 1,
+              "missing_evidence": true,
+              "start": "10:15",
+              "start_in_evidence": false,
+              "type": "lessons",
+              "type_in_evidence": false
+            },
+            {
+              "day": "monday",
+              "end": "13:00",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 2,
+              "missing_evidence": true,
+              "start": "11:45",
+              "start_in_evidence": false,
+              "type": "senior_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "monday",
+              "end": "15:30",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 3,
+              "missing_evidence": true,
+              "start": "13:30",
+              "start_in_evidence": false,
+              "type": "lap_swim",
+              "type_in_evidence": false
+            },
+            {
+              "day": "monday",
+              "end": "19:30",
+              "evidence": null,
+              "evidence_in_pdf": false,
+              "index": 4,
+              "missing_evidence": true,
+              "start": "18:15",
+              "start_in_evidence": false,
+              "type": "lap_swim",
+              "type_in_evidence": false
+            }
+          ],
+          "total": 23
+        },
+        "kind": "grounding_coverage_low",
+        "message": "reviewed-snapshot grounding coverage is 0% (0/23 sessions grounded; 23 ungrounded)",
+        "severity": "warning"
+      }
+    ],
+    "notes": [
+      "reviewed-snapshot grounding coverage is 0% (0/23 sessions grounded; 23 ungrounded)"
+    ],
     "pdf_page_count": 1,
     "pdf_sha256": "f580f358615eb222d31249ebe28d5a67fe9d7aa473493559754696849d8c798f",
     "pdf_text_sha256": "ca53272727a68bfa55c7847835617b41e2fb46b2f421bf45a629e09415c42aee",
-    "pdf_url": "https://sfrecpark.org/DocumentCenter/View/28501",
     "provider": "reviewed-snapshot",
-    "reviewed_snapshot_sha256": "9f7874eed64bf24f17c0f4d14b317cbad09f6bb7c47dce11f480f096e98b26a1",
-    "schedule_effective": "2026-03-15",
-    "session_types": [
-      "family_swim",
-      "lap_swim",
-      "lessons",
-      "senior_swim"
-    ],
-    "sessions_count": 23
+    "reviewed_snapshot_sha256": "9d63f4b70a6d44f7241df90c09c58e26a2fcbe9351422204b9b7a251e376ae3c"
   }
 }
