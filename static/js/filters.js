@@ -18,6 +18,8 @@
 // No frameworks, plain DOM APIs, progressive enhancement: without JS the
 // board still renders and all rows remain visible.
 
+import { sortByRank } from "./helpers/board.mjs";
+
 const POOL_SESSION_TYPES = new Set(["lap_swim", "family_swim"]);
 const EARTH_RADIUS_MILES = 3958.8;
 
@@ -208,7 +210,7 @@ function applyFilters(tbody, state) {
   const ordered =
     state.nearMe && state.userCoords
       ? sortByDistance(visible, state.userCoords)
-      : visible;
+      : sortByRank(visible, (row) => Number(row.dataset.baselineRank));
 
   // Move visible rows to the top in their new order; hidden rows retain
   // their DOM position at the tail (visually irrelevant since hidden).

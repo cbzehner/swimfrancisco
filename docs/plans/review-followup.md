@@ -13,6 +13,9 @@ progress:
   - step: 4
     status: done
     date: 2026-04-17
+  - step: 5
+    status: done
+    date: 2026-04-17
 last_review: null
 iterations: 2
 no_progress_count: 0
@@ -299,7 +302,7 @@ Definition of done:
 - Schedule table reflects current schema.
 - `zola build` passes.
 
-### Step 5: Extract JS helpers + fix board semantics (findings 1 + 4)
+### Step 5: Extract JS helpers + fix board semantics (findings 1 + 4) — DONE 2026-04-17
 
 Why together: both land in `status.js`/`filters.js`. Right moment to
 introduce the minimal JS test layer since fixes require pulling pure

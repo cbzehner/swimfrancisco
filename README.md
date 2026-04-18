@@ -35,6 +35,13 @@ npm run dev           # wrangler dev
 npm run typecheck     # tsc --noEmit
 ```
 
+## Tests
+
+```sh
+uv run pytest                     # Python pipeline + site-render tests
+node --test tests/js/*.test.mjs   # pure JS helpers (node:test)
+```
+
 ## Deploy
 
 Cloudflare Pages builds the site from `main` (build command `zola build`, output `public/`). The Worker is deployed separately with `wrangler deploy` and bound to `swimfrancisco.com/api/*` via a Workers route. After the first deploy, `/api/conditions` returns 503 until the first hourly cron fires; see `docs/deploy.md` for the full runbook including manual cron trigger and KV setup.

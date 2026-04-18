@@ -1,127 +1,8 @@
 // SwimFrancisco departure-board status computation.
-// Pure helpers are testable; the DOM-mutating helpers are called on DOMContentLoaded.
+// Pure helpers live in ./helpers/board.mjs and are exercised by node:test;
+// this file handles the DOM glue.
 
-const DAY_KEYS = [
-  "sunday",
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-];
-
-const PLACEHOLDER = "\u2014"; // em dash
-
-// Parse "HH:MM" into minutes since midnight. Returns null on malformed input.
-function parseHHMM(value) {
-  if (typeof value !== "string") return null;
-  const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
-  if (!match) return null;
-  const hours = Number(match[1]);
-  const minutes = Number(match[2]);
-  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
-  return hours * 60 + minutes;
-}
-
-// Format a minutes-since-midnight value back as "HH:MM" (24-hour).
-function formatHHMM(totalMinutes) {
-  const normalized = ((totalMinutes % 1440) + 1440) % 1440;
-  const hours = Math.floor(normalized / 60);
-  const minutes = normalized % 60;
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-}
-
-// Format a Date as YYYY-MM-DD in local time.
-function formatISODate(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
-// Return the active closure (if any) covering `now`. Closure `start`/`end` are
-// inclusive ISO dates (YYYY-MM-DD). Closures are facility-wide and all-day per
-// the v1 contract — see docs/schedules.md ("Closure Contract").
-function findActiveClosure(closures, now) {
-  if (!Array.isArray(closures) || closures.length === 0) return null;
-  const today = formatISODate(now);
-  for (const closure of closures) {
-    if (!closure || typeof closure !== "object") continue;
-    const start = typeof closure.start === "string" ? closure.start : null;
-    const end = typeof closure.end === "string" ? closure.end : null;
-    if (!start || !end) continue;
-    if (today >= start && today <= end) return closure;
-  }
-  return null;
-}
-
-// Compute STATUS and NEXT for a single pool row.
-// schedule shape: { sessions: [{day, type, start, end}, ...], closures: [{start, end, reason}, ...] }
-function computeStatus(schedule, now) {
-  const empty = { status: PLACEHOLDER, next: PLACEHOLDER };
-  if (!schedule || typeof schedule !== "object") return empty;
-
-  const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
-  const closures = Array.isArray(schedule.closures) ? schedule.closures : [];
-
-  const activeClosure = findActiveClosure(closures, now);
-  if (activeClosure) {
-    return {
-      status: "CLOSED",
-      next: `Closed until ${activeClosure.end}`,
-    };
-  }
-
-  if (sessions.length === 0) return empty;
-
-  const todayKey = DAY_KEYS[now.getDay()];
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
-
-  // Normalize and validate sessions. Drop malformed ones.
-  const normalized = [];
-  for (const session of sessions) {
-    if (!session || typeof session !== "object") continue;
-    const day = typeof session.day === "string" ? session.day.toLowerCase() : null;
-    const start = parseHHMM(session.start);
-    const end = parseHHMM(session.end);
-    if (!day || !DAY_KEYS.includes(day) || start === null || end === null) continue;
-    if (end <= start) continue;
-    normalized.push({ day, start, end });
-  }
-  if (normalized.length === 0) return empty;
-
-  // Is a session currently active today?
-  const current = normalized.find(
-    (s) => s.day === todayKey && s.start <= nowMinutes && nowMinutes < s.end,
-  );
-  if (current) {
-    return { status: "OPEN", next: `Closes ${formatHHMM(current.end)}` };
-  }
-
-  // Find the next upcoming session within a 7-day window.
-  let best = null;
-  for (let offset = 0; offset < 7; offset += 1) {
-    const dayIndex = (now.getDay() + offset) % 7;
-    const dayKey = DAY_KEYS[dayIndex];
-    const candidates = normalized
-      .filter((s) => s.day === dayKey)
-      .filter((s) => offset > 0 || s.start > nowMinutes)
-      .sort((a, b) => a.start - b.start);
-    if (candidates.length > 0) {
-      best = { offset, session: candidates[0] };
-      break;
-    }
-  }
-
-  if (!best) return { status: "CLOSED", next: PLACEHOLDER };
-
-  const label = best.offset === 0
-    ? `Opens ${formatHHMM(best.session.start)}`
-    : `Opens ${best.session.day.slice(0, 3).toUpperCase()} ${formatHHMM(best.session.start)}`;
-
-  return { status: "CLOSED", next: label };
-}
+import { PLACEHOLDER, computeStatus, captureBaselineRanks } from "./helpers/board.mjs";
 
 // Read and parse the data-schedule attribute; returns null on error.
 function readSchedule(row) {
@@ -183,8 +64,13 @@ function init() {
   const rows = Array.from(tbody.querySelectorAll("tr"));
   const sorted = sortRows(rows);
   reorderDom(tbody, sorted);
-  // Signal to filters.js (Step 12) that status cells are populated and rows
-  // are in their baseline (open-first, alphabetical) order.
+  // Stamp each row with its baseline-sort rank so filters.js can restore
+  // this order after Near Me (which resorts by distance) turns off.
+  captureBaselineRanks(sorted, (row, rank) => {
+    row.dataset.baselineRank = String(rank);
+  });
+  // Signal to filters.js that status cells are populated and rows are in
+  // their baseline (open-first, alphabetical) order.
   document.dispatchEvent(new CustomEvent("sf:status-applied"));
 }
 
