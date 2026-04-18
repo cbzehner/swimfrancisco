@@ -247,9 +247,6 @@ export function computeDetailStatus(schedule, now) {
   const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
   const closures = Array.isArray(schedule.closures) ? schedule.closures : [];
 
-  // Resolution order (spec): NOT_VERIFIED wins before any closure check.
-  // A pool with empty `sessions` is treated as "we don't know yet", not
-  // "closed today", even if a facility-wide closure is active.
   const normalized = normalizeSessions(sessions);
   if (normalized.length === 0) {
     return { ...EMPTY_DETAIL, kind: "NOT_VERIFIED" };
@@ -267,11 +264,12 @@ export function computeDetailStatus(schedule, now) {
 
   const todayKey = DAY_KEYS[now.getDay()];
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const todayAll = normalized.filter((s) => s.day === todayKey);
+  const todayDropIn = todayAll.filter((s) => DROP_IN_TYPES.has(s.type));
 
-  const activeDropIn = normalized.filter(
-    (s) => s.day === todayKey && DROP_IN_TYPES.has(s.type) && s.start <= nowMinutes && nowMinutes < s.end,
+  const activeDropIn = todayDropIn.filter(
+    (s) => s.start <= nowMinutes && nowMinutes < s.end,
   );
-
   if (activeDropIn.length > 0) {
     return {
       ...EMPTY_DETAIL,
@@ -279,6 +277,26 @@ export function computeDetailStatus(schedule, now) {
       activePrograms: activeDropIn.map((s) => s.type),
       activeUntil: Math.min(...activeDropIn.map((s) => s.end)),
       is_drop_in: true,
+      nextDropIn: findNextDropIn(schedule, now),
+    };
+  }
+
+  const activeLessons = todayAll.find(
+    (s) => s.type === "lessons" && s.start <= nowMinutes && nowMinutes < s.end,
+  );
+  if (activeLessons) {
+    return {
+      ...EMPTY_DETAIL,
+      kind: "LESSONS",
+      activeLessonsUntil: activeLessons.end,
+      nextDropIn: findNextDropIn(schedule, now),
+    };
+  }
+
+  if (todayDropIn.length === 0 && todayAll.length > 0) {
+    return {
+      ...EMPTY_DETAIL,
+      kind: "NO_DROPIN_TODAY",
       nextDropIn: findNextDropIn(schedule, now),
     };
   }

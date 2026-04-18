@@ -278,3 +278,48 @@ test("computeDetailStatus NOT_VERIFIED wins over active closure", () => {
   const r = computeDetailStatus(unverifiedWithClosure, now);
   assert.equal(r.kind, "NOT_VERIFIED");
 });
+
+test("computeDetailStatus LESSONS when only lessons are active", () => {
+  const schedule = {
+    sessions: [
+      { day: "tuesday", type: "lessons",     start: "15:30", end: "17:00" },
+      { day: "tuesday", type: "family_swim", start: "17:30", end: "18:30" },
+    ],
+    closures: [],
+  };
+  const now = new Date("2026-04-14T16:00:00"); // Tue 16:00 — inside lessons
+  const r = computeDetailStatus(schedule, now);
+  assert.equal(r.kind, "LESSONS");
+  assert.equal(r.activeLessonsUntil, 17 * 60);
+  assert.equal(r.is_drop_in, false);
+  assert.deepEqual(r.nextDropIn, { program: "family_swim", day: "tuesday", start: 17 * 60 + 30 });
+});
+
+test("computeDetailStatus prefers OPEN when drop-in overlaps lessons", () => {
+  const schedule = {
+    sessions: [
+      { day: "tuesday", type: "lessons",  start: "15:30", end: "17:30" },
+      { day: "tuesday", type: "lap_swim", start: "16:00", end: "17:00" },
+    ],
+    closures: [],
+  };
+  const now = new Date("2026-04-14T16:30:00"); // inside both
+  const r = computeDetailStatus(schedule, now);
+  assert.equal(r.kind, "OPEN");
+  assert.deepEqual(r.activePrograms, ["lap_swim"]);
+});
+
+test("computeDetailStatus NO_DROPIN_TODAY on lessons-only day with no active session", () => {
+  const schedule = {
+    sessions: [
+      { day: "tuesday", type: "lessons",  start: "15:30", end: "17:30" },
+      { day: "wednesday", type: "lap_swim", start: "09:00", end: "10:15" },
+    ],
+    closures: [],
+  };
+  const now = new Date("2026-04-14T10:00:00"); // Tue 10:00 — no active lessons/drop-in
+  const r = computeDetailStatus(schedule, now);
+  assert.equal(r.kind, "NO_DROPIN_TODAY");
+  assert.equal(r.is_drop_in, false);
+  assert.deepEqual(r.nextDropIn, { program: "lap_swim", day: "wednesday", start: 9 * 60 });
+});
