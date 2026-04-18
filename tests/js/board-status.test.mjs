@@ -11,6 +11,7 @@ import {
   sortByRank,
   captureBaselineRanks,
   findNextDropIn,
+  freshnessLabel,
 } from "../../static/js/helpers/board.mjs";
 
 test("computeStatus uses 'Closed through' for inclusive end dates", () => {
@@ -172,4 +173,23 @@ test("findNextDropIn rolls to the same weekday one week away", () => {
   const now = new Date("2026-04-15T11:00:00"); // Wed after session ended
   const next = findNextDropIn(wednesdayOnly, now);
   assert.deepEqual(next, { program: "lap_swim", day: "wednesday", start: 9 * 60 });
+});
+
+test("freshnessLabel: within 30 days is fresh", () => {
+  const now = new Date("2026-04-17T10:00:00");
+  assert.equal(freshnessLabel("2026-04-17", now), "fresh");
+  assert.equal(freshnessLabel("2026-03-18", now), "fresh"); // exactly 30 days
+});
+
+test("freshnessLabel: older than 30 days is stale", () => {
+  const now = new Date("2026-04-17T10:00:00");
+  assert.equal(freshnessLabel("2026-03-17", now), "stale"); // 31 days
+  assert.equal(freshnessLabel("2025-10-01", now), "stale");
+});
+
+test("freshnessLabel: missing or invalid input is stale", () => {
+  const now = new Date("2026-04-17T10:00:00");
+  assert.equal(freshnessLabel(null, now), "stale");
+  assert.equal(freshnessLabel("", now), "stale");
+  assert.equal(freshnessLabel("not-a-date", now), "stale");
 });

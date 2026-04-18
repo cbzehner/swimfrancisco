@@ -196,3 +196,20 @@ function normalizeRank(rank) {
 }
 
 export { PLACEHOLDER, DAY_KEYS };
+
+const FRESH_WINDOW_DAYS = 30;
+
+// Return "fresh" when `isoDate` (YYYY-MM-DD) is within FRESH_WINDOW_DAYS of
+// `now` (inclusive); "stale" otherwise. Missing, empty, or unparseable input
+// is treated as stale — we prefer to signal "we don't know" rather than
+// overstate freshness.
+export function freshnessLabel(isoDate, now) {
+  if (typeof isoDate !== "string" || isoDate.length === 0) return "stale";
+  const parsed = new Date(`${isoDate}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return "stale";
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const ageMs = today.getTime() - parsed.getTime();
+  if (ageMs < 0) return "fresh"; // future-dated counts as fresh
+  const ageDays = ageMs / 86_400_000;
+  return ageDays <= FRESH_WINDOW_DAYS ? "fresh" : "stale";
+}
