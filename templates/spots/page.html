@@ -310,5 +310,7 @@
 {% block scripts %}
   {% if page.extra.type == "open_water" %}
     <script type="module" src="{{ get_url(path='js/conditions.js') }}"></script>
+  {% elif page.extra.type == "pool" %}
+    <script type="module" src="{{ get_url(path='js/detail.js') }}"></script>
   {% endif %}
 {% endblock %}
