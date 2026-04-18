@@ -66,3 +66,34 @@ test("sortByRank is stable and keeps unknown ranks at the tail", () => {
   const sorted = sortByRank(items, (x) => x.rank);
   assert.deepEqual(sorted.map((x) => x.id), ["B", "D", "A", "C"]);
 });
+
+test("computeStatus ignores zone-scoped closures (non-empty closure.pool)", () => {
+  const now = new Date("2026-04-17T10:00:00");
+  const schedule = {
+    sessions: [
+      { day: "friday", type: "lap_swim", start: "09:00", end: "11:00" },
+    ],
+    closures: [
+      { start: "2026-04-17", end: "2026-04-17", reason: "training", pool: "deep" },
+    ],
+  };
+  const { status } = computeStatus(schedule, now);
+  // 2026-04-17 is a Friday; no session is active at 10:00 (session is 09:00-11:00, so actually active).
+  // We expect OPEN because the zone closure does not close the facility, AND a session is live.
+  assert.equal(status, "OPEN");
+});
+
+test("computeStatus honors facility-wide closures (empty closure.pool)", () => {
+  const now = new Date("2026-04-17T10:00:00");
+  const schedule = {
+    sessions: [
+      { day: "friday", type: "lap_swim", start: "09:00", end: "11:00" },
+    ],
+    closures: [
+      { start: "2026-04-17", end: "2026-04-17", reason: "training" },
+    ],
+  };
+  const { status, next } = computeStatus(schedule, now);
+  assert.equal(status, "CLOSED");
+  assert.equal(next, "Closed through 2026-04-17");
+});

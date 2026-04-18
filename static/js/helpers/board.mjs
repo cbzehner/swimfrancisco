@@ -40,8 +40,9 @@ export function formatISODate(date) {
   return `${y}-${m}-${d}`;
 }
 
-// Return the active closure (if any) covering `now`. Closure start/end are
-// inclusive ISO dates per the v1 closure contract.
+// Return the active facility-wide closure (if any) covering `now`. Closures
+// with a non-empty `pool` field are zone-scoped and do NOT close the whole
+// facility — they are rendered as detail-page banners but ignored here.
 export function findActiveClosure(closures, now) {
   if (!Array.isArray(closures) || closures.length === 0) return null;
   const today = formatISODate(now);
@@ -50,6 +51,7 @@ export function findActiveClosure(closures, now) {
     const start = typeof closure.start === "string" ? closure.start : null;
     const end = typeof closure.end === "string" ? closure.end : null;
     if (!start || !end) continue;
+    if (typeof closure.pool === "string" && closure.pool.length > 0) continue;
     if (today >= start && today <= end) return closure;
   }
   return null;
