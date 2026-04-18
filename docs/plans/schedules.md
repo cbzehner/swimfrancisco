@@ -251,7 +251,8 @@ Design revised in response to magi review findings:
     stale closures surviving a re-run)
   - `extra.schedule_effective`
   - `extra.schedule_effective_end` (only if present in extracted)
-  - `extra.last_verified_at` (set to today's ISO date)
+- `extra.last_verified_at` is **not** touched by the merge. It is reserved for
+  the human reviewer to bump after comparing the diff against the PDF.
 - Preserves everything else (`title`, `slug`, `extra.type/subtype/address/
   lat/lng/website/cost`) and the entire post-`+++` description body byte-exact
   where tomlkit round-trip allows.

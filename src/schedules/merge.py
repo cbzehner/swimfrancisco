@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -46,7 +45,6 @@ def merge(pool_md_path: Path, extracted: dict[str, Any]) -> MergeResult:
         extra["schedule_effective_end"] = after["schedule_effective_end"]
     elif "schedule_effective_end" in extra:
         del extra["schedule_effective_end"]
-    extra["last_verified_at"] = date.today().isoformat()
 
     updated = tomlkit.dumps(document).rstrip("\n")
     pool_md_path.write_text(f"+++\n{updated}\n+++\n{body}")
