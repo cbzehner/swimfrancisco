@@ -10,6 +10,9 @@ progress:
   - step: 3
     status: done
     date: 2026-04-17
+  - step: 4
+    status: done
+    date: 2026-04-17
 last_review: null
 iterations: 2
 no_progress_count: 0
@@ -260,7 +263,7 @@ Definition of done:
 - Paraphrased evidence no longer passes grounding.
 - Multi-zone-only disagreement surfaces in provider diff reports.
 
-### Step 4: Rewrite pool detail template in one pass (findings 2 + 5)
+### Step 4: Rewrite pool detail template in one pass (findings 2 + 5) — DONE 2026-04-17
 
 Why together: both edits live in `templates/spots/page.html`; both driven
 by the schedule schema as it exists today.

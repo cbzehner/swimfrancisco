@@ -27,18 +27,19 @@
         {% set days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] %}
         <table class="schedule-table">
           <thead>
-            <tr><th>DAY</th><th>START</th><th>END</th><th>TYPE</th><th>LANES</th></tr>
+            <tr><th>DAY</th><th>START</th><th>END</th><th>PROGRAM</th><th>POOL</th><th>NOTES</th></tr>
           </thead>
           <tbody>
             {% for day in days %}
               {% set day_sessions = sessions | filter(attribute="day", value=day) %}
               {% for s in day_sessions %}
                 <tr>
-                  <td>{{ day | upper }}</td>
+                  <td>{{ day | capitalize }}</td>
                   <td>{{ s.start }}</td>
                   <td>{{ s.end }}</td>
-                  <td>{{ s.type | upper }}</td>
-                  <td>{{ s.lanes | default(value="—") }}</td>
+                  <td>{{ s.type | replace(from="_", to=" ") | title }}</td>
+                  <td>{{ s.pool | default(value="—") | capitalize }}</td>
+                  <td>{{ s.notes | default(value="—") }}</td>
                 </tr>
               {% endfor %}
             {% endfor %}
@@ -55,7 +56,10 @@
         <h2>Closures</h2>
         <ul>
           {% for c in closures %}
-            <li>{{ c }}</li>
+            <li>
+              {% if c.start == c.end %}{{ c.start }}{% else %}{{ c.start }} – {{ c.end }}{% endif %}:
+              {{ c.reason }}
+            </li>
           {% endfor %}
         </ul>
       </section>
