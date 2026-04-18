@@ -150,7 +150,100 @@
       {% else %}
         <p class="fallback">Schedule not yet verified.</p>
       {% endif %}
-      <section class="closure-banners" data-placeholder="closures"></section>
+      {# Anchor the 14-day window in America/Los_Angeles so the build host's
+         timezone can't shift the window by a day. 1209600 = 14 × 86400.
+         Zola 0.22.1 Tera `<=`/`>=` are numeric-only, so we strip dashes and
+         cast ISO dates to ints for the overlap test. The date filter on plain
+         ISO strings is also unreliable, so pretty labels use a month lookup. #}
+      {% set today_ts = now(timestamp=true) %}
+      {% set today_iso = today_ts | date(format="%Y-%m-%d", timezone="America/Los_Angeles") %}
+      {% set window_end_iso = (today_ts + 1209600) | date(format="%Y-%m-%d", timezone="America/Los_Angeles") %}
+      {% set today_i = today_iso | replace(from="-", to="") | int %}
+      {% set window_end_i = window_end_iso | replace(from="-", to="") | int %}
+      {% set upcoming_closures = [] %}
+      {% for c in closures %}
+        {% set c_start_i = c.start | replace(from="-", to="") | int %}
+        {% set c_end_i = c.end | replace(from="-", to="") | int %}
+        {% if c_start_i <= window_end_i and c_end_i >= today_i %}
+          {% set_global upcoming_closures = upcoming_closures | concat(with=c) %}
+        {% endif %}
+      {% endfor %}
+
+      {% if upcoming_closures | length > 0 %}
+        <section class="closure-banners" aria-label="Upcoming closures">
+          {% for c in upcoming_closures %}
+            {% set cs_parts = c.start | split(pat="-") %}
+            {% set ce_parts = c.end | split(pat="-") %}
+            {% set cs_month_i = cs_parts[1] | int %}
+            {% set cs_day_i = cs_parts[2] | int %}
+            {% set ce_month_i = ce_parts[1] | int %}
+            {% set ce_day_i = ce_parts[2] | int %}
+            {% if cs_month_i == 1 %}
+              {% set cs_month_label = "JAN" %}
+            {% elif cs_month_i == 2 %}
+              {% set cs_month_label = "FEB" %}
+            {% elif cs_month_i == 3 %}
+              {% set cs_month_label = "MAR" %}
+            {% elif cs_month_i == 4 %}
+              {% set cs_month_label = "APR" %}
+            {% elif cs_month_i == 5 %}
+              {% set cs_month_label = "MAY" %}
+            {% elif cs_month_i == 6 %}
+              {% set cs_month_label = "JUN" %}
+            {% elif cs_month_i == 7 %}
+              {% set cs_month_label = "JUL" %}
+            {% elif cs_month_i == 8 %}
+              {% set cs_month_label = "AUG" %}
+            {% elif cs_month_i == 9 %}
+              {% set cs_month_label = "SEP" %}
+            {% elif cs_month_i == 10 %}
+              {% set cs_month_label = "OCT" %}
+            {% elif cs_month_i == 11 %}
+              {% set cs_month_label = "NOV" %}
+            {% else %}
+              {% set cs_month_label = "DEC" %}
+            {% endif %}
+            {% if ce_month_i == 1 %}
+              {% set ce_month_label = "JAN" %}
+            {% elif ce_month_i == 2 %}
+              {% set ce_month_label = "FEB" %}
+            {% elif ce_month_i == 3 %}
+              {% set ce_month_label = "MAR" %}
+            {% elif ce_month_i == 4 %}
+              {% set ce_month_label = "APR" %}
+            {% elif ce_month_i == 5 %}
+              {% set ce_month_label = "MAY" %}
+            {% elif ce_month_i == 6 %}
+              {% set ce_month_label = "JUN" %}
+            {% elif ce_month_i == 7 %}
+              {% set ce_month_label = "JUL" %}
+            {% elif ce_month_i == 8 %}
+              {% set ce_month_label = "AUG" %}
+            {% elif ce_month_i == 9 %}
+              {% set ce_month_label = "SEP" %}
+            {% elif ce_month_i == 10 %}
+              {% set ce_month_label = "OCT" %}
+            {% elif ce_month_i == 11 %}
+              {% set ce_month_label = "NOV" %}
+            {% else %}
+              {% set ce_month_label = "DEC" %}
+            {% endif %}
+            {% set cs_label = cs_month_label ~ " " ~ cs_day_i %}
+            {% set ce_label = ce_month_label ~ " " ~ ce_day_i %}
+            <div class="closure-banner">
+              <span class="closure-banner-date">
+                {% if c.start == c.end %}
+                  {{ cs_label }}
+                {% else %}
+                  {{ cs_label }} – {{ ce_label }}
+                {% endif %}
+              </span>
+              {% if c.pool %}<span class="closure-banner-zone">{{ c.pool | upper }}</span>{% endif %}
+              <span class="closure-banner-reason">{{ c.reason }}</span>
+            </div>
+          {% endfor %}
+        </section>
+      {% endif %}
       <footer class="meta" data-placeholder="meta"></footer>
     </div>
 
