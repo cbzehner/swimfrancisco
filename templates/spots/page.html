@@ -58,7 +58,70 @@
       </section>
 
       {# Weekly grid, closure banners, footer meta filled in by later tasks. #}
-      <section class="weekly-grid" data-placeholder="weekly"></section>
+      {% set day_order = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] %}
+      {% set day_labels = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"] %}
+      {% set lap_sessions = sessions | filter(attribute="type", value="lap_swim") %}
+      {% set family_sessions = sessions | filter(attribute="type", value="family_swim") %}
+      {% set senior_sessions = sessions | filter(attribute="type", value="senior_swim") %}
+      {% set lap_count = lap_sessions | length %}
+      {% set family_count = family_sessions | length %}
+      {% set senior_count = senior_sessions | length %}
+      {% set drop_in_count = lap_count + family_count + senior_count %}
+
+      {% if drop_in_count > 0 %}
+        {# Parallel flat arrays — Tera can't parse nested array literals in {% set %}. #}
+        {% if senior_sessions | length > 0 %}
+          {% set program_keys     = ["lap_swim", "family_swim", "senior_swim"] %}
+          {% set program_labels   = ["LAP SWIM", "FAMILY SWIM", "SENIOR SWIM"] %}
+          {% set program_crossnav = ["lap", "family", ""] %}
+        {% else %}
+          {% set program_keys     = ["lap_swim", "family_swim"] %}
+          {% set program_labels   = ["LAP SWIM", "FAMILY SWIM"] %}
+          {% set program_crossnav = ["lap", "family"] %}
+        {% endif %}
+
+        <section class="weekly-grid">
+          <h2 class="weekly-grid-title">WEEKLY · BY PROGRAM</h2>
+          <div class="weekly-grid-table" role="table">
+            <div class="weekly-grid-head" role="row">
+              <span class="weekly-grid-rowlabel" role="columnheader"></span>
+              {% for label in day_labels %}
+                <span class="weekly-grid-dayhead" role="columnheader" data-day="{{ day_order[loop.index0] }}">{{ label }}</span>
+              {% endfor %}
+            </div>
+            {% for pkey in program_keys %}
+              {% set pi = loop.index0 %}
+              {% set plabel = program_labels[pi] %}
+              {% set pcross = program_crossnav[pi] %}
+              {% set psessions = sessions | filter(attribute="type", value=pkey) %}
+              <div class="weekly-grid-row" role="row" data-program="{{ pkey }}">
+                <span class="weekly-grid-rowlabel" role="rowheader">
+                  {{ plabel }}
+                  {% if pcross %}
+                    <a class="weekly-grid-crossnav" href="{{ config.base_url }}/#{{ pcross }}">→ OTHER {{ pcross | upper }} POOLS</a>
+                  {% endif %}
+                </span>
+                {% for day in day_order %}
+                  {% set cell = psessions | filter(attribute="day", value=day) %}
+                  <span class="weekly-grid-cell" role="cell" data-day="{{ day }}" data-day-short="{{ day_labels[loop.index0] }}"{% if cell | length == 0 %} data-empty="true"{% endif %}>
+                    {% if cell | length == 0 %}
+                      <span class="weekly-grid-empty">—</span>
+                    {% else %}
+                      {% for s in cell %}
+                        <span class="weekly-grid-session">
+                          {{ s.start }}–{{ s.end }}{% if s.pool %} <span class="zone">({{ s.pool }})</span>{% endif %}
+                        </span>
+                      {% endfor %}
+                    {% endif %}
+                  </span>
+                {% endfor %}
+              </div>
+            {% endfor %}
+          </div>
+        </section>
+      {% else %}
+        <p class="fallback">Schedule not yet verified.</p>
+      {% endif %}
       <section class="closure-banners" data-placeholder="closures"></section>
       <footer class="meta" data-placeholder="meta"></footer>
     </div>
