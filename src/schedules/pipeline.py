@@ -163,6 +163,9 @@ def run_pipeline(
                 cost_estimate = "reviewed-snapshot"
                 result_provider = "reviewed-snapshot"
                 review_notes: list[ReviewNote] = []
+                snapshot_grounding = grounding_from_text(pdf_text_normalized, payload)
+                review_notes.extend(_grounding_notes("reviewed-snapshot", snapshot_grounding))
+                review_notes.extend(check_delta(payload, prior_snapshot))
                 artifact_paths = {"reviewed-snapshot": str(snapshot_path)}
                 snapshot_notes = snapshot.get("summary")
             else:

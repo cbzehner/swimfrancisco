@@ -3,6 +3,7 @@ import json
 import pytest
 
 from schedules.reviewed_snapshots import REVIEWED_SNAPSHOT_VERSION, load_reviewed_snapshot
+from schedules.validate import validate
 
 
 def test_load_reviewed_snapshot(tmp_path):
@@ -178,3 +179,19 @@ def test_canonicalize_payload_identical_on_equivalent_inputs():
         "schedule_effective": "2026-03-17",
     }
     assert canonicalize_payload(a) == canonicalize_payload(b)
+
+
+def test_reviewed_snapshot_payload_passes_validate():
+    payload = {
+        "schedule_effective": "2026-03-17",
+        "sessions": [
+            {"day": "monday", "type": "lap_swim", "start": "07:30", "end": "08:30"},
+            {"day": "tuesday", "type": "lap_swim", "start": "07:30", "end": "08:30"},
+            {"day": "wednesday", "type": "lap_swim", "start": "07:30", "end": "08:30"},
+            {"day": "thursday", "type": "lap_swim", "start": "07:30", "end": "08:30"},
+            {"day": "friday", "type": "lap_swim", "start": "07:30", "end": "08:30"},
+        ],
+        "closures": [],
+    }
+    result = validate(payload, prior_sessions_count=5)
+    assert result.ok
