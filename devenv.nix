@@ -30,6 +30,23 @@
     '';
   };
 
+  # Pipeline runners. Dry-run first to preview; live run writes to
+  # content/spots/ and data/extraction-state.json.
+  scripts.schedules-dry-run = {
+    description = "Run the schedule extraction pipeline without writing (preview mode)";
+    exec = ''
+      set -euo pipefail
+      uv run schedules extract --dry-run "$@"
+    '';
+  };
+  scripts.schedules-extract = {
+    description = "Run the schedule extraction pipeline live (writes content and state)";
+    exec = ''
+      set -euo pipefail
+      uv run schedules extract "$@"
+    '';
+  };
+
   processes.zola.exec = ''
     watchexec --no-vcs-ignore \
       --watch content --watch templates --watch sass --watch static --watch config.toml \
