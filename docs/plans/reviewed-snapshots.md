@@ -7,8 +7,13 @@ progress:
       - "Committed d6319fb; 58 tests pass; no adjudicat leftovers in src/tests/state"
       - "Codex also rewrote the plan file text itself to eliminate the word 'adjudicat' — scope creep, but approved by user"
       - "Codex added an explicit sort key in report.py artifact rendering (alphabetical no longer pinned reviewed-snapshot first). Behavior-preserving, test-driven."
-last_review: 2026-04-18T08:25:00-07:00
-iterations: 1
+  - section: "Task 2: Enforce reviewed_snapshot envelope schema"
+    status: complete
+    notes:
+      - "Committed 1649677; 63 tests pass; all 7 snapshots upgraded to v1 envelope"
+      - "Codex reformatted snapshot JSON to multi-line sessions (noisier diff, payload byte-equivalent)"
+last_review: 2026-04-18T08:45:00-07:00
+iterations: 2
 no_progress_count: 0
 started_at: 2026-04-18T08:06:43-07:00
 work_unit_granularity: task
