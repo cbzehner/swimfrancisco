@@ -270,6 +270,11 @@
           </p>
         {% endif %}
       </footer>
+      {% if page.content %}
+        <section class="description">
+          {{ page.content | safe }}
+        </section>
+      {% endif %}
     </div>
 
   {% elif extra.type == "open_water" %}
@@ -296,7 +301,7 @@
     </footer>
   {% endif %}
 
-  {% if page.content %}
+  {% if page.content and extra.type == "open_water" %}
     <section class="notes">
       {{ page.content | safe }}
     </section>
