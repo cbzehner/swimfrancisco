@@ -70,10 +70,6 @@ EXTRACTION_SCHEMA = {
                         "pattern": r"^\d{4}-\d{2}-\d{2}$",
                     },
                     "reason": {"type": "string", "minLength": 1},
-                    "pool": {
-                        "type": "string",
-                        "minLength": 1,
-                    },
                 },
             },
         },

@@ -41,7 +41,8 @@ function formatISODate(date) {
 }
 
 // Return the active closure (if any) covering `now`. Closure `start`/`end` are
-// inclusive ISO dates (YYYY-MM-DD).
+// inclusive ISO dates (YYYY-MM-DD). Closures are facility-wide and all-day per
+// the v1 contract — see docs/schedules.md ("Closure Contract").
 function findActiveClosure(closures, now) {
   if (!Array.isArray(closures) || closures.length === 0) return null;
   const today = formatISODate(now);

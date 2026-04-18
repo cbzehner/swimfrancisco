@@ -109,6 +109,8 @@ def _normalize_sessions(raw_sessions: list[dict]) -> list[dict[str, str]]:
 
 
 def _normalize_closures(raw_closures: list[dict]) -> list[dict[str, str]]:
+    # Closures are facility-wide, all-day, date-only per the v1 contract; see
+    # docs/schedules.md and docs/plans/review-followup.md Step 1.
     normalized = []
     for closure in raw_closures:
         item: dict[str, str] = {
@@ -116,11 +118,8 @@ def _normalize_closures(raw_closures: list[dict]) -> list[dict[str, str]]:
             "end": str(closure["end"]),
             "reason": str(closure["reason"]),
         }
-        pool = closure.get("pool")
-        if isinstance(pool, str) and pool.strip():
-            item["pool"] = pool.strip()
         normalized.append(item)
-    return sorted(normalized, key=lambda item: (item["start"], item["end"], item["reason"], item.get("pool", "")))
+    return sorted(normalized, key=lambda item: (item["start"], item["end"], item["reason"]))
 
 
 def _build_sessions_value(sessions: list[dict[str, str]]):
@@ -150,8 +149,6 @@ def _build_closures_value(closures: list[dict[str, str]]):
         table["start"] = closure["start"]
         table["end"] = closure["end"]
         table["reason"] = closure["reason"]
-        if "pool" in closure:
-            table["pool"] = closure["pool"]
         aot.append(table)
     return aot
 

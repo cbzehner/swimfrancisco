@@ -12,7 +12,7 @@ Programs to ignore (do NOT emit as sessions):
 - WATER EXERCISE, DEEP WATER EXERCISE, EXERCISE, DEEP WATER H2O AEROBICS, AEROBICS — these are instructor-led aerobics classes.
 - SELF GUIDED EXERCISE, SENIOR/SELF GUIDED EXERCISE — access-controlled exercise programs, not drop-in swim.
 - MASTERS SWIMMING, MASTERS SWIM TEAM, YOUTH SYNCHRO, ADULT SYNCHRO, ADULT HOCKEY, ADULT WATER POLO, PIRANHAS SWIM, JUNIOR PIRANHAS SWIM — private team/club bookings.
-- SFUSD CLASS, SFUSD — school-only bookings. Record these as a closure entry for that day and time instead, with reason "SFUSD class".
+- SFUSD CLASS, SFUSD — school-only bookings. Do not encode timed school-only bookings in closures[]. Omit SFUSD rows from the output entirely; they are private bookings, not facility closures. Closures in this schema are always facility-wide, all-day, and date-only.
 
 Rules:
 - Emit sessions exactly as the PDF shows; do not infer missing programs or dates.

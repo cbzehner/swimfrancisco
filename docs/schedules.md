@@ -113,6 +113,16 @@ As of 2026-04-17:
 - `mission-community-pool` is skipped because the facility page announces the Summer 2026 opening date but exposes no current schedule PDF.
 - `sava-pool` is skipped because the pool remains closed for repairs and the page only links an old Fall 2025 schedule.
 
+## Closure Contract (v1)
+
+Closures in the extractor schema are **facility-wide, all-day, and date-only**:
+
+- Fields: `start`, `end`, `reason` — both dates are ISO (`YYYY-MM-DD`) and inclusive.
+- There is no `pool` field and no time fields.
+- SFUSD and other timed school-only bookings are **not** closures; they are omitted from the output entirely.
+
+Timed or pool-scoped closures are a deliberate out-of-scope item; adding them is a schema migration, not a bug fix. See `docs/plans/review-followup.md` Step 1 for the rationale.
+
 ## Future
 
 The v3 path is still the same: a GitHub Action can wrap `uv run schedules extract` and open a PR whenever the content diff is non-empty.
