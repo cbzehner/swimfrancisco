@@ -1,8 +1,14 @@
 ---
 status: in_progress
-progress: []
-last_review: null
-iterations: 0
+progress:
+  - section: "Task 1: Rename the module, directory, state field, and in-repo references"
+    status: complete
+    notes:
+      - "Committed d6319fb; 58 tests pass; no adjudicat leftovers in src/tests/state"
+      - "Codex also rewrote the plan file text itself to eliminate the word 'adjudicat' — scope creep, but approved by user"
+      - "Codex added an explicit sort key in report.py artifact rendering (alphabetical no longer pinned reviewed-snapshot first). Behavior-preserving, test-driven."
+last_review: 2026-04-18T08:25:00-07:00
+iterations: 1
 no_progress_count: 0
 started_at: 2026-04-18T08:06:43-07:00
 work_unit_granularity: task
