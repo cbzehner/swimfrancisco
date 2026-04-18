@@ -29,3 +29,7 @@ tmp/
 
 # Editor/OS
 .DS_Store
+
+# Brainstorming / scratch
+.superpowers/
+.browser-artifacts/
