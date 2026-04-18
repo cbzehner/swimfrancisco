@@ -8,7 +8,7 @@ from .delta import check_delta
 from .fetch import fetch_pdf
 from .grounding import grounding_from_text, normalize_pdf_text
 from .merge import merge, read_schedule_snapshot
-from .models import DeltaResult, GroundingResult, PoolResult, ReviewFlag
+from .models import DeltaResult, GroundingResult, PoolEntry, PoolResult, ReviewFlag
 from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH
 from .providers import extract as extract_with_provider
 from .registry import load_registry
@@ -37,6 +37,25 @@ def should_write(*, dry_run: bool, compare_with: str | None, hard_block: bool) -
 def compute_exit_code(results: list[PoolResult]) -> int:
     """Non-zero when any pool failed. Partial failure must not exit 0."""
     return 1 if any(result.status == "failed" for result in results) else 0
+
+
+def _identity_kwargs(entry: PoolEntry) -> dict:
+    return {
+        "slug": entry.slug,
+        "official_page_url": entry.official_page_url,
+        "pdf_url": entry.pdf_url,
+        "source_status": entry.source_status,
+    }
+
+
+def _snapshot_kwargs(prior_snapshot: dict) -> dict:
+    count = len(prior_snapshot["sessions"])
+    return {
+        "prior_sessions_count": count,
+        "sessions_count": count,
+        "closures_count": len(prior_snapshot["closures"]),
+        "schedule_effective": prior_snapshot["schedule_effective"],
+    }
 
 
 def _grounding_flags(provider: str, grounding: GroundingResult) -> list[ReviewFlag]:
@@ -108,15 +127,9 @@ def run_pipeline(
         if entry.source_status != "published":
             results.append(
                 PoolResult(
-                    slug=entry.slug,
+                    **_identity_kwargs(entry),
+                    **_snapshot_kwargs(prior_snapshot),
                     status="skipped",
-                    official_page_url=entry.official_page_url,
-                    pdf_url=entry.pdf_url,
-                    source_status=entry.source_status,
-                    prior_sessions_count=len(prior_snapshot["sessions"]),
-                    sessions_count=len(prior_snapshot["sessions"]),
-                    closures_count=len(prior_snapshot["closures"]),
-                    schedule_effective=prior_snapshot["schedule_effective"],
                     notes=entry.notes,
                     error="No current schedule PDF is available for this pool.",
                 )
@@ -135,11 +148,8 @@ def run_pipeline(
             ):
                 results.append(
                     PoolResult(
-                        slug=entry.slug,
+                        **_identity_kwargs(entry),
                         status="unchanged",
-                        official_page_url=entry.official_page_url,
-                        pdf_url=entry.pdf_url,
-                        source_status=entry.source_status,
                         provider=prior_state.get("provider"),
                         model=prior_state.get("model"),
                         pdf_sha256=fetch_result.sha256,
@@ -265,11 +275,8 @@ def run_pipeline(
 
             results.append(
                 PoolResult(
-                    slug=entry.slug,
+                    **_identity_kwargs(entry),
                     status="failed" if delta.hard_block else "success",
-                    official_page_url=entry.official_page_url,
-                    pdf_url=entry.pdf_url,
-                    source_status=entry.source_status,
                     provider=result_provider,
                     model=model,
                     pdf_sha256=fetch_result.sha256,
@@ -295,17 +302,10 @@ def run_pipeline(
         except Exception as exc:  # noqa: BLE001
             results.append(
                 PoolResult(
-                    slug=entry.slug,
+                    **_identity_kwargs(entry),
+                    **_snapshot_kwargs(prior_snapshot),
                     status="failed",
-                    official_page_url=entry.official_page_url,
-                    pdf_url=entry.pdf_url,
-                    source_status=entry.source_status,
-                    prior_sessions_count=len(prior_snapshot["sessions"]),
-                    sessions_count=len(prior_snapshot["sessions"]),
-                    closures_count=len(prior_snapshot["closures"]),
-                    schedule_effective=prior_snapshot["schedule_effective"],
                     error=str(exc),
-                    review_flags=[],
                 )
             )
 
