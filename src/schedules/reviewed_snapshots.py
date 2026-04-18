@@ -4,20 +4,24 @@ import hashlib
 import json
 from pathlib import Path
 
-from .paths import ADJUDICATIONS_DIR, relative_to_repo
+from .paths import REVIEWED_SNAPSHOTS_DIR, relative_to_repo
 
 
-def adjudication_path(slug: str, pdf_sha256: str, root: Path = ADJUDICATIONS_DIR) -> Path:
+def reviewed_snapshot_path(
+    slug: str,
+    pdf_sha256: str,
+    root: Path = REVIEWED_SNAPSHOTS_DIR,
+) -> Path:
     return root / slug / f"{pdf_sha256}.json"
 
 
-def load_adjudication(
+def load_reviewed_snapshot(
     slug: str,
     pdf_sha256: str,
     *,
-    root: Path = ADJUDICATIONS_DIR,
+    root: Path = REVIEWED_SNAPSHOTS_DIR,
 ) -> tuple[dict | None, str | None, str | None]:
-    path = adjudication_path(slug, pdf_sha256, root)
+    path = reviewed_snapshot_path(slug, pdf_sha256, root)
     if not path.exists():
         return None, None, None
 

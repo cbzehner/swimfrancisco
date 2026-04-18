@@ -1,8 +1,7 @@
 {
   "balboa-pool": {
-    "adjudication_sha256": "654a918b380652b9f9432bd795761469ca3a43f5b0a17430386295eb164fdce1",
     "artifact_paths": {
-      "adjudicated": "data/adjudications/balboa-pool/ba9b279ae183b142c0c675368bceb39e49b80ed5ddb12fe37736536e92c8ac2c.json"
+      "reviewed-snapshot": "data/reviewed-snapshots/balboa-pool/ba9b279ae183b142c0c675368bceb39e49b80ed5ddb12fe37736536e92c8ac2c.json"
     },
     "extracted_at": "2026-04-18T03:07:06.767747+00:00",
     "flag_details": [],
@@ -13,7 +12,8 @@
     "pdf_sha256": "ba9b279ae183b142c0c675368bceb39e49b80ed5ddb12fe37736536e92c8ac2c",
     "pdf_text_sha256": "80c834c26c932e3bc34ea6ab4c8d72b3db39c80a13aa86ddccb9653adcb41684",
     "pdf_url": "https://sfrecpark.org/DocumentCenter/View/28547",
-    "provider": "adjudicated",
+    "provider": "reviewed-snapshot",
+    "reviewed_snapshot_sha256": "654a918b380652b9f9432bd795761469ca3a43f5b0a17430386295eb164fdce1",
     "schedule_effective": "2026-03-17",
     "session_types": [
       "family_swim",
@@ -24,9 +24,8 @@
     "sessions_count": 23
   },
   "coffman-pool": {
-    "adjudication_sha256": "eeadd3070c6d06eb3332b59717829dda6b33036eab4b527dc4952fbe06e8bf76",
     "artifact_paths": {
-      "adjudicated": "data/adjudications/coffman-pool/18ada024e2b2e3539a9222d57a917cdfa52c6c346c632ee090b14321caf8ab53.json"
+      "reviewed-snapshot": "data/reviewed-snapshots/coffman-pool/18ada024e2b2e3539a9222d57a917cdfa52c6c346c632ee090b14321caf8ab53.json"
     },
     "extracted_at": "2026-04-18T03:07:06.807576+00:00",
     "flag_details": [],
@@ -37,7 +36,8 @@
     "pdf_sha256": "18ada024e2b2e3539a9222d57a917cdfa52c6c346c632ee090b14321caf8ab53",
     "pdf_text_sha256": "92f122c75398252d77e613b785acde98f417868c7c793494e582b2cc1786781b",
     "pdf_url": "https://sfrecpark.org/DocumentCenter/View/28553",
-    "provider": "adjudicated",
+    "provider": "reviewed-snapshot",
+    "reviewed_snapshot_sha256": "eeadd3070c6d06eb3332b59717829dda6b33036eab4b527dc4952fbe06e8bf76",
     "schedule_effective": "2026-03-17",
     "session_types": [
       "family_swim",
@@ -47,9 +47,8 @@
     "sessions_count": 25
   },
   "garfield-pool": {
-    "adjudication_sha256": "c0b0f89daafaa34c32c4e7e7f69340e81ce70103b108f4053437e804f2e759a9",
     "artifact_paths": {
-      "adjudicated": "data/adjudications/garfield-pool/f8aa854fe49746a1091e39998486a25e709afab95d80844c4f3db440f7b85dbc.json"
+      "reviewed-snapshot": "data/reviewed-snapshots/garfield-pool/f8aa854fe49746a1091e39998486a25e709afab95d80844c4f3db440f7b85dbc.json"
     },
     "extracted_at": "2026-04-18T03:07:06.859133+00:00",
     "flag_details": [],
@@ -60,7 +59,8 @@
     "pdf_sha256": "f8aa854fe49746a1091e39998486a25e709afab95d80844c4f3db440f7b85dbc",
     "pdf_text_sha256": "4643e384c1e9aecf4096b34209a7fe7ec10f22814c560cacfe3de5a4f49d14cd",
     "pdf_url": "https://sfrecpark.org/DocumentCenter/View/28495",
-    "provider": "adjudicated",
+    "provider": "reviewed-snapshot",
+    "reviewed_snapshot_sha256": "c0b0f89daafaa34c32c4e7e7f69340e81ce70103b108f4053437e804f2e759a9",
     "schedule_effective": "2026-03-15",
     "session_types": [
       "family_swim",
@@ -71,9 +71,8 @@
     "sessions_count": 38
   },
   "hamilton-pool": {
-    "adjudication_sha256": "ee0dfc38fdb5a24cc6a515559282e341c7b91d262f327f385d99bb277507fe2e",
     "artifact_paths": {
-      "adjudicated": "data/adjudications/hamilton-pool/adab5f0df897db91aba3ecfa9499e267fe5341c90843b5db93a425f55c2729ed.json"
+      "reviewed-snapshot": "data/reviewed-snapshots/hamilton-pool/adab5f0df897db91aba3ecfa9499e267fe5341c90843b5db93a425f55c2729ed.json"
     },
     "extracted_at": "2026-04-18T01:14:54.817839+00:00",
     "flag_details": [],
@@ -84,7 +83,8 @@
     "pdf_sha256": "adab5f0df897db91aba3ecfa9499e267fe5341c90843b5db93a425f55c2729ed",
     "pdf_text_sha256": "668f12b5fa3b7997ef99f349090c124f3835d6af481249eea1d92d85a360a678",
     "pdf_url": "https://sfrecpark.org/DocumentCenter/View/28496",
-    "provider": "adjudicated",
+    "provider": "reviewed-snapshot",
+    "reviewed_snapshot_sha256": "ee0dfc38fdb5a24cc6a515559282e341c7b91d262f327f385d99bb277507fe2e",
     "schedule_effective": "2026-03-17",
     "session_types": [
       "family_swim",
@@ -94,9 +94,8 @@
     "sessions_count": 29
   },
   "martin-luther-king-jr-pool": {
-    "adjudication_sha256": "d6181454fc7ab786444c7cd7f633523d0ff0b6a74af78d24d5c3a2bfc84f75b0",
     "artifact_paths": {
-      "adjudicated": "data/adjudications/martin-luther-king-jr-pool/4b0ae410e37d66393704fb70dff8e5ce3d42c8c919a6872038cefe8e9097a590.json"
+      "reviewed-snapshot": "data/reviewed-snapshots/martin-luther-king-jr-pool/4b0ae410e37d66393704fb70dff8e5ce3d42c8c919a6872038cefe8e9097a590.json"
     },
     "extracted_at": "2026-04-18T03:07:06.927537+00:00",
     "flag_details": [],
@@ -107,7 +106,8 @@
     "pdf_sha256": "4b0ae410e37d66393704fb70dff8e5ce3d42c8c919a6872038cefe8e9097a590",
     "pdf_text_sha256": "d75d2b47ecae365c65c12e0b435f571588827c890217cce8965f685c08c33bcc",
     "pdf_url": "https://sfrecpark.org/DocumentCenter/View/28771",
-    "provider": "adjudicated",
+    "provider": "reviewed-snapshot",
+    "reviewed_snapshot_sha256": "d6181454fc7ab786444c7cd7f633523d0ff0b6a74af78d24d5c3a2bfc84f75b0",
     "schedule_effective": "2026-04-07",
     "session_types": [
       "family_swim",
@@ -118,9 +118,8 @@
     "sessions_count": 33
   },
   "north-beach-pool": {
-    "adjudication_sha256": "bc025a6413985ebbffd0c5866d96d01782f3e3f2098b650b3404cbefba5765ee",
     "artifact_paths": {
-      "adjudicated": "data/adjudications/north-beach-pool/025a9d1fc08636dccec6430dedb16012a5e4539885898a2789a6ba5df8f30c07.json"
+      "reviewed-snapshot": "data/reviewed-snapshots/north-beach-pool/025a9d1fc08636dccec6430dedb16012a5e4539885898a2789a6ba5df8f30c07.json"
     },
     "extracted_at": "2026-04-18T01:14:54.901959+00:00",
     "flag_details": [],
@@ -131,7 +130,8 @@
     "pdf_sha256": "025a9d1fc08636dccec6430dedb16012a5e4539885898a2789a6ba5df8f30c07",
     "pdf_text_sha256": "c69719f45e2a44ee0ca8ecbe3eee3e1fc796d5c9ac5f0ad3af229edc9ecfa62c",
     "pdf_url": "https://sfrecpark.org/DocumentCenter/View/28503",
-    "provider": "adjudicated",
+    "provider": "reviewed-snapshot",
+    "reviewed_snapshot_sha256": "bc025a6413985ebbffd0c5866d96d01782f3e3f2098b650b3404cbefba5765ee",
     "schedule_effective": "2026-03-17",
     "session_types": [
       "family_swim",
@@ -142,9 +142,8 @@
     "sessions_count": 45
   },
   "rossi-pool": {
-    "adjudication_sha256": "9f7874eed64bf24f17c0f4d14b317cbad09f6bb7c47dce11f480f096e98b26a1",
     "artifact_paths": {
-      "adjudicated": "data/adjudications/rossi-pool/f580f358615eb222d31249ebe28d5a67fe9d7aa473493559754696849d8c798f.json"
+      "reviewed-snapshot": "data/reviewed-snapshots/rossi-pool/f580f358615eb222d31249ebe28d5a67fe9d7aa473493559754696849d8c798f.json"
     },
     "extracted_at": "2026-04-18T01:34:13.600520+00:00",
     "flag_details": [],
@@ -155,7 +154,8 @@
     "pdf_sha256": "f580f358615eb222d31249ebe28d5a67fe9d7aa473493559754696849d8c798f",
     "pdf_text_sha256": "ca53272727a68bfa55c7847835617b41e2fb46b2f421bf45a629e09415c42aee",
     "pdf_url": "https://sfrecpark.org/DocumentCenter/View/28501",
-    "provider": "adjudicated",
+    "provider": "reviewed-snapshot",
+    "reviewed_snapshot_sha256": "9f7874eed64bf24f17c0f4d14b317cbad09f6bb7c47dce11f480f096e98b26a1",
     "schedule_effective": "2026-03-15",
     "session_types": [
       "family_swim",

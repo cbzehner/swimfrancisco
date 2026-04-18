@@ -1,11 +1,10 @@
 import json
 
-from schedules.adjudications import load_adjudication
+from schedules.reviewed_snapshots import load_reviewed_snapshot
 
 
-def test_load_adjudication(tmp_path):
-    root = tmp_path / "adjudications"
-    path = root / "hamilton-pool" / ("abc123" * 10 + "ab")[:64]  # unused, just keep shape obvious
+def test_load_reviewed_snapshot(tmp_path):
+    root = tmp_path / "reviewed-snapshots"
     pdf_sha256 = "a" * 64
     file_path = root / "hamilton-pool" / f"{pdf_sha256}.json"
     file_path.parent.mkdir(parents=True)
@@ -20,8 +19,8 @@ def test_load_adjudication(tmp_path):
         )
     )
 
-    adjudication, fingerprint, relative_path = load_adjudication("hamilton-pool", pdf_sha256, root=root)
+    snapshot, fingerprint, relative_path = load_reviewed_snapshot("hamilton-pool", pdf_sha256, root=root)
 
-    assert adjudication["summary"] == "manual review"
+    assert snapshot["summary"] == "manual review"
     assert isinstance(fingerprint, str) and len(fingerprint) == 64
     assert relative_path == str(file_path)

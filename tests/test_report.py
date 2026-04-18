@@ -177,11 +177,11 @@ class TestPoolBlock:
         text = _render([_proposed(pdf_sha256=sha)], tmp_path)
         assert "- pdf_sha256: " + "a" * 12 + "\n" in text
 
-    def test_adjudicated_notes_and_error_render(self, tmp_path: Path) -> None:
+    def test_reviewed_snapshot_notes_and_error_render(self, tmp_path: Path) -> None:
         text = _render(
             [
                 _proposed(
-                    adjudication_notes="manual override: pinned to hash deadbeef",
+                    reviewed_snapshot_notes="manual override: pinned to hash deadbeef",
                 ),
                 _failed(
                     slug="broke",
@@ -199,7 +199,7 @@ class TestPoolBlock:
                 _proposed(
                     artifact_paths={
                         "payload": "data/artifacts/x/payload.json",
-                        "adjudicated": "data/adjudications/x.json",
+                        "reviewed-snapshot": "data/reviewed-snapshots/x.json",
                         "pdf": "data/pdf/x.pdf",
                     }
                 )
@@ -208,7 +208,7 @@ class TestPoolBlock:
         )
         lines = [line for line in text.splitlines() if line.startswith("- artifact[")]
         assert lines == [
-            "- artifact[adjudicated]: data/adjudications/x.json",
+            "- artifact[reviewed-snapshot]: data/reviewed-snapshots/x.json",
             "- artifact[payload]: data/artifacts/x/payload.json",
             "- artifact[pdf]: data/pdf/x.pdf",
         ]
@@ -219,4 +219,4 @@ class TestFooter:
         text = _render([], tmp_path)
         assert "## Next Steps" in text
         assert "git diff content/spots/" in text
-        assert "data/adjudications" in text
+        assert "data/reviewed-snapshots" in text

@@ -113,7 +113,7 @@ class Skipped(PoolResultBase):
 
 @dataclass(frozen=True)
 class Unchanged(PoolResultBase):
-    """PDF and adjudication both match the last successful run — no re-extraction."""
+    """PDF and reviewed snapshot both match the last successful run — no re-extraction."""
 
     provider: str
     model: str
@@ -148,7 +148,7 @@ class Proposed(PoolResultBase):
     review_notes: list[ReviewNote] = field(default_factory=list)
     artifact_paths: dict[str, str] = field(default_factory=dict)
     written: bool = False
-    adjudication_notes: str | None = None
+    reviewed_snapshot_notes: str | None = None
 
 
 @dataclass(frozen=True)

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .adjudications import load_adjudication
 from .artifacts import save_artifact_bundle
 from .delta import check_delta
 from .fetch import fetch_pdf
@@ -12,6 +11,7 @@ from .models import Failed, GroundingResult, PoolEntry, PoolResult, Proposed, Re
 from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH
 from .providers import extract as extract_with_provider
 from .registry import load_registry
+from .reviewed_snapshots import load_reviewed_snapshot
 from .review import compare_payloads
 from .report import write_report
 from .schema import EXTRACTION_SCHEMA
@@ -126,13 +126,13 @@ def run_pipeline(
 
         try:
             fetch_result = fetch_pdf(entry.slug, entry.pdf_url, force=force)
-            adjudication, adjudication_sha256, adjudication_path = load_adjudication(entry.slug, fetch_result.sha256)
+            snapshot, snapshot_sha256, snapshot_path = load_reviewed_snapshot(entry.slug, fetch_result.sha256)
             if (
                 not force
                 and not compare_with
                 and prior_state
                 and prior_state.get("pdf_sha256") == fetch_result.sha256
-                and prior_state.get("adjudication_sha256") == adjudication_sha256
+                and prior_state.get("reviewed_snapshot_sha256") == snapshot_sha256
             ):
                 results.append(
                     Unchanged(
@@ -156,15 +156,15 @@ def run_pipeline(
             pdf_signals = analyze_page_texts(page_texts)
             pdf_text_normalized = normalize_pdf_text(page_texts)
             prior_sessions_count = len(prior_snapshot["sessions"])
-            if adjudication and not compare_with:
-                payload = adjudication["payload"]
+            if snapshot and not compare_with:
+                payload = snapshot["payload"]
                 model = "manual-review"
                 usage = {}
-                cost_estimate = "adjudicated"
-                result_provider = "adjudicated"
+                cost_estimate = "reviewed-snapshot"
+                result_provider = "reviewed-snapshot"
                 review_notes: list[ReviewNote] = []
-                artifact_paths = {"adjudicated": str(adjudication_path)}
-                adjudication_notes = adjudication.get("summary")
+                artifact_paths = {"reviewed-snapshot": str(snapshot_path)}
+                snapshot_notes = snapshot.get("summary")
             else:
                 primary = extract_with_provider(provider, fetch_result.bytes, prompt, EXTRACTION_SCHEMA)
                 payload = primary.payload
@@ -176,7 +176,7 @@ def run_pipeline(
                 review_notes.extend(source_notes_for_payload(pdf_signals, payload))
                 primary_grounding = grounding_from_text(pdf_text_normalized, payload)
                 review_notes.extend(_grounding_notes(provider, primary_grounding))
-                adjudication_notes = None
+                snapshot_notes = None
                 review_notes.extend(check_delta(payload, prior_snapshot))
                 artifact_paths = save_artifact_bundle(
                     slug=entry.slug,
@@ -245,7 +245,7 @@ def run_pipeline(
                     artifact_paths=artifact_paths,
                     pdf_page_count=pdf_signals.page_count,
                     pdf_text_sha256=pdf_signals.text_sha256,
-                    adjudication_sha256=adjudication_sha256,
+                    reviewed_snapshot_sha256=snapshot_sha256,
                 )
                 state_dirty = True
 
@@ -289,7 +289,7 @@ def run_pipeline(
                         written=bool(merge_result and merge_result.written),
                         artifact_paths=artifact_paths,
                         pdf_text_sha256=pdf_signals.text_sha256,
-                        adjudication_notes=adjudication_notes,
+                        reviewed_snapshot_notes=snapshot_notes,
                     )
                 )
         except Exception as exc:  # noqa: BLE001

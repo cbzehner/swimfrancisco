@@ -34,9 +34,9 @@ def write_report(results: list[PoolResult], path: Path = REPORT_PATH) -> Path:
             "",
             "- Review `git diff content/spots/`.",
             "- Inspect raw artifacts under `data/artifacts/` for any flagged pool.",
-            "- Commit reviewed overrides under `data/adjudications/` when you intentionally lock a pool to a specific PDF hash.",
+            "- Commit reviewed snapshots under `data/reviewed-snapshots/` when you intentionally lock a pool to a specific PDF hash.",
             "- Review flagged pools against the source PDFs before committing.",
-            "- Suggested add command: `git add content/spots data/extraction-state.json data/adjudications`.",
+            "- Suggested add command: `git add content/spots data/extraction-state.json data/reviewed-snapshots`.",
             "",
         ]
     )
@@ -111,11 +111,14 @@ def _render_pool_block(result: PoolResult) -> list[str]:
         lines.append(f"- usage: {result.cost_estimate}")
     if result.pdf_text_sha256:
         lines.append(f"- pdf_text_sha256: {result.pdf_text_sha256[:12]}")
-    for name, pool_path in sorted(result.artifact_paths.items()):
+    for name, pool_path in sorted(
+        result.artifact_paths.items(),
+        key=lambda item: (0 if item[0] == "reviewed-snapshot" else 1, item[0]),
+    ):
         lines.append(f"- artifact[{name}]: {pool_path}")
 
-    if isinstance(result, Proposed) and result.adjudication_notes:
-        lines.append(f"- notes: {result.adjudication_notes}")
+    if isinstance(result, Proposed) and result.reviewed_snapshot_notes:
+        lines.append(f"- notes: {result.reviewed_snapshot_notes}")
     if isinstance(result, Failed):
         lines.append(f"- error: {result.error}")
 

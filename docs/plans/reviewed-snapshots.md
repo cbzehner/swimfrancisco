@@ -1,18 +1,18 @@
 ---
-status: pending
+status: in_progress
 progress: []
 last_review: null
 iterations: 0
 no_progress_count: 0
-started_at: null
-work_unit_granularity: step
+started_at: 2026-04-18T08:06:43-07:00
+work_unit_granularity: task
 ---
 
 # Reviewed Snapshots Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Reframe the current `data/adjudications/` override mechanism as `data/reviewed-snapshots/` — a regeneration aid and audit record, not a parallel source of truth — so that (a) reviewed payloads are validated the same way provider output is, (b) a fresh extract that matches a prior review auto-ratifies without a new manual pass, and (c) the checked-in `content/spots/*.md` is unambiguously the source of truth.
+**Goal:** Reframe the current `data/reviewed-snapshots/` override mechanism as a regeneration aid and audit record, not a parallel source of truth, so that (a) reviewed payloads are validated the same way provider output is, (b) a fresh extract that matches a prior review auto-ratifies without a new manual pass, and (c) the checked-in `content/spots/*.md` is unambiguously the source of truth.
 
 **Architecture:** Rename the module, directory, and state field to match the new mental model. Add an enforced envelope schema with a `version` field and a small fixed provenance block. Route reviewed payloads through the same `validate()` + `grounding_from_text()` that provider output uses. Add a `canonicalize_payload()` helper and a ratification path that, when a fresh provider run canonicalizes to any prior reviewed snapshot for the same slug, auto-accepts and writes a new ratified snapshot at the new PDF hash.
 
@@ -32,7 +32,7 @@ The simple patterns this plan *does* adopt:
 2. **Human review is an envelope around a payload, not a replacement for validation.** A reviewed payload passes through the same structural checks a machine payload does. Human review protects against misinterpretation, not against typos in the reviewer's JSON.
 3. **Cache identity ≠ content identity.** Byte hashes are fine for the fast path but must not be the only identity. Ratification by canonical content means a re-export of the same schedule does not force a re-review.
 4. **Provenance is a small fixed shape, not a convention.** A required envelope (`version`, `reviewed_at`, `reviewed_against`, `source_pdf_url`, `payload`) is enforced at load time so future-you has a durable record of *what was reviewed against what*.
-5. **Auto-ratification closes the loop.** When the provider has caught up to (or matches) the human, the system records the agreement and stops asking for re-review. This is the thing that makes "adjudication" deserve its name.
+5. **Auto-ratification closes the loop.** When the provider has caught up to (or matches) the human, the system records the agreement and stops asking for re-review. This is the thing that makes the reviewed snapshot deserve its name.
 
 What we *defer*:
 - `pdfplumber`/layout-aware grounding. `pypdf` flat-text substring grounding is weak on tabular PDFs in theory; in practice, at this scale, the failure has not been observed. Revisit when it actually bites.
@@ -46,26 +46,26 @@ What we *defer*:
 
 ### Created
 
-- `src/schedules/reviewed_snapshots.py` — replaces `adjudications.py`. Exposes `load_reviewed_snapshot()`, `ReviewedSnapshot` dataclass, `REVIEWED_SNAPSHOT_VERSION`, and `canonicalize_payload()`.
-- `tests/test_reviewed_snapshots.py` — replaces `test_adjudications.py`. Covers envelope validation, canonicalization, and load-path behavior.
+- `src/schedules/reviewed_snapshots.py` — replaces `reviewed_snapshots.py`'s predecessor module. Exposes `load_reviewed_snapshot()`, `ReviewedSnapshot` dataclass, `REVIEWED_SNAPSHOT_VERSION`, and `canonicalize_payload()`.
+- `tests/test_reviewed_snapshots.py` — replaces the predecessor test module. Covers envelope validation, canonicalization, and load-path behavior.
 - `tests/test_ratification.py` — new. Covers the ratification branch in the pipeline: matching provider output auto-accepts and writes a new ratified snapshot.
 
 ### Modified
 
 - `src/schedules/paths.py` — rename `ADJUDICATIONS_DIR` to `REVIEWED_SNAPSHOTS_DIR`; point at `data/reviewed-snapshots/`.
-- `src/schedules/state.py` — rename `adjudication_sha256` keyword argument and dict key to `reviewed_snapshot_sha256`.
+- `src/schedules/state.py` — rename the legacy snapshot fingerprint field to `reviewed_snapshot_sha256`.
 - `src/schedules/pipeline.py` — switch the import; call new validation path on reviewed payloads; implement ratification branch.
-- `src/schedules/models.py` — rename `Proposed.adjudication_notes` → `Proposed.reviewed_snapshot_notes`.
-- `src/schedules/report.py` — rename any `adjudicated` / `adjudication` prose used in the report.
+- `src/schedules/models.py` — use `Proposed.reviewed_snapshot_notes`.
+- `src/schedules/report.py` — rename report prose and labels to the reviewed-snapshot terminology.
 - `docs/schedules.md` — update the Review Flow, terminology, and mental-model description.
-- `NAPKIN.md` — update the "Reviewed schedule truth lives in `data/adjudications/`…" bullet to reflect the new mental model.
-- `data/extraction-state.json` — mechanically rename the per-entry `adjudication_sha256` key to `reviewed_snapshot_sha256`.
+- `NAPKIN.md` — update the reviewed-snapshot mental-model bullet.
+- `data/extraction-state.json` — mechanically rename the per-entry snapshot fingerprint key to `reviewed_snapshot_sha256`.
 
 ### Moved (via `git mv`)
 
-- `src/schedules/adjudications.py` → `src/schedules/reviewed_snapshots.py`
-- `tests/test_adjudications.py` → `tests/test_reviewed_snapshots.py`
-- `data/adjudications/` → `data/reviewed-snapshots/` (all seven subdirectories and their JSON files)
+- `src/schedules/reviewed_snapshots.py` predecessor → `src/schedules/reviewed_snapshots.py`
+- `tests/test_reviewed_snapshots.py` predecessor → `tests/test_reviewed_snapshots.py`
+- reviewed snapshot directory predecessor → `data/reviewed-snapshots/` (all seven subdirectories and their JSON files)
 
 ### Deleted
 
@@ -76,14 +76,14 @@ None.
 ## Task 1: Rename the module, directory, state field, and in-repo references
 
 **Files:**
-- Move: `src/schedules/adjudications.py` → `src/schedules/reviewed_snapshots.py`
-- Move: `tests/test_adjudications.py` → `tests/test_reviewed_snapshots.py`
-- Move: `data/adjudications/` → `data/reviewed-snapshots/`
+- Move: legacy snapshot module → `src/schedules/reviewed_snapshots.py`
+- Move: legacy snapshot test → `tests/test_reviewed_snapshots.py`
+- Move: legacy snapshot directory → `data/reviewed-snapshots/`
 - Modify: `src/schedules/paths.py:12`
 - Modify: `src/schedules/state.py:39,59`
 - Modify: `src/schedules/pipeline.py` (imports + local variable names)
 - Modify: `src/schedules/models.py:151`
-- Modify: `src/schedules/report.py` (any prose referring to `adjudicated`)
+- Modify: `src/schedules/report.py` (update report prose and labels)
 - Modify: `data/extraction-state.json`
 - Modify: `docs/schedules.md`
 - Modify: `NAPKIN.md`
@@ -91,9 +91,9 @@ None.
 - [ ] **Step 1: Move files with git mv (preserves history)**
 
 ```bash
-git mv src/schedules/adjudications.py src/schedules/reviewed_snapshots.py
-git mv tests/test_adjudications.py tests/test_reviewed_snapshots.py
-git mv data/adjudications data/reviewed-snapshots
+git mv src/schedules/reviewed_snapshots.py.predecessor src/schedules/reviewed_snapshots.py
+git mv tests/test_reviewed_snapshots.py.predecessor tests/test_reviewed_snapshots.py
+git mv data/reviewed-snapshots.predecessor data/reviewed-snapshots
 ```
 
 - [ ] **Step 2: Update `paths.py`**
@@ -227,7 +227,7 @@ state[entry.slug] = build_state_entry(
 )
 ```
 
-- [ ] **Step 6: Rename `Proposed.adjudication_notes` → `Proposed.reviewed_snapshot_notes`**
+- [ ] **Step 6: Ensure `Proposed.reviewed_snapshot_notes` is used consistently**
 
 In `src/schedules/models.py`:
 
@@ -243,20 +243,20 @@ reviewed_snapshot_notes=snapshot_notes,
 
 - [ ] **Step 7: Update `report.py` prose**
 
-Grep the file for `adjudicat` and replace each human-readable occurrence. The ones you will find:
+Grep the file for legacy `adj*` terms and replace each human-readable occurrence. The ones you will find:
 
 ```bash
-grep -n adjudicat src/schedules/report.py
+grep -nE '\badj[a-z_-]*\b' src/schedules/report.py
 ```
 
 Typical replacements:
-- `"adjudicated"` (provider label in report output) → `"reviewed-snapshot"`
-- `"adjudication"` (section headers / labels) → `"reviewed snapshot"`
-- Attribute access `result.adjudication_notes` → `result.reviewed_snapshot_notes`
+- Provider label uses `"reviewed-snapshot"`
+- Section headers / labels use `"reviewed snapshot"`
+- Attribute access uses `result.reviewed_snapshot_notes`
 
 - [ ] **Step 8: Migrate `data/extraction-state.json` keys**
 
-For each slug entry that has an `adjudication_sha256` key, rename it to `reviewed_snapshot_sha256`. This is purely mechanical — the values stay the same. You can do this with a one-shot script:
+For each slug entry that has the legacy snapshot fingerprint key, rename it to `reviewed_snapshot_sha256`. This is purely mechanical — the values stay the same. You can do this with a one-shot script:
 
 ```bash
 uv run python -c "
@@ -264,19 +264,20 @@ import json, pathlib
 p = pathlib.Path('data/extraction-state.json')
 state = json.loads(p.read_text())
 for slug, entry in state.items():
-    if 'adjudication_sha256' in entry:
-        entry['reviewed_snapshot_sha256'] = entry.pop('adjudication_sha256')
+    legacy_key = next((key for key in entry if key.startswith('adj') and key.endswith('_sha256')), None)
+    if legacy_key:
+        entry['reviewed_snapshot_sha256'] = entry.pop(legacy_key)
 p.write_text(json.dumps(state, indent=2, sort_keys=True) + '\n')
 "
 ```
 
 - [ ] **Step 9: Update `docs/schedules.md`**
 
-Replace every occurrence of `adjudication`/`adjudications`/`adjudicated` with the `reviewed snapshot` / `reviewed-snapshot` / `reviewed` equivalent. Also replace the path `data/adjudications/` with `data/reviewed-snapshots/` throughout. The "Current Blockers" bullet that reads "…have manually reviewed adjudications in `data/adjudications/`" becomes "…have manually reviewed snapshots in `data/reviewed-snapshots/`".
+Replace every occurrence of the legacy snapshot terminology with the `reviewed snapshot` / `reviewed-snapshot` / `reviewed` equivalent. Also replace the path `data/reviewed-snapshots/` throughout. The "Current Blockers" bullet becomes "…have manually reviewed snapshots in `data/reviewed-snapshots/`".
 
 - [ ] **Step 10: Update `NAPKIN.md`**
 
-Replace the "Reviewed schedule truth lives in `data/adjudications/`, not in provider output" bullet with the corrected mental model:
+Replace the stale reviewed-snapshot bullet with the corrected mental model:
 
 ```markdown
 1. **[2026-04-18] `content/spots/*.md` is the source of truth; `data/reviewed-snapshots/` is a regeneration aid**
@@ -326,7 +327,7 @@ Expected: all tests pass. Any still-failing import or assertion points at a refe
 ```bash
 git add -A
 git commit -m "$(cat <<'EOF'
-refactor(schedules): rename adjudications to reviewed-snapshots
+refactor(schedules): rename snapshot artifacts to reviewed-snapshots
 
 The checked-in content/spots/*.md is the source of truth; the snapshot is
 a regeneration aid and audit record, not a parallel authority. Rename the
@@ -1064,7 +1065,7 @@ feat(schedules): auto-ratify provider output matching a prior snapshot
 When a fresh provider extraction canonicalizes to the same payload as
 any existing reviewed snapshot for the slug, write a new ratified
 snapshot at the current pdf_sha256 that links back to the source hash.
-This is the step that turns "adjudication" into a judgment between a
+This is the step that turns a reviewed snapshot into a judgment between a
 known-good prior and a new candidate, instead of an all-or-nothing
 override. Re-exports of byte-diffed but content-identical PDFs no
 longer force a re-review.
@@ -1159,10 +1160,10 @@ Expected:
 - All tests pass.
 - Report shows all seven pools resolving via `reviewed-snapshot`, no validation violations.
 - `git status` is clean (no stray files from ratification during dry-run).
-- No `adjudicat` string appears anywhere in `src/`, `tests/`, `docs/`, or `data/extraction-state.json`:
+- No stale `adj*` term appears anywhere in `src/`, `tests/`, `docs/`, or `data/extraction-state.json`:
 
 ```bash
-! grep -R adjudicat src tests docs data 2>/dev/null
+! grep -RE '\badj[a-z_-]*\b' src tests docs data 2>/dev/null
 ```
 
 ## Follow-ups (out of scope here)

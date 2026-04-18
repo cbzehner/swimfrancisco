@@ -24,7 +24,7 @@ progress:
     notes:
       - "Anthropic and Gemini provider adapters added behind src/schedules/providers/"
       - "Anthropic path uses document base64 + tool schema; Gemini path uses Part.from_bytes + JSON response schema"
-      - "real extraction verified after `.env` setup; default model is `gemini-3.1-flash-lite-preview` and Anthropic remains available for manual adjudication"
+      - "real extraction verified after `.env` setup; default model is `gemini-3.1-flash-lite-preview` and Anthropic remains available for manual review"
   - section: "Step 5: Schema + prompt"
     status: complete
     notes:
@@ -51,7 +51,7 @@ progress:
     notes:
       - "data/extraction-state.json added"
       - "src/schedules/state.py added with load/save helpers and state entry builder"
-      - "state format now supports structured review flags, artifact paths, PDF page counts, PDF text hashes, and adjudication fingerprints for future accepted runs"
+      - "state format now supports structured review flags, artifact paths, PDF page counts, PDF text hashes, and reviewed snapshot fingerprints for future accepted runs"
   - section: "Step 10: Report writer"
     status: complete
     notes:
@@ -63,7 +63,7 @@ progress:
       - "src/schedules/pipeline.py wires registry, fetch, provider, validation, delta, merge, state, and reporting together"
       - "`--compare-with` runs a second provider on the same PDF, saves both raw payloads, and raises disagreement flags without merging the secondary result"
       - "PDF signal heuristics now flag repeated day-grid pages and likely under-extracted timed lesson blocks"
-      - "Committed `data/adjudications/<slug>/<pdf_sha256>.json` files now let the extractor reuse manually reviewed payloads on later runs"
+      - "Committed `data/reviewed-snapshots/<slug>/<pdf_sha256>.json` files now let the extractor reuse manually reviewed payloads on later runs"
   - section: "Step 12: End-to-end run"
     status: complete
     notes:
@@ -80,8 +80,8 @@ progress:
   - section: "Step 14: Document + hand off"
     status: complete
     notes:
-      - "docs/schedules.md updated with `--compare-with`, local artifact review, adjudication files, and commit guidance"
-      - "README.md updated to point maintainers at the extractor workflow, raw artifact cache, and committed adjudications"
+      - "docs/schedules.md updated with `--compare-with`, local artifact review, reviewed snapshot files, and commit guidance"
+      - "README.md updated to point maintainers at the extractor workflow, raw artifact cache, and committed reviewed snapshots"
 last_review: 2026-04-17T15:46:00-07:00
 iterations: 2
 no_progress_count: 0

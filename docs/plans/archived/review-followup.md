@@ -54,8 +54,8 @@ Product ideas (Swim Windows, Time Scrubber, Trust Layer) live in
   explicitly out of scope. `closures[].pool` is removed from schema to make
   the invalid state unrepresentable.
 - **Prompt versioning**: any edit to `src/schedules/prompts/extract.txt`
-  bumps a prompt version and adds a short note to existing adjudication
-  files so reproducibility is traceable.
+  bumps a prompt version and adds a short note to existing reviewed
+  snapshot files so reproducibility is traceable.
 
 ## Test Runners
 
@@ -125,12 +125,12 @@ Prompt instructs providers to encode SFUSD slots as timed closures, but
 schema is date-only and runtime treats closures as facility-wide.
 Executed in Step 1 (gating item).
 
-### 8. Compare mode overwrites adjudicated data
+### 8. Compare mode overwrites reviewed-snapshot data
 
 Severity: medium. Files: `src/schedules/pipeline.py:145,228`,
 `src/schedules/cli.py`, `docs/schedules.md`.
 
-`--compare-with` disables adjudication bypass and merges unless
+`--compare-with` disables reviewed-snapshot bypass and merges unless
 `--dry-run` is set. Executed in Step 2.
 
 ### 9. Provider disagreement checks ignore `pool` and `notes`
@@ -187,7 +187,7 @@ TDD:
 Hardening beyond tests:
 
 - Remove `closures[].pool` from schema and any fixtures.
-- Bump prompt version; annotate existing adjudications with previous
+- Bump prompt version; annotate existing reviewed snapshots with previous
   version.
 
 Definition of done:
@@ -396,7 +396,7 @@ Definition of done:
 ## Post-Plan (not part of this plan)
 
 - Single-pool canary: rerun extractor on `balboa-pool` only, with the new
-  prompt, and confirm the 2026-04-17 adjudication reproduces without
+  prompt, and confirm the 2026-04-17 reviewed snapshot reproduces without
   SFUSD rows leaking into closures.
 - Only after that, consider a fuller rerun.
 - Post-fix product direction sequence lives in

@@ -13,14 +13,14 @@ def test_state_round_trip(tmp_path):
             artifact_paths={"gemini": "data/artifacts/balboa/abc123/gemini.json"},
             pdf_page_count=1,
             pdf_text_sha256="textsha",
-            adjudication_sha256="adjsha",
+            reviewed_snapshot_sha256="adjsha",
         )
     }
     save_state(state, path)
     loaded = load_state(path)
     assert entry_for("balboa-pool", path=path) == loaded["balboa-pool"]
     assert loaded["balboa-pool"]["pdf_sha256"] == "abc123"
-    assert loaded["balboa-pool"]["adjudication_sha256"] == "adjsha"
+    assert loaded["balboa-pool"]["reviewed_snapshot_sha256"] == "adjsha"
     assert notes_for_entry(loaded["balboa-pool"])[0].message == "manual review"
 
 

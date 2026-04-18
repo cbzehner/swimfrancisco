@@ -92,13 +92,13 @@ can trust the exit code.
 2. Read `tmp/extraction-report.md`.
 3. Review `git diff content/spots/`.
 4. For any pool with `review_note[...]` lines, inspect the raw provider outputs under `data/artifacts/<slug>/<pdf_sha>/`.
-5. If a pool needs a durable manual override, commit an adjudication file under `data/adjudications/<slug>/<pdf_sha256>.json`.
+5. If a pool needs a durable manual override, commit a reviewed snapshot under `data/reviewed-snapshots/<slug>/<pdf_sha256>.json`.
 6. Spot-check flagged pools against the source PDF before accepting a content diff.
-7. Commit `content/spots/`, `data/extraction-state.json`, and any new `data/adjudications/` files only after the diff looks trustworthy.
+7. Commit `content/spots/`, `data/extraction-state.json`, and any new `data/reviewed-snapshots/` files only after the diff looks trustworthy.
 
 `data/artifacts/` is a local review cache. Keep it around when you are comparing providers or debugging a bad extraction, but do not commit it by default.
 
-`data/adjudications/` is the opposite: it is committed source of truth for PDF hashes that have been manually reviewed. When the extractor sees the same `slug + pdf_sha256` again, it reuses that adjudicated payload instead of asking the provider to reinterpret the PDF.
+`data/reviewed-snapshots/` is the opposite: it is committed source of truth for PDF hashes that have been manually reviewed. When the extractor sees the same `slug + pdf_sha256` again, it reuses that reviewed payload instead of asking the provider to reinterpret the PDF.
 
 ## Registry Maintenance
 
@@ -115,7 +115,7 @@ When SF Rec moves a PDF URL:
 
 As of 2026-04-17:
 
-- All 7 pools with current published PDFs have manually reviewed adjudications in `data/adjudications/`.
+- All 7 pools with current published PDFs have manually reviewed snapshots in `data/reviewed-snapshots/`.
 - `mission-community-pool` is skipped because the facility page announces the Summer 2026 opening date but exposes no current schedule PDF.
 - `sava-pool` is skipped because the pool remains closed for repairs and the page only links an old Fall 2025 schedule.
 

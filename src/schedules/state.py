@@ -36,14 +36,14 @@ def build_state_entry(
     artifact_paths: dict[str, str],
     pdf_page_count: int,
     pdf_text_sha256: str,
-    adjudication_sha256: str | None = None,
+    reviewed_snapshot_sha256: str | None = None,
 ) -> dict:
     """Build a state entry carrying *provenance only*.
 
     Anything derivable from ``content/spots/<slug>.md`` (sessions, closures,
     schedule_effective, invariants_passed) lives there — duplicating it here
     invites drift. State retains only data that cannot be reconstructed from
-    content: the fast-path pdf/adjudication hashes, the provider/model that
+    content: the fast-path pdf/reviewed snapshot hashes, the provider/model that
     produced the extraction, and operator-facing notes/artifacts.
     """
     return {
@@ -56,7 +56,7 @@ def build_state_entry(
         "artifact_paths": artifact_paths,
         "pdf_page_count": pdf_page_count,
         "pdf_text_sha256": pdf_text_sha256,
-        "adjudication_sha256": adjudication_sha256,
+        "reviewed_snapshot_sha256": reviewed_snapshot_sha256,
     }
 
 

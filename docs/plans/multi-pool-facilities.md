@@ -20,7 +20,7 @@ separate tanks or partitioned sections of a single tank.
 Two observed cases in SFRP PDFs:
 
 - **North Beach Pool** has a main lap tank and a separate leisure/dive tank
-  that run concurrent programs. The adjudicated North Beach Tuesday has
+  that run concurrent programs. The reviewed North Beach Tuesday has
   `senior_swim 12:50–15:15` and `lap_swim 12:30–15:00` at the same moment —
   those cannot coexist in one tank.
 
