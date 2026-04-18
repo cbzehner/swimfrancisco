@@ -23,6 +23,22 @@ _GROUNDING_MIN_RATIO = 0.9
 _GROUNDING_EVIDENCE_SAMPLE = 5
 
 
+def should_write(*, dry_run: bool, compare_with: str | None, hard_block: bool) -> bool:
+    """Return True iff the pipeline may mutate content or state.
+
+    Gating invariants (all must be False for a write to happen):
+    - dry_run: operator asked for a no-write pass
+    - compare_with: bakeoff mode is observational by default
+    - hard_block: semantic delta refused the new payload
+    """
+    return not (dry_run or compare_with is not None or hard_block)
+
+
+def compute_exit_code(results: list[PoolResult]) -> int:
+    """Non-zero when any pool failed. Partial failure must not exit 0."""
+    return 1 if any(result.status == "failed" for result in results) else 0
+
+
 def _grounding_flags(provider: str, grounding: GroundingResult) -> list[ReviewFlag]:
     if grounding.total == 0 or grounding.ratio >= _GROUNDING_MIN_RATIO:
         return []
@@ -222,12 +238,18 @@ def run_pipeline(
                         )
                     )
 
-            if dry_run or delta.hard_block:
-                merge_result = None
-            else:
-                merge_result = merge(CONTENT_SPOTS_DIR / f"{entry.slug}.md", payload)
+            write_allowed = should_write(
+                dry_run=dry_run,
+                compare_with=compare_with,
+                hard_block=delta.hard_block,
+            )
 
-            if not dry_run and not delta.hard_block:
+            if write_allowed:
+                merge_result = merge(CONTENT_SPOTS_DIR / f"{entry.slug}.md", payload)
+            else:
+                merge_result = None
+
+            if write_allowed:
                 state[entry.slug] = build_state_entry(
                     pdf_url=entry.pdf_url,
                     pdf_sha256=fetch_result.sha256,
@@ -291,9 +313,8 @@ def run_pipeline(
                 )
             )
 
-    if state_dirty and not dry_run:
+    if state_dirty and not dry_run and compare_with is None:
         save_state(state)
 
     report_path = write_report(results)
-    exit_code = 0 if any(result.status in {"success", "unchanged"} for result in results) else 1
-    return exit_code, report_path, results
+    return compute_exit_code(results), report_path, results

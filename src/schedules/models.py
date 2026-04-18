@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 
 ExtractedPayload = dict[str, Any]
+
+PoolResultStatus = Literal["success", "unchanged", "failed", "skipped"]
 
 
 @dataclass(frozen=True)
@@ -103,7 +105,7 @@ class GroundingResult:
 @dataclass
 class PoolResult:
     slug: str
-    status: str
+    status: PoolResultStatus
     official_page_url: str
     pdf_url: str
     source_status: str

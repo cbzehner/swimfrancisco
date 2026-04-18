@@ -66,19 +66,24 @@ Run the full published registry:
 uv run schedules extract
 ```
 
-Run a provider bakeoff on a flagged pool without touching content or state:
+Run a provider bakeoff on a flagged pool:
 
 ```sh
-uv run schedules extract --provider gemini --compare-with anthropic --only hamilton-pool --dry-run --force
+uv run schedules extract --provider gemini --compare-with anthropic --only hamilton-pool --force
 ```
 
 Useful flags:
 
 - `--provider anthropic|gemini`
-- `--compare-with anthropic|gemini`
+- `--compare-with anthropic|gemini` — always observational; never writes to
+  `content/spots/` or `data/extraction-state.json`.
 - `--only slug1,slug2`
 - `--force`
-- `--dry-run`
+- `--dry-run` — skip all writes even without `--compare-with`.
+
+**Exit codes:** the `extract` command exits non-zero when any pool failed
+(hard-blocked or errored). Partial failure never exits 0; shell automation
+can trust the exit code.
 
 ## Review Flow
 

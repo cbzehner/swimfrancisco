@@ -4,9 +4,11 @@ progress:
   - step: 1
     status: done
     date: 2026-04-17
-    commit: pending
+  - step: 2
+    status: done
+    date: 2026-04-17
 last_review: null
-iterations: 1
+iterations: 2
 no_progress_count: 0
 started_at: 2026-04-17
 work_unit_granularity: step
@@ -180,7 +182,7 @@ Definition of done:
 - Schema forbids timed or pool-scoped closures.
 - Tests above pass.
 
-### Step 2: Make compare mode observational and exit codes honest (findings 8 + 10)
+### Step 2: Make compare mode observational and exit codes honest (findings 8 + 10) — DONE 2026-04-17
 
 Why together: both land in `src/schedules/pipeline.py`; both are operator
 trust; precondition for trusting any later re-run.
