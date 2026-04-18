@@ -361,3 +361,22 @@ test("computeDetailStatus concurrent drop-in (Balboa Wednesday case)", () => {
   assert.equal(r.activeUntil, 15 * 60);
   assert.equal(r.is_drop_in, true);
 });
+
+test("computeDetailStatus respects local wall-clock across DST transitions", () => {
+  const schedule = {
+    sessions: [
+      { day: "sunday", type: "lap_swim", start: "10:00", end: "11:00" },
+    ],
+    closures: [],
+  };
+  // 2026-03-08 is the US "spring forward" Sunday. At 10:30 LOCAL time the
+  // session should be active regardless of the UTC offset shift.
+  const springForward = new Date("2026-03-08T10:30:00");
+  const r1 = computeDetailStatus(schedule, springForward);
+  assert.equal(r1.kind, "OPEN", "spring-forward Sunday 10:30 should be OPEN");
+
+  // 2026-11-01 is "fall back" Sunday; 10:30 local again.
+  const fallBack = new Date("2026-11-01T10:30:00");
+  const r2 = computeDetailStatus(schedule, fallBack);
+  assert.equal(r2.kind, "OPEN", "fall-back Sunday 10:30 should be OPEN");
+});
