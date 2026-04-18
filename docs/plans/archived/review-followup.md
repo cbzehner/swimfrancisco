@@ -1,5 +1,6 @@
 ---
-status: done
+status: archived
+archived_at: 2026-04-17
 progress:
   - step: 1
     status: done
