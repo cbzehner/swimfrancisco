@@ -18,8 +18,13 @@ progress:
     notes:
       - "commit 1f832c1; terraform validate clean"
       - "verified: terraform validate emits expected deprecation warning on `environment` attribute (inline comment already tracks the issue)"
-last_review: 2026-04-19T01:25:00-07:00
-iterations: 3
+  - section: "Task 4: Terraform README"
+    status: complete
+    notes:
+      - "commit 961c15c"
+      - "gap: codex stderr warning about ~/.claude/skills/qmd/SKILL.md missing frontmatter delimiters; non-fatal"
+last_review: 2026-04-19T01:28:00-07:00
+iterations: 4
 no_progress_count: 0
 started_at: 2026-04-19T01:13:14-07:00
 ---
