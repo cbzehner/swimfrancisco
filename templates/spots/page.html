@@ -70,7 +70,7 @@
       {% endfor %}
 
       {% if today_drop_in | length > 0 %}
-        <section class="today-block" data-field="today">
+        <section class="today-block" data-field="today" data-day="{{ today_weekday }}">
           <p class="today-block-heading">TODAY · {{ today_weekday_label }}</p>
           <ul class="today-block-list">
             {% for s in today_drop_in %}
@@ -114,7 +114,12 @@
             <div class="weekly-grid-head" role="row">
               <span class="weekly-grid-rowlabel" role="columnheader"></span>
               {% for label in day_labels %}
-                <span class="weekly-grid-dayhead" role="columnheader" data-day="{{ day_order[loop.index0] }}">{{ label }}</span>
+                <span class="weekly-grid-dayhead"
+                      role="columnheader"
+                      data-day="{{ day_order[loop.index0] }}"
+                      {% if day_order[loop.index0] == today_weekday %}data-today="true"{% endif %}>
+                  {{ label }}
+                </span>
               {% endfor %}
             </div>
             {% for pkey in program_keys %}
@@ -131,7 +136,12 @@
                 </span>
                 {% for day in day_order %}
                   {% set cell = psessions | filter(attribute="day", value=day) %}
-                  <span class="weekly-grid-cell" role="cell" data-day="{{ day }}" data-day-short="{{ day_labels[loop.index0] }}"{% if cell | length == 0 %} data-empty="true"{% endif %}>
+                  <span class="weekly-grid-cell"
+                        role="cell"
+                        data-day="{{ day }}"
+                        data-day-short="{{ day_labels[loop.index0] }}"
+                        {% if day == today_weekday %}data-today="true"{% endif %}
+                        {% if cell | length == 0 %}data-empty="true"{% endif %}>
                     {% if cell | length == 0 %}
                       <span class="weekly-grid-empty">—</span>
                     {% else %}
