@@ -13,7 +13,7 @@ cost = "paid"
 schedule_effective = "2026-04-07"
 last_verified_at = "2026-04-17"
 
-# Manually adjudicated against the Spring 2026 MLK Jr. Pool schedule PDF.
+# Manually reviewed against the Spring 2026 MLK Jr. Pool schedule PDF.
 # Bayview Safety Swim & Splash is represented as open swim; adult water polo is intentionally omitted.
 schedule_effective_end = "2026-06-06"
 

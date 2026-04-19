@@ -13,7 +13,7 @@ cost = "paid"
 schedule_effective = "2026-03-17"
 last_verified_at = "2026-04-17"
 
-# Manually adjudicated against the Spring 2026 Coffman Pool schedule PDF.
+# Manually reviewed against the Spring 2026 Coffman Pool schedule PDF.
 # Youth synchro team rows are omitted; shared public rec/family-lap blocks are represented in the flat site schema.
 schedule_effective_end = "2026-04-18"
 

@@ -13,7 +13,7 @@ cost = "paid"
 schedule_effective = "2026-03-17"
 last_verified_at = "2026-04-17"
 
-# Manually adjudicated against the Spring 2026 Balboa Pool schedule PDF.
+# Manually reviewed against the Spring 2026 Balboa Pool schedule PDF.
 # SFUSD-only rows are omitted; Tuesday parent/child intro and Friday masters swim are represented in the public schedule.
 schedule_effective_end = "2026-06-06"
 

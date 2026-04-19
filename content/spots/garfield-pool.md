@@ -13,7 +13,7 @@ cost = "paid"
 schedule_effective = "2026-03-15"
 last_verified_at = "2026-04-17"
 
-# Manually adjudicated against the Garfield Spring 2026 schedule PDF.
+# Manually reviewed against the Garfield Spring 2026 schedule PDF.
 # School-only and misaligned small-pool lesson rows are intentionally omitted from the public schedule.
 schedule_effective_end = "2026-06-04"
 

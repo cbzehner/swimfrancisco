@@ -13,7 +13,7 @@ cost = "paid"
 schedule_effective = "2026-03-17"
 last_verified_at = "2026-04-17"
 
-# Manually adjudicated against the Spring 2026 schedule PDF.
+# Manually reviewed against the Spring 2026 schedule PDF.
 # Wednesday/Friday 15:00-18:00 high-school swim meet blocks are intentionally omitted; they are not public lessons.
 schedule_effective_end = "2026-06-06"
 
