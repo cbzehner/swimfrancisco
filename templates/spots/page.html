@@ -109,6 +109,15 @@
 
         <section class="weekly-grid">
           <h2 class="weekly-grid-title">WEEKLY · BY PROGRAM</h2>
+          <nav class="weekly-grid-crossnav-strip" aria-label="Related pools">
+            {% for pkey in program_keys %}
+              {% set pi = loop.index0 %}
+              {% set pcross = program_crossnav[pi] %}
+              {% if pcross %}
+                <a class="weekly-grid-crossnav" href="{{ config.base_url }}/#{{ pcross }}">→ OTHER {{ pcross | upper }} POOLS</a>
+              {% endif %}
+            {% endfor %}
+          </nav>
           <div class="weekly-grid-table" role="table">
             <div class="weekly-grid-head" role="row">
               <span class="weekly-grid-rowlabel" role="columnheader"></span>
