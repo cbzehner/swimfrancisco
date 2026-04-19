@@ -65,17 +65,6 @@ def _parse_old_flat(filename: str) -> tuple[str, str] | None:
     return (m.group("slug"), m.group("prefix")) if m else None
 
 
-def _resolve_full_hash_from_index(index: dict, slug: str, prefix: str) -> str | None:
-    """Find the full hash from index entries — each value is <slug>-<prefix>.pdf.
-    If the snapshot file for this prefix exists under reviewed-snapshots/<slug>/,
-    its filename IS the full hash."""
-    for _key, filename in index.items():
-        parsed = _parse_old_flat(filename)
-        if parsed == (slug, prefix):
-            return None  # index knows prefix; full hash comes from snapshot dir
-    return None
-
-
 def _find_full_hash_in_snapshots(data_dir: Path, slug: str, prefix: str) -> str | None:
     snap_dir = data_dir / "reviewed-snapshots" / slug
     if not snap_dir.is_dir():
