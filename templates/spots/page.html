@@ -179,6 +179,10 @@
       {% endfor %}
 
       {% if upcoming_closures | length > 0 %}
+        {# Tera 0.22.1 supports variable array indexing (used for day_order /
+           day_labels above), so a 12-entry lookup replaces the hand-unrolled
+           month-label if-ladder that used to live below. #}
+        {% set month_labels = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"] %}
         <section class="closure-banners" aria-label="Upcoming closures">
           {% for c in upcoming_closures %}
             {% set cs_parts = c.start | split(pat="-") %}
@@ -187,56 +191,10 @@
             {% set cs_day_i = cs_parts[2] | int %}
             {% set ce_month_i = ce_parts[1] | int %}
             {% set ce_day_i = ce_parts[2] | int %}
-            {% if cs_month_i == 1 %}
-              {% set cs_month_label = "JAN" %}
-            {% elif cs_month_i == 2 %}
-              {% set cs_month_label = "FEB" %}
-            {% elif cs_month_i == 3 %}
-              {% set cs_month_label = "MAR" %}
-            {% elif cs_month_i == 4 %}
-              {% set cs_month_label = "APR" %}
-            {% elif cs_month_i == 5 %}
-              {% set cs_month_label = "MAY" %}
-            {% elif cs_month_i == 6 %}
-              {% set cs_month_label = "JUN" %}
-            {% elif cs_month_i == 7 %}
-              {% set cs_month_label = "JUL" %}
-            {% elif cs_month_i == 8 %}
-              {% set cs_month_label = "AUG" %}
-            {% elif cs_month_i == 9 %}
-              {% set cs_month_label = "SEP" %}
-            {% elif cs_month_i == 10 %}
-              {% set cs_month_label = "OCT" %}
-            {% elif cs_month_i == 11 %}
-              {% set cs_month_label = "NOV" %}
-            {% else %}
-              {% set cs_month_label = "DEC" %}
-            {% endif %}
-            {% if ce_month_i == 1 %}
-              {% set ce_month_label = "JAN" %}
-            {% elif ce_month_i == 2 %}
-              {% set ce_month_label = "FEB" %}
-            {% elif ce_month_i == 3 %}
-              {% set ce_month_label = "MAR" %}
-            {% elif ce_month_i == 4 %}
-              {% set ce_month_label = "APR" %}
-            {% elif ce_month_i == 5 %}
-              {% set ce_month_label = "MAY" %}
-            {% elif ce_month_i == 6 %}
-              {% set ce_month_label = "JUN" %}
-            {% elif ce_month_i == 7 %}
-              {% set ce_month_label = "JUL" %}
-            {% elif ce_month_i == 8 %}
-              {% set ce_month_label = "AUG" %}
-            {% elif ce_month_i == 9 %}
-              {% set ce_month_label = "SEP" %}
-            {% elif ce_month_i == 10 %}
-              {% set ce_month_label = "OCT" %}
-            {% elif ce_month_i == 11 %}
-              {% set ce_month_label = "NOV" %}
-            {% else %}
-              {% set ce_month_label = "DEC" %}
-            {% endif %}
+            {% set cs_month_idx = cs_month_i - 1 %}
+            {% set ce_month_idx = ce_month_i - 1 %}
+            {% set cs_month_label = month_labels[cs_month_idx] %}
+            {% set ce_month_label = month_labels[ce_month_idx] %}
             {% set cs_label = cs_month_label ~ " " ~ cs_day_i %}
             {% set ce_label = ce_month_label ~ " " ~ ce_day_i %}
             <div class="closure-banner">
