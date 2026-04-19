@@ -71,16 +71,17 @@ The file contains only `compare_payloads()`, `serialize_note()`, `deserialize_no
 - [ ] **Step 1: Verify current call sites**
 
 ```bash
+grep -rn "from .review import\|from schedules.review\|review\|diff" src/schedules/__init__.py
 grep -rn "from .review import\|from schedules.review" src/ tests/
 ```
 
-Expected output (exactly three lines):
+Expected first grep: no `review` or `diff` lines (the `__init__.py` exports only `__version__`, so no re-export update is needed — but confirm this rather than assume).
+
+Expected second grep (exactly two production lines plus the in-file imports of `tests/test_review.py` itself):
 ```
 src/schedules/state.py:9:from .review import deserialize_notes, serialize_note
 src/schedules/pipeline.py:20:from .review import compare_payloads
 ```
-
-(Plus whatever `tests/test_review.py` itself imports — that will move with the file.)
 
 - [ ] **Step 2: Rename files with `git mv`**
 
@@ -216,7 +217,7 @@ Expected: `AttributeError: module 'schedules.paths' has no attribute 'pdf_dir'` 
 
 - [ ] **Step 3: Implement helpers in `src/schedules/paths.py`**
 
-Keep the existing module-level constants (including `PDF_CACHE_DIR` — that one will be removed in Task 3 when `fetch.py` is rewritten). Remove `PDF_CACHE_INDEX_PATH`. Append the helpers:
+Keep ALL existing module-level constants — including `PDF_CACHE_INDEX_PATH`. The index constant stays until Task 3 rewrites `fetch.py` (its only importer). Removing it here would break the `from .paths import PDF_CACHE_INDEX_PATH` line in `fetch.py:13` at commit 2 and crash pytest collection. Append the helpers to the existing file (do not rewrite it):
 
 ```python
 from pathlib import Path
@@ -228,6 +229,7 @@ REPO_ROOT = SRC_ROOT.parent
 CONTENT_SPOTS_DIR = REPO_ROOT / "content" / "spots"
 DATA_DIR = REPO_ROOT / "data"
 PDF_CACHE_DIR = DATA_DIR / "pdfs"
+PDF_CACHE_INDEX_PATH = DATA_DIR / "pdf-cache-index.json"
 ARTIFACTS_DIR = DATA_DIR / "artifacts"
 REVIEWED_SNAPSHOTS_DIR = DATA_DIR / "reviewed-snapshots"
 STATE_PATH = DATA_DIR / "extraction-state.json"
@@ -520,9 +522,13 @@ uv run pytest tests/test_fetch.py -v
 
 Expected: tests fail because `cache_root` is not a parameter of current `fetch_pdf`, and layout is different.
 
-- [ ] **Step 3: Rewrite `src/schedules/fetch.py`**
+- [ ] **Step 3: Rewrite `src/schedules/fetch.py` AND remove `PDF_CACHE_INDEX_PATH` from `paths.py`**
 
-Replace the file contents:
+Two edits in this step — they must land together because the import and the export are coupled.
+
+First, edit `src/schedules/paths.py` to delete the `PDF_CACHE_INDEX_PATH = DATA_DIR / "pdf-cache-index.json"` line. (The constant was kept in Task 2 to preserve the import in the unrewritten `fetch.py`; removing it now is safe because the fetch.py rewrite below drops the import.)
+
+Then replace the contents of `src/schedules/fetch.py`:
 
 ```python
 from __future__ import annotations
@@ -630,11 +636,7 @@ Note the signature change: `index_path` parameter is gone; `cache_dir` → `cach
 grep -n "fetch_pdf(" src/
 ```
 
-Inspect every call site. If any caller passes `cache_dir=` or `index_path=`, rewrite. The `pipeline.py` call is:
-```python
-fetch_result = fetch_pdf(entry.slug, entry.pdf_url)
-```
-(no kwargs) — no change needed. Verify.
+Inspect every call site. If any caller passes `cache_dir=` or `index_path=`, rewrite. The `pipeline.py` call passes `slug`, `pdf_url`, and `force=force` — none of these were removed or renamed, so no change is needed. Verify with the grep above.
 
 - [ ] **Step 5: Run fetch tests to verify pass**
 
@@ -864,11 +866,16 @@ def _find_full_hash_in_snapshots(data_dir: Path, slug: str, prefix: str) -> str 
     snap_dir = data_dir / "reviewed-snapshots" / slug
     if not snap_dir.is_dir():
         return None
+    candidates: list[str] = []
     for snap in snap_dir.glob(f"{prefix}*.json"):
         stem = snap.stem
         if len(stem) == 64 and all(c in "0123456789abcdef" for c in stem):
-            return stem
-    return None
+            candidates.append(stem)
+    if len(candidates) > 1:
+        raise SystemExit(
+            f"ambiguous prefix {prefix} in {snap_dir}: {candidates}"
+        )
+    return candidates[0] if candidates else None
 
 
 def migrate(data_dir: Path) -> tuple[int, int]:
@@ -1005,14 +1012,17 @@ grep -n "data/pdfs\|data/artifacts" .gitignore
 ```
 Expected: only `data/artifacts/` line remains.
 
-- [ ] **Step 2: Fetch PDFs for all 7 pools into the new layout**
+- [ ] **Step 2: Migrate any old-layout data, then fetch into the new layout**
 
-If any old-layout data exists in this worktree (check `ls data/pdfs/*.pdf 2>/dev/null` — look for flat files directly in `data/pdfs/`), first run the migration:
+Always run the migration script first. It's idempotent — safe on a fresh clone, on an index-only state (no PDFs yet), on a flat-PDFs state, and on an already-migrated state. Avoids the fragile "does flat data exist?" heuristic.
+
 ```bash
 uv run python scripts/migrate_pdf_layout.py --data-dir data
 ```
 
-Otherwise, fetch PDFs directly via the rewritten `fetch_pdf` (no API credentials required — this is pure HTTP):
+Expected output: either a summary of PDFs moved + snapshots renamed, or `already migrated (or no data to migrate)`.
+
+Then fetch PDFs directly via the rewritten `fetch_pdf` (no API credentials required — this is pure HTTP):
 ```bash
 uv run python -c "
 from schedules.fetch import fetch_pdf
