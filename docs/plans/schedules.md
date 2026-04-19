@@ -158,8 +158,8 @@ Design revised in response to magi review findings:
 - Entry point: `uv run schedules --help` lists `extract`.
 - `.gitignore`: `data/pdfs/`, `tmp/`, `.venv/` (if not already present).
   - API key bootstrap: README section documents `ANTHROPIC_API_KEY` and
-  `GOOGLE_API_KEY`; neither is committed. `devenv` users put them in `.env`
-  or `.env.local`, loaded via `dotenv.enable`.
+  `GOOGLE_API_KEY`; neither is committed. `devenv` users put them in `.env`,
+  loaded via `dotenv.enable`.
 
 ### Step 2: Build the pool registry
 - `src/schedules/registry.toml`, one entry per pool:

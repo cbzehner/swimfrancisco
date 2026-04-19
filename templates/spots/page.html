@@ -28,59 +28,230 @@
   </header>
 
   {% if extra.type == "pool" %}
-    {% if extra.website %}
-      <p class="official"><a href="{{ extra.website }}" target="_blank" rel="noopener">Official page</a></p>
-    {% endif %}
-
-    <section class="schedule">
-      <h2>Weekly schedule</h2>
-      {% set sessions = extra.sessions | default(value=[]) %}
-      {% if sessions | length > 0 %}
-        {% set days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] %}
-        <table class="schedule-table">
-          <thead>
-            <tr><th>DAY</th><th>START</th><th>END</th><th>PROGRAM</th><th>POOL</th><th>NOTES</th></tr>
-          </thead>
-          <tbody>
-            {% for day in days %}
-              {% set day_sessions = sessions | filter(attribute="day", value=day) %}
-              {% for s in day_sessions %}
-                <tr>
-                  <td>{{ day | capitalize }}</td>
-                  <td>{{ s.start }}</td>
-                  <td>{{ s.end }}</td>
-                  <td>{{ s.type | replace(from="_", to=" ") | title }}</td>
-                  <td>{{ s.pool | default(value="—") | capitalize }}</td>
-                  <td>{{ s.notes | default(value="—") }}</td>
-                </tr>
-              {% endfor %}
-            {% endfor %}
-          </tbody>
-        </table>
-      {% else %}
-        <p>Schedule not yet verified.</p>
-      {% endif %}
-    </section>
-
+    {% set sessions = extra.sessions | default(value=[]) %}
     {% set closures = extra.closures | default(value=[]) %}
-    {% if closures | length > 0 %}
-      <section class="closures">
-        <h2>Closures</h2>
-        <ul>
-          {% for c in closures %}
-            <li>
-              {% if c.start == c.end %}{{ c.start }}{% else %}{{ c.start }} – {{ c.end }}{% endif %}:
-              {{ c.reason }}
-            </li>
-          {% endfor %}
-        </ul>
-      </section>
-    {% endif %}
+    {% set sessions_json = sessions | json_encode %}
+    {% set closures_json = closures | json_encode %}
+    {% set schedule_json = '{"sessions":' ~ sessions_json ~ ',"closures":' ~ closures_json ~ '}' %}
 
-    <footer class="meta">
-      {% if extra.schedule_effective %}<p>Schedule effective: {{ extra.schedule_effective }}</p>{% endif %}
-      {% if extra.last_verified_at %}<p>Last verified: {{ extra.last_verified_at }}</p>{% endif %}
-    </footer>
+    <div class="detail-root"
+         data-schedule='{{ schedule_json | safe }}'>
+
+      {% if extra.subtype or extra.website %}
+        <p class="official">
+          {% if extra.subtype %}<span class="subtype">{{ extra.subtype | upper }}</span>{% endif %}
+          {% if extra.subtype and extra.website %} · {% endif %}
+          {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">OFFICIAL PAGE</a>{% endif %}
+        </p>
+      {% endif %}
+
+      <section class="status-slab" aria-live="polite">
+        <div class="status-slab-row">
+          <span class="status-slab-label">STATUS</span>
+          <span class="status-slab-value" data-field="status">—</span>
+        </div>
+        <div class="status-slab-row">
+          <span class="status-slab-label">NEXT</span>
+          <span class="status-slab-value" data-field="next">—</span>
+        </div>
+      </section>
+
+      {% set today_ts_tb = now(timestamp=true) %}
+      {% set today_weekday = today_ts_tb | date(format="%A", timezone="America/Los_Angeles") | lower %}
+      {% set today_weekday_label = today_ts_tb | date(format="%A", timezone="America/Los_Angeles") | upper %}
+      {% set drop_in_types_tb = ["lap_swim", "family_swim", "senior_swim"] %}
+      {% set today_sessions = sessions | filter(attribute="day", value=today_weekday) %}
+      {% set today_drop_in = [] %}
+      {% for s in today_sessions %}
+        {% if s.type in drop_in_types_tb %}
+          {% set_global today_drop_in = today_drop_in | concat(with=s) %}
+        {% endif %}
+      {% endfor %}
+
+      {% if today_drop_in | length > 0 %}
+        <section class="today-block" data-field="today" data-day="{{ today_weekday }}">
+          <p class="today-block-heading">TODAY · {{ today_weekday_label }}</p>
+          <ul class="today-block-list">
+            {% for s in today_drop_in %}
+              {% set plabel_tb = s.type | replace(from="_swim", to="") | upper %}
+              <li data-start="{{ s.start }}" data-end="{{ s.end }}" data-program="{{ s.type }}">
+                <span class="time">{{ s.start }}–{{ s.end }}</span>
+                <span class="program">{{ plabel_tb }}</span>
+                <span class="row-label"></span>
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endif %}
+
+      {# Weekly grid, closure banners, footer meta filled in by later tasks. #}
+      {% set day_order = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] %}
+      {% set day_labels = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"] %}
+      {% set lap_sessions = sessions | filter(attribute="type", value="lap_swim") %}
+      {% set family_sessions = sessions | filter(attribute="type", value="family_swim") %}
+      {% set senior_sessions = sessions | filter(attribute="type", value="senior_swim") %}
+      {% set lap_count = lap_sessions | length %}
+      {% set family_count = family_sessions | length %}
+      {% set senior_count = senior_sessions | length %}
+      {% set drop_in_count = lap_count + family_count + senior_count %}
+
+      {% if drop_in_count > 0 %}
+        {# Parallel flat arrays — Tera can't parse nested array literals in {% set %}. #}
+        {% if senior_sessions | length > 0 %}
+          {% set program_keys     = ["lap_swim", "family_swim", "senior_swim"] %}
+          {% set program_labels   = ["LAP SWIM", "FAMILY SWIM", "SENIOR SWIM"] %}
+          {% set program_crossnav = ["lap", "family", ""] %}
+        {% else %}
+          {% set program_keys     = ["lap_swim", "family_swim"] %}
+          {% set program_labels   = ["LAP SWIM", "FAMILY SWIM"] %}
+          {% set program_crossnav = ["lap", "family"] %}
+        {% endif %}
+
+        <section class="weekly-grid">
+          <h2 class="weekly-grid-title">WEEKLY · BY PROGRAM</h2>
+          <nav class="weekly-grid-crossnav-strip" aria-label="Related pools">
+            {% for pkey in program_keys %}
+              {% set pi = loop.index0 %}
+              {% set pcross = program_crossnav[pi] %}
+              {% if pcross %}
+                <a class="weekly-grid-crossnav" href="{{ config.base_url }}/#{{ pcross }}">→ OTHER {{ pcross | upper }} POOLS</a>
+              {% endif %}
+            {% endfor %}
+          </nav>
+          <div class="weekly-grid-table" role="table">
+            <div class="weekly-grid-head" role="row">
+              <span class="weekly-grid-rowlabel" role="columnheader"></span>
+              {% for label in day_labels %}
+                <span class="weekly-grid-dayhead"
+                      role="columnheader"
+                      data-day="{{ day_order[loop.index0] }}"
+                      {% if day_order[loop.index0] == today_weekday %}data-today="true"{% endif %}>
+                  {{ label }}
+                </span>
+              {% endfor %}
+            </div>
+            {% for pkey in program_keys %}
+              {% set pi = loop.index0 %}
+              {% set plabel = program_labels[pi] %}
+              {% set pcross = program_crossnav[pi] %}
+              {% set psessions = sessions | filter(attribute="type", value=pkey) %}
+              <div class="weekly-grid-row" role="row" data-program="{{ pkey }}">
+                <span class="weekly-grid-rowlabel" role="rowheader">
+                  {{ plabel }}
+                  {% if pcross %}
+                    <a class="weekly-grid-crossnav" href="{{ config.base_url }}/#{{ pcross }}">→ OTHER {{ pcross | upper }} POOLS</a>
+                  {% endif %}
+                </span>
+                {% for day in day_order %}
+                  {% set cell = psessions | filter(attribute="day", value=day) %}
+                  <span class="weekly-grid-cell"
+                        role="cell"
+                        data-day="{{ day }}"
+                        data-day-short="{{ day_labels[loop.index0] }}"
+                        {% if day == today_weekday %}data-today="true"{% endif %}
+                        {% if cell | length == 0 %}data-empty="true"{% endif %}>
+                    {% if cell | length == 0 %}
+                      <span class="weekly-grid-empty">—</span>
+                    {% else %}
+                      {% for s in cell %}
+                        <span class="weekly-grid-session">
+                          {{ s.start }}–{{ s.end }}{% if s.pool %} <span class="zone">({{ s.pool }})</span>{% endif %}
+                        </span>
+                      {% endfor %}
+                    {% endif %}
+                  </span>
+                {% endfor %}
+              </div>
+            {% endfor %}
+          </div>
+        </section>
+      {% else %}
+        <p class="fallback">Schedule not yet verified.</p>
+      {% endif %}
+      {# Anchor the 14-day window in America/Los_Angeles so the build host's
+         timezone can't shift the window by a day. 1209600 = 14 × 86400.
+         Zola 0.22.1 Tera `<=`/`>=` are numeric-only, so we strip dashes and
+         cast ISO dates to ints for the overlap test. The date filter on plain
+         ISO strings is also unreliable, so pretty labels use a month lookup. #}
+      {% set today_ts = now(timestamp=true) %}
+      {% set today_iso = today_ts | date(format="%Y-%m-%d", timezone="America/Los_Angeles") %}
+      {% set window_end_iso = (today_ts + 1209600) | date(format="%Y-%m-%d", timezone="America/Los_Angeles") %}
+      {% set today_i = today_iso | replace(from="-", to="") | int %}
+      {% set window_end_i = window_end_iso | replace(from="-", to="") | int %}
+      {% set upcoming_closures = [] %}
+      {% for c in closures %}
+        {% set c_start_i = c.start | replace(from="-", to="") | int %}
+        {% set c_end_i = c.end | replace(from="-", to="") | int %}
+        {% if c_start_i <= window_end_i and c_end_i >= today_i %}
+          {% set_global upcoming_closures = upcoming_closures | concat(with=c) %}
+        {% endif %}
+      {% endfor %}
+
+      {% if upcoming_closures | length > 0 %}
+        {# Tera 0.22.1 supports variable array indexing (used for day_order /
+           day_labels above), so a 12-entry lookup replaces the hand-unrolled
+           month-label if-ladder that used to live below. #}
+        {% set month_labels = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"] %}
+        <section class="closure-banners" aria-label="Upcoming closures">
+          {% for c in upcoming_closures %}
+            {% set cs_parts = c.start | split(pat="-") %}
+            {% set ce_parts = c.end | split(pat="-") %}
+            {% set cs_month_i = cs_parts[1] | int %}
+            {% set cs_day_i = cs_parts[2] | int %}
+            {% set ce_month_i = ce_parts[1] | int %}
+            {% set ce_day_i = ce_parts[2] | int %}
+            {% set cs_month_idx = cs_month_i - 1 %}
+            {% set ce_month_idx = ce_month_i - 1 %}
+            {% set cs_month_label = month_labels[cs_month_idx] %}
+            {% set ce_month_label = month_labels[ce_month_idx] %}
+            {% set cs_label = cs_month_label ~ " " ~ cs_day_i %}
+            {% set ce_label = ce_month_label ~ " " ~ ce_day_i %}
+            <div class="closure-banner">
+              <span class="closure-banner-date">
+                {% if c.start == c.end %}
+                  {{ cs_label }}
+                {% else %}
+                  {{ cs_label }} – {{ ce_label }}
+                {% endif %}
+              </span>
+              {% if c.pool %}<span class="closure-banner-zone">{{ c.pool | upper }}</span>{% endif %}
+              <span class="closure-banner-reason">{{ c.reason }}</span>
+            </div>
+          {% endfor %}
+        </section>
+      {% endif %}
+      <footer class="meta">
+        {% if extra.schedule_effective %}
+          <p class="meta-effective">
+            SCHEDULE EFFECTIVE {{ extra.schedule_effective | upper }}{% if extra.schedule_effective_end %} → {{ extra.schedule_effective_end | upper }}{% endif %}
+          </p>
+        {% endif %}
+        {% if extra.last_verified_at %}
+          {% set now_ts_fr = now(timestamp=true) %}
+          {% set threshold_ts = now_ts_fr - 2592000 %}
+          {% set threshold_date = threshold_ts | date(format="%Y-%m-%d", timezone="America/Los_Angeles") %}
+          {% set threshold_i = threshold_date | replace(from="-", to="") | int %}
+          {% set verified_i = extra.last_verified_at | replace(from="-", to="") | int %}
+          {% if verified_i >= threshold_i %}
+            {% set freshness_class = "fresh" %}
+            {% set freshness_label = "FRESH" %}
+          {% else %}
+            {% set freshness_class = "stale" %}
+            {% set freshness_label = "STALE" %}
+          {% endif %}
+          <p class="meta-freshness" data-field="freshness" data-freshness="{{ freshness_class }}">
+            <span class="freshness-dot">●</span>
+            <span class="freshness-label">{{ freshness_label }}</span>
+            · LAST VERIFIED {{ extra.last_verified_at | upper }}
+          </p>
+        {% endif %}
+      </footer>
+      {% if page.content %}
+        <section class="description">
+          {{ page.content | safe }}
+        </section>
+      {% endif %}
+    </div>
 
   {% elif extra.type == "open_water" %}
     {% if extra.description_short %}
@@ -106,7 +277,7 @@
     </footer>
   {% endif %}
 
-  {% if page.content %}
+  {% if page.content and extra.type == "open_water" %}
     <section class="notes">
       {{ page.content | safe }}
     </section>
@@ -115,5 +286,7 @@
 {% block scripts %}
   {% if page.extra.type == "open_water" %}
     <script type="module" src="{{ get_url(path='js/conditions.js') }}"></script>
+  {% elif page.extra.type == "pool" %}
+    <script type="module" src="{{ get_url(path='js/detail.js') }}"></script>
   {% endif %}
 {% endblock %}

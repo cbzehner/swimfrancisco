@@ -5,6 +5,10 @@
     pkgs.git
     pkgs.zola
     pkgs.watchexec
+    pkgs.terraform
+    # Node ≥22.18 — unflagged TS type stripping for `node --test` against
+    # `worker/src/*.ts`. nixpkgs currently ships 22.22+, which clears the bar.
+    pkgs.nodejs_22
   ];
 
   languages.python.enable = true;
@@ -13,7 +17,7 @@
   languages.javascript.enable = true;
   languages.javascript.npm.enable = true;
   dotenv.enable = true;
-  dotenv.filename = [ ".env" ".env.local" ];
+  dotenv.filename = [ ".env" ];
 
   # `devenv up` starts both: a Zola build-on-change watcher and wrangler dev.
   # Wrangler serves ./public as static assets and handles /api/* via the Worker,
@@ -52,5 +56,12 @@
       --watch content --watch templates --watch sass --watch static --watch config.toml \
       -- zola build --base-url http://localhost:8787
   '';
-  processes.worker.exec = "npm --prefix worker run dev";
+  # Wrangler dev snapshots `public/` at startup and doesn't hot-reload static
+  # assets. Wrap it in a watchexec that restarts the server whenever the Zola
+  # watcher rewrites public/, so template/SCSS edits are picked up without a
+  # manual `devenv up` restart. Debounce swallows Zola's multi-file write burst.
+  processes.worker.exec = ''
+    watchexec --no-vcs-ignore --restart --debounce 500ms --watch public \
+      -- npm --prefix worker run dev
+  '';
 }

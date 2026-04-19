@@ -190,29 +190,6 @@ table.board {
   margin: 1rem 0;
 }
 
-.schedule-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 0.5rem 0 1.5rem;
-
-  th,
-  td {
-    text-align: left;
-    padding: 0.4rem 0.6rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-size: 0.85rem;
-  }
-
-  thead th {
-    border-bottom: 1px solid var(--fg);
-  }
-
-  tbody td {
-    border-bottom: 1px solid var(--row-sep);
-  }
-}
-
 .conditions dl {
   display: grid;
   grid-template-columns: max-content 1fr;
@@ -232,8 +209,7 @@ table.board {
 
 .hazards ul,
 .clubs ul,
-.distances ul,
-.closures ul {
+.distances ul {
   list-style: none;
   padding: 0;
   margin: 0.5rem 0;
@@ -314,6 +290,190 @@ table.board tbody tr.flap {
   }
 }
 
+// --- Spot detail page (v2 redesign) -------------------------------------
+
+.detail-root {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin: 1rem 0;
+}
+
+.detail-root .official {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--fg-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-slab {
+  border: 1px solid var(--fg);
+  padding: 0.75rem 1rem;
+  display: grid;
+  grid-template-columns: 8ch 1fr;
+  row-gap: 0.35rem;
+  column-gap: 1rem;
+  font-size: 0.95rem;
+}
+
+.status-slab-row {
+  display: contents;
+}
+
+.status-slab-label {
+  color: var(--fg-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.status-slab-value {
+  color: var(--fg);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.today-block {
+  border-top: 1px solid var(--row-sep);
+  padding-top: 0.75rem;
+}
+
+.today-block-heading {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--fg-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.today-block-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content 1fr max-content;
+  column-gap: 1rem;
+  row-gap: 0.3rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.today-block-list li {
+  display: contents;
+}
+
+.today-block-list .time {
+  white-space: nowrap;
+}
+
+.today-block-list .now-marker {
+  color: var(--accent);
+}
+
+.today-block-list .row-label {
+  color: var(--fg-dim);
+  justify-self: end;
+}
+
+// Weekly grid — desktop (default) -----------------------------------------
+
+.weekly-grid-title {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  color: var(--fg);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.weekly-grid-table {
+  display: grid;
+  grid-template-columns: 10ch repeat(7, minmax(7ch, 1fr));
+  border-top: 1px solid var(--fg);
+  font-size: 0.85rem;
+}
+
+.weekly-grid-head,
+.weekly-grid-row {
+  display: contents;
+}
+
+.weekly-grid-rowlabel,
+.weekly-grid-dayhead,
+.weekly-grid-cell {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--row-sep);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.weekly-grid-dayhead {
+  color: var(--fg-dim);
+  font-size: 0.8rem;
+  text-align: left;
+}
+
+.weekly-grid-rowlabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  color: var(--fg);
+  font-weight: 700;
+}
+
+// Desktop: crossnavs live in the strip below the title; hide the
+// inline copy inside each row label. Mobile re-enables it below.
+.weekly-grid-rowlabel .weekly-grid-crossnav {
+  display: none;
+}
+
+.weekly-grid-crossnav-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.weekly-grid-crossnav {
+  color: var(--fg-dim);
+  font-size: 0.75rem;
+  font-weight: 400;
+
+  &:hover,
+  &:focus {
+    color: var(--fg);
+  }
+}
+
+.weekly-grid-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.weekly-grid-session {
+  white-space: nowrap;
+}
+
+.weekly-grid-empty {
+  color: var(--fg-dim);
+}
+
+.weekly-grid-cell[data-today="true"],
+.weekly-grid-dayhead[data-today="true"] {
+  background: rgba(245, 197, 24, 0.08);
+}
+
+.zone {
+  color: var(--fg-dim);
+  font-size: 0.85em;
+  text-transform: lowercase;
+  letter-spacing: 0;
+}
+
 // --- Responsive ---------------------------------------------------------
 
 @media (max-width: 640px) {
@@ -354,4 +514,111 @@ table.board tbody tr.flap {
   .conditions dl {
     grid-template-columns: 1fr;
   }
+
+  // Weekly grid collapses to one-column stacks grouped by program.
+  // Row-label becomes a heading; day header row is hidden; each cell
+  // becomes a row prefixed by its weekday abbreviation.
+  .weekly-grid-table {
+    grid-template-columns: 1fr;
+    border-top: none;
+  }
+
+  .weekly-grid-head {
+    display: none;
+  }
+
+  .weekly-grid-crossnav-strip {
+    display: none;
+  }
+
+  .weekly-grid-rowlabel {
+    border-bottom: 1px solid var(--fg);
+    padding-top: 1rem;
+  }
+
+  // Re-enable the inline crossnav inside the row label on mobile.
+  .weekly-grid-rowlabel .weekly-grid-crossnav {
+    display: inline;
+  }
+
+  .weekly-grid-cell {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-left: 0.5rem;
+  }
+
+  .weekly-grid-cell::before {
+    content: attr(data-day-short);
+    color: var(--fg-dim);
+    min-width: 4ch;
+    text-transform: uppercase;
+  }
+
+  .weekly-grid-cell[data-empty="true"] {
+    display: none;
+  }
+}
+
+// Closure banners ---------------------------------------------------------
+
+.closure-banners {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.closure-banner {
+  border-left: 3px solid var(--fg);
+  background: rgba(245, 197, 24, 0.08);
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.closure-banner-date,
+.closure-banner-zone {
+  color: var(--fg);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+.closure-banner-reason {
+  color: var(--fg-dim);
+  flex: 1 1 auto;
+}
+
+// Freshness dot + meta ----------------------------------------------------
+
+.meta-effective,
+.meta-freshness {
+  margin: 0.25rem 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-dim);
+}
+
+.meta-freshness .freshness-dot {
+  color: var(--fg);
+  margin-right: 0.25rem;
+}
+
+.meta-freshness[data-freshness="stale"] .freshness-dot {
+  color: var(--fg-dim);
+}
+
+// Description block (moved from .notes) ----------------------------------
+
+.description {
+  color: var(--fg-dim);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-top: 1.5rem;
+  // Prose stays natural case — do NOT uppercase.
+  text-transform: none;
 }
