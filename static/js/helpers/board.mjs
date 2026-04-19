@@ -33,6 +33,39 @@ export function formatHHMM(totalMinutes) {
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
+// Return a Date whose local getters (getFullYear, getMonth, getDate, getDay,
+// getHours, getMinutes, getSeconds) reflect the wall-clock in
+// America/Los_Angeles. Every SwimFrancisco pool is in San Francisco, so the
+// entire site should present and reason about time in Pacific, regardless of
+// the visitor's browser locale. The returned Date's UTC components are a lie
+// — only the local getters are meaningful.
+export function nowInPacific(instant) {
+  const source = instant instanceof Date ? instant : new Date();
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Los_Angeles",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(source);
+  const get = (type) => Number(parts.find((p) => p.type === type).value);
+  // en-US with hour12:false has historically rendered midnight as "24" on
+  // some runtimes; normalize defensively so getHours() returns 0..23.
+  let hour = get("hour");
+  if (hour === 24) hour = 0;
+  return new Date(
+    get("year"),
+    get("month") - 1,
+    get("day"),
+    hour,
+    get("minute"),
+    get("second"),
+  );
+}
+
 export function formatISODate(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -40,8 +73,9 @@ export function formatISODate(date) {
   return `${y}-${m}-${d}`;
 }
 
-// Return the active closure (if any) covering `now`. Closure start/end are
-// inclusive ISO dates per the v1 closure contract.
+// Return the active facility-wide closure (if any) covering `now`. Closures
+// with a non-empty `pool` field are zone-scoped and do NOT close the whole
+// facility — they are rendered as detail-page banners but ignored here.
 export function findActiveClosure(closures, now) {
   if (!Array.isArray(closures) || closures.length === 0) return null;
   const today = formatISODate(now);
@@ -50,6 +84,7 @@ export function findActiveClosure(closures, now) {
     const start = typeof closure.start === "string" ? closure.start : null;
     const end = typeof closure.end === "string" ? closure.end : null;
     if (!start || !end) continue;
+    if (typeof closure.pool === "string" && closure.pool.length > 0) continue;
     if (today >= start && today <= end) return closure;
   }
   return null;
@@ -60,6 +95,48 @@ export function findActiveClosure(closures, now) {
 // exclusive upper bound).
 export function closureCopy(closure) {
   return `Closed through ${closure.end}`;
+}
+
+const DROP_IN_TYPES = new Set(["lap_swim", "family_swim", "senior_swim"]);
+
+// Return the next drop-in session (lap / family / senior) that starts strictly
+// after `now`, scanning up to 7 days ahead. Skips lessons and facility-wide
+// closed days. Returns `{ program, day, start }` (start in minutes-of-day) or
+// null if none found within the window.
+export function findNextDropIn(schedule, now) {
+  if (!schedule || typeof schedule !== "object") return null;
+  const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
+  const closures = Array.isArray(schedule.closures) ? schedule.closures : [];
+  if (sessions.length === 0) return null;
+
+  const normalized = [];
+  for (const session of sessions) {
+    if (!session || typeof session !== "object") continue;
+    if (!DROP_IN_TYPES.has(session.type)) continue;
+    const day = typeof session.day === "string" ? session.day.toLowerCase() : null;
+    const start = parseHHMM(session.start);
+    if (!day || !DAY_KEYS.includes(day) || start === null) continue;
+    normalized.push({ program: session.type, day, start });
+  }
+  if (normalized.length === 0) return null;
+
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  // Scan offset 0..7 inclusive: today plus each of the next 7 days. The
+  // inclusive upper bound covers the "only-Wednesday lap swim, today is
+  // Wednesday, session already ended" case — without it, the same-weekday
+  // recurrence one week away is missed and the function returns null.
+  for (let offset = 0; offset <= 7; offset += 1) {
+    const date = new Date(now);
+    date.setDate(date.getDate() + offset);
+    if (findActiveClosure(closures, date)) continue;
+    const dayKey = DAY_KEYS[date.getDay()];
+    const candidates = normalized
+      .filter((s) => s.day === dayKey)
+      .filter((s) => offset > 0 || s.start > nowMinutes)
+      .sort((a, b) => a.start - b.start);
+    if (candidates.length > 0) return candidates[0];
+  }
+  return null;
 }
 
 export function computeStatus(schedule, now) {
@@ -152,3 +229,119 @@ function normalizeRank(rank) {
 }
 
 export { PLACEHOLDER, DAY_KEYS };
+
+const FRESH_WINDOW_DAYS = 30;
+
+// Return "fresh" when `isoDate` (YYYY-MM-DD) is within FRESH_WINDOW_DAYS of
+// `now` (inclusive); "stale" otherwise. Missing, empty, or unparseable input
+// is treated as stale — we prefer to signal "we don't know" rather than
+// overstate freshness.
+export function freshnessLabel(isoDate, now) {
+  if (typeof isoDate !== "string" || isoDate.length === 0) return "stale";
+  const parsed = new Date(`${isoDate}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return "stale";
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const ageMs = today.getTime() - parsed.getTime();
+  if (ageMs < 0) return "fresh"; // future-dated counts as fresh
+  const ageDays = ageMs / 86_400_000;
+  return ageDays <= FRESH_WINDOW_DAYS ? "fresh" : "stale";
+}
+
+const EMPTY_DETAIL = Object.freeze({
+  kind: "NOT_VERIFIED",
+  activePrograms: [],
+  activeUntil: null,
+  activeLessonsUntil: null,
+  nextDropIn: null,
+  closureReason: null,
+  is_drop_in: false,
+});
+
+// Normalize the session list into { day, type, start, end } with minute-of-day
+// ints and lowercased day names. Skips malformed rows.
+function normalizeSessions(sessions) {
+  const out = [];
+  for (const session of sessions) {
+    if (!session || typeof session !== "object") continue;
+    const day = typeof session.day === "string" ? session.day.toLowerCase() : null;
+    const type = typeof session.type === "string" ? session.type : null;
+    const start = parseHHMM(session.start);
+    const end = parseHHMM(session.end);
+    if (!day || !DAY_KEYS.includes(day) || !type || start === null || end === null) continue;
+    if (end <= start) continue;
+    out.push({ day, type, start, end });
+  }
+  return out;
+}
+
+export function computeDetailStatus(schedule, now) {
+  if (!schedule || typeof schedule !== "object") return { ...EMPTY_DETAIL };
+
+  const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
+  const closures = Array.isArray(schedule.closures) ? schedule.closures : [];
+
+  const normalized = normalizeSessions(sessions);
+  if (normalized.length === 0) {
+    return { ...EMPTY_DETAIL, kind: "NOT_VERIFIED" };
+  }
+
+  const activeClosure = findActiveClosure(closures, now);
+  if (activeClosure) {
+    return {
+      ...EMPTY_DETAIL,
+      kind: "CLOSED_TODAY",
+      closureReason: typeof activeClosure.reason === "string" ? activeClosure.reason : null,
+      nextDropIn: findNextDropIn(schedule, now),
+    };
+  }
+
+  const todayKey = DAY_KEYS[now.getDay()];
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const todayAll = normalized.filter((s) => s.day === todayKey);
+  const todayDropIn = todayAll.filter((s) => DROP_IN_TYPES.has(s.type));
+
+  const activeDropIn = todayDropIn.filter(
+    (s) => s.start <= nowMinutes && nowMinutes < s.end,
+  );
+  if (activeDropIn.length > 0) {
+    return {
+      ...EMPTY_DETAIL,
+      kind: "OPEN",
+      activePrograms: activeDropIn.map((s) => s.type),
+      activeUntil: Math.min(...activeDropIn.map((s) => s.end)),
+      is_drop_in: true,
+      nextDropIn: findNextDropIn(schedule, now),
+    };
+  }
+
+  const activeLessons = todayAll.find(
+    (s) => s.type === "lessons" && s.start <= nowMinutes && nowMinutes < s.end,
+  );
+  if (activeLessons) {
+    return {
+      ...EMPTY_DETAIL,
+      kind: "LESSONS",
+      activeLessonsUntil: activeLessons.end,
+      nextDropIn: findNextDropIn(schedule, now),
+    };
+  }
+
+  if (todayDropIn.length === 0 && todayAll.length > 0) {
+    return {
+      ...EMPTY_DETAIL,
+      kind: "NO_DROPIN_TODAY",
+      nextDropIn: findNextDropIn(schedule, now),
+    };
+  }
+
+  const anyDropInThisWeek = normalized.some((s) => DROP_IN_TYPES.has(s.type));
+  if (!anyDropInThisWeek) {
+    return { ...EMPTY_DETAIL, kind: "NO_DROPIN_WEEK" };
+  }
+
+  return {
+    ...EMPTY_DETAIL,
+    kind: "CLOSED_HOURS",
+    nextDropIn: findNextDropIn(schedule, now),
+  };
+}
