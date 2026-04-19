@@ -7,7 +7,6 @@ REPO_ROOT = SRC_ROOT.parent
 CONTENT_SPOTS_DIR = REPO_ROOT / "content" / "spots"
 DATA_DIR = REPO_ROOT / "data"
 PDF_CACHE_DIR = DATA_DIR / "pdfs"
-PDF_CACHE_INDEX_PATH = DATA_DIR / "pdf-cache-index.json"
 ARTIFACTS_DIR = DATA_DIR / "artifacts"
 REVIEWED_SNAPSHOTS_DIR = DATA_DIR / "reviewed-snapshots"
 STATE_PATH = DATA_DIR / "extraction-state.json"
