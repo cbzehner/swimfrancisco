@@ -9,7 +9,7 @@ from schedules.validate import validate
 def test_load_reviewed_snapshot(tmp_path):
     root = tmp_path / "reviewed-snapshots"
     pdf_sha256 = "a" * 64
-    file_path = root / "hamilton-pool" / f"{pdf_sha256}.json"
+    file_path = root / "hamilton-pool" / f"2026-04-18-{pdf_sha256[:12]}.json"
     file_path.parent.mkdir(parents=True)
     file_path.write_text(
         json.dumps(
@@ -36,7 +36,7 @@ def test_load_reviewed_snapshot(tmp_path):
 
 
 def _write_snapshot(root, slug, pdf_sha256, envelope):
-    file_path = root / slug / f"{pdf_sha256}.json"
+    file_path = root / slug / f"2026-04-18-{pdf_sha256[:12]}.json"
     file_path.parent.mkdir(parents=True, exist_ok=True)
     file_path.write_text(json.dumps(envelope))
     return file_path

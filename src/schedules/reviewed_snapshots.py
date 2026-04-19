@@ -21,7 +21,24 @@ _REQUIRED_ENVELOPE_FIELDS = (
 
 
 def reviewed_snapshot_path(slug: str, pdf_sha256: str, root: Path = REVIEWED_SNAPSHOTS_DIR) -> Path:
-    return root / slug / f"{pdf_sha256}.json"
+    """Resolve the snapshot path for (slug, pdf_sha256).
+
+    Globs `<slug>/*-<prefix>.json` where prefix is the first 12 chars of
+    pdf_sha256. If exactly one file matches, return it. If none match,
+    return the canonical write path using today's date. If more than one
+    matches (should not happen in practice), raise.
+    """
+    prefix = pdf_sha256[:12]
+    slug_dir = root / slug
+    if slug_dir.is_dir():
+        matches = sorted(slug_dir.glob(f"*-{prefix}.json"))
+        if len(matches) == 1:
+            return matches[0]
+        if len(matches) > 1:
+            raise ValueError(
+                f"Multiple reviewed snapshots for {slug} with prefix {prefix}: {matches}"
+            )
+    return slug_dir / f"{date.today().isoformat()}-{prefix}.json"
 
 
 def _validate_envelope(raw: dict, path: Path, *, expected_slug: str, expected_pdf_sha256: str) -> None:

@@ -22,3 +22,35 @@ def relative_to_repo(path: Path) -> str:
         return str(path.relative_to(REPO_ROOT))
     except ValueError:
         return str(path)
+
+
+def pdf_dir(slug: str) -> Path:
+    return DATA_DIR / "pdfs" / slug
+
+
+def reviewed_snapshot_dir(slug: str) -> Path:
+    return DATA_DIR / "reviewed-snapshots" / slug
+
+
+def pdf_filename(date: str, pdf_sha256: str) -> str:
+    return f"{date}-{pdf_sha256[:12]}.pdf"
+
+
+def snapshot_filename(date: str, pdf_sha256: str) -> str:
+    return f"{date}-{pdf_sha256[:12]}.json"
+
+
+def latest_pdf(slug: str) -> Path | None:
+    directory = pdf_dir(slug)
+    if not directory.is_dir():
+        return None
+    files = sorted(directory.glob("*.pdf"))
+    return files[-1] if files else None
+
+
+def latest_reviewed_snapshot(slug: str) -> Path | None:
+    directory = reviewed_snapshot_dir(slug)
+    if not directory.is_dir():
+        return None
+    files = sorted(directory.glob("*.json"))
+    return files[-1] if files else None

@@ -46,7 +46,7 @@ def test_find_snapshots_for_slug_lists_all(tmp_path):
         "closures": [],
     }
     for sha in ("a" * 64, "b" * 64):
-        path = root / "hamilton-pool" / f"{sha}.json"
+        path = root / "hamilton-pool" / f"2026-04-18-{sha[:12]}.json"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(_envelope("hamilton-pool", sha, payload)))
     assert len(find_snapshots_for_slug("hamilton-pool", root=root)) == 2
