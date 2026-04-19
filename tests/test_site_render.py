@@ -55,15 +55,20 @@ def test_pool_detail_never_renders_object_literal_for_closures(built_site: Path)
 
 def test_schedule_table_uses_current_schema_fields(built_site: Path) -> None:
     # `lanes` is not in the current schema; the column must go. Session type
-    # must render as a human label, not the raw enum id.
+    # must render as a human label, not the raw enum id. The weekly-grid render
+    # uses uppercase program labels (e.g. "LAP SWIM"), so check visible text
+    # case-insensitively. Raw enum ids live legitimately in the `data-schedule`
+    # JSON attribute; the guard here targets the uppercase form that would
+    # appear if the enum id leaked into visible text (CSS uppercases labels).
     html = _read(built_site, "balboa-pool")
     assert "<th>LANES</th>" not in html
     assert "FAMILY_SWIM" not in html
     assert "LAP_SWIM" not in html
     assert "SENIOR_SWIM" not in html
-    # Human-readable labels present.
-    assert "Family Swim" in html
-    assert "Lap Swim" in html
+    # Human-readable labels present (case-insensitive match).
+    lowered = html.lower()
+    assert "family swim" in lowered
+    assert "lap swim" in lowered
 
 
 def test_open_water_item_list_sections_render(built_site: Path) -> None:
