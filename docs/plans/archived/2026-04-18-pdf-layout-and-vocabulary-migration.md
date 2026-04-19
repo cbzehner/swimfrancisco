@@ -1,5 +1,5 @@
 ---
-status: in_progress
+status: complete
 progress:
   - section: "Task 1: Rename review.py → diff.py"
     status: complete
@@ -29,8 +29,20 @@ progress:
       - "Committed 5009ccb; 88 tests pass; 9 PDFs checked in under new layout; 7 existing reviewed snapshots renamed to <date>-<prefix>.json; data/pdf-cache-index.json deleted"
       - "gap: registry grew from 7 to 9 pools since spec was written (mission-community-pool, sava-pool added). Commit message verbatim from plan still says '7 PDFs'. Flag for post-ralph magi review."
       - "PDFs fetched with today's date (2026-04-19); snapshots kept their reviewed_at date (2026-04-17). Intentional per spec — filenames share prefix, not date."
-last_review: 2026-04-19T08:16:00-07:00
-iterations: 5
+  - section: "Task 6: Vocabulary scrubs + config-format convention"
+    status: complete
+    notes:
+      - "Committed 20dfae0; 88 tests pass; README/NAPKIN/7 spot MDs scrubbed; NAPKIN Conventions section appended"
+      - "grep 'adjudicat' across in-scope paths is clean (archived plans untouched by design)"
+      - "only 7 spot MDs needed updates — mission-community-pool and sava-pool are registry-only without spot content yet"
+  - section: "Final verification"
+    status: complete
+    notes:
+      - "88/88 tests pass; data layout matches YYYY-MM-DD-[0-9a-f]{12}.(pdf|json) everywhere"
+      - "data/pdf-cache-index.json confirmed deleted"
+      - "grep for 'pdf-cache-index|PDF_CACHE_INDEX' shows only deliberate refs in scripts/migrate_pdf_layout.py + test_migration_idempotent.py (migration cleanup contract); 'from schedules.review' matches are false positives hitting reviewed_snapshots"
+last_review: 2026-04-19T08:22:00-07:00
+iterations: 6
 no_progress_count: 0
 started_at: 2026-04-19T07:53:34-07:00
 work_unit_granularity: task
