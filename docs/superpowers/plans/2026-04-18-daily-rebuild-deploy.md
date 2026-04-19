@@ -36,8 +36,13 @@ progress:
     status: complete
     notes:
       - "commit ba30bf9; 46/46 tests pass, typecheck clean; fetch handler untouched"
-last_review: 2026-04-19T01:40:00-07:00
-iterations: 7
+  - section: "Task 7: rename Worker to swimfrancisco + daily crons"
+    status: complete
+    notes:
+      - "commit b5fc5df; typecheck clean; crons = [hourly, 5 7 UTC, 5 8 UTC]"
+      - "gap: rename propagates to worker/package-lock.json — plan's git add list only includes wrangler.toml + package.json. Future npm-package renames should include the lockfile explicitly."
+last_review: 2026-04-19T01:44:00-07:00
+iterations: 8
 no_progress_count: 0
 started_at: 2026-04-19T01:13:14-07:00
 ---
