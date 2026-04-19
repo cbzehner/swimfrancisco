@@ -23,7 +23,6 @@ dist/
 .venv/
 __pycache__/
 *.pyc
-data/pdfs/
 data/artifacts/
 tmp/
 
