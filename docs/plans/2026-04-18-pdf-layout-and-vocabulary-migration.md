@@ -18,8 +18,13 @@ progress:
       - "Committed a98b6e0; 85 tests pass (was 83 + 3 new - 1 old)"
       - "PDF_CACHE_INDEX_PATH removed from both paths.py and fetch.py in this commit per plan's coupled-edit requirement"
       - "pipeline.py:134 caller compatible — only slug, pdf_url, force kwargs; no rename needed"
-last_review: 2026-04-19T08:06:00-07:00
-iterations: 3
+  - section: "Task 4: Migration script + idempotence test"
+    status: complete
+    notes:
+      - "Committed f7aeab0; 88 tests pass (3 new in test_migration_idempotent.py)"
+      - "gap: plan's Step-3 script body includes dead helper `_resolve_full_hash_from_index` (never called). Harmless; flag for post-ralph magi review."
+last_review: 2026-04-19T08:11:00-07:00
+iterations: 4
 no_progress_count: 0
 started_at: 2026-04-19T07:53:34-07:00
 work_unit_granularity: task
