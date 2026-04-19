@@ -19,15 +19,13 @@ directory = "../public"
 not_found_handling = "404-page"
 run_worker_first = ["/api/*", "/__scheduled"]
 
-# KV namespace for per-spot conditions.
-# Before first deploy, create the namespaces with:
-#   wrangler kv:namespace create CONDITIONS
-#   wrangler kv:namespace create CONDITIONS --preview
-# Then replace REPLACE_ME below with the ids wrangler prints.
+# KV namespace for per-spot conditions. IDs are managed by Terraform
+# (terraform/worker.tf → cloudflare_workers_kv_namespace.conditions /
+# conditions_preview) and exposed via `terraform output`.
 [[kv_namespaces]]
 binding = "CONDITIONS"
-id = "REPLACE_ME"
-preview_id = "REPLACE_ME"
+id = "3b9bd339595448b3b1e057d44bea7f49"
+preview_id = "71167f5251b447c3aea11e6d3805cf8b"
 
 # CORS: HTTP handlers (Step 15) must allow origin https://swimfrancisco.com
 # (plus https://*.swimfrancisco.pages.dev preview deployments if needed).
