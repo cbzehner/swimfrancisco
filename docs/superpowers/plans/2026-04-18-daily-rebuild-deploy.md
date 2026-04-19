@@ -13,8 +13,13 @@ progress:
       - "commit e200d17; terraform init -backend=false + validate clean; provider v5.18.0 installed"
       - "gap: codex-adapter.sh does not auto-fall-back to CLI transport when companion sandbox is read-only — had to invoke CLI directly. Consider patching upstream."
       - "gap: codex sandbox has no network, so terraform init / validate must run from orchestrating shell"
-last_review: 2026-04-19T01:22:00-07:00
-iterations: 2
+  - section: "Task 3: Terraform KV + Workers Custom Domain + outputs"
+    status: complete
+    notes:
+      - "commit 1f832c1; terraform validate clean"
+      - "verified: terraform validate emits expected deprecation warning on `environment` attribute (inline comment already tracks the issue)"
+last_review: 2026-04-19T01:25:00-07:00
+iterations: 3
 no_progress_count: 0
 started_at: 2026-04-19T01:13:14-07:00
 ---
