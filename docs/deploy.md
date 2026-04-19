@@ -1,147 +1,204 @@
 # SwimFrancisco Deploy Guide
 
-This guide walks through the first deploy of SwimFrancisco v1 to Cloudflare. There are two moving parts:
+Deploy is a single Cloudflare Worker (`swimfrancisco`) running in the
+unified Workers Builds model: the same script serves the built Zola site
+as static assets and handles `/api/*` requests. Terraform owns the durable
+infrastructure around it (KV, DNS, the `www → apex` redirect, the apex
+custom-domain binding).
 
-1. **Static site** — built by Zola, served by Cloudflare Pages.
-2. **Conditions API** — a Cloudflare Worker (under `worker/`) that fetches NOAA / NDBC data on a cron and serves JSON.
-
-The custom domain `swimfrancisco.com` ties them together.
-
-All steps below are performed manually (dashboard + `wrangler` CLI). v1 has no CI; pushes to `main` trigger Pages builds automatically once the project is wired up.
+Push to `main` auto-deploys via Workers Builds. A Worker cron at 00:05 PT
+POSTs to a Workers Builds deploy hook to daily-rebuild the site so that
+date-tick-over fields in the rendered HTML stay correct.
 
 ---
 
-## 1. Cloudflare Pages — static site
+## One-time bootstrap
 
-### Create the Pages project
+Follow in this order. Each step depends on the previous.
 
-In the Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git, select this repo and branch `main`.
+### 1. `.env` setup
 
-### Build settings
+Create the root `.env` file from `.env.example`. Fill in:
+
+- `CLOUDFLARE_API_TOKEN` — token with the scopes listed in `terraform/README.md`.
+- `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` — R2 credentials for the
+  Terraform state bucket. (These ARE R2 credentials; the `AWS_` naming is a
+  Terraform S3 backend quirk.)
+- `GOOGLE_API_KEY` / `ANTHROPIC_API_KEY` — for the schedule extractor.
+  Unrelated to deploy, but `.env` is the one file that holds both.
+
+### 2. R2 state bucket for Terraform
+
+Dashboard → R2 → Create bucket `swimfrancisco-tfstate`, private, automatic
+location. Then R2 → Manage API Tokens → Create token scoped to that bucket
+with Object Read & Write.
+
+### 3. Terraform — phase 1 (KV + DNS + redirect)
+
+Preflight: if a `www` CNAME already exists in the zone, Terraform's create
+will fail. Check and clean up first:
+
+```sh
+dig +short www.swimfrancisco.com
+```
+
+If anything returns, delete it in Dashboard → DNS → Records OR
+`terraform import cloudflare_dns_record.www <zone_id>/<record_id>` before
+continuing.
+
+```sh
+devenv shell
+cd terraform
+terraform init
+terraform plan \
+  -target=cloudflare_workers_kv_namespace.conditions \
+  -target=cloudflare_workers_kv_namespace.conditions_preview \
+  -target=cloudflare_dns_record.www \
+  -target=cloudflare_ruleset.www_redirect
+# Review the plan, then apply the same targets:
+terraform apply \
+  -target=cloudflare_workers_kv_namespace.conditions \
+  -target=cloudflare_workers_kv_namespace.conditions_preview \
+  -target=cloudflare_dns_record.www \
+  -target=cloudflare_ruleset.www_redirect
+terraform output
+```
+
+Save the two KV namespace IDs.
+
+### 4. Wire the KV IDs into `worker/wrangler.toml`
+
+Replace the `REPLACE_ME` placeholders in the `[[kv_namespaces]]` block with
+the IDs from step 3 (`kv_namespace_id` → `id`,
+`kv_preview_namespace_id` → `preview_id`). Commit and push to `main`.
+
+### 5. Create the Workers Builds project
+
+Dashboard → Workers & Pages → Create → Workers → Connect to Git. Select
+`cbzehner/swimfrancisco`, branch `main`. Configure:
 
 | Field | Value |
 |---|---|
-| Framework preset | None |
+| Project name | `swimfrancisco` |
 | Build command | `zola build` |
-| Build output directory | `public` |
-| Root directory | `/` (repo root) |
-| Environment variables | `ZOLA_VERSION=0.22.1` |
+| Deploy command | `npx wrangler deploy --config worker/wrangler.toml` |
+| Root directory | `/` |
+| Builds for non-production branches | Enabled (gives PR previews) |
+| Build env var | `ZOLA_VERSION=0.22.1` |
 
-Notes:
+Click Deploy. The first build should succeed now that `worker/wrangler.toml`
+has real KV IDs and the `swimfrancisco` script name.
 
-- Cloudflare Pages' build image ships a recent Zola, but pinning `ZOLA_VERSION` matches the devenv pin (`zola 0.22.1`) and avoids surprise upgrades.
-- Leave Node and Rust versions on their defaults; the build does not use them.
-- `static/_redirects` is copied to `public/_redirects` by Zola and consumed by Pages at deploy time.
+### 6. Terraform — phase 2 (apex custom domain)
 
-### First deploy
+With the Worker now existing:
 
-Trigger a deploy (dashboard → Deployments → Retry or push a commit). The first deploy will be reachable at `https://<project>.pages.dev`.
+```sh
+cd terraform
+terraform plan
+```
 
----
+Expected plan diff: exactly one resource to add
+(`cloudflare_workers_custom_domain.apex`); zero to change, zero to destroy.
+If anything else shows up, stop and investigate — phase-1 resources should
+already be in the state and unchanged.
 
-## 2. Conditions Worker
+```sh
+terraform apply
+```
 
-See `worker/README.md` for the short version; the full flow is:
+This creates `cloudflare_workers_custom_domain.apex`, binding
+`swimfrancisco.com` to the Worker.
+
+### 7. Deploy hook + Worker secret
+
+Workers Builds → `swimfrancisco` → Settings → Triggers → Deploy hooks →
+Add. Name: `daily-rebuild`, Branch: `main`. Copy the URL.
 
 ```sh
 cd worker
-wrangler login
-
-# Create KV namespaces (one real, one for preview/dev).
-wrangler kv:namespace create CONDITIONS
-wrangler kv:namespace create CONDITIONS --preview
+wrangler secret put WORKERS_BUILDS_DEPLOY_HOOK
+# paste the hook URL when prompted
+wrangler secret list   # confirm WORKERS_BUILDS_DEPLOY_HOOK is bound
 ```
 
-Copy the `id` and `preview_id` wrangler prints into `worker/wrangler.toml` under `[[kv_namespaces]]` (replace the `REPLACE_ME` placeholders).
+### 8. Publish cron triggers
 
 ```sh
-wrangler deploy            # ships the Worker
-wrangler triggers deploy   # registers the hourly cron
+cd worker
+wrangler deploy
+wrangler triggers deploy
 ```
 
-### Bootstrap KV immediately
+`deploy` publishes Worker code; `triggers deploy` registers cron patterns.
+In the dashboard: Worker → Settings → Triggers should show three crons
+(`0 * * * *`, `5 7 * * *`, `5 8 * * *`).
 
-Fresh Workers have empty KV, so `/api/conditions` returns `503 conditions not yet available` until the first scheduled tick (up to an hour later). Force a populate:
+### 9. Bootstrap KV immediately
+
+Fresh KV returns `503 conditions not yet available` until the first hourly
+cron tick. Force a populate via the dashboard: Workers & Pages →
+`swimfrancisco` → Triggers → Cron Triggers → next to `0 * * * *`, click
+**Run**. (Wrangler 4 has no standalone `cron trigger` subcommand; the
+dashboard invoker is the official production path.)
+
+### 10. Verify end-to-end
 
 ```sh
-wrangler cron trigger --env production
-# or click "Trigger" on the cron in the dashboard.
+curl -X POST "$WORKERS_BUILDS_DEPLOY_HOOK"          # manual rebuild test
+curl -sSf https://swimfrancisco.com/ | head -5      # site served
+curl -sSf https://swimfrancisco.com/api/conditions | head -c 400   # API served
 ```
 
-Re-run this any time you want to refetch upstream data on demand.
+Within 24 hours, Workers Builds → Deployments should show exactly one
+hook-triggered build at ~00:05 PT in addition to any push-triggered builds.
 
 ---
 
-## 3. Custom domain — swimfrancisco.com
+## Daily rebuild cron
 
-### Add the zone
+The Worker's `scheduled` handler dispatches by PT hour + minute derived from
+`event.scheduledTime`:
 
-If `swimfrancisco.com` is not already in this Cloudflare account, add it via dashboard → Websites → Add a site and follow the registrar instructions to move nameservers (or use Cloudflare Registrar).
+- **PT hour 0, minute 5** → calls `triggerRebuild(WORKERS_BUILDS_DEPLOY_HOOK, …)`.
+  Two UTC crons cover the year (`5 7 * * *` = 00:05 PDT,
+  `5 8 * * *` = 00:05 PST); exactly one matches PT midnight on any
+  given day.
+- **Any other tick** → calls `assembleAndPersist(env.CONDITIONS)` (hourly
+  NOAA/NDBC refresh).
 
-### Attach the apex to Pages
+The minute-5 gate is load-bearing: the hourly cron has minute 0 and always
+falls through to the NOAA refresh, including the 00:00 PT hourly tick.
 
-Pages project → Custom domains → Set up a custom domain → `swimfrancisco.com`. Cloudflare creates the CNAME flattening record and provisions TLS automatically.
-
-### Redirect `www` to apex
-
-Rules → Redirect Rules → Create:
-
-- When incoming requests match: `hostname equals www.swimfrancisco.com`
-- Then: `Static → 301 → https://swimfrancisco.com/${uri.path}`
-
-### Wire the Worker to the zone
-
-Pick **one** of the two options below (both are already stubbed as commented `[[routes]]` blocks in `worker/wrangler.toml` — uncomment the one you choose, then `wrangler deploy`).
-
-#### Option A — single origin (recommended)
-
-Bind the Worker to `swimfrancisco.com/api/*`:
-
-```toml
-[[routes]]
-pattern = "swimfrancisco.com/api/*"
-zone_name = "swimfrancisco.com"
-```
-
-The browser calls `/api/conditions` (same origin), so no CORS handshake is needed in production. Preview Pages deploys (`*.pages.dev`) fall through to `static/_redirects`, or you can add a second route to the preview hostname if you want live data in previews.
-
-#### Option B — dedicated API subdomain
-
-Bind the Worker to `api.swimfrancisco.com/*`:
-
-```toml
-[[routes]]
-pattern = "api.swimfrancisco.com/*"
-zone_name = "swimfrancisco.com"
-```
-
-Then either:
-
-- uncomment the `/api/*` rule in `static/_redirects` so Pages rewrites same-origin `/api/*` to the subdomain, or
-- set `window.SWIMFRANCISCO_API = "https://api.swimfrancisco.com/api/conditions"` at runtime (already supported by `static/js/conditions.js`).
-
-If you pick Option B, confirm the Worker's CORS allow-list still covers `https://swimfrancisco.com` (it does — see `worker/src/` for the CORS handler added in Step 15).
-
----
-
-## 4. Verify
-
-After both services are live:
+Tail the Worker to watch a firing:
 
 ```sh
-curl -sSf https://swimfrancisco.com/ | head -5
-curl -sSf https://swimfrancisco.com/api/conditions | head -c 400   # Option A
-curl -sSf https://api.swimfrancisco.com/api/conditions | head -c 400  # Option B
+cd worker
+wrangler tail --format pretty
 ```
 
-The API response is a JSON object keyed by spot slug (e.g. `{ "aquatic-park": { water_temp_f, water_temp_c, temp_observed_at, tide, updated_at, stale, ... }, ... }`). Each record carries its own `updated_at` ISO timestamp and either a NOAA bay or NDBC ocean reading depending on the spot.
+You should see one `daily-rebuild scheduledTime=...T07:05Z status=200`
+line per day.
 
-Then load `https://swimfrancisco.com/` in a browser and confirm the departure-board populates within a few seconds (the JS fetches `/api/conditions` on page load).
+### Manual rebuild
 
----
+```sh
+curl -X POST "$WORKERS_BUILDS_DEPLOY_HOOK"
+```
 
-## 5. Rollback
+Also available in the dashboard: Workers Builds → Deployments → Trigger.
 
-- Pages: Deployments → pick a previous successful deploy → Rollback.
-- Worker: `wrangler rollback` from `worker/`, or redeploy a previous commit.
-- KV: the cron will re-populate on the next tick; if upstream is broken, stale records stay served until they're overwritten.
+### Rollback
+
+- **Bad deploy.** Workers Builds → Deployments → pick a prior successful
+  deploy → Rollback. Instant; no rebuild.
+- **Bad Worker code.** `cd worker && wrangler rollback`.
+- **Bad infra.** `git revert` the relevant commit in `terraform/` and
+  `terraform apply`.
+
+### Cron health
+
+`triggerRebuild` logs scheduled time and response status. A silent 5xx
+surfaces as a non-200 status in `wrangler tail`. If the cron stops firing,
+the `scheduled` invocation list in the dashboard shows gaps — check before
+assuming KV data is stale.

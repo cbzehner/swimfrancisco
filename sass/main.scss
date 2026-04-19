@@ -422,6 +422,21 @@ table.board tbody tr.flap {
   font-weight: 700;
 }
 
+// Desktop: crossnavs live in the strip below the title; hide the
+// inline copy inside each row label. Mobile re-enables it below.
+.weekly-grid-rowlabel .weekly-grid-crossnav {
+  display: none;
+}
+
+.weekly-grid-crossnav-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .weekly-grid-crossnav {
   color: var(--fg-dim);
   font-size: 0.75rem;
@@ -512,10 +527,18 @@ table.board tbody tr.flap {
     display: none;
   }
 
+  .weekly-grid-crossnav-strip {
+    display: none;
+  }
+
   .weekly-grid-rowlabel {
     border-bottom: 1px solid var(--fg);
     padding-top: 1rem;
-    flex-direction: row;
+  }
+
+  // Re-enable the inline crossnav inside the row label on mobile.
+  .weekly-grid-rowlabel .weekly-grid-crossnav {
+    display: inline;
   }
 
   .weekly-grid-cell {

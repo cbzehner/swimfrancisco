@@ -52,7 +52,7 @@ Create a new file at `content/spots/<slug>.md` with TOML frontmatter. See `docs/
 
 For new **open-water** spots, also edit `worker/src/spots.ts` to map the slug to its NOAA temperature station and tide station. Pools do not need worker changes.
 
-For pool schedule refreshes, use the local extractor in `docs/schedules.md`. It is `uv`-managed, reads provider credentials from a gitignored `.env` or `.env.local` loaded by `devenv`'s built-in dotenv integration, has a `schedules debug bakeoff` subcommand that runs two providers and saves raw review artifacts under `data/artifacts/`, and can lock manually reviewed payloads to a specific PDF hash via committed files in `data/adjudications/`.
+For pool schedule refreshes, use the local extractor in `docs/schedules.md`. It is `uv`-managed, reads provider credentials from a gitignored `.env` loaded by `devenv`'s built-in dotenv integration, has a `schedules debug bakeoff` subcommand that runs two providers and saves raw review artifacts under `data/artifacts/`, and can lock manually reviewed payloads to a specific PDF hash via committed files in `data/adjudications/`.
 
 ## Tech stack
 

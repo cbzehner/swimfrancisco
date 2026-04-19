@@ -1,0 +1,8 @@
+{
+  "name": "swimfrancisco-monorepo",
+  "private": true,
+  "description": "Root package.json declaring the Worker as an npm workspace so Cloudflare Workers Builds' auto `npm install` at the repo root succeeds. The Worker itself lives in `worker/`.",
+  "workspaces": [
+    "worker"
+  ]
+}
