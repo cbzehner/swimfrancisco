@@ -1,13 +1,12 @@
 // SwimFrancisco pool detail page.
 // Reads the schedule embedded in .detail-root[data-schedule], hydrates the
-// status slab, decorates the today block, and updates the freshness dot.
-// Today's column marker is server-rendered by the daily rebuild. Pure
-// computation lives in ./helpers/board.mjs (exercised by node:test).
+// status slab, and decorates the today block. Pure computation lives in
+// ./helpers/board.mjs (exercised by node:test). Today's column marker and
+// freshness class are server-rendered by the daily rebuild.
 
 import {
   computeDetailStatus,
   formatHHMM,
-  freshnessLabel,
   nowInPacific,
   parseHHMM,
 } from "./helpers/board.mjs";
@@ -142,16 +141,6 @@ function decorateTodayBlock(root, now, statusResult) {
   }
 }
 
-function applyFreshness(root, now) {
-  const el = root.querySelector('[data-field="freshness"]');
-  if (!el) return;
-  const iso = root.getAttribute("data-last-verified");
-  const label = freshnessLabel(iso, now);
-  el.setAttribute("data-freshness", label);
-  const labelEl = el.querySelector(".freshness-label");
-  if (labelEl) labelEl.textContent = label.toUpperCase();
-}
-
 function init() {
   const root = document.querySelector(".detail-root");
   if (!root) return;
@@ -163,7 +152,6 @@ function init() {
   const now = nowInPacific();
   const result = applyStatusSlab(root, schedule, now);
   decorateTodayBlock(root, now, result);
-  applyFreshness(root, now);
 }
 
 if (document.readyState === "loading") {
