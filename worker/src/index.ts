@@ -6,9 +6,12 @@
 import { assembleAndPersist } from "./assemble";
 import { readAllRaw, readSpotRaw } from "./kv";
 import { corsHeaders, preflight } from "./cors";
+import { triggerRebuild } from "./deploy";
+import { classifyTick } from "./schedule";
 
 export interface Env {
   CONDITIONS: KVNamespace;
+  WORKERS_BUILDS_DEPLOY_HOOK: string;
 }
 
 // Data refreshes hourly via cron; bound clients to 5min and edge to 15min.
@@ -86,7 +89,21 @@ export default {
     return notFound(request, "not found");
   },
 
-  async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+  async scheduled(event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+    // Daily rebuild: fires once per calendar day at 00:05 PT year-round.
+    // Two daily crons in wrangler.toml cover PST (`5 8 UTC`) and PDT (`5 7 UTC`);
+    // `classifyTick` gates on PT hour 0 + UTC minute 5 so the hourly cron
+    // (minute 0) always falls through to the NOAA refresh path, including at
+    // 00:00 PT. Dispatch logic lives in ./schedule.ts and is unit-tested.
+    if (classifyTick(event.scheduledTime) === "rebuild") {
+      ctx.waitUntil(
+        triggerRebuild(env.WORKERS_BUILDS_DEPLOY_HOOK, event.scheduledTime).catch((err) => {
+          console.error("triggerRebuild failed:", err);
+        }),
+      );
+      return;
+    }
+
     ctx.waitUntil(
       assembleAndPersist(env.CONDITIONS).catch((err) => {
         console.error("assembleAndPersist failed:", err);
