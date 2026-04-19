@@ -7,7 +7,6 @@
 import {
   computeDetailStatus,
   formatHHMM,
-  freshnessLabel,
   nowInPacific,
   parseHHMM,
 } from "./helpers/board.mjs";
@@ -140,16 +139,6 @@ function decorateTodayBlock(root, now, statusResult) {
       labelEl.textContent = "NEXT";
     }
   }
-}
-
-function applyFreshness(root, now) {
-  const el = root.querySelector('[data-field="freshness"]');
-  if (!el) return;
-  const iso = root.getAttribute("data-last-verified");
-  const label = freshnessLabel(iso, now);
-  el.setAttribute("data-freshness", label);
-  const labelEl = el.querySelector(".freshness-label");
-  if (labelEl) labelEl.textContent = label.toUpperCase();
 }
 
 function init() {
