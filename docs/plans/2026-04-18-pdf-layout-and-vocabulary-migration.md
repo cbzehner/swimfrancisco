@@ -12,8 +12,14 @@ progress:
       - "Committed fa6d91c; 83 tests pass (7 new in test_paths_layout.py)"
       - "PDF_CACHE_INDEX_PATH preserved in paths.py per magi-review fix (removal deferred to Task 3)"
       - "Pyright diagnostics on new test files are static-analysis false positives (pytest import, narrow-type Nones); runtime correct — same pattern as reviewed-snapshots plan archive"
-last_review: 2026-04-19T08:02:00-07:00
-iterations: 2
+  - section: "Task 3: Rewrite fetch.py cache layer"
+    status: complete
+    notes:
+      - "Committed a98b6e0; 85 tests pass (was 83 + 3 new - 1 old)"
+      - "PDF_CACHE_INDEX_PATH removed from both paths.py and fetch.py in this commit per plan's coupled-edit requirement"
+      - "pipeline.py:134 caller compatible — only slug, pdf_url, force kwargs; no rename needed"
+last_review: 2026-04-19T08:06:00-07:00
+iterations: 3
 no_progress_count: 0
 started_at: 2026-04-19T07:53:34-07:00
 work_unit_granularity: task
