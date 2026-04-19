@@ -514,10 +514,13 @@ table.board tbody tr.flap {
   .conditions dl {
     grid-template-columns: 1fr;
   }
+}
 
-  // Weekly grid collapses to one-column stacks grouped by program.
-  // Row-label becomes a heading; day header row is hidden; each cell
-  // becomes a row prefixed by its weekday abbreviation.
+// Weekly grid collapses to one-column stacks grouped by program once the
+// 7-column desktop layout can no longer fit the nowrap time ranges.
+// Row-label becomes a heading; day header row is hidden; each cell
+// becomes a row prefixed by its weekday abbreviation.
+@media (max-width: 850px) {
   .weekly-grid-table {
     grid-template-columns: 1fr;
     border-top: none;
