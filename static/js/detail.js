@@ -1,14 +1,12 @@
 // SwimFrancisco pool detail page.
 // Reads the schedule embedded in .detail-root[data-schedule], hydrates the
-// status slab, decorates the today block, marks today's column in the weekly
-// grid, and updates the freshness dot. Pure computation lives in
-// ./helpers/board.mjs (exercised by node:test).
+// status slab, and decorates the today block. Pure computation lives in
+// ./helpers/board.mjs (exercised by node:test). Today's column marker and
+// freshness class are server-rendered by the daily rebuild.
 
 import {
   computeDetailStatus,
-  DAY_KEYS,
   formatHHMM,
-  freshnessLabel,
   nowInPacific,
   parseHHMM,
 } from "./helpers/board.mjs";
@@ -143,24 +141,6 @@ function decorateTodayBlock(root, now, statusResult) {
   }
 }
 
-function applyFreshness(root, now) {
-  const el = root.querySelector('[data-field="freshness"]');
-  if (!el) return;
-  const iso = root.getAttribute("data-last-verified");
-  const label = freshnessLabel(iso, now);
-  el.setAttribute("data-freshness", label);
-  const labelEl = el.querySelector(".freshness-label");
-  if (labelEl) labelEl.textContent = label.toUpperCase();
-}
-
-function markTodayColumn(root, now) {
-  const todayKey = DAY_KEYS[now.getDay()];
-  const dayheads = root.querySelectorAll(`.weekly-grid-dayhead[data-day="${todayKey}"]`);
-  dayheads.forEach((el) => el.setAttribute("data-today", "true"));
-  const cells = root.querySelectorAll(`.weekly-grid-cell[data-day="${todayKey}"]`);
-  cells.forEach((el) => el.setAttribute("data-today", "true"));
-}
-
 function init() {
   const root = document.querySelector(".detail-root");
   if (!root) return;
@@ -172,8 +152,6 @@ function init() {
   const now = nowInPacific();
   const result = applyStatusSlab(root, schedule, now);
   decorateTodayBlock(root, now, result);
-  markTodayColumn(root, now);
-  applyFreshness(root, now);
 }
 
 if (document.readyState === "loading") {

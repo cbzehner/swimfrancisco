@@ -1,13 +1,34 @@
 <!--
 ---
-status: pending
-progress: []
-last_review: 2026-04-18T03:00:00-07:00
-iterations: 0
+status: in_progress
+progress:
+  - section: "Task 3"
+    status: complete
+    notes: []
+  - section: "Task 4"
+    status: complete
+    notes: []
+  - section: "Task 5"
+    status: complete
+    notes: ["Tera forbids arithmetic inside array subscripts; kept plan's `cs_idx`/`ce_idx` form"]
+  - section: "Task 1"
+    status: deferred
+    notes: ["Superseded by 2026-04-18-terraform-deploy-design.md: site is a single Workers Builds project, not Pages — trigger becomes a GitHub Actions workflow hitting a Workers Build hook"]
+  - section: "Task 2"
+    status: deferred
+    notes: ["Superseded by TF design: GHA owns the cron; no new Worker code, no new Env secret, no wrangler.toml trigger changes"]
+  - section: "Task 6"
+    status: deferred
+    notes: ["Docs to be rewritten for GHA + Workers Builds once TF + deploy hook are provisioned"]
+  - section: "Task 7"
+    status: partial
+    notes: ["Static gates verified: zola build clean, 39/39 JS tests, server-rendered data-today confirmed on saturday, closure labels APR/SEP/JAN/MAY render from array. Worker typecheck + deploy test skipped (Task 2 deferred)."]
+last_review: 2026-04-18T20:50:00-07:00
+iterations: 1
 no_progress_count: 0
-started_at: null
+started_at: 2026-04-18T20:44:55-07:00
 work_unit_granularity: step
-engine: codex
+engine: claude
 ---
 -->
 
