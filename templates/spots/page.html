@@ -35,8 +35,7 @@
     {% set schedule_json = '{"sessions":' ~ sessions_json ~ ',"closures":' ~ closures_json ~ '}' %}
 
     <div class="detail-root"
-         data-schedule='{{ schedule_json | safe }}'
-         data-last-verified="{{ extra.last_verified_at | default(value='') }}">
+         data-schedule='{{ schedule_json | safe }}'>
 
       {% if extra.subtype or extra.website %}
         <p class="official">
