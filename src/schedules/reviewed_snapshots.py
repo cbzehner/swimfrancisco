@@ -83,6 +83,28 @@ def load_reviewed_snapshot(
     return raw, fingerprint, relative_to_repo(path)
 
 
+def load_reviewed_snapshot_from_path(
+    path: Path, *, expected_slug: str,
+) -> tuple[dict, str, str]:
+    """Load a snapshot when the on-disk path is already known.
+
+    Unlike ``load_reviewed_snapshot``, this does not require the caller to
+    know the envelope's ``pdf_sha256`` in advance — it extracts it from
+    the file and validates. Used by the ratification loop, where we iterate
+    real filesystem paths whose stems are ``<reviewed_at>-<prefix>`` and
+    must not be mistaken for sha256 values.
+    """
+    raw = json.loads(path.read_text())
+    if not isinstance(raw, dict):
+        raise ValueError(f"{path} must contain a JSON object.")
+    pdf_sha256 = raw.get("pdf_sha256")
+    if not isinstance(pdf_sha256, str):
+        raise ValueError(f"{path} missing or invalid pdf_sha256")
+    _validate_envelope(raw, path, expected_slug=expected_slug, expected_pdf_sha256=pdf_sha256)
+    fingerprint = hashlib.sha256(json.dumps(raw, sort_keys=True).encode("utf-8")).hexdigest()
+    return raw, fingerprint, relative_to_repo(path)
+
+
 _SESSION_COMPARE_KEYS = ("day", "type", "start", "end", "pool")
 _CLOSURE_COMPARE_KEYS = ("start", "end", "reason")
 
