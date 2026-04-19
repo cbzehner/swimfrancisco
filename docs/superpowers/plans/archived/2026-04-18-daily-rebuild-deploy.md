@@ -1,48 +1,80 @@
 ---
-status: in_progress
+status: archived
 progress:
   - section: "Task 1: Terraform scaffolding"
     status: complete
     notes:
       - "commit 80a2c0a; terraform fmt -check clean"
-      - "gap: codex companion transport misparses subjects of form `scope(area):` as model names — use CLI transport for specs containing such literals"
-      - "gap: codex sandbox cannot write worktree .git/index — commit step must run from orchestrating shell"
   - section: "Task 2: Terraform DNS + redirect"
     status: complete
     notes:
-      - "commit e200d17; terraform init -backend=false + validate clean; provider v5.18.0 installed"
-      - "gap: codex-adapter.sh does not auto-fall-back to CLI transport when companion sandbox is read-only — had to invoke CLI directly. Consider patching upstream."
-      - "gap: codex sandbox has no network, so terraform init / validate must run from orchestrating shell"
+      - "commit e200d17; terraform init -backend=false + validate clean"
   - section: "Task 3: Terraform KV + Workers Custom Domain + outputs"
     status: complete
     notes:
-      - "commit 1f832c1; terraform validate clean"
-      - "verified: terraform validate emits expected deprecation warning on `environment` attribute (inline comment already tracks the issue)"
+      - "commit 1f832c1; terraform validate clean (expected `environment` deprecation warning)"
   - section: "Task 4: Terraform README"
     status: complete
     notes:
       - "commit 961c15c"
-      - "gap: codex stderr warning about ~/.claude/skills/qmd/SKILL.md missing frontmatter delimiters; non-fatal"
   - section: "Task 5: triggerRebuild helper + TDD test"
     status: complete
     notes:
       - "commit 2a0a8c9; 2/2 tests pass, typecheck clean"
-      - "gap: worker/node_modules was absent — subagent ran npm install; future iterations should assume deps already present"
   - section: "Task 5b: classifyTick + DST-aware dispatch tests"
     status: complete
     notes:
-      - "commit 5afc476; 5/5 tests pass (PDT/PST midnight rebuild; hourly + off-midnight refresh), typecheck clean"
+      - "commit 5afc476; 5/5 tests pass"
   - section: "Task 6: scheduled handler wires classifyTick"
     status: complete
     notes:
-      - "commit ba30bf9; 46/46 tests pass, typecheck clean; fetch handler untouched"
+      - "commit ba30bf9; 46/46 tests pass"
   - section: "Task 7: rename Worker to swimfrancisco + daily crons"
     status: complete
     notes:
       - "commit b5fc5df; typecheck clean; crons = [hourly, 5 7 UTC, 5 8 UTC]"
-      - "gap: rename propagates to worker/package-lock.json — plan's git add list only includes wrangler.toml + package.json. Future npm-package renames should include the lockfile explicitly."
-last_review: 2026-04-19T01:44:00-07:00
-iterations: 8
+  - section: "Task 8: templates server-render data-today"
+    status: complete
+    notes:
+      - "commit 9f5d74a; zola minifier strips quotes (data-today=true) — grep adjusted"
+  - section: "Task 9: drop data-last-verified from detail-root"
+    status: complete
+    notes:
+      - "commit 933d163; grep -c data-last-verified = 0"
+  - section: "Task 10: replace month-label if-ladder with array lookup"
+    status: complete
+    notes:
+      - "commit 3b6171c; Tera 0.22.1 rejects arithmetic inside brackets — added cs_month_idx/ce_month_idx helper sets"
+  - section: "Task 11: delete markTodayColumn"
+    status: complete
+    notes:
+      - "commit e662cf4; DAY_KEYS import dropped; 46/46 tests pass"
+  - section: "Task 12: delete applyFreshness"
+    status: complete
+    notes:
+      - "commit 2309777; freshnessLabel import dropped; 46/46 tests pass"
+  - section: "Task 13: devenv + .gitignore"
+    status: complete
+    notes:
+      - "commit 1ee4c7e; added pkgs.terraform + pkgs.nodejs_22; dotenv collapsed to .env"
+  - section: "Task 14: docs + .env.example cleanup"
+    status: complete
+    notes:
+      - "commit 5aa6c02; .env.local references removed; CLOUDFLARE_API_TOKEN + AWS_* keys documented"
+  - section: "Task 15: rewrite docs/deploy.md"
+    status: complete
+    notes:
+      - "commit 4fc7a0d; superseded static-cleanup plan removed"
+  - section: "Task 16: memory retirement"
+    status: complete
+    notes:
+      - "updated project_pacific_time_convention.md + MEMORY.md hook (not a repo commit — user-level memory)"
+  - section: "Task 17: operator bootstrap"
+    status: deferred
+    notes:
+      - "human-driven Cloudflare bootstrap per docs/deploy.md; no code to automate"
+last_review: 2026-04-19T02:10:00-07:00
+iterations: 9
 no_progress_count: 0
 started_at: 2026-04-19T01:13:14-07:00
 ---
