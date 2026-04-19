@@ -17,7 +17,7 @@ from .reviewed_snapshots import (
     load_reviewed_snapshot,
     write_ratified_snapshot,
 )
-from .review import compare_payloads
+from .diff import compare_payloads
 from .report import write_report
 from .schema import EXTRACTION_SCHEMA
 from .signals import analyze_page_texts, extract_page_texts, source_notes_for_payload
