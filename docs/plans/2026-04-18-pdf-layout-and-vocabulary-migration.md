@@ -23,8 +23,14 @@ progress:
     notes:
       - "Committed f7aeab0; 88 tests pass (3 new in test_migration_idempotent.py)"
       - "gap: plan's Step-3 script body includes dead helper `_resolve_full_hash_from_index` (never called). Harmless; flag for post-ralph magi review."
-last_review: 2026-04-19T08:11:00-07:00
-iterations: 4
+  - section: "Task 5: Un-ignore data/pdfs/, fetch PDFs, delete index"
+    status: complete
+    notes:
+      - "Committed 5009ccb; 88 tests pass; 9 PDFs checked in under new layout; 7 existing reviewed snapshots renamed to <date>-<prefix>.json; data/pdf-cache-index.json deleted"
+      - "gap: registry grew from 7 to 9 pools since spec was written (mission-community-pool, sava-pool added). Commit message verbatim from plan still says '7 PDFs'. Flag for post-ralph magi review."
+      - "PDFs fetched with today's date (2026-04-19); snapshots kept their reviewed_at date (2026-04-17). Intentional per spec — filenames share prefix, not date."
+last_review: 2026-04-19T08:16:00-07:00
+iterations: 5
 no_progress_count: 0
 started_at: 2026-04-19T07:53:34-07:00
 work_unit_granularity: task
