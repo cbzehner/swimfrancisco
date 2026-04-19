@@ -1,16 +1,19 @@
-name = "swimfrancisco-worker"
+name = "swimfrancisco"
 main = "src/index.ts"
 compatibility_date = "2025-01-01"
 
-# Hourly cron — populates KV with NOAA 9414290 (bay) + NDBC 46237 (ocean) data.
-# Implemented in Step 15.
+# Three crons:
+#  - `0 * * * *` — hourly NOAA/NDBC refresh (unchanged).
+#  - `5 7 * * *` and `5 8 * * *` — daily rebuild candidates. Cron expressions
+#    run in UTC; one maps to 00:05 PT each half of the year (PDT = `5 7 UTC`,
+#    PST = `5 8 UTC`). The `scheduled` handler gates on PT hour 0 + minute 5
+#    so exactly one rebuild fires per calendar day.
 [triggers]
-crons = ["0 * * * *"]
+crons = ["0 * * * *", "5 7 * * *", "5 8 * * *"]
 
-# Static site + Worker on one origin. In dev, `wrangler dev` serves the built
-# Zola output at http://localhost:8787 and invokes the Worker for /api/*.
-# In prod the Worker is bound to swimfrancisco.com/api/* (see routes below)
-# and the static site is served by Pages — same origin either way.
+# Unified Workers Builds model. Wrangler serves the built Zola output from
+# ../public as static assets and invokes this Worker for /api/* and
+# /__scheduled. Same origin locally and in production.
 [assets]
 directory = "../public"
 not_found_handling = "404-page"
