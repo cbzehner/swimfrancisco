@@ -23,8 +23,13 @@ progress:
     notes:
       - "commit 961c15c"
       - "gap: codex stderr warning about ~/.claude/skills/qmd/SKILL.md missing frontmatter delimiters; non-fatal"
-last_review: 2026-04-19T01:28:00-07:00
-iterations: 4
+  - section: "Task 5: triggerRebuild helper + TDD test"
+    status: complete
+    notes:
+      - "commit 2a0a8c9; 2/2 tests pass, typecheck clean"
+      - "gap: worker/node_modules was absent — subagent ran npm install; future iterations should assume deps already present"
+last_review: 2026-04-19T01:32:00-07:00
+iterations: 5
 no_progress_count: 0
 started_at: 2026-04-19T01:13:14-07:00
 ---
