@@ -10,7 +10,7 @@ Use `uv` for package management in this repo:
 uv sync
 ```
 
-Copy `.env.example` to `.env` or `.env.local`, then fill in one provider key:
+Copy `.env.example` to `.env`, then fill in one provider key:
 
 ```sh
 cp .env.example .env
@@ -28,7 +28,7 @@ The repo uses `devenv`'s built-in dotenv integration:
 
 ```nix
 dotenv.enable = true;
-dotenv.filename = [ ".env" ".env.local" ];
+dotenv.filename = [ ".env" ];
 ```
 
 If you use `direnv`, run this once after pulling the `.envrc` change:
@@ -37,7 +37,7 @@ If you use `direnv`, run this once after pulling the `.envrc` change:
 direnv allow
 ```
 
-After editing `.env` or `.env.local`, reload your environment:
+After editing `.env`, reload your environment:
 
 ```sh
 direnv reload
