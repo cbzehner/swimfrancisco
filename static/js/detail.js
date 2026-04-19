@@ -6,7 +6,6 @@
 
 import {
   computeDetailStatus,
-  DAY_KEYS,
   formatHHMM,
   freshnessLabel,
   nowInPacific,
@@ -153,14 +152,6 @@ function applyFreshness(root, now) {
   if (labelEl) labelEl.textContent = label.toUpperCase();
 }
 
-function markTodayColumn(root, now) {
-  const todayKey = DAY_KEYS[now.getDay()];
-  const dayheads = root.querySelectorAll(`.weekly-grid-dayhead[data-day="${todayKey}"]`);
-  dayheads.forEach((el) => el.setAttribute("data-today", "true"));
-  const cells = root.querySelectorAll(`.weekly-grid-cell[data-day="${todayKey}"]`);
-  cells.forEach((el) => el.setAttribute("data-today", "true"));
-}
-
 function init() {
   const root = document.querySelector(".detail-root");
   if (!root) return;
@@ -172,8 +163,6 @@ function init() {
   const now = nowInPacific();
   const result = applyStatusSlab(root, schedule, now);
   decorateTodayBlock(root, now, result);
-  markTodayColumn(root, now);
-  applyFreshness(root, now);
 }
 
 if (document.readyState === "loading") {
