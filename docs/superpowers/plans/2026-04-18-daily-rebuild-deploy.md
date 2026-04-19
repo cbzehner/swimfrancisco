@@ -28,8 +28,12 @@ progress:
     notes:
       - "commit 2a0a8c9; 2/2 tests pass, typecheck clean"
       - "gap: worker/node_modules was absent — subagent ran npm install; future iterations should assume deps already present"
-last_review: 2026-04-19T01:32:00-07:00
-iterations: 5
+  - section: "Task 5b: classifyTick + DST-aware dispatch tests"
+    status: complete
+    notes:
+      - "commit 5afc476; 5/5 tests pass (PDT/PST midnight rebuild; hourly + off-midnight refresh), typecheck clean"
+last_review: 2026-04-19T01:36:00-07:00
+iterations: 6
 no_progress_count: 0
 started_at: 2026-04-19T01:13:14-07:00
 ---
