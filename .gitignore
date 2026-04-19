@@ -32,3 +32,6 @@ tmp/
 # Brainstorming / scratch
 .superpowers/
 .browser-artifacts/
+
+# Git worktrees
+.worktrees/
