@@ -431,44 +431,43 @@ git commit -m "feat(cli): add 'schedules project' subcommand for regenerating sp
 
 # PR 2 — review_server.py + UI + devenv
 
-## Task 3: Add `nowInPacific()` to `board.mjs`
+## Task 3: Reviewer date helper — `pacificDateISO()`
 
-The spec assumes this helper exists. Grep confirms it does not. Add it now — it has exactly one caller initially (`static/js/review/time.mjs`), but it belongs in `board.mjs` alongside the other time helpers.
+`board.mjs` already exports `nowInPacific(instant)` (returns a **Date** whose local getters reflect Pacific wall-clock — not a YYYY-MM-DD string). The reviewer needs the ISO-date string form. Add `pacificDateISO()` to `static/js/review/time.mjs` (not `board.mjs` — this form is reviewer-specific) and have it derive from the existing `nowInPacific()` so there's one source of truth.
 
 **Files:**
-- Modify: `static/js/helpers/board.mjs`
+- Modify: `static/js/review/time.mjs` (created in Task 12 — but shape set here)
 
-- [ ] **Step 1: Implement**
+- [ ] **Step 1: Pre-register the time.mjs contract (design-only, no file yet)**
 
-Append to `static/js/helpers/board.mjs`:
+Task 12 will create `static/js/review/time.mjs`. Its exports MUST be:
 
 ```javascript
-/**
- * Returns today's date string in Pacific Time (America/Los_Angeles) as YYYY-MM-DD.
- * Used by both the public board and the local reviewer tool to avoid UTC drift.
- */
-export function nowInPacific() {
-  const fmt = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Los_Angeles",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-  return fmt.format(new Date());
+// static/js/review/time.mjs — created in Task 12
+import { nowInPacific } from "/js/helpers/board.mjs";
+
+export { nowInPacific };
+
+/** Returns today's Pacific wall-clock date as YYYY-MM-DD. */
+export function pacificDateISO(instant) {
+  const d = nowInPacific(instant);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 ```
 
-- [ ] **Step 2: Manual smoke — import it in a Node REPL**
+(No new file in this task; the contract is recorded so Task 12's stub matches. See Task 12, Step 3.)
 
-Run: `node --input-type=module -e "import('./static/js/helpers/board.mjs').then(m => console.log(m.nowInPacific()))"`
-Expected: a YYYY-MM-DD string matching today's Pacific date.
+- [ ] **Step 2: Node smoke — plan for later**
+
+Run (once Task 12 lands): `node --input-type=module -e "import('./static/js/review/time.mjs').then(m => console.log(m.pacificDateISO()))"`
+Expected: today's Pacific date as YYYY-MM-DD.
 
 - [ ] **Step 3: Commit**
 
-```bash
-git add static/js/helpers/board.mjs
-git commit -m "feat(helpers): add nowInPacific() for Pacific-timezone date strings"
-```
+Nothing to commit for this task. (Implementation rolls in with Task 12's `time.mjs` commit.)
 
 ## Task 4: `review_server.py` skeleton — `/health`, CORS, graceful shutdown
 
@@ -1445,56 +1444,86 @@ git add src/schedules/cli.py src/schedules/__main__.py tests/test_cli_review_sig
 git commit -m "feat(cli): add 'schedules review' subcommand with graceful shutdown"
 ```
 
-## Task 10: `devenv.nix` — `admin` process group + scripts
+## Task 10: `devenv.nix` — admin processes + scripts
+
+Current `devenv.nix` (on main) uses flat `processes.<name>.exec` and the `scripts.<name> = { description; exec; }` nested form. devenv's `devenv up <name>` accepts individual process names — it does not have a native "process group" concept across versions. Solution: ship two clearly-named admin processes and a wrapper script that starts them together.
+
+`devenv.nix` on main already has `dotenv.enable = true` with `dotenv.filename = [".env"]`, so `.env` is auto-sourced by every script — no per-script `set -a && source .env` needed.
 
 **Files:**
 - Modify: `devenv.nix`
 
-- [ ] **Step 1: Add the admin process group and scripts**
+- [ ] **Step 1: Add admin processes (do NOT auto-start on default `devenv up`)**
 
-Read the current `devenv.nix` structure (it uses flat `processes.<name>.exec`). Add:
+devenv starts every declared process when you run `devenv up` with no arguments. To keep production-parity previewing clean, gate admin processes behind `devenv up admin-zola admin-review`. The simplest mechanism is `processes.<name>.process-compose.disabled = true` — disabled-by-default; explicit invocation enables them.
+
+Add to `devenv.nix`:
 
 ```nix
-# in the appropriate location in devenv.nix
-
-processes.zola-admin = {
-  exec = "zola serve --drafts --interface 127.0.0.1 --port 1111";
-  process-compose = {
-    availability.restart = "on_failure";
-    # Put this in a non-default group via process-compose namespace:
+  processes.admin-zola = {
+    exec = "zola serve --drafts --interface 127.0.0.1 --port 1111";
+    process-compose.disabled = true;  # not part of default `devenv up`
   };
-};
+  processes.admin-review = {
+    exec = "uv run schedules review --host 127.0.0.1 --port 4317";
+    process-compose.disabled = true;
+  };
 
-processes.schedules-review = {
-  exec = "uv run schedules review --host 127.0.0.1 --port 4317";
-};
+  scripts.admin-up = {
+    description = "Start the reviewer UI (Zola drafts + schedules review server)";
+    exec = ''
+      set -euo pipefail
+      devenv up admin-zola admin-review
+    '';
+  };
 
-scripts.extract.exec = ''
-  set -a && source .env && set +a
-  uv run schedules extract "$@"
-'';
+  scripts.schedules-project = {
+    description = "Regenerate content/spots/<slug>.md from the latest reviewed snapshot";
+    exec = ''
+      set -euo pipefail
+      uv run schedules project "$@"
+    '';
+  };
 
-scripts.bakeoff.exec = ''
-  set -a && source .env && set +a
-  uv run schedules debug bakeoff "$@"
-'';
+  scripts.schedules-bakeoff = {
+    description = "Run two providers on the same PDFs and diff (no writes)";
+    exec = ''
+      set -euo pipefail
+      uv run schedules debug bakeoff "$@"
+    '';
+  };
 
-scripts.project.exec = "uv run schedules project \"$@\"";
-
-scripts.migrate-pdf-layout.exec = "uv run python scripts/migrate_pdf_layout.py";
+  scripts.migrate-pdf-layout = {
+    description = "Idempotent migration of PDF cache to per-slug date-prefixed layout";
+    exec = ''
+      set -euo pipefail
+      uv run python scripts/migrate_pdf_layout.py
+    '';
+  };
 ```
 
-Verify against the actual `devenv.nix` conventions (flat `processes.<name>.exec`) and use whatever grouping mechanism the file already uses. If devenv does not support named groups natively on this version, use an `admin = true` attribute on the processes or gate them via a `dev.enable` flag toggled by `devenv up admin`.
+Note: if the installed devenv version doesn't support `process-compose.disabled`, fall back to removing that line and documenting in README that `devenv up` will start admin processes alongside the default set (acceptable for a single-developer tool).
 
 - [ ] **Step 2: Smoke test**
 
-Run: `devenv up admin` (or the equivalent group invocation). Confirm both `zola serve` and `schedules review` start. Hit `http://127.0.0.1:4317/health` and `http://127.0.0.1:1111/`. Stop with Ctrl+C — both must exit cleanly.
+Run: `admin-up` (the wrapper script picks up the two processes).
+Expected: `zola serve --drafts` listening on `127.0.0.1:1111` and `schedules review` on `127.0.0.1:4317`.
 
-- [ ] **Step 3: Commit**
+Hit: `curl -s http://127.0.0.1:4317/health` → `{"ok":true}`.
+Hit: `curl -sI http://127.0.0.1:1111/` → 200.
+
+Stop with Ctrl+C — both must exit cleanly (verified against Task 9's SIGINT handler).
+
+- [ ] **Step 3: Confirm default `devenv up` is unchanged**
+
+Run: `devenv up` (no args).
+Expected: only the pre-existing `zola` + `worker` processes start; admin processes stay dormant.
+
+- [ ] **Step 4: Commit**
 
 ```bash
 git add devenv.nix
-git commit -m "feat(devenv): add 'admin' process group and schedules scripts"
+git commit -m "feat(devenv): add opt-in admin processes and schedules helper scripts"
 ```
 
 ## Task 11: `content/_admin/review.md` + static HTML shell
@@ -1627,11 +1656,22 @@ export function validSession(s) {
 }
 ```
 
-- [ ] **Step 3: Write `time.mjs`**
+- [ ] **Step 3: Write `time.mjs`** (implements the contract from Task 3)
 
 ```javascript
 // static/js/review/time.mjs
-export { nowInPacific } from "/js/helpers/board.mjs";
+import { nowInPacific } from "/js/helpers/board.mjs";
+
+export { nowInPacific };
+
+/** Returns today's Pacific wall-clock date as YYYY-MM-DD. */
+export function pacificDateISO(instant) {
+  const d = nowInPacific(instant);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 ```
 
 - [ ] **Step 4: Write `store.mjs`**
