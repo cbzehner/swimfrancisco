@@ -6,8 +6,14 @@ progress:
     notes:
       - "Committed 380651c; 76 tests pass; src/schedules/__init__.py confirmed to have no review/diff re-exports"
       - "Inner loop fell back to Claude implementation (trivial 2-move + 3-import-edit change); no codex invocation"
-last_review: 2026-04-19T07:55:00-07:00
-iterations: 1
+  - section: "Task 2: Add path helpers + reviewed_snapshot glob resolution"
+    status: complete
+    notes:
+      - "Committed fa6d91c; 83 tests pass (7 new in test_paths_layout.py)"
+      - "PDF_CACHE_INDEX_PATH preserved in paths.py per magi-review fix (removal deferred to Task 3)"
+      - "Pyright diagnostics on new test files are static-analysis false positives (pytest import, narrow-type Nones); runtime correct — same pattern as reviewed-snapshots plan archive"
+last_review: 2026-04-19T08:02:00-07:00
+iterations: 2
 no_progress_count: 0
 started_at: 2026-04-19T07:53:34-07:00
 work_unit_granularity: task
