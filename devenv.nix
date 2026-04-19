@@ -5,6 +5,10 @@
     pkgs.git
     pkgs.zola
     pkgs.watchexec
+    pkgs.terraform
+    # Node ≥22.18 — unflagged TS type stripping for `node --test` against
+    # `worker/src/*.ts`. nixpkgs currently ships 22.22+, which clears the bar.
+    pkgs.nodejs_22
   ];
 
   languages.python.enable = true;
@@ -13,7 +17,7 @@
   languages.javascript.enable = true;
   languages.javascript.npm.enable = true;
   dotenv.enable = true;
-  dotenv.filename = [ ".env" ".env.local" ];
+  dotenv.filename = [ ".env" ];
 
   # `devenv up` starts both: a Zola build-on-change watcher and wrangler dev.
   # Wrangler serves ./public as static assets and handles /api/* via the Worker,
