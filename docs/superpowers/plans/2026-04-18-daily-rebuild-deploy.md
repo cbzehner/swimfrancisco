@@ -7,8 +7,14 @@ progress:
       - "commit 80a2c0a; terraform fmt -check clean"
       - "gap: codex companion transport misparses subjects of form `scope(area):` as model names — use CLI transport for specs containing such literals"
       - "gap: codex sandbox cannot write worktree .git/index — commit step must run from orchestrating shell"
-last_review: 2026-04-19T01:17:00-07:00
-iterations: 1
+  - section: "Task 2: Terraform DNS + redirect"
+    status: complete
+    notes:
+      - "commit e200d17; terraform init -backend=false + validate clean; provider v5.18.0 installed"
+      - "gap: codex-adapter.sh does not auto-fall-back to CLI transport when companion sandbox is read-only — had to invoke CLI directly. Consider patching upstream."
+      - "gap: codex sandbox has no network, so terraform init / validate must run from orchestrating shell"
+last_review: 2026-04-19T01:22:00-07:00
+iterations: 2
 no_progress_count: 0
 started_at: 2026-04-19T01:13:14-07:00
 ---
