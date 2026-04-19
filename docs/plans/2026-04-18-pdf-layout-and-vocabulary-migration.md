@@ -1,10 +1,15 @@
 ---
-status: pending
-progress: []
-last_review: null
-iterations: 0
+status: in_progress
+progress:
+  - section: "Task 1: Rename review.py → diff.py"
+    status: complete
+    notes:
+      - "Committed 380651c; 76 tests pass; src/schedules/__init__.py confirmed to have no review/diff re-exports"
+      - "Inner loop fell back to Claude implementation (trivial 2-move + 3-import-edit change); no codex invocation"
+last_review: 2026-04-19T07:55:00-07:00
+iterations: 1
 no_progress_count: 0
-started_at: null
+started_at: 2026-04-19T07:53:34-07:00
 work_unit_granularity: task
 ---
 
