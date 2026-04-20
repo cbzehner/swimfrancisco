@@ -68,4 +68,25 @@
     watchexec --no-vcs-ignore --restart --debounce 500ms --watch public \
       -- npm --prefix worker run dev
   '';
+  # Seed KV on startup so /api/conditions returns data instead of 503 on a
+  # fresh `devenv up`. Polls until wrangler is listening, then fires the
+  # cron handler once. Offline-safe (swallows curl failures). Ends with
+  # `sleep infinity` because devenv flags exited processes as crashed;
+  # idling is cheaper than that noise.
+  processes.seed-conditions.exec = ''
+    set -u
+    echo "seed-conditions: waiting for wrangler on :8787..."
+    # Poll for ANY HTTP response. Drop `-f` so curl returns 0 on 503 and
+    # writes the code to stdout via `-w`. `-o /dev/null` discards the body.
+    until code=$(curl -sS -o /dev/null -w "%{http_code}" http://localhost:8787/api/conditions 2>/dev/null) \
+          && [ -n "$code" ] && [ "$code" != "000" ]; do
+      sleep 1
+    done
+    echo "seed-conditions: wrangler up (got $code), firing /__scheduled"
+    curl -sS http://localhost:8787/__scheduled > /dev/null 2>&1 \
+      && echo "seed-conditions: KV populated" \
+      || echo "seed-conditions: skipped (offline or worker error)"
+    # Idle so devenv doesn't flag us as crashed.
+    sleep infinity
+  '';
 }
