@@ -5,7 +5,9 @@ import os
 import click
 
 from .models import Failed, PoolResult, Proposed, Skipped, Unchanged
+from .paths import CONTENT_SPOTS_DIR, REVIEWED_SNAPSHOTS_DIR
 from .pipeline import run_pipeline
+from .project import ProjectError, project as _project
 
 
 def _default_provider() -> str:
@@ -68,6 +70,21 @@ def extract(
     click.echo(f"Wrote {report_path}")
     click.echo(_summary_line(results))
     raise SystemExit(exit_code)
+
+
+@cli.command("project")
+@click.argument("slug")
+def project_command(slug: str) -> None:
+    """Project the latest reviewed snapshot for SLUG into content/spots/<slug>.md."""
+    try:
+        path = _project(
+            slug=slug,
+            snapshots_root=REVIEWED_SNAPSHOTS_DIR,
+            content_spots_dir=CONTENT_SPOTS_DIR,
+        )
+    except ProjectError as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(f"Wrote {path}")
 
 
 @cli.group()
