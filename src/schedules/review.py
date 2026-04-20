@@ -114,3 +114,112 @@ def find_review_candidates(
             )
     candidates.sort(key=lambda c: (c.pdf_date, c.slug))
     return candidates
+
+
+import json as _json
+from datetime import date as _date
+from .paths import REVIEWED_SNAPSHOT_DRAFTS_DIR
+from .reviewed_snapshots import REVIEWED_SNAPSHOT_VERSION
+
+
+_PROVIDER_PREFERENCE = ("gemini", "anthropic")
+
+
+def _pick_provider_artifact(artifact_dir: Path) -> Path:
+    """Return the provider artifact to seed from. gemini → anthropic → newest mtime."""
+    provider_paths: dict[str, list[Path]] = {}
+    for path in artifact_dir.glob("*.json"):
+        if path.name == "meta.json":
+            continue
+        provider = path.name.split("-", 1)[0]
+        provider_paths.setdefault(provider, []).append(path)
+
+    for preferred in _PROVIDER_PREFERENCE:
+        if preferred in provider_paths:
+            return sorted(provider_paths[preferred], key=lambda p: p.stat().st_mtime)[-1]
+
+    all_paths = [p for paths in provider_paths.values() for p in paths]
+    if not all_paths:
+        raise FileNotFoundError(f"No provider artifacts found in {artifact_dir}")
+    return max(all_paths, key=lambda p: p.stat().st_mtime)
+
+
+def _all_provider_descriptors(artifact_dir: Path, primary_provider: str) -> list[dict]:
+    descriptors: list[dict] = []
+    for path in sorted(artifact_dir.glob("*.json")):
+        if path.name == "meta.json":
+            continue
+        try:
+            payload = _json.loads(path.read_text())
+        except (OSError, _json.JSONDecodeError):
+            continue
+        provider = payload.get("provider")
+        model = payload.get("model")
+        if isinstance(provider, str) and isinstance(model, str):
+            descriptors.append({
+                "provider": provider,
+                "model": model,
+                "artifact_relpath": str(path),
+            })
+
+    # The provider actually seeded into payload leads; remaining sorted by
+    # preference order then provider name.
+    def _rank(d: dict) -> tuple[int, int, str]:
+        is_primary = 0 if d["provider"] == primary_provider else 1
+        try:
+            idx = _PROVIDER_PREFERENCE.index(d["provider"])
+        except ValueError:
+            idx = len(_PROVIDER_PREFERENCE)
+        return (is_primary, idx, d["provider"])
+    descriptors.sort(key=_rank)
+    return descriptors
+
+
+def draft_path_for(slug: str, pdf_sha256: str, today: _date, root: Path = REVIEWED_SNAPSHOT_DRAFTS_DIR) -> Path:
+    return root / slug / f"{today.isoformat()}-{pdf_sha256[:12]}.json"
+
+
+def seed_draft(
+    *,
+    candidate: ReviewCandidate,
+    drafts_root: Path = REVIEWED_SNAPSHOT_DRAFTS_DIR,
+    today: _date | None = None,
+) -> Path:
+    """Seed a draft envelope in the drafts tree. Returns its path.
+
+    If a draft for this (slug, pdf_sha256) already exists, returns it
+    unchanged — resuming work is idempotent.
+    """
+    today = today or _date.today()
+
+    # Idempotent on re-entry: any prior draft for this (slug, pdf_sha256) wins,
+    # regardless of the date in its filename.
+    slug_drafts = drafts_root / candidate.slug
+    prefix = candidate.pdf_sha256[:12]
+    if slug_drafts.is_dir():
+        for existing in sorted(slug_drafts.glob(f"*-{prefix}.json")):
+            return existing
+
+    path = draft_path_for(candidate.slug, candidate.pdf_sha256, today, root=drafts_root)
+
+    provider_path = _pick_provider_artifact(candidate.artifact_dir)
+    provider_payload = _json.loads(provider_path.read_text())
+    primary_provider = provider_payload.get("provider", "")
+    source_pdf_url = provider_payload.get("pdf_url", "")
+    payload = provider_payload.get("payload", {})
+
+    envelope = {
+        "$schema": "../../reviewed-snapshots/schema.json",
+        "version": REVIEWED_SNAPSHOT_VERSION,
+        "slug": candidate.slug,
+        "pdf_sha256": candidate.pdf_sha256,
+        "reviewed_at": today.isoformat(),
+        "source_pdf_url": source_pdf_url,
+        "reviewed_against": _all_provider_descriptors(candidate.artifact_dir, primary_provider),
+        "summary": "(draft)",
+        "payload": payload,
+    }
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(_json.dumps(envelope, indent=2) + "\n")
+    return path
