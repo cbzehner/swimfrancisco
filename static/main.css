@@ -1,4 +1,4 @@
-/* Swim Francisco — departure board styles (Step 8)
+/* Swim Francisco — board styles (Step 8)
    Active filter convention: button[aria-pressed="true"].
    Step 12 JS will toggle aria-pressed on filter buttons and aria-expanded on
    tbody rows for mobile tap-to-expand. No HTML changes needed here. */
@@ -212,7 +212,7 @@ a {
   }
 }
 
-/* --- Departure board ----------------------------------------------------- */
+/* --- Board --------------------------------------------------------------- */
 
 table.board {
   width: 100%;
@@ -572,7 +572,7 @@ table.board tbody tr.flap {
 
 /* --- Responsive --------------------------------------------------------- */
 
-/* Phone-only breakpoint. Reserve this for the departure board's compact
+/* Phone-only breakpoint. Reserve this for the board's compact
    interaction model and other handset-specific reductions. */
 @media (max-width: 640px) {
   main {

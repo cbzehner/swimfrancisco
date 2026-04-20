@@ -1,6 +1,6 @@
 // Swim Francisco open-water live conditions.
 // Fetches /api/conditions from the Worker and injects water temp into
-// matching rows on the departure board and the detail page panel.
+// matching rows on the board and the detail page panel.
 // Fails silently — missing data leaves the existing em-dash placeholders.
 
 import { nowInPacific } from "./helpers/board.mjs";
@@ -36,7 +36,7 @@ async function fetchConditions(url) {
   }
 }
 
-// Inject water temps into the departure board's TEMP column (5th <td>) and
+// Inject water temps into the board's TEMP column (5th <td>) and
 // the detail-page conditions panel, when present. `conditions` is keyed by slug.
 function applyConditions(root, conditions) {
   if (!conditions || typeof conditions !== "object") return;

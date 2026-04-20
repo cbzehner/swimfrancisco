@@ -1,4 +1,4 @@
-// Pure helpers for the Swim Francisco departure board.
+// Pure helpers for the Swim Francisco board.
 //
 // Extracted from status.js / filters.js so they can be exercised under
 // node:test without a DOM. DOM-facing wrappers live in the parent files and

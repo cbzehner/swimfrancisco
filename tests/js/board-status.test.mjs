@@ -1,4 +1,4 @@
-// Pure helpers for the departure board. Node's built-in node:test runner —
+// Pure helpers for the board. Node's built-in node:test runner —
 // no Vitest, no Jest, no jsdom. DOM-mutating logic is kept in status.js /
 // filters.js; the branching that matters lives in board.mjs and is tested
 // against plain arrays.
