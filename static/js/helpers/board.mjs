@@ -113,20 +113,54 @@ export function closureCopy(closure) {
 
 const DROP_IN_TYPES = new Set(["lap_swim", "family_swim", "senior_swim"]);
 
+function normalizeAllowedTypes(allowedTypes) {
+  if (allowedTypes == null) return null;
+  const values = allowedTypes instanceof Set
+    ? Array.from(allowedTypes)
+    : Array.isArray(allowedTypes)
+      ? allowedTypes
+      : null;
+  if (!values) return null;
+  const normalized = new Set(
+    values.filter((value) => typeof value === "string" && value.length > 0),
+  );
+  return normalized;
+}
+
+function findNextSession(normalized, closures, now) {
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  for (let offset = 0; offset <= 7; offset += 1) {
+    const date = new Date(now);
+    date.setDate(date.getDate() + offset);
+    if (findActiveClosure(closures, date)) continue;
+    const dayKey = DAY_KEYS[date.getDay()];
+    const candidates = normalized
+      .filter((session) => session.day === dayKey)
+      .filter((session) => offset > 0 || session.start > nowMinutes)
+      .sort((a, b) => a.start - b.start);
+    if (candidates.length > 0) {
+      return { offset, session: candidates[0] };
+    }
+  }
+  return null;
+}
+
 // Return the next drop-in session (lap / family / senior) that starts strictly
 // after `now`, scanning up to 7 days ahead. Skips lessons and facility-wide
 // closed days. Returns `{ program, day, start }` (start in minutes-of-day) or
 // null if none found within the window.
-export function findNextDropIn(schedule, now) {
+export function findNextDropIn(schedule, now, allowedTypes = null) {
   if (!schedule || typeof schedule !== "object") return null;
   const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
   const closures = Array.isArray(schedule.closures) ? schedule.closures : [];
   if (sessions.length === 0) return null;
+  const allowed = normalizeAllowedTypes(allowedTypes);
 
   const normalized = [];
   for (const session of sessions) {
     if (!session || typeof session !== "object") continue;
     if (!DROP_IN_TYPES.has(session.type)) continue;
+    if (allowed && !allowed.has(session.type)) continue;
     const day = typeof session.day === "string" ? session.day.toLowerCase() : null;
     const start = parseHHMM(session.start);
     if (!day || !DAY_KEYS.includes(day) || start === null) continue;
@@ -134,31 +168,17 @@ export function findNextDropIn(schedule, now) {
   }
   if (normalized.length === 0) return null;
 
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  // Scan offset 0..7 inclusive: today plus each of the next 7 days. The
-  // inclusive upper bound covers the "only-Wednesday lap swim, today is
-  // Wednesday, session already ended" case — without it, the same-weekday
-  // recurrence one week away is missed and the function returns null.
-  for (let offset = 0; offset <= 7; offset += 1) {
-    const date = new Date(now);
-    date.setDate(date.getDate() + offset);
-    if (findActiveClosure(closures, date)) continue;
-    const dayKey = DAY_KEYS[date.getDay()];
-    const candidates = normalized
-      .filter((s) => s.day === dayKey)
-      .filter((s) => offset > 0 || s.start > nowMinutes)
-      .sort((a, b) => a.start - b.start);
-    if (candidates.length > 0) return candidates[0];
-  }
-  return null;
+  const best = findNextSession(normalized, closures, now);
+  return best ? best.session : null;
 }
 
-export function computeStatus(schedule, now) {
+export function computeStatus(schedule, now, allowedTypes = null) {
   const empty = { status: PLACEHOLDER, next: PLACEHOLDER };
   if (!schedule || typeof schedule !== "object") return empty;
 
   const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
   const closures = Array.isArray(schedule.closures) ? schedule.closures : [];
+  const allowed = normalizeAllowedTypes(allowedTypes);
 
   const activeClosure = findActiveClosure(closures, now);
   if (activeClosure) {
@@ -170,16 +190,7 @@ export function computeStatus(schedule, now) {
   const todayKey = DAY_KEYS[now.getDay()];
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
-  const normalized = [];
-  for (const session of sessions) {
-    if (!session || typeof session !== "object") continue;
-    const day = typeof session.day === "string" ? session.day.toLowerCase() : null;
-    const start = parseHHMM(session.start);
-    const end = parseHHMM(session.end);
-    if (!day || !DAY_KEYS.includes(day) || start === null || end === null) continue;
-    if (end <= start) continue;
-    normalized.push({ day, start, end });
-  }
+  const normalized = normalizeSessions(sessions, allowed);
   if (normalized.length === 0) return empty;
 
   const current = normalized.find(
@@ -189,20 +200,7 @@ export function computeStatus(schedule, now) {
     return { status: "OPEN", next: `Closes ${formatHHMM(current.end)}` };
   }
 
-  let best = null;
-  for (let offset = 0; offset < 7; offset += 1) {
-    const dayIndex = (now.getDay() + offset) % 7;
-    const dayKey = DAY_KEYS[dayIndex];
-    const candidates = normalized
-      .filter((s) => s.day === dayKey)
-      .filter((s) => offset > 0 || s.start > nowMinutes)
-      .sort((a, b) => a.start - b.start);
-    if (candidates.length > 0) {
-      best = { offset, session: candidates[0] };
-      break;
-    }
-  }
-
+  const best = findNextSession(normalized, closures, now);
   if (!best) return { status: "CLOSED", next: PLACEHOLDER };
 
   const label = best.offset === 0
@@ -273,12 +271,14 @@ const EMPTY_DETAIL = Object.freeze({
 
 // Normalize the session list into { day, type, start, end } with minute-of-day
 // ints and lowercased day names. Skips malformed rows.
-function normalizeSessions(sessions) {
+function normalizeSessions(sessions, allowedTypes = null) {
   const out = [];
+  const allowed = normalizeAllowedTypes(allowedTypes);
   for (const session of sessions) {
     if (!session || typeof session !== "object") continue;
     const day = typeof session.day === "string" ? session.day.toLowerCase() : null;
     const type = typeof session.type === "string" ? session.type : null;
+    if (allowed && !allowed.has(type)) continue;
     const start = parseHHMM(session.start);
     const end = parseHHMM(session.end);
     if (!day || !DAY_KEYS.includes(day) || !type || start === null || end === null) continue;

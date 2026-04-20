@@ -16,14 +16,14 @@ function readSchedule(row) {
 }
 
 // Apply computed STATUS/NEXT to every pool row. Open-water rows are skipped.
-function applyStatuses(root, now) {
+function applyStatuses(root, now, allowedTypes = null) {
   const rows = root.querySelectorAll('table.board tbody tr[data-type="pool"]');
   rows.forEach((row) => {
     const cells = row.querySelectorAll("td");
     if (cells.length < 4) return;
     const schedule = readSchedule(row);
     const { status, next } = schedule
-      ? computeStatus(schedule, now)
+      ? computeStatus(schedule, now, allowedTypes)
       : { status: PLACEHOLDER, next: PLACEHOLDER };
     cells[2].textContent = status;
     cells[3].textContent = next;
@@ -56,21 +56,22 @@ function reorderDom(tbody, sortedRows) {
   sortedRows.forEach((row) => tbody.appendChild(row));
 }
 
-function init() {
-  const tbody = document.querySelector("table.board tbody");
+export function renderBoard(root, allowedTypes = null, now = nowInPacific()) {
+  const tbody = root.querySelector("table.board tbody");
   if (!tbody) return;
-  // All SF pools are in Pacific; reason about "now" in PT regardless of the
-  // visitor's browser timezone.
-  const now = nowInPacific();
-  applyStatuses(document, now);
+  applyStatuses(root, now, allowedTypes);
   const rows = Array.from(tbody.querySelectorAll("tr"));
   const sorted = sortRows(rows);
   reorderDom(tbody, sorted);
-  // Stamp each row with its baseline-sort rank so filters.js can restore
-  // this order after Near Me (which resorts by distance) turns off.
   captureBaselineRanks(sorted, (row, rank) => {
     row.dataset.baselineRank = String(rank);
   });
+}
+
+function init() {
+  // All SF pools are in Pacific; reason about "now" in PT regardless of the
+  // visitor's browser timezone.
+  renderBoard(document);
   // Signal to filters.js that status cells are populated and rows are in
   // their baseline (open-first, alphabetical) order.
   document.dispatchEvent(new CustomEvent("sf:status-applied"));

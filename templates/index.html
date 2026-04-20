@@ -21,12 +21,17 @@
   </noscript>
 
   <div class="board-controls">
-    <div class="filters" role="group" aria-label="Filters">
-      <button type="button" data-filter="open-now">OPEN NOW</button>
-      <button type="button" data-filter="type" data-type="lap_swim">LAP</button>
-      <button type="button" data-filter="type" data-type="family_swim">FAMILY</button>
-      <button type="button" data-filter="type" data-type="open_water">BEACH</button>
-      <button type="button" data-action="near-me">NEAR ME</button>
+    <div class="filters" aria-label="Filters">
+      <div class="filter-group" role="group" aria-label="Type Filter">
+        <button type="button" data-filter="type" data-type="lap_swim">LAP</button>
+        <button type="button" data-filter="type" data-type="family_swim">FAMILY</button>
+        <button type="button" data-filter="type" data-type="open_water">BEACH</button>
+        <button type="button" data-filter="type" data-type="none">ALL</button>
+      </div>
+      <div class="filter-group filter-group-secondary" role="group" aria-label="Additional Filters">
+        <button type="button" data-filter="open-now">OPEN NOW</button>
+        <button type="button" data-action="near-me">NEAR ME</button>
+      </div>
     </div>
     <div class="view-switcher" role="group" aria-label="View">
       {% if is_map_view %}

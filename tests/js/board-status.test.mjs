@@ -118,6 +118,12 @@ test("findNextDropIn returns the next drop-in later today", () => {
   assert.deepEqual(next, { program: "family_swim", day: "tuesday", start: 14 * 60 + 30 });
 });
 
+test("findNextDropIn honors allowed program types", () => {
+  const now = new Date("2026-04-14T10:00:00"); // Tuesday 10:00 local
+  const next = findNextDropIn(DROP_IN_SCHEDULE, now, ["lap_swim"]);
+  assert.deepEqual(next, { program: "lap_swim", day: "wednesday", start: 9 * 60 });
+});
+
 test("findNextDropIn rolls to tomorrow after today's last drop-in", () => {
   const now = new Date("2026-04-14T17:00:00"); // Tuesday 17:00, after all Tue drop-ins
   const next = findNextDropIn(DROP_IN_SCHEDULE, now);
@@ -205,6 +211,51 @@ const BASIC_SCHEDULE = {
   ],
   closures: [],
 };
+
+const FILTERED_STATUS_SCHEDULE = {
+  sessions: [
+    { day: "tuesday", type: "lap_swim", start: "07:00", end: "08:00" },
+    { day: "tuesday", type: "family_swim", start: "14:30", end: "15:30" },
+    { day: "tuesday", type: "lessons", start: "15:30", end: "16:00" },
+    { day: "wednesday", type: "lap_swim", start: "09:00", end: "10:15" },
+    { day: "wednesday", type: "family_swim", start: "13:00", end: "14:00" },
+  ],
+  closures: [],
+};
+
+test("computeStatus honors a family-only filter", () => {
+  const now = new Date("2026-04-14T15:40:00"); // Tue during lessons, after family ended
+  const { status, next } = computeStatus(FILTERED_STATUS_SCHEDULE, now, ["family_swim"]);
+  assert.equal(status, "CLOSED");
+  assert.equal(next, "Opens WED 13:00");
+});
+
+test("computeStatus honors a lap-only filter", () => {
+  const now = new Date("2026-04-14T14:40:00"); // Tue during family, no lap active
+  const { status, next } = computeStatus(FILTERED_STATUS_SCHEDULE, now, ["lap_swim"]);
+  assert.equal(status, "CLOSED");
+  assert.equal(next, "Opens WED 09:00");
+});
+
+test("computeStatus treats multiple active program filters as a union", () => {
+  const now = new Date("2026-04-14T14:40:00"); // Tue during family
+  const { status, next } = computeStatus(FILTERED_STATUS_SCHEDULE, now, ["lap_swim", "family_swim"]);
+  assert.equal(status, "OPEN");
+  assert.equal(next, "Closes 15:30");
+});
+
+test("computeStatus rolls filtered programs to the same weekday one week away", () => {
+  const wednesdayFamilyOnly = {
+    sessions: [
+      { day: "wednesday", type: "family_swim", start: "14:00", end: "15:00" },
+    ],
+    closures: [],
+  };
+  const now = new Date("2026-04-15T16:00:00"); // Wed after the family block ended
+  const { status, next } = computeStatus(wednesdayFamilyOnly, now, ["family_swim"]);
+  assert.equal(status, "CLOSED");
+  assert.equal(next, "Opens WED 14:00");
+});
 
 test("computeDetailStatus OPEN during a single drop-in session", () => {
   const now = new Date("2026-04-14T13:00:00"); // Tue 13:00 — inside lap 12:30-14:00

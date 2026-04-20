@@ -19,9 +19,11 @@
 // board still renders and all rows remain visible.
 
 import { sortByRank } from "./helpers/board.mjs";
+import { renderBoard } from "./status.js";
 
 const POOL_SESSION_TYPES = new Set(["lap_swim", "family_swim"]);
 const EARTH_RADIUS_MILES = 3958.8;
+const TYPE_NONE = "none";
 
 // Hash routing: short tokens in window.location.hash, joined by "+".
 // Filters own the hash. The `/map/` vs `/` switch is a real navigation
@@ -125,20 +127,13 @@ function rowIsOpenNow(row) {
   return cells[2].textContent.trim() === "OPEN";
 }
 
-// Pure: apply all active filter predicates. If no type pills are pressed,
-// every type passes. Type pills OR together (union).
+// Pure: apply all active filter predicates. If the active type is `none`
+// (rendered as the "ALL" pill in the UI),
+// every type passes. Otherwise the single selected type must match.
 function rowPassesFilters(row, state) {
   if (state.openNow && !rowIsOpenNow(row)) return false;
-  if (state.types.size > 0) {
-    let anyMatch = false;
-    for (const type of state.types) {
-      if (rowMatchesType(row, type)) {
-        anyMatch = true;
-        break;
-      }
-    }
-    if (!anyMatch) return false;
-  }
+  const type = activeType(state);
+  if (type && type !== TYPE_NONE && !rowMatchesType(row, type)) return false;
   return true;
 }
 
@@ -173,6 +168,30 @@ function sortByDistance(rows, userCoords) {
   return decorated.map((item) => item.row);
 }
 
+function allowedPoolTypes(state) {
+  const active = Array.from(state.types).filter((type) => POOL_SESSION_TYPES.has(type));
+  return active.length > 0 ? active : null;
+}
+
+function activeType(state) {
+  const [type] = state.types;
+  return type ?? TYPE_NONE;
+}
+
+function setPressed(buttons, activeTypeValue) {
+  buttons.forEach((button) => {
+    const type = button.getAttribute("data-type");
+    button.setAttribute("aria-pressed", String(type === activeTypeValue));
+  });
+}
+
+function collapseExpandedRows(tbody) {
+  tbody.querySelectorAll('tr[aria-expanded="true"]').forEach((row) => {
+    row.setAttribute("aria-expanded", "false");
+  });
+  tbody.querySelectorAll("tr.row-detail").forEach((row) => row.remove());
+}
+
 // Trigger the split-flap animation on the given rows. Assigns --flap-index
 // in order (0..N-1), adds the .flap class, and removes it on the next
 // animationend bubbling up from a cell. The `once` option means the listener
@@ -199,7 +218,9 @@ function triggerFlap(rows) {
 // rows (by distance if Near Me is on, otherwise leave in the baseline order
 // that status.js produced), move them to the top of tbody, and flap them.
 function applyFilters(tbody, state) {
-  const rows = Array.from(tbody.querySelectorAll("tr"));
+  collapseExpandedRows(tbody);
+  renderBoard(document, allowedPoolTypes(state));
+  const rows = Array.from(tbody.querySelectorAll("tr:not(.row-detail)"));
   const visible = [];
   rows.forEach((row) => {
     const passes = rowPassesFilters(row, state);
@@ -243,17 +264,19 @@ function attachHandlers(tbody, filtersRoot) {
   }
 
   const typeButtons = filtersRoot.querySelectorAll('button[data-filter="type"]');
+  const typeButtonsArray = Array.from(typeButtons);
   typeButtons.forEach((button) => {
-    button.setAttribute("aria-pressed", "false");
+    button.setAttribute("aria-pressed", String(button.getAttribute("data-type") === TYPE_NONE));
     const type = button.getAttribute("data-type");
     if (!type) return;
     button.addEventListener("click", () => {
-      if (state.types.has(type)) {
-        state.types.delete(type);
-        button.setAttribute("aria-pressed", "false");
+      if (type === TYPE_NONE) {
+        state.types.clear();
+        setPressed(typeButtonsArray, TYPE_NONE);
       } else {
+        state.types.clear();
         state.types.add(type);
-        button.setAttribute("aria-pressed", "true");
+        setPressed(typeButtonsArray, type);
       }
       applyFilters(tbody, state);
       syncStateToHash(state);
@@ -311,18 +334,28 @@ function restoreFromHash(controls) {
     const want = tokens.has("open-now");
     if (want !== state.openNow) openNowButton.click();
   }
-  typeButtons.forEach((button) => {
+  const typeButtonsArray = Array.from(typeButtons);
+  const desiredTypeButton = typeButtonsArray.find((button) => {
     const type = button.getAttribute("data-type");
+    if (!type) return false;
+    if (type === TYPE_NONE) return !hasTypeToken(tokens);
     const token = TYPE_TO_TOKEN[type];
-    if (!token) return;
-    const want = tokens.has(token);
-    const have = state.types.has(type);
-    if (want !== have) button.click();
+    return Boolean(token && tokens.has(token));
   });
+  const pressedTypeButton = typeButtonsArray.find(
+    (button) => button.getAttribute("aria-pressed") === "true",
+  );
+  if (desiredTypeButton && desiredTypeButton !== pressedTypeButton) {
+    desiredTypeButton.click();
+  }
   if (nearMeButton) {
     const want = tokens.has("near-me");
     if (want !== state.nearMe) nearMeButton.click();
   }
+}
+
+function hasTypeToken(tokens) {
+  return Object.keys(TYPE_TOKENS).some((token) => tokens.has(token));
 }
 
 function init() {
