@@ -48,10 +48,10 @@ test("captureBaselineRanks + sortByRank restores baseline order after reshuffle"
     row.baselineRank = rank;
   });
 
-  // Near Me reshuffles into distance order.
+  // Distance sort reshuffles into distance order.
   const reshuffled = [baseline[2], baseline[0], baseline[3], baseline[1]];
 
-  // Near Me off → restore baseline.
+  // Distance sort off → restore baseline.
   const restored = sortByRank(reshuffled, (row) => row.baselineRank);
   assert.deepEqual(
     restored.map((r) => r.id),

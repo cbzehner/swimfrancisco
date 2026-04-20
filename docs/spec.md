@@ -127,7 +127,8 @@ Airport departure board aesthetic. Split-flap animation.
 | Aquatic Park | OPEN WATER | — | — | 56°F |
 
 - Default sort: open-first, then alphabetical
-- Filters: **Open Now** (toggle), **Type** (pills: Lap / Open / Family / Open Water), **Near Me** (button, triggers geolocation → re-sort by distance)
+- Filters: **Open Now** (toggle), **Type** (pills: Lap / Open / Family / Open Water)
+- Sort: **Distance** (button, triggers geolocation → re-sort by distance; board view only)
 - Map view toggle (Leaflet + OpenStreetMap), not the default
 
 **Mobile (primary):**

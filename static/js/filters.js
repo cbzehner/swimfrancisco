@@ -1,13 +1,17 @@
 // Swim Francisco departure-board filters (Step 12).
 // Wires up the Open Now toggle, Type pills (lap_swim /
-// family_swim / open_water), and Near Me button. Each change re-applies
+// family_swim / open_water), and Distance sort. Each change re-applies
 // visibility + sort and retriggers the split-flap animation on visible rows.
+//
+// Filters vs. sort: Open Now and the Type pills are filters (they hide
+// rows). Distance is a sort — it reorders visible rows by geolocation but
+// never hides any. Distance only renders on the board view (not map).
 //
 // Contract with status.js:
 //   - status.js dispatches `sf:status-applied` after it populates STATUS/NEXT
 //     and performs the baseline sort. filters.js waits for that event so
 //     it reads the correct status cell text and preserves the baseline order
-//     when Near Me is not active.
+//     when Distance sort is not active.
 //
 // Contract with main.scss (.flap / --flap-index):
 //   - Set CSS custom property `--flap-index` on each visible row (integer,
@@ -36,9 +40,12 @@ const TYPE_TOKENS = {
 const TYPE_TO_TOKEN = Object.fromEntries(
   Object.entries(TYPE_TOKENS).map(([token, type]) => [type, token]),
 );
-const FILTER_TOKENS = new Set([
+// Hash tokens this module owns — stripped and rewritten on every state sync.
+// Includes the sort token even though sort isn't a filter, because the same
+// hash-round-trip logic applies.
+const OWNED_TOKENS = new Set([
   "open-now",
-  "near-me",
+  "distance",
   ...Object.keys(TYPE_TOKENS),
 ]);
 
@@ -57,9 +64,9 @@ function writeHashTokens(tokens) {
 // Remove this module's tokens from hash, then add the ones currently active.
 function syncStateToHash(state) {
   const tokens = readHashTokens();
-  for (const token of FILTER_TOKENS) tokens.delete(token);
+  for (const token of OWNED_TOKENS) tokens.delete(token);
   if (state.openNow) tokens.add("open-now");
-  if (state.nearMe) tokens.add("near-me");
+  if (state.sortByDistance) tokens.add("distance");
   for (const type of state.types) {
     const token = TYPE_TO_TOKEN[type];
     if (token) tokens.add(token);
@@ -149,9 +156,9 @@ function haversineMiles(lat1, lng1, lat2, lng2) {
   return EARTH_RADIUS_MILES * c;
 }
 
-// When Near Me is active, sort visible rows by ascending distance from
-// userCoords. Rows missing lat/lng fall to the end. Stable via index.
-function sortByDistance(rows, userCoords) {
+// When Distance sort is active, order visible rows by ascending distance
+// from userCoords. Rows missing lat/lng fall to the end. Stable via index.
+function sortRowsByDistance(rows, userCoords) {
   const decorated = rows.map((row, index) => {
     const lat = readNumber(row, "data-lat");
     const lng = readNumber(row, "data-lng");
@@ -215,8 +222,8 @@ function triggerFlap(rows) {
 }
 
 // Apply current filter state to the board: toggle row.hidden, sort visible
-// rows (by distance if Near Me is on, otherwise leave in the baseline order
-// that status.js produced), move them to the top of tbody, and flap them.
+// rows (by distance if Distance sort is on, otherwise leave in the baseline
+// order that status.js produced), move them to the top of tbody, and flap them.
 function applyFilters(tbody, state) {
   collapseExpandedRows(tbody);
   renderBoard(document, allowedPoolTypes(state));
@@ -229,8 +236,8 @@ function applyFilters(tbody, state) {
   });
 
   const ordered =
-    state.nearMe && state.userCoords
-      ? sortByDistance(visible, state.userCoords)
+    state.sortByDistance && state.userCoords
+      ? sortRowsByDistance(visible, state.userCoords)
       : sortByRank(visible, (row) => Number(row.dataset.baselineRank));
 
   // Move visible rows to the top in their new order; hidden rows retain
@@ -248,7 +255,7 @@ function attachHandlers(tbody, filtersRoot) {
   const state = {
     openNow: false,
     types: new Set(),
-    nearMe: false,
+    sortByDistance: false,
     userCoords: null,
   };
 
@@ -283,27 +290,27 @@ function attachHandlers(tbody, filtersRoot) {
     });
   });
 
-  const nearMeButton = filtersRoot.querySelector('button[data-action="near-me"]');
-  if (nearMeButton) {
-    nearMeButton.setAttribute("aria-pressed", "false");
-    nearMeButton.addEventListener("click", () => {
+  const distanceButton = document.querySelector('button[data-action="sort-distance"]');
+  if (distanceButton) {
+    distanceButton.setAttribute("aria-pressed", "false");
+    distanceButton.addEventListener("click", () => {
       // Toggle off if already on.
-      if (state.nearMe) {
-        state.nearMe = false;
+      if (state.sortByDistance) {
+        state.sortByDistance = false;
         state.userCoords = null;
-        nearMeButton.setAttribute("aria-pressed", "false");
+        distanceButton.setAttribute("aria-pressed", "false");
         applyFilters(tbody, state);
         syncStateToHash(state);
         return;
       }
       if (!("geolocation" in navigator)) {
-        nearMeButton.setAttribute("aria-pressed", "false");
+        distanceButton.setAttribute("aria-pressed", "false");
         return;
       }
-      nearMeButton.setAttribute("aria-pressed", "true");
+      distanceButton.setAttribute("aria-pressed", "true");
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          state.nearMe = true;
+          state.sortByDistance = true;
           state.userCoords = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
@@ -312,15 +319,15 @@ function attachHandlers(tbody, filtersRoot) {
           syncStateToHash(state);
         },
         () => {
-          state.nearMe = false;
+          state.sortByDistance = false;
           state.userCoords = null;
-          nearMeButton.setAttribute("aria-pressed", "false");
+          distanceButton.setAttribute("aria-pressed", "false");
         },
       );
     });
   }
 
-  return { state, openNowButton, typeButtons, nearMeButton };
+  return { state, openNowButton, typeButtons, distanceButton };
 }
 
 // Apply hash tokens by dispatching clicks on buttons whose desired pressed-
@@ -328,7 +335,7 @@ function attachHandlers(tbody, filtersRoot) {
 // idempotently).
 function restoreFromHash(controls) {
   const tokens = readHashTokens();
-  const { state, openNowButton, typeButtons, nearMeButton } = controls;
+  const { state, openNowButton, typeButtons, distanceButton } = controls;
 
   if (openNowButton) {
     const want = tokens.has("open-now");
@@ -348,9 +355,9 @@ function restoreFromHash(controls) {
   if (desiredTypeButton && desiredTypeButton !== pressedTypeButton) {
     desiredTypeButton.click();
   }
-  if (nearMeButton) {
-    const want = tokens.has("near-me");
-    if (want !== state.nearMe) nearMeButton.click();
+  if (distanceButton) {
+    const want = tokens.has("distance");
+    if (want !== state.sortByDistance) distanceButton.click();
   }
 }
 

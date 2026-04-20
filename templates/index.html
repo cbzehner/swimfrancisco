@@ -8,9 +8,24 @@
 
 {% block title %}Swim Francisco — where to swim right now{% endblock %}
 {% block content %}
-  <header>
-    <h1>{{ config.title }}</h1>
-    <p>{{ config.description }}</p>
+  <header class="site-header">
+    <div class="site-header-row">
+      <h1>{{ config.title }}</h1>
+      <div class="site-header-actions">
+        {% if not is_map_view %}
+          <div class="sort-group" role="group" aria-label="Sort">
+            <button type="button" data-action="sort-distance" aria-label="Sort by distance">NEAREST</button>
+          </div>
+        {% endif %}
+        <div class="view-switcher" role="group" aria-label="View">
+          {% if is_map_view %}
+            <a href="/" data-target-path="/" class="view-switcher-link" aria-label="View board">BOARD</a>
+          {% else %}
+            <a href="/map/" data-target-path="/map/" class="view-switcher-link" aria-label="View map">MAP</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
   </header>
 
   <noscript>
@@ -22,23 +37,15 @@
 
   <div class="board-controls">
     <div class="filters" aria-label="Filters">
+      <div class="filter-group" role="group" aria-label="Availability Filter">
+        <button type="button" data-filter="open-now">OPEN NOW</button>
+      </div>
       <div class="filter-group" role="group" aria-label="Type Filter">
+        <button type="button" data-filter="type" data-type="none">ALL</button>
         <button type="button" data-filter="type" data-type="lap_swim">LAP</button>
         <button type="button" data-filter="type" data-type="family_swim">FAMILY</button>
         <button type="button" data-filter="type" data-type="open_water">BEACH</button>
-        <button type="button" data-filter="type" data-type="none">ALL</button>
       </div>
-      <div class="filter-group filter-group-secondary" role="group" aria-label="Additional Filters">
-        <button type="button" data-filter="open-now">OPEN NOW</button>
-        <button type="button" data-action="near-me">NEAR ME</button>
-      </div>
-    </div>
-    <div class="view-switcher" role="group" aria-label="View">
-      {% if is_map_view %}
-        <a href="/" data-target-path="/" class="view-switcher-link">VIEW BOARD</a>
-      {% else %}
-        <a href="/map/" data-target-path="/map/" class="view-switcher-link">VIEW MAP</a>
-      {% endif %}
     </div>
   </div>
 

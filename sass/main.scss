@@ -62,13 +62,37 @@ a {
   letter-spacing: 0.05em;
 }
 
-// --- Controls row (filters + view switcher) -----------------------------
+// --- Site header row (title + header-level actions) ---------------------
+// Header actions (NEAREST sort, VIEW MAP) live opposite the H1. Grouping
+// them here — rather than inline with filter pills — keeps the controls
+// row pure filters, since sort and view-mode reorder/reshape the board
+// but never hide rows.
+
+.site-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.site-header-row h1 {
+  margin-bottom: 0;
+}
+
+.site-header-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// --- Controls row (filters only) ----------------------------------------
 
 .board-controls {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: 0.75rem 1rem;
   margin: 1rem 0;
 }
@@ -85,37 +109,79 @@ a {
     flex-wrap: wrap;
     gap: 0.5rem;
   }
+}
 
-  .filter-group-secondary {
-    margin-left: 0.25rem;
+// Sort controls live in the header actions row alongside VIEW MAP. They
+// share the pill styling below with filter buttons for visual consistency,
+// but are placed separately because a sort reorders rows rather than
+// hiding them.
+.sort-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filters button {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--fg);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font: inherit;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease;
+
+  &:hover,
+  &:focus {
+    background: rgba(245, 197, 24, 0.12);
   }
 
-  button {
-    background: transparent;
-    color: var(--fg);
-    border: 1px solid var(--fg);
-    border-radius: 999px;
-    padding: 0.35rem 0.9rem;
-    font: inherit;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    transition:
-      background-color 180ms ease,
-      color 180ms ease,
-      border-color 180ms ease;
-
-    &:hover,
-    &:focus {
-      background: rgba(245, 197, 24, 0.12);
-    }
-
-    &[aria-pressed="true"] {
-      background: var(--accent);
-      color: var(--bg);
-    }
+  &[aria-pressed="true"] {
+    background: var(--accent);
+    color: var(--bg);
   }
+}
+
+// Sort button — square block, matches the view switcher since both live
+// in the header actions row and act as page-level controls, not filters.
+.sort-group button {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--fg);
+  border-radius: 2px;
+  padding: 0.35rem 1rem;
+  font: inherit;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease;
+
+  &:hover,
+  &:focus {
+    background: rgba(245, 197, 24, 0.12);
+  }
+
+  &[aria-pressed="true"] {
+    background: var(--accent);
+    color: var(--bg);
+  }
+}
+
+// Active-sort indicator: when Nearest is pressed the rows run nearest →
+// farthest, so a trailing down-arrow visually matches the table order.
+.sort-group button[aria-pressed="true"]::after {
+  content: " ↓";
+  margin-left: 0.25rem;
 }
 
 // --- View switcher (BOARD ↔ MAP) ----------------------------------------
@@ -513,19 +579,34 @@ table.board tbody tr.flap {
     padding: 1rem 0.75rem;
   }
 
-  .filters {
+  // Site header: keep the view switcher in the top-right; title can shrink
+  // or wrap beneath it on very narrow viewports.
+  .site-header-row {
+    gap: 0.5rem;
+  }
+
+  .board-controls {
     gap: 0.5rem 0.75rem;
+  }
+
+  .filters {
+    gap: 0.4rem 0.6rem;
 
     .filter-group {
-      gap: 0.4rem;
-    }
-
-    .filter-group-secondary {
-      margin-left: 0;
+      gap: 0.35rem;
     }
   }
 
-  .filters button,
+  .sort-group {
+    gap: 0.4rem;
+  }
+
+  .filters button {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.65rem;
+  }
+
+  .sort-group button,
   .view-switcher .view-switcher-link {
     font-size: 0.75rem;
     padding: 0.3rem 0.7rem;
