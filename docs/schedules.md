@@ -80,7 +80,7 @@ Useful flags on `extract`:
 - `--dry-run` — skip content/state writes but still produce the report.
 
 `schedules debug bakeoff` is always observational — it never writes to
-`content/spots/` or `data/extraction-state.json`.
+`content/spots/` or any `data/` file.
 
 **Exit codes:** the `extract` command exits non-zero when any pool failed
 (hard-blocked or errored). Partial failure never exits 0; shell automation
@@ -92,34 +92,47 @@ The source of truth for a pool's schedule is `content/spots/<slug>.md`. The
 extractor and reviewed-snapshot machinery are regeneration aids — they
 help produce and verify that file, but they are not parallel authorities.
 
+Everything for a given (slug, PDF) lives in one directory:
+
+```
+data/<slug>/<fetch-date>-<pdf-sha12>/
+  source.pdf
+  gemini-<model>.json          # self-describing provider output
+  anthropic-<model>.json
+  reviewed.json                # present ⇔ human-approved
+```
+
+Review status is a filesystem predicate: `reviewed.json` present ⇒ done;
+absent ⇒ needs review. `--force` and `--compare-with` bypass this
+fast-path.
+
 1. Run `uv run schedules extract`.
 2. Read `tmp/extraction-report.md`.
 3. Review `git diff content/spots/`.
-4. For any pool with `review_note[...]` lines, inspect the raw provider
-   outputs under `data/artifacts/<slug>/<pdf_sha>/`.
-5. If a pool needs a durable manual override, commit a reviewed snapshot
-   under `data/reviewed-snapshots/<slug>/<pdf_sha256>.json`. The envelope
-   schema is enforced on load — see `src/schedules/reviewed_snapshots.py`
-   for the required fields.
+4. For any pool with `review_note[...]` lines, inspect the provider
+   outputs under `data/<slug>/<fetch-date>-<sha12>/`.
+5. Run `uv run schedules review` to approve the next pending pool. The
+   CLI picks the oldest unreviewed directory, seeds `reviewed.json`, opens
+   the PDF, and launches `$EDITOR`. On exit it validates, projects into
+   `content/spots/<slug>.md`, and leaves `reviewed.json` on disk.
 6. Spot-check flagged pools against the source PDF before accepting a
    content diff.
-7. Commit `content/spots/`, `data/extraction-state.json`, and any new
-   `data/reviewed-snapshots/` files only after the diff looks trustworthy.
+7. Commit `content/spots/` and the per-review directory (`source.pdf`,
+   provider JSONs, `reviewed.json`) once the diff looks trustworthy.
 
 Every new PDF requires a fresh human pass via `schedules review` — there
 is no auto-ratification shortcut. If a re-exported PDF has identical
-content to a prior reviewed snapshot, approving it via the reviewer is
-cheap (few seconds) and preserves the "human vouched for this hash"
-contract.
+content to a prior review, approving it via the reviewer is cheap (few
+seconds) and preserves the "human vouched for this hash" contract.
 
-`data/artifacts/` is a local review cache. Keep it around when comparing
-providers or debugging a bad extraction, but do not commit it by default.
+Each `<provider>-<model>.json` is self-describing: it carries
+`prompt_sha256`, `schema_sha256`, `source_pdf_url`, `pdf_sha256`, and
+`extracted_at`. Extraction skips when the cached file's hashes match the
+current prompt and schema; an edit to either re-triggers the LLM.
 
-`data/reviewed-snapshots/` is the opposite: committed, schema-enforced,
-and used by the pipeline to skip re-extraction when the same
-`slug + pdf_sha256` is seen again. Its payloads pass through the same
-validation and grounding that provider output does — human review
-protects against misinterpretation, not typos.
+`reviewed.json` payloads pass through the same validation and grounding
+that provider output does — human review protects against
+misinterpretation, not typos.
 
 ## Registry Maintenance
 
@@ -134,9 +147,9 @@ When SF Rec moves a PDF URL:
 
 ## Current Blockers
 
-As of 2026-04-17:
+As of 2026-04-20:
 
-- All 7 pools with current published PDFs have manually reviewed snapshots in `data/reviewed-snapshots/`.
+- All 7 pools with current published PDFs have `reviewed.json` committed under `data/<slug>/<date>-<sha12>/`.
 - `mission-community-pool` is skipped because the facility page announces the Summer 2026 opening date but exposes no current schedule PDF.
 - `sava-pool` is skipped because the pool remains closed for repairs and the page only links an old Fall 2025 schedule.
 
@@ -158,18 +171,19 @@ Every extracted pool joins the review queue until a human approves it. Approve e
 schedules review
 ```
 
-The CLI scans `data/artifacts/` for `(slug, pdf_sha256)` pairs with no matching reviewed snapshot, picks the oldest-PDF-first, and:
+The CLI scans `data/<slug>/` for review dirs that have provider JSON but
+no `reviewed.json`, picks the oldest-PDF-first, and:
 
-1. Seeds a draft envelope at `data/reviewed-snapshot-drafts/<slug>/<reviewed_at>-<prefix>.json` (gitignored).
+1. Writes `reviewed.json` into the review dir (no separate draft tree).
 2. Opens the PDF in Preview (macOS `open`).
-3. Launches `$EDITOR` (or `hx`) on the draft. Helix's JSON LSP picks up the `$schema` pointer and gives you autocomplete + inline validation.
-4. On editor exit, validates and finalizes: schema → `validate()` invariants → destination check → rename draft into `data/reviewed-snapshots/` → project into `content/spots/<slug>.md`.
+3. Launches `$EDITOR` (or `hx`) on `reviewed.json`. Helix's JSON LSP picks up the `$schema` pointer and gives you autocomplete + inline validation.
+4. On editor exit, validates (schema + `validate()` invariants) and projects into `content/spots/<slug>.md`.
 
 To review a specific pool: `schedules review --slug hamilton-pool`.
 
-If finalization fails after the snapshot is committed (rare; projection error), re-run `schedules project <slug>` to finish.
+If finalization fails after `reviewed.json` is written (rare; projection error), re-run `schedules project <slug>` to finish.
 
-The draft tree is ignored by git. If the pipeline writes a new artifact for a PDF you've already reviewed, the filesystem diff automatically re-surfaces it.
+To start over from raw extraction on a given pool, delete its `reviewed.json` and re-run `schedules review`.
 
 ## Future
 

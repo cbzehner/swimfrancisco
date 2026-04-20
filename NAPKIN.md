@@ -19,8 +19,8 @@
    Do instead: prefix with `set -a && source .env && set +a &&` when running `uv run schedules extract` or `uv run schedules debug bakeoff` or any provider call, or the run fails with `GOOGLE_API_KEY is not set.`.
 
 ## Domain Behavior Guardrails
-1. **[2026-04-18] `content/spots/*.md` is the source of truth; `data/reviewed-snapshots/` is a regeneration aid**
-   Do instead: treat checked-in markdown as authoritative. `data/reviewed-snapshots/<slug>/<pdf_sha256>.json` is a human-reviewed payload used to skip re-extraction; it is not parallel truth. Every new PDF sha256 requires a fresh human pass via `schedules review` — there is no auto-ratification.
+1. **[2026-04-20] `content/spots/*.md` is the source of truth; `data/<slug>/<date>-<sha12>/` is a regeneration aid**
+   Do instead: treat checked-in markdown as authoritative. Each per-review directory holds `source.pdf`, per-provider JSON, and `reviewed.json` (present ⇔ human-approved). Every new PDF sha256 requires a fresh human pass via `schedules review` — there is no auto-ratification.
 2. **[2026-04-17] Do not publish stale Mission or Sava schedules**
    Do instead: leave `mission-community-pool` and `sava-pool` skipped until the official facility pages publish a current schedule PDF, then review that new hash.
 3. **[2026-04-17] SFRP vocabulary: REC/FAMILY SWIM is one program, not two**
