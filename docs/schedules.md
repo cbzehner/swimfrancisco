@@ -147,6 +147,27 @@ Closures in the extractor schema are **facility-wide, all-day, and date-only**:
 
 Timed or pool-scoped closures are a deliberate out-of-scope item; adding them is a schema migration, not a bug fix. See `docs/plans/review-followup.md` Step 1 for the rationale.
 
+## Reviewing extracted schedules
+
+When the extraction pipeline can't auto-ratify a pool (grounding flagged something, `validate` failed, or extraction failed), the pool joins a review queue. Approve extractions by running:
+
+```
+schedules review
+```
+
+The CLI scans `data/artifacts/` for `(slug, pdf_sha256)` pairs with no matching reviewed snapshot, picks the oldest-PDF-first, and:
+
+1. Seeds a draft envelope at `data/reviewed-snapshot-drafts/<slug>/<reviewed_at>-<prefix>.json` (gitignored).
+2. Opens the PDF in Preview (macOS `open`).
+3. Launches `$EDITOR` (or `hx`) on the draft. Helix's JSON LSP picks up the `$schema` pointer and gives you autocomplete + inline validation.
+4. On editor exit, validates and finalizes: schema → `validate()` invariants → destination check → rename draft into `data/reviewed-snapshots/` → project into `content/spots/<slug>.md`.
+
+To review a specific pool: `schedules review --slug hamilton-pool`.
+
+If finalization fails after the snapshot is committed (rare; projection error), re-run `schedules project <slug>` to finish.
+
+The draft tree is ignored by git. If the pipeline writes a new artifact for a PDF you've already reviewed, the filesystem diff automatically re-surfaces it.
+
 ## Future
 
 The v3 path is still the same: a GitHub Action can wrap `uv run schedules extract` and open a PR whenever the content diff is non-empty.
