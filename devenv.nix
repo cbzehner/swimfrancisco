@@ -9,6 +9,10 @@
     # Node ≥22.18 — unflagged TS type stripping for `node --test` against
     # `worker/src/*.ts`. nixpkgs currently ships 22.22+, which clears the bar.
     pkgs.nodejs_22
+    # Provides `vscode-json-language-server` for editor-side schema validation
+    # of reviewed-snapshot JSON. Helix picks it up automatically when it sees
+    # a `$schema` key pointing at `data/reviewed-snapshots/schema.json`.
+    pkgs.vscode-langservers-extracted
   ];
 
   languages.python.enable = true;

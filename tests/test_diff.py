@@ -1,4 +1,4 @@
-from schedules.review import compare_payloads
+from schedules.diff import compare_payloads
 
 
 def test_compare_payloads_flags_pool_only_session_disagreement():

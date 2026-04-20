@@ -52,7 +52,7 @@ Create a new file at `content/spots/<slug>.md` with TOML frontmatter. See `docs/
 
 For new **open-water** spots, also edit `worker/src/spots.ts` to map the slug to its NOAA temperature station and tide station. Pools do not need worker changes.
 
-For pool schedule refreshes, use the local extractor in `docs/schedules.md`. It is `uv`-managed, reads provider credentials from a gitignored `.env` loaded by `devenv`'s built-in dotenv integration, has a `schedules debug bakeoff` subcommand that runs two providers and saves raw review artifacts under `data/artifacts/`, and can lock manually reviewed payloads to a specific PDF hash via committed files in `data/adjudications/`.
+For pool schedule refreshes, use the local extractor in `docs/schedules.md`. It is `uv`-managed, reads provider credentials from a gitignored `.env` loaded by `devenv`'s built-in dotenv integration, has a `schedules debug bakeoff` subcommand that runs two providers and saves raw review artifacts under `data/artifacts/`, and can lock manually reviewed payloads to a specific PDF hash via committed files in `data/reviewed-snapshots/`.
 
 ## Tech stack
 
@@ -60,7 +60,7 @@ Zola, plain JS (no build step for frontend), Leaflet (lazy-loaded for map view),
 
 ## Known gaps
 
-- All 7 pools with current published schedule PDFs now have manually adjudicated `sessions[]` data. `mission-community-pool` and `sava-pool` still depend on upstream publishing a current schedule PDF.
+- All 7 pools with current published schedule PDFs now have manually reviewed `sessions[]` data. `mission-community-pool` and `sava-pool` still depend on upstream publishing a current schedule PDF.
 - Lat/lng for all spots are best-estimate geocodes; re-verify before any distance-critical UX work.
 - Worker bootstrap: after first deploy `/api/conditions` returns 503 until the first hourly cron fires — see `docs/deploy.md` for the manual trigger command.
 

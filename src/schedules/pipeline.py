@@ -15,9 +15,10 @@ from .reviewed_snapshots import (
     canonicalize_payload,
     find_snapshots_for_slug,
     load_reviewed_snapshot,
+    load_reviewed_snapshot_from_path,
     write_ratified_snapshot,
 )
-from .review import compare_payloads
+from .diff import compare_payloads
 from .report import write_report
 from .schema import EXTRACTION_SCHEMA
 from .signals import analyze_page_texts, extract_page_texts, source_notes_for_payload
@@ -207,19 +208,21 @@ def run_pipeline(
                     human_match: str | None = None
                     ratification_match: str | None = None
                     for existing_snapshot_path in find_snapshots_for_slug(entry.slug):
-                        existing_sha = existing_snapshot_path.stem
                         try:
-                            existing, _, _ = load_reviewed_snapshot(entry.slug, existing_sha)
+                            existing, _, _ = load_reviewed_snapshot_from_path(
+                                existing_snapshot_path, expected_slug=entry.slug
+                            )
                         except ValueError as exc:
                             review_notes.append(
                                 ReviewNote(
                                     kind="reviewed_snapshot_malformed",
-                                    message=f"Skipping malformed reviewed snapshot {existing_sha[:12]}: {exc}",
+                                    message=f"Skipping malformed reviewed snapshot {existing_snapshot_path.name}: {exc}",
                                     severity="warning",
                                 )
                             )
                             continue
-                        if existing and canonicalize_payload(existing["payload"]) == canonical_payload:
+                        existing_sha = existing["pdf_sha256"]
+                        if canonicalize_payload(existing["payload"]) == canonical_payload:
                             if existing.get("reviewed_by") != "ratification":
                                 human_match = existing_sha
                                 break

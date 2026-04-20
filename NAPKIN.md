@@ -22,8 +22,12 @@
 1. **[2026-04-18] `content/spots/*.md` is the source of truth; `data/reviewed-snapshots/` is a regeneration aid**
    Do instead: treat checked-in markdown as authoritative. `data/reviewed-snapshots/<slug>/<pdf_sha256>.json` is a human-reviewed payload used to skip re-extraction; it is not parallel truth. If a provider run canonicalizes to a prior snapshot, the pipeline auto-ratifies and writes a new snapshot — no re-review needed.
 2. **[2026-04-17] Do not publish stale Mission or Sava schedules**
-   Do instead: leave `mission-community-pool` and `sava-pool` skipped until the official facility pages publish a current schedule PDF, then adjudicate that new hash.
+   Do instead: leave `mission-community-pool` and `sava-pool` skipped until the official facility pages publish a current schedule PDF, then review that new hash.
 3. **[2026-04-17] SFRP vocabulary: REC/FAMILY SWIM is one program, not two**
    Do instead: always map REC SWIM, RECREATION SWIM, REC/FAMILY SWIM, FAMILY SWIM to `family_swim`. `open_swim` is no longer in the enum. Instructor-led programs (WATER/DEEP WATER/SELF GUIDED EXERCISE, AEROBICS, MASTERS, SYNCHRO, PIRANHAS, WATER POLO, HOCKEY) are ignored entirely; SFUSD classes become closure entries.
 
 ## User Directives
+
+## Conventions
+
+- **Config formats**: TOML for human-authored config (Zola frontmatter, `pyproject.toml`, `config.toml`, `src/schedules/registry.toml`). JSON for machine-generated data (`data/**/*.json`). YAML only where a vendor tool requires it (`devenv.yaml`). New files follow this rule.

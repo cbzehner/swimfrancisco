@@ -46,7 +46,7 @@ def test_find_snapshots_for_slug_lists_all(tmp_path):
         "closures": [],
     }
     for sha in ("a" * 64, "b" * 64):
-        path = root / "hamilton-pool" / f"{sha}.json"
+        path = root / "hamilton-pool" / f"2026-04-18-{sha[:12]}.json"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(_envelope("hamilton-pool", sha, payload)))
     assert len(find_snapshots_for_slug("hamilton-pool", root=root)) == 2
@@ -174,18 +174,31 @@ def _install_pipeline_stubs(monkeypatch, tmp_path, *, payload, envelopes_by_sha,
     )
     monkeypatch.setattr(pipeline_mod, "merge", merge_mock)
 
+    # Write real envelope files on disk so load_reviewed_snapshot_from_path
+    # exercises the actual post-migration filename layout: <reviewed_at>-<prefix>.json.
+    reviewed_root = tmp_path / "reviewed-snapshots" / entry.slug
+    reviewed_root.mkdir(parents=True, exist_ok=True)
+    envelope_paths: dict[str, Path] = {}
+    for sha, envelope in envelopes_by_sha.items():
+        path = reviewed_root / f"2026-01-01-{sha[:12]}.json"
+        path.write_text(json.dumps(envelope))
+        envelope_paths[sha] = path
+    for sha in bad_shas:
+        # Valid JSON but invalid envelope → load_reviewed_snapshot_from_path raises ValueError.
+        path = reviewed_root / f"2026-01-01-{sha[:12]}.json"
+        path.write_text("{}")
+        envelope_paths[sha] = path
+
     def fake_load(slug, sha, root=None):
+        # Only the current-PDF cache lookup uses this now; ratification path
+        # reads envelopes by filesystem path via load_reviewed_snapshot_from_path.
         if sha == new_sha:
             return None, None, None
-        if sha in bad_shas:
-            raise ValueError(f"malformed envelope at {sha}")
-        if sha in envelopes_by_sha:
-            return envelopes_by_sha[sha], "fp", Path(f"{slug}/{sha}.json")
-        raise ValueError(f"unexpected sha {sha}")
+        raise ValueError(f"unexpected sha {sha} in load_reviewed_snapshot stub")
     monkeypatch.setattr(pipeline_mod, "load_reviewed_snapshot", fake_load)
 
     order = snapshot_order if snapshot_order is not None else [*bad_shas, *envelopes_by_sha.keys()]
-    snapshot_paths = [Path(f"{entry.slug}/{sha}.json") for sha in order]
+    snapshot_paths = [envelope_paths[sha] for sha in order]
     monkeypatch.setattr(pipeline_mod, "find_snapshots_for_slug", lambda slug, root=None: snapshot_paths)
 
     monkeypatch.setattr(

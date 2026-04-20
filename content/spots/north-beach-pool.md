@@ -13,7 +13,7 @@ cost = "paid"
 schedule_effective = "2026-03-17"
 last_verified_at = "2026-04-17"
 
-# Manually adjudicated against the Spring 2026 schedule PDF.
+# Manually reviewed against the Spring 2026 schedule PDF.
 # This facility publishes two separate pool pages; the rows below are a flat facility-level aggregate until the site schema can label sessions by pool.
 schedule_effective_end = "2026-06-06"
 

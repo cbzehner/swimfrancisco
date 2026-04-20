@@ -2,14 +2,18 @@ import json
 
 import pytest
 
-from schedules.reviewed_snapshots import REVIEWED_SNAPSHOT_VERSION, load_reviewed_snapshot
+from schedules.reviewed_snapshots import (
+    REVIEWED_SNAPSHOT_VERSION,
+    load_reviewed_snapshot,
+    load_reviewed_snapshot_from_path,
+)
 from schedules.validate import validate
 
 
 def test_load_reviewed_snapshot(tmp_path):
     root = tmp_path / "reviewed-snapshots"
     pdf_sha256 = "a" * 64
-    file_path = root / "hamilton-pool" / f"{pdf_sha256}.json"
+    file_path = root / "hamilton-pool" / f"2026-04-18-{pdf_sha256[:12]}.json"
     file_path.parent.mkdir(parents=True)
     file_path.write_text(
         json.dumps(
@@ -36,7 +40,7 @@ def test_load_reviewed_snapshot(tmp_path):
 
 
 def _write_snapshot(root, slug, pdf_sha256, envelope):
-    file_path = root / slug / f"{pdf_sha256}.json"
+    file_path = root / slug / f"2026-04-18-{pdf_sha256[:12]}.json"
     file_path.parent.mkdir(parents=True, exist_ok=True)
     file_path.write_text(json.dumps(envelope))
     return file_path
@@ -104,6 +108,26 @@ def test_load_reviewed_snapshot_rejects_mismatched_slug(tmp_path):
     _write_snapshot(root, "hamilton-pool", pdf_sha256, envelope)
     with pytest.raises(ValueError, match="slug"):
         load_reviewed_snapshot("hamilton-pool", pdf_sha256, root=root)
+
+
+def test_load_reviewed_snapshot_from_path_extracts_sha_from_envelope(tmp_path):
+    # Filename stem is <reviewed_at>-<prefix>, not a sha; loader must extract
+    # the real pdf_sha256 from the envelope contents, not the filename.
+    root = tmp_path / "reviewed-snapshots"
+    pdf_sha256 = "a" * 64
+    path = _write_snapshot(root, "hamilton-pool", pdf_sha256, _valid_envelope("hamilton-pool", pdf_sha256))
+    env, fingerprint, _ = load_reviewed_snapshot_from_path(path, expected_slug="hamilton-pool")
+    assert env["pdf_sha256"] == pdf_sha256
+    assert len(fingerprint) == 64
+
+
+def test_load_reviewed_snapshot_from_path_rejects_invalid_envelope(tmp_path):
+    slug_dir = tmp_path / "reviewed-snapshots" / "hamilton-pool"
+    slug_dir.mkdir(parents=True)
+    path = slug_dir / "2026-04-18-abcabcabcabc.json"
+    path.write_text("{}")
+    with pytest.raises(ValueError, match="pdf_sha256"):
+        load_reviewed_snapshot_from_path(path, expected_slug="hamilton-pool")
 
 
 from schedules.reviewed_snapshots import canonicalize_payload

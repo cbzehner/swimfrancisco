@@ -21,7 +21,24 @@ _REQUIRED_ENVELOPE_FIELDS = (
 
 
 def reviewed_snapshot_path(slug: str, pdf_sha256: str, root: Path = REVIEWED_SNAPSHOTS_DIR) -> Path:
-    return root / slug / f"{pdf_sha256}.json"
+    """Resolve the snapshot path for (slug, pdf_sha256).
+
+    Globs `<slug>/*-<prefix>.json` where prefix is the first 12 chars of
+    pdf_sha256. If exactly one file matches, return it. If none match,
+    return the canonical write path using today's date. If more than one
+    matches (should not happen in practice), raise.
+    """
+    prefix = pdf_sha256[:12]
+    slug_dir = root / slug
+    if slug_dir.is_dir():
+        matches = sorted(slug_dir.glob(f"*-{prefix}.json"))
+        if len(matches) == 1:
+            return matches[0]
+        if len(matches) > 1:
+            raise ValueError(
+                f"Multiple reviewed snapshots for {slug} with prefix {prefix}: {matches}"
+            )
+    return slug_dir / f"{date.today().isoformat()}-{prefix}.json"
 
 
 def _validate_envelope(raw: dict, path: Path, *, expected_slug: str, expected_pdf_sha256: str) -> None:
@@ -62,6 +79,28 @@ def load_reviewed_snapshot(
 
     _validate_envelope(raw, path, expected_slug=slug, expected_pdf_sha256=pdf_sha256)
 
+    fingerprint = hashlib.sha256(json.dumps(raw, sort_keys=True).encode("utf-8")).hexdigest()
+    return raw, fingerprint, relative_to_repo(path)
+
+
+def load_reviewed_snapshot_from_path(
+    path: Path, *, expected_slug: str,
+) -> tuple[dict, str, str]:
+    """Load a snapshot when the on-disk path is already known.
+
+    Unlike ``load_reviewed_snapshot``, this does not require the caller to
+    know the envelope's ``pdf_sha256`` in advance — it extracts it from
+    the file and validates. Used by the ratification loop, where we iterate
+    real filesystem paths whose stems are ``<reviewed_at>-<prefix>`` and
+    must not be mistaken for sha256 values.
+    """
+    raw = json.loads(path.read_text())
+    if not isinstance(raw, dict):
+        raise ValueError(f"{path} must contain a JSON object.")
+    pdf_sha256 = raw.get("pdf_sha256")
+    if not isinstance(pdf_sha256, str):
+        raise ValueError(f"{path} missing or invalid pdf_sha256")
+    _validate_envelope(raw, path, expected_slug=expected_slug, expected_pdf_sha256=pdf_sha256)
     fingerprint = hashlib.sha256(json.dumps(raw, sort_keys=True).encode("utf-8")).hexdigest()
     return raw, fingerprint, relative_to_repo(path)
 

@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://swimfrancisco.com/schemas/reviewed-snapshot.json",
+  "title": "Reviewed Snapshot (v1)",
+  "description": "Human-reviewed snapshot of a pool schedule extraction. Locks a canonical payload to a specific PDF content hash.",
+  "type": "object",
+  "required": [
+    "version",
+    "slug",
+    "pdf_sha256",
+    "reviewed_at",
+    "source_pdf_url",
+    "reviewed_against",
+    "summary",
+    "payload"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional pointer to this schema; enables editor autocomplete without global config."
+    },
+    "version": {
+      "const": 1,
+      "description": "Envelope format version. Bump when the envelope shape changes incompatibly."
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Pool slug. Must match the containing directory name."
+    },
+    "pdf_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 of the source PDF bytes. Locks this snapshot to that exact document."
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "ISO date (YYYY-MM-DD) in Pacific time when the reviewer approved this payload."
+    },
+    "source_pdf_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Canonical URL the PDF was fetched from at review time."
+    },
+    "reviewed_against": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Extraction providers whose output the reviewer evaluated before approving.",
+      "items": {
+        "type": "object",
+        "required": ["provider", "model"],
+        "additionalProperties": false,
+        "properties": {
+          "provider": { "type": "string" },
+          "model": { "type": "string" },
+          "artifact_relpath": {
+            "type": "string",
+            "description": "Relative path to the raw provider output that was reviewed."
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "string",
+      "description": "Free-form note from the reviewer about what they checked or changed."
+    },
+    "payload": {
+      "type": "object",
+      "required": ["schedule_effective", "sessions", "closures"],
+      "additionalProperties": false,
+      "properties": {
+        "schedule_effective": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "description": "Start of the window this schedule is valid for."
+        },
+        "schedule_effective_end": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "description": "Optional end date of the schedule window. Null or omitted if open-ended."
+        },
+        "sessions": {
+          "type": "array",
+          "minItems": 5,
+          "description": "Weekly swim sessions. Validator rejects payloads with fewer than 5.",
+          "items": { "$ref": "#/$defs/session" }
+        },
+        "closures": {
+          "type": "array",
+          "description": "Dated closures (holidays, training, maintenance).",
+          "items": { "$ref": "#/$defs/closure" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "session": {
+      "type": "object",
+      "required": ["day", "type", "start", "end"],
+      "additionalProperties": false,
+      "properties": {
+        "day": {
+          "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+        },
+        "type": {
+          "enum": ["lap_swim", "family_swim", "senior_swim", "lessons"],
+          "description": "Session category. Add new values here first, then teach the template."
+        },
+        "start": {
+          "type": "string",
+          "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+          "description": "24-hour start time, HH:MM."
+        },
+        "end": {
+          "type": "string",
+          "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+          "description": "24-hour end time, HH:MM. Must be strictly greater than start."
+        },
+        "pool": {
+          "type": "string",
+          "description": "Optional sub-pool identifier for multi-pool venues (e.g. 'deep', 'shallow')."
+        },
+        "evidence": {
+          "type": "string",
+          "description": "Optional verbatim PDF line this session came from. Stripped on canonicalization."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional reviewer note. Stripped on canonicalization."
+        }
+      }
+    },
+    "closure": {
+      "type": "object",
+      "required": ["start", "end", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "end": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "description": "Must be ≥ start. Single-day closures use start == end."
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

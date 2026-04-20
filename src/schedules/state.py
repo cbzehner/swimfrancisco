@@ -6,7 +6,7 @@ from pathlib import Path
 
 from .models import ReviewNote
 from .paths import STATE_PATH
-from .review import deserialize_notes, serialize_note
+from .diff import deserialize_notes, serialize_note
 
 
 def load_state(path: Path = STATE_PATH) -> dict[str, dict]:
