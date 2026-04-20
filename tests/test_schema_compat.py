@@ -5,7 +5,13 @@ import pytest
 
 jsonschema = pytest.importorskip("jsonschema")
 
-SCHEMA_PATH = Path(__file__).resolve().parents[1] / "data" / "reviewed-snapshots" / "schema.json"
+SCHEMA_PATH = (
+    Path(__file__).resolve().parents[1]
+    / "src"
+    / "schedules"
+    / "schemas"
+    / "reviewed-snapshot.json"
+)
 
 
 def _load_schema() -> dict:
@@ -14,12 +20,10 @@ def _load_schema() -> dict:
 
 def _valid_envelope() -> dict:
     return {
-        "version": 1,
         "slug": "hamilton-pool",
         "pdf_sha256": "a" * 64,
         "reviewed_at": "2026-04-18",
         "source_pdf_url": "https://example.com/schedule.pdf",
-        "reviewed_against": [{"provider": "gemini", "model": "gemini-3.1-flash-lite-preview"}],
         "payload": {
             "schedule_effective": "2026-03-17",
             "sessions": [
@@ -31,23 +35,29 @@ def _valid_envelope() -> dict:
     }
 
 
-def test_schema_accepts_human_reviewer_envelope():
+def test_schema_accepts_minimal_envelope():
     schema = _load_schema()
-    envelope = _valid_envelope()
-    envelope["reviewed_by"] = "Chris Zehner <cbzehner@gmail.com>"
-    jsonschema.validate(instance=envelope, schema=schema)
+    jsonschema.validate(instance=_valid_envelope(), schema=schema)
 
 
-def test_schema_accepts_envelope_without_reviewed_by():
-    # Legacy / LLM-generated snapshots omit reviewed_by entirely.
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("$schema", "../schemas/reviewed-snapshot.json"),
+        ("version", 1),
+        ("reviewed_by", "Chris Zehner <cbzehner@gmail.com>"),
+        ("reviewed_against", [{"provider": "gemini", "model": "x"}]),
+    ],
+)
+def test_schema_rejects_removed_fields(field, value):
     schema = _load_schema()
     envelope = _valid_envelope()
-    envelope.pop("reviewed_by", None)
-    jsonschema.validate(instance=envelope, schema=schema)
+    envelope[field] = value
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(instance=envelope, schema=schema)
 
 
 def test_schema_rejects_ratified_from_sha256():
-    # The ratification field was removed; additionalProperties:false blocks it.
     schema = _load_schema()
     envelope = _valid_envelope()
     envelope["ratified_from_sha256"] = "b" * 64

@@ -1,21 +1,8 @@
 {
-  "version": 1,
   "slug": "martin-luther-king-jr-pool",
   "pdf_sha256": "4b0ae410e37d66393704fb70dff8e5ce3d42c8c919a6872038cefe8e9097a590",
   "reviewed_at": "2026-04-17",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28771",
-  "reviewed_against": [
-    {
-      "provider": "anthropic",
-      "model": "claude-sonnet-4-6",
-      "artifact_relpath": "data/artifacts/martin-luther-king-jr-pool/4b0ae410e37d/anthropic-claude-sonnet-4-6.json"
-    },
-    {
-      "provider": "gemini",
-      "model": "gemini-3-1-flash-lite-preview",
-      "artifact_relpath": "data/artifacts/martin-luther-king-jr-pool/4b0ae410e37d/gemini-gemini-3-1-flash-lite-preview.json"
-    }
-  ],
   "payload": {
     "closures": [
       {

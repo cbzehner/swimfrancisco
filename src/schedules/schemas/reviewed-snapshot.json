@@ -5,24 +5,14 @@
   "description": "Human-reviewed snapshot of a pool schedule extraction. Locks a canonical payload to a specific PDF content hash.",
   "type": "object",
   "required": [
-    "version",
     "slug",
     "pdf_sha256",
     "reviewed_at",
     "source_pdf_url",
-    "reviewed_against",
     "payload"
   ],
   "additionalProperties": false,
   "properties": {
-    "$schema": {
-      "type": "string",
-      "description": "Optional pointer to this schema; enables editor autocomplete without global config."
-    },
-    "version": {
-      "const": 1,
-      "description": "Envelope format version. Bump when the envelope shape changes incompatibly."
-    },
     "slug": {
       "type": "string",
       "pattern": "^[a-z0-9-]+$",
@@ -32,10 +22,6 @@
       "type": "string",
       "pattern": "^[0-9a-f]{64}$",
       "description": "SHA-256 of the source PDF bytes. Locks this snapshot to that exact document."
-    },
-    "reviewed_by": {
-      "type": "string",
-      "description": "Human reviewer in 'Name <email>' format. Omitted for legacy LLM-generated snapshots that never had a human pass."
     },
     "reviewed_at": {
       "type": "string",
@@ -47,24 +33,6 @@
       "type": "string",
       "format": "uri",
       "description": "Canonical URL the PDF was fetched from at review time."
-    },
-    "reviewed_against": {
-      "type": "array",
-      "minItems": 1,
-      "description": "Extraction providers whose output the reviewer evaluated before approving.",
-      "items": {
-        "type": "object",
-        "required": ["provider", "model"],
-        "additionalProperties": false,
-        "properties": {
-          "provider": { "type": "string" },
-          "model": { "type": "string" },
-          "artifact_relpath": {
-            "type": "string",
-            "description": "Relative path to the raw provider output that was reviewed."
-          }
-        }
-      }
     },
     "payload": {
       "type": "object",

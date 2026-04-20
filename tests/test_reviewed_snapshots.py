@@ -3,7 +3,6 @@ import json
 import pytest
 
 from schedules.reviewed_snapshots import (
-    REVIEWED_SNAPSHOT_VERSION,
     load_reviewed_snapshot,
     load_reviewed_snapshot_from_path,
 )
@@ -18,14 +17,10 @@ def test_load_reviewed_snapshot(tmp_path):
     file_path.write_text(
         json.dumps(
             {
-                "version": REVIEWED_SNAPSHOT_VERSION,
                 "slug": "hamilton-pool",
                 "pdf_sha256": pdf_sha256,
                 "reviewed_at": "2026-04-18",
                 "source_pdf_url": "https://example.com/schedule.pdf",
-                "reviewed_against": [
-                    {"provider": "gemini", "model": "gemini-3.1-flash-lite-preview"}
-                ],
                 "payload": {"schedule_effective": "2026-03-17", "sessions": [], "closures": []},
             }
         )
@@ -47,14 +42,10 @@ def _write_snapshot(root, slug, pdf_sha256, envelope):
 
 def _valid_envelope(slug, pdf_sha256):
     return {
-        "version": REVIEWED_SNAPSHOT_VERSION,
         "slug": slug,
         "pdf_sha256": pdf_sha256,
         "reviewed_at": "2026-04-18",
         "source_pdf_url": "https://example.com/schedule.pdf",
-        "reviewed_against": [
-            {"provider": "gemini", "model": "gemini-3.1-flash-lite-preview"}
-        ],
         "payload": {"schedule_effective": "2026-03-17", "sessions": [], "closures": []},
     }
 
@@ -64,28 +55,8 @@ def test_load_reviewed_snapshot_accepts_valid_envelope(tmp_path):
     pdf_sha256 = "a" * 64
     _write_snapshot(root, "hamilton-pool", pdf_sha256, _valid_envelope("hamilton-pool", pdf_sha256))
     snapshot, fingerprint, _ = load_reviewed_snapshot("hamilton-pool", pdf_sha256, root=root)
-    assert snapshot["version"] == REVIEWED_SNAPSHOT_VERSION
+    assert snapshot["slug"] == "hamilton-pool"
     assert len(fingerprint) == 64
-
-
-def test_load_reviewed_snapshot_rejects_missing_version(tmp_path):
-    root = tmp_path / "reviewed-snapshots"
-    pdf_sha256 = "a" * 64
-    envelope = _valid_envelope("hamilton-pool", pdf_sha256)
-    del envelope["version"]
-    _write_snapshot(root, "hamilton-pool", pdf_sha256, envelope)
-    with pytest.raises(ValueError, match="version"):
-        load_reviewed_snapshot("hamilton-pool", pdf_sha256, root=root)
-
-
-def test_load_reviewed_snapshot_rejects_wrong_version(tmp_path):
-    root = tmp_path / "reviewed-snapshots"
-    pdf_sha256 = "a" * 64
-    envelope = _valid_envelope("hamilton-pool", pdf_sha256)
-    envelope["version"] = 999
-    _write_snapshot(root, "hamilton-pool", pdf_sha256, envelope)
-    with pytest.raises(ValueError, match="version"):
-        load_reviewed_snapshot("hamilton-pool", pdf_sha256, root=root)
 
 
 def test_load_reviewed_snapshot_rejects_missing_required_field(tmp_path):

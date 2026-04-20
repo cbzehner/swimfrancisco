@@ -1,21 +1,8 @@
 {
-  "version": 1,
   "slug": "balboa-pool",
   "pdf_sha256": "ba9b279ae183b142c0c675368bceb39e49b80ed5ddb12fe37736536e92c8ac2c",
   "reviewed_at": "2026-04-17",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28547",
-  "reviewed_against": [
-    {
-      "provider": "anthropic",
-      "model": "claude-sonnet-4-6",
-      "artifact_relpath": "data/artifacts/balboa-pool/ba9b279ae183/anthropic-claude-sonnet-4-6.json"
-    },
-    {
-      "provider": "gemini",
-      "model": "gemini-3-1-flash-lite-preview",
-      "artifact_relpath": "data/artifacts/balboa-pool/ba9b279ae183/gemini-gemini-3-1-flash-lite-preview.json"
-    }
-  ],
   "payload": {
     "closures": [
       {

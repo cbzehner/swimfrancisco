@@ -1,21 +1,8 @@
 {
-  "version": 1,
   "slug": "coffman-pool",
   "pdf_sha256": "18ada024e2b2e3539a9222d57a917cdfa52c6c346c632ee090b14321caf8ab53",
   "reviewed_at": "2026-04-17",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28553",
-  "reviewed_against": [
-    {
-      "provider": "anthropic",
-      "model": "claude-sonnet-4-6",
-      "artifact_relpath": "data/artifacts/coffman-pool/18ada024e2b2/anthropic-claude-sonnet-4-6.json"
-    },
-    {
-      "provider": "gemini",
-      "model": "gemini-3-1-flash-lite-preview",
-      "artifact_relpath": "data/artifacts/coffman-pool/18ada024e2b2/gemini-gemini-3-1-flash-lite-preview.json"
-    }
-  ],
   "payload": {
     "closures": [
       {

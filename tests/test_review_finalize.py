@@ -8,12 +8,10 @@ from schedules.review import FinalizeError, finalize_draft
 
 def _valid_draft_envelope(slug: str, pdf_sha256: str) -> dict:
     return {
-        "version": 1,
         "slug": slug,
         "pdf_sha256": pdf_sha256,
         "reviewed_at": "2026-04-19",
         "source_pdf_url": "https://example.com/schedule.pdf",
-        "reviewed_against": [{"provider": "gemini", "model": "gemini-3.1-flash-lite-preview"}],
         "payload": {
             "schedule_effective": "2026-03-17",
             "sessions": [
@@ -120,25 +118,6 @@ def test_finalize_aborts_on_destination_conflict(tmp_path):
             content_spots_dir=content,
         )
     assert draft.exists()
-
-
-def test_finalize_accepts_human_reviewer_identity(tmp_path):
-    drafts = tmp_path / "drafts"
-    snapshots = tmp_path / "reviewed-snapshots"
-    content = tmp_path / "content" / "spots"
-    envelope = _valid_draft_envelope("hamilton-pool", "a" * 64)
-    envelope["reviewed_by"] = "Chris Zehner <cbzehner@gmail.com>"
-    draft = _write_draft(drafts, "hamilton-pool", "a" * 64, envelope)
-    _seed_content_md(content, "hamilton-pool")
-
-    result = finalize_draft(
-        draft_path=draft,
-        snapshots_root=snapshots,
-        content_spots_dir=content,
-    )
-
-    written = json.loads(result.read_text())
-    assert written["reviewed_by"] == "Chris Zehner <cbzehner@gmail.com>"
 
 
 def test_finalize_rejects_ratified_from_sha256(tmp_path):

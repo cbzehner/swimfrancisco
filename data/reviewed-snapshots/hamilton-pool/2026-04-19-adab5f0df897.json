@@ -1,23 +1,8 @@
 {
-  "$schema": "../../reviewed-snapshots/schema.json",
-  "version": 1,
   "slug": "hamilton-pool",
   "pdf_sha256": "adab5f0df897db91aba3ecfa9499e267fe5341c90843b5db93a425f55c2729ed",
-  "reviewed_by": "Chris Zehner <cbzehner@gmail.com>",
   "reviewed_at": "2026-04-19",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28496",
-  "reviewed_against": [
-    {
-      "provider": "gemini",
-      "model": "gemini-3.1-flash-lite-preview",
-      "artifact_relpath": "hamilton-pool/adab5f0df897/gemini-gemini-3-1-flash-lite-preview.json"
-    },
-    {
-      "provider": "anthropic",
-      "model": "claude-sonnet-4-6",
-      "artifact_relpath": "hamilton-pool/adab5f0df897/anthropic-claude-sonnet-4-6.json"
-    }
-  ],
   "payload": {
     "closures": [
       {

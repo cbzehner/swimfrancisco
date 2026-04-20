@@ -1,6 +1,3 @@
-import json
-from pathlib import Path
-
 import pytest
 
 from schedules.envelope import (
@@ -12,12 +9,10 @@ from schedules.envelope import (
 
 def _valid_envelope() -> dict:
     return {
-        "version": 1,
         "slug": "hamilton-pool",
         "pdf_sha256": "a" * 64,
         "reviewed_at": "2026-04-18",
         "source_pdf_url": "https://example.com/schedule.pdf",
-        "reviewed_against": [{"provider": "gemini", "model": "gemini-3.1-flash-lite-preview"}],
         "payload": {
             "schedule_effective": "2026-03-17",
             "sessions": [

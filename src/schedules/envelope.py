@@ -6,14 +6,11 @@ from pathlib import Path
 
 import jsonschema
 
-from .paths import REVIEWED_SNAPSHOTS_DIR
-
-
 class EnvelopeValidationError(ValueError):
     """Raised when a reviewed-snapshot envelope fails schema validation."""
 
 
-_SCHEMA_PATH = REVIEWED_SNAPSHOTS_DIR / "schema.json"
+_SCHEMA_PATH = Path(__file__).resolve().parent / "schemas" / "reviewed-snapshot.json"
 
 
 @lru_cache(maxsize=1)

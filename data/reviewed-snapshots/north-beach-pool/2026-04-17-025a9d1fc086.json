@@ -1,21 +1,8 @@
 {
-  "version": 1,
   "slug": "north-beach-pool",
   "pdf_sha256": "025a9d1fc08636dccec6430dedb16012a5e4539885898a2789a6ba5df8f30c07",
   "reviewed_at": "2026-04-17",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28503",
-  "reviewed_against": [
-    {
-      "provider": "gemini",
-      "model": "gemini-3-1-flash-lite-preview",
-      "artifact_relpath": "data/artifacts/north-beach-pool/025a9d1fc086/gemini-gemini-3-1-flash-lite-preview.json"
-    },
-    {
-      "provider": "anthropic",
-      "model": "claude-sonnet-4-6",
-      "artifact_relpath": "data/artifacts/north-beach-pool/025a9d1fc086/anthropic-claude-sonnet-4-6.json"
-    }
-  ],
   "payload": {
     "schedule_effective": "2026-03-17",
     "schedule_effective_end": "2026-06-06",

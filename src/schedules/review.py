@@ -120,7 +120,6 @@ import json as _json
 from datetime import date as _date, datetime as _datetime
 from zoneinfo import ZoneInfo
 from .paths import REVIEWED_SNAPSHOT_DRAFTS_DIR
-from .reviewed_snapshots import REVIEWED_SNAPSHOT_VERSION
 
 
 _PROVIDER_PREFERENCE = ("gemini", "anthropic")
@@ -216,18 +215,14 @@ def seed_draft(
 
     provider_path = _pick_provider_artifact(candidate.artifact_dir)
     provider_payload = _json.loads(provider_path.read_text())
-    primary_provider = provider_payload.get("provider", "")
     source_pdf_url = provider_payload.get("pdf_url", "")
     payload = provider_payload.get("payload", {})
 
     envelope = {
-        "$schema": "../../reviewed-snapshots/schema.json",
-        "version": REVIEWED_SNAPSHOT_VERSION,
         "slug": candidate.slug,
         "pdf_sha256": candidate.pdf_sha256,
         "reviewed_at": today.isoformat(),
         "source_pdf_url": source_pdf_url,
-        "reviewed_against": _all_provider_descriptors(candidate.artifact_dir, primary_provider),
         "payload": payload,
     }
 

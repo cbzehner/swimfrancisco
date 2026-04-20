@@ -40,7 +40,7 @@ def _make_candidate(artifact_dir: Path, pdf_sha256: str, slug: str = "hamilton-p
     )
 
 
-def test_seed_draft_prefers_gemini(tmp_path):
+def test_seed_draft_envelope_fields(tmp_path):
     artifact_dir = tmp_path / "artifacts" / "hamilton-pool" / ("a" * 12)
     _write_provider(artifact_dir, "gemini", "gemini-3.1-flash-lite-preview", "a" * 64)
     _write_provider(artifact_dir, "anthropic", "claude-sonnet-4-6", "a" * 64)
@@ -53,44 +53,10 @@ def test_seed_draft_prefers_gemini(tmp_path):
     )
 
     envelope = json.loads(path.read_text())
-    providers = [r["provider"] for r in envelope["reviewed_against"]]
-    assert providers[0] == "gemini"
-    assert set(providers) == {"gemini", "anthropic"}
     assert envelope["slug"] == "hamilton-pool"
     assert envelope["pdf_sha256"] == "a" * 64
     assert envelope["reviewed_at"] == "2026-04-19"
     assert envelope["payload"]["schedule_effective"] == "2026-03-17"
-
-
-def test_seed_draft_falls_back_to_anthropic_when_no_gemini(tmp_path):
-    artifact_dir = tmp_path / "artifacts" / "hamilton-pool" / ("a" * 12)
-    _write_provider(artifact_dir, "anthropic", "claude-sonnet-4-6", "a" * 64)
-    drafts_root = tmp_path / "drafts"
-
-    path = seed_draft(
-        candidate=_make_candidate(artifact_dir, "a" * 64),
-        drafts_root=drafts_root,
-        today=date(2026, 4, 19),
-    )
-    envelope = json.loads(path.read_text())
-    assert envelope["reviewed_against"][0]["provider"] == "anthropic"
-
-
-def test_seed_draft_falls_back_to_latest_mtime_for_unknown_provider(tmp_path):
-    artifact_dir = tmp_path / "artifacts" / "hamilton-pool" / ("a" * 12)
-    older = _write_provider(artifact_dir, "future", "model-v1", "a" * 64)
-    newer = _write_provider(artifact_dir, "other", "model-v2", "a" * 64)
-    import os, time
-    os.utime(older, (time.time() - 100, time.time() - 100))
-    os.utime(newer, (time.time(), time.time()))
-
-    path = seed_draft(
-        candidate=_make_candidate(artifact_dir, "a" * 64),
-        drafts_root=tmp_path / "drafts",
-        today=date(2026, 4, 19),
-    )
-    envelope = json.loads(path.read_text())
-    assert envelope["reviewed_against"][0]["provider"] == "other"
 
 
 def test_seed_draft_is_idempotent(tmp_path):
@@ -107,24 +73,6 @@ def test_seed_draft_is_idempotent(tmp_path):
 
     assert first == second
     assert '"reviewed_by": "Chris Zehner <cbzehner@gmail.com>"' in second.read_text()
-
-
-def test_seed_draft_writes_relative_artifact_relpath(tmp_path):
-    artifact_dir = tmp_path / "artifacts" / "hamilton-pool" / ("a" * 12)
-    _write_provider(artifact_dir, "gemini", "gemini-3.1-flash-lite-preview", "a" * 64)
-    _write_provider(artifact_dir, "anthropic", "claude-sonnet-4-6", "a" * 64)
-
-    path = seed_draft(
-        candidate=_make_candidate(artifact_dir, "a" * 64),
-        drafts_root=tmp_path / "drafts",
-        today=date(2026, 4, 19),
-    )
-    envelope = json.loads(path.read_text())
-    for descriptor in envelope["reviewed_against"]:
-        relpath = descriptor["artifact_relpath"]
-        assert not relpath.startswith("/"), relpath
-        assert "hamilton-pool" in relpath
-        assert relpath.endswith(".json")
 
 
 def test_seed_draft_uses_pacific_time_for_today(tmp_path, monkeypatch):

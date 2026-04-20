@@ -8,14 +8,11 @@ from pathlib import Path
 from .paths import REVIEWED_SNAPSHOTS_DIR, relative_to_repo
 
 
-REVIEWED_SNAPSHOT_VERSION = 1
 _REQUIRED_ENVELOPE_FIELDS = (
-    "version",
     "slug",
     "pdf_sha256",
     "reviewed_at",
     "source_pdf_url",
-    "reviewed_against",
     "payload",
 )
 
@@ -45,10 +42,6 @@ def _validate_envelope(raw: dict, path: Path, *, expected_slug: str, expected_pd
     missing = [field for field in _REQUIRED_ENVELOPE_FIELDS if field not in raw]
     if missing:
         raise ValueError(f"{path} is missing required field(s): {', '.join(missing)}")
-    if raw["version"] != REVIEWED_SNAPSHOT_VERSION:
-        raise ValueError(
-            f"{path} has version={raw['version']!r}, expected {REVIEWED_SNAPSHOT_VERSION}"
-        )
     if raw["slug"] != expected_slug:
         raise ValueError(
             f"{path} envelope slug={raw['slug']!r} does not match directory slug={expected_slug!r}"
@@ -59,8 +52,6 @@ def _validate_envelope(raw: dict, path: Path, *, expected_slug: str, expected_pd
         )
     if not isinstance(raw["payload"], dict):
         raise ValueError(f"{path} payload must be an object")
-    if not isinstance(raw["reviewed_against"], list):
-        raise ValueError(f"{path} reviewed_against must be a list")
 
 
 def load_reviewed_snapshot(
