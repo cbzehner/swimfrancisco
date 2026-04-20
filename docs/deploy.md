@@ -1,4 +1,4 @@
-# SwimFrancisco Deploy Guide
+# Swim Francisco Deploy Guide
 
 Deploy is a single Cloudflare Worker (`swimfrancisco`) running in the
 unified Workers Builds model: the same script serves the built Zola site

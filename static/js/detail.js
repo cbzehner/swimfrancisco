@@ -1,4 +1,4 @@
-// SwimFrancisco pool detail page.
+// Swim Francisco pool detail page.
 // Reads the schedule embedded in .detail-root[data-schedule], hydrates the
 // status slab, and decorates the today block. Pure computation lives in
 // ./helpers/board.mjs (exercised by node:test). Today's column marker and

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "SwimFrancisco conditions Worker — hourly cron fetches NOAA/NDBC, serves /api/conditions.",
+  "description": "Swim Francisco conditions Worker — hourly cron fetches NOAA/NDBC, serves /api/conditions.",
   "scripts": {
     "dev": "wrangler dev --test-scheduled",
     "deploy": "wrangler deploy",

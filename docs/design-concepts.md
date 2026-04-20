@@ -1,4 +1,4 @@
-# SwimFrancisco Design Concepts
+# Swim Francisco Design Concepts
 
 ## Concept 1: "The Water Line"
 

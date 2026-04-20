@@ -1,4 +1,4 @@
-"""Schedule extraction tooling for SwimFrancisco."""
+"""Schedule extraction tooling for Swim Francisco."""
 
 __all__ = ["__version__"]
 

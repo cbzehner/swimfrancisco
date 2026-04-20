@@ -1,4 +1,4 @@
-// SwimFrancisco departure-board status computation.
+// Swim Francisco departure-board status computation.
 // Pure helpers live in ./helpers/board.mjs and are exercised by node:test;
 // this file handles the DOM glue.
 

@@ -1,4 +1,4 @@
-// SwimFrancisco departure-board filters (Step 12).
+// Swim Francisco departure-board filters (Step 12).
 // Wires up the Open Now toggle, Type pills (lap_swim /
 // family_swim / open_water), and Near Me button. Each change re-applies
 // visibility + sort and retriggers the split-flap animation on visible rows.

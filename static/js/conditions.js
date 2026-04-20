@@ -1,4 +1,4 @@
-// SwimFrancisco open-water live conditions.
+// Swim Francisco open-water live conditions.
 // Fetches /api/conditions from the Worker and injects water temp into
 // matching rows on the departure board and the detail page panel.
 // Fails silently — missing data leaves the existing em-dash placeholders.

@@ -1,4 +1,4 @@
-// Pure helpers for the SwimFrancisco departure board.
+// Pure helpers for the Swim Francisco departure board.
 //
 // Extracted from status.js / filters.js so they can be exercised under
 // node:test without a DOM. DOM-facing wrappers live in the parent files and
@@ -35,7 +35,7 @@ export function formatHHMM(totalMinutes) {
 
 // Return a Date whose local getters (getFullYear, getMonth, getDate, getDay,
 // getHours, getMinutes, getSeconds) reflect the wall-clock in
-// America/Los_Angeles. Every SwimFrancisco pool is in San Francisco, so the
+// America/Los_Angeles. Every Swim Francisco pool is in San Francisco, so the
 // entire site should present and reason about time in Pacific, regardless of
 // the visitor's browser locale. The returned Date's UTC components are a lie
 // — only the local getters are meaningful.

@@ -1,4 +1,4 @@
-# SwimFrancisco Conditions Worker
+# Swim Francisco Conditions Worker
 
 Cloudflare Worker that fetches water conditions from NOAA CO-OPS and NDBC, assembles per-spot records, and serves them as JSON.
 

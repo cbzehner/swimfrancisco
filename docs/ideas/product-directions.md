@@ -1,4 +1,4 @@
-# SwimFrancisco Product Directions
+# Swim Francisco Product Directions
 
 Product ideas extracted from the 2026-04-17 review. These are
 intentionally kept out of the fix plan (`docs/plans/review-followup.md`)

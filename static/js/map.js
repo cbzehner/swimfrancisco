@@ -1,4 +1,4 @@
-// SwimFrancisco map view.
+// Swim Francisco map view.
 // Only loaded on /map/. Initializes Leaflet, renders one marker per spot
 // that is visible under the current filters, and re-renders on
 // `sf:filters-applied`. No client-side view toggling — the VIEW BOARD link

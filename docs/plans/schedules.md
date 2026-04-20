@@ -89,7 +89,7 @@ started_at: 2026-04-17T01:25:21-07:00
 work_unit_granularity: step
 ---
 
-# SwimFrancisco Pool Schedule Extraction Plan
+# Swim Francisco Pool Schedule Extraction Plan
 
 Reference: [docs/spec.md](../spec.md) ("Scraping Pipeline v2"), [docs/plans/archived/plan-v1.md](archived/plan-v1.md)
 

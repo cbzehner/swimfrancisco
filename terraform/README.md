@@ -1,4 +1,4 @@
-# SwimFrancisco Terraform
+# Swim Francisco Terraform
 
 Manages the Cloudflare infrastructure around the `swimfrancisco` Worker:
 KV namespaces, the `www` CNAME + redirect, and the apex→Worker custom-domain

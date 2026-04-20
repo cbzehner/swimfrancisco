@@ -1,4 +1,4 @@
-// SwimFrancisco mobile tap-to-expand (Step 16).
+// Swim Francisco mobile tap-to-expand (Step 16).
 //
 // On narrow viewports (<=640px) the board hides TYPE and NEXT columns (see
 // sass/main.scss responsive block). To keep the condensed row useful, tapping

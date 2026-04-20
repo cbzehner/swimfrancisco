@@ -1,4 +1,4 @@
-# SwimFrancisco Spec
+# Swim Francisco Spec
 
 ## Overview
 swimfrancisco.com — a live-updating database of all the places to swim in San Francisco. Utility-first: answers "where can I swim right now?"

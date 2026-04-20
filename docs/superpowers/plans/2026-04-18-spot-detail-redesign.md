@@ -1776,7 +1776,7 @@ rendered). Description keeps natural case — uppercase is chrome only."
 Write this file to `static/js/detail.js`:
 
 ```js
-// SwimFrancisco pool detail page.
+// Swim Francisco pool detail page.
 // Reads the schedule embedded in .detail-root[data-schedule], hydrates the
 // status slab, injects the today block, marks today's column in the weekly
 // grid, and updates the freshness dot. Pure computation lives in

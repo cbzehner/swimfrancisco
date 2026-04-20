@@ -1,4 +1,4 @@
-# SwimFrancisco
+# Swim Francisco
 
 A "departure board" for San Francisco swim spots — 9 city pools and 5 open-water locations — with live open/closed status, water temperatures, and tide predictions.
 

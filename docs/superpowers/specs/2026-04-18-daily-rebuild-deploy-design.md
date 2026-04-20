@@ -2,7 +2,7 @@
 
 **Status:** Draft
 **Date:** 2026-04-18
-**Topic:** Daily midnight-PT rebuild of the SwimFrancisco static site via a Worker cron firing a Workers Builds deploy hook, Terraform-managed Cloudflare infra, and removal of the client-side JavaScript that compensated for the site not rebuilding daily.
+**Topic:** Daily midnight-PT rebuild of the Swim Francisco static site via a Worker cron firing a Workers Builds deploy hook, Terraform-managed Cloudflare infra, and removal of the client-side JavaScript that compensated for the site not rebuilding daily.
 
 **Supersedes:** `docs/superpowers/plans/2026-04-18-daily-rebuild-static-cleanup.md` — the existing plan targets Cloudflare Pages and manages no infra. This spec keeps the same end-state intent but lands it on Workers Builds with Terraform-backed infra.
 
@@ -24,7 +24,7 @@
 
 ## Architecture
 
-SwimFrancisco runs as a single Cloudflare Worker in the unified Workers Builds model. The Worker serves the built Zola site as static assets (via `[assets]` in `wrangler.toml`) and handles `/api/*` in its `fetch` handler. There is no separate Pages project.
+Swim Francisco runs as a single Cloudflare Worker in the unified Workers Builds model. The Worker serves the built Zola site as static assets (via `[assets]` in `wrangler.toml`) and handles `/api/*` in its `fetch` handler. There is no separate Pages project.
 
 Three deploy paths converge on the same Worker:
 

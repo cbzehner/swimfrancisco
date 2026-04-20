@@ -1,4 +1,4 @@
-// SwimFrancisco conditions Worker.
+// Swim Francisco conditions Worker.
 // - Cron (hourly): fetch NOAA 9414290 + fallback 9414750 (bay temp + tides)
 //   and NDBC 46237 (ocean temp); assemble per-spot records; write KV.
 // - HTTP: GET /api/conditions → bulk `all`; GET /api/conditions/:slug → spot.

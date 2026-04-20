@@ -1,5 +1,5 @@
 base_url = "https://swimfrancisco.com"
-title = "SwimFrancisco"
+title = "Swim Francisco"
 description = "Live-updating database of all the places to swim in San Francisco"
 default_language = "en"
 compile_sass = true
