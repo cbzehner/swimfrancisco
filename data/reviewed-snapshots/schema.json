@@ -94,8 +94,8 @@
         },
         "sessions": {
           "type": "array",
-          "minItems": 5,
-          "description": "Weekly swim sessions. Validator rejects payloads with fewer than 5.",
+          "minItems": 1,
+          "description": "Weekly swim sessions. validate() rejects payloads with fewer than 5; schema only enforces shape.",
           "items": { "$ref": "#/$defs/session" }
         },
         "closures": {

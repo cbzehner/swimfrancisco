@@ -223,3 +223,69 @@ def seed_draft(
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(_json.dumps(envelope, indent=2) + "\n")
     return path
+
+
+from .envelope import EnvelopeValidationError, validate_envelope
+from .paths import CONTENT_SPOTS_DIR
+from .project import ProjectError, project
+from .validate import validate
+
+
+class FinalizeError(RuntimeError):
+    """Raised when finalizing a draft fails; message is reviewer-facing."""
+
+
+def finalize_draft(
+    *,
+    draft_path: Path,
+    snapshots_root: Path = REVIEWED_SNAPSHOTS_DIR,
+    content_spots_dir: Path = CONTENT_SPOTS_DIR,
+) -> Path:
+    """Finalize a draft envelope into a reviewed snapshot and project its MD.
+
+    Returns the final snapshot path on success. Leaves the draft in place
+    on any failure. Commit point is the os.rename; project() runs after.
+    """
+    try:
+        raw = _json.loads(draft_path.read_text())
+    except _json.JSONDecodeError as exc:
+        raise FinalizeError(f"{draft_path}: invalid JSON: {exc.msg} at line {exc.lineno}") from exc
+    except OSError as exc:
+        raise FinalizeError(f"{draft_path}: cannot read: {exc}") from exc
+
+    if not isinstance(raw, dict):
+        raise FinalizeError(f"{draft_path}: envelope must be a JSON object")
+
+    try:
+        validate_envelope(raw)
+    except EnvelopeValidationError as exc:
+        raise FinalizeError(f"schema: {exc}") from exc
+
+    result = validate(raw.get("payload", {}))
+    if not result.ok:
+        raise FinalizeError("; ".join(result.violations))
+
+    slug = raw["slug"]
+    pdf_sha256 = raw["pdf_sha256"]
+    reviewed_at = raw["reviewed_at"]
+    destination = snapshots_root / slug / f"{reviewed_at}-{pdf_sha256[:12]}.json"
+
+    if destination.exists():
+        raise FinalizeError(
+            f"destination {destination} already exists; resolve by deleting either "
+            "the existing snapshot or the draft, then retry"
+        )
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    import os as _os
+    _os.rename(draft_path, destination)
+
+    try:
+        project(slug=slug, snapshots_root=snapshots_root, content_spots_dir=content_spots_dir)
+    except ProjectError as exc:
+        raise FinalizeError(
+            f"snapshot committed at {destination}, but projection failed: {exc}. "
+            f"Re-run `schedules project {slug}` to finish."
+        ) from exc
+
+    return destination
