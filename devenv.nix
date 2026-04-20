@@ -57,12 +57,12 @@
 
   processes.zola.exec = ''
     watchexec --no-vcs-ignore \
-      --watch content --watch templates --watch sass --watch static --watch config.toml \
+      --watch content --watch templates --watch static --watch config.toml \
       -- zola build --base-url http://localhost:8787
   '';
   # Wrangler dev snapshots `public/` at startup and doesn't hot-reload static
   # assets. Wrap it in a watchexec that restarts the server whenever the Zola
-  # watcher rewrites public/, so template/SCSS edits are picked up without a
+  # watcher rewrites public/, so template/CSS edits are picked up without a
   # manual `devenv up` restart. Debounce swallows Zola's multi-file write burst.
   processes.worker.exec = ''
     watchexec --no-vcs-ignore --restart --debounce 500ms --watch public \
