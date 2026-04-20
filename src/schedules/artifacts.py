@@ -5,57 +5,47 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from .models import GroundingResult, PdfSignals
-from .paths import ARTIFACTS_DIR, relative_to_repo, slugify
+from .models import GroundingResult
+from .paths import DATA_DIR, artifact_path, relative_to_repo
+
+
+def _sha256_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _sha256_json(value: dict) -> str:
+    return hashlib.sha256(json.dumps(value, sort_keys=True).encode("utf-8")).hexdigest()
 
 
 def save_artifact_bundle(
     *,
     slug: str,
+    date: str,
     provider: str,
     model: str,
-    pdf_url: str,
+    source_pdf_url: str,
     pdf_sha256: str,
-    pdf_signals: PdfSignals,
     prompt: str,
     schema: dict,
     payload: dict,
     usage: dict,
     cost_estimate: str,
     grounding: GroundingResult | None = None,
-    root: Path = ARTIFACTS_DIR,
+    root: Path = DATA_DIR,
 ) -> dict[str, str]:
-    artifact_dir = root / slug / pdf_sha256[:12]
-    artifact_dir.mkdir(parents=True, exist_ok=True)
+    target = artifact_path(slug, date, pdf_sha256, provider, model, root=root)
+    target.parent.mkdir(parents=True, exist_ok=True)
 
-    meta_path = artifact_dir / "meta.json"
-    provider_path = artifact_dir / f"{provider}-{slugify(model)}.json"
-
-    meta = {
-        "slug": slug,
-        "pdf_url": pdf_url,
-        "pdf_sha256": pdf_sha256,
-        "pdf_page_count": pdf_signals.page_count,
-        "pdf_text_sha256": pdf_signals.text_sha256,
-        "grid_header_pages": pdf_signals.grid_header_pages,
-        "timed_lesson_line_count": pdf_signals.timed_lesson_line_count,
-        "prompt_hash": _sha256_text(prompt),
-        "schema_hash": hashlib.sha256(json.dumps(schema, sort_keys=True).encode("utf-8")).hexdigest(),
-        "updated_at": datetime.now(timezone.utc).isoformat(),
-    }
-    meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n")
-
-    provider_payload = {
-        "slug": slug,
+    provider_payload: dict = {
         "provider": provider,
         "model": model,
-        "pdf_url": pdf_url,
+        "extracted_at": datetime.now(timezone.utc).isoformat(),
+        "prompt_sha256": _sha256_text(prompt),
+        "schema_sha256": _sha256_json(schema),
+        "source_pdf_url": source_pdf_url,
         "pdf_sha256": pdf_sha256,
-        "pdf_page_count": pdf_signals.page_count,
-        "pdf_text_sha256": pdf_signals.text_sha256,
         "usage": usage,
         "cost_estimate": cost_estimate,
-        "extracted_at": datetime.now(timezone.utc).isoformat(),
         "payload": payload,
     }
     if grounding is not None:
@@ -75,15 +65,31 @@ def save_artifact_bundle(
                 for entry in grounding.sessions
             ],
         }
-    provider_path.write_text(json.dumps(provider_payload, indent=2, sort_keys=True) + "\n")
+    target.write_text(json.dumps(provider_payload, indent=2, sort_keys=True) + "\n")
 
-    return {
-        "meta": relative_to_repo(meta_path),
-        provider: relative_to_repo(provider_path),
-    }
+    return {provider: relative_to_repo(target)}
 
 
-def _sha256_text(value: str) -> str:
-    return hashlib.sha256(value.encode("utf-8")).hexdigest()
-
-
+def skip_if_fresh(
+    *,
+    slug: str,
+    date: str,
+    pdf_sha256: str,
+    provider: str,
+    model: str,
+    prompt: str,
+    schema: dict,
+    root: Path = DATA_DIR,
+) -> bool:
+    """Return True iff a cached provider JSON exists and its hashes match."""
+    provider_file = artifact_path(slug, date, pdf_sha256, provider, model, root=root)
+    if not provider_file.exists():
+        return False
+    try:
+        data = json.loads(provider_file.read_text())
+    except (OSError, json.JSONDecodeError):
+        return False
+    return (
+        data.get("prompt_sha256") == _sha256_text(prompt)
+        and data.get("schema_sha256") == _sha256_json(schema)
+    )

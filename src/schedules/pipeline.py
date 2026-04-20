@@ -183,11 +183,11 @@ def run_pipeline(
                 review_notes.extend(check_delta(payload, prior_snapshot))
                 artifact_paths = save_artifact_bundle(
                     slug=entry.slug,
+                    date=fetch_result.path.name[:10],
                     provider=provider,
                     model=model,
-                    pdf_url=entry.pdf_url,
+                    source_pdf_url=entry.pdf_url,
                     pdf_sha256=fetch_result.sha256,
-                    pdf_signals=pdf_signals,
                     prompt=prompt,
                     schema=EXTRACTION_SCHEMA,
                     payload=payload,
@@ -206,11 +206,11 @@ def run_pipeline(
                     artifact_paths.update(
                         save_artifact_bundle(
                             slug=entry.slug,
+                            date=fetch_result.path.name[:10],
                             provider=compare_with,
                             model=compare.model,
-                            pdf_url=entry.pdf_url,
+                            source_pdf_url=entry.pdf_url,
                             pdf_sha256=fetch_result.sha256,
-                            pdf_signals=pdf_signals,
                             prompt=prompt,
                             schema=EXTRACTION_SCHEMA,
                             payload=compare.payload,
