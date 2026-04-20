@@ -1,7 +1,16 @@
-# Local Reviewer Tool — Design
+# Local Reviewer Tool — Design (ARCHIVED)
 
 Date: 2026-04-18
-Status: Draft for review (magi round 3 revisions applied)
+Status: **Archived 2026-04-19.** Superseded by the CLI-based reviewer spec at `docs/superpowers/specs/2026-04-19-reviewer-cli-design.md`.
+
+## Why this was archived
+
+This spec proposed a loopback HTTP server + Zola draft page + vanilla-JS browser UI with ETag concurrency, atomic write + rollback, read-back verification, delta-warning flow, and 14+ test files. A magi council review found 3 high-severity issues (silent drop of post-write verification, wrong `prior_sessions_count` into `validate()`, TOCTOU on concurrent saves) that were all consequences of the architectural choice to be a stateful concurrent server. The tool only has one user on one machine and is used maybe once a month — that architecture doesn't earn its complexity.
+
+The replacement design uses: helix (with a JSON-schema-aware LSP) in one terminal pane, macOS Preview in another window, a ~80-line `schedules review` CLI that seeds drafts from existing provider artifacts and moves approved drafts into the tracked `reviewed-snapshots/` tree. No server, no browser, no queue file — the filesystem is the state machine.
+
+---
+
 Depends on: `2026-04-18-pdf-layout-and-vocabulary-migration-design.md` (lands first).
 
 ## Purpose

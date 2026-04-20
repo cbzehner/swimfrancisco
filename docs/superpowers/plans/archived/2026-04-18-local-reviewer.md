@@ -1,4 +1,8 @@
-# Local Reviewer Tool Implementation Plan
+# Local Reviewer Tool Implementation Plan (ARCHIVED)
+
+**Status: Archived 2026-04-19, never executed.** This plan implements the browser-based reviewer design that was subsequently replaced with a CLI-based approach. See `docs/superpowers/specs/archived/2026-04-18-local-reviewer-design.md` for the archival rationale. The current design lives at `docs/superpowers/specs/2026-04-19-reviewer-cli-design.md` with its own plan.
+
+---
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
