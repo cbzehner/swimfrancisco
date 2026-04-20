@@ -21,7 +21,13 @@ def test_load_reviewed_snapshot(tmp_path):
                 "pdf_sha256": pdf_sha256,
                 "reviewed_at": "2026-04-18",
                 "source_pdf_url": "https://example.com/schedule.pdf",
-                "payload": {"schedule_effective": "2026-03-17", "sessions": [], "closures": []},
+                "payload": {
+                    "schedule_effective": "2026-03-17",
+                    "sessions": [
+                        {"day": "monday", "type": "lap_swim", "start": "07:00", "end": "08:00"}
+                    ],
+                    "closures": [],
+                },
             }
         )
     )
@@ -46,7 +52,13 @@ def _valid_envelope(slug, pdf_sha256):
         "pdf_sha256": pdf_sha256,
         "reviewed_at": "2026-04-18",
         "source_pdf_url": "https://example.com/schedule.pdf",
-        "payload": {"schedule_effective": "2026-03-17", "sessions": [], "closures": []},
+        "payload": {
+            "schedule_effective": "2026-03-17",
+            "sessions": [
+                {"day": "monday", "type": "lap_swim", "start": "07:00", "end": "08:00"}
+            ],
+            "closures": [],
+        },
     }
 
 
@@ -66,6 +78,16 @@ def test_load_reviewed_snapshot_rejects_missing_required_field(tmp_path):
     del envelope["source_pdf_url"]
     _write_snapshot(root, "hamilton-pool", pdf_sha256, envelope)
     with pytest.raises(ValueError, match="source_pdf_url"):
+        load_reviewed_snapshot("hamilton-pool", pdf_sha256, root=root)
+
+
+def test_load_reviewed_snapshot_rejects_extra_top_level_key(tmp_path):
+    root = tmp_path / "reviewed-snapshots"
+    pdf_sha256 = "a" * 64
+    envelope = _valid_envelope("hamilton-pool", pdf_sha256)
+    envelope["bogus_field"] = True
+    _write_snapshot(root, "hamilton-pool", pdf_sha256, envelope)
+    with pytest.raises(ValueError):
         load_reviewed_snapshot("hamilton-pool", pdf_sha256, root=root)
 
 
@@ -95,7 +117,7 @@ def test_load_reviewed_snapshot_from_path_rejects_invalid_envelope(tmp_path):
     slug_dir.mkdir(parents=True)
     path = slug_dir / "2026-04-18-abcabcabcabc.json"
     path.write_text("{}")
-    with pytest.raises(ValueError, match="pdf_sha256"):
+    with pytest.raises(ValueError):
         load_reviewed_snapshot_from_path(path, expected_slug="hamilton-pool")
 
 

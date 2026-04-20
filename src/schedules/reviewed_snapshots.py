@@ -5,16 +5,8 @@ import json
 from datetime import date
 from pathlib import Path
 
+from .envelope import EnvelopeValidationError, validate_envelope
 from .paths import REVIEWED_SNAPSHOTS_DIR, relative_to_repo
-
-
-_REQUIRED_ENVELOPE_FIELDS = (
-    "slug",
-    "pdf_sha256",
-    "reviewed_at",
-    "source_pdf_url",
-    "payload",
-)
 
 
 def reviewed_snapshot_path(slug: str, pdf_sha256: str, root: Path = REVIEWED_SNAPSHOTS_DIR) -> Path:
@@ -38,22 +30,6 @@ def reviewed_snapshot_path(slug: str, pdf_sha256: str, root: Path = REVIEWED_SNA
     return slug_dir / f"{date.today().isoformat()}-{prefix}.json"
 
 
-def _validate_envelope(raw: dict, path: Path, *, expected_slug: str, expected_pdf_sha256: str) -> None:
-    missing = [field for field in _REQUIRED_ENVELOPE_FIELDS if field not in raw]
-    if missing:
-        raise ValueError(f"{path} is missing required field(s): {', '.join(missing)}")
-    if raw["slug"] != expected_slug:
-        raise ValueError(
-            f"{path} envelope slug={raw['slug']!r} does not match directory slug={expected_slug!r}"
-        )
-    if raw["pdf_sha256"] != expected_pdf_sha256:
-        raise ValueError(
-            f"{path} envelope pdf_sha256 does not match filename sha256"
-        )
-    if not isinstance(raw["payload"], dict):
-        raise ValueError(f"{path} payload must be an object")
-
-
 def load_reviewed_snapshot(
     slug: str,
     pdf_sha256: str,
@@ -68,7 +44,16 @@ def load_reviewed_snapshot(
     if not isinstance(raw, dict):
         raise ValueError(f"{path} must contain a JSON object.")
 
-    _validate_envelope(raw, path, expected_slug=slug, expected_pdf_sha256=pdf_sha256)
+    try:
+        validate_envelope(raw)
+    except EnvelopeValidationError as exc:
+        raise ValueError(f"{path}: {exc}") from exc
+    if raw["slug"] != slug:
+        raise ValueError(
+            f"{path} envelope slug={raw['slug']!r} does not match directory slug={slug!r}"
+        )
+    if raw["pdf_sha256"] != pdf_sha256:
+        raise ValueError(f"{path} envelope pdf_sha256 does not match filename sha256")
 
     fingerprint = hashlib.sha256(json.dumps(raw, sort_keys=True).encode("utf-8")).hexdigest()
     return raw, fingerprint, relative_to_repo(path)
@@ -86,10 +71,14 @@ def load_reviewed_snapshot_from_path(
     raw = json.loads(path.read_text())
     if not isinstance(raw, dict):
         raise ValueError(f"{path} must contain a JSON object.")
-    pdf_sha256 = raw.get("pdf_sha256")
-    if not isinstance(pdf_sha256, str):
-        raise ValueError(f"{path} missing or invalid pdf_sha256")
-    _validate_envelope(raw, path, expected_slug=expected_slug, expected_pdf_sha256=pdf_sha256)
+    try:
+        validate_envelope(raw)
+    except EnvelopeValidationError as exc:
+        raise ValueError(f"{path}: {exc}") from exc
+    if raw["slug"] != expected_slug:
+        raise ValueError(
+            f"{path} envelope slug={raw['slug']!r} does not match directory slug={expected_slug!r}"
+        )
     fingerprint = hashlib.sha256(json.dumps(raw, sort_keys=True).encode("utf-8")).hexdigest()
     return raw, fingerprint, relative_to_repo(path)
 
