@@ -13,7 +13,7 @@
 //     it reads the correct status cell text and preserves the baseline order
 //     when Distance sort is not active.
 //
-// Contract with main.scss (.flap / --flap-index):
+// Contract with main.css (.flap / --flap-index):
 //   - Set CSS custom property `--flap-index` on each visible row (integer,
 //     0..N-1 in sorted order) and add the `.flap` class. Animation is on
 //     the <td> cells; listen for animationend bubbling up to the <tr> and

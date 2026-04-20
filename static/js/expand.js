@@ -1,13 +1,13 @@
 // Swim Francisco mobile tap-to-expand (Step 16).
 //
 // On narrow viewports (<=640px) the board hides TYPE and TEMP columns, and
-// below 420px STATUS is also hidden (see sass/main.scss responsive block).
+// below 420px STATUS is also hidden (see static/main.css responsive block).
 // To keep the condensed row useful, tapping anywhere on a row — except the
 // SPOT link itself — toggles an expanded sibling <tr class="row-detail">
 // surfacing the hidden values (TYPE, STATUS, TEMP) plus a destination link.
 // Tapping the anchor still navigates to /spots/:slug/.
 //
-// Contract with main.scss:
+// Contract with main.css:
 //   - `.row-detail { display: none }` by default (already present).
 //   - `tbody tr[aria-expanded="true"] + tr.row-detail { display: table-row }`
 //     inside the (max-width:640px) block (already present). Desktop users

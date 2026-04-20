@@ -1,7 +1,7 @@
-// Swim Francisco — departure board styles (Step 8)
-// Active filter convention: button[aria-pressed="true"].
-// Step 12 JS will toggle aria-pressed on filter buttons and aria-expanded on
-// tbody rows for mobile tap-to-expand. No HTML changes needed here.
+/* Swim Francisco — departure board styles (Step 8)
+   Active filter convention: button[aria-pressed="true"].
+   Step 12 JS will toggle aria-pressed on filter buttons and aria-expanded on
+   tbody rows for mobile tap-to-expand. No HTML changes needed here. */
 
 :root {
   --bg: #1a1a2e;
@@ -50,7 +50,7 @@ a {
   }
 }
 
-// --- No-JS notice --------------------------------------------------------
+/* --- No-JS notice -------------------------------------------------------- */
 
 .noscript-notice {
   border: 1px solid var(--fg);
@@ -62,11 +62,11 @@ a {
   letter-spacing: 0.05em;
 }
 
-// --- Site header row (title + header-level actions) ---------------------
-// Header actions (NEAREST sort, VIEW MAP) live opposite the H1. Grouping
-// them here — rather than inline with filter pills — keeps the controls
-// row pure filters, since sort and view-mode reorder/reshape the board
-// but never hide rows.
+/* --- Site header row (title + header-level actions) ---------------------
+   Header actions (NEAREST sort, VIEW MAP) live opposite the H1. Grouping
+   them here — rather than inline with filter pills — keeps the controls
+   row pure filters, since sort and view-mode reorder/reshape the board
+   but never hide rows. */
 
 .site-header-row {
   display: flex;
@@ -87,7 +87,7 @@ a {
   gap: 0.5rem;
 }
 
-// --- Controls row (filters only) ----------------------------------------
+/* --- Controls row (filters only) ---------------------------------------- */
 
 .board-controls {
   display: flex;
@@ -97,24 +97,24 @@ a {
   margin: 1rem 0;
 }
 
-// --- Filter pills --------------------------------------------------------
+/* --- Filter pills -------------------------------------------------------- */
 
 .filters {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem 1rem;
 
-  .filter-group {
+  & .filter-group {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
   }
 }
 
-// Sort controls live in the header actions row alongside VIEW MAP. They
-// share the pill styling below with filter buttons for visual consistency,
-// but are placed separately because a sort reorders rows rather than
-// hiding them.
+/* Sort controls live in the header actions row alongside VIEW MAP. They
+   share the pill styling below with filter buttons for visual consistency,
+   but are placed separately because a sort reorders rows rather than
+   hiding them. */
 .sort-group {
   display: flex;
   flex-wrap: wrap;
@@ -148,8 +148,8 @@ a {
   }
 }
 
-// Sort button — square block, matches the view switcher since both live
-// in the header actions row and act as page-level controls, not filters.
+/* Sort button — square block, matches the view switcher since both live
+   in the header actions row and act as page-level controls, not filters. */
 .sort-group button {
   background: transparent;
   color: var(--fg);
@@ -177,16 +177,16 @@ a {
   }
 }
 
-// Active-sort indicator: when Nearest is pressed the rows run nearest →
-// farthest, so a trailing down-arrow visually matches the table order.
+/* Active-sort indicator: when Nearest is pressed the rows run nearest →
+   farthest, so a trailing down-arrow visually matches the table order. */
 .sort-group button[aria-pressed="true"]::after {
   content: " ↓";
   margin-left: 0.25rem;
 }
 
-// --- View switcher (BOARD ↔ MAP) ----------------------------------------
-// Distinct visual identity from filters: rectangular button, not a pill,
-// because this is a view-mode toggle, not a filter predicate.
+/* --- View switcher (BOARD ↔ MAP) ----------------------------------------
+   Distinct visual identity from filters: rectangular button, not a pill,
+   because this is a view-mode toggle, not a filter predicate. */
 
 .view-switcher .view-switcher-link {
   display: inline-block;
@@ -212,15 +212,15 @@ a {
   }
 }
 
-// --- Departure board -----------------------------------------------------
+/* --- Departure board ----------------------------------------------------- */
 
 table.board {
   width: 100%;
   border-collapse: collapse;
   margin: 1rem 0 2rem;
 
-  th,
-  td {
+  & th,
+  & td {
     text-align: left;
     padding: 0.5rem 0.75rem;
     text-transform: uppercase;
@@ -228,33 +228,33 @@ table.board {
     font-size: 0.9rem;
   }
 
-  thead th {
+  & thead th {
     color: var(--fg);
     border-bottom: 1px solid var(--fg);
     font-weight: 700;
   }
 
-  tbody td {
+  & tbody td {
     border-bottom: 1px solid var(--row-sep);
   }
 
-  tbody tr:hover td {
+  & tbody tr:hover td {
     background: rgba(245, 197, 24, 0.05);
   }
 
-  th:first-child,
-  td:first-child {
+  & th:first-child,
+  & td:first-child {
     min-width: 14ch;
   }
 }
 
-// Mobile tap-to-expand hook (Step 12 JS toggles aria-expanded on <tr>, and
-// optionally inserts a following <tr class="row-detail">). Hidden by default.
+/* Mobile tap-to-expand hook (Step 12 JS toggles aria-expanded on <tr>, and
+   optionally inserts a following <tr class="row-detail">). Hidden by default. */
 .row-detail {
   display: none;
 }
 
-// --- Detail page --------------------------------------------------------
+/* --- Detail page -------------------------------------------------------- */
 
 .back,
 .address,
@@ -272,13 +272,13 @@ table.board {
   gap: 0.35rem 1rem;
   margin: 0.5rem 0;
 
-  dt {
+  & dt {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--fg-dim);
   }
 
-  dd {
+  & dd {
     margin: 0;
   }
 }
@@ -290,7 +290,7 @@ table.board {
   padding: 0;
   margin: 0.5rem 0;
 
-  li {
+  & li {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     padding: 0.25rem 0;
@@ -306,15 +306,15 @@ table.board {
   margin-top: 1.5rem;
 }
 
-// --- Split-flap animation ----------------------------------------------
-// Step 12 JS contract:
-//   - JS sets inline `style="--flap-index: <N>"` on each <tr> to stagger
-//     the flip (N = row's new sorted position).
-//   - JS adds `.flap` to trigger the animation, and removes it on
-//     `animationend` so the class can be re-applied on the next change.
-// Animation is applied to <td> cells rather than <tr>, because rows use
-// `display: table-row` which does not honor 3D transforms reliably.
-// Budget: 30ms stagger × ~14 rows = 420ms + 250ms flip ≈ 670ms worst case.
+/* --- Split-flap animation ----------------------------------------------
+   Step 12 JS contract:
+     - JS sets inline `style="--flap-index: <N>"` on each <tr> to stagger
+       the flip (N = row's new sorted position).
+     - JS adds `.flap` to trigger the animation, and removes it on
+       `animationend` so the class can be re-applied on the next change.
+   Animation is applied to <td> cells rather than <tr>, because rows use
+   `display: table-row` which does not honor 3D transforms reliably.
+   Budget: 30ms stagger × ~14 rows = 420ms + 250ms flip ≈ 670ms worst case. */
 
 @keyframes flap {
   0%   { transform: rotateX(0); }
@@ -326,7 +326,7 @@ table.board tbody tr.flap {
   transform-style: preserve-3d;
   backface-visibility: hidden;
 
-  td {
+  & td {
     animation: flap 360ms ease-in-out both;
     animation-delay: calc(var(--flap-index, 0) * 40ms);
     transform-origin: center;
@@ -340,7 +340,7 @@ table.board tbody tr.flap {
   }
 }
 
-// --- Map view -----------------------------------------------------------
+/* --- Map view ----------------------------------------------------------- */
 
 #map-view {
   height: 70vh;
@@ -355,18 +355,18 @@ table.board tbody tr.flap {
   letter-spacing: 0.05em;
   font-size: 0.85rem;
 
-  strong {
+  & strong {
     display: block;
     margin-bottom: 0.25rem;
   }
 
-  .sf-map-popup-meta {
+  & .sf-map-popup-meta {
     color: #333;
     font-size: 0.75rem;
   }
 }
 
-// --- Spot detail page (v2 redesign) -------------------------------------
+/* --- Spot detail page (v2 redesign) ------------------------------------- */
 
 .detail-root {
   display: flex;
@@ -456,7 +456,7 @@ table.board tbody tr.flap {
   justify-self: end;
 }
 
-// Weekly grid — desktop (default) -----------------------------------------
+/* Weekly grid — desktop (default) ----------------------------------------- */
 
 .weekly-grid-title {
   margin: 0 0 0.5rem;
@@ -518,8 +518,8 @@ table.board tbody tr.flap {
   font-weight: 700;
 }
 
-// Desktop: crossnavs live in the strip below the title; hide the
-// inline copy inside each row label. Mobile re-enables it below.
+/* Desktop: crossnavs live in the strip below the title; hide the
+   inline copy inside each row label. Mobile re-enables it below. */
 .weekly-grid-rowlabel .weekly-grid-crossnav {
   display: none;
 }
@@ -570,17 +570,17 @@ table.board tbody tr.flap {
   letter-spacing: 0;
 }
 
-// --- Responsive ---------------------------------------------------------
+/* --- Responsive --------------------------------------------------------- */
 
-// Phone-only breakpoint. Reserve this for the departure board's compact
-// interaction model and other handset-specific reductions.
+/* Phone-only breakpoint. Reserve this for the departure board's compact
+   interaction model and other handset-specific reductions. */
 @media (max-width: 640px) {
   main {
     padding: 1rem 0.75rem;
   }
 
-  // Site header: keep the view switcher in the top-right; title can shrink
-  // or wrap beneath it on very narrow viewports.
+  /* Site header: keep the view switcher in the top-right; title can shrink
+     or wrap beneath it on very narrow viewports. */
   .site-header-row {
     gap: 0.5rem;
   }
@@ -592,7 +592,7 @@ table.board tbody tr.flap {
   .filters {
     gap: 0.4rem 0.6rem;
 
-    .filter-group {
+    & .filter-group {
       gap: 0.35rem;
     }
   }
@@ -612,24 +612,24 @@ table.board tbody tr.flap {
     padding: 0.3rem 0.7rem;
   }
 
-  // Hide TYPE (col 2) and TEMP (col 5); keep SPOT, STATUS, NEXT.
-  // NEXT is more actionable than TEMP for pool-goers deciding whether to
-  // leave the house; TEMP still surfaces on expand + detail page.
+  /* Hide TYPE (col 2) and TEMP (col 5); keep SPOT, STATUS, NEXT.
+     NEXT is more actionable than TEMP for pool-goers deciding whether to
+     leave the house; TEMP still surfaces on expand + detail page. */
   table.board {
-    th:nth-child(2),
-    td:nth-child(2),
-    th:nth-child(5),
-    td:nth-child(5) {
+    & th:nth-child(2),
+    & td:nth-child(2),
+    & th:nth-child(5),
+    & td:nth-child(5) {
       display: none;
     }
   }
 
-  // Tap-to-expand: when a row is marked expanded, reveal the following
-  // detail row (Step 12 JS will inject / manage it).
+  /* Tap-to-expand: when a row is marked expanded, reveal the following
+     detail row (Step 12 JS will inject / manage it). */
   table.board tbody tr[aria-expanded="true"] + tr.row-detail {
     display: table-row;
 
-    td {
+    & td {
       grid-column: 1 / -1;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -643,23 +643,23 @@ table.board tbody tr.flap {
   }
 }
 
-// Narrow-phone breakpoint: drop STATUS too, leaving only SPOT + NEXT.
-// At this width the OPEN NOW filter does the work STATUS would; users
-// scanning an unfiltered board see "NEXT" as the universal signal.
+/* Narrow-phone breakpoint: drop STATUS too, leaving only SPOT + NEXT.
+   At this width the OPEN NOW filter does the work STATUS would; users
+   scanning an unfiltered board see "NEXT" as the universal signal. */
 @media (max-width: 420px) {
   table.board {
-    th:nth-child(3),
-    td:nth-child(3) {
+    & th:nth-child(3),
+    & td:nth-child(3) {
       display: none;
     }
   }
 }
 
-// Structural tablet breakpoint. Collapse the weekly grid before the table
-// starts to feel cramped, while keeping 640px reserved for phone-only board
-// behaviors above.
-// Row-label becomes a heading; day header row is hidden; each cell becomes a
-// row prefixed by its weekday abbreviation.
+/* Structural tablet breakpoint. Collapse the weekly grid before the table
+   starts to feel cramped, while keeping 640px reserved for phone-only board
+   behaviors above.
+   Row-label becomes a heading; day header row is hidden; each cell becomes a
+   row prefixed by its weekday abbreviation. */
 @media (max-width: 768px) {
   .weekly-grid-meta {
     display: block;
@@ -683,7 +683,7 @@ table.board tbody tr.flap {
     padding-top: 1rem;
   }
 
-  // Re-enable the inline crossnav inside the row label on mobile.
+  /* Re-enable the inline crossnav inside the row label on mobile. */
   .weekly-grid-rowlabel .weekly-grid-crossnav {
     display: inline;
   }
@@ -707,7 +707,7 @@ table.board tbody tr.flap {
   }
 }
 
-// Closure banners ---------------------------------------------------------
+/* Closure banners --------------------------------------------------------- */
 
 .closure-banners {
   display: flex;
@@ -739,7 +739,7 @@ table.board tbody tr.flap {
   flex: 1 1 auto;
 }
 
-// Freshness dot + meta ----------------------------------------------------
+/* Freshness dot + meta ---------------------------------------------------- */
 
 .meta-effective,
 .meta-freshness {
@@ -798,13 +798,13 @@ table.board tbody tr.flap {
   box-shadow: 0 0 0 1px var(--fg);
 }
 
-// Description block (moved from .notes) ----------------------------------
+/* Description block (moved from .notes) ---------------------------------- */
 
 .description {
   color: var(--fg-dim);
   font-size: 0.9rem;
   line-height: 1.5;
   margin-top: 1.5rem;
-  // Prose stays natural case — do NOT uppercase.
+  /* Prose stays natural case — do NOT uppercase. */
   text-transform: none;
 }

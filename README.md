@@ -11,8 +11,7 @@ A [Zola](https://www.getzola.org/) static site deployed on Cloudflare Pages. A c
 ```
 content/spots/   one .md per spot (TOML frontmatter)
 templates/       Zola/Tera templates (base, index, spots/page)
-static/          plain JS (conditions, filters, map, status, expand), _redirects
-sass/            main.scss (compiled to /main.css)
+static/          plain JS (conditions, filters, map, status, expand), main.css, _redirects
 worker/          Cloudflare Worker source (TypeScript)
 docs/            spec.md, plan.md, deploy.md, design-concepts.md
 ```
