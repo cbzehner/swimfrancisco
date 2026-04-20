@@ -492,6 +492,8 @@ table.board tbody tr.flap {
 
 // --- Responsive ---------------------------------------------------------
 
+// Phone-only breakpoint. Reserve this for the departure board's compact
+// interaction model and other handset-specific reductions.
 @media (max-width: 640px) {
   main {
     padding: 1rem 0.75rem;
@@ -532,11 +534,12 @@ table.board tbody tr.flap {
   }
 }
 
-// Weekly grid collapses to one-column stacks grouped by program once the
-// 7-column desktop layout can no longer fit the nowrap time ranges.
-// Row-label becomes a heading; day header row is hidden; each cell
-// becomes a row prefixed by its weekday abbreviation.
-@media (max-width: 850px) {
+// Structural tablet breakpoint. Collapse the weekly grid before the table
+// starts to feel cramped, while keeping 640px reserved for phone-only board
+// behaviors above.
+// Row-label becomes a heading; day header row is hidden; each cell becomes a
+// row prefixed by its weekday abbreviation.
+@media (max-width: 768px) {
   .weekly-grid-meta {
     display: block;
   }
