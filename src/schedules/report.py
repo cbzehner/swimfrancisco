@@ -109,8 +109,6 @@ def _render_pool_block(result: PoolResult) -> list[str]:
 
     if result.cost_estimate:
         lines.append(f"- usage: {result.cost_estimate}")
-    if result.pdf_text_sha256:
-        lines.append(f"- pdf_text_sha256: {result.pdf_text_sha256[:12]}")
     for name, pool_path in sorted(
         result.artifact_paths.items(),
         key=lambda item: (0 if item[0] == "reviewed-snapshot" else 1, item[0]),

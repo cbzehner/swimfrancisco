@@ -30,7 +30,6 @@ def _proposed(**overrides: object) -> Proposed:
         "schedule_effective": "2026-04-01",
         "invariants_passed": True,
         "cost_estimate": "$0.01",
-        "pdf_text_sha256": "b" * 64,
     }
     defaults.update(overrides)
     return Proposed(**defaults)  # type: ignore[arg-type]

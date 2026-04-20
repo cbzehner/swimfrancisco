@@ -126,7 +126,6 @@ class Unchanged(PoolResultBase):
     review_notes: list[ReviewNote] = field(default_factory=list)
     cost_estimate: str = "unchanged"
     artifact_paths: dict[str, str] = field(default_factory=dict)
-    pdf_text_sha256: str | None = None
 
 
 @dataclass(frozen=True)
@@ -143,7 +142,6 @@ class Proposed(PoolResultBase):
     schedule_effective: str | None
     invariants_passed: bool
     cost_estimate: str
-    pdf_text_sha256: str
     violations: list[str] = field(default_factory=list)
     review_notes: list[ReviewNote] = field(default_factory=list)
     artifact_paths: dict[str, str] = field(default_factory=dict)
@@ -170,7 +168,6 @@ class Failed(PoolResultBase):
     review_notes: list[ReviewNote] = field(default_factory=list)
     cost_estimate: str | None = None
     artifact_paths: dict[str, str] = field(default_factory=dict)
-    pdf_text_sha256: str | None = None
 
 
 PoolResult = Skipped | Unchanged | Proposed | Failed

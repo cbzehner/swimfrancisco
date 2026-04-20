@@ -58,7 +58,6 @@ def _proposed(slug: str, *, written: bool = True) -> Proposed:
         schedule_effective="2026-01-01",
         invariants_passed=True,
         cost_estimate="$0.01",
-        pdf_text_sha256="y",
         written=written,
     )
 

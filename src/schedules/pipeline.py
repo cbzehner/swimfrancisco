@@ -1,24 +1,25 @@
 from __future__ import annotations
 
+import json
+import os
 from pathlib import Path
 
-from .artifacts import save_artifact_bundle
+from .artifacts import save_artifact_bundle, skip_if_fresh
 from .delta import check_delta
+from .envelope import EnvelopeValidationError, validate_envelope
 from .fetch import fetch_pdf
 from .grounding import grounding_from_text, normalize_pdf_text
 from .merge import merge, read_schedule_snapshot
 from .models import Failed, GroundingResult, PoolEntry, PoolResult, Proposed, ReviewNote, Skipped, Unchanged
-from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH
+from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH, artifact_path, reviewed_path
 from .providers import extract as extract_with_provider
+from .providers.anthropic_provider import DEFAULT_MODEL as ANTHROPIC_DEFAULT_MODEL
+from .providers.gemini_provider import DEFAULT_MODEL as GEMINI_DEFAULT_MODEL
 from .registry import load_registry
-from .reviewed_snapshots import (
-    load_reviewed_snapshot,
-)
 from .diff import compare_payloads
 from .report import write_report
 from .schema import EXTRACTION_SCHEMA
 from .signals import analyze_page_texts, extract_page_texts, source_notes_for_payload
-from .state import build_state_entry, load_state, notes_for_entry, save_state
 from .validate import validate
 
 _GROUNDING_MIN_RATIO = 0.9
@@ -48,6 +49,14 @@ def _identity_kwargs(entry: PoolEntry) -> dict:
         "pdf_url": entry.pdf_url,
         "source_status": entry.source_status,
     }
+
+
+def _default_model(provider: str) -> str:
+    if provider == "gemini":
+        return os.getenv("SCHEDULES_GEMINI_MODEL", GEMINI_DEFAULT_MODEL)
+    if provider == "anthropic":
+        return os.getenv("SCHEDULES_ANTHROPIC_MODEL", ANTHROPIC_DEFAULT_MODEL)
+    raise ValueError(f"Unsupported provider {provider!r}.")
 
 
 def _grounding_notes(provider: str, grounding: GroundingResult) -> list[ReviewNote]:
@@ -92,6 +101,21 @@ def _grounding_notes(provider: str, grounding: GroundingResult) -> list[ReviewNo
     ]
 
 
+def _load_reviewed_envelope(path: Path, expected_slug: str, expected_sha: str) -> dict:
+    raw = json.loads(path.read_text())
+    if not isinstance(raw, dict):
+        raise ValueError(f"{path} must contain a JSON object.")
+    try:
+        validate_envelope(raw)
+    except EnvelopeValidationError as exc:
+        raise ValueError(f"{path}: {exc}") from exc
+    if raw["slug"] != expected_slug:
+        raise ValueError(f"{path} envelope slug does not match {expected_slug!r}")
+    if raw["pdf_sha256"] != expected_sha:
+        raise ValueError(f"{path} envelope pdf_sha256 does not match current PDF")
+    return raw
+
+
 def run_pipeline(
     *,
     slugs: list[str] | None,
@@ -108,12 +132,9 @@ def run_pipeline(
             raise ValueError(f"Unknown registry slug(s): {', '.join(missing)}")
 
     prompt = PROMPT_PATH.read_text().strip()
-    state = load_state()
     results: list[PoolResult] = []
-    state_dirty = False
 
     for entry in selected:
-        prior_state = state.get(entry.slug)
         prior_snapshot = read_schedule_snapshot(CONTENT_SPOTS_DIR / f"{entry.slug}.md")
 
         if entry.source_status != "published":
@@ -128,28 +149,26 @@ def run_pipeline(
 
         try:
             fetch_result = fetch_pdf(entry.slug, entry.pdf_url, force=force)
-            snapshot, snapshot_sha256, snapshot_path = load_reviewed_snapshot(entry.slug, fetch_result.sha256)
-            if (
-                not force
-                and not compare_with
-                and prior_state
-                and prior_state.get("pdf_sha256") == fetch_result.sha256
-                and prior_state.get("reviewed_snapshot_sha256") == snapshot_sha256
-            ):
+            date = fetch_result.path.parent.name[:10]
+            reviewed_file = reviewed_path(entry.slug, date, fetch_result.sha256)
+
+            # Fast-path: reviewed.json exists ⇒ the pool is locked to this PDF.
+            if not force and not compare_with and reviewed_file.exists():
+                envelope = _load_reviewed_envelope(reviewed_file, entry.slug, fetch_result.sha256)
+                payload = envelope["payload"]
                 results.append(
                     Unchanged(
                         **_identity_kwargs(entry),
-                        provider=str(prior_state.get("provider")),
-                        model=str(prior_state.get("model")),
+                        provider="reviewed-snapshot",
+                        model="manual-review",
                         pdf_sha256=fetch_result.sha256,
                         page_count=fetch_result.page_count,
-                        sessions_count=len(prior_snapshot["sessions"]),
-                        closures_count=len(prior_snapshot["closures"]),
-                        schedule_effective=str(prior_snapshot["schedule_effective"]),
-                        invariants_passed=True,  # merged content is by definition content that validated
-                        review_notes=notes_for_entry(prior_state),
-                        artifact_paths=dict(prior_state.get("artifact_paths") or {}),
-                        pdf_text_sha256=prior_state.get("pdf_text_sha256"),
+                        sessions_count=len(payload.get("sessions") or []),
+                        closures_count=len(payload.get("closures") or []),
+                        schedule_effective=str(payload.get("schedule_effective") or ""),
+                        invariants_passed=True,
+                        review_notes=[],
+                        artifact_paths={"reviewed-snapshot": str(reviewed_file)},
                     )
                 )
                 continue
@@ -158,17 +177,38 @@ def run_pipeline(
             pdf_signals = analyze_page_texts(page_texts)
             pdf_text_normalized = normalize_pdf_text(page_texts)
             prior_sessions_count = len(prior_snapshot["sessions"])
-            if snapshot and not compare_with:
-                payload = snapshot["payload"]
-                model = "manual-review"
-                usage = {}
-                cost_estimate = "reviewed-snapshot"
-                result_provider = "reviewed-snapshot"
+
+            # Extract-skip: provider cache matches current prompt+schema hashes.
+            default_model = _default_model(provider)
+            use_cached = (
+                not force
+                and not compare_with
+                and skip_if_fresh(
+                    slug=entry.slug,
+                    date=date,
+                    pdf_sha256=fetch_result.sha256,
+                    provider=provider,
+                    model=default_model,
+                    prompt=prompt,
+                    schema=EXTRACTION_SCHEMA,
+                )
+            )
+            if use_cached:
+                cached_path = artifact_path(
+                    entry.slug, date, fetch_result.sha256, provider, default_model
+                )
+                cached = json.loads(cached_path.read_text())
+                payload = cached["payload"]
+                model = cached.get("model", default_model)
+                usage = cached.get("usage") or {}
+                cost_estimate = cached.get("cost_estimate", "cached")
+                result_provider = provider
                 review_notes: list[ReviewNote] = []
-                snapshot_grounding = grounding_from_text(pdf_text_normalized, payload)
-                review_notes.extend(_grounding_notes("reviewed-snapshot", snapshot_grounding))
+                review_notes.extend(source_notes_for_payload(pdf_signals, payload))
+                cached_grounding = grounding_from_text(pdf_text_normalized, payload)
+                review_notes.extend(_grounding_notes(provider, cached_grounding))
                 review_notes.extend(check_delta(payload, prior_snapshot))
-                artifact_paths = {"reviewed-snapshot": str(snapshot_path)}
+                artifact_paths = {provider: str(cached_path)}
             else:
                 primary = extract_with_provider(provider, fetch_result.bytes, prompt, EXTRACTION_SCHEMA)
                 payload = primary.payload
@@ -183,7 +223,7 @@ def run_pipeline(
                 review_notes.extend(check_delta(payload, prior_snapshot))
                 artifact_paths = save_artifact_bundle(
                     slug=entry.slug,
-                    date=fetch_result.path.parent.name[:10],
+                    date=date,
                     provider=provider,
                     model=model,
                     source_pdf_url=entry.pdf_url,
@@ -206,7 +246,7 @@ def run_pipeline(
                     artifact_paths.update(
                         save_artifact_bundle(
                             slug=entry.slug,
-                            date=fetch_result.path.parent.name[:10],
+                            date=date,
                             provider=compare_with,
                             model=compare.model,
                             source_pdf_url=entry.pdf_url,
@@ -240,19 +280,6 @@ def run_pipeline(
             else:
                 merge_result = None
 
-            if write_allowed:
-                state[entry.slug] = build_state_entry(
-                    pdf_sha256=fetch_result.sha256,
-                    provider=result_provider,
-                    model=model,
-                    notes=review_notes,
-                    artifact_paths=artifact_paths,
-                    pdf_page_count=pdf_signals.page_count,
-                    pdf_text_sha256=pdf_signals.text_sha256,
-                    reviewed_snapshot_sha256=snapshot_sha256,
-                )
-                state_dirty = True
-
             result_prior_sessions = len(prior_snapshot["sessions"])
             if validation.catastrophic:
                 results.append(
@@ -271,7 +298,6 @@ def run_pipeline(
                         review_notes=review_notes,
                         cost_estimate=cost_estimate,
                         artifact_paths=artifact_paths,
-                        pdf_text_sha256=pdf_signals.text_sha256,
                     )
                 )
             else:
@@ -292,7 +318,6 @@ def run_pipeline(
                         cost_estimate=cost_estimate,
                         written=bool(merge_result and merge_result.written),
                         artifact_paths=artifact_paths,
-                        pdf_text_sha256=pdf_signals.text_sha256,
                     )
                 )
         except Exception as exc:  # noqa: BLE001
@@ -307,9 +332,6 @@ def run_pipeline(
                     schedule_effective=prior_snapshot["schedule_effective"],
                 )
             )
-
-    if state_dirty and not dry_run and compare_with is None:
-        save_state(state)
 
     report_path = write_report(results)
     return compute_exit_code(results), report_path, results
