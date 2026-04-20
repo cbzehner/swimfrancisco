@@ -1,10 +1,11 @@
 // Swim Francisco mobile tap-to-expand (Step 16).
 //
-// On narrow viewports (<=640px) the board hides TYPE and NEXT columns (see
-// sass/main.scss responsive block). To keep the condensed row useful, tapping
-// anywhere on a row — except the SPOT link itself — toggles an expanded
-// sibling <tr class="row-detail"> showing the full destination link and the
-// STATUS/NEXT values. Tapping the anchor still navigates to /spots/:slug/.
+// On narrow viewports (<=640px) the board hides TYPE and TEMP columns, and
+// below 420px STATUS is also hidden (see sass/main.scss responsive block).
+// To keep the condensed row useful, tapping anywhere on a row — except the
+// SPOT link itself — toggles an expanded sibling <tr class="row-detail">
+// surfacing the hidden values (TYPE, STATUS, TEMP) plus a destination link.
+// Tapping the anchor still navigates to /spots/:slug/.
 //
 // Contract with main.scss:
 //   - `.row-detail { display: none }` by default (already present).
@@ -28,20 +29,26 @@ function buildDetailContent(row) {
   const spotHref = spotAnchor ? spotAnchor.getAttribute("href") : `/spots/${slug}/`;
   const spotText = spotAnchor ? spotAnchor.textContent.trim() : slug;
   const cells = row.querySelectorAll("td");
+  const typeText = cells[1] ? cells[1].textContent.trim() : "";
   const statusText = cells[2] ? cells[2].textContent.trim() : "";
-  const nextText = cells[3] ? cells[3].textContent.trim() : "";
+  const tempText = cells[4] ? cells[4].textContent.trim() : "";
 
   const fragment = document.createDocumentFragment();
 
+  if (typeText && typeText !== "—") {
+    const typeLine = document.createElement("div");
+    typeLine.textContent = `TYPE: ${typeText}`;
+    fragment.appendChild(typeLine);
+  }
   if (statusText && statusText !== "—") {
     const statusLine = document.createElement("div");
     statusLine.textContent = `STATUS: ${statusText}`;
     fragment.appendChild(statusLine);
   }
-  if (nextText && nextText !== "—") {
-    const nextLine = document.createElement("div");
-    nextLine.textContent = `NEXT: ${nextText}`;
-    fragment.appendChild(nextLine);
+  if (tempText && tempText !== "—") {
+    const tempLine = document.createElement("div");
+    tempLine.textContent = `TEMP: ${tempText}`;
+    fragment.appendChild(tempLine);
   }
 
   const linkLine = document.createElement("div");

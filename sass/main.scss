@@ -612,12 +612,14 @@ table.board tbody tr.flap {
     padding: 0.3rem 0.7rem;
   }
 
-  // Hide TYPE (col 2) and NEXT (col 4); keep SPOT, STATUS, TEMP.
+  // Hide TYPE (col 2) and TEMP (col 5); keep SPOT, STATUS, NEXT.
+  // NEXT is more actionable than TEMP for pool-goers deciding whether to
+  // leave the house; TEMP still surfaces on expand + detail page.
   table.board {
     th:nth-child(2),
     td:nth-child(2),
-    th:nth-child(4),
-    td:nth-child(4) {
+    th:nth-child(5),
+    td:nth-child(5) {
       display: none;
     }
   }
@@ -638,6 +640,18 @@ table.board tbody tr.flap {
 
   .conditions dl {
     grid-template-columns: 1fr;
+  }
+}
+
+// Narrow-phone breakpoint: drop STATUS too, leaving only SPOT + NEXT.
+// At this width the OPEN NOW filter does the work STATUS would; users
+// scanning an unfiltered board see "NEXT" as the universal signal.
+@media (max-width: 420px) {
+  table.board {
+    th:nth-child(3),
+    td:nth-child(3) {
+      display: none;
+    }
   }
 }
 
