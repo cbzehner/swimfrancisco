@@ -1,9 +1,5 @@
 from __future__ import annotations
 
-from datetime import date
-
-import pytest
-
 from schedules import paths
 
 
@@ -50,11 +46,6 @@ def test_latest_reviewed_snapshot_picks_highest_date(tmp_path, monkeypatch):
     older.write_text("{}")
     newer.write_text("{}")
     assert paths.latest_reviewed_snapshot("hamilton-pool") == newer
-
-
-def test_reviewed_snapshot_drafts_dir_is_in_data():
-    from schedules.paths import DATA_DIR, REVIEWED_SNAPSHOT_DRAFTS_DIR
-    assert REVIEWED_SNAPSHOT_DRAFTS_DIR == DATA_DIR / "reviewed-snapshot-drafts"
 
 
 # Consolidated-layout helpers (Task 2): data/<slug>/<date>-<sha12>/

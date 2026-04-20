@@ -7,8 +7,10 @@ from pathlib import Path
 
 from .paths import (
     ARTIFACTS_DIR,
+    DATA_DIR,
     PDF_CACHE_DIR,
     REVIEWED_SNAPSHOTS_DIR,
+    reviewed_path,
 )
 
 
@@ -18,7 +20,7 @@ class ReviewCandidate:
     pdf_sha256: str
     artifact_dir: Path
     pdf_path: Path | None
-    pdf_date: str  # YYYY-MM-DD extracted from PDF filename; empty string if no PDF
+    fetch_date: str  # YYYY-MM-DD; first-seen date (from PDF filename or today)
 
 
 _PDF_NAME = re.compile(r"^(\d{4}-\d{2}-\d{2})-([0-9a-f]{12})\.pdf$")
@@ -109,17 +111,16 @@ def find_review_candidates(
                     pdf_sha256=full_sha,
                     artifact_dir=hash_dir,
                     pdf_path=pdf_path,
-                    pdf_date=pdf_date,
+                    fetch_date=pdf_date,
                 )
             )
-    candidates.sort(key=lambda c: (c.pdf_date, c.slug))
+    candidates.sort(key=lambda c: (c.fetch_date, c.slug))
     return candidates
 
 
 import json as _json
 from datetime import date as _date, datetime as _datetime
 from zoneinfo import ZoneInfo
-from .paths import REVIEWED_SNAPSHOT_DRAFTS_DIR
 
 
 _PROVIDER_PREFERENCE = ("gemini", "anthropic")
@@ -149,73 +150,30 @@ def _pick_provider_artifact(artifact_dir: Path) -> Path:
     return max(all_paths, key=lambda p: p.stat().st_mtime)
 
 
-def _all_provider_descriptors(artifact_dir: Path, primary_provider: str) -> list[dict]:
-    # artifact_dir = <artifacts_root>/<slug>/<hash_prefix>; use <slug>/<hash>/<file>.
-    artifacts_root = artifact_dir.parent.parent
-    descriptors: list[dict] = []
-    for path in sorted(artifact_dir.glob("*.json")):
-        if path.name == "meta.json":
-            continue
-        try:
-            payload = _json.loads(path.read_text())
-        except (OSError, _json.JSONDecodeError):
-            continue
-        provider = payload.get("provider")
-        model = payload.get("model")
-        if isinstance(provider, str) and isinstance(model, str):
-            try:
-                relpath = str(path.relative_to(artifacts_root))
-            except ValueError:
-                relpath = str(path)
-            descriptors.append({
-                "provider": provider,
-                "model": model,
-                "artifact_relpath": relpath,
-            })
-
-    # The provider actually seeded into payload leads; remaining sorted by
-    # preference order then provider name.
-    def _rank(d: dict) -> tuple[int, int, str]:
-        is_primary = 0 if d["provider"] == primary_provider else 1
-        try:
-            idx = _PROVIDER_PREFERENCE.index(d["provider"])
-        except ValueError:
-            idx = len(_PROVIDER_PREFERENCE)
-        return (is_primary, idx, d["provider"])
-    descriptors.sort(key=_rank)
-    return descriptors
-
-
-def draft_path_for(slug: str, pdf_sha256: str, today: _date, root: Path = REVIEWED_SNAPSHOT_DRAFTS_DIR) -> Path:
-    return root / slug / f"{today.isoformat()}-{pdf_sha256[:12]}.json"
-
-
 def seed_draft(
     *,
     candidate: ReviewCandidate,
-    drafts_root: Path = REVIEWED_SNAPSHOT_DRAFTS_DIR,
+    data_root: Path = DATA_DIR,
     today: _date | None = None,
 ) -> Path:
-    """Seed a draft envelope in the drafts tree. Returns its path.
+    """Write `reviewed.json` under the per-review dir if it does not exist.
 
-    If a draft for this (slug, pdf_sha256) already exists, returns it
-    unchanged — resuming work is idempotent.
+    Returns the target path regardless of whether a write happened. Reviewers
+    who want to discard WIP use `git restore`; to start over from raw
+    extraction, remove the file and re-run `schedules review`.
     """
     today = today or _pacific_today()
-
-    # Idempotent on re-entry: any prior draft for this (slug, pdf_sha256) wins,
-    # regardless of the date in its filename.
-    slug_drafts = drafts_root / candidate.slug
-    prefix = candidate.pdf_sha256[:12]
-    if slug_drafts.is_dir():
-        for existing in sorted(slug_drafts.glob(f"*-{prefix}.json")):
-            return existing
-
-    path = draft_path_for(candidate.slug, candidate.pdf_sha256, today, root=drafts_root)
+    target = reviewed_path(candidate.slug, candidate.fetch_date, candidate.pdf_sha256, root=data_root)
+    if target.exists():
+        return target
 
     provider_path = _pick_provider_artifact(candidate.artifact_dir)
     provider_payload = _json.loads(provider_path.read_text())
-    source_pdf_url = provider_payload.get("pdf_url", "")
+    source_pdf_url = (
+        provider_payload.get("source_pdf_url")
+        or provider_payload.get("pdf_url")
+        or ""
+    )
     payload = provider_payload.get("payload", {})
 
     envelope = {
@@ -226,9 +184,9 @@ def seed_draft(
         "payload": payload,
     }
 
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(_json.dumps(envelope, indent=2) + "\n")
-    return path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(_json.dumps(envelope, indent=2) + "\n")
+    return target
 
 
 from .envelope import EnvelopeValidationError, validate_envelope
@@ -243,24 +201,24 @@ class FinalizeError(RuntimeError):
 
 def finalize_draft(
     *,
-    draft_path: Path,
-    snapshots_root: Path = REVIEWED_SNAPSHOTS_DIR,
+    reviewed_json_path: Path,
     content_spots_dir: Path = CONTENT_SPOTS_DIR,
 ) -> Path:
-    """Finalize a draft envelope into a reviewed snapshot and project its MD.
+    """Validate `reviewed.json` in place and project it into content/spots/<slug>.md.
 
-    Returns the final snapshot path on success. Leaves the draft in place
-    on any failure. Commit point is the os.rename; project() runs after.
+    No rename: `reviewed.json` IS the final file. Returns the reviewed.json
+    path on success. On any failure, raises FinalizeError and leaves the
+    file unchanged on disk.
     """
     try:
-        raw = _json.loads(draft_path.read_text())
+        raw = _json.loads(reviewed_json_path.read_text())
     except _json.JSONDecodeError as exc:
-        raise FinalizeError(f"{draft_path}: invalid JSON: {exc.msg} at line {exc.lineno}") from exc
+        raise FinalizeError(f"{reviewed_json_path}: invalid JSON: {exc.msg} at line {exc.lineno}") from exc
     except OSError as exc:
-        raise FinalizeError(f"{draft_path}: cannot read: {exc}") from exc
+        raise FinalizeError(f"{reviewed_json_path}: cannot read: {exc}") from exc
 
     if not isinstance(raw, dict):
-        raise FinalizeError(f"{draft_path}: envelope must be a JSON object")
+        raise FinalizeError(f"{reviewed_json_path}: envelope must be a JSON object")
 
     try:
         validate_envelope(raw)
@@ -272,26 +230,16 @@ def finalize_draft(
         raise FinalizeError("; ".join(result.violations))
 
     slug = raw["slug"]
-    pdf_sha256 = raw["pdf_sha256"]
-    reviewed_at = raw["reviewed_at"]
-    destination = snapshots_root / slug / f"{reviewed_at}-{pdf_sha256[:12]}.json"
-
-    if destination.exists():
-        raise FinalizeError(
-            f"destination {destination} already exists; resolve by deleting either "
-            "the existing snapshot or the draft, then retry"
-        )
-
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    import os as _os
-    _os.rename(draft_path, destination)
-
     try:
-        project(slug=slug, snapshots_root=snapshots_root, content_spots_dir=content_spots_dir)
+        project(
+            slug=slug,
+            reviewed_json_path=reviewed_json_path,
+            content_spots_dir=content_spots_dir,
+        )
     except ProjectError as exc:
         raise FinalizeError(
-            f"snapshot committed at {destination}, but projection failed: {exc}. "
+            f"reviewed.json at {reviewed_json_path} validated, but projection failed: {exc}. "
             f"Re-run `schedules project {slug}` to finish."
         ) from exc
 
-    return destination
+    return reviewed_json_path

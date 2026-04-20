@@ -23,10 +23,10 @@ def _valid_draft_envelope(slug: str, pdf_sha256: str) -> dict:
     }
 
 
-def _write_draft(drafts_root: Path, slug: str, pdf_sha256: str, envelope: dict) -> Path:
-    slug_dir = drafts_root / slug
-    slug_dir.mkdir(parents=True, exist_ok=True)
-    path = slug_dir / f"2026-04-19-{pdf_sha256[:12]}.json"
+def _write_reviewed(data_root: Path, slug: str, pdf_sha256: str, envelope: dict) -> Path:
+    review_dir = data_root / slug / f"2026-04-19-{pdf_sha256[:12]}"
+    review_dir.mkdir(parents=True, exist_ok=True)
+    path = review_dir / "reviewed.json"
     path.write_text(json.dumps(envelope))
     return path
 
@@ -39,98 +39,59 @@ def _seed_content_md(content_dir: Path, slug: str) -> Path:
 
 
 def test_finalize_happy_path(tmp_path):
-    drafts = tmp_path / "drafts"
-    snapshots = tmp_path / "reviewed-snapshots"
+    data_root = tmp_path / "data"
     content = tmp_path / "content" / "spots"
-    draft = _write_draft(drafts, "hamilton-pool", "a" * 64, _valid_draft_envelope("hamilton-pool", "a" * 64))
+    reviewed = _write_reviewed(data_root, "hamilton-pool", "a" * 64, _valid_draft_envelope("hamilton-pool", "a" * 64))
     _seed_content_md(content, "hamilton-pool")
 
     result = finalize_draft(
-        draft_path=draft,
-        snapshots_root=snapshots,
+        reviewed_json_path=reviewed,
         content_spots_dir=content,
     )
 
-    assert result.is_relative_to(snapshots)
-    assert not draft.exists()
-    assert (snapshots / "hamilton-pool" / "2026-04-19-aaaaaaaaaaaa.json").exists()
+    assert result == reviewed
+    assert reviewed.exists()
     assert "[[extra.sessions]]" in (content / "hamilton-pool.md").read_text()
 
 
 def test_finalize_rejects_malformed_json(tmp_path):
-    drafts = tmp_path / "drafts"
-    (drafts / "hamilton-pool").mkdir(parents=True)
-    draft = drafts / "hamilton-pool" / "2026-04-19-aaaaaaaaaaaa.json"
-    draft.write_text("{ bogus")
+    data_root = tmp_path / "data"
+    review_dir = data_root / "hamilton-pool" / "2026-04-19-aaaaaaaaaaaa"
+    review_dir.mkdir(parents=True)
+    reviewed = review_dir / "reviewed.json"
+    reviewed.write_text("{ bogus")
 
     with pytest.raises(FinalizeError, match="invalid JSON"):
         finalize_draft(
-            draft_path=draft,
-            snapshots_root=tmp_path / "reviewed-snapshots",
+            reviewed_json_path=reviewed,
             content_spots_dir=tmp_path / "content" / "spots",
         )
-    assert draft.exists()
+    assert reviewed.exists()
 
 
 def test_finalize_rejects_schema_invalid(tmp_path):
-    drafts = tmp_path / "drafts"
+    data_root = tmp_path / "data"
     envelope = _valid_draft_envelope("hamilton-pool", "a" * 64)
     del envelope["source_pdf_url"]  # violates required
-    draft = _write_draft(drafts, "hamilton-pool", "a" * 64, envelope)
+    reviewed = _write_reviewed(data_root, "hamilton-pool", "a" * 64, envelope)
 
     with pytest.raises(FinalizeError, match="source_pdf_url"):
         finalize_draft(
-            draft_path=draft,
-            snapshots_root=tmp_path / "reviewed-snapshots",
+            reviewed_json_path=reviewed,
             content_spots_dir=tmp_path / "content" / "spots",
         )
-    assert draft.exists()
+    assert reviewed.exists()
 
 
 def test_finalize_rejects_validate_failure(tmp_path):
-    drafts = tmp_path / "drafts"
+    data_root = tmp_path / "data"
     envelope = _valid_draft_envelope("hamilton-pool", "a" * 64)
     envelope["payload"]["sessions"] = envelope["payload"]["sessions"][:2]
-    draft = _write_draft(drafts, "hamilton-pool", "a" * 64, envelope)
+    reviewed = _write_reviewed(data_root, "hamilton-pool", "a" * 64, envelope)
 
     with pytest.raises(FinalizeError, match="fewer than 5"):
         finalize_draft(
-            draft_path=draft,
-            snapshots_root=tmp_path / "reviewed-snapshots",
+            reviewed_json_path=reviewed,
             content_spots_dir=tmp_path / "content" / "spots",
         )
-    assert draft.exists()
-
-
-def test_finalize_aborts_on_destination_conflict(tmp_path):
-    drafts = tmp_path / "drafts"
-    snapshots = tmp_path / "reviewed-snapshots"
-    content = tmp_path / "content" / "spots"
-    draft = _write_draft(drafts, "hamilton-pool", "a" * 64, _valid_draft_envelope("hamilton-pool", "a" * 64))
-    (snapshots / "hamilton-pool").mkdir(parents=True)
-    (snapshots / "hamilton-pool" / "2026-04-19-aaaaaaaaaaaa.json").write_text("{}")
-    _seed_content_md(content, "hamilton-pool")
-
-    with pytest.raises(FinalizeError, match="already exists"):
-        finalize_draft(
-            draft_path=draft,
-            snapshots_root=snapshots,
-            content_spots_dir=content,
-        )
-    assert draft.exists()
-
-
-def test_finalize_rejects_ratified_from_sha256(tmp_path):
-    # Legacy field from the removed auto-ratification pathway must be refused.
-    drafts = tmp_path / "drafts"
-    envelope = _valid_draft_envelope("hamilton-pool", "a" * 64)
-    envelope["ratified_from_sha256"] = "b" * 64
-    draft = _write_draft(drafts, "hamilton-pool", "a" * 64, envelope)
-
-    with pytest.raises(FinalizeError, match="ratified_from_sha256"):
-        finalize_draft(
-            draft_path=draft,
-            snapshots_root=tmp_path / "reviewed-snapshots",
-            content_spots_dir=tmp_path / "content" / "spots",
-        )
-    assert draft.exists()
+    assert reviewed.exists()

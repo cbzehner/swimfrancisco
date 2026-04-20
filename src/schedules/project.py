@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .merge import merge
-from .paths import CONTENT_SPOTS_DIR, REVIEWED_SNAPSHOTS_DIR, REVIEWED_SNAPSHOT_DRAFTS_DIR
+from .paths import CONTENT_SPOTS_DIR, REVIEWED_SNAPSHOTS_DIR
 from .reviewed_snapshots import (
     canonicalize_payload,
     load_reviewed_snapshot_from_path,
@@ -28,20 +28,20 @@ def project(
     slug: str,
     snapshots_root: Path = REVIEWED_SNAPSHOTS_DIR,
     content_spots_dir: Path = CONTENT_SPOTS_DIR,
+    reviewed_json_path: Path | None = None,
 ) -> Path:
     """Project the latest reviewed snapshot for `slug` into content/spots/<slug>.md.
 
     Raises ProjectError with a reviewer-facing message on any failure.
     Returns the path to the written MD. Idempotent.
-    """
-    # Explicit draft-tree guard: spec contract.
-    if snapshots_root.name == REVIEWED_SNAPSHOT_DRAFTS_DIR.name:
-        raise ProjectError(
-            f"refusing to project from draft tree {snapshots_root}; "
-            "drafts must be finalized into reviewed-snapshots first"
-        )
 
-    snapshot_path = _latest_snapshot_path(snapshots_root, slug)
+    If `reviewed_json_path` is provided, read from that exact path and skip
+    the snapshots_root search (used by the consolidated-layout finalize flow).
+    """
+    if reviewed_json_path is not None:
+        snapshot_path: Path | None = reviewed_json_path
+    else:
+        snapshot_path = _latest_snapshot_path(snapshots_root, slug)
     if snapshot_path is None:
         raise ProjectError(f"no reviewed snapshot found for slug={slug!r}")
 

@@ -10,15 +10,14 @@ from .models import Failed, PoolResult, Proposed, Skipped, Unchanged
 from .paths import (
     ARTIFACTS_DIR,
     CONTENT_SPOTS_DIR,
+    DATA_DIR,
     PDF_CACHE_DIR,
-    REVIEWED_SNAPSHOT_DRAFTS_DIR,
     REVIEWED_SNAPSHOTS_DIR,
 )
 from .pipeline import run_pipeline
 from .project import ProjectError, project as _project
 from .review import (
     FinalizeError,
-    draft_path_for,
     finalize_draft,
     find_review_candidates,
     seed_draft,
@@ -121,7 +120,7 @@ def review_command(slug: str | None) -> None:
         return
 
     candidate = candidates[0]
-    draft = seed_draft(candidate=candidate, drafts_root=REVIEWED_SNAPSHOT_DRAFTS_DIR)
+    draft = seed_draft(candidate=candidate, data_root=DATA_DIR)
     click.echo(f"Reviewing {candidate.slug} ({candidate.pdf_sha256[:12]})")
     click.echo(f"Draft:  {draft}")
 
@@ -136,8 +135,7 @@ def review_command(slug: str | None) -> None:
 
     try:
         final = finalize_draft(
-            draft_path=draft,
-            snapshots_root=REVIEWED_SNAPSHOTS_DIR,
+            reviewed_json_path=draft,
             content_spots_dir=CONTENT_SPOTS_DIR,
         )
     except FinalizeError as exc:

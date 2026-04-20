@@ -1,5 +1,4 @@
 import json
-import os
 from pathlib import Path
 
 from click.testing import CliRunner
@@ -15,6 +14,7 @@ def _write_artifact(root: Path, slug: str, pdf_sha256: str) -> None:
         "provider": "gemini",
         "model": "model",
         "pdf_url": "https://example.com/x.pdf",
+        "source_pdf_url": "https://example.com/x.pdf",
         "pdf_sha256": pdf_sha256,
         "payload": {
             "schedule_effective": "2026-03-17",
@@ -41,16 +41,16 @@ def _seed_content_md(content_dir: Path, slug: str) -> None:
 def _patch_dirs(monkeypatch, tmp_path):
     artifacts = tmp_path / "artifacts"
     snapshots = tmp_path / "reviewed-snapshots"
-    drafts = tmp_path / "reviewed-snapshot-drafts"
+    data = tmp_path / "data"
     pdfs = tmp_path / "pdfs"
     content = tmp_path / "content" / "spots"
     artifacts.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr("schedules.cli.ARTIFACTS_DIR", artifacts)
     monkeypatch.setattr("schedules.cli.REVIEWED_SNAPSHOTS_DIR", snapshots)
-    monkeypatch.setattr("schedules.cli.REVIEWED_SNAPSHOT_DRAFTS_DIR", drafts)
+    monkeypatch.setattr("schedules.cli.DATA_DIR", data)
     monkeypatch.setattr("schedules.cli.PDF_CACHE_DIR", pdfs)
     monkeypatch.setattr("schedules.cli.CONTENT_SPOTS_DIR", content)
-    return artifacts, snapshots, drafts, pdfs, content
+    return artifacts, snapshots, data, pdfs, content
 
 
 def test_cli_review_reports_nothing_to_review(tmp_path, monkeypatch):
@@ -73,7 +73,7 @@ def test_cli_review_hints_extract_when_artifacts_missing(tmp_path, monkeypatch):
 
 
 def test_cli_review_end_to_end_with_editor_noop(tmp_path, monkeypatch):
-    artifacts, snapshots, drafts, pdfs, content = _patch_dirs(monkeypatch, tmp_path)
+    artifacts, snapshots, data, pdfs, content = _patch_dirs(monkeypatch, tmp_path)
     _write_artifact(artifacts, "hamilton-pool", "a" * 64)
     _write_pdf(pdfs, "hamilton-pool", "2026-04-01", "a" * 64)
     _seed_content_md(content, "hamilton-pool")
@@ -91,8 +91,8 @@ def test_cli_review_end_to_end_with_editor_noop(tmp_path, monkeypatch):
     runner = CliRunner()
     result = runner.invoke(cli, ["review"])
     assert result.exit_code == 0, result.output
-    final = snapshots / "hamilton-pool"
-    assert list(final.glob("*.json"))  # a snapshot was committed
+    reviewed_dir = data / "hamilton-pool"
+    assert any(reviewed_dir.glob("*/reviewed.json"))  # reviewed.json was written
     assert "Wrote" in result.output
     # Editor and `open` were both invoked.
     assert any(call[0] == "open" for call in calls)
@@ -100,7 +100,7 @@ def test_cli_review_end_to_end_with_editor_noop(tmp_path, monkeypatch):
 
 
 def test_cli_review_splits_multi_word_editor(tmp_path, monkeypatch):
-    artifacts, snapshots, drafts, pdfs, content = _patch_dirs(monkeypatch, tmp_path)
+    artifacts, snapshots, data, pdfs, content = _patch_dirs(monkeypatch, tmp_path)
     _write_artifact(artifacts, "hamilton-pool", "a" * 64)
     _write_pdf(pdfs, "hamilton-pool", "2026-04-01", "a" * 64)
     _seed_content_md(content, "hamilton-pool")
@@ -124,7 +124,7 @@ def test_cli_review_splits_multi_word_editor(tmp_path, monkeypatch):
 
 
 def test_cli_review_filters_by_slug(tmp_path, monkeypatch):
-    artifacts, snapshots, drafts, pdfs, content = _patch_dirs(monkeypatch, tmp_path)
+    artifacts, snapshots, data, pdfs, content = _patch_dirs(monkeypatch, tmp_path)
     _write_artifact(artifacts, "hamilton-pool", "a" * 64)
     _write_artifact(artifacts, "balboa-pool", "b" * 64)
     _write_pdf(pdfs, "hamilton-pool", "2026-04-01", "a" * 64)
@@ -137,5 +137,5 @@ def test_cli_review_filters_by_slug(tmp_path, monkeypatch):
     runner = CliRunner()
     result = runner.invoke(cli, ["review", "--slug", "balboa-pool"])
     assert result.exit_code == 0, result.output
-    assert (snapshots / "balboa-pool").exists()
-    assert not (snapshots / "hamilton-pool").exists()
+    assert (data / "balboa-pool").exists()
+    assert not (data / "hamilton-pool").exists()

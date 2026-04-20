@@ -55,16 +55,6 @@ def test_project_writes_sessions_to_content_md(tmp_path):
     assert rendered.count("[[extra.sessions]]") == 5
 
 
-def test_project_rejects_draft_path(tmp_path):
-    drafts = tmp_path / "reviewed-snapshot-drafts"
-    content = tmp_path / "content" / "spots"
-    _write_snapshot(drafts, "hamilton-pool", "a" * 64, _valid_envelope("hamilton-pool", "a" * 64))
-    _seed_content_md(content, "hamilton-pool")
-
-    with pytest.raises(ProjectError, match="draft"):
-        project(slug="hamilton-pool", snapshots_root=drafts, content_spots_dir=content)
-
-
 def test_project_rejects_missing_slug(tmp_path):
     snapshots = tmp_path / "reviewed-snapshots"
     content = tmp_path / "content" / "spots"
