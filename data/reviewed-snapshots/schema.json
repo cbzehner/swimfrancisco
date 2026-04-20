@@ -67,10 +67,6 @@
       "type": "string",
       "description": "Free-form note from the reviewer about what they checked or changed."
     },
-    "draft": {
-      "type": "boolean",
-      "description": "Set to true when the extraction pipeline seeds a snapshot from provider output awaiting review. The reviewer marks the snapshot approved by removing this key (or setting it to false). `schedules review` refuses to project a snapshot while `draft: true`."
-    },
     "payload": {
       "type": "object",
       "required": ["schedule_effective", "sessions", "closures"],
