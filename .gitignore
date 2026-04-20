@@ -22,8 +22,6 @@ dist/
 .venv/
 __pycache__/
 *.pyc
-data/artifacts/
-data/reviewed-snapshot-drafts/
 tmp/
 
 # Editor/OS

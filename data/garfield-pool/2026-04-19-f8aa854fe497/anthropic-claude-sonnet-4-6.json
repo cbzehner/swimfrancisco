@@ -1,0 +1,604 @@
+{
+  "cost_estimate": "input_tokens=3980, output_tokens=2771",
+  "extracted_at": "2026-04-18T02:46:13.203949+00:00",
+  "grounding": {
+    "grounded_count": 4,
+    "ratio": 0.1081,
+    "sessions": [
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 0,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 1,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 2,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 3,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 4,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 5,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 6,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 7,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 8,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 9,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 10,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 11,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 12,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 13,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 14,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 15,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": false
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 16,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 17,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 18,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 19,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 20,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 21,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 22,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 23,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 24,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 25,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 26,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 27,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 28,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 29,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 30,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 31,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": false
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 32,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 33,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 34,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 35,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": false,
+        "grounded": false,
+        "index": 36,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      }
+    ],
+    "total": 37
+  },
+  "model": "claude-sonnet-4-6",
+  "payload": {
+    "closures": [
+      {
+        "end": "2026-05-25",
+        "reason": "Monday May 25th closure",
+        "start": "2026-05-25"
+      },
+      {
+        "end": "2026-03-19",
+        "reason": "Closed for staff training (Thursday 11am-2pm)",
+        "start": "2026-03-19"
+      },
+      {
+        "end": "2026-04-16",
+        "reason": "Closed for staff training (Thursday 11am-2pm)",
+        "start": "2026-04-16"
+      },
+      {
+        "end": "2026-05-21",
+        "reason": "Closed for staff training (Thursday 11am-2pm)",
+        "start": "2026-05-21"
+      }
+    ],
+    "schedule_effective": "2026-03-15",
+    "schedule_effective_end": "2026-06-04",
+    "sessions": [
+      {
+        "day": "monday",
+        "end": "08:45",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM MAIN POOL - LAP SWIM 7:00AM - 8:45AM",
+        "start": "07:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "monday",
+        "end": "08:45",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM MAIN POOL - LAP SWIM 7:00AM - 8:45AM",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "monday",
+        "end": "10:45",
+        "evidence": "MAIN POOL - SENIOR/ THERAPY SWIM *SMALL POOL- SWIM LESSONS 9:00AM - 10:45AM",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "monday",
+        "end": "10:45",
+        "evidence": "MAIN POOL - SENIOR/ THERAPY SWIM *SMALL POOL- SWIM LESSONS 9:00AM - 10:45AM",
+        "start": "09:00",
+        "type": "lessons"
+      },
+      {
+        "day": "monday",
+        "end": "13:00",
+        "evidence": "MAIN POOL - LAP SWIM SMALL POOL - WATER EXERCISE (11:30AM-12:30PM) 11:00AM-1:00PM",
+        "start": "11:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "monday",
+        "end": "15:45",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM MAIN POOL - LAP SWIM 2:00PM-3:45PM",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "monday",
+        "end": "15:45",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM MAIN POOL - LAP SWIM 2:00PM-3:45PM",
+        "start": "14:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "monday",
+        "end": "17:00",
+        "evidence": "*YOUTH LESSONS/ SWIM TEAM 4:00PM - 5:00PM",
+        "start": "16:00",
+        "type": "lessons"
+      },
+      {
+        "day": "monday",
+        "end": "18:30",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM MAIN POOL - LAP SWIM 5:15PM-6:30PM",
+        "start": "17:15",
+        "type": "family_swim"
+      },
+      {
+        "day": "monday",
+        "end": "18:30",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM MAIN POOL - LAP SWIM 5:15PM-6:30PM",
+        "start": "17:15",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "10:45",
+        "evidence": "MAIN POOL - SENIOR/ THERAPY SWIM *SMALL POOL- NVNS CLASS (9:00AM - 10:00AM) 9:00AM - 10:45AM",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "13:00",
+        "evidence": "MAIN POOL - LAP SWIM SMALL POOL - WATER EXERCISE (11:15AM-12:15PM) 11:00AM - 1:00PM",
+        "start": "11:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:30",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM MAIN POOL - LAP SWIM 2:00PM-3:30PM",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:30",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM MAIN POOL - LAP SWIM 2:00PM-3:30PM",
+        "start": "14:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "17:30",
+        "evidence": "*YOUTH LESSONS/ SWIM TEAM 3:45PM - 5:30PM",
+        "start": "15:45",
+        "type": "lessons"
+      },
+      {
+        "day": "tuesday",
+        "end": "19:00",
+        "evidence": "\u2666MASTER'S SWIM TEAM 5:30PM - 7:00PM",
+        "start": "17:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "08:45",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM MAIN POOL - LAP SWIM 7:00AM - 8:45AM",
+        "start": "07:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "08:45",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM MAIN POOL - LAP SWIM 7:00AM - 8:45AM",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "10:45",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM MAIN POOL - SENIOR/THERAPY SWIM 9:00AM - 10:45AM",
+        "start": "09:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "10:45",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM MAIN POOL - SENIOR/THERAPY SWIM 9:00AM - 10:45AM",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "13:00",
+        "evidence": "MAIN POOL - LAP SWIM *SMALL POOL-SFUSD CLASS (11:00AM-12:00PM) 11:00AM - 1:00PM",
+        "start": "11:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:45",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM MAIN POOL - LAP SWIM 2:00PM-3:45PM",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:45",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM MAIN POOL - LAP SWIM 2:00PM-3:45PM",
+        "start": "14:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "17:00",
+        "evidence": "*YOUTH LESSONS/ SWIM TEAM 4:00PM - 5:00PM",
+        "start": "16:00",
+        "type": "lessons"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:00",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM MAIN POOL - LAP SWIM 5:15PM-7:00PM",
+        "start": "17:15",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:00",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM MAIN POOL - LAP SWIM 5:15PM-7:00PM",
+        "start": "17:15",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "10:45",
+        "evidence": "**MAIN POOL - SENIOR/ THERAPY SWIM (2 LANES) DEEP WATER EXERCISE (1 LANE) (9:30AM - 10:30AM) 9:00AM - 10:45AM",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "13:00",
+        "evidence": "MAIN POOL - LAP SWIM CLOSED FOR STAFF TRAINING MAR 19TH, APR 16TH, MAY 21ST 11:00AM - 1:00PM",
+        "start": "11:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "15:30",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM MAIN POOL - LAP SWIM 2:00PM-3:30PM",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "15:30",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM MAIN POOL - LAP SWIM 2:00PM-3:30PM",
+        "start": "14:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "17:30",
+        "evidence": "*YOUTH LESSONS/ SWIM TEAM 3:45PM - 5:30PM",
+        "start": "15:45",
+        "type": "lessons"
+      },
+      {
+        "day": "thursday",
+        "end": "19:00",
+        "evidence": "\u2666MASTER'S SWIM TEAM 5:45PM - 7:00PM",
+        "start": "17:45",
+        "type": "lap_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "10:30",
+        "evidence": "MAIN POOL-LAP SWIM 8:30AM - 10:30AM",
+        "start": "08:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "11:00",
+        "evidence": "*SMALL POOL- YOUTH LESSONS 9:00AM - 11:00AM",
+        "start": "09:00",
+        "type": "lessons"
+      },
+      {
+        "day": "sunday",
+        "end": "14:00",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM MAIN POOL-LAP SWIM 12:30PM - 2:00PM",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "14:00",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM MAIN POOL-LAP SWIM 12:30PM - 2:00PM",
+        "start": "12:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "16:30",
+        "evidence": "REC/ FAMILY SWIM 2:30PM-4:30PM",
+        "start": "14:30",
+        "type": "family_swim"
+      }
+    ]
+  },
+  "pdf_sha256": "f8aa854fe49746a1091e39998486a25e709afab95d80844c4f3db440f7b85dbc",
+  "prompt_sha256": "24a24994cd43864fa7dbf09c495c947d4986ec88307b89e272659fb3dd49dd9e",
+  "provider": "anthropic",
+  "schema_sha256": "7bd50481cfa763ea810391021daf61e1bbfdbe7184496c976b486a53a05afe7c",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28495",
+  "usage": {
+    "input_tokens": 3980,
+    "output_tokens": 2771
+  }
+}
