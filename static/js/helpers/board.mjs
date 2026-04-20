@@ -73,6 +73,20 @@ export function formatISODate(date) {
   return `${y}-${m}-${d}`;
 }
 
+export function formatISODateHuman(isoDate) {
+  if (typeof isoDate !== "string") return "";
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate.trim());
+  if (!match) return isoDate;
+  const [, year, month, day] = match;
+  const monthLabels = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  ];
+  const monthIndex = Number(month) - 1;
+  if (monthIndex < 0 || monthIndex >= monthLabels.length) return isoDate;
+  return `${monthLabels[monthIndex]} ${Number(day)}, ${year}`;
+}
+
 // Return the active facility-wide closure (if any) covering `now`. Closures
 // with a non-empty `pool` field are zone-scoped and do NOT close the whole
 // facility — they are rendered as detail-page banners but ignored here.
@@ -94,7 +108,7 @@ export function findActiveClosure(closures, now) {
 // the pool is closed THROUGH that date (not "until" it — that reads as an
 // exclusive upper bound).
 export function closureCopy(closure) {
-  return `Closed through ${closure.end}`;
+  return `Closed through ${formatISODateHuman(closure.end)}`;
 }
 
 const DROP_IN_TYPES = new Set(["lap_swim", "family_swim", "senior_swim"]);

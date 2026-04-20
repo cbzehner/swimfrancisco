@@ -12,6 +12,32 @@
   {% endif %}
 {% endmacro item_list %}
 
+{% macro format_iso_date(iso, with_year=true) -%}
+  {%- if iso -%}
+    {%- set parts = iso | split(pat="-") -%}
+    {%- if parts | length == 3 -%}
+      {%- if parts[1] == "01" -%}{%- set month_label = "JAN" -%}
+      {%- elif parts[1] == "02" -%}{%- set month_label = "FEB" -%}
+      {%- elif parts[1] == "03" -%}{%- set month_label = "MAR" -%}
+      {%- elif parts[1] == "04" -%}{%- set month_label = "APR" -%}
+      {%- elif parts[1] == "05" -%}{%- set month_label = "MAY" -%}
+      {%- elif parts[1] == "06" -%}{%- set month_label = "JUN" -%}
+      {%- elif parts[1] == "07" -%}{%- set month_label = "JUL" -%}
+      {%- elif parts[1] == "08" -%}{%- set month_label = "AUG" -%}
+      {%- elif parts[1] == "09" -%}{%- set month_label = "SEP" -%}
+      {%- elif parts[1] == "10" -%}{%- set month_label = "OCT" -%}
+      {%- elif parts[1] == "11" -%}{%- set month_label = "NOV" -%}
+      {%- else -%}{%- set month_label = "DEC" -%}
+      {%- endif -%}
+      {%- set day = parts[2] | int -%}
+      {%- set year = parts[0] | int -%}
+      {{- month_label }} {{ day }}{%- if with_year -%}, {{ year }}{%- endif -%}
+    {%- else -%}
+      {{- iso | upper -}}
+    {%- endif -%}
+  {%- endif -%}
+{%- endmacro format_iso_date %}
+
 {% block content %}
   {% set extra = page.extra %}
   {% set map_href = "https://www.google.com/maps/search/?api=1&query=" ~ extra.lat ~ "," ~ extra.lng %}
@@ -33,15 +59,42 @@
     {% set sessions_json = sessions | json_encode %}
     {% set closures_json = closures | json_encode %}
     {% set schedule_json = '{"sessions":' ~ sessions_json ~ ',"closures":' ~ closures_json ~ '}' %}
+    {% if extra.last_verified_at %}
+      {% set now_ts_fr = now(timestamp=true) %}
+      {% set threshold_ts = now_ts_fr - 2592000 %}
+      {% set threshold_date = threshold_ts | date(format="%Y-%m-%d", timezone="America/Los_Angeles") %}
+      {% set threshold_i = threshold_date | replace(from="-", to="") | int %}
+      {% set verified_i = extra.last_verified_at | replace(from="-", to="") | int %}
+      {% set verified_label = self::format_iso_date(iso=extra.last_verified_at) %}
+      {% if verified_i >= threshold_i %}
+        {% set freshness_class = "fresh" %}
+        {% set freshness_label = "FRESH" %}
+      {% else %}
+        {% set freshness_class = "stale" %}
+        {% set freshness_label = "STALE" %}
+      {% endif %}
+    {% endif %}
 
     <div class="detail-root"
          data-schedule='{{ schedule_json | safe }}'>
 
-      {% if extra.subtype or extra.website %}
+      {% if extra.subtype or extra.website or extra.last_verified_at %}
         <p class="official">
           {% if extra.subtype %}<span class="subtype">{{ extra.subtype | upper }}</span>{% endif %}
-          {% if extra.subtype and extra.website %} · {% endif %}
+          {% if extra.subtype and (extra.website or extra.last_verified_at) %} · {% endif %}
           {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">OFFICIAL PAGE</a>{% endif %}
+          {% if extra.website and extra.last_verified_at %} · {% endif %}
+          {% if extra.last_verified_at %}
+            <span class="meta-freshness"
+                  data-field="freshness"
+                  data-freshness="{{ freshness_class }}"
+                  data-tooltip="LAST VERIFIED {{ verified_label }}"
+                  tabindex="0"
+                  aria-label="{{ freshness_label }}. LAST VERIFIED {{ verified_label }}">
+              <span class="freshness-dot">●</span>
+              <span class="freshness-label">{{ freshness_label }}</span>
+            </span>
+          {% endif %}
         </p>
       {% endif %}
 
@@ -204,7 +257,6 @@
       {% set window_end_iso = (today_ts + 1209600) | date(format="%Y-%m-%d", timezone="America/Los_Angeles") %}
       {% set today_i = today_iso | replace(from="-", to="") | int %}
       {% set window_end_i = window_end_iso | replace(from="-", to="") | int %}
-      {% set month_labels = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"] %}
       {% set upcoming_closures = [] %}
       {% for c in closures %}
         {% set c_start_i = c.start | replace(from="-", to="") | int %}
@@ -217,24 +269,12 @@
       {% if upcoming_closures | length > 0 %}
         <section class="closure-banners" aria-label="Upcoming closures">
           {% for c in upcoming_closures %}
-            {% set cs_parts = c.start | split(pat="-") %}
-            {% set ce_parts = c.end | split(pat="-") %}
-            {% set cs_month_i = cs_parts[1] | int %}
-            {% set cs_day_i = cs_parts[2] | int %}
-            {% set ce_month_i = ce_parts[1] | int %}
-            {% set ce_day_i = ce_parts[2] | int %}
-            {% set cs_idx = cs_month_i - 1 %}
-            {% set ce_idx = ce_month_i - 1 %}
-            {% set cs_month_label = month_labels[cs_idx] %}
-            {% set ce_month_label = month_labels[ce_idx] %}
-            {% set cs_label = cs_month_label ~ " " ~ cs_day_i %}
-            {% set ce_label = ce_month_label ~ " " ~ ce_day_i %}
             <div class="closure-banner">
               <span class="closure-banner-date">
                 {% if c.start == c.end %}
-                  {{ cs_label }}
+                  {{ self::format_iso_date(iso=c.start, with_year=false) }}
                 {% else %}
-                  {{ cs_label }} – {{ ce_label }}
+                  {{ self::format_iso_date(iso=c.start, with_year=false) }} – {{ self::format_iso_date(iso=c.end, with_year=false) }}
                 {% endif %}
               </span>
               {% if c.pool %}<span class="closure-banner-zone">{{ c.pool | upper }}</span>{% endif %}
@@ -243,36 +283,17 @@
           {% endfor %}
         </section>
       {% endif %}
-      <footer class="meta">
-        {% if extra.schedule_effective %}
-          <p class="meta-effective">
-            SCHEDULE EFFECTIVE {{ extra.schedule_effective | upper }}{% if extra.schedule_effective_end %} → {{ extra.schedule_effective_end | upper }}{% endif %}
-          </p>
-        {% endif %}
-        {% if extra.last_verified_at %}
-          {% set now_ts_fr = now(timestamp=true) %}
-          {% set threshold_ts = now_ts_fr - 2592000 %}
-          {% set threshold_date = threshold_ts | date(format="%Y-%m-%d", timezone="America/Los_Angeles") %}
-          {% set threshold_i = threshold_date | replace(from="-", to="") | int %}
-          {% set verified_i = extra.last_verified_at | replace(from="-", to="") | int %}
-          {% if verified_i >= threshold_i %}
-            {% set freshness_class = "fresh" %}
-            {% set freshness_label = "FRESH" %}
-          {% else %}
-            {% set freshness_class = "stale" %}
-            {% set freshness_label = "STALE" %}
-          {% endif %}
-          <p class="meta-freshness" data-field="freshness" data-freshness="{{ freshness_class }}">
-            <span class="freshness-dot">●</span>
-            <span class="freshness-label">{{ freshness_label }}</span>
-            · LAST VERIFIED {{ extra.last_verified_at | upper }}
-          </p>
-        {% endif %}
-      </footer>
       {% if page.content %}
         <section class="description">
           {{ page.content | safe }}
         </section>
+      {% endif %}
+      {% if extra.schedule_effective %}
+        <footer class="meta">
+          <p class="meta-effective">
+            SCHEDULE EFFECTIVE FROM {{ self::format_iso_date(iso=extra.schedule_effective) }}{% if extra.schedule_effective_end %} TO {{ self::format_iso_date(iso=extra.schedule_effective_end) }}{% endif %}
+          </p>
+        </footer>
       {% endif %}
     </div>
 
@@ -296,7 +317,9 @@
     {{ self::item_list(title="Common distances", class="distances", items=extra.common_distances | default(value=[])) }}
 
     <footer class="meta">
-      {% if extra.last_verified_at %}<p>Last verified: {{ extra.last_verified_at }}</p>{% endif %}
+      {% if extra.last_verified_at %}
+        <p class="meta-verified">LAST VERIFIED {{ self::format_iso_date(iso=extra.last_verified_at) }}</p>
+      {% endif %}
     </footer>
   {% endif %}
 

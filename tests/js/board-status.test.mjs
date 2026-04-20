@@ -31,7 +31,7 @@ test("computeStatus uses 'Closed through' for inclusive end dates", () => {
   assert.equal(status, "CLOSED");
   assert.equal(
     next,
-    "Closed through 2026-04-20",
+    "Closed through Apr 20, 2026",
     "inclusive end date must read 'through', not 'until'",
   );
 });
@@ -99,7 +99,7 @@ test("computeStatus honors facility-wide closures (empty closure.pool)", () => {
   };
   const { status, next } = computeStatus(schedule, now);
   assert.equal(status, "CLOSED");
-  assert.equal(next, "Closed through 2026-04-17");
+  assert.equal(next, "Closed through Apr 17, 2026");
 });
 
 const DROP_IN_SCHEDULE = {

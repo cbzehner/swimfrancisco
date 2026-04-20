@@ -301,6 +301,10 @@ table.board tbody tr.flap {
 
 .detail-root .official {
   margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem;
   font-size: 0.85rem;
   color: var(--fg-dim);
   text-transform: uppercase;
@@ -629,13 +633,52 @@ table.board tbody tr.flap {
   color: var(--fg-dim);
 }
 
+.meta-freshness {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  vertical-align: baseline;
+  gap: 0.25rem;
+  cursor: help;
+  outline: none;
+}
+
 .meta-freshness .freshness-dot {
   color: var(--fg);
-  margin-right: 0.25rem;
 }
 
 .meta-freshness[data-freshness="stale"] .freshness-dot {
   color: var(--fg-dim);
+}
+
+.meta-freshness::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 0;
+  top: calc(100% + 0.45rem);
+  z-index: 10;
+  min-width: max-content;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--fg);
+  background: #101026;
+  color: var(--fg);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-2px);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.meta-freshness:hover::after,
+.meta-freshness:focus-visible::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.meta-freshness:focus-visible {
+  box-shadow: 0 0 0 1px var(--fg);
 }
 
 // Description block (moved from .notes) ----------------------------------
