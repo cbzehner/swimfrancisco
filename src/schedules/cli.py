@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import shlex
 import subprocess
 
 import click
@@ -131,7 +132,7 @@ def review_command(slug: str | None) -> None:
             click.echo(f"(note: `open` not available; PDF at {candidate.pdf_path})")
 
     editor = os.getenv("EDITOR") or "hx"
-    subprocess.run([editor, str(draft)], check=False)
+    subprocess.run([*shlex.split(editor), str(draft)], check=False)
 
     try:
         final = finalize_draft(

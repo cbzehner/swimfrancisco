@@ -108,6 +108,49 @@ def test_seed_draft_is_idempotent(tmp_path):
     assert '"reviewer edits"' in second.read_text()
 
 
+def test_seed_draft_writes_relative_artifact_relpath(tmp_path):
+    artifact_dir = tmp_path / "artifacts" / "hamilton-pool" / ("a" * 12)
+    _write_provider(artifact_dir, "gemini", "gemini-3.1-flash-lite-preview", "a" * 64)
+    _write_provider(artifact_dir, "anthropic", "claude-sonnet-4-6", "a" * 64)
+
+    path = seed_draft(
+        candidate=_make_candidate(artifact_dir, "a" * 64),
+        drafts_root=tmp_path / "drafts",
+        today=date(2026, 4, 19),
+    )
+    envelope = json.loads(path.read_text())
+    for descriptor in envelope["reviewed_against"]:
+        relpath = descriptor["artifact_relpath"]
+        assert not relpath.startswith("/"), relpath
+        assert "hamilton-pool" in relpath
+        assert relpath.endswith(".json")
+
+
+def test_seed_draft_uses_pacific_time_for_today(tmp_path, monkeypatch):
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    artifact_dir = tmp_path / "artifacts" / "hamilton-pool" / ("a" * 12)
+    _write_provider(artifact_dir, "gemini", "gemini-3.1-flash-lite-preview", "a" * 64)
+
+    # 2026-04-20 00:30 UTC is 2026-04-19 17:30 PT — PT date must win.
+    fixed_utc = datetime(2026, 4, 20, 0, 30, tzinfo=ZoneInfo("UTC"))
+
+    class _FixedDatetime:
+        @classmethod
+        def now(cls, tz=None):
+            return fixed_utc.astimezone(tz) if tz else fixed_utc.replace(tzinfo=None)
+
+    monkeypatch.setattr("schedules.review._datetime", _FixedDatetime)
+
+    path = seed_draft(
+        candidate=_make_candidate(artifact_dir, "a" * 64),
+        drafts_root=tmp_path / "drafts",
+    )
+    envelope = json.loads(path.read_text())
+    assert envelope["reviewed_at"] == "2026-04-19"
+
+
 def test_seed_draft_raises_when_no_provider_artifact(tmp_path):
     empty_dir = tmp_path / "artifacts" / "hamilton-pool" / ("a" * 12)
     empty_dir.mkdir(parents=True)

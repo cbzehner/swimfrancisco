@@ -99,6 +99,30 @@ def test_cli_review_end_to_end_with_editor_noop(tmp_path, monkeypatch):
     assert any(call[0] in {"hx", "$EDITOR"} or call[0].endswith("hx") for call in calls)
 
 
+def test_cli_review_splits_multi_word_editor(tmp_path, monkeypatch):
+    artifacts, snapshots, drafts, pdfs, content = _patch_dirs(monkeypatch, tmp_path)
+    _write_artifact(artifacts, "hamilton-pool", "a" * 64)
+    _write_pdf(pdfs, "hamilton-pool", "2026-04-01", "a" * 64)
+    _seed_content_md(content, "hamilton-pool")
+
+    calls: list[list[str]] = []
+
+    def fake_run(cmd, *args, **kwargs):
+        calls.append(list(cmd))
+        class R: returncode = 0
+        return R()
+
+    monkeypatch.setattr("schedules.cli.subprocess.run", fake_run)
+    monkeypatch.setenv("EDITOR", "code --wait")
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["review"])
+    assert result.exit_code == 0, result.output
+    editor_calls = [call for call in calls if call and call[0] == "code"]
+    assert editor_calls, f"expected `code` invocation, got {calls}"
+    assert editor_calls[0][1] == "--wait"
+
+
 def test_cli_review_filters_by_slug(tmp_path, monkeypatch):
     artifacts, snapshots, drafts, pdfs, content = _patch_dirs(monkeypatch, tmp_path)
     _write_artifact(artifacts, "hamilton-pool", "a" * 64)

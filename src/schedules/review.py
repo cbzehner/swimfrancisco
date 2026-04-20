@@ -117,12 +117,18 @@ def find_review_candidates(
 
 
 import json as _json
-from datetime import date as _date
+from datetime import date as _date, datetime as _datetime
+from zoneinfo import ZoneInfo
 from .paths import REVIEWED_SNAPSHOT_DRAFTS_DIR
 from .reviewed_snapshots import REVIEWED_SNAPSHOT_VERSION
 
 
 _PROVIDER_PREFERENCE = ("gemini", "anthropic")
+_PACIFIC_TZ = ZoneInfo("America/Los_Angeles")
+
+
+def _pacific_today() -> _date:
+    return _datetime.now(_PACIFIC_TZ).date()
 
 
 def _pick_provider_artifact(artifact_dir: Path) -> Path:
@@ -145,6 +151,8 @@ def _pick_provider_artifact(artifact_dir: Path) -> Path:
 
 
 def _all_provider_descriptors(artifact_dir: Path, primary_provider: str) -> list[dict]:
+    # artifact_dir = <artifacts_root>/<slug>/<hash_prefix>; use <slug>/<hash>/<file>.
+    artifacts_root = artifact_dir.parent.parent
     descriptors: list[dict] = []
     for path in sorted(artifact_dir.glob("*.json")):
         if path.name == "meta.json":
@@ -156,10 +164,14 @@ def _all_provider_descriptors(artifact_dir: Path, primary_provider: str) -> list
         provider = payload.get("provider")
         model = payload.get("model")
         if isinstance(provider, str) and isinstance(model, str):
+            try:
+                relpath = str(path.relative_to(artifacts_root))
+            except ValueError:
+                relpath = str(path)
             descriptors.append({
                 "provider": provider,
                 "model": model,
-                "artifact_relpath": str(path),
+                "artifact_relpath": relpath,
             })
 
     # The provider actually seeded into payload leads; remaining sorted by
@@ -190,7 +202,7 @@ def seed_draft(
     If a draft for this (slug, pdf_sha256) already exists, returns it
     unchanged — resuming work is idempotent.
     """
-    today = today or _date.today()
+    today = today or _pacific_today()
 
     # Idempotent on re-entry: any prior draft for this (slug, pdf_sha256) wins,
     # regardless of the date in its filename.
