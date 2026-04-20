@@ -94,6 +94,23 @@
       {% set family_count = family_sessions | length %}
       {% set senior_count = senior_sessions | length %}
       {% set drop_in_count = lap_count + family_count + senior_count %}
+      {% set display_day_order = [] %}
+      {% set display_day_labels = [] %}
+      {% set omitted_day_order = [] %}
+      {% for day in day_order %}
+        {% set day_lap_sessions = lap_sessions | filter(attribute="day", value=day) %}
+        {% set day_family_sessions = family_sessions | filter(attribute="day", value=day) %}
+        {% set day_senior_sessions = senior_sessions | filter(attribute="day", value=day) %}
+        {% set day_lap_count = day_lap_sessions | length %}
+        {% set day_family_count = day_family_sessions | length %}
+        {% set day_senior_count = day_senior_sessions | length %}
+        {% if day_lap_count + day_family_count + day_senior_count > 0 %}
+          {% set_global display_day_order = display_day_order | concat(with=day) %}
+          {% set_global display_day_labels = display_day_labels | concat(with=day_labels[loop.index0]) %}
+        {% else %}
+          {% set_global omitted_day_order = omitted_day_order | concat(with=day) %}
+        {% endif %}
+      {% endfor %}
 
       {% if drop_in_count > 0 %}
         {# Parallel flat arrays — Tera can't parse nested array literals in {% set %}. #}
@@ -109,22 +126,35 @@
 
         <section class="weekly-grid">
           <h2 class="weekly-grid-title">WEEKLY · BY PROGRAM</h2>
-          <nav class="weekly-grid-crossnav-strip" aria-label="Related pools">
-            {% for pkey in program_keys %}
-              {% set pi = loop.index0 %}
-              {% set pcross = program_crossnav[pi] %}
-              {% if pcross %}
-                <a class="weekly-grid-crossnav" href="{{ config.base_url }}/#{{ pcross }}">→ OTHER {{ pcross | upper }} POOLS</a>
-              {% endif %}
-            {% endfor %}
-          </nav>
-          <div class="weekly-grid-table" role="table">
+          <div class="weekly-grid-meta">
+            {% if omitted_day_order | length > 0 %}
+              <p class="weekly-grid-note">
+                NO DROP-IN HOURS
+                {% for day in omitted_day_order %}
+                  {% if loop.index0 > 0 %}
+                    {% if loop.last %} AND {% else %}, {% endif %}
+                  {% endif %}
+                  {{ day | upper }}
+                {% endfor %}
+              </p>
+            {% endif %}
+            <nav class="weekly-grid-crossnav-strip" aria-label="Related pools">
+              {% for pkey in program_keys %}
+                {% set pi = loop.index0 %}
+                {% set pcross = program_crossnav[pi] %}
+                {% if pcross %}
+                  <a class="weekly-grid-crossnav" href="{{ config.base_url }}/#{{ pcross }}">→ OTHER {{ pcross | upper }} POOLS</a>
+                {% endif %}
+              {% endfor %}
+            </nav>
+          </div>
+          <div class="weekly-grid-table" role="table" style="--weekday-count: {{ display_day_order | length }};">
             <div class="weekly-grid-head" role="row">
               <span class="weekly-grid-rowlabel" role="columnheader"></span>
-              {% for label in day_labels %}
+              {% for label in display_day_labels %}
                 <span class="weekly-grid-dayhead" role="columnheader"
-                      data-day="{{ day_order[loop.index0] }}"
-                      {% if day_order[loop.index0] == today_weekday %}data-today="true"{% endif %}>{{ label }}</span>
+                      data-day="{{ display_day_order[loop.index0] }}"
+                      {% if display_day_order[loop.index0] == today_weekday %}data-today="true"{% endif %}>{{ label }}</span>
               {% endfor %}
             </div>
             {% for pkey in program_keys %}
@@ -139,11 +169,11 @@
                     <a class="weekly-grid-crossnav" href="{{ config.base_url }}/#{{ pcross }}">→ OTHER {{ pcross | upper }} POOLS</a>
                   {% endif %}
                 </span>
-                {% for day in day_order %}
+                {% for day in display_day_order %}
                   {% set cell = psessions | filter(attribute="day", value=day) %}
                   <span class="weekly-grid-cell" role="cell"
                         data-day="{{ day }}"
-                        data-day-short="{{ day_labels[loop.index0] }}"
+                        data-day-short="{{ display_day_labels[loop.index0] }}"
                         {% if day == today_weekday %}data-today="true"{% endif %}
                         {% if cell | length == 0 %}data-empty="true"{% endif %}>
                     {% if cell | length == 0 %}

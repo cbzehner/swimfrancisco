@@ -62,8 +62,18 @@ def test_schedule_table_uses_current_schema_fields(built_site: Path) -> None:
     assert "LAP_SWIM" not in html
     assert "SENIOR_SWIM" not in html
     # Human-readable labels present.
-    assert "Family Swim" in html
-    assert "Lap Swim" in html
+    assert "FAMILY SWIM" in html
+    assert "LAP SWIM" in html
+
+
+def test_weekly_grid_omits_days_without_drop_in_sessions(built_site: Path) -> None:
+    html = _read(built_site, "balboa-pool")
+    assert "data-day=tuesday" in html
+    assert "data-day=saturday" in html
+    assert "class=weekly-grid-dayhead data-day=monday" not in html
+    assert "class=weekly-grid-dayhead data-day=sunday" not in html
+    assert "style=--weekday-count:5" in html
+    assert "NO DROP-IN HOURS MONDAY AND SUNDAY" in html
 
 
 def test_open_water_item_list_sections_render(built_site: Path) -> None:
