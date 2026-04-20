@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
@@ -54,3 +55,46 @@ def latest_reviewed_snapshot(slug: str) -> Path | None:
         return None
     files = sorted(directory.glob("*.json"))
     return files[-1] if files else None
+
+
+def slugify(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+
+
+# Consolidated per-review layout: data/<slug>/<date>-<pdf_sha256[:12]>/
+
+
+def review_dir(slug: str, date: str, pdf_sha256: str, *, root: Path = DATA_DIR) -> Path:
+    return root / slug / f"{date}-{pdf_sha256[:12]}"
+
+
+def pdf_path(slug: str, date: str, pdf_sha256: str, *, root: Path = DATA_DIR) -> Path:
+    return review_dir(slug, date, pdf_sha256, root=root) / "source.pdf"
+
+
+def artifact_path(
+    slug: str,
+    date: str,
+    pdf_sha256: str,
+    provider: str,
+    model: str,
+    *,
+    root: Path = DATA_DIR,
+) -> Path:
+    return review_dir(slug, date, pdf_sha256, root=root) / f"{provider}-{slugify(model)}.json"
+
+
+def reviewed_path(slug: str, date: str, pdf_sha256: str, *, root: Path = DATA_DIR) -> Path:
+    return review_dir(slug, date, pdf_sha256, root=root) / "reviewed.json"
+
+
+def all_review_dirs(slug: str, *, root: Path = DATA_DIR) -> list[Path]:
+    slug_dir = root / slug
+    if not slug_dir.is_dir():
+        return []
+    return sorted(d for d in slug_dir.iterdir() if d.is_dir())
+
+
+def latest_review_dir(slug: str, *, root: Path = DATA_DIR) -> Path | None:
+    dirs = all_review_dirs(slug, root=root)
+    return dirs[-1] if dirs else None

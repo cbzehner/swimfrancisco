@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-import re
 from datetime import datetime, timezone
 from pathlib import Path
 
 from .models import GroundingResult, PdfSignals
-from .paths import ARTIFACTS_DIR, relative_to_repo
+from .paths import ARTIFACTS_DIR, relative_to_repo, slugify
 
 
 def save_artifact_bundle(
@@ -88,5 +87,3 @@ def _sha256_text(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
-def slugify(value: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")

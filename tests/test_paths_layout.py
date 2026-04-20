@@ -55,3 +55,64 @@ def test_latest_reviewed_snapshot_picks_highest_date(tmp_path, monkeypatch):
 def test_reviewed_snapshot_drafts_dir_is_in_data():
     from schedules.paths import DATA_DIR, REVIEWED_SNAPSHOT_DRAFTS_DIR
     assert REVIEWED_SNAPSHOT_DRAFTS_DIR == DATA_DIR / "reviewed-snapshot-drafts"
+
+
+# Consolidated-layout helpers (Task 2): data/<slug>/<date>-<sha12>/
+
+def test_review_dir_shape(tmp_path):
+    p = paths.review_dir("hamilton-pool", "2026-04-19", "a" * 64, root=tmp_path)
+    assert p.name == "2026-04-19-aaaaaaaaaaaa"
+    assert p.parent.name == "hamilton-pool"
+    assert p.parent.parent == tmp_path
+
+
+def test_pdf_path_is_source_pdf(tmp_path):
+    p = paths.pdf_path("hamilton-pool", "2026-04-19", "a" * 64, root=tmp_path)
+    assert p.name == "source.pdf"
+    assert p.parent.name == "2026-04-19-aaaaaaaaaaaa"
+
+
+def test_artifact_path_includes_provider_and_model(tmp_path):
+    p = paths.artifact_path(
+        "hamilton-pool",
+        "2026-04-19",
+        "a" * 64,
+        "gemini",
+        "gemini-3.1-flash-lite-preview",
+        root=tmp_path,
+    )
+    assert p.name == "gemini-gemini-3-1-flash-lite-preview.json"
+    assert p.parent.name == "2026-04-19-aaaaaaaaaaaa"
+
+
+def test_reviewed_path_is_reviewed_json(tmp_path):
+    p = paths.reviewed_path("hamilton-pool", "2026-04-19", "a" * 64, root=tmp_path)
+    assert p.name == "reviewed.json"
+    assert p.parent.name == "2026-04-19-aaaaaaaaaaaa"
+
+
+def test_all_review_dirs_returns_empty_for_missing_slug(tmp_path):
+    assert paths.all_review_dirs("ghost-pool", root=tmp_path) == []
+
+
+def test_all_review_dirs_sorts_ascending(tmp_path):
+    slug_dir = tmp_path / "hamilton-pool"
+    slug_dir.mkdir()
+    older = slug_dir / "2026-04-01-aaaaaaaaaaaa"
+    newer = slug_dir / "2026-04-19-bbbbbbbbbbbb"
+    older.mkdir()
+    newer.mkdir()
+    assert paths.all_review_dirs("hamilton-pool", root=tmp_path) == [older, newer]
+
+
+def test_latest_review_dir_returns_newest(tmp_path):
+    slug_dir = tmp_path / "hamilton-pool"
+    slug_dir.mkdir()
+    (slug_dir / "2026-04-01-aaaaaaaaaaaa").mkdir()
+    newest = slug_dir / "2026-04-19-bbbbbbbbbbbb"
+    newest.mkdir()
+    assert paths.latest_review_dir("hamilton-pool", root=tmp_path) == newest
+
+
+def test_latest_review_dir_returns_none_when_empty(tmp_path):
+    assert paths.latest_review_dir("ghost-pool", root=tmp_path) is None
