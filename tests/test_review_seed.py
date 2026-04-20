@@ -8,9 +8,9 @@ from schedules.paths import slugify
 from schedules.review import ReviewCandidate, seed_draft
 
 
-def _write_provider(artifact_dir: Path, provider: str, model: str, pdf_sha256: str, sessions_count: int = 5) -> Path:
-    artifact_dir.mkdir(parents=True, exist_ok=True)
-    path = artifact_dir / f"{provider}-{slugify(model)}.json"
+def _write_provider(review_dir: Path, provider: str, model: str, pdf_sha256: str, sessions_count: int = 5) -> Path:
+    review_dir.mkdir(parents=True, exist_ok=True)
+    path = review_dir / f"{provider}-{slugify(model)}.json"
     path.write_text(json.dumps({
         "slug": "hamilton-pool",
         "provider": provider,
@@ -31,12 +31,12 @@ def _write_provider(artifact_dir: Path, provider: str, model: str, pdf_sha256: s
     return path
 
 
-def _make_candidate(artifact_dir: Path, pdf_sha256: str, slug: str = "hamilton-pool") -> ReviewCandidate:
+def _make_candidate(review_dir: Path, pdf_sha256: str, slug: str = "hamilton-pool") -> ReviewCandidate:
     return ReviewCandidate(
         slug=slug,
         pdf_sha256=pdf_sha256,
-        artifact_dir=artifact_dir,
-        pdf_path=None,
+        review_dir=review_dir,
+        pdf_path=review_dir / "source.pdf",
         fetch_date="2026-04-01",
     )
 

@@ -8,10 +8,8 @@ import click
 
 from .models import Failed, PoolResult, Proposed, Skipped, Unchanged
 from .paths import (
-    ARTIFACTS_DIR,
     CONTENT_SPOTS_DIR,
     DATA_DIR,
-    PDF_CACHE_DIR,
     REVIEWED_SNAPSHOTS_DIR,
 )
 from .pipeline import run_pipeline
@@ -105,14 +103,12 @@ def project_command(slug: str) -> None:
 @click.option("--slug", help="Restrict review to this pool slug.")
 def review_command(slug: str | None) -> None:
     """Approve the next pipeline-extracted pool schedule."""
-    if not ARTIFACTS_DIR.is_dir():
+    if not DATA_DIR.is_dir():
         click.echo("nothing to review (run `schedules extract` first?)")
         return
 
     candidates = find_review_candidates(
-        artifacts_root=ARTIFACTS_DIR,
-        snapshots_root=REVIEWED_SNAPSHOTS_DIR,
-        pdfs_root=PDF_CACHE_DIR,
+        data_root=DATA_DIR,
         only_slug=slug,
     )
     if not candidates:

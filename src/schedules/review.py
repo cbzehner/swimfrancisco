@@ -1,52 +1,38 @@
 from __future__ import annotations
 
 import json
-import re
 from dataclasses import dataclass
+from datetime import date as _date, datetime as _datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
-from .paths import (
-    ARTIFACTS_DIR,
-    DATA_DIR,
-    PDF_CACHE_DIR,
-    REVIEWED_SNAPSHOTS_DIR,
-    reviewed_path,
-)
+from .envelope import EnvelopeValidationError, validate_envelope
+from .paths import CONTENT_SPOTS_DIR, DATA_DIR, all_review_dirs, reviewed_path
+from .project import ProjectError, project
+from .validate import validate
 
 
 @dataclass(frozen=True)
 class ReviewCandidate:
     slug: str
     pdf_sha256: str
-    artifact_dir: Path
-    pdf_path: Path | None
-    fetch_date: str  # YYYY-MM-DD; first-seen date (from PDF filename or today)
+    review_dir: Path
+    pdf_path: Path
+    fetch_date: str  # YYYY-MM-DD derived from the review-dir name prefix
 
 
-_PDF_NAME = re.compile(r"^(\d{4}-\d{2}-\d{2})-([0-9a-f]{12})\.pdf$")
+_PROVIDER_JSON_EXCLUDES = {"reviewed.json"}
 
 
-def _reviewed_sha256s_for_slug(snapshots_root: Path, slug: str) -> set[str]:
-    slug_dir = snapshots_root / slug
-    if not slug_dir.is_dir():
-        return set()
-    out: set[str] = set()
-    for path in slug_dir.glob("*.json"):
-        try:
-            envelope = json.loads(path.read_text())
-        except (OSError, json.JSONDecodeError):
-            continue
-        sha = envelope.get("pdf_sha256")
-        if isinstance(sha, str):
-            out.add(sha)
-    return out
+def _provider_json_paths(review_dir: Path) -> list[Path]:
+    return sorted(
+        p for p in review_dir.glob("*.json") if p.name not in _PROVIDER_JSON_EXCLUDES
+    )
 
 
-def _full_sha_from_artifact(artifact_dir: Path) -> str | None:
-    """Recover the full pdf_sha256 from any provider payload in the dir."""
-    for provider_path in sorted(artifact_dir.glob("*.json")):
-        if provider_path.name == "meta.json":
-            continue
+def _full_sha_from_provider_jsons(review_dir: Path) -> str | None:
+    """Recover the full pdf_sha256 from any provider payload in the review dir."""
+    for provider_path in _provider_json_paths(review_dir):
         try:
             payload = json.loads(provider_path.read_text())
         except (OSError, json.JSONDecodeError):
@@ -54,73 +40,49 @@ def _full_sha_from_artifact(artifact_dir: Path) -> str | None:
         sha = payload.get("pdf_sha256")
         if isinstance(sha, str) and len(sha) == 64:
             return sha
-    # Fall back to meta.json, which also carries pdf_sha256.
-    meta_path = artifact_dir / "meta.json"
-    if meta_path.exists():
-        try:
-            meta = json.loads(meta_path.read_text())
-        except (OSError, json.JSONDecodeError):
-            return None
-        sha = meta.get("pdf_sha256")
-        if isinstance(sha, str) and len(sha) == 64:
-            return sha
     return None
-
-
-def _pdf_date_for(pdfs_root: Path, slug: str, pdf_sha256: str) -> tuple[str, Path | None]:
-    slug_dir = pdfs_root / slug
-    if not slug_dir.is_dir():
-        return "", None
-    prefix = pdf_sha256[:12]
-    for path in sorted(slug_dir.glob(f"*-{prefix}.pdf")):
-        m = _PDF_NAME.match(path.name)
-        if m:
-            return m.group(1), path
-    return "", None
 
 
 def find_review_candidates(
     *,
-    artifacts_root: Path = ARTIFACTS_DIR,
-    snapshots_root: Path = REVIEWED_SNAPSHOTS_DIR,
-    pdfs_root: Path = PDF_CACHE_DIR,
+    data_root: Path = DATA_DIR,
     only_slug: str | None = None,
 ) -> list[ReviewCandidate]:
-    """Return review candidates ordered by PDF publication date, then slug."""
-    if not artifacts_root.is_dir():
+    """Return review candidates ordered by fetch date (oldest first), then slug.
+
+    A candidate is a review dir under ``data/<slug>/`` where at least one
+    ``<provider>-<model>.json`` exists AND ``reviewed.json`` does not.
+    """
+    if not data_root.is_dir():
         return []
 
     candidates: list[ReviewCandidate] = []
-    for slug_dir in sorted(artifacts_root.iterdir()):
+    for slug_dir in sorted(data_root.iterdir()):
         if not slug_dir.is_dir():
             continue
         slug = slug_dir.name
         if only_slug is not None and slug != only_slug:
             continue
-        reviewed = _reviewed_sha256s_for_slug(snapshots_root, slug)
-        for hash_dir in sorted(slug_dir.iterdir()):
-            if not hash_dir.is_dir():
+        for review_dir in all_review_dirs(slug, root=data_root):
+            if (review_dir / "reviewed.json").exists():
                 continue
-            full_sha = _full_sha_from_artifact(hash_dir)
-            if full_sha is None or full_sha in reviewed:
+            if not _provider_json_paths(review_dir):
                 continue
-            pdf_date, pdf_path = _pdf_date_for(pdfs_root, slug, full_sha)
+            full_sha = _full_sha_from_provider_jsons(review_dir)
+            if full_sha is None:
+                continue
+            fetch_date = review_dir.name[:10]
             candidates.append(
                 ReviewCandidate(
                     slug=slug,
                     pdf_sha256=full_sha,
-                    artifact_dir=hash_dir,
-                    pdf_path=pdf_path,
-                    fetch_date=pdf_date,
+                    review_dir=review_dir,
+                    pdf_path=review_dir / "source.pdf",
+                    fetch_date=fetch_date,
                 )
             )
     candidates.sort(key=lambda c: (c.fetch_date, c.slug))
     return candidates
-
-
-import json as _json
-from datetime import date as _date, datetime as _datetime
-from zoneinfo import ZoneInfo
 
 
 _PROVIDER_PREFERENCE = ("gemini", "anthropic")
@@ -131,12 +93,10 @@ def _pacific_today() -> _date:
     return _datetime.now(_PACIFIC_TZ).date()
 
 
-def _pick_provider_artifact(artifact_dir: Path) -> Path:
+def _pick_provider_artifact(review_dir: Path) -> Path:
     """Return the provider artifact to seed from. gemini → anthropic → newest mtime."""
     provider_paths: dict[str, list[Path]] = {}
-    for path in artifact_dir.glob("*.json"):
-        if path.name == "meta.json":
-            continue
+    for path in _provider_json_paths(review_dir):
         provider = path.name.split("-", 1)[0]
         provider_paths.setdefault(provider, []).append(path)
 
@@ -146,7 +106,7 @@ def _pick_provider_artifact(artifact_dir: Path) -> Path:
 
     all_paths = [p for paths in provider_paths.values() for p in paths]
     if not all_paths:
-        raise FileNotFoundError(f"No provider artifacts found in {artifact_dir}")
+        raise FileNotFoundError(f"No provider artifacts found in {review_dir}")
     return max(all_paths, key=lambda p: p.stat().st_mtime)
 
 
@@ -167,8 +127,8 @@ def seed_draft(
     if target.exists():
         return target
 
-    provider_path = _pick_provider_artifact(candidate.artifact_dir)
-    provider_payload = _json.loads(provider_path.read_text())
+    provider_path = _pick_provider_artifact(candidate.review_dir)
+    provider_payload = json.loads(provider_path.read_text())
     source_pdf_url = (
         provider_payload.get("source_pdf_url")
         or provider_payload.get("pdf_url")
@@ -185,14 +145,8 @@ def seed_draft(
     }
 
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(_json.dumps(envelope, indent=2) + "\n")
+    target.write_text(json.dumps(envelope, indent=2) + "\n")
     return target
-
-
-from .envelope import EnvelopeValidationError, validate_envelope
-from .paths import CONTENT_SPOTS_DIR
-from .project import ProjectError, project
-from .validate import validate
 
 
 class FinalizeError(RuntimeError):
@@ -211,8 +165,8 @@ def finalize_draft(
     file unchanged on disk.
     """
     try:
-        raw = _json.loads(reviewed_json_path.read_text())
-    except _json.JSONDecodeError as exc:
+        raw = json.loads(reviewed_json_path.read_text())
+    except json.JSONDecodeError as exc:
         raise FinalizeError(f"{reviewed_json_path}: invalid JSON: {exc.msg} at line {exc.lineno}") from exc
     except OSError as exc:
         raise FinalizeError(f"{reviewed_json_path}: cannot read: {exc}") from exc
