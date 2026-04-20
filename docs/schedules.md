@@ -101,13 +101,16 @@ help produce and verify that file, but they are not parallel authorities.
    under `data/reviewed-snapshots/<slug>/<pdf_sha256>.json`. The envelope
    schema is enforced on load — see `src/schedules/reviewed_snapshots.py`
    for the required fields.
-6. If the provider catches up to the reviewed payload on a future PDF
-   (same schedule, re-exported PDF), ratification fires automatically and
-   writes a new snapshot at the new hash — no re-review needed.
-7. Spot-check flagged pools against the source PDF before accepting a
+6. Spot-check flagged pools against the source PDF before accepting a
    content diff.
-8. Commit `content/spots/`, `data/extraction-state.json`, and any new
+7. Commit `content/spots/`, `data/extraction-state.json`, and any new
    `data/reviewed-snapshots/` files only after the diff looks trustworthy.
+
+Every new PDF requires a fresh human pass via `schedules review` — there
+is no auto-ratification shortcut. If a re-exported PDF has identical
+content to a prior reviewed snapshot, approving it via the reviewer is
+cheap (few seconds) and preserves the "human vouched for this hash"
+contract.
 
 `data/artifacts/` is a local review cache. Keep it around when comparing
 providers or debugging a bad extraction, but do not commit it by default.
@@ -149,7 +152,7 @@ Timed or pool-scoped closures are a deliberate out-of-scope item; adding them is
 
 ## Reviewing extracted schedules
 
-When the extraction pipeline can't auto-ratify a pool (grounding flagged something, `validate` failed, or extraction failed), the pool joins a review queue. Approve extractions by running:
+Every extracted pool joins the review queue until a human approves it. Approve extractions by running:
 
 ```
 schedules review

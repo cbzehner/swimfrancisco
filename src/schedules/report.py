@@ -117,8 +117,6 @@ def _render_pool_block(result: PoolResult) -> list[str]:
     ):
         lines.append(f"- artifact[{name}]: {pool_path}")
 
-    if isinstance(result, Proposed) and result.reviewed_snapshot_notes:
-        lines.append(f"- notes: {result.reviewed_snapshot_notes}")
     if isinstance(result, Failed):
         lines.append(f"- error: {result.error}")
 

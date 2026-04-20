@@ -18,7 +18,6 @@ def _valid_envelope() -> dict:
         "reviewed_at": "2026-04-18",
         "source_pdf_url": "https://example.com/schedule.pdf",
         "reviewed_against": [{"provider": "gemini", "model": "gemini-3.1-flash-lite-preview"}],
-        "summary": "manual review",
         "payload": {
             "schedule_effective": "2026-03-17",
             "sessions": [
@@ -42,10 +41,10 @@ def test_validate_envelope_accepts_valid():
 
 def test_validate_envelope_rejects_missing_required():
     envelope = _valid_envelope()
-    del envelope["summary"]
+    del envelope["source_pdf_url"]
     with pytest.raises(EnvelopeValidationError) as exc:
         validate_envelope(envelope)
-    assert "summary" in str(exc.value)
+    assert "source_pdf_url" in str(exc.value)
 
 
 def test_validate_envelope_rejects_bad_time_format():

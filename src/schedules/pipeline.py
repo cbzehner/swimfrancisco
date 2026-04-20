@@ -8,15 +8,11 @@ from .fetch import fetch_pdf
 from .grounding import grounding_from_text, normalize_pdf_text
 from .merge import merge, read_schedule_snapshot
 from .models import Failed, GroundingResult, PoolEntry, PoolResult, Proposed, ReviewNote, Skipped, Unchanged
-from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH, relative_to_repo
+from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH
 from .providers import extract as extract_with_provider
 from .registry import load_registry
 from .reviewed_snapshots import (
-    canonicalize_payload,
-    find_snapshots_for_slug,
     load_reviewed_snapshot,
-    load_reviewed_snapshot_from_path,
-    write_ratified_snapshot,
 )
 from .diff import compare_payloads
 from .report import write_report
@@ -131,7 +127,6 @@ def run_pipeline(
             continue
 
         try:
-            ratified_from_sha256: str | None = None
             fetch_result = fetch_pdf(entry.slug, entry.pdf_url, force=force)
             snapshot, snapshot_sha256, snapshot_path = load_reviewed_snapshot(entry.slug, fetch_result.sha256)
             if (
@@ -174,7 +169,6 @@ def run_pipeline(
                 review_notes.extend(_grounding_notes("reviewed-snapshot", snapshot_grounding))
                 review_notes.extend(check_delta(payload, prior_snapshot))
                 artifact_paths = {"reviewed-snapshot": str(snapshot_path)}
-                snapshot_notes = snapshot.get("summary")
             else:
                 primary = extract_with_provider(provider, fetch_result.bytes, prompt, EXTRACTION_SCHEMA)
                 payload = primary.payload
@@ -186,7 +180,6 @@ def run_pipeline(
                 review_notes.extend(source_notes_for_payload(pdf_signals, payload))
                 primary_grounding = grounding_from_text(pdf_text_normalized, payload)
                 review_notes.extend(_grounding_notes(provider, primary_grounding))
-                snapshot_notes = None
                 review_notes.extend(check_delta(payload, prior_snapshot))
                 artifact_paths = save_artifact_bundle(
                     slug=entry.slug,
@@ -203,41 +196,6 @@ def run_pipeline(
                     grounding=primary_grounding,
                 )
 
-                if snapshot is None:
-                    canonical_payload = canonicalize_payload(payload)
-                    human_match: str | None = None
-                    ratification_match: str | None = None
-                    for existing_snapshot_path in find_snapshots_for_slug(entry.slug):
-                        try:
-                            existing, _, _ = load_reviewed_snapshot_from_path(
-                                existing_snapshot_path, expected_slug=entry.slug
-                            )
-                        except ValueError as exc:
-                            review_notes.append(
-                                ReviewNote(
-                                    kind="reviewed_snapshot_malformed",
-                                    message=f"Skipping malformed reviewed snapshot {existing_snapshot_path.name}: {exc}",
-                                    severity="warning",
-                                )
-                            )
-                            continue
-                        existing_sha = existing["pdf_sha256"]
-                        if canonicalize_payload(existing["payload"]) == canonical_payload:
-                            if existing.get("reviewed_by") != "ratification":
-                                human_match = existing_sha
-                                break
-                            if ratification_match is None:
-                                ratification_match = existing_sha
-                    ratified_from_sha256 = human_match or ratification_match
-
-                    if ratified_from_sha256:
-                        review_notes.append(
-                            ReviewNote(
-                                kind="ratified",
-                                message=f"Provider payload canonicalizes to reviewed snapshot {ratified_from_sha256[:12]}.",
-                                severity="info",
-                            )
-                        )
             validation = validate(payload, prior_sessions_count=prior_sessions_count)
 
             if compare_with:
@@ -276,21 +234,6 @@ def run_pipeline(
                 compare_with=compare_with,
                 catastrophic=validation.catastrophic,
             )
-
-            if write_allowed and ratified_from_sha256:
-                new_snapshot_path = write_ratified_snapshot(
-                    slug=entry.slug,
-                    pdf_sha256=fetch_result.sha256,
-                    source_pdf_url=entry.pdf_url,
-                    payload=payload,
-                    reviewed_against=[{"provider": provider, "model": model}],
-                    ratified_from_sha256=ratified_from_sha256,
-                )
-                result_provider = "reviewed-snapshot"
-                model = "manual-review"
-                cost_estimate = "ratified"
-                artifact_paths["reviewed-snapshot"] = relative_to_repo(new_snapshot_path)
-                snapshot_notes = f"Auto-ratified against {ratified_from_sha256[:12]}."
 
             if write_allowed:
                 merge_result = merge(CONTENT_SPOTS_DIR / f"{entry.slug}.md", payload)
@@ -350,7 +293,6 @@ def run_pipeline(
                         written=bool(merge_result and merge_result.written),
                         artifact_paths=artifact_paths,
                         pdf_text_sha256=pdf_signals.text_sha256,
-                        reviewed_snapshot_notes=snapshot_notes,
                     )
                 )
         except Exception as exc:  # noqa: BLE001

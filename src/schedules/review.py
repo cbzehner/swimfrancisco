@@ -228,7 +228,6 @@ def seed_draft(
         "reviewed_at": today.isoformat(),
         "source_pdf_url": source_pdf_url,
         "reviewed_against": _all_provider_descriptors(candidate.artifact_dir, primary_provider),
-        "summary": "(draft)",
         "payload": payload,
     }
 

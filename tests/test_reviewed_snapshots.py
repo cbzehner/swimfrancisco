@@ -22,7 +22,6 @@ def test_load_reviewed_snapshot(tmp_path):
                 "slug": "hamilton-pool",
                 "pdf_sha256": pdf_sha256,
                 "reviewed_at": "2026-04-18",
-                "summary": "manual review",
                 "source_pdf_url": "https://example.com/schedule.pdf",
                 "reviewed_against": [
                     {"provider": "gemini", "model": "gemini-3.1-flash-lite-preview"}
@@ -34,7 +33,7 @@ def test_load_reviewed_snapshot(tmp_path):
 
     snapshot, fingerprint, relative_path = load_reviewed_snapshot("hamilton-pool", pdf_sha256, root=root)
 
-    assert snapshot["summary"] == "manual review"
+    assert snapshot["slug"] == "hamilton-pool"
     assert isinstance(fingerprint, str) and len(fingerprint) == 64
     assert relative_path == str(file_path)
 
@@ -56,7 +55,6 @@ def _valid_envelope(slug, pdf_sha256):
         "reviewed_against": [
             {"provider": "gemini", "model": "gemini-3.1-flash-lite-preview"}
         ],
-        "summary": "manual review",
         "payload": {"schedule_effective": "2026-03-17", "sessions": [], "closures": []},
     }
 

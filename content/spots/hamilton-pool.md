@@ -42,18 +42,6 @@ start = "13:00"
 end = "15:00"
 
 [[extra.sessions]]
-day = "tuesday"
-type = "lessons"
-start = "15:30"
-end = "18:00"
-
-[[extra.sessions]]
-day = "tuesday"
-type = "lap_swim"
-start = "18:30"
-end = "20:00"
-
-[[extra.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "06:30"
@@ -92,12 +80,6 @@ end = "20:00"
 [[extra.sessions]]
 day = "thursday"
 type = "lap_swim"
-start = "06:45"
-end = "08:15"
-
-[[extra.sessions]]
-day = "thursday"
-type = "lap_swim"
 start = "09:00"
 end = "11:00"
 
@@ -118,18 +100,6 @@ day = "thursday"
 type = "lap_swim"
 start = "13:00"
 end = "14:30"
-
-[[extra.sessions]]
-day = "thursday"
-type = "lessons"
-start = "15:30"
-end = "18:00"
-
-[[extra.sessions]]
-day = "thursday"
-type = "lap_swim"
-start = "18:30"
-end = "20:00"
 
 [[extra.sessions]]
 day = "friday"
@@ -172,12 +142,7 @@ day = "saturday"
 type = "lap_swim"
 start = "09:00"
 end = "10:30"
-
-[[extra.sessions]]
-day = "saturday"
-type = "lessons"
-start = "09:00"
-end = "12:00"
+pool = "shared"
 
 [[extra.sessions]]
 day = "saturday"

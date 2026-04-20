@@ -148,7 +148,6 @@ class Proposed(PoolResultBase):
     review_notes: list[ReviewNote] = field(default_factory=list)
     artifact_paths: dict[str, str] = field(default_factory=dict)
     written: bool = False
-    reviewed_snapshot_notes: str | None = None
 
 
 @dataclass(frozen=True)

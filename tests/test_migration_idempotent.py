@@ -29,7 +29,6 @@ def _setup_old_layout(tmp_data: Path):
         "reviewed_at": "2026-04-10",
         "source_pdf_url": "https://example.test/balboa.pdf",
         "reviewed_against": [{"provider": "gemini", "model": "flash"}],
-        "summary": "test",
         "payload": {"schedule_effective": "2026-03-17", "sessions": [], "closures": []},
     }))
 

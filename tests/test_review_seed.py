@@ -59,7 +59,6 @@ def test_seed_draft_prefers_gemini(tmp_path):
     assert envelope["slug"] == "hamilton-pool"
     assert envelope["pdf_sha256"] == "a" * 64
     assert envelope["reviewed_at"] == "2026-04-19"
-    assert envelope["summary"] == "(draft)"
     assert envelope["payload"]["schedule_effective"] == "2026-03-17"
 
 
@@ -101,11 +100,13 @@ def test_seed_draft_is_idempotent(tmp_path):
     candidate = _make_candidate(artifact_dir, "a" * 64)
 
     first = seed_draft(candidate=candidate, drafts_root=drafts_root, today=date(2026, 4, 19))
-    first.write_text(first.read_text().replace('"(draft)"', '"reviewer edits"'))
+    envelope = json.loads(first.read_text())
+    envelope["reviewed_by"] = "Chris Zehner <cbzehner@gmail.com>"
+    first.write_text(json.dumps(envelope, indent=2) + "\n")
     second = seed_draft(candidate=candidate, drafts_root=drafts_root, today=date(2026, 4, 20))
 
     assert first == second
-    assert '"reviewer edits"' in second.read_text()
+    assert '"reviewed_by": "Chris Zehner <cbzehner@gmail.com>"' in second.read_text()
 
 
 def test_seed_draft_writes_relative_artifact_relpath(tmp_path):

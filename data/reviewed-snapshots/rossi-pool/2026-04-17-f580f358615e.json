@@ -3,7 +3,6 @@
   "slug": "rossi-pool",
   "pdf_sha256": "f580f358615eb222d31249ebe28d5a67fe9d7aa473493559754696849d8c798f",
   "reviewed_at": "2026-04-17",
-  "summary": "Manual review of the Rossi Spring 2026 PDF. Keep the public lap/senior/lesson rows, and represent the evening shared family/lap blocks as both family and lap on Tuesday, Wednesday, and Thursday.",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28501",
   "reviewed_against": [
     {

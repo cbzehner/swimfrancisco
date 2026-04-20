@@ -90,9 +90,7 @@ def load_reviewed_snapshot_from_path(
 
     Unlike ``load_reviewed_snapshot``, this does not require the caller to
     know the envelope's ``pdf_sha256`` in advance — it extracts it from
-    the file and validates. Used by the ratification loop, where we iterate
-    real filesystem paths whose stems are ``<reviewed_at>-<prefix>`` and
-    must not be mistaken for sha256 values.
+    the file and validates.
     """
     raw = json.loads(path.read_text())
     if not isinstance(raw, dict):
@@ -118,8 +116,7 @@ def canonicalize_payload(payload: dict) -> dict:
 
     Sorts sessions and closures, and strips fields that legitimately vary
     between a reviewed snapshot and a fresh provider extraction (e.g.
-    `evidence`, free-form `notes`). Used by the ratification check: two
-    payloads with identical canonical forms represent the same schedule.
+    `evidence`, free-form `notes`).
     """
     sessions = [_project(session, _SESSION_COMPARE_KEYS) for session in payload.get("sessions") or []]
     sessions.sort(key=lambda s: tuple(s.get(key, "") for key in _SESSION_COMPARE_KEYS))
@@ -137,38 +134,3 @@ def canonicalize_payload(payload: dict) -> dict:
     return canonical
 
 
-def find_snapshots_for_slug(slug: str, *, root: Path = REVIEWED_SNAPSHOTS_DIR) -> list[Path]:
-    """Return every snapshot file for a slug, regardless of pdf_sha256."""
-    slug_dir = root / slug
-    if not slug_dir.is_dir():
-        return []
-    return sorted(slug_dir.glob("*.json"))
-
-
-def write_ratified_snapshot(
-    *,
-    slug: str,
-    pdf_sha256: str,
-    source_pdf_url: str,
-    payload: dict,
-    reviewed_against: list[dict],
-    ratified_from_sha256: str,
-    root: Path = REVIEWED_SNAPSHOTS_DIR,
-) -> Path:
-    """Write a new snapshot that was auto-ratified by matching a prior one."""
-    path = reviewed_snapshot_path(slug, pdf_sha256, root)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    envelope = {
-        "version": REVIEWED_SNAPSHOT_VERSION,
-        "slug": slug,
-        "pdf_sha256": pdf_sha256,
-        "reviewed_at": date.today().isoformat(),
-        "reviewed_by": "ratification",
-        "source_pdf_url": source_pdf_url,
-        "reviewed_against": reviewed_against,
-        "ratified_from_sha256": ratified_from_sha256,
-        "summary": f"Auto-ratified: canonical payload matches {ratified_from_sha256[:12]}.",
-        "payload": payload,
-    }
-    path.write_text(json.dumps(envelope, indent=2) + "\n")
-    return path

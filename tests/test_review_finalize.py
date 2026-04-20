@@ -14,7 +14,6 @@ def _valid_draft_envelope(slug: str, pdf_sha256: str) -> dict:
         "reviewed_at": "2026-04-19",
         "source_pdf_url": "https://example.com/schedule.pdf",
         "reviewed_against": [{"provider": "gemini", "model": "gemini-3.1-flash-lite-preview"}],
-        "summary": "reviewer edits",
         "payload": {
             "schedule_effective": "2026-03-17",
             "sessions": [
@@ -78,10 +77,10 @@ def test_finalize_rejects_malformed_json(tmp_path):
 def test_finalize_rejects_schema_invalid(tmp_path):
     drafts = tmp_path / "drafts"
     envelope = _valid_draft_envelope("hamilton-pool", "a" * 64)
-    del envelope["summary"]  # violates required
+    del envelope["source_pdf_url"]  # violates required
     draft = _write_draft(drafts, "hamilton-pool", "a" * 64, envelope)
 
-    with pytest.raises(FinalizeError, match="summary"):
+    with pytest.raises(FinalizeError, match="source_pdf_url"):
         finalize_draft(
             draft_path=draft,
             snapshots_root=tmp_path / "reviewed-snapshots",
@@ -119,5 +118,40 @@ def test_finalize_aborts_on_destination_conflict(tmp_path):
             draft_path=draft,
             snapshots_root=snapshots,
             content_spots_dir=content,
+        )
+    assert draft.exists()
+
+
+def test_finalize_accepts_human_reviewer_identity(tmp_path):
+    drafts = tmp_path / "drafts"
+    snapshots = tmp_path / "reviewed-snapshots"
+    content = tmp_path / "content" / "spots"
+    envelope = _valid_draft_envelope("hamilton-pool", "a" * 64)
+    envelope["reviewed_by"] = "Chris Zehner <cbzehner@gmail.com>"
+    draft = _write_draft(drafts, "hamilton-pool", "a" * 64, envelope)
+    _seed_content_md(content, "hamilton-pool")
+
+    result = finalize_draft(
+        draft_path=draft,
+        snapshots_root=snapshots,
+        content_spots_dir=content,
+    )
+
+    written = json.loads(result.read_text())
+    assert written["reviewed_by"] == "Chris Zehner <cbzehner@gmail.com>"
+
+
+def test_finalize_rejects_ratified_from_sha256(tmp_path):
+    # Legacy field from the removed auto-ratification pathway must be refused.
+    drafts = tmp_path / "drafts"
+    envelope = _valid_draft_envelope("hamilton-pool", "a" * 64)
+    envelope["ratified_from_sha256"] = "b" * 64
+    draft = _write_draft(drafts, "hamilton-pool", "a" * 64, envelope)
+
+    with pytest.raises(FinalizeError, match="ratified_from_sha256"):
+        finalize_draft(
+            draft_path=draft,
+            snapshots_root=tmp_path / "reviewed-snapshots",
+            content_spots_dir=tmp_path / "content" / "spots",
         )
     assert draft.exists()

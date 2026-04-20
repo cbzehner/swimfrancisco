@@ -177,12 +177,9 @@ class TestPoolBlock:
         text = _render([_proposed(pdf_sha256=sha)], tmp_path)
         assert "- pdf_sha256: " + "a" * 12 + "\n" in text
 
-    def test_reviewed_snapshot_notes_and_error_render(self, tmp_path: Path) -> None:
+    def test_failed_error_renders(self, tmp_path: Path) -> None:
         text = _render(
             [
-                _proposed(
-                    reviewed_snapshot_notes="manual override: pinned to hash deadbeef",
-                ),
                 _failed(
                     slug="broke",
                     error="Semantic delta validation blocked merge.",
@@ -190,7 +187,6 @@ class TestPoolBlock:
             ],
             tmp_path,
         )
-        assert "- notes: manual override: pinned to hash deadbeef" in text
         assert "- error: Semantic delta validation blocked merge." in text
 
     def test_artifact_paths_sorted(self, tmp_path: Path) -> None:
