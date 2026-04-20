@@ -13,6 +13,7 @@ dependencies = [
   "click",
   "google-genai",
   "httpx",
+  "jsonschema",
   "pypdf",
   "pytest",
   "tomlkit",

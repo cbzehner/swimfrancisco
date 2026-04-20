@@ -1,11 +1,28 @@
 from __future__ import annotations
 
 import os
+import shlex
+import subprocess
 
 import click
 
 from .models import Failed, PoolResult, Proposed, Skipped, Unchanged
+from .paths import (
+    ARTIFACTS_DIR,
+    CONTENT_SPOTS_DIR,
+    PDF_CACHE_DIR,
+    REVIEWED_SNAPSHOT_DRAFTS_DIR,
+    REVIEWED_SNAPSHOTS_DIR,
+)
 from .pipeline import run_pipeline
+from .project import ProjectError, project as _project
+from .review import (
+    FinalizeError,
+    draft_path_for,
+    finalize_draft,
+    find_review_candidates,
+    seed_draft,
+)
 
 
 def _default_provider() -> str:
@@ -68,6 +85,64 @@ def extract(
     click.echo(f"Wrote {report_path}")
     click.echo(_summary_line(results))
     raise SystemExit(exit_code)
+
+
+@cli.command("project")
+@click.argument("slug")
+def project_command(slug: str) -> None:
+    """Project the latest reviewed snapshot for SLUG into content/spots/<slug>.md."""
+    try:
+        path = _project(
+            slug=slug,
+            snapshots_root=REVIEWED_SNAPSHOTS_DIR,
+            content_spots_dir=CONTENT_SPOTS_DIR,
+        )
+    except ProjectError as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(f"Wrote {path}")
+
+
+@cli.command("review")
+@click.option("--slug", help="Restrict review to this pool slug.")
+def review_command(slug: str | None) -> None:
+    """Approve the next pipeline-extracted pool schedule."""
+    if not ARTIFACTS_DIR.is_dir():
+        click.echo("nothing to review (run `schedules extract` first?)")
+        return
+
+    candidates = find_review_candidates(
+        artifacts_root=ARTIFACTS_DIR,
+        snapshots_root=REVIEWED_SNAPSHOTS_DIR,
+        pdfs_root=PDF_CACHE_DIR,
+        only_slug=slug,
+    )
+    if not candidates:
+        click.echo("nothing to review")
+        return
+
+    candidate = candidates[0]
+    draft = seed_draft(candidate=candidate, drafts_root=REVIEWED_SNAPSHOT_DRAFTS_DIR)
+    click.echo(f"Reviewing {candidate.slug} ({candidate.pdf_sha256[:12]})")
+    click.echo(f"Draft:  {draft}")
+
+    if candidate.pdf_path and candidate.pdf_path.exists():
+        try:
+            subprocess.run(["open", str(candidate.pdf_path)], check=False)
+        except FileNotFoundError:
+            click.echo(f"(note: `open` not available; PDF at {candidate.pdf_path})")
+
+    editor = os.getenv("EDITOR") or "hx"
+    subprocess.run([*shlex.split(editor), str(draft)], check=False)
+
+    try:
+        final = finalize_draft(
+            draft_path=draft,
+            snapshots_root=REVIEWED_SNAPSHOTS_DIR,
+            content_spots_dir=CONTENT_SPOTS_DIR,
+        )
+    except FinalizeError as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(f"Wrote {final}")
 
 
 @cli.group()
