@@ -918,12 +918,18 @@ def seed_draft(
     """Seed a draft envelope in the drafts tree. Returns its path.
 
     If a draft for this (slug, pdf_sha256) already exists, returns it
-    unchanged — resuming work is idempotent.
+    unchanged — resuming work is idempotent across days. The existing
+    filename's date prefix is preserved so reviewer edits survive even
+    when the reviewer resumes on a later date.
     """
     today = today or _date.today()
+    slug_dir = drafts_root / candidate.slug
+    prefix = candidate.pdf_sha256[:12]
+    if slug_dir.is_dir():
+        existing = sorted(slug_dir.glob(f"*-{prefix}.json"))
+        if existing:
+            return existing[0]
     path = draft_path_for(candidate.slug, candidate.pdf_sha256, today, root=drafts_root)
-    if path.exists():
-        return path
 
     provider_path = _pick_provider_artifact(candidate.artifact_dir)
     provider_payload = _json.loads(provider_path.read_text())
@@ -962,8 +968,9 @@ git commit -m "$(cat <<'EOF'
 feat(review): seed draft envelopes from provider artifacts
 
 Prefers gemini, falls back to anthropic, then newest-mtime. Idempotent
-on re-entry so an editor crash doesn't lose reviewer edits. Adds a
-$schema pointer so helix's JSON LSP picks up autocomplete automatically.
+on re-entry across days: resume globs drafts_root/<slug>/*-<prefix>.json
+so an editor crash or overnight pause doesn't lose reviewer edits. Adds
+a $schema pointer so helix's JSON LSP picks up autocomplete automatically.
 EOF
 )"
 ```
@@ -1099,7 +1106,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .merge import merge
-from .paths import CONTENT_SPOTS_DIR, REVIEWED_SNAPSHOTS_DIR, REVIEWED_SNAPSHOT_DRAFTS_DIR
+from .paths import CONTENT_SPOTS_DIR, REVIEWED_SNAPSHOTS_DIR
 from .reviewed_snapshots import (
     canonicalize_payload,
     load_reviewed_snapshot_from_path,
@@ -1130,8 +1137,10 @@ def project(
     Raises ProjectError with a reviewer-facing message on any failure.
     Returns the path to the written MD. Idempotent.
     """
-    # Explicit draft-tree guard: spec contract.
-    if snapshots_root.resolve() == REVIEWED_SNAPSHOT_DRAFTS_DIR.resolve():
+    # Explicit draft-tree guard: spec contract. Compare by basename so the
+    # guard fires whether callers pass the real constant or a test-injected
+    # tmp_path that mirrors the on-disk layout.
+    if snapshots_root.name == "reviewed-snapshot-drafts":
         raise ProjectError(
             f"refusing to project from draft tree {snapshots_root}; "
             "drafts must be finalized into reviewed-snapshots first"
@@ -1404,10 +1413,13 @@ def test_finalize_rejects_schema_invalid(tmp_path):
 def test_finalize_rejects_validate_failure(tmp_path):
     drafts = tmp_path / "drafts"
     envelope = _valid_draft_envelope("hamilton-pool", "a" * 64)
-    envelope["payload"]["sessions"] = envelope["payload"]["sessions"][:2]
+    # Schema-valid (5 sessions, well-formed HH:MM), but validate() catches
+    # the start >= end ordering the schema pattern cannot express.
+    envelope["payload"]["sessions"][0]["start"] = "09:00"
+    envelope["payload"]["sessions"][0]["end"] = "08:00"
     draft = _write_draft(drafts, "hamilton-pool", "a" * 64, envelope)
 
-    with pytest.raises(FinalizeError, match="fewer than 5"):
+    with pytest.raises(FinalizeError, match="invalid time range"):
         finalize_draft(
             draft_path=draft,
             snapshots_root=tmp_path / "reviewed-snapshots",
@@ -1432,6 +1444,29 @@ def test_finalize_aborts_on_destination_conflict(tmp_path):
             content_spots_dir=content,
         )
     assert draft.exists()
+
+
+def test_finalize_surfaces_post_rename_projection_failure(tmp_path):
+    """Rename is the commit point: if project() fails after rename, the draft
+    is gone, the snapshot exists, and the error tells the reviewer how to
+    recover by re-running `schedules project <slug>`."""
+    drafts = tmp_path / "drafts"
+    snapshots = tmp_path / "reviewed-snapshots"
+    content = tmp_path / "content" / "spots"
+    draft = _write_draft(drafts, "hamilton-pool", "a" * 64, _valid_draft_envelope("hamilton-pool", "a" * 64))
+    # Deliberately omit content/spots/hamilton-pool.md — project() will raise
+    # a ProjectError("content file missing: ...") AFTER the rename succeeds.
+    content.mkdir(parents=True)
+
+    with pytest.raises(FinalizeError, match="projection failed"):
+        finalize_draft(
+            draft_path=draft,
+            snapshots_root=snapshots,
+            content_spots_dir=content,
+        )
+
+    assert not draft.exists()
+    assert (snapshots / "hamilton-pool" / "2026-04-19-aaaaaaaaaaaa.json").exists()
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
@@ -1513,7 +1548,7 @@ def finalize_draft(
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `uv run pytest tests/test_review_finalize.py -v`
-Expected: all five PASS.
+Expected: all six PASS.
 
 - [ ] **Step 5: Commit**
 
@@ -1524,8 +1559,9 @@ feat(review): finalize drafts into reviewed snapshots
 
 Rename is the commit point; projection runs after. Draft stays in place
 on any pre-rename failure (malformed JSON, schema violation, validate
-failure, destination conflict). Post-rename projection failures surface
-a message telling the reviewer how to resume with `schedules project`.
+failure, destination conflict). Post-rename projection failures leave
+the snapshot committed and surface a message telling the reviewer how
+to finish via `schedules project`, exercised by a dedicated test.
 EOF
 )"
 ```
