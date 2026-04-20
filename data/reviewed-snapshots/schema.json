@@ -34,6 +34,15 @@
       "pattern": "^[0-9a-f]{64}$",
       "description": "SHA-256 of the source PDF bytes. Locks this snapshot to that exact document."
     },
+    "reviewed_by": {
+      "type": "string",
+      "description": "Who/what produced this snapshot. 'ratification' for auto-ratified envelopes; omitted or 'manual' for human-reviewed."
+    },
+    "ratified_from_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "When reviewed_by='ratification', the pdf_sha256 of the human-reviewed snapshot whose canonical payload matched."
+    },
     "reviewed_at": {
       "type": "string",
       "format": "date",
