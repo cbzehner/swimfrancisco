@@ -106,11 +106,29 @@ export async function fetchTempWithFallback(
   }
 }
 
+// YYYYMMDD in America/Los_Angeles — all our stations are Pacific, so we
+// anchor the tide window to the station-local calendar day. Using the
+// Worker's UTC date would silently skip up to 7 hours of predictions
+// during PT evenings (when UTC has already rolled to "tomorrow").
+function stationLocalDateYmd(): string {
+  const fmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Los_Angeles",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  return fmt.format(new Date()).replace(/-/g, "");
+}
+
 export async function fetchNoaaTides(stationId: string): Promise<NoaaTideData | null> {
+  // 48-hour window forward from station-local today-midnight. Covers
+  // today + tomorrow of hi/lo predictions so the client always has at
+  // least one future entry no matter the hour of day.
   const body = await noaaGet<NoaaPredictionsResponse>("NOAA tides", stationId, {
     product: "predictions",
     datum: "MLLW",
-    date: "today",
+    begin_date: stationLocalDateYmd(),
+    range: "48",
     interval: "hilo",
   });
   const rows = body.predictions ?? [];
