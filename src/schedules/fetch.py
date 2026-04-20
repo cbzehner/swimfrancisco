@@ -10,7 +10,7 @@ import httpx
 from pypdf import PdfReader
 
 from .models import FetchResult
-from .paths import PDF_CACHE_DIR
+from .paths import DATA_DIR
 
 
 class FetchError(RuntimeError):
@@ -21,12 +21,12 @@ def fetch_pdf(
     slug: str,
     url: str,
     *,
-    cache_root: Path = PDF_CACHE_DIR,
+    cache_root: Path = DATA_DIR,
     force: bool = False,
     timeout: float = 30.0,
     retries: int = 2,
 ) -> FetchResult:
-    """Fetch a PDF, caching under data/pdfs/<slug>/<date>-<prefix>.pdf."""
+    """Fetch a PDF, caching under data/<slug>/<date>-<prefix>/source.pdf."""
     slug_dir = cache_root / slug
     slug_dir.mkdir(parents=True, exist_ok=True)
 
@@ -40,8 +40,8 @@ def fetch_pdf(
                 sha256 = hashlib.sha256(payload).hexdigest()
                 prefix = sha256[:12]
 
-                # Glob by prefix to detect cache hit or collision.
-                matches = sorted(slug_dir.glob(f"*-{prefix}.pdf"))
+                # Glob by prefix under per-review dirs to detect cache hit or collision.
+                matches = sorted(slug_dir.glob(f"*-{prefix}/source.pdf"))
                 if not force and matches:
                     for existing in matches:
                         existing_bytes = existing.read_bytes()
@@ -61,8 +61,9 @@ def fetch_pdf(
                         )
 
                 # Cache miss — write with today's date.
-                filename = f"{date.today().isoformat()}-{prefix}.pdf"
-                path = slug_dir / filename
+                review_dir = slug_dir / f"{date.today().isoformat()}-{prefix}"
+                review_dir.mkdir(parents=True, exist_ok=True)
+                path = review_dir / "source.pdf"
                 path.write_bytes(payload)
                 return FetchResult(
                     path=path,
