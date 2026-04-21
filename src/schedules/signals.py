@@ -46,6 +46,7 @@ def analyze_page_texts(page_texts: list[str]) -> PdfSignals:
 
 
 def source_notes_for_payload(signals: PdfSignals, payload: dict) -> list[ReviewNote]:
+    del payload  # unused — reserved for future payload-aware signals
     notes: list[ReviewNote] = []
 
     if len(signals.grid_header_pages) >= 2:
@@ -56,25 +57,6 @@ def source_notes_for_payload(signals: PdfSignals, payload: dict) -> list[ReviewN
                     f"PDF appears to contain repeated day-grid pages ({len(signals.grid_header_pages)} pages with day headers)"
                 ),
                 evidence={"grid_header_pages": signals.grid_header_pages},
-            )
-        )
-
-    extracted_lessons = sum(
-        1
-        for session in payload.get("sessions") or []
-        if str(session.get("type")) == "lessons"
-    )
-    if signals.timed_lesson_line_count > extracted_lessons:
-        notes.append(
-            ReviewNote(
-                kind="timed_lessons_under_extracted",
-                message=(
-                    f"source PDF contains {signals.timed_lesson_line_count} timed lesson-like lines but extraction produced {extracted_lessons} lesson sessions"
-                ),
-                evidence={
-                    "timed_lesson_line_count": signals.timed_lesson_line_count,
-                    "extracted_lessons": extracted_lessons,
-                },
             )
         )
 

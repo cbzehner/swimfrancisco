@@ -6,9 +6,9 @@ Allowed session types:
 - `lap_swim` — LAP SWIM
 - `family_swim` — REC/FAMILY SWIM, REC SWIM, RECREATION SWIM, FAMILY SWIM (all of these are the same program; always emit `family_swim`)
 - `senior_swim` — SENIOR SWIM, SENIOR/THERAPY, SENIOR ACCESS SWIM
-- `lessons` — SWIM LESSONS, LEARN TO SWIM, ADULT LESSONS, PARENT/CHILD INTRO, PRE-SCHOOL LESSONS
 
 Programs to ignore (do NOT emit as sessions):
+- SWIM LESSONS, LEARN TO SWIM, ADULT LESSONS, PARENT/CHILD INTRO, PRE-SCHOOL LESSONS, TINY TOTS — instructor-led registration-only lessons are out of scope for drop-in availability.
 - WATER EXERCISE, DEEP WATER EXERCISE, EXERCISE, DEEP WATER H2O AEROBICS, AEROBICS — these are instructor-led aerobics classes.
 - SELF GUIDED EXERCISE, SENIOR/SELF GUIDED EXERCISE — access-controlled exercise programs, not drop-in swim.
 - MASTERS SWIMMING, MASTERS SWIM TEAM, YOUTH SYNCHRO, ADULT SYNCHRO, ADULT HOCKEY, ADULT WATER POLO, PIRANHAS SWIM, JUNIOR PIRANHAS SWIM — private team/club bookings.
@@ -28,6 +28,7 @@ Rules:
 - Do not emit the same (day, type, start, end) tuple more than once.
 - If a cell contains two session types separated by `/` or `&` (e.g. `REC/FAMILY SWIM / LAP SWIM`), emit one session per type. If the cell notes a different end time for one of them (e.g. `Lap until 4pm`), apply that end time to the matching session.
 - If a cell labels a pool section in parentheses (e.g. `(shallow pool)`, `(deep)`, `(deep / shallow)`, `(Lap/Therapy)`), set the session's `pool` field to that label, lowercased and stripped of the word "pool" (e.g. `shallow`, `deep`, `deep / shallow`, `lap/therapy`). Leave `pool` absent when the PDF shows no section label.
+- If the PDF contains multiple pages and each page has its own day-grid AND its own pool header (e.g. different temperature/dimensions like `86°F/30°C, 27 Meters` vs `76°F/30°C, 25 Meters`), treat each page as a separate pool's schedule. Emit sessions from every page, and set each session's `pool` field based on that page's header — prefer `warm` for the hotter pool and `cool` for the cooler pool when temperatures differ, otherwise use the most specific label the PDF supplies.
 - If a cell has a visible caveat that applies to that specific session (e.g. `Closed every 3rd Thursday of the month for training`), put the caveat verbatim in the session's `notes` field. Do not put whole-facility closure text in `notes`.
 - For each session, set `evidence` to the exact line of text from the PDF that contained this row's time and type. Copy characters verbatim; do not paraphrase, summarize, or translate. If a session is represented by more than one visible line on the PDF, concatenate those lines with a single space.
 
