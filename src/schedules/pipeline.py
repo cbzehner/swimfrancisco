@@ -148,7 +148,7 @@ def run_pipeline(
             continue
 
         try:
-            fetch_result = fetch_pdf(entry.slug, entry.pdf_url, force=force)
+            fetch_result = fetch_pdf(entry.slug, entry.pdf_url)
             date = fetch_result.path.parent.name[:10]
             reviewed_file = reviewed_path(entry.slug, date, fetch_result.sha256)
 

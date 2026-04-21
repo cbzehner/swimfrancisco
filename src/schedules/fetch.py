@@ -22,7 +22,6 @@ def fetch_pdf(
     url: str,
     *,
     cache_root: Path = DATA_DIR,
-    force: bool = False,
     timeout: float = 30.0,
     retries: int = 2,
 ) -> FetchResult:
@@ -41,8 +40,11 @@ def fetch_pdf(
                 prefix = sha256[:12]
 
                 # Glob by prefix under per-review dirs to detect cache hit or collision.
+                # A matching sha always reuses the existing review dir, even under `force`:
+                # `--force` re-triggers provider extraction (see extract.py), not a fresh
+                # dated directory for byte-identical PDFs.
                 matches = sorted(slug_dir.glob(f"*-{prefix}/source.pdf"))
-                if not force and matches:
+                if matches:
                     for existing in matches:
                         existing_bytes = existing.read_bytes()
                         existing_sha = hashlib.sha256(existing_bytes).hexdigest()
