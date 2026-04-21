@@ -1,0 +1,190 @@
+{
+  "slug": "coffman-pool",
+  "pdf_sha256": "2392369030b457e7bfb57c0bd2a1f8afbd2af5bf1c1dc665c01eddb114a6c458",
+  "reviewed_at": "2026-04-20",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28927",
+  "payload": {
+    "closures": [
+      {
+        "end": "2026-06-06",
+        "reason": "In-Service (9am\u20131pm)",
+        "start": "2026-06-06"
+      },
+      {
+        "end": "2026-05-21",
+        "reason": "Pool closed Thursday 5/21 11:30am\u20131pm",
+        "start": "2026-05-21"
+      }
+    ],
+    "schedule_effective": "2026-04-21",
+    "schedule_effective_end": "2026-06-06",
+    "sessions": [
+      {
+        "day": "tuesday",
+        "end": "08:30",
+        "evidence": "LAP SWIM 7:00 am - 8:30 am",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "10:00",
+        "evidence": "SENIOR/THERAPY SWIM 8:45 am - 10:00 am",
+        "start": "08:45",
+        "type": "senior_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "13:00",
+        "evidence": "LAP SWIM 11:30 am - 1:00 pm",
+        "start": "11:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "16:00",
+        "evidence": "REC/FAMILY / SENIOR SWIM (Shared Pool)^ 2:00 pm - 4:00 pm",
+        "pool": "shared",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "16:00",
+        "evidence": "REC/FAMILY / SENIOR SWIM (Shared Pool)^ 2:00 pm - 4:00 pm",
+        "pool": "shared",
+        "start": "14:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "10:30",
+        "evidence": "SENIOR/SELF GUIDED EXERCISE 9:00 am - 10:30 am",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "13:00",
+        "evidence": "LAP SWIM 11:00 am - 1:00 pm",
+        "start": "11:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "14:30",
+        "evidence": "REC/FAMILY SWIM 1:30 pm - 2:30 pm",
+        "start": "13:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:00",
+        "evidence": "REC/FAMILY /LAP SWIM (Shared Pool)^ 6:00 pm - 7:00 pm",
+        "pool": "shared",
+        "start": "18:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:00",
+        "evidence": "REC/FAMILY /LAP SWIM (Shared Pool)^ 6:00 pm - 7:00 pm",
+        "pool": "shared",
+        "start": "18:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "08:30",
+        "evidence": "LAP SWIM 7:00 am - 8:30 am",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "10:00",
+        "evidence": "SENIOR/THERAPY SWIM 8:45 am - 10:00 am",
+        "start": "08:45",
+        "type": "senior_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "13:00",
+        "evidence": "LAP SWIM Closed every 3rd Thurs of the month for training 11:30 am - 1:00 pm",
+        "notes": "Closed every 3rd Thurs of the month for training",
+        "start": "11:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "16:00",
+        "evidence": "LAP SWIM 2:30 pm - 4:00 pm",
+        "start": "14:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "10:30",
+        "evidence": "SENIOR/SELF GUIDED EXERCISE 9:00 am - 10:30 am",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "friday",
+        "end": "11:15",
+        "evidence": "SENIOR/SFUSD 10:30 am - 11:15 am",
+        "start": "10:30",
+        "type": "senior_swim"
+      },
+      {
+        "day": "friday",
+        "end": "13:00",
+        "evidence": "LAP SWIM 11:30 am - 1:00 pm",
+        "start": "11:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "15:00",
+        "evidence": "REC/FAMILY SWIM 2:00 pm \u20133:00 pm",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "10:30",
+        "evidence": "REC/FAMILY SWIM 9:00am-10:30am",
+        "start": "09:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "12:45",
+        "evidence": "SENIOR/THERAPY SWIM 11:45 am - 12:45 pm",
+        "start": "11:45",
+        "type": "senior_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "14:00",
+        "evidence": "PARENT & CHILD FAMILY SWIM 1:00 pm - 2:00 pm",
+        "start": "13:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "15:45",
+        "evidence": "REC/FAMILY SWIM 2:30 pm - 3:45 pm",
+        "start": "14:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "17:00",
+        "evidence": "LAP SWIM 4:00 pm - 5:00 pm",
+        "start": "16:00",
+        "type": "lap_swim"
+      }
+    ]
+  }
+}

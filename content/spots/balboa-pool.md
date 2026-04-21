@@ -112,7 +112,7 @@ day = "friday"
 type = "senior_swim"
 start = "10:30"
 end = "12:00"
-pool = "deep / shallow"
+pool = "shallow / deep"
 
 [[extra.sessions]]
 day = "friday"

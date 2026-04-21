@@ -144,7 +144,7 @@
         "day": "friday",
         "end": "12:00",
         "evidence": "SENIOR / THERAPY ACCESS SWIM (deep / shallow) 10:30 am \u2013 12:00 pm",
-        "pool": "deep / shallow",
+        "pool": "shallow / deep",
         "start": "10:30",
         "type": "senior_swim"
       },
