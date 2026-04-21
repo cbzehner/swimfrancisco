@@ -39,7 +39,7 @@
         "day": "tuesday",
         "end": "08:30",
         "evidence": "LAP SWIM 7:30 - 8:30 AM",
-        "pool": "warm pool",
+        "pool": "warm",
         "start": "07:30",
         "type": "lap_swim"
       },
@@ -47,7 +47,7 @@
         "day": "tuesday",
         "end": "10:00",
         "evidence": "SENIOR SWIM (LAP/THERAPY) 8:45 - 10:00AM",
-        "pool": "warm pool",
+        "pool": "warm",
         "start": "08:45",
         "type": "senior_swim"
       },
@@ -55,7 +55,7 @@
         "day": "tuesday",
         "end": "15:00",
         "evidence": "LAP SWIM (LAP/THERAPY) 12:30\u2013 3:00 PM",
-        "pool": "warm pool",
+        "pool": "warm",
         "start": "12:30",
         "type": "lap_swim"
       },
@@ -63,7 +63,7 @@
         "day": "tuesday",
         "end": "17:00",
         "evidence": "REC/FAMILY SWIM 3:30- 5:00 PM",
-        "pool": "warm pool",
+        "pool": "warm",
         "start": "15:30",
         "type": "family_swim"
       },
@@ -71,7 +71,7 @@
         "day": "tuesday",
         "end": "18:30",
         "evidence": "LAP SWIM 5:30-6:30PM",
-        "pool": "warm pool",
+        "pool": "warm",
         "start": "17:30",
         "type": "lap_swim"
       },
@@ -79,7 +79,7 @@
         "day": "wednesday",
         "end": "10:15",
         "evidence": "SENIOR SWIM (LAP/THERAPY) 9:00 - 10:15 AM",
-        "pool": "warm pool",
+        "pool": "warm",
         "start": "09:00",
         "type": "senior_swim"
       },
@@ -87,7 +87,6 @@
         "day": "wednesday",
         "end": "15:15",
         "evidence": "SENIOR SWIM (LAP/THERAPY) 12:50- 3:15PM",
-        "pool": "lap/therapy",
         "start": "12:50",
         "type": "senior_swim"
       },
@@ -95,7 +94,7 @@
         "day": "wednesday",
         "end": "18:30",
         "evidence": "REC/FAMILY SWIM 5:30 - 6:30 PM",
-        "pool": "warm pool",
+        "pool": "warm",
         "start": "17:30",
         "type": "family_swim"
       },
@@ -103,7 +102,7 @@
         "day": "thursday",
         "end": "08:30",
         "evidence": "LAP SWIM 7:30 - 8:30 AM",
-        "pool": "warm pool",
+        "pool": "warm",
         "start": "07:30",
         "type": "lap_swim"
       },
@@ -111,7 +110,7 @@
         "day": "thursday",
         "end": "10:30",
         "evidence": "SENIOR SWIM (LAP/THERAPY) 9:00 - 10:30AM",
-        "pool": "warm pool",
+        "pool": "warm",
         "start": "09:00",
         "type": "senior_swim"
       },
@@ -120,7 +119,7 @@
         "end": "14:00",
         "evidence": "LAP SWIM (LAP/THERAPY) CLOSED EVERY 3RD THURS OF THE MONTH FOR TRAINING 11:00 2:00 PM",
         "notes": "CLOSED EVERY 3RD THURS OF THE MONTH FOR TRAINING",
-        "pool": "warm pool",
+        "pool": "warm",
         "start": "11:00",
         "type": "lap_swim"
       },
@@ -128,7 +127,7 @@
         "day": "thursday",
         "end": "15:15",
         "evidence": "Lap Swim 2:15- 3:15 pm",
-        "pool": "warm pool",
+        "pool": "warm",
         "start": "14:15",
         "type": "lap_swim"
       },
@@ -136,7 +135,7 @@
         "day": "thursday",
         "end": "17:30",
         "evidence": "REC/FAMILY SWIM 4:15 - 5:30 PM",
-        "pool": "warm pool",
+        "pool": "warm",
         "start": "16:15",
         "type": "family_swim"
       },
@@ -144,7 +143,7 @@
         "day": "friday",
         "end": "10:15",
         "evidence": "REC/FAMILY\u2014SENIOR SWIM 9:00 - 10:15 AM",
-        "pool": "warm pool",
+        "pool": "warm",
         "start": "09:00",
         "type": "family_swim"
       },
@@ -152,7 +151,7 @@
         "day": "friday",
         "end": "10:15",
         "evidence": "REC/FAMILY\u2014SENIOR SWIM 9:00 - 10:15 AM",
-        "pool": "warm pool",
+        "pool": "warm",
         "start": "09:00",
         "type": "senior_swim"
       },
@@ -160,7 +159,7 @@
         "day": "friday",
         "end": "15:15",
         "evidence": "SENIOR SWIM (LAP/THERAPY) 12:50- 3:15PM",
-        "pool": "warm pool",
+        "pool": "warm",
         "start": "12:50",
         "type": "senior_swim"
       },
@@ -168,7 +167,7 @@
         "day": "friday",
         "end": "19:00",
         "evidence": "REC/FAMILY SWIM 5:30 - 7:00 PM",
-        "pool": "warm pool",
+        "pool": "warm",
         "start": "17:30",
         "type": "family_swim"
       },
@@ -176,7 +175,7 @@
         "day": "saturday",
         "end": "13:15",
         "evidence": "LAP SWIM (LAP/THERAPY) 12:00 \u2013 1:15 PM",
-        "pool": "warm pool",
+        "pool": "warm",
         "start": "12:00",
         "type": "lap_swim"
       },
@@ -184,7 +183,7 @@
         "day": "saturday",
         "end": "15:00",
         "evidence": "REC/FAMILY SWIM 1:45\u2013 3:00 PM",
-        "pool": "warm pool",
+        "pool": "warm",
         "start": "13:45",
         "type": "family_swim"
       },
@@ -192,7 +191,7 @@
         "day": "saturday",
         "end": "17:00",
         "evidence": "REC/FAMILY SWIM 3:30- 5:00 PM",
-        "pool": "warm pool",
+        "pool": "warm",
         "start": "15:30",
         "type": "family_swim"
       },
@@ -200,7 +199,7 @@
         "day": "tuesday",
         "end": "10:00",
         "evidence": "LAP SWIM 7:30 - 10:00AM",
-        "pool": "cool pool",
+        "pool": "cool",
         "start": "07:30",
         "type": "lap_swim"
       },
@@ -208,7 +207,7 @@
         "day": "tuesday",
         "end": "15:30",
         "evidence": "LAP SWIM 12:30 - 3:30PM",
-        "pool": "cool pool",
+        "pool": "cool",
         "start": "12:30",
         "type": "lap_swim"
       },
@@ -216,7 +215,7 @@
         "day": "tuesday",
         "end": "18:30",
         "evidence": "LAP SWIM 5:30 - 6:30 PM",
-        "pool": "cool pool",
+        "pool": "cool",
         "start": "17:30",
         "type": "lap_swim"
       },
@@ -224,7 +223,7 @@
         "day": "wednesday",
         "end": "10:15",
         "evidence": "LAP SWIM 9:00 - 10:15 AM",
-        "pool": "cool pool",
+        "pool": "cool",
         "start": "09:00",
         "type": "lap_swim"
       },
@@ -232,7 +231,7 @@
         "day": "wednesday",
         "end": "15:30",
         "evidence": "LAP SWIM 11:45 -3:30PM",
-        "pool": "cool pool",
+        "pool": "cool",
         "start": "11:45",
         "type": "lap_swim"
       },
@@ -240,7 +239,7 @@
         "day": "wednesday",
         "end": "18:30",
         "evidence": "LAP SWIM 5:30 - 6:30 PM",
-        "pool": "cool pool",
+        "pool": "cool",
         "start": "17:30",
         "type": "lap_swim"
       },
@@ -248,7 +247,7 @@
         "day": "thursday",
         "end": "10:30",
         "evidence": "LAP SWIM 7:30 - 10:30AM",
-        "pool": "cool pool",
+        "pool": "cool",
         "start": "07:30",
         "type": "lap_swim"
       },
@@ -256,7 +255,7 @@
         "day": "thursday",
         "end": "14:00",
         "evidence": "LAP SWIM 11:00 - 2:00PM",
-        "pool": "cool pool",
+        "pool": "cool",
         "start": "11:00",
         "type": "lap_swim"
       },
@@ -264,7 +263,7 @@
         "day": "thursday",
         "end": "15:30",
         "evidence": "LAP SWIM 2:15- 3:30PM",
-        "pool": "cool pool",
+        "pool": "cool",
         "start": "14:15",
         "type": "lap_swim"
       },
@@ -272,7 +271,7 @@
         "day": "thursday",
         "end": "18:30",
         "evidence": "LAP SWIM 5:30 - 6:30 PM",
-        "pool": "cool pool",
+        "pool": "cool",
         "start": "17:30",
         "type": "lap_swim"
       },
@@ -280,7 +279,7 @@
         "day": "friday",
         "end": "10:15",
         "evidence": "LAP SWIM 9:00 - 10:15 AM",
-        "pool": "cool pool",
+        "pool": "cool",
         "start": "09:00",
         "type": "lap_swim"
       },
@@ -288,7 +287,7 @@
         "day": "friday",
         "end": "15:30",
         "evidence": "LAP SWIM 11:45 - 3:30PM",
-        "pool": "cool pool",
+        "pool": "cool",
         "start": "11:45",
         "type": "lap_swim"
       },
@@ -296,7 +295,7 @@
         "day": "friday",
         "end": "19:30",
         "evidence": "LAP SWIM 5:30 - 7:30 PM",
-        "pool": "cool pool",
+        "pool": "cool",
         "start": "17:30",
         "type": "lap_swim"
       },
@@ -304,7 +303,7 @@
         "day": "saturday",
         "end": "14:00",
         "evidence": "LAP SWIM 12:00 - 2:00 PM",
-        "pool": "cool pool",
+        "pool": "cool",
         "start": "12:00",
         "type": "lap_swim"
       },
@@ -312,7 +311,7 @@
         "day": "saturday",
         "end": "16:30",
         "evidence": "LAP SWIM 2:30 \u2013 4:30 PM",
-        "pool": "cool pool",
+        "pool": "cool",
         "start": "14:30",
         "type": "lap_swim"
       }
