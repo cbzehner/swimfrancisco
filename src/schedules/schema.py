@@ -28,7 +28,6 @@ EXTRACTION_SCHEMA = {
                             "lap_swim",
                             "family_swim",
                             "senior_swim",
-                            "lessons",
                         ],
                     },
                     "start": {

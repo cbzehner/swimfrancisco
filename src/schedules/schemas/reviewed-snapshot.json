@@ -74,7 +74,7 @@
           "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
         },
         "type": {
-          "enum": ["lap_swim", "family_swim", "senior_swim", "lessons"],
+          "enum": ["lap_swim", "family_swim", "senior_swim"],
           "description": "Session category. Add new values here first, then teach the template."
         },
         "start": {

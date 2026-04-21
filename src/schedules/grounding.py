@@ -12,7 +12,6 @@ TYPE_TOKENS: dict[str, tuple[str, ...]] = {
     "lap_swim": ("lap",),
     "family_swim": ("family", "rec", "recreation"),
     "senior_swim": ("senior", "55+", "50+"),
-    "lessons": ("lesson", "swim school", "learn to swim", "parent/child", "parent / child", "instruct"),
 }
 
 _WS_RE = re.compile(r"\s+")

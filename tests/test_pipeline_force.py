@@ -91,7 +91,7 @@ def _setup(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr("schedules.pipeline.extract_page_texts", lambda _bytes: [""])
     monkeypatch.setattr(
         "schedules.pipeline.analyze_page_texts",
-        lambda _pages: PdfSignals(page_count=1, text_sha256="x", grid_header_pages=[], timed_lesson_line_count=0),
+        lambda _pages: PdfSignals(page_count=1, text_sha256="x", grid_header_pages=[]),
     )
     monkeypatch.setattr("schedules.pipeline.normalize_pdf_text", lambda _pages: "")
     monkeypatch.setattr(

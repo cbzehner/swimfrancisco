@@ -1,8 +1,4 @@
 {
-  "slug": "martin-luther-king-jr-pool",
-  "pdf_sha256": "4b0ae410e37d66393704fb70dff8e5ce3d42c8c919a6872038cefe8e9097a590",
-  "reviewed_at": "2026-04-20",
-  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28771",
   "payload": {
     "closures": [
       {
@@ -180,14 +176,6 @@
       {
         "day": "friday",
         "end": "12:00",
-        "evidence": "SWIM LESSONS (shallow) 10:30am - 12:00pm",
-        "pool": "shallow",
-        "start": "10:30",
-        "type": "lessons"
-      },
-      {
-        "day": "friday",
-        "end": "12:00",
         "evidence": "LAP SWIM (8) 10:30am - 12:00pm",
         "start": "10:30",
         "type": "lap_swim"
@@ -229,5 +217,9 @@
         "type": "lap_swim"
       }
     ]
-  }
+  },
+  "pdf_sha256": "4b0ae410e37d66393704fb70dff8e5ce3d42c8c919a6872038cefe8e9097a590",
+  "reviewed_at": "2026-04-20",
+  "slug": "martin-luther-king-jr-pool",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28771"
 }

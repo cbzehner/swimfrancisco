@@ -154,13 +154,6 @@ end = "12:00"
 
 [[extra.sessions]]
 day = "friday"
-type = "lessons"
-start = "10:30"
-end = "12:00"
-pool = "shallow"
-
-[[extra.sessions]]
-day = "friday"
 type = "family_swim"
 start = "12:30"
 end = "15:30"
@@ -205,4 +198,4 @@ end = "2026-06-06"
 reason = "Inservice Training Closure"
 +++
 
-An indoor pool in the Bayview, featuring a 25-yard x 25-meter main pool and a separate wading pool for tots. Programs include lap swim, senior swim, recreation swim, and lessons.
+An indoor pool in the Bayview, featuring a 25-yard x 25-meter main pool and a separate wading pool for tots. Programs include lap swim, senior swim, and recreation swim.

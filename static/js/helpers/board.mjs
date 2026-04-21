@@ -146,9 +146,9 @@ function findNextSession(normalized, closures, now) {
 }
 
 // Return the next drop-in session (lap / family / senior) that starts strictly
-// after `now`, scanning up to 7 days ahead. Skips lessons and facility-wide
-// closed days. Returns `{ program, day, start }` (start in minutes-of-day) or
-// null if none found within the window.
+// after `now`, scanning up to 7 days ahead. Skips facility-wide closed days.
+// Returns `{ program, day, start }` (start in minutes-of-day) or null if none
+// found within the window.
 export function findNextDropIn(schedule, now, allowedTypes = null) {
   if (!schedule || typeof schedule !== "object") return null;
   const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
@@ -263,7 +263,6 @@ const EMPTY_DETAIL = Object.freeze({
   kind: "NOT_VERIFIED",
   activePrograms: [],
   activeUntil: null,
-  activeLessonsUntil: null,
   nextDropIn: null,
   closureReason: null,
   is_drop_in: false,
@@ -324,18 +323,6 @@ export function computeDetailStatus(schedule, now) {
       activePrograms: activeDropIn.map((s) => s.type),
       activeUntil: Math.min(...activeDropIn.map((s) => s.end)),
       is_drop_in: true,
-      nextDropIn: findNextDropIn(schedule, now),
-    };
-  }
-
-  const activeLessons = todayAll.find(
-    (s) => s.type === "lessons" && s.start <= nowMinutes && nowMinutes < s.end,
-  );
-  if (activeLessons) {
-    return {
-      ...EMPTY_DETAIL,
-      kind: "LESSONS",
-      activeLessonsUntil: activeLessons.end,
       nextDropIn: findNextDropIn(schedule, now),
     };
   }

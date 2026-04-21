@@ -47,8 +47,6 @@ function formatStatusLine(result) {
       const programs = result.activePrograms.map((p) => PROGRAM_LABEL[p] || p.toUpperCase()).join(" + ");
       return `OPEN — ${programs} UNTIL ${formatHHMM(result.activeUntil)}`;
     }
-    case "LESSONS":
-      return `LESSONS UNTIL ${formatHHMM(result.activeLessonsUntil)}`;
     case "CLOSED_TODAY":
       return result.closureReason
         ? `CLOSED TODAY — ${result.closureReason.toUpperCase()}`

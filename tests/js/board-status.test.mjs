@@ -105,7 +105,6 @@ test("computeStatus honors facility-wide closures (empty closure.pool)", () => {
 const DROP_IN_SCHEDULE = {
   sessions: [
     { day: "tuesday",  type: "lap_swim",    start: "07:00", end: "08:00" },
-    { day: "tuesday",  type: "lessons",     start: "15:30", end: "16:00" },
     { day: "tuesday",  type: "family_swim", start: "14:30", end: "15:30" },
     { day: "wednesday",type: "lap_swim",    start: "09:00", end: "10:15" },
   ],
@@ -130,19 +129,6 @@ test("findNextDropIn rolls to tomorrow after today's last drop-in", () => {
   assert.deepEqual(next, { program: "lap_swim", day: "wednesday", start: 9 * 60 });
 });
 
-test("findNextDropIn skips lessons sessions", () => {
-  const lessonsOnly = {
-    sessions: [
-      { day: "tuesday", type: "lessons", start: "15:30", end: "16:00" },
-      { day: "thursday", type: "lap_swim", start: "07:00", end: "08:00" },
-    ],
-    closures: [],
-  };
-  const now = new Date("2026-04-14T14:00:00"); // Tuesday before lessons
-  const next = findNextDropIn(lessonsOnly, now);
-  assert.deepEqual(next, { program: "lap_swim", day: "thursday", start: 7 * 60 });
-});
-
 test("findNextDropIn skips facility-wide closed days", () => {
   const withClosure = {
     sessions: [
@@ -156,17 +142,6 @@ test("findNextDropIn skips facility-wide closed days", () => {
   const now = new Date("2026-04-14T06:00:00");
   const next = findNextDropIn(withClosure, now);
   assert.deepEqual(next, { program: "lap_swim", day: "wednesday", start: 9 * 60 });
-});
-
-test("findNextDropIn returns null when no drop-in sessions exist", () => {
-  const lessonsOnly = {
-    sessions: [
-      { day: "tuesday", type: "lessons", start: "15:30", end: "16:00" },
-    ],
-    closures: [],
-  };
-  const now = new Date("2026-04-14T10:00:00");
-  assert.equal(findNextDropIn(lessonsOnly, now), null);
 });
 
 test("findNextDropIn rolls to the same weekday one week away", () => {
@@ -216,7 +191,6 @@ const FILTERED_STATUS_SCHEDULE = {
   sessions: [
     { day: "tuesday", type: "lap_swim", start: "07:00", end: "08:00" },
     { day: "tuesday", type: "family_swim", start: "14:30", end: "15:30" },
-    { day: "tuesday", type: "lessons", start: "15:30", end: "16:00" },
     { day: "wednesday", type: "lap_swim", start: "09:00", end: "10:15" },
     { day: "wednesday", type: "family_swim", start: "13:00", end: "14:00" },
   ],
@@ -224,7 +198,7 @@ const FILTERED_STATUS_SCHEDULE = {
 };
 
 test("computeStatus honors a family-only filter", () => {
-  const now = new Date("2026-04-14T15:40:00"); // Tue during lessons, after family ended
+  const now = new Date("2026-04-14T15:40:00"); // Tue after family ended
   const { status, next } = computeStatus(FILTERED_STATUS_SCHEDULE, now, ["family_swim"]);
   assert.equal(status, "CLOSED");
   assert.equal(next, "Opens WED 13:00");
@@ -331,70 +305,11 @@ test("computeDetailStatus NOT_VERIFIED wins over active closure", () => {
   assert.equal(r.kind, "NOT_VERIFIED");
 });
 
-test("computeDetailStatus LESSONS when only lessons are active", () => {
-  const schedule = {
-    sessions: [
-      { day: "tuesday", type: "lessons",     start: "15:30", end: "17:00" },
-      { day: "tuesday", type: "family_swim", start: "17:30", end: "18:30" },
-    ],
-    closures: [],
-  };
-  const now = new Date("2026-04-14T16:00:00"); // Tue 16:00 — inside lessons
-  const r = computeDetailStatus(schedule, now);
-  assert.equal(r.kind, "LESSONS");
-  assert.equal(r.activeLessonsUntil, 17 * 60);
-  assert.equal(r.is_drop_in, false);
-  assert.deepEqual(r.nextDropIn, { program: "family_swim", day: "tuesday", start: 17 * 60 + 30 });
-});
-
-test("computeDetailStatus prefers OPEN when drop-in overlaps lessons", () => {
-  const schedule = {
-    sessions: [
-      { day: "tuesday", type: "lessons",  start: "15:30", end: "17:30" },
-      { day: "tuesday", type: "lap_swim", start: "16:00", end: "17:00" },
-    ],
-    closures: [],
-  };
-  const now = new Date("2026-04-14T16:30:00"); // inside both
-  const r = computeDetailStatus(schedule, now);
-  assert.equal(r.kind, "OPEN");
-  assert.deepEqual(r.activePrograms, ["lap_swim"]);
-});
-
-test("computeDetailStatus NO_DROPIN_TODAY on lessons-only day with no active session", () => {
-  const schedule = {
-    sessions: [
-      { day: "tuesday", type: "lessons",  start: "15:30", end: "17:30" },
-      { day: "wednesday", type: "lap_swim", start: "09:00", end: "10:15" },
-    ],
-    closures: [],
-  };
-  const now = new Date("2026-04-14T10:00:00"); // Tue 10:00 — no active lessons/drop-in
-  const r = computeDetailStatus(schedule, now);
-  assert.equal(r.kind, "NO_DROPIN_TODAY");
-  assert.equal(r.is_drop_in, false);
-  assert.deepEqual(r.nextDropIn, { program: "lap_swim", day: "wednesday", start: 9 * 60 });
-});
-
 test("computeDetailStatus NOT_VERIFIED when sessions array is empty", () => {
   const schedule = { sessions: [], closures: [] };
   const now = new Date("2026-04-14T10:00:00");
   const r = computeDetailStatus(schedule, now);
   assert.equal(r.kind, "NOT_VERIFIED");
-  assert.equal(r.nextDropIn, null);
-});
-
-test("computeDetailStatus NO_DROPIN_WEEK when all sessions are lessons", () => {
-  const schedule = {
-    sessions: [
-      { day: "tuesday", type: "lessons", start: "15:30", end: "17:30" },
-      { day: "friday",  type: "lessons", start: "15:30", end: "17:30" },
-    ],
-    closures: [],
-  };
-  const now = new Date("2026-04-13T10:00:00"); // Monday 10:00
-  const r = computeDetailStatus(schedule, now);
-  assert.equal(r.kind, "NO_DROPIN_WEEK");
   assert.equal(r.nextDropIn, null);
 });
 

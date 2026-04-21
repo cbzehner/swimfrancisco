@@ -65,7 +65,6 @@ class PdfSignals:
     page_count: int
     text_sha256: str
     grid_header_pages: list[int]
-    timed_lesson_line_count: int
 
 
 @dataclass(frozen=True)

@@ -56,7 +56,7 @@ def test_compare_payloads_flags_provider_differences():
     secondary = {
         "sessions": [
             {"day": "tuesday", "type": "lap_swim", "start": "07:30", "end": "08:30"},
-            {"day": "thursday", "type": "lessons", "start": "15:30", "end": "18:00"},
+            {"day": "thursday", "type": "senior_swim", "start": "15:30", "end": "18:00"},
         ],
         "closures": [{"start": "2026-06-06", "end": "2026-06-06", "reason": "training"}],
         "schedule_effective": "2026-03-18",
