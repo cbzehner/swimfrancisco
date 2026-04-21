@@ -1,9 +1,9 @@
 {
-  "cost_estimate": "prompt_tokens=1848, candidate_tokens=2679, total_tokens=4527",
-  "extracted_at": "2026-04-18T03:10:09.791528+00:00",
+  "cost_estimate": "prompt_tokens=1879, candidate_tokens=2692, total_tokens=4571",
+  "extracted_at": "2026-04-21T02:02:11.454489+00:00",
   "grounding": {
-    "grounded_count": 29,
-    "ratio": 1.0,
+    "grounded_count": 6,
+    "ratio": 0.2069,
     "sessions": [
       {
         "evidence_in_pdf": true,
@@ -15,7 +15,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 1,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -23,7 +23,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 2,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -39,7 +39,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 4,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -55,7 +55,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 6,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -63,7 +63,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 7,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -71,7 +71,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 8,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -79,7 +79,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 9,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -103,7 +103,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 12,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -111,7 +111,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 13,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -119,7 +119,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 14,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -127,7 +127,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 15,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -135,7 +135,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 16,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -143,7 +143,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 17,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -151,7 +151,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 18,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -159,7 +159,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 19,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -167,7 +167,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 20,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -175,7 +175,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 21,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -183,7 +183,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 22,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -191,7 +191,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 23,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -199,7 +199,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 24,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -207,7 +207,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 25,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -215,7 +215,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 26,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -223,7 +223,7 @@
       },
       {
         "evidence_in_pdf": false,
-        "grounded": true,
+        "grounded": false,
         "index": 27,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -255,7 +255,7 @@
       },
       {
         "end": "2026-06-06",
-        "reason": "In- Service Training",
+        "reason": "In- Service Training: Pool Closed 9:00-1:00pm",
         "start": "2026-06-06"
       },
       {
@@ -404,13 +404,6 @@
         "type": "family_swim"
       },
       {
-        "day": "thursday",
-        "end": "19:00",
-        "evidence": "REC/FAMILY SWIM 5:30 - 7:00 PM",
-        "start": "17:30",
-        "type": "family_swim"
-      },
-      {
         "day": "friday",
         "end": "10:15",
         "evidence": "REC/FAMILY\u2014SENIOR SWIM 9:00 - 10:15 AM",
@@ -445,6 +438,13 @@
         "evidence": "SWIM LESSONS* 4:30 - 5:00 PM",
         "start": "16:30",
         "type": "lessons"
+      },
+      {
+        "day": "friday",
+        "end": "19:00",
+        "evidence": "REC/FAMILY SWIM 5:30 - 7:00 PM",
+        "start": "17:30",
+        "type": "family_swim"
       },
       {
         "day": "saturday",
@@ -492,13 +492,13 @@
     ]
   },
   "pdf_sha256": "025a9d1fc08636dccec6430dedb16012a5e4539885898a2789a6ba5df8f30c07",
-  "prompt_sha256": "9c56ebb241e188dee0166143f20af6bd334820da8489c79246416c277a3fc8ea",
+  "prompt_sha256": "fac318d4b8d445a3c7c475624fec55f088c776770ed31fa24ec6d753d775fcab",
   "provider": "gemini",
-  "schema_sha256": "77c48baf08b6eeae576f18ada9a5480f534e7a7b224e918311811aacf166de12",
+  "schema_sha256": "9621f34615c358c5f9409c9df1c5217d7d8fed31d0bff8c7e72f66f4af3382b6",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28503",
   "usage": {
-    "candidates_token_count": 2679,
-    "prompt_token_count": 1848,
-    "total_token_count": 4527
+    "candidates_token_count": 2692,
+    "prompt_token_count": 1879,
+    "total_token_count": 4571
   }
 }

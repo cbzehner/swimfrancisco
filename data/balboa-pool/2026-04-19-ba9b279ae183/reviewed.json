@@ -1,7 +1,7 @@
 {
   "slug": "balboa-pool",
   "pdf_sha256": "ba9b279ae183b142c0c675368bceb39e49b80ed5ddb12fe37736536e92c8ac2c",
-  "reviewed_at": "2026-04-17",
+  "reviewed_at": "2026-04-20",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28547",
   "payload": {
     "closures": [
@@ -37,138 +37,150 @@
       {
         "day": "tuesday",
         "end": "08:00",
+        "evidence": "LAP SWIM* 7:00 am - 8:00 am",
         "start": "07:00",
         "type": "lap_swim"
       },
       {
         "day": "tuesday",
         "end": "12:00",
+        "evidence": "SENIOR / THERAPY SWIM (deep pool) 10:30 am - 12:00 pm",
+        "pool": "deep",
         "start": "10:30",
         "type": "senior_swim"
       },
       {
         "day": "tuesday",
         "end": "14:00",
+        "evidence": "LAP SWIM* 12:30 pm - 2:00 pm",
         "start": "12:30",
         "type": "lap_swim"
       },
       {
         "day": "tuesday",
         "end": "15:30",
+        "evidence": "REC/FAMILY SWIM/ LAP SWIM (shallow / deep) (Lap unl 4pm) 2:30 pm - 3:30 pm",
+        "pool": "shallow / deep",
         "start": "14:30",
         "type": "family_swim"
       },
       {
         "day": "tuesday",
         "end": "16:00",
-        "start": "15:30",
-        "type": "lessons"
+        "evidence": "REC/FAMILY SWIM/ LAP SWIM (shallow / deep) (Lap unl 4pm) 2:30 pm - 3:30 pm",
+        "notes": "Lap unl 4pm",
+        "pool": "shallow / deep",
+        "start": "14:30",
+        "type": "lap_swim"
       },
       {
         "day": "wednesday",
         "end": "10:15",
+        "evidence": "LAP SWIM* 9:00 am - 10:15 am",
         "start": "09:00",
         "type": "lap_swim"
       },
       {
         "day": "wednesday",
         "end": "12:00",
+        "evidence": "SENIOR / THERAPY ACCESS SWIM (deep pool) 10:30 am - 12:00 pm",
+        "pool": "deep",
         "start": "10:30",
         "type": "senior_swim"
       },
       {
         "day": "wednesday",
         "end": "15:00",
+        "evidence": "LAP SWIM* (deep) 12:30 am - 3:00 pm",
+        "pool": "deep",
         "start": "12:30",
         "type": "lap_swim"
       },
       {
         "day": "wednesday",
         "end": "15:00",
+        "evidence": "REC/FAMILY SWIM (shallow pool) 2:00 pm - 3:00 pm",
+        "pool": "shallow",
         "start": "14:00",
         "type": "family_swim"
       },
       {
-        "day": "wednesday",
-        "end": "17:30",
-        "start": "15:30",
-        "type": "lessons"
-      },
-      {
         "day": "thursday",
         "end": "08:00",
+        "evidence": "LAP SWIM* 7:00 am - 8:00 am",
         "start": "07:00",
         "type": "lap_swim"
       },
       {
         "day": "thursday",
         "end": "11:00",
+        "evidence": "SENIOR / THERAPY SWIM 10:00 am - 11:00 am",
         "start": "10:00",
         "type": "senior_swim"
       },
       {
         "day": "thursday",
         "end": "14:00",
+        "evidence": "LAP SWIM* Closed every 3rd Thursday of the month for training 11:30 am - 2:00 pm",
+        "notes": "Closed every 3rd Thursday of the month for training",
         "start": "11:30",
         "type": "lap_swim"
       },
       {
         "day": "thursday",
         "end": "16:00",
+        "evidence": "LAP SWIM* 2:30 pm - 4:00 pm",
         "start": "14:30",
         "type": "lap_swim"
       },
       {
         "day": "thursday",
         "end": "19:30",
+        "evidence": "REC/FAMILY SWIM 6:00 pm - 7:30 pm",
         "start": "18:00",
         "type": "family_swim"
       },
       {
         "day": "friday",
         "end": "12:00",
+        "evidence": "SENIOR / THERAPY ACCESS SWIM (deep / shallow) 10:30 am \u2013 12:00 pm",
+        "pool": "deep / shallow",
         "start": "10:30",
         "type": "senior_swim"
       },
       {
         "day": "friday",
         "end": "15:00",
+        "evidence": "LAP SWIM* 1:30 pm - 3:00 pm",
         "start": "13:30",
         "type": "lap_swim"
       },
       {
-        "day": "friday",
-        "end": "17:30",
-        "start": "15:30",
-        "type": "lessons"
-      },
-      {
         "day": "saturday",
         "end": "10:30",
+        "evidence": "LAP SWIM (deep pool) 9:00 am - 10:30 am",
+        "pool": "deep",
         "start": "09:00",
         "type": "lap_swim"
       },
       {
         "day": "saturday",
-        "end": "11:00",
-        "start": "09:00",
-        "type": "lessons"
-      },
-      {
-        "day": "saturday",
         "end": "14:00",
+        "evidence": "REC/FAMILY SWIM 12:30 pm - 2:00 pm",
         "start": "12:30",
         "type": "family_swim"
       },
       {
         "day": "saturday",
         "end": "15:30",
+        "evidence": "REC/FAMILY SWIM 2:30 pm - 3:30 pm",
         "start": "14:30",
         "type": "family_swim"
       },
       {
         "day": "saturday",
         "end": "17:00",
+        "evidence": "LAP SWIM 4:00 pm - 5:00 pm",
         "start": "16:00",
         "type": "lap_swim"
       }

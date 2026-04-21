@@ -1,313 +1,204 @@
 {
   "slug": "north-beach-pool",
   "pdf_sha256": "025a9d1fc08636dccec6430dedb16012a5e4539885898a2789a6ba5df8f30c07",
-  "reviewed_at": "2026-04-17",
+  "reviewed_at": "2026-04-20",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28503",
   "payload": {
+    "closures": [
+      {
+        "end": "2026-05-25",
+        "reason": "Holiday Closure",
+        "start": "2026-05-25"
+      },
+      {
+        "end": "2026-06-19",
+        "reason": "Holiday Closure",
+        "start": "2026-06-19"
+      },
+      {
+        "end": "2026-06-06",
+        "reason": "In- Service Training: Pool Closed 9:00-1:00pm",
+        "start": "2026-06-06"
+      },
+      {
+        "end": "2026-03-19",
+        "reason": "Every 3rd Thursday of the Month Closed for Aquatic Division Training 11:00am-2:00pm",
+        "start": "2026-03-19"
+      },
+      {
+        "end": "2026-04-16",
+        "reason": "Every 3rd Thursday of the Month Closed for Aquatic Division Training 11:00am-2:00pm",
+        "start": "2026-04-16"
+      },
+      {
+        "end": "2026-05-21",
+        "reason": "Every 3rd Thursday of the Month Closed for Aquatic Division Training 11:00am-2:00pm",
+        "start": "2026-05-21"
+      }
+    ],
     "schedule_effective": "2026-03-17",
     "schedule_effective_end": "2026-06-06",
     "sessions": [
       {
         "day": "tuesday",
-        "type": "lap_swim",
+        "end": "08:30",
+        "evidence": "LAP SWIM 7:30 - 8:30 AM",
+        "pool": "warm pool",
         "start": "07:30",
-        "end": "08:30"
+        "type": "lap_swim"
       },
       {
         "day": "tuesday",
-        "type": "lap_swim",
-        "start": "07:30",
-        "end": "10:00"
-      },
-      {
-        "day": "tuesday",
-        "type": "senior_swim",
+        "end": "10:00",
+        "evidence": "SENIOR SWIM (LAP/THERAPY) 8:45 - 10:00AM",
+        "pool": "warm pool",
         "start": "08:45",
-        "end": "10:00"
+        "type": "senior_swim"
       },
       {
         "day": "tuesday",
-        "type": "lap_swim",
+        "end": "15:00",
+        "evidence": "LAP SWIM (LAP/THERAPY) 12:30\u2013 3:00 PM",
+        "pool": "warm pool",
         "start": "12:30",
-        "end": "15:00"
+        "type": "lap_swim"
       },
       {
         "day": "tuesday",
-        "type": "lap_swim",
-        "start": "12:30",
-        "end": "15:30"
-      },
-      {
-        "day": "tuesday",
-        "type": "senior_swim",
-        "start": "12:50",
-        "end": "15:15"
-      },
-      {
-        "day": "tuesday",
-        "type": "family_swim",
+        "end": "17:00",
+        "evidence": "REC/FAMILY SWIM 3:30- 5:00 PM",
+        "pool": "warm pool",
         "start": "15:30",
-        "end": "17:00"
+        "type": "family_swim"
       },
       {
         "day": "tuesday",
-        "type": "lap_swim",
+        "end": "18:30",
+        "evidence": "LAP SWIM 5:30-6:30PM",
+        "pool": "warm pool",
         "start": "17:30",
-        "end": "18:30"
+        "type": "lap_swim"
       },
       {
         "day": "wednesday",
-        "type": "lap_swim",
-        "start": "07:30",
-        "end": "08:30"
-      },
-      {
-        "day": "wednesday",
-        "type": "lap_swim",
+        "end": "10:15",
+        "evidence": "SENIOR SWIM (LAP/THERAPY) 9:00 - 10:15 AM",
+        "pool": "warm pool",
         "start": "09:00",
-        "end": "10:15"
+        "type": "senior_swim"
       },
       {
         "day": "wednesday",
-        "type": "senior_swim",
-        "start": "09:00",
-        "end": "10:15"
+        "end": "15:15",
+        "evidence": "SENIOR SWIM (LAP/THERAPY) 12:50- 3:15PM",
+        "pool": "lap/therapy",
+        "start": "12:50",
+        "type": "senior_swim"
       },
       {
         "day": "wednesday",
-        "type": "lap_swim",
-        "start": "11:45",
-        "end": "12:45"
-      },
-      {
-        "day": "wednesday",
-        "type": "lap_swim",
-        "start": "11:45",
-        "end": "15:30"
-      },
-      {
-        "day": "wednesday",
-        "type": "lessons",
-        "start": "15:45",
-        "end": "16:15"
-      },
-      {
-        "day": "wednesday",
-        "type": "lessons",
-        "start": "16:30",
-        "end": "17:00"
-      },
-      {
-        "day": "wednesday",
-        "type": "family_swim",
+        "end": "18:30",
+        "evidence": "REC/FAMILY SWIM 5:30 - 6:30 PM",
+        "pool": "warm pool",
         "start": "17:30",
-        "end": "18:30"
-      },
-      {
-        "day": "wednesday",
-        "type": "lap_swim",
-        "start": "17:30",
-        "end": "18:30"
+        "type": "family_swim"
       },
       {
         "day": "thursday",
-        "type": "lap_swim",
+        "end": "08:30",
+        "evidence": "LAP SWIM 7:30 - 8:30 AM",
+        "pool": "warm pool",
         "start": "07:30",
-        "end": "08:30"
+        "type": "lap_swim"
       },
       {
         "day": "thursday",
-        "type": "lap_swim",
-        "start": "07:30",
-        "end": "10:30"
-      },
-      {
-        "day": "thursday",
-        "type": "senior_swim",
+        "end": "10:30",
+        "evidence": "SENIOR SWIM (LAP/THERAPY) 9:00 - 10:30AM",
+        "pool": "warm pool",
         "start": "09:00",
-        "end": "10:30"
+        "type": "senior_swim"
       },
       {
         "day": "thursday",
-        "type": "lap_swim",
+        "end": "14:00",
+        "evidence": "LAP SWIM (LAP/THERAPY) CLOSED EVERY 3RD THURS OF THE MONTH FOR TRAINING 11:00 2:00 PM",
+        "notes": "CLOSED EVERY 3RD THURS OF THE MONTH FOR TRAINING",
+        "pool": "warm pool",
         "start": "11:00",
-        "end": "14:00"
+        "type": "lap_swim"
       },
       {
         "day": "thursday",
-        "type": "lap_swim",
+        "end": "15:15",
+        "evidence": "Lap Swim 2:15- 3:15 pm",
+        "pool": "warm pool",
         "start": "14:15",
-        "end": "15:15"
+        "type": "lap_swim"
       },
       {
         "day": "thursday",
-        "type": "lessons",
-        "start": "15:20",
-        "end": "15:50"
-      },
-      {
-        "day": "thursday",
-        "type": "family_swim",
+        "end": "17:30",
+        "evidence": "REC/FAMILY SWIM 4:15 - 5:30 PM",
+        "pool": "warm pool",
         "start": "16:15",
-        "end": "17:30"
-      },
-      {
-        "day": "thursday",
-        "type": "lap_swim",
-        "start": "17:30",
-        "end": "18:30"
+        "type": "family_swim"
       },
       {
         "day": "friday",
-        "type": "lap_swim",
+        "end": "10:15",
+        "evidence": "REC/FAMILY\u2014SENIOR SWIM 9:00 - 10:15 AM",
+        "pool": "warm pool",
         "start": "09:00",
-        "end": "10:15"
+        "type": "family_swim"
       },
       {
         "day": "friday",
-        "type": "senior_swim",
+        "end": "10:15",
+        "evidence": "REC/FAMILY\u2014SENIOR SWIM 9:00 - 10:15 AM",
+        "pool": "warm pool",
         "start": "09:00",
-        "end": "10:15"
+        "type": "senior_swim"
       },
       {
         "day": "friday",
-        "type": "lap_swim",
-        "start": "11:45",
-        "end": "12:45"
-      },
-      {
-        "day": "friday",
-        "type": "lap_swim",
-        "start": "11:45",
-        "end": "15:30"
-      },
-      {
-        "day": "friday",
-        "type": "senior_swim",
+        "end": "15:15",
+        "evidence": "SENIOR SWIM (LAP/THERAPY) 12:50- 3:15PM",
+        "pool": "warm pool",
         "start": "12:50",
-        "end": "15:15"
+        "type": "senior_swim"
       },
       {
         "day": "friday",
-        "type": "lessons",
-        "start": "15:45",
-        "end": "16:15"
-      },
-      {
-        "day": "friday",
-        "type": "lessons",
-        "start": "16:30",
-        "end": "17:00"
-      },
-      {
-        "day": "friday",
-        "type": "family_swim",
+        "end": "19:00",
+        "evidence": "REC/FAMILY SWIM 5:30 - 7:00 PM",
+        "pool": "warm pool",
         "start": "17:30",
-        "end": "19:00"
-      },
-      {
-        "day": "friday",
-        "type": "lap_swim",
-        "start": "17:30",
-        "end": "19:30"
+        "type": "family_swim"
       },
       {
         "day": "saturday",
-        "type": "lessons",
-        "start": "09:00",
-        "end": "09:30"
-      },
-      {
-        "day": "saturday",
-        "type": "lessons",
-        "start": "09:00",
-        "end": "10:00"
-      },
-      {
-        "day": "saturday",
-        "type": "lessons",
-        "start": "09:45",
-        "end": "10:15"
-      },
-      {
-        "day": "saturday",
-        "type": "lessons",
-        "start": "10:15",
-        "end": "11:15"
-      },
-      {
-        "day": "saturday",
-        "type": "lessons",
-        "start": "10:30",
-        "end": "11:00"
-      },
-      {
-        "day": "saturday",
-        "type": "lap_swim",
+        "end": "13:15",
+        "evidence": "LAP SWIM (LAP/THERAPY) 12:00 \u2013 1:15 PM",
+        "pool": "warm pool",
         "start": "12:00",
-        "end": "13:15"
+        "type": "lap_swim"
       },
       {
         "day": "saturday",
-        "type": "lap_swim",
-        "start": "12:00",
-        "end": "14:00"
-      },
-      {
-        "day": "saturday",
-        "type": "family_swim",
+        "end": "15:00",
+        "evidence": "REC/FAMILY SWIM 1:45\u2013 3:00 PM",
+        "pool": "warm pool",
         "start": "13:45",
-        "end": "15:00"
+        "type": "family_swim"
       },
       {
         "day": "saturday",
-        "type": "lap_swim",
-        "start": "14:30",
-        "end": "16:30"
-      },
-      {
-        "day": "saturday",
-        "type": "family_swim",
+        "end": "17:00",
+        "evidence": "REC/FAMILY SWIM 3:30- 5:00 PM",
+        "pool": "warm pool",
         "start": "15:30",
-        "end": "17:00"
-      },
-      {
-        "day": "saturday",
-        "type": "lessons",
-        "start": "16:30",
-        "end": "17:00"
-      }
-    ],
-    "closures": [
-      {
-        "start": "2026-03-19",
-        "end": "2026-03-19",
-        "reason": "Aquatic Division Training"
-      },
-      {
-        "start": "2026-04-16",
-        "end": "2026-04-16",
-        "reason": "Aquatic Division Training"
-      },
-      {
-        "start": "2026-05-21",
-        "end": "2026-05-21",
-        "reason": "Aquatic Division Training"
-      },
-      {
-        "start": "2026-05-25",
-        "end": "2026-05-25",
-        "reason": "Holiday Closure"
-      },
-      {
-        "start": "2026-06-06",
-        "end": "2026-06-06",
-        "reason": "In-Service Training"
-      },
-      {
-        "start": "2026-06-19",
-        "end": "2026-06-19",
-        "reason": "Holiday Closure"
+        "type": "family_swim"
       }
     ]
   }

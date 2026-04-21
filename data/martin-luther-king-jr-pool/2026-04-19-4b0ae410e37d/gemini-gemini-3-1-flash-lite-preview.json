@@ -1,6 +1,6 @@
 {
-  "cost_estimate": "prompt_tokens=856, candidate_tokens=2490, total_tokens=3346",
-  "extracted_at": "2026-04-18T02:46:54.198555+00:00",
+  "cost_estimate": "prompt_tokens=1359, candidate_tokens=2591, total_tokens=3950",
+  "extracted_at": "2026-04-21T02:02:02.383698+00:00",
   "grounding": {
     "grounded_count": 0,
     "ratio": 0.0,
@@ -302,6 +302,7 @@
         "day": "tuesday",
         "end": "15:30",
         "evidence": "REC/FAMILY SWIM (shallow) 12:30pm - 3:30pm",
+        "pool": "shallow",
         "start": "12:30",
         "type": "family_swim"
       },
@@ -337,6 +338,7 @@
         "day": "wednesday",
         "end": "12:00",
         "evidence": "SWIM LESSONS (shallow) 10:30am - 12:00pm",
+        "pool": "shallow",
         "start": "10:30",
         "type": "lessons"
       },
@@ -351,6 +353,7 @@
         "day": "wednesday",
         "end": "15:30",
         "evidence": "REC/FAMILY SWIM (shallow) 12:30pm - 3:30pm",
+        "pool": "shallow",
         "start": "12:30",
         "type": "family_swim"
       },
@@ -386,13 +389,16 @@
         "day": "thursday",
         "end": "12:00",
         "evidence": "LAP SWIM (10) CLOSED EVERY 3RD THURSDAY 11:00am - 12:00pm",
+        "notes": "CLOSED EVERY 3RD THURSDAY",
         "start": "11:00",
         "type": "lap_swim"
       },
       {
         "day": "thursday",
         "end": "15:30",
-        "evidence": "REC/FAMILY SWIM (shallow) 12:30pm - 3:30pm",
+        "evidence": "REC/FAMILY SWIM (shallow) 12:30pm - 3:30pm CLOSED EVERY 3RD THURSDAY",
+        "notes": "CLOSED EVERY 3RD THURSDAY",
+        "pool": "shallow",
         "start": "12:30",
         "type": "family_swim"
       },
@@ -400,6 +406,7 @@
         "day": "thursday",
         "end": "15:30",
         "evidence": "LAP SWIM (8) CLOSED EVERY 3RD THURSDAY 12:30pm - 3:30pm",
+        "notes": "CLOSED EVERY 3RD THURSDAY",
         "start": "12:30",
         "type": "lap_swim"
       },
@@ -412,15 +419,15 @@
       },
       {
         "day": "friday",
-        "end": "10:30",
-        "evidence": "SENIOR LAP SWIM (6) 9:00am - 10:30am",
+        "end": "11:00",
+        "evidence": "SENIOR LAP SWIM (6) 9:00am - 11:00am",
         "start": "09:00",
         "type": "senior_swim"
       },
       {
         "day": "friday",
-        "end": "10:30",
-        "evidence": "LAP SWIM (4) 9:00am - 10:30am",
+        "end": "11:00",
+        "evidence": "LAP SWIM (4) 9:00am - 11:00am",
         "start": "09:00",
         "type": "lap_swim"
       },
@@ -428,6 +435,7 @@
         "day": "friday",
         "end": "12:00",
         "evidence": "SWIM LESSONS (shallow) 10:30am - 12:00pm",
+        "pool": "shallow",
         "start": "10:30",
         "type": "lessons"
       },
@@ -442,6 +450,7 @@
         "day": "friday",
         "end": "15:30",
         "evidence": "REC/FAMILY SWIM (shallow) 12:30pm - 3:30pm",
+        "pool": "shallow",
         "start": "12:30",
         "type": "family_swim"
       },
@@ -483,13 +492,13 @@
     ]
   },
   "pdf_sha256": "4b0ae410e37d66393704fb70dff8e5ce3d42c8c919a6872038cefe8e9097a590",
-  "prompt_sha256": "24a24994cd43864fa7dbf09c495c947d4986ec88307b89e272659fb3dd49dd9e",
+  "prompt_sha256": "fac318d4b8d445a3c7c475624fec55f088c776770ed31fa24ec6d753d775fcab",
   "provider": "gemini",
-  "schema_sha256": "7bd50481cfa763ea810391021daf61e1bbfdbe7184496c976b486a53a05afe7c",
+  "schema_sha256": "9621f34615c358c5f9409c9df1c5217d7d8fed31d0bff8c7e72f66f4af3382b6",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28771",
   "usage": {
-    "candidates_token_count": 2490,
-    "prompt_token_count": 856,
-    "total_token_count": 3346
+    "candidates_token_count": 2591,
+    "prompt_token_count": 1359,
+    "total_token_count": 3950
   }
 }

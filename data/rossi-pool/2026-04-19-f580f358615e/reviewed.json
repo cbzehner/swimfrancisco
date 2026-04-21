@@ -1,174 +1,189 @@
 {
   "slug": "rossi-pool",
   "pdf_sha256": "f580f358615eb222d31249ebe28d5a67fe9d7aa473493559754696849d8c798f",
-  "reviewed_at": "2026-04-17",
+  "reviewed_at": "2026-04-20",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28501",
   "payload": {
     "closures": [
       {
-        "end": "2026-03-19",
-        "reason": "Training",
-        "start": "2026-03-19"
-      },
-      {
-        "end": "2026-04-16",
-        "reason": "Training",
-        "start": "2026-04-16"
-      },
-      {
-        "end": "2026-05-21",
-        "reason": "Training",
-        "start": "2026-05-21"
-      },
-      {
         "end": "2026-05-25",
-        "reason": "Federal Holiday",
+        "reason": "FEDERAL HOLIDAY",
         "start": "2026-05-25"
       },
       {
         "end": "2026-06-19",
-        "reason": "Federal Holiday",
+        "reason": "FEDERAL HOLIDAY",
         "start": "2026-06-19"
+      },
+      {
+        "end": "2026-03-19",
+        "reason": "3rd Thursday training",
+        "start": "2026-03-19"
+      },
+      {
+        "end": "2026-04-16",
+        "reason": "3rd Thursday training",
+        "start": "2026-04-16"
+      },
+      {
+        "end": "2026-05-21",
+        "reason": "3rd Thursday training",
+        "start": "2026-05-21"
       }
     ],
     "schedule_effective": "2026-03-15",
     "schedule_effective_end": "2026-06-04",
     "sessions": [
       {
+        "day": "sunday",
+        "end": "08:30",
+        "evidence": "LAP SWIM 7:30 - 8:30 AM",
+        "start": "07:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "14:00",
+        "evidence": "REC/FAMILY SWIM 12:30 - 2:00 PM",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "15:30",
+        "evidence": "REC/FAMILY SWIM 2:30 - 3:30 PM",
+        "start": "14:30",
+        "type": "family_swim"
+      },
+      {
         "day": "monday",
         "end": "10:00",
+        "evidence": "LAP SWIM 7:30 - 10:00AM",
         "start": "07:30",
         "type": "lap_swim"
       },
       {
         "day": "monday",
-        "end": "11:30",
-        "start": "10:15",
-        "type": "lessons"
-      },
-      {
-        "day": "monday",
         "end": "13:00",
+        "evidence": "SENIOR/ THERAPY** 11:45 - 1:00 PM",
         "start": "11:45",
         "type": "senior_swim"
       },
       {
         "day": "monday",
         "end": "15:30",
+        "evidence": "LAP SWIM 1:30 - 3:30 PM",
         "start": "13:30",
         "type": "lap_swim"
       },
       {
         "day": "monday",
         "end": "19:30",
+        "evidence": "LAP SWIM 6:15 - 7:30 PM",
         "start": "18:15",
         "type": "lap_swim"
       },
       {
         "day": "tuesday",
         "end": "10:00",
+        "evidence": "LAP SWIM 7:30 - 10:00AM",
         "start": "07:30",
         "type": "lap_swim"
       },
       {
         "day": "tuesday",
         "end": "12:00",
+        "evidence": "SENIOR SWIM /THERAPY 10:15 - 12:00PM",
         "start": "10:15",
         "type": "senior_swim"
       },
       {
         "day": "tuesday",
         "end": "15:30",
+        "evidence": "LAP SWIM 12:30 - 3:30 PM",
         "start": "12:30",
         "type": "lap_swim"
       },
       {
         "day": "tuesday",
         "end": "19:30",
+        "evidence": "FAMILY/LAP SWIM (2 lanes)**",
         "start": "18:15",
         "type": "family_swim"
       },
       {
+        "day": "tuesday",
+        "end": "19:30",
+        "evidence": "Lap Swim (4 Lanes) 6:15 - 7:30PM",
+        "pool": "4 lanes",
+        "start": "18:15",
+        "type": "lap_swim"
+      },
+      {
         "day": "wednesday",
         "end": "10:45",
+        "evidence": "SENIOR SWIM 9:00 - 10:45AM",
         "start": "09:00",
         "type": "senior_swim"
       },
       {
         "day": "wednesday",
         "end": "13:30",
+        "evidence": "LAP SWIM 11:00 - 1:30PM",
         "start": "11:00",
         "type": "lap_swim"
       },
       {
         "day": "wednesday",
         "end": "15:30",
+        "evidence": "FAMILY (2 lanes)/LAP SWIM (4 lanes) 2:00 - 3:30 PM",
+        "pool": "2 lanes",
         "start": "14:00",
         "type": "family_swim"
       },
       {
+        "day": "wednesday",
+        "end": "15:30",
+        "evidence": "FAMILY (2 lanes)/LAP SWIM (4 lanes) 2:00 - 3:30 PM",
+        "pool": "4 lanes",
+        "start": "14:00",
+        "type": "lap_swim"
+      },
+      {
         "day": "thursday",
         "end": "10:00",
+        "evidence": "LAP SWIM 7:30 - 10:00 AM",
         "start": "07:30",
         "type": "lap_swim"
       },
       {
         "day": "thursday",
         "end": "11:45",
+        "evidence": "SENIOR SWIM 10:15 - 11:45 AM",
         "start": "10:15",
         "type": "senior_swim"
       },
       {
         "day": "thursday",
         "end": "15:30",
+        "evidence": "LAP SWIM 12:30 - 3:30PM",
+        "notes": "Closed every 3rd Thursday of the month for training",
         "start": "12:30",
         "type": "lap_swim"
       },
       {
         "day": "thursday",
         "end": "19:30",
+        "evidence": "FAMILY/LAP SWIM (3 lanes)**",
+        "pool": "3 lanes",
         "start": "18:15",
         "type": "family_swim"
-      },
-      {
-        "day": "sunday",
-        "end": "08:30",
-        "start": "07:30",
-        "type": "lap_swim"
-      },
-      {
-        "day": "sunday",
-        "end": "11:00",
-        "start": "09:00",
-        "type": "lessons"
-      },
-      {
-        "day": "sunday",
-        "end": "14:00",
-        "start": "12:30",
-        "type": "family_swim"
-      },
-      {
-        "day": "sunday",
-        "end": "15:30",
-        "start": "14:30",
-        "type": "family_swim"
-      },
-      {
-        "day": "tuesday",
-        "end": "19:30",
-        "start": "18:15",
-        "type": "lap_swim"
-      },
-      {
-        "day": "wednesday",
-        "end": "15:30",
-        "start": "14:00",
-        "type": "lap_swim"
       },
       {
         "day": "thursday",
         "end": "19:30",
+        "evidence": "Lap Swim (3 Lanes) 6:15 - 7:30PM",
+        "pool": "3 lanes",
         "start": "18:15",
         "type": "lap_swim"
       }

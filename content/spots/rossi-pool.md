@@ -25,12 +25,6 @@ end = "10:00"
 
 [[extra.sessions]]
 day = "monday"
-type = "lessons"
-start = "10:15"
-end = "11:30"
-
-[[extra.sessions]]
-day = "monday"
 type = "senior_swim"
 start = "11:45"
 end = "13:00"
@@ -76,6 +70,7 @@ day = "tuesday"
 type = "lap_swim"
 start = "18:15"
 end = "19:30"
+pool = "4 lanes"
 
 [[extra.sessions]]
 day = "wednesday"
@@ -94,12 +89,14 @@ day = "wednesday"
 type = "family_swim"
 start = "14:00"
 end = "15:30"
+pool = "2 lanes"
 
 [[extra.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "14:00"
 end = "15:30"
+pool = "4 lanes"
 
 [[extra.sessions]]
 day = "thursday"
@@ -124,24 +121,20 @@ day = "thursday"
 type = "family_swim"
 start = "18:15"
 end = "19:30"
+pool = "3 lanes"
 
 [[extra.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "18:15"
 end = "19:30"
+pool = "3 lanes"
 
 [[extra.sessions]]
 day = "sunday"
 type = "lap_swim"
 start = "07:30"
 end = "08:30"
-
-[[extra.sessions]]
-day = "sunday"
-type = "lessons"
-start = "09:00"
-end = "11:00"
 
 [[extra.sessions]]
 day = "sunday"
@@ -157,27 +150,27 @@ end = "15:30"
 [[extra.closures]]
 start = "2026-03-19"
 end = "2026-03-19"
-reason = "Training"
+reason = "3rd Thursday training"
 
 [[extra.closures]]
 start = "2026-04-16"
 end = "2026-04-16"
-reason = "Training"
+reason = "3rd Thursday training"
 
 [[extra.closures]]
 start = "2026-05-21"
 end = "2026-05-21"
-reason = "Training"
+reason = "3rd Thursday training"
 
 [[extra.closures]]
 start = "2026-05-25"
 end = "2026-05-25"
-reason = "Federal Holiday"
+reason = "FEDERAL HOLIDAY"
 
 [[extra.closures]]
 start = "2026-06-19"
 end = "2026-06-19"
-reason = "Federal Holiday"
+reason = "FEDERAL HOLIDAY"
 +++
 
 An indoor pool at Rossi Playground in the Inner Richmond, at the corner of Arguello and Anza. Programs include lap swim, senior swim, recreation swim, and lessons.

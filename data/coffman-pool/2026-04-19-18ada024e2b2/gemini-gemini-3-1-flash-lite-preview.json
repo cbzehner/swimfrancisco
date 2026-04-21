@@ -1,6 +1,6 @@
 {
-  "cost_estimate": "prompt_tokens=856, candidate_tokens=2013, total_tokens=2869",
-  "extracted_at": "2026-04-18T02:45:13.016125+00:00",
+  "cost_estimate": "prompt_tokens=1359, candidate_tokens=1847, total_tokens=3206",
+  "extracted_at": "2026-04-21T02:01:42.128956+00:00",
   "grounding": {
     "grounded_count": 0,
     "ratio": 0.0,
@@ -27,7 +27,7 @@
         "index": 2,
         "missing_evidence": false,
         "start_in_evidence": true,
-        "type_in_evidence": false
+        "type_in_evidence": true
       },
       {
         "evidence_in_pdf": false,
@@ -107,7 +107,7 @@
         "index": 12,
         "missing_evidence": false,
         "start_in_evidence": true,
-        "type_in_evidence": false
+        "type_in_evidence": true
       },
       {
         "evidence_in_pdf": false,
@@ -180,33 +180,9 @@
         "missing_evidence": false,
         "start_in_evidence": true,
         "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": false,
-        "grounded": false,
-        "index": 22,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": false,
-        "grounded": false,
-        "index": 23,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": false,
-        "grounded": false,
-        "index": 24,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
       }
     ],
-    "total": 25
+    "total": 22
   },
   "model": "gemini-3.1-flash-lite-preview",
   "payload": {
@@ -241,13 +217,6 @@
       },
       {
         "day": "tuesday",
-        "end": "11:00",
-        "evidence": "SELF GUIDED EXERCISE 10:00 am - 11:00 am",
-        "start": "10:00",
-        "type": "senior_swim"
-      },
-      {
-        "day": "tuesday",
         "end": "13:00",
         "evidence": "LAP SWIM 11:30 am - 1:00 pm",
         "start": "11:30",
@@ -257,21 +226,16 @@
         "day": "tuesday",
         "end": "16:00",
         "evidence": "REC/FAMILY / SENIOR SWIM (Shared Pool)^ 2:00 pm - 4:00 pm",
+        "pool": "shared",
         "start": "14:00",
         "type": "family_swim"
       },
       {
-        "day": "wednesday",
-        "end": "08:30",
-        "evidence": "LAP SWIM 7:00 am - 8:30 am",
-        "start": "07:00",
-        "type": "lap_swim"
-      },
-      {
-        "day": "wednesday",
-        "end": "10:30",
-        "evidence": "SENIOR/SELF GUIDED EXERCISE 9:00 am - 10:30 am",
-        "start": "09:00",
+        "day": "tuesday",
+        "end": "16:00",
+        "evidence": "REC/FAMILY / SENIOR SWIM (Shared Pool)^ 2:00 pm - 4:00 pm",
+        "pool": "shared",
+        "start": "14:00",
         "type": "senior_swim"
       },
       {
@@ -299,8 +263,24 @@
         "day": "wednesday",
         "end": "19:00",
         "evidence": "REC/FAMILY/LAP SWIM (Shared Pool)^ 5:45 pm - 7:00 pm",
+        "pool": "shared",
         "start": "17:45",
         "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:00",
+        "evidence": "REC/FAMILY/LAP SWIM (Shared Pool)^ 5:45 pm - 7:00 pm",
+        "pool": "shared",
+        "start": "17:45",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "08:30",
+        "evidence": "LAP SWIM 7:00 am - 8:30 am",
+        "start": "07:00",
+        "type": "lap_swim"
       },
       {
         "day": "thursday",
@@ -311,15 +291,9 @@
       },
       {
         "day": "thursday",
-        "end": "11:00",
-        "evidence": "SELF GUIDED EXECISE 10:00 am - 11:00 am",
-        "start": "10:00",
-        "type": "senior_swim"
-      },
-      {
-        "day": "thursday",
         "end": "13:00",
-        "evidence": "LAP SWIM 11:30 am - 1:00 pm",
+        "evidence": "LAP SWIM Closed every 3rd Thurs of the month for training 11:30 am - 1:00 pm",
+        "notes": "Closed every 3rd Thurs of the month for training",
         "start": "11:30",
         "type": "lap_swim"
       },
@@ -329,20 +303,6 @@
         "evidence": "LAP SWIM 2:30 pm - 4:00 pm",
         "start": "14:30",
         "type": "lap_swim"
-      },
-      {
-        "day": "friday",
-        "end": "10:30",
-        "evidence": "SENIOR/SELF GUIDED EXERCISE 9:00 am - 10:30 am",
-        "start": "09:00",
-        "type": "senior_swim"
-      },
-      {
-        "day": "friday",
-        "end": "11:15",
-        "evidence": "SENIOR / SFUSD (Shared Pool)^ 10:30 am - 11:15 am",
-        "start": "10:30",
-        "type": "senior_swim"
       },
       {
         "day": "friday",
@@ -403,13 +363,13 @@
     ]
   },
   "pdf_sha256": "18ada024e2b2e3539a9222d57a917cdfa52c6c346c632ee090b14321caf8ab53",
-  "prompt_sha256": "24a24994cd43864fa7dbf09c495c947d4986ec88307b89e272659fb3dd49dd9e",
+  "prompt_sha256": "fac318d4b8d445a3c7c475624fec55f088c776770ed31fa24ec6d753d775fcab",
   "provider": "gemini",
-  "schema_sha256": "7bd50481cfa763ea810391021daf61e1bbfdbe7184496c976b486a53a05afe7c",
+  "schema_sha256": "9621f34615c358c5f9409c9df1c5217d7d8fed31d0bff8c7e72f66f4af3382b6",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28553",
   "usage": {
-    "candidates_token_count": 2013,
-    "prompt_token_count": 856,
-    "total_token_count": 2869
+    "candidates_token_count": 1847,
+    "prompt_token_count": 1359,
+    "total_token_count": 3206
   }
 }
