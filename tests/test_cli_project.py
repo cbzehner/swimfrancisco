@@ -23,17 +23,23 @@ def _valid_envelope(slug: str, pdf_sha256: str) -> dict:
     }
 
 
-def test_cli_project_happy_path(tmp_path, monkeypatch):
-    snapshots = tmp_path / "reviewed-snapshots"
-    content = tmp_path / "content" / "spots"
-    (snapshots / "hamilton-pool").mkdir(parents=True)
-    (snapshots / "hamilton-pool" / "2026-04-18-aaaaaaaaaaaa.json").write_text(
-        json.dumps(_valid_envelope("hamilton-pool", "a" * 64))
+def _seed_review_dir(data_root: Path, slug: str, date: str, pdf_sha256: str) -> Path:
+    review_dir = data_root / slug / f"{date}-{pdf_sha256[:12]}"
+    review_dir.mkdir(parents=True)
+    (review_dir / "reviewed.json").write_text(
+        json.dumps(_valid_envelope(slug, pdf_sha256))
     )
+    return review_dir
+
+
+def test_cli_project_happy_path(tmp_path, monkeypatch):
+    data = tmp_path / "data"
+    content = tmp_path / "content" / "spots"
+    _seed_review_dir(data, "hamilton-pool", "2026-04-18", "a" * 64)
     content.mkdir(parents=True)
     (content / "hamilton-pool.md").write_text("+++\ntitle = \"Hamilton\"\n\n[extra]\n+++\n")
 
-    monkeypatch.setattr("schedules.cli.REVIEWED_SNAPSHOTS_DIR", snapshots)
+    monkeypatch.setattr("schedules.cli.DATA_DIR", data)
     monkeypatch.setattr("schedules.cli.CONTENT_SPOTS_DIR", content)
 
     runner = CliRunner()
@@ -43,9 +49,9 @@ def test_cli_project_happy_path(tmp_path, monkeypatch):
 
 
 def test_cli_project_missing_slug_exits_nonzero(tmp_path, monkeypatch):
-    monkeypatch.setattr("schedules.cli.REVIEWED_SNAPSHOTS_DIR", tmp_path / "reviewed-snapshots")
+    monkeypatch.setattr("schedules.cli.DATA_DIR", tmp_path / "data")
     monkeypatch.setattr("schedules.cli.CONTENT_SPOTS_DIR", tmp_path / "content" / "spots")
     runner = CliRunner()
     result = runner.invoke(cli, ["project", "ghost-pool"])
     assert result.exit_code != 0
-    assert "no reviewed snapshot" in result.output
+    assert "no review dir" in result.output

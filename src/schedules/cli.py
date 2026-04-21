@@ -10,7 +10,7 @@ from .models import Failed, PoolResult, Proposed, Skipped, Unchanged
 from .paths import (
     CONTENT_SPOTS_DIR,
     DATA_DIR,
-    REVIEWED_SNAPSHOTS_DIR,
+    latest_review_dir,
 )
 from .pipeline import run_pipeline
 from .project import ProjectError, project as _project
@@ -87,11 +87,17 @@ def extract(
 @cli.command("project")
 @click.argument("slug")
 def project_command(slug: str) -> None:
-    """Project the latest reviewed snapshot for SLUG into content/spots/<slug>.md."""
+    """Project the latest reviewed.json for SLUG into content/spots/<slug>.md."""
+    review_dir = latest_review_dir(slug, root=DATA_DIR)
+    if review_dir is None:
+        raise click.ClickException(f"no review dir found for slug={slug!r}")
+    reviewed_json = review_dir / "reviewed.json"
+    if not reviewed_json.exists():
+        raise click.ClickException(f"no reviewed.json found at {reviewed_json}")
     try:
         path = _project(
             slug=slug,
-            snapshots_root=REVIEWED_SNAPSHOTS_DIR,
+            reviewed_json_path=reviewed_json,
             content_spots_dir=CONTENT_SPOTS_DIR,
         )
     except ProjectError as exc:
