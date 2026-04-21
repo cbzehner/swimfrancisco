@@ -2,61 +2,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import date
 from pathlib import Path
 
 from .envelope import EnvelopeValidationError, validate_envelope
-from .paths import REVIEWED_SNAPSHOTS_DIR, relative_to_repo
-
-
-def reviewed_snapshot_path(slug: str, pdf_sha256: str, root: Path = REVIEWED_SNAPSHOTS_DIR) -> Path:
-    """Resolve the snapshot path for (slug, pdf_sha256).
-
-    Globs `<slug>/*-<prefix>.json` where prefix is the first 12 chars of
-    pdf_sha256. If exactly one file matches, return it. If none match,
-    return the canonical write path using today's date. If more than one
-    matches (should not happen in practice), raise.
-    """
-    prefix = pdf_sha256[:12]
-    slug_dir = root / slug
-    if slug_dir.is_dir():
-        matches = sorted(slug_dir.glob(f"*-{prefix}.json"))
-        if len(matches) == 1:
-            return matches[0]
-        if len(matches) > 1:
-            raise ValueError(
-                f"Multiple reviewed snapshots for {slug} with prefix {prefix}: {matches}"
-            )
-    return slug_dir / f"{date.today().isoformat()}-{prefix}.json"
-
-
-def load_reviewed_snapshot(
-    slug: str,
-    pdf_sha256: str,
-    *,
-    root: Path = REVIEWED_SNAPSHOTS_DIR,
-) -> tuple[dict | None, str | None, str | None]:
-    path = reviewed_snapshot_path(slug, pdf_sha256, root)
-    if not path.exists():
-        return None, None, None
-
-    raw = json.loads(path.read_text())
-    if not isinstance(raw, dict):
-        raise ValueError(f"{path} must contain a JSON object.")
-
-    try:
-        validate_envelope(raw)
-    except EnvelopeValidationError as exc:
-        raise ValueError(f"{path}: {exc}") from exc
-    if raw["slug"] != slug:
-        raise ValueError(
-            f"{path} envelope slug={raw['slug']!r} does not match directory slug={slug!r}"
-        )
-    if raw["pdf_sha256"] != pdf_sha256:
-        raise ValueError(f"{path} envelope pdf_sha256 does not match filename sha256")
-
-    fingerprint = hashlib.sha256(json.dumps(raw, sort_keys=True).encode("utf-8")).hexdigest()
-    return raw, fingerprint, relative_to_repo(path)
+from .paths import relative_to_repo
 
 
 def load_reviewed_snapshot_from_path(

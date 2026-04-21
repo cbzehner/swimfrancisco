@@ -2,41 +2,8 @@ import json
 
 import pytest
 
-from schedules.reviewed_snapshots import (
-    load_reviewed_snapshot,
-    load_reviewed_snapshot_from_path,
-)
+from schedules.reviewed_snapshots import load_reviewed_snapshot_from_path
 from schedules.validate import validate
-
-
-def test_load_reviewed_snapshot(tmp_path):
-    root = tmp_path / "reviewed-snapshots"
-    pdf_sha256 = "a" * 64
-    file_path = root / "hamilton-pool" / f"2026-04-18-{pdf_sha256[:12]}.json"
-    file_path.parent.mkdir(parents=True)
-    file_path.write_text(
-        json.dumps(
-            {
-                "slug": "hamilton-pool",
-                "pdf_sha256": pdf_sha256,
-                "reviewed_at": "2026-04-18",
-                "source_pdf_url": "https://example.com/schedule.pdf",
-                "payload": {
-                    "schedule_effective": "2026-03-17",
-                    "sessions": [
-                        {"day": "monday", "type": "lap_swim", "start": "07:00", "end": "08:00"}
-                    ],
-                    "closures": [],
-                },
-            }
-        )
-    )
-
-    snapshot, fingerprint, relative_path = load_reviewed_snapshot("hamilton-pool", pdf_sha256, root=root)
-
-    assert snapshot["slug"] == "hamilton-pool"
-    assert isinstance(fingerprint, str) and len(fingerprint) == 64
-    assert relative_path == str(file_path)
 
 
 def _write_snapshot(root, slug, pdf_sha256, envelope):
@@ -60,45 +27,6 @@ def _valid_envelope(slug, pdf_sha256):
             "closures": [],
         },
     }
-
-
-def test_load_reviewed_snapshot_accepts_valid_envelope(tmp_path):
-    root = tmp_path / "reviewed-snapshots"
-    pdf_sha256 = "a" * 64
-    _write_snapshot(root, "hamilton-pool", pdf_sha256, _valid_envelope("hamilton-pool", pdf_sha256))
-    snapshot, fingerprint, _ = load_reviewed_snapshot("hamilton-pool", pdf_sha256, root=root)
-    assert snapshot["slug"] == "hamilton-pool"
-    assert len(fingerprint) == 64
-
-
-def test_load_reviewed_snapshot_rejects_missing_required_field(tmp_path):
-    root = tmp_path / "reviewed-snapshots"
-    pdf_sha256 = "a" * 64
-    envelope = _valid_envelope("hamilton-pool", pdf_sha256)
-    del envelope["source_pdf_url"]
-    _write_snapshot(root, "hamilton-pool", pdf_sha256, envelope)
-    with pytest.raises(ValueError, match="source_pdf_url"):
-        load_reviewed_snapshot("hamilton-pool", pdf_sha256, root=root)
-
-
-def test_load_reviewed_snapshot_rejects_extra_top_level_key(tmp_path):
-    root = tmp_path / "reviewed-snapshots"
-    pdf_sha256 = "a" * 64
-    envelope = _valid_envelope("hamilton-pool", pdf_sha256)
-    envelope["bogus_field"] = True
-    _write_snapshot(root, "hamilton-pool", pdf_sha256, envelope)
-    with pytest.raises(ValueError):
-        load_reviewed_snapshot("hamilton-pool", pdf_sha256, root=root)
-
-
-def test_load_reviewed_snapshot_rejects_mismatched_slug(tmp_path):
-    root = tmp_path / "reviewed-snapshots"
-    pdf_sha256 = "a" * 64
-    envelope = _valid_envelope("hamilton-pool", pdf_sha256)
-    envelope["slug"] = "rossi-pool"
-    _write_snapshot(root, "hamilton-pool", pdf_sha256, envelope)
-    with pytest.raises(ValueError, match="slug"):
-        load_reviewed_snapshot("hamilton-pool", pdf_sha256, root=root)
 
 
 def test_load_reviewed_snapshot_from_path_extracts_sha_from_envelope(tmp_path):
