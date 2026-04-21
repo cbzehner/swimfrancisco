@@ -1,15 +1,18 @@
-> **Superseded — 2026-04-18.** Frontend work (zone rendering on detail pages,
-> zone-scoped closure logic on the homepage, detail-page layout) landed via
-> [`docs/superpowers/plans/2026-04-18-spot-detail-redesign.md`](../superpowers/plans/2026-04-18-spot-detail-redesign.md)
+> **Archived — 2026-04-21.** Frontend work (zone rendering on detail pages,
+> zone-scoped closure logic on the homepage, detail-page layout) shipped via
+> [`docs/plans/archived/2026-04-18-spot-detail-redesign.md`](2026-04-18-spot-detail-redesign.md)
 > and the design spec
-> [`docs/superpowers/specs/2026-04-17-spot-detail-redesign-design.md`](../superpowers/specs/2026-04-17-spot-detail-redesign-design.md).
-> Backend extractor work in this plan (populating `session.pool` from PDFs
-> for multi-zone facilities) remains open as a separate data task.
+> [`docs/specs/archived/2026-04-17-spot-detail-redesign-design.md`](../../specs/archived/2026-04-17-spot-detail-redesign-design.md).
+> Backend extractor work described here (populating `session.pool` from PDFs
+> for multi-zone facilities) has been partially delivered by reviewer-driven
+> zone labeling in `data/reviews/**/reviewed.json`; no further planned work
+> is carried forward under this plan.
 
 ---
 
 ---
-status: pending
+status: archived
+archived_at: 2026-04-21
 progress: []
 last_review: null
 iterations: 0

@@ -1,8 +1,8 @@
 # Spot Detail Page Redesign — Design
 
 **Date:** 2026-04-17
-**Status:** Draft for review
-**Supersedes:** Frontend steps of [docs/plans/multi-pool-facilities.md](../../plans/multi-pool-facilities.md)
+**Status:** Archived 2026-04-21 — shipped via [`docs/plans/archived/2026-04-18-spot-detail-redesign.md`](../../plans/archived/2026-04-18-spot-detail-redesign.md).
+**Supersedes:** Frontend steps of [docs/plans/archived/multi-pool-facilities.md](../../plans/archived/multi-pool-facilities.md)
 
 ## Context
 

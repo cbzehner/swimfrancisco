@@ -1,5 +1,6 @@
 ---
-status: in_progress
+status: archived
+archived_at: 2026-04-21
 progress:
   - section: "Step 1: Wire Python toolchain into devenv"
     status: complete

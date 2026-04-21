@@ -1,6 +1,6 @@
 # Daily Rebuild + Deploy — Design
 
-**Status:** Draft
+**Status:** Archived 2026-04-21 — shipped via [`docs/plans/archived/2026-04-18-daily-rebuild-deploy.md`](../../plans/archived/2026-04-18-daily-rebuild-deploy.md).
 **Date:** 2026-04-18
 **Topic:** Daily midnight-PT rebuild of the Swim Francisco static site via a Worker cron firing a Workers Builds deploy hook, Terraform-managed Cloudflare infra, and removal of the client-side JavaScript that compensated for the site not rebuilding daily.
 

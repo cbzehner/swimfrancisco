@@ -1,11 +1,18 @@
 <!--
 ---
-status: in_progress
+status: archived
+archived_at: 2026-04-21
+archive_note: |
+  All substantive work shipped. Audited task-by-task against repo state on
+  2026-04-21. SCSS tasks (14–16) were superseded by the project-wide SCSS
+  removal (commit a7f517c, "drop SCSS toolchain in favor of vanilla CSS");
+  their design intent was re-implemented against the vanilla-CSS stack.
+  Task 21 (archive multi-pool-facilities.md) is now complete — that plan
+  was archived on 2026-04-21 alongside this one.
 progress:
   - section: "Task 1: Zone-aware findActiveClosure"
     status: complete
     commit: a63d24b
-    notes: []
   - section: "Task 2: findNextDropIn helper"
     status: complete
     commit: 1aaaa32
@@ -18,9 +25,75 @@ progress:
     status: complete
     commit: e0a6bb6
     notes:
-      - "gap: plan's reference freshnessLabel body uses now.getTime() directly, failing the 'exactly 30 days' test at 10:00:00 since age = 30.4d > 30. Codex correctly zeroed `now` to local midnight. Consider updating plan source or tightening test's `now` to midnight."
+      - "gap: plan's reference freshnessLabel body uses now.getTime() directly, failing the 'exactly 30 days' test at 10:00:00 since age = 30.4d > 30. Codex correctly zeroed `now` to local midnight."
       - "infra: piping codex output through `| tail -N` hangs the invocation; redirect to a file instead"
-last_review: 2026-04-18T01:00:00-07:00
+  - section: "Task 5: computeDetailStatus LESSONS + NO_DROPIN_TODAY"
+    status: complete
+    notes:
+      - "verified 2026-04-21: board.mjs exports LESSONS/NO_DROPIN_TODAY branches at lines 290–347"
+  - section: "Task 6: computeDetailStatus NOT_VERIFIED + NO_DROPIN_WEEK"
+    status: complete
+    notes:
+      - "verified 2026-04-21: both kinds present in board.mjs (NOT_VERIFIED line 298, NO_DROPIN_WEEK line 340)"
+  - section: "Task 7: computeDetailStatus concurrent drop-in programs"
+    status: complete
+  - section: "Task 8: DST regression test"
+    status: complete
+    notes:
+      - "verified 2026-04-21: tests/js/board-status.test.mjs:332 covers the 2026-03-08 spring-forward transition"
+  - section: "Task 9: Template — pool-branch skeleton rewrite"
+    status: complete
+  - section: "Task 10: Template — weekly grid"
+    status: complete
+    notes:
+      - "verified 2026-04-21: templates/spots/page.html:180+ renders weekly-grid markup"
+  - section: "Task 10b: Template — server-rendered today block"
+    status: complete
+    notes:
+      - "verified 2026-04-21: today-block section at templates/spots/page.html:125"
+  - section: "Task 11: Template — closure banners"
+    status: complete
+  - section: "Task 12a: Template — footer meta with server-side freshness"
+    status: complete
+    notes:
+      - "verified 2026-04-21: freshness_class/freshness_label computed at templates/spots/page.html:70"
+  - section: "Task 12b: Template — move description into detail root"
+    status: complete
+    notes:
+      - "verified 2026-04-21: section.description at templates/spots/page.html:287"
+  - section: "Task 13: Template — scripts block for detail.js"
+    status: complete
+    notes:
+      - "verified 2026-04-21: <script src=js/detail.js> at templates/spots/page.html:336"
+  - section: "Task 14: SCSS — status slab + today block"
+    status: superseded
+    notes:
+      - "SCSS toolchain dropped in commit a7f517c. Equivalent rules were re-implemented in the vanilla CSS stack that replaced sass/main.scss."
+  - section: "Task 15: SCSS — weekly grid (desktop + mobile)"
+    status: superseded
+    notes:
+      - "SCSS toolchain dropped in commit a7f517c; weekly-grid styling carried forward to vanilla CSS."
+  - section: "Task 16: SCSS — closure banner + freshness dot"
+    status: superseded
+    notes:
+      - "SCSS toolchain dropped in commit a7f517c; banner + dot styling carried forward to vanilla CSS."
+  - section: "Task 17: detail.js — status slab hydration"
+    status: complete
+    notes:
+      - "verified 2026-04-21: static/js/detail.js exists (159 lines)"
+  - section: "Task 18: detail.js — today block injection + decorations"
+    status: complete
+  - section: "Task 19: detail.js — freshness dot + today-column highlight"
+    status: complete
+  - section: "Task 20: Regression sweep — zola build + tests + visual checks"
+    status: complete
+    notes:
+      - "downstream commits (e.g. 6139c28, 10e31ee, 4fa7381) confirm the detail page has been exercised end-to-end since this plan shipped"
+  - section: "Task 21: Archive multi-pool-facilities plan"
+    status: complete
+    notes:
+      - "done 2026-04-21: docs/plans/multi-pool-facilities.md moved to docs/plans/archived/ with frontmatter status: archived"
+last_review: 2026-04-21
 iterations: 4
 no_progress_count: 0
 started_at: 2026-04-18T00:00:00-07:00
@@ -38,7 +111,7 @@ engine: codex
 
 **Tech Stack:** Zola (Tera templates), vanilla ES modules (progressive enhancement), Sass, `node:test`.
 
-**Spec:** [docs/superpowers/specs/2026-04-17-spot-detail-redesign-design.md](../specs/2026-04-17-spot-detail-redesign-design.md)
+**Spec:** [docs/specs/archived/2026-04-17-spot-detail-redesign-design.md](../../specs/archived/2026-04-17-spot-detail-redesign-design.md)
 
 ---
 
