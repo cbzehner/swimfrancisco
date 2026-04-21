@@ -41,14 +41,12 @@ day = "tuesday"
 type = "family_swim"
 start = "14:30"
 end = "15:30"
-pool = "shallow / deep"
 
 [[extra.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "14:30"
 end = "16:00"
-pool = "shallow / deep"
 
 [[extra.sessions]]
 day = "wednesday"
@@ -112,7 +110,6 @@ day = "friday"
 type = "senior_swim"
 start = "10:30"
 end = "12:00"
-pool = "shallow / deep"
 
 [[extra.sessions]]
 day = "friday"

@@ -70,7 +70,6 @@ day = "tuesday"
 type = "lap_swim"
 start = "18:15"
 end = "19:30"
-pool = "4 lanes"
 
 [[extra.sessions]]
 day = "wednesday"
@@ -89,14 +88,12 @@ day = "wednesday"
 type = "family_swim"
 start = "14:00"
 end = "15:30"
-pool = "2 lanes"
 
 [[extra.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "14:00"
 end = "15:30"
-pool = "4 lanes"
 
 [[extra.sessions]]
 day = "thursday"
@@ -121,14 +118,12 @@ day = "thursday"
 type = "family_swim"
 start = "18:15"
 end = "19:30"
-pool = "3 lanes"
 
 [[extra.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "18:15"
 end = "19:30"
-pool = "3 lanes"
 
 [[extra.sessions]]
 day = "sunday"

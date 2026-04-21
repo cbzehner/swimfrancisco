@@ -60,7 +60,6 @@
         "day": "tuesday",
         "end": "15:30",
         "evidence": "REC/FAMILY SWIM/ LAP SWIM (shallow / deep) (Lap unl 4pm) 2:30 pm - 3:30 pm",
-        "pool": "shallow / deep",
         "start": "14:30",
         "type": "family_swim"
       },
@@ -69,7 +68,6 @@
         "end": "16:00",
         "evidence": "REC/FAMILY SWIM/ LAP SWIM (shallow / deep) (Lap unl 4pm) 2:30 pm - 3:30 pm",
         "notes": "Lap unl 4pm",
-        "pool": "shallow / deep",
         "start": "14:30",
         "type": "lap_swim"
       },
@@ -144,7 +142,6 @@
         "day": "friday",
         "end": "12:00",
         "evidence": "SENIOR / THERAPY ACCESS SWIM (deep / shallow) 10:30 am \u2013 12:00 pm",
-        "pool": "shallow / deep",
         "start": "10:30",
         "type": "senior_swim"
       },
