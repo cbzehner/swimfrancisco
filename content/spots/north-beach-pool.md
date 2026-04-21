@@ -26,6 +26,13 @@ pool = "warm pool"
 
 [[extra.sessions]]
 day = "tuesday"
+type = "lap_swim"
+start = "07:30"
+end = "10:00"
+pool = "cool pool"
+
+[[extra.sessions]]
+day = "tuesday"
 type = "senior_swim"
 start = "08:45"
 end = "10:00"
@@ -40,6 +47,13 @@ pool = "warm pool"
 
 [[extra.sessions]]
 day = "tuesday"
+type = "lap_swim"
+start = "12:30"
+end = "15:30"
+pool = "cool pool"
+
+[[extra.sessions]]
+day = "tuesday"
 type = "family_swim"
 start = "15:30"
 end = "17:00"
@@ -50,7 +64,21 @@ day = "tuesday"
 type = "lap_swim"
 start = "17:30"
 end = "18:30"
+pool = "cool pool"
+
+[[extra.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "17:30"
+end = "18:30"
 pool = "warm pool"
+
+[[extra.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "09:00"
+end = "10:15"
+pool = "cool pool"
 
 [[extra.sessions]]
 day = "wednesday"
@@ -58,6 +86,13 @@ type = "senior_swim"
 start = "09:00"
 end = "10:15"
 pool = "warm pool"
+
+[[extra.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "11:45"
+end = "15:30"
+pool = "cool pool"
 
 [[extra.sessions]]
 day = "wednesday"
@@ -74,6 +109,13 @@ end = "18:30"
 pool = "warm pool"
 
 [[extra.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "17:30"
+end = "18:30"
+pool = "cool pool"
+
+[[extra.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "07:30"
@@ -82,10 +124,24 @@ pool = "warm pool"
 
 [[extra.sessions]]
 day = "thursday"
+type = "lap_swim"
+start = "07:30"
+end = "10:30"
+pool = "cool pool"
+
+[[extra.sessions]]
+day = "thursday"
 type = "senior_swim"
 start = "09:00"
 end = "10:30"
 pool = "warm pool"
+
+[[extra.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "11:00"
+end = "14:00"
+pool = "cool pool"
 
 [[extra.sessions]]
 day = "thursday"
@@ -103,10 +159,24 @@ pool = "warm pool"
 
 [[extra.sessions]]
 day = "thursday"
+type = "lap_swim"
+start = "14:15"
+end = "15:30"
+pool = "cool pool"
+
+[[extra.sessions]]
+day = "thursday"
 type = "family_swim"
 start = "16:15"
 end = "17:30"
 pool = "warm pool"
+
+[[extra.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "17:30"
+end = "18:30"
+pool = "cool pool"
 
 [[extra.sessions]]
 day = "friday"
@@ -114,6 +184,13 @@ type = "family_swim"
 start = "09:00"
 end = "10:15"
 pool = "warm pool"
+
+[[extra.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "09:00"
+end = "10:15"
+pool = "cool pool"
 
 [[extra.sessions]]
 day = "friday"
@@ -121,6 +198,13 @@ type = "senior_swim"
 start = "09:00"
 end = "10:15"
 pool = "warm pool"
+
+[[extra.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "11:45"
+end = "15:30"
+pool = "cool pool"
 
 [[extra.sessions]]
 day = "friday"
@@ -137,6 +221,13 @@ end = "19:00"
 pool = "warm pool"
 
 [[extra.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "17:30"
+end = "19:30"
+pool = "cool pool"
+
+[[extra.sessions]]
 day = "saturday"
 type = "lap_swim"
 start = "12:00"
@@ -145,10 +236,24 @@ pool = "warm pool"
 
 [[extra.sessions]]
 day = "saturday"
+type = "lap_swim"
+start = "12:00"
+end = "14:00"
+pool = "cool pool"
+
+[[extra.sessions]]
+day = "saturday"
 type = "family_swim"
 start = "13:45"
 end = "15:00"
 pool = "warm pool"
+
+[[extra.sessions]]
+day = "saturday"
+type = "lap_swim"
+start = "14:30"
+end = "16:30"
+pool = "cool pool"
 
 [[extra.sessions]]
 day = "saturday"
