@@ -1,16 +1,16 @@
 # Pool Schedule Extraction
 
-The schedule extractor is a local `uv`-managed Python CLI that fetches SF Rec & Park schedule PDFs, asks an LLM provider to extract structured schedule data, merges the result into `content/spots/*.md`, and writes a review report to `tmp/extraction-report.md`.
+The schedule extractor is a local `uv`-managed Python CLI under `schedule-tools/`. It fetches SF Rec & Park schedule PDFs, asks an LLM provider to extract structured schedule data, merges the result into `content/spots/*.md`, and writes a review report to `tmp/extraction-report.md`.
 
 ## Setup
 
-Use `uv` for package management in this repo:
+Use `uv` for package management in the extractor project:
 
 ```sh
-uv sync
+just sync
 ```
 
-Copy `.env.example` to `.env`, then fill in one provider key:
+Copy the root `.env.example` to root `.env`, then fill in one provider key:
 
 ```sh
 cp .env.example .env
@@ -57,19 +57,19 @@ SCHEDULES_ANTHROPIC_MODEL=claude-sonnet-4-6
 Dry-run a single pool:
 
 ```sh
-uv run schedules extract --only hamilton-pool --dry-run
+just schedules-dry-run --only hamilton-pool
 ```
 
 Run the full published registry:
 
 ```sh
-uv run schedules extract
+just schedules-extract
 ```
 
 Run a provider bakeoff on a flagged pool:
 
 ```sh
-uv run schedules debug bakeoff --provider gemini --compare-with anthropic --only hamilton-pool --force
+just schedules debug bakeoff --provider gemini --compare-with anthropic --only hamilton-pool --force
 ```
 
 Useful flags on `extract`:
@@ -106,12 +106,12 @@ Review status is a filesystem predicate: `reviewed.json` present ⇒ done;
 absent ⇒ needs review. `--force` and `--compare-with` bypass this
 fast-path.
 
-1. Run `uv run schedules extract`.
+1. Run `just schedules-extract`.
 2. Read `tmp/extraction-report.md`.
 3. Review `git diff content/spots/`.
 4. For any pool with `review_note[...]` lines, inspect the provider
    outputs under `data/<slug>/<fetch-date>-<sha12>/`.
-5. Run `uv run schedules review` to approve the next pending pool. The
+5. Run `just schedules-review` to approve the next pending pool. The
    CLI picks the oldest unreviewed directory, seeds `reviewed.json`, opens
    the PDF, and launches `$EDITOR`. On exit it validates, projects into
    `content/spots/<slug>.md`, and leaves `reviewed.json` on disk.
@@ -136,7 +136,7 @@ misinterpretation, not typos.
 
 ## Registry Maintenance
 
-The source registry lives at `src/schedules/registry.toml`.
+The source registry lives at `schedule-tools/src/schedules/registry.toml`.
 
 When SF Rec moves a PDF URL:
 
@@ -147,10 +147,10 @@ When SF Rec moves a PDF URL:
 
 ## Current Blockers
 
-As of 2026-04-20:
+As of 2026-05-04:
 
-- All 7 pools with current published PDFs have `reviewed.json` committed under `data/<slug>/<date>-<sha12>/`.
-- `mission-community-pool` is skipped because the facility page announces the Summer 2026 opening date but exposes no current schedule PDF.
+- All 8 pools with current published PDFs have `reviewed.json` committed under `data/<slug>/<date>-<sha12>/`.
+- `mission-community-pool` uses the Spring 2026 PDF (`DocumentCenter/View/28959`, effective 2026-05-12 through 2026-06-06), reviewed under `data/mission-community-pool/2026-05-03-6d12e60b17f1/`.
 - `sava-pool` is skipped because the pool remains closed for repairs and the page only links an old Fall 2025 schedule.
 
 ## Closure Contract (v1)
@@ -168,7 +168,7 @@ Timed or pool-scoped closures are a deliberate out-of-scope item; adding them is
 Every extracted pool joins the review queue until a human approves it. Approve extractions by running:
 
 ```
-schedules review
+just schedules-review
 ```
 
 The CLI scans `data/<slug>/` for review dirs that have provider JSON but
@@ -179,12 +179,12 @@ no `reviewed.json`, picks the oldest-PDF-first, and:
 3. Launches `$EDITOR` (or `hx`) on `reviewed.json`. Helix's JSON LSP picks up the `$schema` pointer and gives you autocomplete + inline validation.
 4. On editor exit, validates (schema + `validate()` invariants) and projects into `content/spots/<slug>.md`.
 
-To review a specific pool: `schedules review --slug hamilton-pool`.
+To review a specific pool: `just schedules-review --slug hamilton-pool`.
 
-If finalization fails after `reviewed.json` is written (rare; projection error), re-run `schedules project <slug>` to finish.
+If finalization fails after `reviewed.json` is written (rare; projection error), re-run `just schedules project <slug>` to finish.
 
-To start over from raw extraction on a given pool, delete its `reviewed.json` and re-run `schedules review`.
+To start over from raw extraction on a given pool, delete its `reviewed.json` and re-run `just schedules-review`.
 
 ## Future
 
-The v3 path is still the same: a GitHub Action can wrap `uv run schedules extract` and open a PR whenever the content diff is non-empty.
+The v3 path is still the same: a GitHub Action can wrap `just schedules-extract` and open a PR whenever the content diff is non-empty.

@@ -16,13 +16,13 @@
 
 ## Shell & Command Reliability
 1. **[2026-04-17] `schedules` CLI does not autoload `.env`**
-   Do instead: prefix with `set -a && source .env && set +a &&` when running `uv run schedules extract` or `uv run schedules debug bakeoff` or any provider call, or the run fails with `GOOGLE_API_KEY is not set.`.
+   Do instead: use the `just schedules-*` wrappers, which load root `.env` before provider calls; raw `uv --project schedule-tools run schedules ...` calls still need `set -a && source .env && set +a`.
 
 ## Domain Behavior Guardrails
 1. **[2026-04-20] `content/spots/*.md` is the source of truth; `data/<slug>/<date>-<sha12>/` is a regeneration aid**
    Do instead: treat checked-in markdown as authoritative. Each per-review directory holds `source.pdf`, per-provider JSON, and `reviewed.json` (present ⇔ human-approved). Every new PDF sha256 requires a fresh human pass via `schedules review` — there is no auto-ratification.
-2. **[2026-05-04] Do not publish unreviewed Mission schedule data**
-   Do instead: Mission's facility page now links `DocumentCenter/View/28959` (`Mission_Spring-2026-Schedule-May12_June6-1`, effective 2026-05-12 through 2026-06-06); update the registry/extract only when ready, then run the normal `schedules review` pass before projecting content.
+2. **[2026-05-04] Mission's Spring 2026 schedule has a reviewed PDF**
+   Do instead: use `data/mission-community-pool/2026-05-03-6d12e60b17f1/` and registry URL `DocumentCenter/View/28959` as the current reviewed Mission source; remember timed staff-training closures are represented conservatively by the v1 all-day closure model.
 3. **[2026-04-17] Do not publish stale Sava schedules**
    Do instead: leave `sava-pool` skipped until the official facility page publishes a current schedule PDF, then review that new hash.
 4. **[2026-04-17] SFRP vocabulary: REC/FAMILY SWIM is one program, not two**
