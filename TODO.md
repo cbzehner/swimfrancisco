@@ -1,5 +1,1 @@
 # TODO
-
-- **Verify the 00:05 PT daily-rebuild cron fires tonight.** Cron is registered (`5 7 * * *` / `5 8 * * *` in `worker/wrangler.toml`) and the deploy hook secret `WORKERS_BUILDS_DEPLOY_HOOK` is bound. Tomorrow check Cloudflare dashboard → Workers Builds → Deployments for a ~07:05 UTC (PDT) build, or run `wrangler tail` overnight to watch the `scheduled` handler fire. If no build appears, inspect `worker/src/index.ts` daily-rebuild gate and confirm the secret is readable from the Worker.
-
-- **Mitigate Workers Builds uv-sync bloat (37 Python packages per deploy).** Workers Builds auto-detects the root `pyproject.toml` and runs `uv sync` on every build, adding ~1-2s. Workers Builds does *not* document a `.cfignore` or opt-out (only 13 JS frameworks are officially auto-detected; Python is undocumented). Likely fix: relocate `pyproject.toml` + `schedules/` python package into a subdirectory so the root scan misses it — will require updating `devenv.nix` scripts (`schedules-dry-run`, `schedules-extract`) and any docs that call `uv run` from the repo root.

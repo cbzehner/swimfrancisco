@@ -3,6 +3,7 @@
 {
   packages = [
     pkgs.git
+    pkgs.just
     pkgs.zola
     pkgs.watchexec
     pkgs.terraform
@@ -22,38 +23,6 @@
   languages.javascript.npm.enable = true;
   dotenv.enable = true;
   dotenv.filename = [ ".env" ];
-
-  # `devenv up` starts both: a Zola build-on-change watcher and wrangler dev.
-  # Wrangler serves ./public as static assets and handles /api/* via the Worker,
-  # matching prod's single-origin shape. Open http://localhost:8787.
-  # Manually trigger the Worker's scheduled handler (the hourly cron that
-  # fetches NOAA/NDBC and writes KV). Wrangler's `--test-scheduled` flag
-  # (set in worker/package.json) exposes this at /__scheduled.
-  scripts.refresh-conditions = {
-    description = "Trigger the Worker cron handler to refresh conditions in KV";
-    exec = ''
-      set -euo pipefail
-      curl -fsS "http://localhost:8787/__scheduled" && echo
-      echo "cron handler invoked — fetch with: curl -s http://localhost:8787/api/conditions | jq"
-    '';
-  };
-
-  # Pipeline runners. Dry-run first to preview; live run writes to
-  # content/spots/ and data/extraction-state.json.
-  scripts.schedules-dry-run = {
-    description = "Run the schedule extraction pipeline without writing (preview mode)";
-    exec = ''
-      set -euo pipefail
-      uv run schedules extract --dry-run "$@"
-    '';
-  };
-  scripts.schedules-extract = {
-    description = "Run the schedule extraction pipeline live (writes content and state)";
-    exec = ''
-      set -euo pipefail
-      uv run schedules extract "$@"
-    '';
-  };
 
   processes.zola.exec = ''
     watchexec --no-vcs-ignore \
