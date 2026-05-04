@@ -25,7 +25,7 @@
 import { computeNextOpenOffset, nowInPacific, sortByRank } from "./helpers/board.mjs";
 import { renderBoard } from "./status.js";
 
-const POOL_SESSION_TYPES = new Set(["lap_swim", "family_swim"]);
+const POOL_SESSION_TYPES = new Set(["lap_swim", "family_swim", "senior_swim"]);
 const EARTH_RADIUS_MILES = 3958.8;
 const TYPE_NONE = "none";
 
@@ -34,8 +34,9 @@ const TYPE_NONE = "none";
 // (plain <a href>), not a hash token — see view-switcher in the template.
 const TYPE_TOKENS = {
   lap: "lap_swim",
-  family: "family_swim",
   beach: "open_water",
+  family: "family_swim",
+  senior: "senior_swim",
 };
 const TYPE_TO_TOKEN = Object.fromEntries(
   Object.entries(TYPE_TOKENS).map(([token, type]) => [type, token]),
