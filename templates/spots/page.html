@@ -40,7 +40,12 @@
 
 {% block content %}
   {% set extra = page.extra %}
-  {% set map_href = "https://www.google.com/maps/search/?api=1&query=" ~ extra.lat ~ "," ~ extra.lng %}
+  {% set destination = extra.address | default(value="") %}
+  {% if destination == "" %}{% set destination = extra.lat ~ "," ~ extra.lng %}{% endif %}
+  {% set destination_enc = destination | urlencode %}
+  {% set place_href = "https://www.google.com/maps/search/?api=1&query=" ~ destination_enc %}
+  {% set google_dir = "https://www.google.com/maps/dir/?api=1&destination=" ~ destination_enc %}
+  {% set apple_dir = "https://maps.apple.com/?daddr=" ~ destination_enc %}
 
   <p class="back"><a href="{{ config.base_url }}/">&larr; BOARD</a></p>
 
@@ -48,7 +53,22 @@
     <h1>{{ page.title }}</h1>
     {% if extra.address %}
       <p class="address">
-        <a href="{{ map_href }}" target="_blank" rel="noopener">{{ extra.address }}</a>
+        <a href="{{ place_href }}" target="_blank" rel="noopener">{{ extra.address }}</a>
+      </p>
+    {% endif %}
+    {% if extra.subtype or extra.website or extra.address %}
+      <p class="official">
+        {% if extra.subtype %}<span class="subtype">{{ extra.subtype | upper }}</span>{% endif %}
+        {% if extra.subtype and extra.website %} · {% endif %}
+        {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">OFFICIAL PAGE</a>{% endif %}
+        {% if extra.address %}
+          {% if extra.subtype or extra.website %} · {% endif %}
+          <span class="address-actions" aria-label="Directions">
+            <span class="address-actions-label">DIRECTIONS</span>
+            <a href="{{ apple_dir }}" target="_blank" rel="noopener">APPLE</a>
+            <a href="{{ google_dir }}" target="_blank" rel="noopener">GOOGLE</a>
+          </span>
+        {% endif %}
       </p>
     {% endif %}
   </header>
@@ -59,44 +79,8 @@
     {% set sessions_json = sessions | json_encode %}
     {% set closures_json = closures | json_encode %}
     {% set schedule_json = '{"sessions":' ~ sessions_json ~ ',"closures":' ~ closures_json ~ '}' %}
-    {% if extra.last_verified_at %}
-      {% set now_ts_fr = now(timestamp=true) %}
-      {% set threshold_ts = now_ts_fr - 2592000 %}
-      {% set threshold_date = threshold_ts | date(format="%Y-%m-%d", timezone="America/Los_Angeles") %}
-      {% set threshold_i = threshold_date | replace(from="-", to="") | int %}
-      {% set verified_i = extra.last_verified_at | replace(from="-", to="") | int %}
-      {% set verified_label = self::format_iso_date(iso=extra.last_verified_at) %}
-      {% if verified_i >= threshold_i %}
-        {% set freshness_class = "fresh" %}
-        {% set freshness_label = "FRESH" %}
-      {% else %}
-        {% set freshness_class = "stale" %}
-        {% set freshness_label = "STALE" %}
-      {% endif %}
-    {% endif %}
-
     <div class="detail-root"
          data-schedule='{{ schedule_json | safe }}'>
-
-      {% if extra.subtype or extra.website or extra.last_verified_at %}
-        <p class="official">
-          {% if extra.subtype %}<span class="subtype">{{ extra.subtype | upper }}</span>{% endif %}
-          {% if extra.subtype and (extra.website or extra.last_verified_at) %} · {% endif %}
-          {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">OFFICIAL PAGE</a>{% endif %}
-          {% if extra.website and extra.last_verified_at %} · {% endif %}
-          {% if extra.last_verified_at %}
-            <span class="meta-freshness"
-                  data-field="freshness"
-                  data-freshness="{{ freshness_class }}"
-                  data-tooltip="LAST VERIFIED {{ verified_label }}"
-                  tabindex="0"
-                  aria-label="{{ freshness_label }}. LAST VERIFIED {{ verified_label }}">
-              <span class="freshness-dot">●</span>
-              <span class="freshness-label">{{ freshness_label }}</span>
-            </span>
-          {% endif %}
-        </p>
-      {% endif %}
 
       <section class="status-slab" aria-live="polite">
         <div class="status-slab-row">
@@ -291,7 +275,7 @@
       {% if extra.schedule_effective %}
         <footer class="meta">
           <p class="meta-source">
-            SOURCE SF REC &amp; PARKS{% if extra.last_verified_at %} · REVIEWED {{ self::format_iso_date(iso=extra.last_verified_at) }}{% endif %}
+            {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">SOURCE SF REC &amp; PARKS{% if extra.last_verified_at %} · REVIEWED {{ self::format_iso_date(iso=extra.last_verified_at) }}{% endif %}</a>{% else %}SOURCE SF REC &amp; PARKS{% if extra.last_verified_at %} · REVIEWED {{ self::format_iso_date(iso=extra.last_verified_at) }}{% endif %}{% endif %}
           </p>
           <p class="meta-effective">
             SCHEDULE EFFECTIVE FROM {{ self::format_iso_date(iso=extra.schedule_effective) }}{% if extra.schedule_effective_end %} TO {{ self::format_iso_date(iso=extra.schedule_effective_end) }}{% endif %}
@@ -319,18 +303,18 @@
     {{ self::item_list(title="Clubs", class="clubs", items=extra.clubs | default(value=[])) }}
     {{ self::item_list(title="Common distances", class="distances", items=extra.common_distances | default(value=[])) }}
 
+    {% if page.content %}
+      <section class="notes">
+        {{ page.content | safe }}
+      </section>
+    {% endif %}
+
     <footer class="meta">
       <p class="meta-source">SOURCE NOAA/NDBC · UPDATED HOURLY</p>
       {% if extra.last_verified_at %}
         <p class="meta-verified">LAST VERIFIED {{ self::format_iso_date(iso=extra.last_verified_at) }}</p>
       {% endif %}
     </footer>
-  {% endif %}
-
-  {% if page.content and extra.type == "open_water" %}
-    <section class="notes">
-      {{ page.content | safe }}
-    </section>
   {% endif %}
 {% endblock %}
 {% block scripts %}

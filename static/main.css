@@ -250,31 +250,22 @@ table.board {
     box-shadow: inset 3px 0 0 var(--accent);
   }
 
-  & tbody tr.is-open td:nth-child(3) {
-    background: var(--accent);
-    color: var(--bg);
-    font-weight: 700;
-  }
-
   & th:first-child,
   & td:first-child {
     min-width: 14ch;
   }
-}
 
-.trust-badge {
-  display: inline-block;
-  color: var(--fg-dim);
-}
+  /* No beaches visible → TEMP column carries no data; collapse it. */
+  &.no-beaches th:nth-child(5),
+  &.no-beaches td:nth-child(5) {
+    display: none;
+  }
 
-.trust-badge[data-trust="fresh"],
-.trust-badge[data-trust="live"] {
-  color: var(--fg);
-}
-
-.trust-badge[data-trust="stale"],
-.trust-badge[data-trust="missing"] {
-  color: var(--fg-dim);
+  /* No pools visible → NEXT column carries no data; collapse it. */
+  &.no-pools th:nth-child(4),
+  &.no-pools td:nth-child(4) {
+    display: none;
+  }
 }
 
 /* Mobile tap-to-expand hook (Step 12 JS toggles aria-expanded on <tr>, and
@@ -289,6 +280,44 @@ table.board {
 .address,
 .official {
   margin: 0.5rem 0;
+}
+
+.official {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+  color: var(--fg-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.address-actions {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.address-actions-label {
+  color: var(--fg-dim);
+}
+
+.address-actions a {
+  color: var(--fg);
+  text-decoration: none;
+  border: 1px solid var(--fg);
+  padding: 0.1rem 0.45rem;
+  border-radius: 2px;
+}
+
+.address-actions a:hover,
+.address-actions a:focus {
+  background: rgba(245, 197, 24, 0.12);
+  text-decoration: none;
 }
 
 .description {
@@ -641,16 +670,14 @@ table.board tbody tr.flap {
     padding: 0.3rem 0.7rem;
   }
 
-  /* Hide TYPE (col 2), TEMP (col 5), and TRUST (col 6); keep SPOT, STATUS, NEXT.
+  /* Hide TYPE (col 2) and TEMP (col 5); keep SPOT, STATUS, NEXT.
      NEXT is more actionable than TEMP for pool-goers deciding whether to
      leave the house; hidden columns still surface on expand + detail page. */
   table.board {
     & th:nth-child(2),
     & td:nth-child(2),
     & th:nth-child(5),
-    & td:nth-child(5),
-    & th:nth-child(6),
-    & td:nth-child(6) {
+    & td:nth-child(5) {
       display: none;
     }
   }
@@ -774,61 +801,12 @@ table.board tbody tr.flap {
 
 .meta-source,
 .meta-effective,
-.meta-verified,
-.meta-freshness {
+.meta-verified {
   margin: 0.25rem 0;
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--fg-dim);
-}
-
-.meta-freshness {
-  position: relative;
-  display: inline-flex;
-  align-items: baseline;
-  vertical-align: baseline;
-  gap: 0.25rem;
-  cursor: help;
-  outline: none;
-}
-
-.meta-freshness .freshness-dot {
-  color: var(--fg);
-}
-
-.meta-freshness[data-freshness="stale"] .freshness-dot {
-  color: var(--fg-dim);
-}
-
-.meta-freshness::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  left: 0;
-  top: calc(100% + 0.45rem);
-  z-index: 10;
-  min-width: max-content;
-  padding: 0.35rem 0.5rem;
-  border: 1px solid var(--fg);
-  background: #101026;
-  color: var(--fg);
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-2px);
-  transition: opacity 120ms ease, transform 120ms ease;
-}
-
-.meta-freshness:hover::after,
-.meta-freshness:focus-visible::after {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.meta-freshness:focus-visible {
-  box-shadow: 0 0 0 1px var(--fg);
 }
 
 /* Description block (moved from .notes) ---------------------------------- */

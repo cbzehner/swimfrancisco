@@ -15,10 +15,12 @@ function readSchedule(row) {
   }
 }
 
-// Apply computed STATUS/NEXT to every pool row. Open-water rows are skipped.
+// Apply computed STATUS/NEXT. Pools compute from their schedule; open-water
+// rows have no schedule and are always accessible, so they render as OPEN
+// with no NEXT — keeping a consistent visual rhythm with pool rows.
 function applyStatuses(root, now, allowedTypes = null) {
-  const rows = root.querySelectorAll('table.board tbody tr[data-type="pool"]');
-  rows.forEach((row) => {
+  const poolRows = root.querySelectorAll('table.board tbody tr[data-type="pool"]');
+  poolRows.forEach((row) => {
     const cells = row.querySelectorAll("td");
     if (cells.length < 4) return;
     const schedule = readSchedule(row);
@@ -28,6 +30,15 @@ function applyStatuses(root, now, allowedTypes = null) {
     cells[2].textContent = status;
     cells[3].textContent = next;
     row.classList.toggle("is-open", status === "OPEN");
+  });
+
+  const beachRows = root.querySelectorAll('table.board tbody tr[data-type="open_water"]');
+  beachRows.forEach((row) => {
+    const cells = row.querySelectorAll("td");
+    if (cells.length < 4) return;
+    cells[2].textContent = "OPEN";
+    cells[3].textContent = PLACEHOLDER;
+    row.classList.add("is-open");
   });
 }
 

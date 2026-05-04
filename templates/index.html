@@ -14,6 +14,7 @@
       <div class="site-header-actions">
         {% if not is_map_view %}
           <div class="sort-group" role="group" aria-label="Sort">
+            <button type="button" data-filter="open-now" aria-label="Sort by next open time">OPEN</button>
             <button type="button" data-action="sort-distance" aria-label="Sort by distance">NEAREST</button>
           </div>
         {% endif %}
@@ -37,9 +38,6 @@
 
   <div class="board-controls">
     <div class="filters" aria-label="Filters">
-      <div class="filter-group" role="group" aria-label="Availability Sort">
-        <button type="button" data-filter="open-now" aria-label="Sort by next open time">OPEN</button>
-      </div>
       <div class="filter-group" role="group" aria-label="Type Filter">
         <button type="button" data-filter="type" data-type="none">ALL</button>
         <button type="button" data-filter="type" data-type="lap_swim">LAP</button>
@@ -50,11 +48,6 @@
   </div>
 
   {% set spots = get_section(path='spots/_index.md') %}
-  {% set trust_now_ts = now(timestamp=true) %}
-  {% set trust_today = trust_now_ts | date(format="%Y-%m-%d", timezone="America/Los_Angeles") %}
-  {% set trust_threshold = (trust_now_ts - 2592000) | date(format="%Y-%m-%d", timezone="America/Los_Angeles") %}
-  {% set trust_today_i = trust_today | replace(from="-", to="") | int %}
-  {% set trust_threshold_i = trust_threshold | replace(from="-", to="") | int %}
   <table class="board"{% if is_map_view %} hidden{% endif %}>
     <thead>
       <tr>
@@ -63,7 +56,6 @@
         <th>STATUS</th>
         <th>NEXT</th>
         <th>TEMP</th>
-        <th>TRUST</th>
       </tr>
     </thead>
     <tbody>
@@ -73,41 +65,6 @@
         {% set sessions_json = sessions | json_encode %}
         {% set closures_json = closures | json_encode %}
         {% set schedule_json = '{"sessions":' ~ sessions_json ~ ',"closures":' ~ closures_json ~ '}' %}
-        {% set trust_label = "NOAA/NDBC" %}
-        {% set trust_class = "live" %}
-        {% set trust_title = "CONDITIONS UPDATED HOURLY FROM PUBLIC STATIONS" %}
-        {% if page.extra.type == 'pool' %}
-          {% if sessions | length == 0 %}
-            {% set trust_label = "UNVERIFIED" %}
-            {% set trust_class = "missing" %}
-            {% set trust_title = "NO REVIEWED DROP-IN SCHEDULE YET" %}
-          {% elif page.extra.schedule_effective_end %}
-            {% set schedule_end_i = page.extra.schedule_effective_end | replace(from="-", to="") | int %}
-            {% if schedule_end_i < trust_today_i %}
-              {% set trust_label = "EXPIRED" %}
-              {% set trust_class = "stale" %}
-              {% set trust_title = "SCHEDULE PERIOD ENDED " ~ page.extra.schedule_effective_end %}
-            {% endif %}
-          {% endif %}
-          {% if trust_class != "missing" and trust_class != "stale" %}
-            {% if page.extra.last_verified_at %}
-              {% set verified_i = page.extra.last_verified_at | replace(from="-", to="") | int %}
-              {% if verified_i >= trust_threshold_i %}
-                {% set trust_label = "VERIFIED" %}
-                {% set trust_class = "fresh" %}
-                {% set trust_title = "REVIEWED AGAINST SF REC & PARK PDF ON " ~ page.extra.last_verified_at %}
-              {% else %}
-                {% set trust_label = "STALE" %}
-                {% set trust_class = "stale" %}
-                {% set trust_title = "LAST REVIEWED " ~ page.extra.last_verified_at %}
-              {% endif %}
-            {% else %}
-              {% set trust_label = "UNKNOWN" %}
-              {% set trust_class = "missing" %}
-              {% set trust_title = "NO REVIEW DATE RECORDED" %}
-            {% endif %}
-          {% endif %}
-        {% endif %}
         <tr
           data-slug="{{ page.slug }}"
           data-type="{{ page.extra.type }}"
@@ -115,7 +72,6 @@
           data-lat="{{ page.extra.lat }}"
           data-lng="{{ page.extra.lng }}"
           data-schedule='{{ schedule_json | safe }}'
-          data-trust="{{ trust_label }}"
         >
           <td><a href="{{ page.permalink }}">{{ page.title | upper }}</a></td>
           <td>
@@ -130,7 +86,6 @@
           <td>—</td>
           <td>—</td>
           <td>—</td>
-          <td><span class="trust-badge" data-trust="{{ trust_class }}" title="{{ trust_title }}">{{ trust_label }}</span></td>
         </tr>
       {% endfor %}
     </tbody>

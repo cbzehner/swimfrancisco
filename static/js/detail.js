@@ -1,8 +1,8 @@
 // Swim Francisco pool detail page.
 // Reads the schedule embedded in .detail-root[data-schedule], hydrates the
 // status slab, and decorates the today block. Pure computation lives in
-// ./helpers/board.mjs (exercised by node:test). Today's column marker and
-// freshness class are server-rendered by the daily rebuild.
+// ./helpers/board.mjs (exercised by node:test). Today's column marker is
+// server-rendered by the daily rebuild.
 
 import {
   computeDetailStatus,
@@ -52,14 +52,9 @@ function formatStatusLine(result) {
         ? `CLOSED TODAY — ${result.closureReason.toUpperCase()}`
         : "CLOSED TODAY";
     case "CLOSED_HOURS":
-    case "NO_DROPIN_TODAY": {
-      if (!result.nextDropIn) return "CLOSED";
-      const program = PROGRAM_LABEL[result.nextDropIn.program] || result.nextDropIn.program.toUpperCase();
-      const day = DAY_LABEL_SHORT[result.nextDropIn.day] || result.nextDropIn.day.toUpperCase();
-      const time = formatHHMM(result.nextDropIn.start);
-      const prefix = result.kind === "NO_DROPIN_TODAY" ? "NO DROP-IN TODAY" : "CLOSED";
-      return `${prefix} — NEXT ${program} ${day} ${time}`;
-    }
+      return "CLOSED";
+    case "NO_DROPIN_TODAY":
+      return "NO DROP-IN TODAY";
     case "NOT_VERIFIED":
       return "SCHEDULE NOT YET VERIFIED";
     case "NO_DROPIN_WEEK":
@@ -70,11 +65,6 @@ function formatStatusLine(result) {
 }
 
 function formatNextLine(result) {
-  // The STATUS line already carries NEXT info for these kinds.
-  const inlineKinds = new Set([
-    "CLOSED_TODAY", "CLOSED_HOURS", "NO_DROPIN_TODAY", "NOT_VERIFIED", "NO_DROPIN_WEEK",
-  ]);
-  if (inlineKinds.has(result.kind)) return "—";
   if (!result.nextDropIn) return "—";
   const program = PROGRAM_LABEL[result.nextDropIn.program] || result.nextDropIn.program.toUpperCase();
   const day = DAY_LABEL_SHORT[result.nextDropIn.day] || result.nextDropIn.day.toUpperCase();

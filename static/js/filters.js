@@ -260,6 +260,17 @@ function applyFilters(tbody, state) {
   // their DOM position at the tail (visually irrelevant since hidden).
   ordered.forEach((row) => tbody.appendChild(row));
 
+  // TEMP column only carries data for beaches and NEXT only for pools.
+  // Hide either when its rows aren't visible so pool-only or beach-only
+  // views aren't padded with "—" placeholders.
+  const hasBeach = ordered.some((row) => row.getAttribute("data-type") === "open_water");
+  const hasPool = ordered.some((row) => row.getAttribute("data-type") === "pool");
+  const table = tbody.closest("table.board");
+  if (table) {
+    table.classList.toggle("no-beaches", !hasBeach);
+    table.classList.toggle("no-pools", !hasPool);
+  }
+
   triggerFlap(ordered);
 
   // Broadcast so other modules (map.js) can react to the new visible set.
@@ -275,7 +286,7 @@ function attachHandlers(tbody, filtersRoot) {
     userCoords: null,
   };
 
-  const nextOpenButton = filtersRoot.querySelector('button[data-filter="open-now"]');
+  const nextOpenButton = document.querySelector('button[data-filter="open-now"]');
   if (nextOpenButton) {
     nextOpenButton.setAttribute("aria-pressed", "false");
     nextOpenButton.addEventListener("click", () => {
