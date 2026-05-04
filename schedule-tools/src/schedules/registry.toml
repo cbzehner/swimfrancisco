@@ -25,10 +25,8 @@ official_page_url = "https://sfrecpark.org/facilities/facility/details/Martin-Lu
 
 [[pool]]
 slug = "mission-community-pool"
-pdf_url = "https://sfrecpark.org/DocumentCenter/View/26289"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/28959"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Mission-Community-Pool-217"
-source_status = "missing_current_schedule"
-notes = "As of 2026-04-17 the facility page announced the 2026 opening date but exposed no 2026 schedule PDF; this URL is the last linked Mission PDF and should stay skipped until a current schedule is published."
 
 [[pool]]
 slug = "north-beach-pool"
@@ -46,4 +44,3 @@ pdf_url = "https://sfrecpark.org/DocumentCenter/View/27654"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Sava-Pool-220"
 source_status = "closed_without_current_schedule"
 notes = "As of 2026-04-17 Sava Pool remained closed for repairs and the facility page only exposed an old Fall 2025 PDF; keep this entry skipped until the pool reopens with a current schedule."
-
