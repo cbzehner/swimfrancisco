@@ -286,12 +286,19 @@ function attachHandlers(tbody, filtersRoot) {
     userCoords: null,
   };
 
+  const distanceButton = document.querySelector('button[data-action="sort-distance"]');
   const nextOpenButton = document.querySelector('button[data-filter="open-now"]');
   if (nextOpenButton) {
     nextOpenButton.setAttribute("aria-pressed", "false");
     nextOpenButton.addEventListener("click", () => {
       state.sortByNextOpen = !state.sortByNextOpen;
       nextOpenButton.setAttribute("aria-pressed", String(state.sortByNextOpen));
+      // Mutually exclusive with NEAREST — only one sort active at a time.
+      if (state.sortByNextOpen && state.sortByDistance) {
+        state.sortByDistance = false;
+        state.userCoords = null;
+        distanceButton?.setAttribute("aria-pressed", "false");
+      }
       applyFilters(tbody, state);
       syncStateToHash(state);
     });
@@ -317,7 +324,6 @@ function attachHandlers(tbody, filtersRoot) {
     });
   });
 
-  const distanceButton = document.querySelector('button[data-action="sort-distance"]');
   if (distanceButton) {
     distanceButton.setAttribute("aria-pressed", "false");
     distanceButton.addEventListener("click", () => {
@@ -342,6 +348,11 @@ function attachHandlers(tbody, filtersRoot) {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
           };
+          // Mutually exclusive with OPEN — only one sort active at a time.
+          if (state.sortByNextOpen) {
+            state.sortByNextOpen = false;
+            nextOpenButton?.setAttribute("aria-pressed", "false");
+          }
           applyFilters(tbody, state);
           syncStateToHash(state);
         },
