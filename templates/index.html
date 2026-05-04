@@ -10,7 +10,7 @@
 {% block content %}
   <header class="site-header">
     <div class="site-header-row">
-      <h1>{{ config.title }}</h1>
+      <h1><a href="{{ config.base_url }}/" class="site-title">{{ config.title }}</a></h1>
       <div class="site-header-actions">
         {% if not is_map_view %}
           <div class="sort-group" role="group" aria-label="Sort">
