@@ -42,8 +42,10 @@ const TYPE_TO_TOKEN = Object.fromEntries(
 );
 // Hash tokens this module owns — stripped and rewritten on every state sync.
 // Includes the sort token even though sort isn't a filter, because the same
-// hash-round-trip logic applies.
+// hash-round-trip logic applies. `next-open` and `open-now` are legacy
+// tokens still recognized on read for inbound links; canonical write is `open`.
 const OWNED_TOKENS = new Set([
+  "open",
   "next-open",
   "open-now",
   "distance",
@@ -66,7 +68,7 @@ function writeHashTokens(tokens) {
 function syncStateToHash(state) {
   const tokens = readHashTokens();
   for (const token of OWNED_TOKENS) tokens.delete(token);
-  if (state.sortByNextOpen) tokens.add("next-open");
+  if (state.sortByNextOpen) tokens.add("open");
   if (state.sortByDistance) tokens.add("distance");
   for (const type of state.types) {
     const token = TYPE_TO_TOKEN[type];
@@ -376,7 +378,7 @@ function restoreFromHash(controls) {
   const { state, nextOpenButton, typeButtons, distanceButton } = controls;
 
   if (nextOpenButton) {
-    const want = tokens.has("next-open") || tokens.has("open-now");
+    const want = tokens.has("open") || tokens.has("next-open") || tokens.has("open-now");
     if (want !== state.sortByNextOpen) nextOpenButton.click();
   }
   const typeButtonsArray = Array.from(typeButtons);
