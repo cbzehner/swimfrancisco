@@ -1,11 +1,11 @@
 // Swim Francisco board filters (Step 12).
-// Wires up the Open Now toggle, Type pills (lap_swim /
+// Wires up the Next Open sort, Type pills (lap_swim /
 // family_swim / open_water), and Distance sort. Each change re-applies
 // visibility + sort and retriggers the split-flap animation on visible rows.
 //
-// Filters vs. sort: Open Now and the Type pills are filters (they hide
-// rows). Distance is a sort — it reorders visible rows by geolocation but
-// never hides any. Distance only renders on the board view (not map).
+// Filters vs. sort: Type pills are filters (they hide rows). Next Open and
+// Distance are sorts — they reorder visible rows but never hide any. Distance
+// only renders on the board view (not map).
 //
 // Contract with status.js:
 //   - status.js dispatches `sf:status-applied` after it populates STATUS/NEXT
@@ -22,7 +22,7 @@
 // No frameworks, plain DOM APIs, progressive enhancement: without JS the
 // board still renders and all rows remain visible.
 
-import { sortByRank } from "./helpers/board.mjs";
+import { computeNextOpenOffset, nowInPacific, sortByRank } from "./helpers/board.mjs";
 import { renderBoard } from "./status.js";
 
 const POOL_SESSION_TYPES = new Set(["lap_swim", "family_swim"]);
@@ -44,6 +44,7 @@ const TYPE_TO_TOKEN = Object.fromEntries(
 // Includes the sort token even though sort isn't a filter, because the same
 // hash-round-trip logic applies.
 const OWNED_TOKENS = new Set([
+  "next-open",
   "open-now",
   "distance",
   ...Object.keys(TYPE_TOKENS),
@@ -65,7 +66,7 @@ function writeHashTokens(tokens) {
 function syncStateToHash(state) {
   const tokens = readHashTokens();
   for (const token of OWNED_TOKENS) tokens.delete(token);
-  if (state.openNow) tokens.add("open-now");
+  if (state.sortByNextOpen) tokens.add("next-open");
   if (state.sortByDistance) tokens.add("distance");
   for (const type of state.types) {
     const token = TYPE_TO_TOKEN[type];
@@ -122,23 +123,10 @@ function rowMatchesType(row, type) {
   );
 }
 
-// Pure: can this spot be used right now?
-// - Open-water spots (Aquatic Park, Ocean Beach, …) pass because the water
-//   is always there; no schedule constraint.
-// - Pool rows pass only if status.js computed STATUS === "OPEN". A status
-//   of "CLOSED" or "—" (no schedule data yet, or closed all week) fails.
-function rowIsOpenNow(row) {
-  if (row.getAttribute("data-type") === "open_water") return true;
-  const cells = row.querySelectorAll("td");
-  if (cells.length < 3) return false;
-  return cells[2].textContent.trim() === "OPEN";
-}
-
 // Pure: apply all active filter predicates. If the active type is `none`
 // (rendered as the "ALL" pill in the UI),
 // every type passes. Otherwise the single selected type must match.
 function rowPassesFilters(row, state) {
-  if (state.openNow && !rowIsOpenNow(row)) return false;
   const type = activeType(state);
   if (type && type !== TYPE_NONE && !rowMatchesType(row, type)) return false;
   return true;
@@ -170,6 +158,31 @@ function sortRowsByDistance(rows, userCoords) {
   });
   decorated.sort((a, b) => {
     if (a.distance !== b.distance) return a.distance - b.distance;
+    return a.index - b.index;
+  });
+  return decorated.map((item) => item.row);
+}
+
+// Sort visible rows by the soonest time they can be used. Open-water rows
+// and currently open pool sessions rank as "now" (0). Pools with no known
+// upcoming drop-in session fall to the end. Stable via baseline rank.
+function sortRowsByNextOpen(rows, allowedTypes, now) {
+  const decorated = rows.map((row, index) => {
+    const offset =
+      row.getAttribute("data-type") === "open_water"
+        ? 0
+        : computeNextOpenOffset(readSchedule(row), now, allowedTypes);
+    const baselineRank = Number(row.dataset.baselineRank);
+    return {
+      row,
+      index,
+      offset,
+      baselineRank: Number.isFinite(baselineRank) ? baselineRank : Number.POSITIVE_INFINITY,
+    };
+  });
+  decorated.sort((a, b) => {
+    if (a.offset !== b.offset) return a.offset - b.offset;
+    if (a.baselineRank !== b.baselineRank) return a.baselineRank - b.baselineRank;
     return a.index - b.index;
   });
   return decorated.map((item) => item.row);
@@ -226,7 +239,8 @@ function triggerFlap(rows) {
 // order that status.js produced), move them to the top of tbody, and flap them.
 function applyFilters(tbody, state) {
   collapseExpandedRows(tbody);
-  renderBoard(document, allowedPoolTypes(state));
+  const poolTypes = allowedPoolTypes(state);
+  renderBoard(document, poolTypes);
   const rows = Array.from(tbody.querySelectorAll("tr:not(.row-detail)"));
   const visible = [];
   rows.forEach((row) => {
@@ -238,6 +252,8 @@ function applyFilters(tbody, state) {
   const ordered =
     state.sortByDistance && state.userCoords
       ? sortRowsByDistance(visible, state.userCoords)
+      : state.sortByNextOpen
+        ? sortRowsByNextOpen(visible, poolTypes, nowInPacific())
       : sortByRank(visible, (row) => Number(row.dataset.baselineRank));
 
   // Move visible rows to the top in their new order; hidden rows retain
@@ -253,18 +269,18 @@ function applyFilters(tbody, state) {
 // Wire click handlers. Returns the state object (handlers close over it).
 function attachHandlers(tbody, filtersRoot) {
   const state = {
-    openNow: false,
+    sortByNextOpen: false,
     types: new Set(),
     sortByDistance: false,
     userCoords: null,
   };
 
-  const openNowButton = filtersRoot.querySelector('button[data-filter="open-now"]');
-  if (openNowButton) {
-    openNowButton.setAttribute("aria-pressed", "false");
-    openNowButton.addEventListener("click", () => {
-      state.openNow = !state.openNow;
-      openNowButton.setAttribute("aria-pressed", String(state.openNow));
+  const nextOpenButton = filtersRoot.querySelector('button[data-filter="open-now"]');
+  if (nextOpenButton) {
+    nextOpenButton.setAttribute("aria-pressed", "false");
+    nextOpenButton.addEventListener("click", () => {
+      state.sortByNextOpen = !state.sortByNextOpen;
+      nextOpenButton.setAttribute("aria-pressed", String(state.sortByNextOpen));
       applyFilters(tbody, state);
       syncStateToHash(state);
     });
@@ -327,7 +343,7 @@ function attachHandlers(tbody, filtersRoot) {
     });
   }
 
-  return { state, openNowButton, typeButtons, distanceButton };
+  return { state, nextOpenButton, typeButtons, distanceButton };
 }
 
 // Apply hash tokens by dispatching clicks on buttons whose desired pressed-
@@ -335,11 +351,11 @@ function attachHandlers(tbody, filtersRoot) {
 // idempotently).
 function restoreFromHash(controls) {
   const tokens = readHashTokens();
-  const { state, openNowButton, typeButtons, distanceButton } = controls;
+  const { state, nextOpenButton, typeButtons, distanceButton } = controls;
 
-  if (openNowButton) {
-    const want = tokens.has("open-now");
-    if (want !== state.openNow) openNowButton.click();
+  if (nextOpenButton) {
+    const want = tokens.has("next-open") || tokens.has("open-now");
+    if (want !== state.sortByNextOpen) nextOpenButton.click();
   }
   const typeButtonsArray = Array.from(typeButtons);
   const desiredTypeButton = typeButtonsArray.find((button) => {

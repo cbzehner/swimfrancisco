@@ -210,6 +210,32 @@ export function computeStatus(schedule, now, allowedTypes = null) {
   return { status: "CLOSED", next: label };
 }
 
+export function computeNextOpenOffset(schedule, now, allowedTypes = null) {
+  if (!schedule || typeof schedule !== "object") return Number.POSITIVE_INFINITY;
+
+  const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
+  const closures = Array.isArray(schedule.closures) ? schedule.closures : [];
+  if (sessions.length === 0) return Number.POSITIVE_INFINITY;
+
+  const normalized = normalizeSessions(sessions, allowedTypes);
+  if (normalized.length === 0) return Number.POSITIVE_INFINITY;
+
+  const activeClosure = findActiveClosure(closures, now);
+  const todayKey = DAY_KEYS[now.getDay()];
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+  if (!activeClosure) {
+    const current = normalized.find(
+      (s) => s.day === todayKey && s.start <= nowMinutes && nowMinutes < s.end,
+    );
+    if (current) return 0;
+  }
+
+  const best = findNextSession(normalized, closures, now);
+  if (!best) return Number.POSITIVE_INFINITY;
+  return best.offset * 1440 + best.session.start - nowMinutes;
+}
+
 // Assign a baseline rank to each item via the provided setter. Keeps this
 // pure (no DOM knowledge here); status.js passes a setter that writes to
 // `row.dataset.baselineRank`.

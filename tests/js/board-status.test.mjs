@@ -11,6 +11,7 @@ import {
   computeDetailStatus, // NEW
   sortByRank,
   captureBaselineRanks,
+  computeNextOpenOffset,
   findNextDropIn,
   freshnessLabel,
   nowInPacific,
@@ -229,6 +230,29 @@ test("computeStatus rolls filtered programs to the same weekday one week away", 
   const { status, next } = computeStatus(wednesdayFamilyOnly, now, ["family_swim"]);
   assert.equal(status, "CLOSED");
   assert.equal(next, "Opens WED 14:00");
+});
+
+test("computeNextOpenOffset returns zero for a currently open session", () => {
+  const now = new Date("2026-04-14T13:00:00"); // Tuesday
+  assert.equal(computeNextOpenOffset(BASIC_SCHEDULE, now), 0);
+});
+
+test("computeNextOpenOffset returns minutes until the next session", () => {
+  const now = new Date("2026-04-14T08:30:00"); // Tuesday
+  assert.equal(computeNextOpenOffset(BASIC_SCHEDULE, now), 4 * 60);
+});
+
+test("computeNextOpenOffset honors allowed program types", () => {
+  const now = new Date("2026-04-14T13:00:00"); // Tuesday during lap
+  assert.equal(computeNextOpenOffset(BASIC_SCHEDULE, now, ["family_swim"]), 90);
+});
+
+test("computeNextOpenOffset puts schedules without upcoming sessions at the tail", () => {
+  const now = new Date("2026-04-14T13:00:00");
+  assert.equal(
+    computeNextOpenOffset({ sessions: [], closures: [] }, now),
+    Number.POSITIVE_INFINITY,
+  );
 });
 
 test("computeDetailStatus OPEN during a single drop-in session", () => {

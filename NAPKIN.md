@@ -21,9 +21,11 @@
 ## Domain Behavior Guardrails
 1. **[2026-04-20] `content/spots/*.md` is the source of truth; `data/<slug>/<date>-<sha12>/` is a regeneration aid**
    Do instead: treat checked-in markdown as authoritative. Each per-review directory holds `source.pdf`, per-provider JSON, and `reviewed.json` (present ⇔ human-approved). Every new PDF sha256 requires a fresh human pass via `schedules review` — there is no auto-ratification.
-2. **[2026-04-17] Do not publish stale Mission or Sava schedules**
-   Do instead: leave `mission-community-pool` and `sava-pool` skipped until the official facility pages publish a current schedule PDF, then review that new hash.
-3. **[2026-04-17] SFRP vocabulary: REC/FAMILY SWIM is one program, not two**
+2. **[2026-05-04] Do not publish unreviewed Mission schedule data**
+   Do instead: Mission's facility page now links `DocumentCenter/View/28959` (`Mission_Spring-2026-Schedule-May12_June6-1`, effective 2026-05-12 through 2026-06-06); update the registry/extract only when ready, then run the normal `schedules review` pass before projecting content.
+3. **[2026-04-17] Do not publish stale Sava schedules**
+   Do instead: leave `sava-pool` skipped until the official facility page publishes a current schedule PDF, then review that new hash.
+4. **[2026-04-17] SFRP vocabulary: REC/FAMILY SWIM is one program, not two**
    Do instead: always map REC SWIM, RECREATION SWIM, REC/FAMILY SWIM, FAMILY SWIM to `family_swim`. `open_swim` is no longer in the enum. Instructor-led programs (WATER/DEEP WATER/SELF GUIDED EXERCISE, AEROBICS, MASTERS, SYNCHRO, PIRANHAS, WATER POLO, HOCKEY) are ignored entirely; SFUSD classes become closure entries.
 
 ## User Directives
