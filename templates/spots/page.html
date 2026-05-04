@@ -290,6 +290,9 @@
       {% endif %}
       {% if extra.schedule_effective %}
         <footer class="meta">
+          <p class="meta-source">
+            SOURCE SF REC &amp; PARKS{% if extra.last_verified_at %} · REVIEWED {{ self::format_iso_date(iso=extra.last_verified_at) }}{% endif %}
+          </p>
           <p class="meta-effective">
             SCHEDULE EFFECTIVE FROM {{ self::format_iso_date(iso=extra.schedule_effective) }}{% if extra.schedule_effective_end %} TO {{ self::format_iso_date(iso=extra.schedule_effective_end) }}{% endif %}
           </p>
@@ -317,6 +320,7 @@
     {{ self::item_list(title="Common distances", class="distances", items=extra.common_distances | default(value=[])) }}
 
     <footer class="meta">
+      <p class="meta-source">SOURCE NOAA/NDBC · UPDATED HOURLY</p>
       {% if extra.last_verified_at %}
         <p class="meta-verified">LAST VERIFIED {{ self::format_iso_date(iso=extra.last_verified_at) }}</p>
       {% endif %}

@@ -248,6 +248,21 @@ table.board {
   }
 }
 
+.trust-badge {
+  display: inline-block;
+  color: var(--fg-dim);
+}
+
+.trust-badge[data-trust="fresh"],
+.trust-badge[data-trust="live"] {
+  color: var(--fg);
+}
+
+.trust-badge[data-trust="stale"],
+.trust-badge[data-trust="missing"] {
+  color: var(--fg-dim);
+}
+
 /* Mobile tap-to-expand hook (Step 12 JS toggles aria-expanded on <tr>, and
    optionally inserts a following <tr class="row-detail">). Hidden by default. */
 .row-detail {
@@ -612,14 +627,16 @@ table.board tbody tr.flap {
     padding: 0.3rem 0.7rem;
   }
 
-  /* Hide TYPE (col 2) and TEMP (col 5); keep SPOT, STATUS, NEXT.
+  /* Hide TYPE (col 2), TEMP (col 5), and TRUST (col 6); keep SPOT, STATUS, NEXT.
      NEXT is more actionable than TEMP for pool-goers deciding whether to
-     leave the house; TEMP still surfaces on expand + detail page. */
+     leave the house; hidden columns still surface on expand + detail page. */
   table.board {
     & th:nth-child(2),
     & td:nth-child(2),
     & th:nth-child(5),
-    & td:nth-child(5) {
+    & td:nth-child(5),
+    & th:nth-child(6),
+    & td:nth-child(6) {
       display: none;
     }
   }
@@ -644,8 +661,8 @@ table.board tbody tr.flap {
 }
 
 /* Narrow-phone breakpoint: drop STATUS too, leaving only SPOT + NEXT.
-   At this width the OPEN NOW filter does the work STATUS would; users
-   scanning an unfiltered board see "NEXT" as the universal signal. */
+   At this width the OPEN sort can bring the next usable spots to the top;
+   users scanning an unfiltered board see "NEXT" as the universal signal. */
 @media (max-width: 420px) {
   table.board {
     & th:nth-child(3),
@@ -741,7 +758,9 @@ table.board tbody tr.flap {
 
 /* Freshness dot + meta ---------------------------------------------------- */
 
+.meta-source,
 .meta-effective,
+.meta-verified,
 .meta-freshness {
   margin: 0.25rem 0;
   font-size: 0.8rem;

@@ -32,6 +32,7 @@ function buildDetailContent(row) {
   const typeText = cells[1] ? cells[1].textContent.trim() : "";
   const statusText = cells[2] ? cells[2].textContent.trim() : "";
   const tempText = cells[4] ? cells[4].textContent.trim() : "";
+  const trustText = cells[5] ? cells[5].textContent.trim() : "";
 
   const fragment = document.createDocumentFragment();
 
@@ -50,6 +51,11 @@ function buildDetailContent(row) {
     tempLine.textContent = `TEMP: ${tempText}`;
     fragment.appendChild(tempLine);
   }
+  if (trustText && trustText !== "—") {
+    const trustLine = document.createElement("div");
+    trustLine.textContent = `TRUST: ${trustText}`;
+    fragment.appendChild(trustLine);
+  }
 
   const linkLine = document.createElement("div");
   const link = document.createElement("a");
@@ -67,8 +73,8 @@ function insertDetailRow(row) {
   const detail = document.createElement("tr");
   detail.className = "row-detail";
   const cell = document.createElement("td");
-  // Board has 5 columns; use colspan 5 so the detail spans the whole row.
-  cell.colSpan = 5;
+  // Board has 6 columns; use colspan 6 so the detail spans the whole row.
+  cell.colSpan = 6;
   cell.appendChild(buildDetailContent(row));
   detail.appendChild(cell);
   row.parentNode.insertBefore(detail, row.nextSibling);

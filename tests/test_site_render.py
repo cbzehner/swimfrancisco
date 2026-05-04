@@ -112,9 +112,20 @@ def test_closures_render_without_object_literal_across_all_pools(built_site: Pat
 def test_pool_meta_dates_render_in_human_format(built_site: Path) -> None:
     html = _read(built_site, "balboa-pool")
     assert "SCHEDULE EFFECTIVE FROM MAR 17, 2026 TO JUN 6, 2026" in html
+    assert "SOURCE SF REC & PARKS · REVIEWED APR 17, 2026" in html
     assert 'data-tooltip="LAST VERIFIED APR 17, 2026"' in html
     assert "· LAST VERIFIED APR 17, 2026" not in html
     assert html.index("OFFICIAL PAGE") < html.index('data-tooltip="LAST VERIFIED APR 17, 2026"')
     assert html.index("recently reopened after a $9M renovation") < html.index(
         "SCHEDULE EFFECTIVE FROM MAR 17, 2026 TO JUN 6, 2026"
     )
+
+
+def test_homepage_renders_trust_layer(built_site: Path) -> None:
+    html = (built_site / "index.html").read_text()
+    assert "<th>TRUST" in html
+    assert "data-slug=mission-community-pool" in html
+    assert "REVIEWED AGAINST SF REC & PARK PDF ON 2026-05-03" in html
+    assert "data-slug=sava-pool" in html
+    assert "NO REVIEWED DROP-IN SCHEDULE YET" in html
+    assert "NOAA/NDBC" in html
