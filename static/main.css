@@ -1,7 +1,5 @@
-/* Swim Francisco — board styles (Step 8)
-   Active filter convention: button[aria-pressed="true"].
-   Step 12 JS will toggle aria-pressed on filter buttons and aria-expanded on
-   tbody rows for mobile tap-to-expand. No HTML changes needed here. */
+/* Swim Francisco — board styles.
+   Active filter convention: button[aria-pressed="true"]. */
 
 :root {
   --bg: #1a1a2e;
@@ -29,6 +27,21 @@ main {
   max-width: 1100px;
   margin: 0 auto;
   padding: 1.5rem 1rem;
+}
+
+.site-footer {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem 1rem 2rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-dim);
+  text-align: center;
+}
+
+.site-footer a {
+  color: inherit;
 }
 
 h1, h2, h3 {
@@ -238,6 +251,10 @@ table.board {
     border-bottom: 1px solid var(--row-sep);
   }
 
+  & tbody tr {
+    cursor: pointer;
+  }
+
   & tbody tr:hover td {
     background: rgba(245, 197, 24, 0.05);
   }
@@ -266,12 +283,6 @@ table.board {
   &.no-pools td:nth-child(4) {
     display: none;
   }
-}
-
-/* Mobile tap-to-expand hook (Step 12 JS toggles aria-expanded on <tr>, and
-   optionally inserts a following <tr class="row-detail">). Hidden by default. */
-.row-detail {
-  display: none;
 }
 
 /* --- Detail page -------------------------------------------------------- */
@@ -798,27 +809,13 @@ table.board tbody tr.flap {
 
   /* Hide TYPE (col 2) and TEMP (col 5); keep SPOT, STATUS, NEXT.
      NEXT is more actionable than TEMP for pool-goers deciding whether to
-     leave the house; hidden columns still surface on expand + detail page. */
+     leave the house; hidden columns still surface on the detail page. */
   table.board {
     & th:nth-child(2),
     & td:nth-child(2),
     & th:nth-child(5),
     & td:nth-child(5) {
       display: none;
-    }
-  }
-
-  /* Tap-to-expand: when a row is marked expanded, reveal the following
-     detail row (Step 12 JS will inject / manage it). */
-  table.board tbody tr[aria-expanded="true"] + tr.row-detail {
-    display: table-row;
-
-    & td {
-      grid-column: 1 / -1;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      font-size: 0.85rem;
-      color: var(--fg-dim);
     }
   }
 

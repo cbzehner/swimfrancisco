@@ -208,13 +208,6 @@ function setPressed(buttons, activeTypeValue) {
   });
 }
 
-function collapseExpandedRows(tbody) {
-  tbody.querySelectorAll('tr[aria-expanded="true"]').forEach((row) => {
-    row.setAttribute("aria-expanded", "false");
-  });
-  tbody.querySelectorAll("tr.row-detail").forEach((row) => row.remove());
-}
-
 // Trigger the split-flap animation on the given rows. Assigns --flap-index
 // in order (0..N-1), adds the .flap class, and removes it on the next
 // animationend bubbling up from a cell. The `once` option means the listener
@@ -241,10 +234,9 @@ function triggerFlap(rows) {
 // rows (by distance if Distance sort is on, otherwise leave in the baseline
 // order that status.js produced), move them to the top of tbody, and flap them.
 function applyFilters(tbody, state) {
-  collapseExpandedRows(tbody);
   const poolTypes = allowedPoolTypes(state);
   renderBoard(document, poolTypes);
-  const rows = Array.from(tbody.querySelectorAll("tr:not(.row-detail)"));
+  const rows = Array.from(tbody.querySelectorAll("tr"));
   const visible = [];
   rows.forEach((row) => {
     const passes = rowPassesFilters(row, state);
