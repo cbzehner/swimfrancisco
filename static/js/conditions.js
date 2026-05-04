@@ -81,6 +81,9 @@ async function init() {
   const conditions = await fetchConditions(endpoint);
   if (!conditions) return;
   applyConditions(document, conditions);
+  // Expose for other modules (e.g. map popups) and signal availability.
+  window.SWIMFRANCISCO_CONDITIONS = conditions;
+  document.dispatchEvent(new CustomEvent("sf:conditions-loaded"));
 }
 
 if (document.readyState === "loading") {

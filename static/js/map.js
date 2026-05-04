@@ -4,6 +4,9 @@
 // `sf:filters-applied`. No client-side view toggling — the VIEW BOARD link
 // is a plain <a href="/"> and the browser handles navigation.
 
+import { nowInPacific } from "./helpers/board.mjs";
+import { formatTideSummary } from "./helpers/tide.mjs";
+
 const LEAFLET_JS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
 const LEAFLET_JS_INTEGRITY =
   "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=";
@@ -42,11 +45,14 @@ function collectVisibleSpots() {
     const lng = readNumber(row, "data-lng");
     if (lat === null || lng === null) return;
     const slug = row.getAttribute("data-slug") || "";
+    const type = row.getAttribute("data-type") || "";
     const cells = row.querySelectorAll("td");
     const name = cells[0]?.querySelector("a")?.textContent.trim() ?? "";
     const typeLabel = cells[1]?.textContent.trim() ?? "";
     const status = cells[2]?.textContent.trim() ?? "";
-    spots.push({ slug, name, lat, lng, typeLabel, status });
+    const next = cells[3]?.textContent.trim() ?? "";
+    const temp = cells[4]?.textContent.trim() ?? "";
+    spots.push({ slug, type, name, lat, lng, typeLabel, status, next, temp });
   });
   return spots;
 }
@@ -60,25 +66,84 @@ function escapeHTML(value) {
     .replace(/'/g, "&#39;");
 }
 
-function createPopupHTML(spot) {
-  const name = escapeHTML(spot.name);
-  const typeLabel = escapeHTML(spot.typeLabel);
-  const status = escapeHTML(spot.status);
-  const href = `/spots/${encodeURIComponent(spot.slug)}/`;
+function popupRow(label, value) {
+  if (!value || value === "—") return "";
   return (
-    `<div class="sf-map-popup">` +
-    `<strong>${name}</strong>` +
-    `<div class="sf-map-popup-meta">${typeLabel}${typeLabel && status ? " — " : ""}${status}</div>` +
-    `<a href="${href}">Details</a>` +
+    `<div class="sf-map-popup-row">` +
+    `<span class="sf-map-popup-key">${escapeHTML(label)}</span>` +
+    `<span class="sf-map-popup-val">${escapeHTML(value)}</span>` +
     `</div>`
   );
 }
 
-function renderMarkers(L, layer, spots) {
+function beachConditions(spot) {
+  const conditions = (typeof window !== "undefined" && window.SWIMFRANCISCO_CONDITIONS) || null;
+  const record = conditions ? conditions[spot.slug] : null;
+  const tide = record ? formatTideSummary(record, nowInPacific()) : null;
+  return { temp: spot.temp, tide };
+}
+
+function createPopupHTML(spot) {
+  const name = escapeHTML(spot.name);
+  const detailsHref = `/spots/${encodeURIComponent(spot.slug)}/`;
+  const appleHref = `https://maps.apple.com/?daddr=${spot.lat},${spot.lng}`;
+  const googleHref = `https://www.google.com/maps/dir/?api=1&destination=${spot.lat},${spot.lng}`;
+  const rows = [popupRow("TYPE", spot.typeLabel)];
+
+  if (spot.type === "open_water") {
+    const { temp, tide } = beachConditions(spot);
+    rows.push(popupRow("STATUS", spot.status || "OPEN"));
+    rows.push(popupRow("WATER", temp));
+    rows.push(popupRow("TIDE", tide));
+  } else {
+    rows.push(popupRow("STATUS", spot.status));
+    rows.push(popupRow("NEXT", spot.next));
+  }
+
+  return (
+    `<div class="sf-map-popup">` +
+    `<a class="sf-map-popup-title" href="${detailsHref}">` +
+    `<strong>${name}</strong>` +
+    `<span class="sf-map-popup-title-arrow" aria-hidden="true">→</span>` +
+    `</a>` +
+    rows.join("") +
+    `<div class="sf-map-popup-actions">` +
+    `<div class="sf-map-popup-directions">` +
+    `<span class="sf-map-popup-key">DIRECTIONS</span>` +
+    `<a href="${appleHref}" target="_blank" rel="noopener">APPLE</a>` +
+    `<a href="${googleHref}" target="_blank" rel="noopener">GOOGLE</a>` +
+    `</div>` +
+    `</div>` +
+    `</div>`
+  );
+}
+
+function createMarkerIcon(L, spot) {
+  const isOpen = spot.status === "OPEN";
+  const cls = `sf-marker${isOpen ? " sf-marker-open" : ""}`;
+  return L.divIcon({
+    className: cls,
+    html: '<span class="sf-marker-dot"></span>',
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
+    popupAnchor: [0, -10],
+  });
+}
+
+// Zoom level used when zooming into a clicked marker. Far enough in to see
+// the immediate neighborhood and walking routes, not so far that context is
+// lost (e.g. nearby beaches relative to a pool).
+const FOCUS_ZOOM = 15;
+
+function renderMarkers(L, map, layer, spots) {
   layer.clearLayers();
   spots.forEach((spot) => {
-    const marker = L.marker([spot.lat, spot.lng]);
+    const marker = L.marker([spot.lat, spot.lng], { icon: createMarkerIcon(L, spot) });
     marker.bindPopup(createPopupHTML(spot));
+    marker.on("click", () => {
+      const targetZoom = Math.max(map.getZoom(), FOCUS_ZOOM);
+      map.flyTo([spot.lat, spot.lng], targetZoom, { duration: 0.6 });
+    });
     layer.addLayer(marker);
   });
 }
@@ -96,18 +161,22 @@ async function init() {
   }
 
   const map = L.map(container).setView(SF_CENTER, SF_ZOOM);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  // CartoDB Voyager: warm cream basemap that keeps SF's neighborhoods,
+  // parks, and the bay legible without overwhelming the brand palette.
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
     maxZoom: 19,
+    subdomains: "abcd",
     attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
   }).addTo(map);
   const markerLayer = L.layerGroup().addTo(map);
-  renderMarkers(L, markerLayer, collectVisibleSpots());
+  const refresh = () => renderMarkers(L, map, markerLayer, collectVisibleSpots());
+  refresh();
 
   // Filters update row.hidden; we re-render markers to match.
-  document.addEventListener("sf:filters-applied", () => {
-    renderMarkers(L, markerLayer, collectVisibleSpots());
-  });
+  document.addEventListener("sf:filters-applied", refresh);
+  // Conditions arrive async — re-render so beach popups pick up temp/tide.
+  document.addEventListener("sf:conditions-loaded", refresh);
 }
 
 if (document.readyState === "loading") {

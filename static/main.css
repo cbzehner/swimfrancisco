@@ -405,23 +405,149 @@ table.board tbody tr.flap {
   min-height: 400px;
   margin: 1rem 0 2rem;
   border: 1px solid var(--fg);
+  /* Match Voyager's land tone so newly-loading tiles fade in from a
+     similar color instead of flashing against the page's dark bg. */
+  background: #d6dbe0;
+}
+
+/* Branded markers — yellow dot with a dark ring; open spots glow. */
+.sf-marker .sf-marker-dot {
+  display: block;
+  width: 14px;
+  height: 14px;
+  margin: 2px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.sf-marker-open .sf-marker-dot {
+  box-shadow:
+    0 0 0 1px var(--accent),
+    0 0 10px rgba(245, 197, 24, 0.65);
+}
+
+/* Leaflet popup → split-flap palette. Selectors are doubled (`.leaflet-popup
+   .leaflet-popup-content-wrapper`) so they win over leaflet.css, which is
+   loaded after main.css from extra_head and would otherwise tie on
+   specificity and override via source order. */
+.leaflet-popup .leaflet-popup-content-wrapper,
+.leaflet-popup .leaflet-popup-tip {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--fg);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.leaflet-popup .leaflet-popup-content {
+  margin: 0.6rem 0.8rem;
+  min-width: 14ch;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  color: var(--fg-dim);
+}
+
+.leaflet-container a.leaflet-popup-close-button:hover {
+  color: var(--fg);
 }
 
 #map-view .sf-map-popup {
   font-family: inherit;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+  color: var(--fg);
+}
 
-  & strong {
-    display: block;
-    margin-bottom: 0.25rem;
-  }
+#map-view a.sf-map-popup-title {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+  color: var(--fg);
+  text-decoration: none;
+}
 
-  & .sf-map-popup-meta {
-    color: #333;
-    font-size: 0.75rem;
-  }
+#map-view a.sf-map-popup-title:hover,
+#map-view a.sf-map-popup-title:focus {
+  text-decoration: underline;
+}
+
+#map-view a.sf-map-popup-title strong {
+  font-size: 0.9rem;
+}
+
+#map-view .sf-map-popup-title-arrow {
+  color: var(--accent);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+#map-view .sf-map-popup-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.15rem 0;
+}
+
+#map-view .sf-map-popup-key {
+  color: var(--fg-dim);
+}
+
+#map-view .sf-map-popup-val {
+  color: var(--fg);
+}
+
+#map-view .sf-map-popup-actions {
+  margin-top: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(245, 197, 24, 0.25);
+}
+
+#map-view .sf-map-popup-directions {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+
+#map-view .sf-map-popup-directions a {
+  color: var(--fg);
+  text-decoration: none;
+  border: 1px solid var(--fg);
+  padding: 0.1rem 0.4rem;
+  border-radius: 2px;
+}
+
+#map-view .sf-map-popup-directions a:hover,
+#map-view .sf-map-popup-directions a:focus {
+  background: rgba(245, 197, 24, 0.12);
+}
+
+/* Leaflet zoom + attribution controls — match the brand. */
+.leaflet-bar,
+.leaflet-bar a {
+  background: var(--bg);
+  color: var(--fg);
+  border-color: var(--fg);
+}
+
+.leaflet-bar a:hover,
+.leaflet-bar a:focus {
+  background: rgba(245, 197, 24, 0.12);
+  color: var(--fg);
+}
+
+.leaflet-control-attribution {
+  background: rgba(26, 26, 46, 0.85);
+  color: var(--fg-dim);
+  font-size: 0.7rem;
+}
+
+.leaflet-control-attribution a {
+  color: var(--fg);
 }
 
 /* --- Spot detail page (v2 redesign) ------------------------------------- */
