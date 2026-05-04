@@ -3,7 +3,8 @@ from pathlib import Path
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
 SRC_ROOT = PACKAGE_ROOT.parent
-REPO_ROOT = SRC_ROOT.parent
+PROJECT_ROOT = SRC_ROOT.parent
+REPO_ROOT = PROJECT_ROOT.parent
 
 CONTENT_SPOTS_DIR = REPO_ROOT / "content" / "spots"
 DATA_DIR = REPO_ROOT / "data"

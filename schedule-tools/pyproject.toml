@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "swimfrancisco-schedules"
 version = "0.1.0"
 description = "Local PDF schedule extraction pipeline for Swim Francisco pool content."
-readme = "README.md"
+readme = "../README.md"
 requires-python = ">=3.13"
 dependencies = [
   "anthropic",
@@ -30,4 +30,3 @@ packages = ["src/schedules"]
 
 [tool.uv]
 package = true
-

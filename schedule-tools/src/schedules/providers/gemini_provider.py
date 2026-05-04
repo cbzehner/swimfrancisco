@@ -14,7 +14,7 @@ def extract(pdf_bytes: bytes, prompt: str, schema: dict[str, Any]) -> ProviderRe
         from google import genai
         from google.genai import types
     except ImportError as exc:  # pragma: no cover - exercised only in real runs
-        raise RuntimeError("google-genai is not installed. Run `uv sync` first.") from exc
+        raise RuntimeError("google-genai is not installed. Run `uv --project schedule-tools sync` first.") from exc
 
     if not os.getenv("GOOGLE_API_KEY"):
         raise RuntimeError("GOOGLE_API_KEY is not set.")

@@ -7,6 +7,7 @@ jsonschema = pytest.importorskip("jsonschema")
 
 SCHEMA_PATH = (
     Path(__file__).resolve().parents[1]
+    / "schedule-tools"
     / "src"
     / "schedules"
     / "schemas"

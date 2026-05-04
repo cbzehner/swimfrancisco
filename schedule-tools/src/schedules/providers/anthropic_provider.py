@@ -13,7 +13,7 @@ def extract(pdf_bytes: bytes, prompt: str, schema: dict[str, Any]) -> ProviderRe
     try:
         import anthropic
     except ImportError as exc:  # pragma: no cover - exercised only in real runs
-        raise RuntimeError("anthropic is not installed. Run `uv sync` first.") from exc
+        raise RuntimeError("anthropic is not installed. Run `uv --project schedule-tools sync` first.") from exc
 
     if not os.getenv("ANTHROPIC_API_KEY"):
         raise RuntimeError("ANTHROPIC_API_KEY is not set.")
@@ -84,4 +84,3 @@ def _format_usage(usage: dict[str, Any]) -> str:
     if input_tokens is None and output_tokens is None:
         return "usage unavailable"
     return f"input_tokens={input_tokens or 0}, output_tokens={output_tokens or 0}"
-
