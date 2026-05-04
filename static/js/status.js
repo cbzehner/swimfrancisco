@@ -27,6 +27,7 @@ function applyStatuses(root, now, allowedTypes = null) {
       : { status: PLACEHOLDER, next: PLACEHOLDER };
     cells[2].textContent = status;
     cells[3].textContent = next;
+    row.classList.toggle("is-open", status === "OPEN");
   });
 }
 

@@ -242,6 +242,20 @@ table.board {
     background: rgba(245, 197, 24, 0.05);
   }
 
+  & tbody tr.is-open td {
+    background: rgba(245, 197, 24, 0.08);
+  }
+
+  & tbody tr.is-open td:first-child {
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+
+  & tbody tr.is-open td:nth-child(3) {
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: 700;
+  }
+
   & th:first-child,
   & td:first-child {
     min-width: 14ch;
