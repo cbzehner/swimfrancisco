@@ -1,6 +1,6 @@
 {
-  "cost_estimate": "input_tokens=4453, output_tokens=1647",
-  "extracted_at": "2026-05-05T02:33:37.968977+00:00",
+  "cost_estimate": "input_tokens=4791, output_tokens=1696",
+  "extracted_at": "2026-05-05T02:45:22.654454+00:00",
   "grounding": {
     "grounded_count": 20,
     "ratio": 1.0,
@@ -180,21 +180,6 @@
         "end": "2026-06-19",
         "reason": "Federal Holiday - All Municipal Pools Closed",
         "start": "2026-06-19"
-      },
-      {
-        "end": "2026-03-19",
-        "reason": "3rd Thursday of month pool closed 11:00-2:00 for staff training",
-        "start": "2026-03-19"
-      },
-      {
-        "end": "2026-04-16",
-        "reason": "3rd Thursday of month pool closed 11:00-2:00 for staff training",
-        "start": "2026-04-16"
-      },
-      {
-        "end": "2026-05-21",
-        "reason": "3rd Thursday of month pool closed 11:00-2:00 for staff training",
-        "start": "2026-05-21"
       }
     ],
     "schedule_effective": "2026-03-15",
@@ -267,7 +252,6 @@
         "day": "tuesday",
         "end": "19:30",
         "evidence": "FAMILY/LAP SWIM (2 lanes)** Lap Swim (4 Lanes) 6:15 - 7:30PM",
-        "notes": "2 lanes family swim",
         "start": "18:15",
         "type": "family_swim"
       },
@@ -275,7 +259,6 @@
         "day": "tuesday",
         "end": "19:30",
         "evidence": "FAMILY/LAP SWIM (2 lanes)** Lap Swim (4 Lanes) 6:15 - 7:30PM",
-        "notes": "4 lanes lap swim",
         "start": "18:15",
         "type": "lap_swim"
       },
@@ -297,7 +280,6 @@
         "day": "wednesday",
         "end": "15:30",
         "evidence": "FAMILY (2 lanes)/LAP SWIM (4 lanes) 2:00 - 3:30 PM",
-        "notes": "2 lanes family swim",
         "start": "14:00",
         "type": "family_swim"
       },
@@ -305,7 +287,6 @@
         "day": "wednesday",
         "end": "15:30",
         "evidence": "FAMILY (2 lanes)/LAP SWIM (4 lanes) 2:00 - 3:30 PM",
-        "notes": "4 lanes lap swim",
         "start": "14:00",
         "type": "lap_swim"
       },
@@ -326,8 +307,7 @@
       {
         "day": "thursday",
         "end": "15:30",
-        "evidence": "LAP SWIM 12:30 - 3:30PM Closed every 3rd Thursday of the month for training",
-        "notes": "Closed every 3rd Thursday of the month for training",
+        "evidence": "LAP SWIM 12:30 - 3:30PM",
         "start": "12:30",
         "type": "lap_swim"
       },
@@ -335,7 +315,6 @@
         "day": "thursday",
         "end": "19:30",
         "evidence": "FAMILY/LAP SWIM (3 lanes)** Lap Swim (3 Lanes) 6:15 - 7:30PM",
-        "notes": "3 lanes family swim; 3rd Thursday of month pool closed 11:00-2:00 for training (3/19, 4/16, 5/21)",
         "start": "18:15",
         "type": "family_swim"
       },
@@ -343,19 +322,19 @@
         "day": "thursday",
         "end": "19:30",
         "evidence": "FAMILY/LAP SWIM (3 lanes)** Lap Swim (3 Lanes) 6:15 - 7:30PM",
-        "notes": "3 lanes lap swim; 3rd Thursday of month pool closed 11:00-2:00 for training (3/19, 4/16, 5/21)",
+        "notes": "Closed every 3rd Thursday of the month for training (3/19, 4/16, 5/21); pool closed 11:00-2:00 for training on those dates",
         "start": "18:15",
         "type": "lap_swim"
       }
     ]
   },
   "pdf_sha256": "f580f358615eb222d31249ebe28d5a67fe9d7aa473493559754696849d8c798f",
-  "prompt_sha256": "176c2e48fb132bd451dab954f66763fdc4bd9f0c3798baf37f68e699cf2167bd",
+  "prompt_sha256": "6177a94b15a5383964c18951256e3a3362d15175ca1b240881887509b9a857b0",
   "provider": "anthropic",
   "schema_sha256": "2fd2318cf6431c3570fc660353cef45eeb81a742f74879e86f99dddf505a8ade",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28501",
   "usage": {
-    "input_tokens": 4453,
-    "output_tokens": 1647
+    "input_tokens": 4791,
+    "output_tokens": 1696
   }
 }

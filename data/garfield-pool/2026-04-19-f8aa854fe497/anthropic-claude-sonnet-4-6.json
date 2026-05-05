@@ -1,6 +1,6 @@
 {
-  "cost_estimate": "input_tokens=4720, output_tokens=2620",
-  "extracted_at": "2026-05-05T02:31:36.386809+00:00",
+  "cost_estimate": "input_tokens=5058, output_tokens=3122",
+  "extracted_at": "2026-05-05T02:43:26.125701+00:00",
   "grounding": {
     "grounded_count": 25,
     "ratio": 0.7812,
@@ -269,7 +269,7 @@
     "closures": [
       {
         "end": "2026-05-25",
-        "reason": "Monday: May 25th - Closed",
+        "reason": "Monday: May 25th \u2014 facility closed",
         "start": "2026-05-25"
       }
     ],
@@ -351,7 +351,7 @@
       {
         "day": "tuesday",
         "end": "13:00",
-        "evidence": "MAIN POOL - LAP SWIM SMALL POOL - WATER EXERCISE (11:15AM-12:15PM) 11:00AM- 1:00PM",
+        "evidence": "MAIN POOL - LAP SWIM SMALL POOL - WATER EXERCISE (11:15AM-12:15PM) 11:00AM - 1:00PM",
         "pool": "main pool",
         "start": "11:00",
         "type": "lap_swim"
@@ -454,17 +454,17 @@
       },
       {
         "day": "thursday",
-        "end": "10:45",
+        "end": "10:30",
         "evidence": "**MAIN POOL - SENIOR/ THERAPY SWIM (2 LANES) DEEP WATER EXERCISE (1 LANE) (9:30AM - 10:30AM) 9:00AM - 10:45AM",
         "pool": "main pool",
-        "start": "09:00",
+        "start": "09:30",
         "type": "senior_swim"
       },
       {
         "day": "thursday",
         "end": "13:00",
         "evidence": "MAIN POOL - LAP SWIM CLOSED FOR STAFF TRAINING MAR 19TH, APR 16TH, MAY 21ST 11:00AM - 1:00PM",
-        "notes": "Closed for staff training every 3rd Thursday from 11AM-2PM (Mar 19th, Apr 16th, May 21st)",
+        "notes": "Closed for staff training Mar 19th, Apr 16th, May 21st",
         "pool": "main pool",
         "start": "11:00",
         "type": "lap_swim"
@@ -529,19 +529,18 @@
         "day": "sunday",
         "end": "16:30",
         "evidence": "REC/ FAMILY SWIM 2:30PM-4:30PM",
-        "pool": "small pool",
         "start": "14:30",
         "type": "family_swim"
       }
     ]
   },
   "pdf_sha256": "f8aa854fe49746a1091e39998486a25e709afab95d80844c4f3db440f7b85dbc",
-  "prompt_sha256": "176c2e48fb132bd451dab954f66763fdc4bd9f0c3798baf37f68e699cf2167bd",
+  "prompt_sha256": "6177a94b15a5383964c18951256e3a3362d15175ca1b240881887509b9a857b0",
   "provider": "anthropic",
   "schema_sha256": "2fd2318cf6431c3570fc660353cef45eeb81a742f74879e86f99dddf505a8ade",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28495",
   "usage": {
-    "input_tokens": 4720,
-    "output_tokens": 2620
+    "input_tokens": 5058,
+    "output_tokens": 3122
   }
 }

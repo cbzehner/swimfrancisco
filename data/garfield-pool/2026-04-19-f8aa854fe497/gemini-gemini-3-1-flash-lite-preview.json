@@ -1,13 +1,13 @@
 {
-  "cost_estimate": "prompt_tokens=1508, candidate_tokens=2718, total_tokens=4226",
-  "extracted_at": "2026-05-05T02:31:07.965382+00:00",
+  "cost_estimate": "prompt_tokens=1832, candidate_tokens=2607, total_tokens=4439",
+  "extracted_at": "2026-05-05T02:42:54.061405+00:00",
   "grounding": {
-    "grounded_count": 28,
-    "ratio": 0.9655,
+    "grounded_count": 27,
+    "ratio": 0.9643,
     "sessions": [
       {
-        "evidence_in_pdf": true,
-        "grounded": true,
+        "evidence_in_pdf": false,
+        "grounded": false,
         "index": 0,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -206,8 +206,8 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
-        "grounded": false,
+        "evidence_in_pdf": true,
+        "grounded": true,
         "index": 25,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -228,24 +228,16 @@
         "missing_evidence": false,
         "start_in_evidence": true,
         "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 28,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
       }
     ],
-    "total": 29
+    "total": 28
   },
   "model": "gemini-3.1-flash-lite-preview",
   "payload": {
     "closures": [
       {
         "end": "2026-05-25",
-        "reason": "Memorial Day",
+        "reason": "Staff training",
         "start": "2026-05-25"
       },
       {
@@ -267,6 +259,29 @@
     "schedule_effective": "2026-03-15",
     "schedule_effective_end": "2026-06-04",
     "sessions": [
+      {
+        "day": "sunday",
+        "end": "10:30",
+        "evidence": "MAIN POOL-LAP SWIM 8:30AM - 10:30AM",
+        "pool": "main",
+        "start": "08:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "14:00",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM 12:30PM - 2:00PM",
+        "pool": "small",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "16:30",
+        "evidence": "REC/ FAMILY SWIM 2:30PM-4:30PM",
+        "start": "14:30",
+        "type": "family_swim"
+      },
       {
         "day": "monday",
         "end": "08:45",
@@ -437,18 +452,17 @@
       },
       {
         "day": "thursday",
-        "end": "10:45",
-        "evidence": "MAIN POOL - SENIOR/THERAPY SWIM 9:00AM - 10:45AM",
-        "notes": "**Shared Pool (Lane Configuration May Vary)",
+        "end": "10:30",
+        "evidence": "**MAIN POOL - SENIOR/ THERAPY SWIM (2 LANES) (9:30AM - 10:30AM)",
+        "notes": "Shared Pool",
         "pool": "main",
-        "start": "09:00",
+        "start": "09:30",
         "type": "senior_swim"
       },
       {
         "day": "thursday",
         "end": "13:00",
         "evidence": "MAIN POOL - LAP SWIM 11:00AM - 1:00PM",
-        "notes": "CLOSED FOR STAFF TRAINING MAR 19TH, APR 16TH, MAY 21ST",
         "pool": "main",
         "start": "11:00",
         "type": "lap_swim"
@@ -468,48 +482,17 @@
         "pool": "main",
         "start": "14:00",
         "type": "lap_swim"
-      },
-      {
-        "day": "sunday",
-        "end": "10:30",
-        "evidence": "MAIN POOL-LAP SWIM 8:30AM - 10:30AM",
-        "pool": "main",
-        "start": "08:30",
-        "type": "lap_swim"
-      },
-      {
-        "day": "sunday",
-        "end": "14:00",
-        "evidence": "SMALL POOL - REC/ FAMILY SWIM 12:30PM - 2:00PM",
-        "pool": "small",
-        "start": "12:30",
-        "type": "family_swim"
-      },
-      {
-        "day": "sunday",
-        "end": "14:00",
-        "evidence": "MAIN POOL-LAP SWIM 12:30PM - 2:00PM",
-        "pool": "main",
-        "start": "12:30",
-        "type": "lap_swim"
-      },
-      {
-        "day": "sunday",
-        "end": "16:30",
-        "evidence": "REC/ FAMILY SWIM 2:30PM-4:30PM",
-        "start": "14:30",
-        "type": "family_swim"
       }
     ]
   },
   "pdf_sha256": "f8aa854fe49746a1091e39998486a25e709afab95d80844c4f3db440f7b85dbc",
-  "prompt_sha256": "176c2e48fb132bd451dab954f66763fdc4bd9f0c3798baf37f68e699cf2167bd",
+  "prompt_sha256": "6177a94b15a5383964c18951256e3a3362d15175ca1b240881887509b9a857b0",
   "provider": "gemini",
   "schema_sha256": "2fd2318cf6431c3570fc660353cef45eeb81a742f74879e86f99dddf505a8ade",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28495",
   "usage": {
-    "candidates_token_count": 2718,
-    "prompt_token_count": 1508,
-    "total_token_count": 4226
+    "candidates_token_count": 2607,
+    "prompt_token_count": 1832,
+    "total_token_count": 4439
   }
 }

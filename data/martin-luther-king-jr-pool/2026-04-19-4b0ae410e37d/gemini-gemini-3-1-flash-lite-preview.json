@@ -1,6 +1,6 @@
 {
-  "cost_estimate": "prompt_tokens=1508, candidate_tokens=2349, total_tokens=3857",
-  "extracted_at": "2026-05-05T02:32:19.837142+00:00",
+  "cost_estimate": "prompt_tokens=1832, candidate_tokens=2457, total_tokens=4289",
+  "extracted_at": "2026-05-05T02:44:01.238201+00:00",
   "grounding": {
     "grounded_count": 27,
     "ratio": 1.0,
@@ -256,14 +256,14 @@
       {
         "day": "tuesday",
         "end": "11:00",
-        "evidence": "SENIOR LAP SWIM (6) 9:00am - 11:00am",
+        "evidence": "SENIOR LAP SWIM (6) LAP SWIM (4) 9:00am - 11:00am",
         "start": "09:00",
         "type": "senior_swim"
       },
       {
         "day": "tuesday",
         "end": "11:00",
-        "evidence": "LAP SWIM (4) 9:00am - 11:00am",
+        "evidence": "SENIOR LAP SWIM (6) LAP SWIM (4) 9:00am - 11:00am",
         "start": "09:00",
         "type": "lap_swim"
       },
@@ -277,7 +277,7 @@
       {
         "day": "tuesday",
         "end": "15:30",
-        "evidence": "REC/FAMILY SWIM (shallow) 12:30pm - 3:30pm",
+        "evidence": "REC/FAMILY SWIM (shallow) LAP SWIM (8) 12:30pm - 3:30pm",
         "pool": "shallow",
         "start": "12:30",
         "type": "family_swim"
@@ -285,28 +285,28 @@
       {
         "day": "tuesday",
         "end": "15:30",
-        "evidence": "LAP SWIM (8) 12:30pm - 3:30pm",
+        "evidence": "REC/FAMILY SWIM (shallow) LAP SWIM (8) 12:30pm - 3:30pm",
         "start": "12:30",
         "type": "lap_swim"
       },
       {
         "day": "tuesday",
         "end": "19:00",
-        "evidence": "LAP SWIM (8) 6:00pm - 7:00pm",
+        "evidence": "WATER EXERCISE (shallow) LAP SWIM (8) 6:00pm - 7:00pm",
         "start": "18:00",
         "type": "lap_swim"
       },
       {
         "day": "wednesday",
         "end": "10:30",
-        "evidence": "SENIOR LAP SWIM (6) 9:00am - 10:30am",
+        "evidence": "SENIOR LAP SWIM (6) LAP SWIM (4) 9:00am - 10:30am",
         "start": "09:00",
         "type": "senior_swim"
       },
       {
         "day": "wednesday",
         "end": "10:30",
-        "evidence": "LAP SWIM (4) 9:00am - 10:30am",
+        "evidence": "SENIOR LAP SWIM (6) LAP SWIM (4) 9:00am - 10:30am",
         "start": "09:00",
         "type": "lap_swim"
       },
@@ -320,7 +320,7 @@
       {
         "day": "wednesday",
         "end": "15:30",
-        "evidence": "REC/FAMILY SWIM (shallow) 12:30pm - 3:30pm",
+        "evidence": "REC/FAMILY SWIM (shallow) LAP SWIM (8) 12:30pm - 3:30pm",
         "pool": "shallow",
         "start": "12:30",
         "type": "family_swim"
@@ -328,7 +328,7 @@
       {
         "day": "wednesday",
         "end": "15:30",
-        "evidence": "LAP SWIM (8) 12:30pm - 3:30pm",
+        "evidence": "REC/FAMILY SWIM (shallow) LAP SWIM (8) 12:30pm - 3:30pm",
         "start": "12:30",
         "type": "lap_swim"
       },
@@ -342,14 +342,14 @@
       {
         "day": "thursday",
         "end": "11:00",
-        "evidence": "SENIOR LAP SWIM (6) 9:00am - 11:00am",
+        "evidence": "SENIOR LAP SWIM (6) LAP SWIM (4) 9:00am - 11:00am",
         "start": "09:00",
         "type": "senior_swim"
       },
       {
         "day": "thursday",
         "end": "11:00",
-        "evidence": "LAP SWIM (4) 9:00am - 11:00am",
+        "evidence": "SENIOR LAP SWIM (6) LAP SWIM (4) 9:00am - 11:00am",
         "start": "09:00",
         "type": "lap_swim"
       },
@@ -364,7 +364,7 @@
       {
         "day": "thursday",
         "end": "15:30",
-        "evidence": "REC/FAMILY SWIM (shallow) CLOSED EVERY 3RD THURSDAY 12:30pm - 3:30pm",
+        "evidence": "REC/FAMILY SWIM (shallow) LAP SWIM (8) CLOSED EVERY 3RD THURSDAY 12:30pm - 3:30pm",
         "notes": "CLOSED EVERY 3RD THURSDAY",
         "pool": "shallow",
         "start": "12:30",
@@ -373,7 +373,7 @@
       {
         "day": "thursday",
         "end": "15:30",
-        "evidence": "LAP SWIM (8) CLOSED EVERY 3RD THURSDAY 12:30pm - 3:30pm",
+        "evidence": "REC/FAMILY SWIM (shallow) LAP SWIM (8) CLOSED EVERY 3RD THURSDAY 12:30pm - 3:30pm",
         "notes": "CLOSED EVERY 3RD THURSDAY",
         "start": "12:30",
         "type": "lap_swim"
@@ -381,21 +381,21 @@
       {
         "day": "thursday",
         "end": "19:00",
-        "evidence": "LAP SWIM (8) 6:00pm - 7:00pm",
+        "evidence": "WATER EXERCISE (shallow) LAP SWIM (8) 6:00pm - 7:00pm",
         "start": "18:00",
         "type": "lap_swim"
       },
       {
         "day": "friday",
         "end": "10:30",
-        "evidence": "SENIOR LAP SWIM (6) 9:00am - 10:30am",
+        "evidence": "SENIOR LAP SWIM (6) LAP SWIM (4) 9:00am - 10:30am",
         "start": "09:00",
         "type": "senior_swim"
       },
       {
         "day": "friday",
         "end": "10:30",
-        "evidence": "LAP SWIM (4) 9:00am - 10:30am",
+        "evidence": "SENIOR LAP SWIM (6) LAP SWIM (4) 9:00am - 10:30am",
         "start": "09:00",
         "type": "lap_swim"
       },
@@ -409,7 +409,7 @@
       {
         "day": "friday",
         "end": "15:30",
-        "evidence": "REC/FAMILY SWIM (shallow) 12:30pm - 3:30pm",
+        "evidence": "REC/FAMILY SWIM (shallow) LAP SWIM (8) 12:30pm - 3:30pm",
         "pool": "shallow",
         "start": "12:30",
         "type": "family_swim"
@@ -417,7 +417,7 @@
       {
         "day": "friday",
         "end": "15:30",
-        "evidence": "LAP SWIM (8) 12:30pm - 3:30pm",
+        "evidence": "REC/FAMILY SWIM (shallow) LAP SWIM (8) 12:30pm - 3:30pm",
         "start": "12:30",
         "type": "lap_swim"
       },
@@ -445,13 +445,13 @@
     ]
   },
   "pdf_sha256": "4b0ae410e37d66393704fb70dff8e5ce3d42c8c919a6872038cefe8e9097a590",
-  "prompt_sha256": "176c2e48fb132bd451dab954f66763fdc4bd9f0c3798baf37f68e699cf2167bd",
+  "prompt_sha256": "6177a94b15a5383964c18951256e3a3362d15175ca1b240881887509b9a857b0",
   "provider": "gemini",
   "schema_sha256": "2fd2318cf6431c3570fc660353cef45eeb81a742f74879e86f99dddf505a8ade",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28771",
   "usage": {
-    "candidates_token_count": 2349,
-    "prompt_token_count": 1508,
-    "total_token_count": 3857
+    "candidates_token_count": 2457,
+    "prompt_token_count": 1832,
+    "total_token_count": 4289
   }
 }
