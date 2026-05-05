@@ -20,7 +20,8 @@ import subprocess
 from datetime import date as _date
 from pathlib import Path
 
-from .paths import DATA_DIR, REPO_ROOT, TMP_DIR
+from .eval import PoolEval, collect_pool_evals
+from .paths import DATA_DIR, REPO_ROOT
 from .registry import load_registry
 
 
@@ -94,7 +95,6 @@ def render_pr_body(
     *,
     repo_root: Path = REPO_ROOT,
     data_root: Path = DATA_DIR,
-    tmp_dir: Path = TMP_DIR,
     today: _date | None = None,
 ) -> str:
     today = today or _date.today()
@@ -152,13 +152,91 @@ def render_pr_body(
         lines.append("Nothing changed — this PR is empty and can be closed.")
     lines.append("")
 
-    eval_path = tmp_dir / "eval.md"
-    if eval_path.exists():
-        eval_text = eval_path.read_text().strip()
-        if eval_text:
-            lines.append("### Eval (vs current `reviewed.json` ground truth)")
-            lines.append("")
-            lines.append(eval_text)
-            lines.append("")
+    lines.extend(_render_eval_section(data_root=data_root, changed_slugs=set(changed.keys())))
 
     return "\n".join(lines).rstrip() + "\n"
+
+
+def _eval_aggregate_row(provider: str, items: list[PoolEval]) -> str:
+    truth = sum(i.truth_count for i in items)
+    extracted = sum(i.extracted_count for i in items)
+    tp = sum(i.true_positives for i in items)
+    fp = sum(i.false_positives for i in items)
+    fn = sum(i.false_negatives for i in items)
+    precision = tp / (tp + fp) if (tp + fp) else 1.0
+    recall = tp / (tp + fn) if (tp + fn) else 1.0
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
+    return (
+        f"| {provider} | {len(items)} | {truth} | {extracted} | {tp} | {fp} | {fn} | "
+        f"{precision:.0%} | {recall:.0%} | {f1:.2f} |"
+    )
+
+
+def _render_eval_section(*, data_root: Path, changed_slugs: set[str]) -> list[str]:
+    evals = collect_pool_evals(data_root=data_root)
+    if not evals:
+        return []
+
+    lines = ["### Eval (vs current `reviewed.json` ground truth)", ""]
+
+    by_provider: dict[str, list[PoolEval]] = {}
+    for e in evals:
+        by_provider.setdefault(e.provider, []).append(e)
+
+    lines.append("| Provider | Pools | Truth | Extr | TP | FP | FN | P | R | F1 |")
+    lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
+    for provider in sorted(by_provider):
+        lines.append(_eval_aggregate_row(provider, by_provider[provider]))
+    lines.append("")
+    lines.append("<details><summary>Column definitions</summary>")
+    lines.append("")
+    lines.append("- **Pools** — number of (pool, review-dir) pairs the provider was scored against.")
+    lines.append("- **Truth** — total session rows in the human-reviewed `reviewed.json` payloads.")
+    lines.append("- **Extr** — total session rows the provider extracted.")
+    lines.append("- **TP** (true positive) — extracted rows that match a truth row on `(day, type, start, end)`.")
+    lines.append("- **FP** (false positive) — extracted rows the truth does not have. Precision-loss.")
+    lines.append("- **FN** (false negative) — truth rows the provider missed. Recall-loss.")
+    lines.append("- **P** — precision = TP / (TP + FP). Of what we emit, how much is correct.")
+    lines.append("- **R** — recall = TP / (TP + FN). Of what truth has, how much we caught.")
+    lines.append("- **F1** — harmonic mean of P and R: `2·P·R / (P+R)`. Single number for overall fit.")
+    lines.append("")
+    lines.append("</details>")
+    lines.append("")
+
+    relevant = [e for e in evals if e.pool in changed_slugs]
+    if not relevant:
+        unchanged = sorted({e.pool for e in evals})
+        lines.append(
+            f"_No reviewed pools changed in this run; per-pool detail omitted "
+            f"({len(unchanged)} pool(s) tracked: {', '.join(unchanged)})._"
+        )
+        lines.append("")
+        return lines
+
+    lines.append("**Per pool / artifact (changed only):**")
+    lines.append("")
+    lines.append("| Pool | Artifact | Truth | Extr | TP | FP | FN | P | R | F1 |")
+    lines.append("|---|---|---:|---:|---:|---:|---:|---:|---:|---:|")
+    for e in sorted(relevant, key=lambda x: (x.pool, x.provider)):
+        lines.append(
+            f"| {e.pool} | {e.provider_artifact} | {e.truth_count} | {e.extracted_count} | "
+            f"{e.true_positives} | {e.false_positives} | {e.false_negatives} | "
+            f"{e.precision:.0%} | {e.recall:.0%} | {e.f1:.2f} |"
+        )
+    lines.append("")
+
+    for e in sorted(relevant, key=lambda x: (x.pool, x.provider)):
+        if not (e.extra_examples or e.missing_examples):
+            continue
+        lines.append(f"**{e.pool} — {e.provider_artifact}:**")
+        if e.extra_examples:
+            lines.append("- Extra (extracted but not in truth):")
+            for ex in e.extra_examples:
+                lines.append(f"  - {ex['day']} {ex['type']} {ex['start']}-{ex['end']}  `{ex['evidence']}`")
+        if e.missing_examples:
+            lines.append("- Missing (in truth but not extracted):")
+            for ex in e.missing_examples:
+                lines.append(f"  - {ex['day']} {ex['type']} {ex['start']}-{ex['end']}  `{ex['evidence']}`")
+        lines.append("")
+
+    return lines
