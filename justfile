@@ -43,3 +43,6 @@ schedules-extract *args:
 
 schedules-review *args:
     set -a; [ ! -f .env ] || . ./.env; set +a; uv --project schedule-tools run schedules review "$@"
+
+schedules-eval *args:
+    uv --project schedule-tools run schedules eval "$@"

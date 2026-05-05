@@ -12,6 +12,7 @@ from .paths import (
     DATA_DIR,
     latest_review_dir,
 )
+from .eval import collect_pool_evals, render_report, write_report
 from .pipeline import run_pipeline
 from .project import ProjectError, project as _project
 from .review import (
@@ -143,6 +144,33 @@ def review_command(slug: str | None) -> None:
     except FinalizeError as exc:
         raise click.ClickException(str(exc)) from exc
     click.echo(f"Wrote {final}")
+
+
+@cli.command("eval")
+@click.option(
+    "--stdout",
+    is_flag=True,
+    help="Print the report to stdout instead of writing to tmp/eval-<ts>.md.",
+)
+@click.option(
+    "--all-dirs",
+    is_flag=True,
+    help="Include historical review dirs (default: latest review dir per pool).",
+)
+def eval_command(stdout: bool, all_dirs: bool) -> None:
+    """Diff every committed reviewed.json against same-dir provider artifacts.
+
+    No API calls. Output is a per-pool / per-provider scorecard with
+    aggregate precision/recall/F1.
+    """
+    evals = collect_pool_evals(all_dirs=all_dirs)
+    if not evals:
+        raise click.ClickException("no (review_dir, provider) pairs found.")
+    if stdout:
+        click.echo(render_report(evals))
+        return
+    path = write_report(evals)
+    click.echo(f"Wrote {path}")
 
 
 @cli.group()

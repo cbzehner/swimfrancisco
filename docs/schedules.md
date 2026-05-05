@@ -185,6 +185,22 @@ If finalization fails after `reviewed.json` is written (rare; projection error),
 
 To start over from raw extraction on a given pool, delete its `reviewed.json` and re-run `just schedules-review`.
 
+## Eval
+
+```sh
+just schedules-eval               # writes tmp/eval-<timestamp>.md
+just schedules-eval --stdout      # prints the same report
+just schedules-eval --all-dirs    # include historical review dirs (default: latest only)
+```
+
+The eval reads existing per-review artifacts — no API calls. For each pool with a
+committed `reviewed.json`, it diffs every same-dir provider artifact against the
+human-reviewed payload using `(day, type, start, end)` as the row identity. Output
+is per-provider aggregate plus per-pool/per-artifact precision/recall/F1, plus a
+sample of disagreements (extra rows the model emitted, missing rows it dropped).
+
+Run before and after any prompt or schema tweak; require improvement, not regression.
+
 ## Future
 
 The v3 path is still the same: a GitHub Action can wrap `just schedules-extract` and open a PR whenever the content diff is non-empty.
