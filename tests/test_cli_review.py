@@ -63,18 +63,40 @@ def test_cli_review_hints_extract_when_data_missing(tmp_path, monkeypatch):
     assert "schedules extract" in result.output
 
 
-def test_cli_review_end_to_end_with_editor_noop(tmp_path, monkeypatch):
+def _editing_fake_run(calls: list[list[str]], data_root: Path, slug: str, sha12: str):
+    """Fake subprocess.run that simulates an editor making a real edit.
+
+    The byte-identical guard in finalize_draft refuses to mark a review
+    complete when the saved payload still byte-equals the provider seed,
+    so test runs that mock the editor have to mutate something.
+    """
+    reviewed_path = data_root / slug / f"2026-04-01-{sha12}" / "reviewed.json"
+
+    def fake_run(cmd, *args, **kwargs):
+        calls.append(list(cmd))
+        if reviewed_path.exists() and any(str(reviewed_path) == part for part in cmd):
+            envelope = json.loads(reviewed_path.read_text())
+            envelope["payload"]["sessions"][0]["notes"] = "verified"
+            reviewed_path.write_text(json.dumps(envelope, indent=2))
+
+        class R:
+            returncode = 0
+
+        return R()
+
+    return fake_run
+
+
+def test_cli_review_end_to_end_with_editor_edit(tmp_path, monkeypatch):
     data, content = _patch_dirs(monkeypatch, tmp_path)
     _seed_review_dir(data, "hamilton-pool", "2026-04-01", "a" * 64)
     _seed_content_md(content, "hamilton-pool")
 
     calls: list[list[str]] = []
-
-    def fake_run(cmd, *args, **kwargs):
-        calls.append(list(cmd))
-        class R: returncode = 0
-        return R()
-    monkeypatch.setattr("schedules.cli.subprocess.run", fake_run)
+    monkeypatch.setattr(
+        "schedules.cli.subprocess.run",
+        _editing_fake_run(calls, data, "hamilton-pool", "a" * 12),
+    )
     monkeypatch.setenv("EDITOR", "hx")
 
     runner = CliRunner()
@@ -83,9 +105,28 @@ def test_cli_review_end_to_end_with_editor_noop(tmp_path, monkeypatch):
     reviewed_file = data / "hamilton-pool" / "2026-04-01-aaaaaaaaaaaa" / "reviewed.json"
     assert reviewed_file.exists()
     assert "Wrote" in result.output
-    # Editor and `open` were both invoked.
     assert any(call[0] == "open" for call in calls)
     assert any(call[0] in {"hx", "$EDITOR"} or call[0].endswith("hx") for call in calls)
+
+
+def test_cli_review_rejects_unedited_payload(tmp_path, monkeypatch):
+    data, content = _patch_dirs(monkeypatch, tmp_path)
+    _seed_review_dir(data, "hamilton-pool", "2026-04-01", "a" * 64)
+    _seed_content_md(content, "hamilton-pool")
+
+    def fake_run(cmd, *args, **kwargs):
+        class R:
+            returncode = 0
+
+        return R()
+
+    monkeypatch.setattr("schedules.cli.subprocess.run", fake_run)
+    monkeypatch.setenv("EDITOR", "hx")
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["review"])
+    assert result.exit_code != 0
+    assert "byte-identical" in result.output
 
 
 def test_cli_review_splits_multi_word_editor(tmp_path, monkeypatch):
@@ -94,11 +135,7 @@ def test_cli_review_splits_multi_word_editor(tmp_path, monkeypatch):
     _seed_content_md(content, "hamilton-pool")
 
     calls: list[list[str]] = []
-
-    def fake_run(cmd, *args, **kwargs):
-        calls.append(list(cmd))
-        class R: returncode = 0
-        return R()
+    fake_run = _editing_fake_run(calls, data, "hamilton-pool", "a" * 12)
 
     monkeypatch.setattr("schedules.cli.subprocess.run", fake_run)
     monkeypatch.setenv("EDITOR", "code --wait")
@@ -117,7 +154,10 @@ def test_cli_review_filters_by_slug(tmp_path, monkeypatch):
     _seed_review_dir(data, "balboa-pool", "2026-04-01", "b" * 64)
     _seed_content_md(content, "balboa-pool")
 
-    monkeypatch.setattr("schedules.cli.subprocess.run", lambda *a, **k: type("R", (), {"returncode": 0})())
+    monkeypatch.setattr(
+        "schedules.cli.subprocess.run",
+        _editing_fake_run([], data, "balboa-pool", "b" * 12),
+    )
     monkeypatch.setenv("EDITOR", "hx")
 
     runner = CliRunner()

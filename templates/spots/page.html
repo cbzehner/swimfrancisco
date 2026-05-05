@@ -76,16 +76,34 @@
   {% if extra.type == "pool" %}
     {% set sessions = extra.sessions | default(value=[]) %}
     {% set closures = extra.closures | default(value=[]) %}
+    {% set today_ts_tb = now(timestamp=true) %}
+    {% set today_iso_tb = today_ts_tb | date(format="%Y-%m-%d", timezone="America/Los_Angeles") %}
+    {% set today_i_tb = today_iso_tb | replace(from="-", to="") | int %}
+    {% set effective_start = extra.schedule_effective | default(value="") %}
+    {% set effective_end = extra.schedule_effective_end | default(value="") %}
+    {% set pre_effective = false %}
+    {% set post_effective = false %}
+    {% if effective_start %}
+      {% set effective_start_i = effective_start | replace(from="-", to="") | int %}
+      {% if today_i_tb < effective_start_i %}{% set_global pre_effective = true %}{% endif %}
+    {% endif %}
+    {% if effective_end %}
+      {% set effective_end_i = effective_end | replace(from="-", to="") | int %}
+      {% if today_i_tb > effective_end_i %}{% set_global post_effective = true %}{% endif %}
+    {% endif %}
+    {% set schedule_in_window = not pre_effective and not post_effective %}
     {% set sessions_json = sessions | json_encode %}
     {% set closures_json = closures | json_encode %}
-    {% set schedule_json = '{"sessions":' ~ sessions_json ~ ',"closures":' ~ closures_json ~ '}' %}
+    {% set effective_start_json = effective_start | json_encode %}
+    {% set effective_end_json = effective_end | json_encode %}
+    {% set schedule_json = '{"sessions":' ~ sessions_json ~ ',"closures":' ~ closures_json ~ ',"effective_start":' ~ effective_start_json ~ ',"effective_end":' ~ effective_end_json ~ '}' %}
     <div class="detail-root"
          data-schedule='{{ schedule_json | safe }}'>
 
       <section class="status-slab" aria-live="polite">
         <div class="status-slab-row">
           <span class="status-slab-label">STATUS</span>
-          <span class="status-slab-value" data-field="status">—</span>
+          <span class="status-slab-value" data-field="status">{% if pre_effective %}OPENS {{ self::format_iso_date(iso=effective_start) }}{% elif post_effective %}SEASON ENDED {{ self::format_iso_date(iso=effective_end) }}{% else %}—{% endif %}</span>
         </div>
         <div class="status-slab-row">
           <span class="status-slab-label">NEXT</span>
@@ -93,7 +111,6 @@
         </div>
       </section>
 
-      {% set today_ts_tb = now(timestamp=true) %}
       {% set today_weekday = today_ts_tb | date(format="%A", timezone="America/Los_Angeles") | lower %}
       {% set today_weekday_label = today_ts_tb | date(format="%A", timezone="America/Los_Angeles") | upper %}
       {% set drop_in_types_tb = ["lap_swim", "family_swim", "senior_swim"] %}
@@ -105,7 +122,7 @@
         {% endif %}
       {% endfor %}
 
-      {% if today_drop_in | length > 0 %}
+      {% if schedule_in_window and today_drop_in | length > 0 %}
         <section class="today-block" data-field="today" data-day="{{ today_weekday }}">
           <p class="today-block-heading">TODAY · {{ today_weekday_label }}</p>
           <ul class="today-block-list">

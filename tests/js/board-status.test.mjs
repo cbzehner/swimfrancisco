@@ -374,6 +374,55 @@ test("nowInPacific reflects PT wall-clock during PST (UTC-8)", () => {
   assert.equal(pt.getMinutes(), 30);
 });
 
+test("computeDetailStatus returns SEASON_NOT_STARTED before effective_start", () => {
+  const schedule = {
+    sessions: [{ day: "tuesday", type: "lap_swim", start: "07:30", end: "09:30" }],
+    closures: [],
+    effective_start: "2026-05-12",
+    effective_end: "2026-06-06",
+  };
+  const before = new Date("2026-05-05T15:00:00-07:00");
+  const result = computeDetailStatus(schedule, before);
+  assert.equal(result.kind, "SEASON_NOT_STARTED");
+  assert.equal(result.effectiveStart, "2026-05-12");
+});
+
+test("computeDetailStatus returns SEASON_ENDED after effective_end", () => {
+  const schedule = {
+    sessions: [{ day: "tuesday", type: "lap_swim", start: "07:30", end: "09:30" }],
+    closures: [],
+    effective_start: "2026-05-12",
+    effective_end: "2026-06-06",
+  };
+  const after = new Date("2026-06-09T08:00:00-07:00");
+  const result = computeDetailStatus(schedule, after);
+  assert.equal(result.kind, "SEASON_ENDED");
+  assert.equal(result.effectiveEnd, "2026-06-06");
+});
+
+test("computeDetailStatus runs normal logic inside the effective window", () => {
+  const schedule = {
+    sessions: [{ day: "tuesday", type: "lap_swim", start: "07:30", end: "09:30" }],
+    closures: [],
+    effective_start: "2026-05-12",
+    effective_end: "2026-06-06",
+  };
+  const inside = new Date("2026-05-19T08:00:00-07:00");
+  const result = computeDetailStatus(schedule, inside);
+  assert.equal(result.kind, "OPEN");
+});
+
+test("computeDetailStatus ignores effective_start when missing", () => {
+  const schedule = {
+    sessions: [{ day: "tuesday", type: "lap_swim", start: "07:30", end: "09:30" }],
+    closures: [],
+  };
+  const t = new Date("2026-05-19T08:00:00-07:00");
+  const result = computeDetailStatus(schedule, t);
+  assert.equal(result.kind, "OPEN");
+});
+
+
 test("nowInPacific straddles midnight PT correctly", () => {
   // 08:00 UTC on 2026-01-15 = 00:00 PST on 2026-01-15.
   const midnight = nowInPacific(new Date("2026-01-15T08:00:00Z"));

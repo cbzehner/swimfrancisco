@@ -7,6 +7,7 @@
 import {
   computeDetailStatus,
   formatHHMM,
+  formatISODateHuman,
   nowInPacific,
   parseHHMM,
 } from "./helpers/board.mjs";
@@ -59,6 +60,10 @@ function formatStatusLine(result) {
       return "SCHEDULE NOT YET VERIFIED";
     case "NO_DROPIN_WEEK":
       return "NO DROP-IN THIS WEEK";
+    case "SEASON_NOT_STARTED":
+      return `OPENS ${formatISODateHuman(result.effectiveStart).toUpperCase()}`;
+    case "SEASON_ENDED":
+      return `SEASON ENDED ${formatISODateHuman(result.effectiveEnd).toUpperCase()}`;
     default:
       return "—";
   }
@@ -86,6 +91,8 @@ function decorateTodayBlock(root, now, statusResult) {
     "NOT_VERIFIED",
     "NO_DROPIN_WEEK",
     "NO_DROPIN_TODAY",
+    "SEASON_NOT_STARTED",
+    "SEASON_ENDED",
   ]);
 
   const block = root.querySelector(".today-block");

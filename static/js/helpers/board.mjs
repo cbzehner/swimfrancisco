@@ -301,6 +301,21 @@ export function computeDetailStatus(schedule, now) {
 
   const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
   const closures = Array.isArray(schedule.closures) ? schedule.closures : [];
+  const todayISO = formatISODate(now);
+  const effectiveStart =
+    typeof schedule.effective_start === "string" && schedule.effective_start
+      ? schedule.effective_start
+      : null;
+  const effectiveEnd =
+    typeof schedule.effective_end === "string" && schedule.effective_end
+      ? schedule.effective_end
+      : null;
+  if (effectiveStart && todayISO < effectiveStart) {
+    return { ...EMPTY_DETAIL, kind: "SEASON_NOT_STARTED", effectiveStart };
+  }
+  if (effectiveEnd && todayISO > effectiveEnd) {
+    return { ...EMPTY_DETAIL, kind: "SEASON_ENDED", effectiveEnd };
+  }
 
   const normalized = normalizeSessions(sessions);
   if (normalized.length === 0) {
