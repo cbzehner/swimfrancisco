@@ -153,6 +153,29 @@ class FinalizeError(RuntimeError):
     """Raised when finalizing a draft fails; message is reviewer-facing."""
 
 
+def _canonical_payload(payload: dict) -> str:
+    return json.dumps(payload, sort_keys=True, separators=(",", ":"))
+
+
+def _payload_matches_any_provider(payload: dict, review_dir: Path) -> str | None:
+    """Return the provider artifact name whose payload byte-equals this one.
+
+    Used to detect "the reviewer didn't actually edit anything" — a bypass of
+    the human review contract. A re-export of the same PDF that yields a
+    legitimately correct LLM payload still requires the reviewer to make an
+    explicit attestation edit (a notes field, a reorder, anything).
+    """
+    target = _canonical_payload(payload)
+    for provider_path in _provider_json_paths(review_dir):
+        try:
+            provider = json.loads(provider_path.read_text())
+        except (OSError, json.JSONDecodeError):
+            continue
+        if _canonical_payload(provider.get("payload", {})) == target:
+            return provider_path.name
+    return None
+
+
 def finalize_draft(
     *,
     reviewed_json_path: Path,
@@ -182,6 +205,15 @@ def finalize_draft(
     result = validate(raw.get("payload", {}))
     if not result.ok:
         raise FinalizeError("; ".join(result.violations))
+
+    matched = _payload_matches_any_provider(raw.get("payload", {}), reviewed_json_path.parent)
+    if matched is not None:
+        raise FinalizeError(
+            f"reviewed payload is byte-identical to {matched} — "
+            "no human edits detected. Re-open the file, verify each row "
+            "against the source PDF, and make at least one explicit change "
+            "(a notes field, a reorder, an evidence edit) before saving."
+        )
 
     slug = raw["slug"]
     try:

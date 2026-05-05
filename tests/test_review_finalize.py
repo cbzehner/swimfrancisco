@@ -95,3 +95,45 @@ def test_finalize_rejects_validate_failure(tmp_path):
             content_spots_dir=tmp_path / "content" / "spots",
         )
     assert reviewed.exists()
+
+
+def _write_provider_artifact(review_dir: Path, payload: dict) -> Path:
+    path = review_dir / "gemini-gemini-3-1-flash-lite-preview.json"
+    path.write_text(json.dumps({"payload": payload}))
+    return path
+
+
+def test_finalize_rejects_byte_identical_provider_payload(tmp_path):
+    data_root = tmp_path / "data"
+    envelope = _valid_draft_envelope("hamilton-pool", "a" * 64)
+    reviewed = _write_reviewed(data_root, "hamilton-pool", "a" * 64, envelope)
+    _write_provider_artifact(reviewed.parent, envelope["payload"])
+    _seed_content_md(tmp_path / "content" / "spots", "hamilton-pool")
+
+    with pytest.raises(FinalizeError, match="byte-identical"):
+        finalize_draft(
+            reviewed_json_path=reviewed,
+            content_spots_dir=tmp_path / "content" / "spots",
+        )
+    assert reviewed.exists()
+
+
+def test_finalize_accepts_payload_with_any_diff_from_provider(tmp_path):
+    data_root = tmp_path / "data"
+    envelope = _valid_draft_envelope("hamilton-pool", "a" * 64)
+    reviewed = _write_reviewed(data_root, "hamilton-pool", "a" * 64, envelope)
+    # Provider seed had one extra session the reviewer dropped — meaningful edit.
+    provider_payload = {
+        **envelope["payload"],
+        "sessions": envelope["payload"]["sessions"] + [
+            {"day": "saturday", "type": "lap_swim", "start": "08:00", "end": "09:00"}
+        ],
+    }
+    _write_provider_artifact(reviewed.parent, provider_payload)
+    _seed_content_md(tmp_path / "content" / "spots", "hamilton-pool")
+
+    result = finalize_draft(
+        reviewed_json_path=reviewed,
+        content_spots_dir=tmp_path / "content" / "spots",
+    )
+    assert result == reviewed
