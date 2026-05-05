@@ -19,7 +19,7 @@ schedule_effective_end = "2026-06-06"
 [[extra.closures]]
 start = "2026-05-21"
 end = "2026-05-21"
-reason = "Staff Training"
+reason = "Staff training"
 
 [[extra.closures]]
 start = "2026-05-25"
@@ -29,7 +29,7 @@ reason = "Memorial Day"
 [[extra.closures]]
 start = "2026-06-06"
 end = "2026-06-06"
-reason = "Staff Training"
+reason = "Staff training"
 [[extra.sessions]]
 day = "tuesday"
 type = "lap_swim"

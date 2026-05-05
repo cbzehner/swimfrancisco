@@ -1,0 +1,164 @@
+{
+  "slug": "mission-community-pool",
+  "pdf_sha256": "6d12e60b17f1a0233582600528027308871aa8129d620258650f70b6a468a3ff",
+  "reviewed_at": "2026-05-05",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28959",
+  "payload": {
+    "closures": [
+      {
+        "end": "2026-05-25",
+        "reason": "Memorial Day",
+        "start": "2026-05-25"
+      },
+      {
+        "end": "2026-05-21",
+        "reason": "Staff training",
+        "start": "2026-05-21"
+      },
+      {
+        "end": "2026-06-06",
+        "reason": "Staff training",
+        "start": "2026-06-06"
+      }
+    ],
+    "schedule_effective": "2026-05-12",
+    "schedule_effective_end": "2026-06-06",
+    "sessions": [
+      {
+        "day": "tuesday",
+        "end": "09:30",
+        "evidence": "Lap Swim 7:30 AM - 9:30 AM",
+        "start": "07:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "13:00",
+        "evidence": "Lap Swim 11:00 AM - 1:00 PM",
+        "start": "11:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:45",
+        "evidence": "Lap Swim 2:30 PM - 3:45 PM",
+        "start": "14:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "17:00",
+        "evidence": "Rec/Family Swim 4:00 PM - 5:00 PM",
+        "start": "16:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "10:45",
+        "evidence": "Senior/Therapy Swim 9:00 AM - 10:45 AM",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "13:00",
+        "evidence": "Lap Swim 11:00 AM - 1:00 PM",
+        "start": "11:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:45",
+        "evidence": "Rec/Family Swim 2:30 PM - 3:45 PM",
+        "start": "14:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "18:00",
+        "evidence": "Lap Swim 4:00 PM - 6:00 PM",
+        "start": "16:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "09:30",
+        "evidence": "Lap Swim 7:30 AM - 9:30 AM",
+        "start": "07:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "13:30",
+        "evidence": "Lap Swim 11:30 AM - 1:30 PM CLOSED 5/21",
+        "notes": "CLOSED 5/21",
+        "start": "11:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "17:00",
+        "evidence": "Rec/Family Swim 3:00 PM - 5:00 PM",
+        "notes": "Pool closed every 3rd Thursday of the month from 11:00 AM\u2013 3:00 PM for staff training.",
+        "start": "15:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "10:45",
+        "evidence": "Senior /Therapy Swim 9:00 AM - 10:45 AM",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "friday",
+        "end": "13:00",
+        "evidence": "Lap Swim 11:00 AM - 1:00 PM",
+        "start": "11:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "15:45",
+        "evidence": "Rec/Family Swim 2:30 PM - 3:45 PM",
+        "start": "14:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "18:00",
+        "evidence": "Lap Swim 4:00 PM - 6:00 PM",
+        "start": "16:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "10:30",
+        "evidence": "Lap Swim 9:00 AM - 10:30 AM",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "12:00",
+        "evidence": "Rec/Family Swim 10:45 AM - 12:00 PM",
+        "start": "10:45",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "15:00",
+        "evidence": "Rec/Family Swim 1:30 PM - 3:00 PM",
+        "start": "13:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "17:00",
+        "evidence": "Lap Swim 3:30 PM - 5:00 PM",
+        "start": "15:30",
+        "type": "lap_swim"
+      }
+    ]
+  }
+}
