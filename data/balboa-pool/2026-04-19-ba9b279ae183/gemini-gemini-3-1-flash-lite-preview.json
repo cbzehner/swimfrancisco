@@ -1,6 +1,6 @@
 {
   "cost_estimate": "prompt_tokens=1844, candidate_tokens=2020, total_tokens=3864",
-  "extracted_at": "2026-05-05T02:42:00.324196+00:00",
+  "extracted_at": "2026-05-05T03:30:51.731363+00:00",
   "grounding": {
     "grounded_count": 18,
     "ratio": 0.8571,

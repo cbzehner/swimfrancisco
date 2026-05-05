@@ -1,21 +1,21 @@
 {
-  "cost_estimate": "prompt_tokens=1832, candidate_tokens=2607, total_tokens=4439",
-  "extracted_at": "2026-05-05T02:42:54.061405+00:00",
+  "cost_estimate": "prompt_tokens=1832, candidate_tokens=2863, total_tokens=4695",
+  "extracted_at": "2026-05-05T03:31:18.881443+00:00",
   "grounding": {
-    "grounded_count": 27,
-    "ratio": 0.9643,
+    "grounded_count": 30,
+    "ratio": 0.9677,
     "sessions": [
       {
-        "evidence_in_pdf": false,
-        "grounded": false,
+        "evidence_in_pdf": true,
+        "grounded": true,
         "index": 0,
         "missing_evidence": false,
         "start_in_evidence": true,
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": true,
-        "grounded": true,
+        "evidence_in_pdf": false,
+        "grounded": false,
         "index": 1,
         "missing_evidence": false,
         "start_in_evidence": true,
@@ -228,37 +228,69 @@
         "missing_evidence": false,
         "start_in_evidence": true,
         "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 28,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 29,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 30,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
       }
     ],
-    "total": 28
+    "total": 31
   },
   "model": "gemini-3.1-flash-lite-preview",
   "payload": {
     "closures": [
       {
-        "end": "2026-05-25",
-        "reason": "Staff training",
-        "start": "2026-05-25"
-      },
-      {
         "end": "2026-03-19",
-        "reason": "Staff training",
+        "reason": "STAFF TRAINING",
         "start": "2026-03-19"
       },
       {
         "end": "2026-04-16",
-        "reason": "Staff training",
+        "reason": "STAFF TRAINING",
         "start": "2026-04-16"
       },
       {
         "end": "2026-05-21",
-        "reason": "Staff training",
+        "reason": "STAFF TRAINING",
         "start": "2026-05-21"
+      },
+      {
+        "end": "2026-05-25",
+        "reason": "MEMORIAL DAY",
+        "start": "2026-05-25"
       }
     ],
     "schedule_effective": "2026-03-15",
     "schedule_effective_end": "2026-06-04",
     "sessions": [
+      {
+        "day": "sunday",
+        "end": "14:00",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM 12:30PM - 2:00PM",
+        "pool": "small",
+        "start": "12:30",
+        "type": "family_swim"
+      },
       {
         "day": "sunday",
         "end": "10:30",
@@ -270,10 +302,10 @@
       {
         "day": "sunday",
         "end": "14:00",
-        "evidence": "SMALL POOL - REC/ FAMILY SWIM 12:30PM - 2:00PM",
-        "pool": "small",
+        "evidence": "MAIN POOL-LAP SWIM 12:30PM - 2:00PM",
+        "pool": "main",
         "start": "12:30",
-        "type": "family_swim"
+        "type": "lap_swim"
       },
       {
         "day": "sunday",
@@ -325,7 +357,7 @@
       {
         "day": "monday",
         "end": "15:45",
-        "evidence": "MAIN POOL-LAP SWIM 2:00PM-3:45PM",
+        "evidence": "MAIN POOL - LAP SWIM 2:00PM-3:45PM",
         "pool": "main",
         "start": "14:00",
         "type": "lap_swim"
@@ -396,6 +428,22 @@
       },
       {
         "day": "wednesday",
+        "end": "08:45",
+        "evidence": "SMALL POOL - REC/ FAMILY SWIM 7:00AM - 8:45AM",
+        "pool": "small",
+        "start": "07:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "08:45",
+        "evidence": "MAIN POOL - LAP SWIM 7:00AM - 8:45AM",
+        "pool": "main",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
         "end": "10:45",
         "evidence": "SMALL POOL - REC/ FAMILY SWIM 9:00AM - 10:45AM",
         "pool": "small",
@@ -455,7 +503,7 @@
         "end": "10:30",
         "evidence": "**MAIN POOL - SENIOR/ THERAPY SWIM (2 LANES) (9:30AM - 10:30AM)",
         "notes": "Shared Pool",
-        "pool": "main",
+        "pool": "2 lanes",
         "start": "09:30",
         "type": "senior_swim"
       },
@@ -491,8 +539,8 @@
   "schema_sha256": "2fd2318cf6431c3570fc660353cef45eeb81a742f74879e86f99dddf505a8ade",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28495",
   "usage": {
-    "candidates_token_count": 2607,
+    "candidates_token_count": 2863,
     "prompt_token_count": 1832,
-    "total_token_count": 4439
+    "total_token_count": 4695
   }
 }

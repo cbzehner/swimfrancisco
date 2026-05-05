@@ -1,8 +1,8 @@
 {
-  "cost_estimate": "prompt_tokens=2352, candidate_tokens=2790, total_tokens=5142",
-  "extracted_at": "2026-05-05T02:44:28.320053+00:00",
+  "cost_estimate": "prompt_tokens=2352, candidate_tokens=3340, total_tokens=5692",
+  "extracted_at": "2026-05-05T03:31:54.671773+00:00",
   "grounding": {
-    "grounded_count": 37,
+    "grounded_count": 36,
     "ratio": 1.0,
     "sessions": [
       {
@@ -292,17 +292,9 @@
         "missing_evidence": false,
         "start_in_evidence": true,
         "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 36,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
       }
     ],
-    "total": 37
+    "total": 36
   },
   "model": "gemini-3.1-flash-lite-preview",
   "payload": {
@@ -324,17 +316,17 @@
       },
       {
         "end": "2026-03-19",
-        "reason": "Every 3rd Thursday of the Month Closed for Aquatic Division Training",
+        "reason": "Aquatic Division Training",
         "start": "2026-03-19"
       },
       {
         "end": "2026-04-16",
-        "reason": "Every 3rd Thursday of the Month Closed for Aquatic Division Training",
+        "reason": "Aquatic Division Training",
         "start": "2026-04-16"
       },
       {
         "end": "2026-05-21",
-        "reason": "Every 3rd Thursday of the Month Closed for Aquatic Division Training",
+        "reason": "Aquatic Division Training",
         "start": "2026-05-21"
       }
     ],
@@ -568,14 +560,6 @@
       },
       {
         "day": "thursday",
-        "end": "10:30",
-        "evidence": "LAP SWIM 7:30 - 10:30AM",
-        "pool": "cool",
-        "start": "07:30",
-        "type": "lap_swim"
-      },
-      {
-        "day": "thursday",
         "end": "14:00",
         "evidence": "LAP SWIM (LAP/THERAPY) CLOSED EVERY 3RD THURS OF THE MONTH FOR TRAINING 11:00 2:00 PM",
         "notes": "CLOSED EVERY 3RD THURS OF THE MONTH FOR TRAINING",
@@ -647,8 +631,8 @@
   "schema_sha256": "2fd2318cf6431c3570fc660353cef45eeb81a742f74879e86f99dddf505a8ade",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28503",
   "usage": {
-    "candidates_token_count": 2790,
+    "candidates_token_count": 3340,
     "prompt_token_count": 2352,
-    "total_token_count": 5142
+    "total_token_count": 5692
   }
 }

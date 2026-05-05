@@ -1,6 +1,6 @@
 {
-  "cost_estimate": "input_tokens=4865, output_tokens=1461",
-  "extracted_at": "2026-05-05T02:42:18.219271+00:00",
+  "cost_estimate": "input_tokens=4865, output_tokens=1451",
+  "extracted_at": "2026-05-05T03:32:21.700714+00:00",
   "grounding": {
     "grounded_count": 17,
     "ratio": 0.85,
@@ -210,16 +210,16 @@
       {
         "day": "tuesday",
         "end": "15:30",
-        "evidence": "REC/FAMILY SWIM/ LAP SWIM (shallow / deep) (Lap un\u019fl 4pm) 2:30 pm - 3:30 pm",
-        "pool": "shallow / deep",
+        "evidence": "REC/FAMILY SWIM/ LAP SWIM (shallow / deep) (Lap until 4pm) 2:30 pm - 3:30 pm",
+        "pool": "shallow",
         "start": "14:30",
         "type": "family_swim"
       },
       {
         "day": "tuesday",
         "end": "16:00",
-        "evidence": "REC/FAMILY SWIM/ LAP SWIM (shallow / deep) (Lap un\u019fl 4pm) 2:30 pm - 3:30 pm",
-        "pool": "shallow / deep",
+        "evidence": "REC/FAMILY SWIM/ LAP SWIM (shallow / deep) (Lap until 4pm) 2:30 pm - 3:30 pm",
+        "pool": "deep",
         "start": "14:30",
         "type": "lap_swim"
       },
@@ -343,6 +343,6 @@
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28547",
   "usage": {
     "input_tokens": 4865,
-    "output_tokens": 1461
+    "output_tokens": 1451
   }
 }

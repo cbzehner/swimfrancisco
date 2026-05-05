@@ -1,9 +1,9 @@
 {
-  "cost_estimate": "input_tokens=7293, output_tokens=2779",
-  "extracted_at": "2026-05-05T02:44:58.644127+00:00",
+  "cost_estimate": "input_tokens=7293, output_tokens=2953",
+  "extracted_at": "2026-05-05T03:34:38.339918+00:00",
   "grounding": {
-    "grounded_count": 37,
-    "ratio": 0.9737,
+    "grounded_count": 41,
+    "ratio": 1.0,
     "sessions": [
       {
         "evidence_in_pdf": true,
@@ -119,11 +119,11 @@
       },
       {
         "evidence_in_pdf": true,
-        "grounded": false,
+        "grounded": true,
         "index": 14,
         "missing_evidence": false,
         "start_in_evidence": true,
-        "type_in_evidence": false
+        "type_in_evidence": true
       },
       {
         "evidence_in_pdf": true,
@@ -308,9 +308,33 @@
         "missing_evidence": false,
         "start_in_evidence": true,
         "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 38,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 39,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 40,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
       }
     ],
-    "total": 38
+    "total": 41
   },
   "model": "claude-sonnet-4-6",
   "payload": {
@@ -439,9 +463,17 @@
       },
       {
         "day": "thursday",
-        "end": "14:00",
-        "evidence": "LAP SWIM (LAP/THERAPY) CLOSED EVERY 3RD THURS OF THE MONTH FOR TRAINING 11:00 2:00 PM",
+        "end": "12:00",
+        "evidence": "LAP SWIM (LAP/THERAPY) CLOSED EVERY 3RD THURS OF THE MONTH FOR TRAINING 10:30 - 12:00 PM",
         "notes": "CLOSED EVERY 3RD THURS OF THE MONTH FOR TRAINING",
+        "pool": "warm",
+        "start": "10:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "14:00",
+        "evidence": "Lap Swim 11:00 2:00 PM",
         "pool": "warm",
         "start": "11:00",
         "type": "lap_swim"
@@ -465,7 +497,7 @@
       {
         "day": "thursday",
         "end": "18:30",
-        "evidence": "DEEP WATER H2O AEROBICS 5:30-6:30PM",
+        "evidence": "REC/FAMILY SWIM 5:30 - 6:30 PM",
         "pool": "warm",
         "start": "17:30",
         "type": "family_swim"
@@ -544,6 +576,14 @@
       },
       {
         "day": "tuesday",
+        "end": "10:15",
+        "evidence": "LAP SWIM 9:00 - 10:15 AM",
+        "pool": "cool",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
         "end": "15:30",
         "evidence": "LAP SWIM 12:30 - 3:30PM",
         "pool": "cool",
@@ -592,9 +632,17 @@
       },
       {
         "day": "thursday",
-        "end": "14:00",
-        "evidence": "LAP SWIM (LAP/THERAPY) CLOSED EVERY 3RD THURS OF THE MONTH FOR TRAINING 11:00 2:00 PM",
+        "end": "12:00",
+        "evidence": "LAP SWIM (LAP/THERAPY) CLOSED EVERY 3RD THURS OF THE MONTH FOR TRAINING 10:30-11:30 AM",
         "notes": "CLOSED EVERY 3RD THURS OF THE MONTH FOR TRAINING",
+        "pool": "cool",
+        "start": "10:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "14:00",
+        "evidence": "LAP SWIM 11:00 2:00 PM",
         "pool": "cool",
         "start": "11:00",
         "type": "lap_swim"
@@ -664,6 +712,6 @@
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28503",
   "usage": {
     "input_tokens": 7293,
-    "output_tokens": 2779
+    "output_tokens": 2953
   }
 }

@@ -1,9 +1,9 @@
 {
-  "cost_estimate": "prompt_tokens=1832, candidate_tokens=2030, total_tokens=3862",
-  "extracted_at": "2026-05-05T03:32:02.774801+00:00",
+  "cost_estimate": "input_tokens=4702, output_tokens=1411",
+  "extracted_at": "2026-05-05T03:34:06.151406+00:00",
   "grounding": {
-    "grounded_count": 21,
-    "ratio": 1.0,
+    "grounded_count": 19,
+    "ratio": 0.9048,
     "sessions": [
       {
         "evidence_in_pdf": true,
@@ -15,11 +15,11 @@
       },
       {
         "evidence_in_pdf": true,
-        "grounded": true,
+        "grounded": false,
         "index": 1,
         "missing_evidence": false,
         "start_in_evidence": true,
-        "type_in_evidence": true
+        "type_in_evidence": false
       },
       {
         "evidence_in_pdf": true,
@@ -87,11 +87,11 @@
       },
       {
         "evidence_in_pdf": true,
-        "grounded": true,
+        "grounded": false,
         "index": 10,
         "missing_evidence": false,
         "start_in_evidence": true,
-        "type_in_evidence": true
+        "type_in_evidence": false
       },
       {
         "evidence_in_pdf": true,
@@ -176,206 +176,185 @@
     ],
     "total": 21
   },
-  "model": "gemini-3.1-flash-lite-preview",
+  "model": "claude-sonnet-4-6",
   "payload": {
     "closures": [
       {
         "end": "2026-05-25",
-        "reason": "FEDERAL HOLIDAY",
+        "reason": "Memorial Day (All Day)",
         "start": "2026-05-25"
       },
       {
-        "end": "2026-06-19",
-        "reason": "FEDERAL HOLIDAY",
-        "start": "2026-06-19"
-      },
-      {
-        "end": "2026-03-19",
-        "reason": "3rd Thursday of month training",
-        "start": "2026-03-19"
-      },
-      {
-        "end": "2026-04-16",
-        "reason": "3rd Thursday of month training",
-        "start": "2026-04-16"
-      },
-      {
         "end": "2026-05-21",
-        "reason": "3rd Thursday of month training",
+        "reason": "Staff Training (11\u20133PM)",
         "start": "2026-05-21"
+      },
+      {
+        "end": "2026-06-06",
+        "reason": "Staff Training (9AM-2PM)",
+        "start": "2026-06-06"
       }
     ],
-    "schedule_effective": "2026-03-15",
-    "schedule_effective_end": "2026-06-04",
+    "schedule_effective": "2026-05-12",
+    "schedule_effective_end": "2026-06-06",
     "sessions": [
       {
-        "day": "sunday",
-        "end": "08:30",
-        "evidence": "LAP SWIM 7:30 - 8:30 AM",
+        "day": "tuesday",
+        "end": "09:30",
+        "evidence": "Lap Swim 7:30 AM - 9:30 AM",
         "start": "07:30",
         "type": "lap_swim"
       },
       {
-        "day": "sunday",
-        "end": "14:00",
-        "evidence": "REC/FAMILY SWIM 12:30 - 2:00 PM",
-        "start": "12:30",
+        "day": "tuesday",
+        "end": "10:45",
+        "evidence": "Parent/Child Swim 9:45 AM - 10:45 AM",
+        "start": "09:45",
         "type": "family_swim"
       },
       {
-        "day": "sunday",
-        "end": "15:30",
-        "evidence": "REC/FAMILY SWIM 2:30 - 3:30 PM",
-        "start": "14:30",
-        "type": "family_swim"
-      },
-      {
-        "day": "monday",
-        "end": "10:00",
-        "evidence": "LAP SWIM 7:30 - 10:00AM",
-        "start": "07:30",
-        "type": "lap_swim"
-      },
-      {
-        "day": "monday",
+        "day": "tuesday",
         "end": "13:00",
-        "evidence": "SENIOR/ THERAPY** 11:45 - 1:00 PM",
-        "notes": "DENOTES SHARED PROGRAM **",
-        "start": "11:45",
-        "type": "senior_swim"
-      },
-      {
-        "day": "monday",
-        "end": "15:30",
-        "evidence": "LAP SWIM 1:30 - 3:30 PM",
-        "start": "13:30",
-        "type": "lap_swim"
-      },
-      {
-        "day": "monday",
-        "end": "19:30",
-        "evidence": "LAP SWIM 6:15 - 7:30 PM",
-        "start": "18:15",
+        "evidence": "Lap Swim 11:00 AM - 1:00 PM",
+        "start": "11:00",
         "type": "lap_swim"
       },
       {
         "day": "tuesday",
-        "end": "10:00",
-        "evidence": "LAP SWIM 7:30 - 10:00AM",
-        "start": "07:30",
+        "end": "15:45",
+        "evidence": "Lap Swim 2:30 PM - 3:45 PM",
+        "start": "14:30",
         "type": "lap_swim"
       },
       {
         "day": "tuesday",
-        "end": "12:00",
-        "evidence": "SENIOR SWIM /THERAPY 10:15 - 12:00PM",
-        "start": "10:15",
-        "type": "senior_swim"
-      },
-      {
-        "day": "tuesday",
-        "end": "15:30",
-        "evidence": "LAP SWIM 12:30 - 3:30 PM",
-        "start": "12:30",
-        "type": "lap_swim"
-      },
-      {
-        "day": "tuesday",
-        "end": "19:30",
-        "evidence": "FAMILY/LAP SWIM (2 lanes)** Lap Swim (4 Lanes) 6:15 - 7:30PM",
-        "notes": "DENOTES SHARED PROGRAM **",
-        "pool": "2 lanes",
-        "start": "18:15",
+        "end": "17:00",
+        "evidence": "Rec/Family Swim 4:00 PM - 5:00 PM",
+        "start": "16:00",
         "type": "family_swim"
-      },
-      {
-        "day": "tuesday",
-        "end": "19:30",
-        "evidence": "FAMILY/LAP SWIM (2 lanes)** Lap Swim (4 Lanes) 6:15 - 7:30PM",
-        "notes": "DENOTES SHARED PROGRAM **",
-        "start": "18:15",
-        "type": "lap_swim"
       },
       {
         "day": "wednesday",
         "end": "10:45",
-        "evidence": "SENIOR SWIM 9:00 - 10:45AM",
+        "evidence": "Senior/Therapy Swim 9:00 AM - 10:45 AM",
         "start": "09:00",
         "type": "senior_swim"
       },
       {
         "day": "wednesday",
-        "end": "13:30",
-        "evidence": "LAP SWIM 11:00 - 1:30PM",
+        "end": "13:00",
+        "evidence": "Lap Swim 11:00 AM - 1:00 PM",
         "start": "11:00",
         "type": "lap_swim"
       },
       {
         "day": "wednesday",
-        "end": "15:30",
-        "evidence": "FAMILY (2 lanes)/LAP SWIM (4 lanes) 2:00 - 3:30 PM",
-        "pool": "2 lanes",
-        "start": "14:00",
+        "end": "15:45",
+        "evidence": "Rec/Family Swim 2:30 PM - 3:45 PM",
+        "start": "14:30",
         "type": "family_swim"
       },
       {
         "day": "wednesday",
-        "end": "15:30",
-        "evidence": "FAMILY (2 lanes)/LAP SWIM (4 lanes) 2:00 - 3:30 PM",
-        "pool": "4 lanes",
-        "start": "14:00",
+        "end": "18:00",
+        "evidence": "Lap Swim 4:00 PM - 6:00 PM",
+        "start": "16:00",
         "type": "lap_swim"
       },
       {
         "day": "thursday",
-        "end": "10:00",
-        "evidence": "LAP SWIM 7:30 - 10:00AM",
+        "end": "09:30",
+        "evidence": "Lap Swim 7:30 AM - 9:30 AM",
         "start": "07:30",
         "type": "lap_swim"
       },
       {
         "day": "thursday",
-        "end": "11:45",
-        "evidence": "SENIOR SWIM/ AEROBICS** 10:15 - 11:45 AM",
-        "notes": "DENOTES SHARED PROGRAM **",
-        "start": "10:15",
-        "type": "senior_swim"
-      },
-      {
-        "day": "thursday",
-        "end": "15:30",
-        "evidence": "LAP SWIM 12:30 - 3:30PM Closed every 3rd Thursday of the month for training",
-        "notes": "Closed every 3rd Thursday of the month for training",
-        "start": "12:30",
-        "type": "lap_swim"
-      },
-      {
-        "day": "thursday",
-        "end": "19:30",
-        "evidence": "FAMILY/LAP SWIM (3 lanes)** Lap Swim (3 Lanes) 6:15 - 7:30PM",
-        "notes": "DENOTES SHARED PROGRAM **",
-        "pool": "3 lanes",
-        "start": "18:15",
+        "end": "10:45",
+        "evidence": "Parent/Child Swim 9:45 AM - 10:45 AM",
+        "start": "09:45",
         "type": "family_swim"
       },
       {
         "day": "thursday",
-        "end": "19:30",
-        "evidence": "FAMILY/LAP SWIM (3 lanes)** Lap Swim (3 Lanes) 6:15 - 7:30PM",
-        "notes": "DENOTES SHARED PROGRAM **",
-        "start": "18:15",
+        "end": "13:30",
+        "evidence": "Lap Swim 11:30 AM - 1:30 PM CLOSED 5/21",
+        "notes": "CLOSED 5/21 Pool closed every 3rd Thursday of the month from 11:00 AM\u20133:00 PM for staff training.",
+        "start": "11:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "17:00",
+        "evidence": "Rec/Family Swim 3:00 PM - 5:00 PM",
+        "start": "15:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "10:45",
+        "evidence": "Senior /Therapy Swim 9:00 AM - 10:45 AM",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "friday",
+        "end": "13:00",
+        "evidence": "Lap Swim 11:00 AM - 1:00 PM",
+        "start": "11:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "15:45",
+        "evidence": "Rec/Family Swim 2:30 PM - 3:45 PM",
+        "start": "14:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "18:00",
+        "evidence": "Lap Swim 4:00 PM - 6:00 PM",
+        "start": "16:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "10:30",
+        "evidence": "Lap Swim 9:00 AM - 10:30 AM",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "12:00",
+        "evidence": "Rec/Family Swim 10:45 AM - 12:00 PM",
+        "start": "10:45",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "15:00",
+        "evidence": "Rec/Family Swim 1:30 PM - 3:00 PM",
+        "start": "13:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "17:00",
+        "evidence": "Lap Swim 3:30 PM - 5:00 PM",
+        "start": "15:30",
         "type": "lap_swim"
       }
     ]
   },
-  "pdf_sha256": "f580f358615eb222d31249ebe28d5a67fe9d7aa473493559754696849d8c798f",
+  "pdf_sha256": "6d12e60b17f1a0233582600528027308871aa8129d620258650f70b6a468a3ff",
   "prompt_sha256": "6177a94b15a5383964c18951256e3a3362d15175ca1b240881887509b9a857b0",
-  "provider": "gemini",
+  "provider": "anthropic",
   "schema_sha256": "2fd2318cf6431c3570fc660353cef45eeb81a742f74879e86f99dddf505a8ade",
-  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28501",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28959",
   "usage": {
-    "candidates_token_count": 2030,
-    "prompt_token_count": 1832,
-    "total_token_count": 3862
+    "input_tokens": 4702,
+    "output_tokens": 1411
   }
 }

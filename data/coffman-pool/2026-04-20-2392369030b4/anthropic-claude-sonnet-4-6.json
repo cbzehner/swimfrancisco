@@ -1,9 +1,9 @@
 {
-  "cost_estimate": "input_tokens=5000, output_tokens=2058",
-  "extracted_at": "2026-05-05T02:42:44.677562+00:00",
+  "cost_estimate": "input_tokens=5000, output_tokens=1677",
+  "extracted_at": "2026-05-05T03:32:37.240076+00:00",
   "grounding": {
-    "grounded_count": 25,
-    "ratio": 0.9615,
+    "grounded_count": 24,
+    "ratio": 0.9231,
     "sessions": [
       {
         "evidence_in_pdf": true,
@@ -127,11 +127,11 @@
       },
       {
         "evidence_in_pdf": true,
-        "grounded": true,
+        "grounded": false,
         "index": 15,
         "missing_evidence": false,
         "start_in_evidence": true,
-        "type_in_evidence": true
+        "type_in_evidence": false
       },
       {
         "evidence_in_pdf": true,
@@ -170,7 +170,7 @@
         "grounded": false,
         "index": 20,
         "missing_evidence": false,
-        "start_in_evidence": false,
+        "start_in_evidence": true,
         "type_in_evidence": false
       },
       {
@@ -221,7 +221,7 @@
     "closures": [
       {
         "end": "2026-06-06",
-        "reason": "In-Service (Pool Closed 6/6/26 9am\u20131pm)",
+        "reason": "In-Service (pool closed 9am\u20131pm)",
         "start": "2026-06-06"
       }
     ],
@@ -323,7 +323,7 @@
         "day": "thursday",
         "end": "13:00",
         "evidence": "LAP SWIM Closed every 3rd Thurs of the month for training 11:30 am - 1:00 pm",
-        "notes": "Closed every 3rd Thurs of the month for training",
+        "notes": "Closed every 3rd Thursday of the month for training",
         "start": "11:30",
         "type": "lap_swim"
       },
@@ -337,7 +337,7 @@
       {
         "day": "thursday",
         "end": "19:00",
-        "evidence": "LAP SWIM 4:30 pm - 7:00 pm",
+        "evidence": "YOUTH SYNCHRO** 4:30 pm - 7:00 pm",
         "start": "16:30",
         "type": "lap_swim"
       },
@@ -373,7 +373,7 @@
         "day": "friday",
         "end": "19:00",
         "evidence": "YOUTH SYNCHRO** 5:30 pm - 7:00 pm",
-        "start": "17:00",
+        "start": "17:30",
         "type": "lap_swim"
       },
       {
@@ -420,6 +420,6 @@
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28927",
   "usage": {
     "input_tokens": 5000,
-    "output_tokens": 2058
+    "output_tokens": 1677
   }
 }

@@ -1,6 +1,6 @@
 {
   "cost_estimate": "input_tokens=5169, output_tokens=1869",
-  "extracted_at": "2026-05-05T02:43:51.278028+00:00",
+  "extracted_at": "2026-05-05T03:33:22.307901+00:00",
   "grounding": {
     "grounded_count": 23,
     "ratio": 1.0,
@@ -370,18 +370,18 @@
         "type": "lap_swim"
       },
       {
-        "day": "friday",
-        "end": "20:00",
-        "evidence": "REC / FAMILY SWIM 6:30 PM - 8:00 PM",
-        "start": "18:30",
-        "type": "family_swim"
-      },
-      {
         "day": "wednesday",
         "end": "20:00",
         "evidence": "LAP SWIM (6) 6:30 PM - 8:00 PM",
         "start": "18:30",
         "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "20:00",
+        "evidence": "REC / FAMILY SWIM 6:30 PM - 8:00 PM",
+        "start": "18:30",
+        "type": "family_swim"
       }
     ]
   },

@@ -1,9 +1,9 @@
 {
-  "cost_estimate": "input_tokens=5010, output_tokens=2073",
-  "extracted_at": "2026-05-05T02:44:18.442337+00:00",
+  "cost_estimate": "input_tokens=5010, output_tokens=2393",
+  "extracted_at": "2026-05-05T03:33:49.507446+00:00",
   "grounding": {
     "grounded_count": 27,
-    "ratio": 0.9643,
+    "ratio": 1.0,
     "sessions": [
       {
         "evidence_in_pdf": true,
@@ -207,11 +207,11 @@
       },
       {
         "evidence_in_pdf": true,
-        "grounded": false,
+        "grounded": true,
         "index": 25,
         "missing_evidence": false,
         "start_in_evidence": true,
-        "type_in_evidence": false
+        "type_in_evidence": true
       },
       {
         "evidence_in_pdf": true,
@@ -220,34 +220,26 @@
         "missing_evidence": false,
         "start_in_evidence": true,
         "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 27,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
       }
     ],
-    "total": 28
+    "total": 27
   },
   "model": "claude-sonnet-4-6",
   "payload": {
     "closures": [
       {
         "end": "2026-04-16",
-        "reason": "Inservice Training Closure, 11:00am - 3:30pm",
+        "reason": "Inservice Training Closure",
         "start": "2026-04-16"
       },
       {
         "end": "2026-05-21",
-        "reason": "Inservice Training Closure, 11:00am - 3:30pm",
+        "reason": "Inservice Training Closure",
         "start": "2026-05-21"
       },
       {
         "end": "2026-06-06",
-        "reason": "Inservice Training Closure, 7:00am - 1:00pm",
+        "reason": "Inservice Training Closure",
         "start": "2026-06-06"
       }
     ],
@@ -438,13 +430,6 @@
       },
       {
         "day": "saturday",
-        "end": "11:00",
-        "evidence": "ADULT MASTERS** (5) ADULT SYNCHRO** (2) 9:00am - 11:00am",
-        "start": "09:00",
-        "type": "lap_swim"
-      },
-      {
-        "day": "saturday",
         "end": "15:00",
         "evidence": "REC/FAMILY SWIM (10) 1:30pm - 3:00pm",
         "start": "13:30",
@@ -466,6 +451,6 @@
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28771",
   "usage": {
     "input_tokens": 5010,
-    "output_tokens": 2073
+    "output_tokens": 2393
   }
 }
