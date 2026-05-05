@@ -8,10 +8,11 @@ import assert from "node:assert/strict";
 
 import {
   computeStatus,
-  computeDetailStatus, // NEW
+  computeDetailStatus,
   sortByRank,
   captureBaselineRanks,
   computeNextOpenOffset,
+  findActiveClosure,
   findNextDropIn,
   nowInPacific,
 } from "../../static/js/helpers/board.mjs";
@@ -434,6 +435,70 @@ test("computeStatus dashboard line for post-season uses 'Schedule ended'", () =>
   const { status, next } = computeStatus(schedule, after);
   assert.equal(status, "CLOSED");
   assert.equal(next, "Schedule ended Jun 6, 2026");
+});
+
+test("findActiveClosure respects start_time/end_time on partial-day closures", () => {
+  const closures = [{
+    start: "2026-05-21",
+    end: "2026-05-21",
+    start_time: "11:00",
+    end_time: "14:00",
+    reason: "Aquatics training",
+  }];
+  // 10:00 AM — before the closure window — pool is open.
+  const before = new Date("2026-05-21T10:00:00-07:00");
+  assert.equal(findActiveClosure(closures, before), null);
+  // 12:00 PM — inside the window — closed.
+  const during = new Date("2026-05-21T12:00:00-07:00");
+  const active = findActiveClosure(closures, during);
+  assert.ok(active);
+  assert.equal(active.reason, "Aquatics training");
+  // 14:00 — boundary — open (end is exclusive).
+  const after = new Date("2026-05-21T14:00:00-07:00");
+  assert.equal(findActiveClosure(closures, after), null);
+});
+
+test("computeStatus dashboard line for partial-day closure shows the time window", () => {
+  const schedule = {
+    sessions: [{ day: "thursday", type: "lap_swim", start: "11:30", end: "13:30" }],
+    closures: [{
+      start: "2026-05-21",
+      end: "2026-05-21",
+      start_time: "11:00",
+      end_time: "14:00",
+      reason: "Aquatics training",
+    }],
+  };
+  const during = new Date("2026-05-21T12:00:00-07:00");
+  const { status, next } = computeStatus(schedule, during);
+  assert.equal(status, "CLOSED");
+  // No "through DATE" copy when a partial window is present — just the
+  // time range, since the pool reopens later that same day.
+  assert.equal(next, "Closed 11:00–14:00");
+});
+
+test("findNextSession skips sessions inside a partial-day closure", () => {
+  const schedule = {
+    sessions: [
+      { day: "thursday", type: "lap_swim", start: "11:30", end: "13:30" },
+      { day: "thursday", type: "lap_swim", start: "16:00", end: "18:00" },
+    ],
+    closures: [{
+      start: "2026-05-21",
+      end: "2026-05-21",
+      start_time: "11:00",
+      end_time: "14:00",
+      reason: "Aquatics training",
+    }],
+  };
+  // Tuesday morning, looking ahead. The 11:30 Thursday lap swim falls in
+  // the partial closure and must be skipped; the 16:00 Thursday session
+  // is the real next slot.
+  const now = new Date("2026-05-19T10:00:00-07:00");
+  const next = findNextDropIn(schedule, now);
+  assert.ok(next);
+  assert.equal(next.day, "thursday");
+  assert.equal(next.start, 16 * 60);
 });
 
 test("computeStatus surfaces 'Schedule not yet verified' on bare schedules", () => {

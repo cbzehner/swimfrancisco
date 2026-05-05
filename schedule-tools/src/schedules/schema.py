@@ -69,6 +69,14 @@ EXTRACTION_SCHEMA = {
                         "pattern": r"^\d{4}-\d{2}-\d{2}$",
                     },
                     "reason": {"type": "string", "minLength": 1},
+                    "start_time": {
+                        "type": "string",
+                        "pattern": r"^([01]\d|2[0-3]):[0-5]\d$",
+                    },
+                    "end_time": {
+                        "type": "string",
+                        "pattern": r"^([01]\d|2[0-3]):[0-5]\d$",
+                    },
                 },
             },
         },

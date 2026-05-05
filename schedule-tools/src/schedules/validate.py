@@ -29,6 +29,20 @@ def validate(payload: dict, *, prior_sessions_count: int | None = None) -> Valid
         end = closure.get("end")
         if not isinstance(start, str) or not isinstance(end, str) or start > end:
             violations.append(f"closure #{index} has an invalid date range")
+            continue
+
+        start_time = closure.get("start_time")
+        end_time = closure.get("end_time")
+        if start_time is None and end_time is None:
+            continue
+        if start_time is None or end_time is None:
+            violations.append(f"closure #{index} must have both start_time and end_time when either is present")
+            continue
+        if not isinstance(start_time, str) or not isinstance(end_time, str) or start_time >= end_time:
+            violations.append(f"closure #{index} has an invalid time range")
+            continue
+        if start != end:
+            violations.append(f"closure #{index} cannot have start_time/end_time on a multi-day range; expand to one entry per day")
 
     schedule_effective = payload.get("schedule_effective")
     try:

@@ -93,13 +93,23 @@ export function formatISODateHuman(isoDate) {
 export function findActiveClosure(closures, now) {
   if (!Array.isArray(closures) || closures.length === 0) return null;
   const today = formatISODate(now);
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
   for (const closure of closures) {
     if (!closure || typeof closure !== "object") continue;
     const start = typeof closure.start === "string" ? closure.start : null;
     const end = typeof closure.end === "string" ? closure.end : null;
     if (!start || !end) continue;
     if (typeof closure.pool === "string" && closure.pool.length > 0) continue;
-    if (today >= start && today <= end) return closure;
+    if (today < start || today > end) continue;
+    // Partial-day closures (single-date with start_time/end_time) only block
+    // during their explicit window. Outside that window the pool is open
+    // even though a closure entry "exists" for the day.
+    const startMin = parseHHMM(closure.start_time);
+    const endMin = parseHHMM(closure.end_time);
+    if (startMin !== null && endMin !== null) {
+      if (nowMinutes < startMin || nowMinutes >= endMin) continue;
+    }
+    return closure;
   }
   return null;
 }
@@ -116,6 +126,13 @@ export function closureCopy(closure) {
   // "Closed through <end>" copy.
   if (closure.kind === "POST_SEASON" && typeof closure.reason === "string") {
     return closure.reason;
+  }
+  // Partial-day closures show their time window since "Closed through
+  // <date>" at 11 AM is misleading when the pool reopens at 3 PM.
+  const startMin = parseHHMM(closure.start_time);
+  const endMin = parseHHMM(closure.end_time);
+  if (startMin !== null && endMin !== null) {
+    return `Closed ${formatHHMM(startMin)}–${formatHHMM(endMin)}`;
   }
   return `Closed through ${formatISODateHuman(closure.end)}`;
 }
@@ -141,11 +158,32 @@ function findNextSession(normalized, closures, now) {
   for (let offset = 0; offset <= 7; offset += 1) {
     const date = new Date(now);
     date.setDate(date.getDate() + offset);
-    if (findActiveClosure(closures, date)) continue;
     const dayKey = DAY_KEYS[date.getDay()];
+    const dateISO = formatISODate(date);
+
+    // All-day closures cover the whole day. Partial-day closures only block
+    // sessions whose start lands inside the partial window.
+    const dayClosures = closures.filter((c) => {
+      if (!c || typeof c !== "object") return false;
+      if (typeof c.pool === "string" && c.pool.length > 0) return false;
+      const start = typeof c.start === "string" ? c.start : null;
+      const end = typeof c.end === "string" ? c.end : null;
+      return Boolean(start && end && dateISO >= start && dateISO <= end);
+    });
+    const allDay = dayClosures.find(
+      (c) => typeof c.start_time !== "string" || typeof c.end_time !== "string",
+    );
+    if (allDay) continue;
+    const partialWindows = dayClosures
+      .map((c) => ({ start: parseHHMM(c.start_time), end: parseHHMM(c.end_time) }))
+      .filter((w) => w.start !== null && w.end !== null);
+
     const candidates = normalized
       .filter((session) => session.day === dayKey)
       .filter((session) => offset > 0 || session.start > nowMinutes)
+      .filter((session) => !partialWindows.some(
+        (w) => session.start >= w.start && session.start < w.end,
+      ))
       .sort((a, b) => a.start - b.start);
     if (candidates.length > 0) {
       return { offset, session: candidates[0] };

@@ -273,7 +273,7 @@
             <div class="closure-banner">
               <span class="closure-banner-date">
                 {% if c.start == c.end %}
-                  {{ self::format_iso_date(iso=c.start, with_year=false) }}
+                  {{ self::format_iso_date(iso=c.start, with_year=false) }}{% if c.start_time and c.end_time %} {{ c.start_time }}–{{ c.end_time }}{% endif %}
                 {% else %}
                   {{ self::format_iso_date(iso=c.start, with_year=false) }} – {{ self::format_iso_date(iso=c.end, with_year=false) }}
                 {% endif %}

@@ -1,10 +1,15 @@
 """Contract tests for the extraction prompt and schema.
 
-The closure contract (v1) is: closures are facility-wide, all-day, date-only.
-Timed or pool-scoped closures are a future schema migration and are
-explicitly out of scope. These tests exist so the prompt and schema cannot
-silently drift away from that contract — see docs/plans/review-followup.md
-Step 1.
+The closure contract (v2) is: closures are facility-wide. By default they
+are all-day (start..end inclusive, no time fields). Single-day closures MAY
+carry optional `start_time` / `end_time` (24-hour HH:MM) to mark a
+partial-day window — both must appear together, and they're not allowed on
+multi-day ranges. Pool-scoped closures remain out of scope.
+
+The original v1 contract (no times at all) was lifted in 2026-05 to model
+SF Rec & Park's recurring partial-day "Aquatics Division Training"
+windows, which were previously rounded to all-day and over-reported pool
+unavailability. These tests guard the v2 boundaries.
 """
 
 from __future__ import annotations
@@ -31,11 +36,14 @@ def test_prompt_forbids_timed_sfusd_rows_in_closures() -> None:
     ), "prompt is missing the explicit guard against timed school bookings in closures"
 
 
-def test_closures_are_date_only_and_facility_wide() -> None:
+def test_closures_have_optional_partial_day_time_fields() -> None:
     props = _closure_properties()
-    assert "start_time" not in props, "closures gained a start_time field (violates v1 contract)"
-    assert "end_time" not in props, "closures gained an end_time field (violates v1 contract)"
-    assert "pool" not in props, "closures[].pool still present (pool-scoped closures are out of scope)"
+    assert "start_time" in props, "closures lost the v2 partial-day start_time field"
+    assert "end_time" in props, "closures lost the v2 partial-day end_time field"
+    assert "pool" not in props, "closures[].pool reintroduced (pool-scoped closures are still out of scope)"
+    # start_time/end_time stay optional — required is still just date+reason.
+    assert "start_time" not in _closure_required()
+    assert "end_time" not in _closure_required()
 
 
 def test_closure_required_fields_are_exactly_start_end_reason() -> None:

@@ -153,15 +153,20 @@ As of 2026-05-04:
 - `mission-community-pool` uses the Spring 2026 PDF (`DocumentCenter/View/28959`, effective 2026-05-12 through 2026-06-06), reviewed under `data/mission-community-pool/2026-05-03-6d12e60b17f1/`.
 - `sava-pool` is skipped because the pool remains closed for repairs and the page only links an old Fall 2025 schedule.
 
-## Closure Contract (v1)
+## Closure Contract (v2)
 
-Closures in the extractor schema are **facility-wide, all-day, and date-only**:
+Closures in the extractor schema are **facility-wide**. By default they are
+all-day. Single-day closures may carry a partial-day time window so common
+recurring sub-day events (Aquatics Division Training on the 3rd Thursday of
+each month, etc.) don't have to round up to a whole-day cancellation.
 
-- Fields: `start`, `end`, `reason` — both dates are ISO (`YYYY-MM-DD`) and inclusive.
-- There is no `pool` field and no time fields.
+- Fields: `start`, `end`, `reason` (required); `start_time`, `end_time` (optional, both required together).
+- Dates are ISO (`YYYY-MM-DD`) and inclusive. Times are 24-hour `HH:MM` and the window is half-open: `[start_time, end_time)`.
+- Partial-day windows are only valid on single-day entries (`start == end`). For recurring patterns, expand to one entry per occurrence within the schedule's effective window.
+- There is no `pool` field. Pool-scoped closures remain out of scope.
 - SFUSD and other timed school-only bookings are **not** closures; they are omitted from the output entirely.
 
-Timed or pool-scoped closures are a deliberate out-of-scope item; adding them is a schema migration, not a bug fix. See `docs/plans/review-followup.md` Step 1 for the rationale.
+The pre-v2 contract was all-day-only, which over-reported "Closed for staff training 11–2" cells as full-day closures. v2 was added in 2026-05; existing all-day closures keep working unchanged (the time fields are additive).
 
 ## Reviewing extracted schedules
 
