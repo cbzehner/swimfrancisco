@@ -296,17 +296,19 @@ test("computeDetailStatus boundary: now === end is CLOSED_HOURS", () => {
   assert.deepEqual(r.nextDropIn, { program: "lap_swim", day: "tuesday", start: 12 * 60 + 30 });
 });
 
-test("computeDetailStatus NOT_VERIFIED wins over active closure", () => {
-  // A pool with empty sessions + an active facility-wide closure is
-  // "we don't know yet", not "closed today" — Mission Community and
-  // Sava are the real cases.
-  const unverifiedWithClosure = {
+test("computeDetailStatus surfaces an active closure even when sessions are empty", () => {
+  // Sava (closed for repairs, no sessions on file) should render its
+  // closure reason — not the generic "SCHEDULE NOT YET VERIFIED" that
+  // hides the actual signal. NOT_VERIFIED is reserved for pools with
+  // no sessions AND no active closure.
+  const closedForRepairs = {
     sessions: [],
     closures: [{ start: "2026-04-14", end: "2026-04-14", reason: "training" }],
   };
   const now = new Date("2026-04-14T10:00:00");
-  const r = computeDetailStatus(unverifiedWithClosure, now);
-  assert.equal(r.kind, "NOT_VERIFIED");
+  const r = computeDetailStatus(closedForRepairs, now);
+  assert.equal(r.kind, "CLOSED_TODAY");
+  assert.equal(r.closureReason, "training");
 });
 
 test("computeDetailStatus NOT_VERIFIED when sessions array is empty", () => {
@@ -374,7 +376,9 @@ test("nowInPacific reflects PT wall-clock during PST (UTC-8)", () => {
   assert.equal(pt.getMinutes(), 30);
 });
 
-test("computeDetailStatus returns SEASON_NOT_STARTED before effective_start", () => {
+test("computeDetailStatus treats pre-season as a synthetic closure", () => {
+  // Pre-season collapses into the same CLOSED_TODAY shape used for repair
+  // shutdowns and holidays; the closure reason carries the transition copy.
   const schedule = {
     sessions: [{ day: "tuesday", type: "lap_swim", start: "07:30", end: "09:30" }],
     closures: [],
@@ -383,11 +387,12 @@ test("computeDetailStatus returns SEASON_NOT_STARTED before effective_start", ()
   };
   const before = new Date("2026-05-05T15:00:00-07:00");
   const result = computeDetailStatus(schedule, before);
-  assert.equal(result.kind, "SEASON_NOT_STARTED");
-  assert.equal(result.effectiveStart, "2026-05-12");
+  assert.equal(result.kind, "CLOSED_TODAY");
+  assert.equal(result.closureKind, "PRE_SEASON");
+  assert.match(result.closureReason, /Schedule starts/);
 });
 
-test("computeDetailStatus returns SEASON_ENDED after effective_end", () => {
+test("computeDetailStatus treats post-season as a synthetic closure", () => {
   const schedule = {
     sessions: [{ day: "tuesday", type: "lap_swim", start: "07:30", end: "09:30" }],
     closures: [],
@@ -396,8 +401,49 @@ test("computeDetailStatus returns SEASON_ENDED after effective_end", () => {
   };
   const after = new Date("2026-06-09T08:00:00-07:00");
   const result = computeDetailStatus(schedule, after);
-  assert.equal(result.kind, "SEASON_ENDED");
-  assert.equal(result.effectiveEnd, "2026-06-06");
+  assert.equal(result.kind, "CLOSED_TODAY");
+  assert.equal(result.closureKind, "POST_SEASON");
+  assert.match(result.closureReason, /Schedule ended/);
+  // Post-season has no known reopen, so we don't compute a nextDropIn.
+  assert.equal(result.nextDropIn, null);
+});
+
+test("computeStatus dashboard line for pre-season mirrors closure copy", () => {
+  // Mission's "Closed through MAY 11, 2026" should match Sava's
+  // "Closed through SEP 21, 2026" shape — both flow through closureCopy.
+  const schedule = {
+    sessions: [{ day: "tuesday", type: "lap_swim", start: "07:30", end: "09:30" }],
+    closures: [],
+    effective_start: "2026-05-12",
+    effective_end: "2026-06-06",
+  };
+  const before = new Date("2026-05-05T15:00:00-07:00");
+  const { status, next } = computeStatus(schedule, before);
+  assert.equal(status, "CLOSED");
+  assert.equal(next, "Closed through May 11, 2026");
+});
+
+test("computeStatus dashboard line for post-season uses 'Schedule ended'", () => {
+  const schedule = {
+    sessions: [{ day: "tuesday", type: "lap_swim", start: "07:30", end: "09:30" }],
+    closures: [],
+    effective_start: "2026-05-12",
+    effective_end: "2026-06-06",
+  };
+  const after = new Date("2026-06-09T08:00:00-07:00");
+  const { status, next } = computeStatus(schedule, after);
+  assert.equal(status, "CLOSED");
+  assert.equal(next, "Schedule ended Jun 6, 2026");
+});
+
+test("computeStatus surfaces 'Schedule not yet verified' on bare schedules", () => {
+  // No sessions, no closures, no effective window — the canonical
+  // "we have no idea what this pool is doing" state.
+  const empty = { sessions: [], closures: [] };
+  const t = new Date("2026-05-05T15:00:00-07:00");
+  const { status, next } = computeStatus(empty, t);
+  assert.equal(status, "CLOSED");
+  assert.equal(next, "Schedule not yet verified");
 });
 
 test("computeDetailStatus runs normal logic inside the effective window", () => {

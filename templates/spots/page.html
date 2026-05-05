@@ -103,11 +103,11 @@
       <section class="status-slab" aria-live="polite">
         <div class="status-slab-row">
           <span class="status-slab-label">STATUS</span>
-          <span class="status-slab-value" data-field="status">{% if pre_effective %}OPENS {{ self::format_iso_date(iso=effective_start) }}{% elif post_effective %}SEASON ENDED {{ self::format_iso_date(iso=effective_end) }}{% else %}—{% endif %}</span>
+          <span class="status-slab-value" data-field="status">{% if pre_effective or post_effective %}CLOSED TODAY{% else %}—{% endif %}</span>
         </div>
         <div class="status-slab-row">
           <span class="status-slab-label">NEXT</span>
-          <span class="status-slab-value" data-field="next">—</span>
+          <span class="status-slab-value" data-field="next">{% if pre_effective %}Schedule starts {{ self::format_iso_date(iso=effective_start) }}{% elif post_effective %}Schedule ended {{ self::format_iso_date(iso=effective_end) }}{% else %}—{% endif %}</span>
         </div>
       </section>
 

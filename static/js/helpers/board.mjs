@@ -108,6 +108,15 @@ export function findActiveClosure(closures, now) {
 // the pool is closed THROUGH that date (not "until" it — that reads as an
 // exclusive upper bound).
 export function closureCopy(closure) {
+  // Synthetic POST_SEASON closures end in year 9999 — a "closed through"
+  // line for that is nonsense. The reason field already carries the
+  // human-readable transition message ("Schedule ended JUN 6, 2026"), so
+  // surface that verbatim. Everything else (explicit closures + the
+  // PRE_SEASON synthetic, whose end is a real date) keeps the standard
+  // "Closed through <end>" copy.
+  if (closure.kind === "POST_SEASON" && typeof closure.reason === "string") {
+    return closure.reason;
+  }
   return `Closed through ${formatISODateHuman(closure.end)}`;
 }
 
@@ -152,7 +161,11 @@ function findNextSession(normalized, closures, now) {
 export function findNextDropIn(schedule, now, allowedTypes = null) {
   if (!schedule || typeof schedule !== "object") return null;
   const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
-  const closures = Array.isArray(schedule.closures) ? schedule.closures : [];
+  // Pull in derived closures so pre-season pools skip days that fall
+  // outside the schedule's effective window when looking for the next
+  // session. Without this, a pre-season pool would surface a session in
+  // its yet-to-start schedule as "today" or a same-week day.
+  const closures = allClosures(schedule);
   if (sessions.length === 0) return null;
   const allowed = normalizeAllowedTypes(allowedTypes);
 
@@ -172,20 +185,96 @@ export function findNextDropIn(schedule, now, allowedTypes = null) {
   return best ? best.session : null;
 }
 
+// A schedule's effective window is itself a closure. Pre-season and
+// post-season become synthetic closure entries so the rest of the system
+// (status copy, dashboard "next" line, detail-page suppression) treats them
+// uniformly with explicit closures like Memorial Day or a repair shutdown.
+//
+// PRE_SEASON range:  far past → schedule_effective_start - 1
+// POST_SEASON range: schedule_effective_end + 1 → far future
+//
+// Synthetic closures carry a `kind` so callers that want to distinguish
+// data-driven gaps from explicit closures still can.
+function derivedClosures(schedule) {
+  const out = [];
+  const start =
+    typeof schedule.effective_start === "string" && schedule.effective_start
+      ? schedule.effective_start
+      : null;
+  const end =
+    typeof schedule.effective_end === "string" && schedule.effective_end
+      ? schedule.effective_end
+      : null;
+  if (start) {
+    const dayBefore = previousISODate(start);
+    out.push({
+      start: "0001-01-01",
+      end: dayBefore,
+      reason: `Schedule starts ${formatISODateHuman(start)}`,
+      kind: "PRE_SEASON",
+    });
+  }
+  if (end) {
+    const dayAfter = nextISODate(end);
+    out.push({
+      start: dayAfter,
+      end: "9999-12-31",
+      reason: `Schedule ended ${formatISODateHuman(end)}`,
+      kind: "POST_SEASON",
+    });
+  }
+  return out;
+}
+
+function shiftISODate(iso, delta) {
+  // iso is "YYYY-MM-DD". Returns the date `delta` days away in the same
+  // shape. All math is done in UTC so the runtime's local TZ never shifts
+  // the calendar day (formatISODate reads local-time getters, so we must
+  // not round-trip through it here).
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!match) return iso;
+  const t = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])) + delta * 86400000;
+  const d = new Date(t);
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function previousISODate(iso) {
+  return shiftISODate(iso, -1);
+}
+
+function nextISODate(iso) {
+  return shiftISODate(iso, 1);
+}
+
+function allClosures(schedule) {
+  const explicit = Array.isArray(schedule.closures) ? schedule.closures : [];
+  return [...explicit, ...derivedClosures(schedule)];
+}
+
 export function computeStatus(schedule, now, allowedTypes = null) {
   const empty = { status: PLACEHOLDER, next: PLACEHOLDER };
   if (!schedule || typeof schedule !== "object") return empty;
 
   const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
-  const closures = Array.isArray(schedule.closures) ? schedule.closures : [];
   const allowed = normalizeAllowedTypes(allowedTypes);
 
+  // Pre-season, post-season, and explicit closures all flow through
+  // findActiveClosure so the dashboard renders one shape: status=CLOSED,
+  // next=closureCopy. Schedule transitions render naturally because the
+  // synthetic PRE_SEASON closure carries "Schedule starts <date>" as its
+  // reason, which findActiveClosure surfaces unchanged.
+  const closures = allClosures(schedule);
   const activeClosure = findActiveClosure(closures, now);
   if (activeClosure) {
     return { status: "CLOSED", next: closureCopy(activeClosure) };
   }
 
-  if (sessions.length === 0) return empty;
+  if (sessions.length === 0) {
+    return { status: "CLOSED", next: "Schedule not yet verified" };
+  }
 
   const todayKey = DAY_KEYS[now.getDay()];
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
@@ -300,27 +389,10 @@ export function computeDetailStatus(schedule, now) {
   if (!schedule || typeof schedule !== "object") return { ...EMPTY_DETAIL };
 
   const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
-  const closures = Array.isArray(schedule.closures) ? schedule.closures : [];
-  const todayISO = formatISODate(now);
-  const effectiveStart =
-    typeof schedule.effective_start === "string" && schedule.effective_start
-      ? schedule.effective_start
-      : null;
-  const effectiveEnd =
-    typeof schedule.effective_end === "string" && schedule.effective_end
-      ? schedule.effective_end
-      : null;
-  if (effectiveStart && todayISO < effectiveStart) {
-    return { ...EMPTY_DETAIL, kind: "SEASON_NOT_STARTED", effectiveStart };
-  }
-  if (effectiveEnd && todayISO > effectiveEnd) {
-    return { ...EMPTY_DETAIL, kind: "SEASON_ENDED", effectiveEnd };
-  }
-
-  const normalized = normalizeSessions(sessions);
-  if (normalized.length === 0) {
-    return { ...EMPTY_DETAIL, kind: "NOT_VERIFIED" };
-  }
+  // Pre-season and post-season are synthetic closures so the detail page
+  // collapses them into the same CLOSED_TODAY rendering used for repair
+  // shutdowns and holiday closures.
+  const closures = allClosures(schedule);
 
   const activeClosure = findActiveClosure(closures, now);
   if (activeClosure) {
@@ -328,8 +400,14 @@ export function computeDetailStatus(schedule, now) {
       ...EMPTY_DETAIL,
       kind: "CLOSED_TODAY",
       closureReason: typeof activeClosure.reason === "string" ? activeClosure.reason : null,
-      nextDropIn: findNextDropIn(schedule, now),
+      closureKind: typeof activeClosure.kind === "string" ? activeClosure.kind : null,
+      nextDropIn: activeClosure.kind === "POST_SEASON" ? null : findNextDropIn(schedule, now),
     };
+  }
+
+  const normalized = normalizeSessions(sessions);
+  if (normalized.length === 0) {
+    return { ...EMPTY_DETAIL, kind: "NOT_VERIFIED" };
   }
 
   const todayKey = DAY_KEYS[now.getDay()];
