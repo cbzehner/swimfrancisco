@@ -1,16 +1,11 @@
-"""Render a PR body optimized for human reviewers of auto-extract runs.
+"""Render a PR body for auto-extract runs.
 
-The verbose ``tmp/extraction-report.md`` is useful when running the pipeline
-locally. For a GitHub PR, that level of detail buries the signal under
-seven unchanged-pool blocks. This module produces a tight summary that:
-
-  - Highlights pools whose artifact files actually changed in this run.
-  - One-liners every other pool (unchanged or skipped) so the reviewer
-    knows nothing was forgotten.
-  - Appends the eval scorecard as-is (it's already concise).
-
-Inputs are derived from the filesystem and ``git`` — no in-memory pipeline
-results required, which keeps the workflow plumbing simple.
+Designed for a human reviewer landing on a freshly-opened PR cold. Leads
+with the action ("X needs a human review"), then a short list of what
+artifacts changed, then a 5-step checklist with rough time estimate.
+The eval baseline is collapsed; reviewers who care about the F1 number
+can expand it. Inputs come from ``git diff --staged`` and the registry,
+so the workflow's plumbing is just "git add data/" → run this command.
 """
 
 from __future__ import annotations
@@ -26,13 +21,11 @@ from .registry import load_registry
 
 
 _DATA_PATH_RE = re.compile(r"^data/([a-z0-9-]+)/([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9a-f]{12})/(.+)$")
+_REVIEW_MIN_PER_POOL = 10
 
 
 def _staged_data_changes(repo_root: Path = REPO_ROOT) -> list[tuple[str, str, str, str]]:
-    """Return staged changes under ``data/`` as ``(slug, run, filename, change)`` tuples.
-
-    ``change`` is one of: ``A`` (added), ``M`` (modified), ``D`` (deleted).
-    """
+    """Return staged changes under ``data/`` as ``(slug, run, filename, change)`` tuples."""
     try:
         out = subprocess.run(
             ["git", "diff", "--staged", "--name-status", "--", "data/"],
@@ -50,7 +43,7 @@ def _staged_data_changes(repo_root: Path = REPO_ROOT) -> list[tuple[str, str, st
         parts = line.split("\t")
         if len(parts) < 2:
             continue
-        change = parts[0][0]  # A/M/D/...
+        change = parts[0][0]  # A/M/D
         path = parts[-1]
         m = _DATA_PATH_RE.match(path)
         if m:
@@ -59,36 +52,32 @@ def _staged_data_changes(repo_root: Path = REPO_ROOT) -> list[tuple[str, str, st
 
 
 def _changed_slugs_with_runs(rows: list[tuple[str, str, str, str]]) -> dict[str, dict[str, list[tuple[str, str]]]]:
-    """Group changes by slug → run → list of (filename, change-marker)."""
     out: dict[str, dict[str, list[tuple[str, str]]]] = {}
     for slug, run, filename, change in rows:
         out.setdefault(slug, {}).setdefault(run, []).append((filename, change))
     return out
 
 
-def _change_marker(change: str) -> str:
-    return {"A": "🆕", "M": "✏️", "D": "🗑️"}.get(change, "•")
+def _change_word(change: str) -> str:
+    return {"A": "new", "M": "updated", "D": "deleted"}.get(change, "changed")
 
 
-def _has_reviewed(slug: str, run: str, data_root: Path = DATA_DIR) -> bool:
-    return (data_root / slug / run / "reviewed.json").exists()
+def _provider_word(filename: str) -> str:
+    if filename.startswith("anthropic"):
+        return "Anthropic"
+    if filename.startswith("gemini"):
+        return "Gemini"
+    return filename.split("-", 1)[0].capitalize()
 
 
-def _render_changed_pool(slug: str, runs: dict[str, list[tuple[str, str]]], data_root: Path = DATA_DIR) -> list[str]:
-    lines = [f"### `{slug}`"]
-    for run, files in sorted(runs.items()):
-        reviewed = _has_reviewed(slug, run, data_root)
-        attestation = (
-            "✅ has `reviewed.json` (human-verified)"
-            if reviewed
-            else "⚠️ **no `reviewed.json` — run `just schedules-review --slug "
-            f"{slug}` to verify**"
-        )
-        lines.append(f"- run `{run}` — {attestation}")
-        for filename, change in sorted(files):
-            lines.append(f"  - {_change_marker(change)} `{filename}`")
-    lines.append("")
-    return lines
+def _slug_list(slugs: list[str]) -> str:
+    if not slugs:
+        return ""
+    if len(slugs) == 1:
+        return f"`{slugs[0]}`"
+    if len(slugs) == 2:
+        return f"`{slugs[0]}` and `{slugs[1]}`"
+    return ", ".join(f"`{s}`" for s in slugs[:-1]) + f", and `{slugs[-1]}`"
 
 
 def render_pr_body(
@@ -101,75 +90,123 @@ def render_pr_body(
     rows = _staged_data_changes(repo_root)
     changed = _changed_slugs_with_runs(rows)
     registry = load_registry()
-    registry_slugs = {entry.slug for entry in registry}
+    published = [e for e in registry if e.source_status == "published"]
+
+    if not changed:
+        return (
+            "Nothing to review. Auto-extract found no diffs against `main` "
+            "(every published pool's PDF, prompt, and schema sha matched the "
+            "cached artifact). Close this PR.\n"
+        )
+
+    changed_slugs = sorted(s for s in changed if any(e.slug == s for e in registry))
+    unchanged_n = len(published) - len(changed_slugs)
+    branch = f"auto/schedules-extract-{today.isoformat()}"
 
     lines: list[str] = []
-    lines.append(f"## Auto-extract {today.isoformat()}")
-    lines.append("")
-    lines.append("Opened by the weekly `schedules-extract` workflow. Provider artifacts under `data/`")
-    lines.append("are regenerated when the cache misses (new PDF, prompt edit, schema edit, or no")
-    lines.append("prior artifact). `content/spots/` and `reviewed.json` are never modified by the")
-    lines.append("workflow — humans always review.")
-    lines.append("")
-
-    if changed:
-        n_pools = len({s for s in changed.keys() if s in registry_slugs})
-        n_files = sum(len(files) for runs in changed.values() for files in runs.values())
-        lines.append(f"### Changed in this run — {n_pools} pool(s), {n_files} file(s)")
-        lines.append("")
-        for slug in sorted(changed.keys()):
-            lines.extend(_render_changed_pool(slug, changed[slug], data_root))
-
-    unchanged_published = sorted(
-        e.slug for e in registry
-        if e.source_status == "published" and e.slug not in changed
-    )
-    skipped = [e for e in registry if e.source_status != "published"]
-
-    if unchanged_published:
-        lines.append("### Unchanged (cache fresh, no diff)")
-        lines.append("")
-        lines.append(", ".join(f"`{slug}`" for slug in unchanged_published))
-        lines.append("")
-
-    if skipped:
-        lines.append("### Skipped")
-        lines.append("")
-        for entry in skipped:
-            note = entry.notes or "no published schedule"
-            lines.append(f"- `{entry.slug}` — {note}")
-        lines.append("")
-
-    lines.append("### Reviewer next steps")
-    lines.append("")
-    if changed:
-        first_changed = sorted(changed.keys())[0]
-        lines.append(f"1. `git fetch origin && git checkout auto/schedules-extract-{today.isoformat()}`")
-        lines.append(f"2. `just schedules-review --slug {first_changed}` (repeat per changed pool)")
-        lines.append("3. Verify each row against the source PDF in `$EDITOR`; save `reviewed.json`.")
-        lines.append("4. Commit `reviewed.json` and the auto-projected `content/spots/<slug>.md`, push, merge.")
-    else:
-        lines.append("Nothing changed — this PR is empty and can be closed.")
-    lines.append("")
-
-    lines.extend(_render_eval_section(data_root=data_root, changed_slugs=set(changed.keys())))
+    lines.extend(_render_lead(changed, changed_slugs, unchanged_n))
+    lines.extend(_render_whats_here(changed))
+    lines.extend(_render_review(branch, changed_slugs))
+    lines.extend(_render_eval_section(data_root=data_root, changed_slugs=set(changed_slugs)))
 
     return "\n".join(lines).rstrip() + "\n"
 
 
+def _render_lead(
+    changed: dict[str, dict[str, list[tuple[str, str]]]],
+    changed_slugs: list[str],
+    unchanged_n: int,
+) -> list[str]:
+    if len(changed_slugs) == 1:
+        slug = changed_slugs[0]
+        action = (
+            f"`{slug}` needs a human review. "
+            "The published page is running on an unverified projection until that happens."
+        )
+    else:
+        action = (
+            f"{_slug_list(changed_slugs)} need human review this week. "
+            "Their published pages run on unverified projections until that happens."
+        )
+
+    files = [
+        (filename, change)
+        for runs in changed.values()
+        for files in runs.values()
+        for filename, change in files
+    ]
+    new_files = [f for f, c in files if c == "A"]
+    updated_files = [f for f, c in files if c == "M"]
+
+    seed_phrases = []
+    if new_files:
+        providers = sorted({_provider_word(f) for f in new_files})
+        seed_phrases.append(f"seeded fresh {', '.join(providers)} JSON")
+    if updated_files:
+        providers = sorted({_provider_word(f) for f in updated_files})
+        seed_phrases.append(f"refreshed {', '.join(providers)} JSON")
+    seed = " and ".join(seed_phrases) if seed_phrases else "wrote provider artifacts"
+
+    if unchanged_n == 1:
+        tail = "; the other published pool cache-hit, nothing else changed."
+    elif unchanged_n > 1:
+        tail = f"; the other {unchanged_n} published pools cache-hit, nothing else changed."
+    else:
+        tail = "."
+
+    return [f"{action} Auto-extract {seed} to start from{tail}", ""]
+
+
+def _render_whats_here(changed: dict[str, dict[str, list[tuple[str, str]]]]) -> list[str]:
+    lines = ["## What's here", ""]
+    for slug in sorted(changed):
+        for run in sorted(changed[slug]):
+            for filename, change in sorted(changed[slug][run]):
+                provider = _provider_word(filename)
+                state = _change_word(change)
+                lines.append(
+                    f"`data/{slug}/{run}/{filename}` — {state} {provider} extraction."
+                )
+    lines.append("")
+    return lines
+
+
+def _render_review(branch: str, changed_slugs: list[str]) -> list[str]:
+    minutes = max(_REVIEW_MIN_PER_POOL, len(changed_slugs) * _REVIEW_MIN_PER_POOL)
+    if len(changed_slugs) == 1:
+        slug = changed_slugs[0]
+        review_step = (
+            f"`just schedules-review --slug {slug}` — opens the PDF and a seeded JSON in `$EDITOR`"
+        )
+    else:
+        first = changed_slugs[0]
+        review_step = (
+            f"For each pool, `just schedules-review --slug <slug>` — opens its PDF and a seeded JSON in `$EDITOR` "
+            f"(start with `{first}`)"
+        )
+
+    return [
+        f"## Review (~{minutes} min)",
+        "",
+        f"- [ ] `git fetch origin && git checkout {branch}`",
+        f"- [ ] {review_step}",
+        "- [ ] Read each session row against the PDF cell it claims to come from. Drop invented or misclassified rows, fix wrong days/times, leave correct rows alone.",
+        "- [ ] Save and quit. The CLI projects the verified payload into `content/spots/<slug>.md`.",
+        "- [ ] Commit `reviewed.json` and the projected MD, push, merge.",
+        "",
+        "Skip this week → close the PR. Next Monday will produce another.",
+        "",
+    ]
+
+
 def _eval_aggregate_row(provider: str, items: list[PoolEval]) -> str:
-    truth = sum(i.truth_count for i in items)
-    extracted = sum(i.extracted_count for i in items)
     tp = sum(i.true_positives for i in items)
     fp = sum(i.false_positives for i in items)
     fn = sum(i.false_negatives for i in items)
     precision = tp / (tp + fp) if (tp + fp) else 1.0
     recall = tp / (tp + fn) if (tp + fn) else 1.0
     f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
-    return (
-        f"| {provider} | {len(items)} | {truth} | {extracted} | {tp} | {fp} | {fn} | "
-        f"{precision:.0%} | {recall:.0%} | {f1:.2f} |"
-    )
+    return f"| {provider} | {f1:.2f} |"
 
 
 def _render_eval_section(*, data_root: Path, changed_slugs: set[str]) -> list[str]:
@@ -177,66 +214,55 @@ def _render_eval_section(*, data_root: Path, changed_slugs: set[str]) -> list[st
     if not evals:
         return []
 
-    lines = ["### Eval (vs current `reviewed.json` ground truth)", ""]
-
     by_provider: dict[str, list[PoolEval]] = {}
     for e in evals:
         by_provider.setdefault(e.provider, []).append(e)
 
-    lines.append("| Provider | Pools | Truth | Extr | TP | FP | FN | P | R | F1 |")
-    lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
+    relevant = [e for e in evals if e.pool in changed_slugs]
+
+    if relevant:
+        summary = "Eval baseline (changed pools detailed below)"
+    else:
+        summary = "Eval baseline (changed pools excluded — that's the point of this PR)"
+
+    lines = [f"<details><summary>{summary}</summary>", ""]
+
+    distinct_pools = len({e.pool for e in evals})
+    lines.append(f"| Provider | F1 across {distinct_pools} reviewed pools |")
+    lines.append("|---|---:|")
     for provider in sorted(by_provider):
         lines.append(_eval_aggregate_row(provider, by_provider[provider]))
     lines.append("")
-    lines.append("<details><summary>Column definitions</summary>")
+    lines.append(
+        "Per-codebase F1 on `(day, type, start, end)` row identity. "
+        "Run `just schedules-eval --stdout` for the full per-pool breakdown."
+    )
     lines.append("")
-    lines.append("- **Pools** — number of (pool, review-dir) pairs the provider was scored against.")
-    lines.append("- **Truth** — total session rows in the human-reviewed `reviewed.json` payloads.")
-    lines.append("- **Extr** — total session rows the provider extracted.")
-    lines.append("- **TP** (true positive) — extracted rows that match a truth row on `(day, type, start, end)`.")
-    lines.append("- **FP** (false positive) — extracted rows the truth does not have. Precision-loss.")
-    lines.append("- **FN** (false negative) — truth rows the provider missed. Recall-loss.")
-    lines.append("- **P** — precision = TP / (TP + FP). Of what we emit, how much is correct.")
-    lines.append("- **R** — recall = TP / (TP + FN). Of what truth has, how much we caught.")
-    lines.append("- **F1** — harmonic mean of P and R: `2·P·R / (P+R)`. Single number for overall fit.")
-    lines.append("")
+
+    if relevant:
+        lines.append("**Changed pools, per artifact:**")
+        lines.append("")
+        lines.append("| Pool | Artifact | Truth | Extracted | F1 |")
+        lines.append("|---|---|---:|---:|---:|")
+        for e in sorted(relevant, key=lambda x: (x.pool, x.provider)):
+            lines.append(
+                f"| {e.pool} | {e.provider_artifact} | {e.truth_count} | {e.extracted_count} | {e.f1:.2f} |"
+            )
+        lines.append("")
+        for e in sorted(relevant, key=lambda x: (x.pool, x.provider)):
+            if not (e.extra_examples or e.missing_examples):
+                continue
+            lines.append(f"_{e.pool} — {e.provider_artifact}:_")
+            if e.extra_examples:
+                lines.append("- Extra (extracted but not in truth):")
+                for ex in e.extra_examples:
+                    lines.append(f"  - {ex['day']} {ex['type']} {ex['start']}-{ex['end']}  `{ex['evidence']}`")
+            if e.missing_examples:
+                lines.append("- Missing (in truth but not extracted):")
+                for ex in e.missing_examples:
+                    lines.append(f"  - {ex['day']} {ex['type']} {ex['start']}-{ex['end']}  `{ex['evidence']}`")
+            lines.append("")
+
     lines.append("</details>")
     lines.append("")
-
-    relevant = [e for e in evals if e.pool in changed_slugs]
-    if not relevant:
-        unchanged = sorted({e.pool for e in evals})
-        lines.append(
-            f"_No reviewed pools changed in this run; per-pool detail omitted "
-            f"({len(unchanged)} pool(s) tracked: {', '.join(unchanged)})._"
-        )
-        lines.append("")
-        return lines
-
-    lines.append("**Per pool / artifact (changed only):**")
-    lines.append("")
-    lines.append("| Pool | Artifact | Truth | Extr | TP | FP | FN | P | R | F1 |")
-    lines.append("|---|---|---:|---:|---:|---:|---:|---:|---:|---:|")
-    for e in sorted(relevant, key=lambda x: (x.pool, x.provider)):
-        lines.append(
-            f"| {e.pool} | {e.provider_artifact} | {e.truth_count} | {e.extracted_count} | "
-            f"{e.true_positives} | {e.false_positives} | {e.false_negatives} | "
-            f"{e.precision:.0%} | {e.recall:.0%} | {e.f1:.2f} |"
-        )
-    lines.append("")
-
-    for e in sorted(relevant, key=lambda x: (x.pool, x.provider)):
-        if not (e.extra_examples or e.missing_examples):
-            continue
-        lines.append(f"**{e.pool} — {e.provider_artifact}:**")
-        if e.extra_examples:
-            lines.append("- Extra (extracted but not in truth):")
-            for ex in e.extra_examples:
-                lines.append(f"  - {ex['day']} {ex['type']} {ex['start']}-{ex['end']}  `{ex['evidence']}`")
-        if e.missing_examples:
-            lines.append("- Missing (in truth but not extracted):")
-            for ex in e.missing_examples:
-                lines.append(f"  - {ex['day']} {ex['type']} {ex['start']}-{ex['end']}  `{ex['evidence']}`")
-        lines.append("")
-
     return lines
