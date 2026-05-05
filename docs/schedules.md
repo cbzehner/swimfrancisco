@@ -229,6 +229,15 @@ Required repo secrets: `GOOGLE_API_KEY`, `ANTHROPIC_API_KEY`. The default
 `GITHUB_TOKEN` (auto-provisioned with `contents: write` and
 `pull-requests: write`) is enough to push the branch and open the PR.
 
+Required repo settings: Settings → Actions → General →
+- Workflow permissions: **Read and write permissions**
+- **Allow GitHub Actions to create and approve pull requests: ENABLED**
+
+GitHub bundles create + approve into a single toggle. The defense against
+the bot self-approving its own PRs is branch protection: Settings →
+Branches → main → require pull request review before merging, with at
+least 1 approval. The bot can open a PR but cannot merge it.
+
 ## Future
 
 The v4 path is auto-merge for trivially-confident updates: when an
