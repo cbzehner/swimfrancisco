@@ -45,13 +45,14 @@ jobs:
       - name: Extract with Gemini (no content writes)
         # --dry-run skips the merge into content/spots/ and reviewed.json
         # remains untouched. Provider artifacts under data/<slug>/.../ ARE
-        # written. --force bypasses the unchanged shortcut so the run
-        # always reflects the current PDF.
-        run: uv --project schedule-tools run schedules extract --provider gemini --force --dry-run
+        # written, but only when the cache check fails (PDF sha changed,
+        # or prompt/schema sha changed, or no cached artifact exists).
+        # No --force: pools with fresh artifacts produce no diff at all.
+        run: uv --project schedule-tools run schedules extract --provider gemini --dry-run
         continue-on-error: true
 
       - name: Extract with Anthropic (no content writes)
-        run: uv --project schedule-tools run schedules extract --provider anthropic --force --dry-run
+        run: uv --project schedule-tools run schedules extract --provider anthropic --dry-run
         continue-on-error: true
 
       - name: Run eval against committed reviewed.json
