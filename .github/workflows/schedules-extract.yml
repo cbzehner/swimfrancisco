@@ -87,11 +87,15 @@ jobs:
           # staged data/ changes. Force-push overwrites any prior content;
           # the PR body gets updated below to reflect the latest state.
           git checkout -B "${BRANCH}"
-          git commit -m "chore(schedules): auto-extract ${DATE}"
-          git push --force origin "${BRANCH}"
 
+          # Generate the PR body BEFORE committing — pr-summary reads
+          # `git diff --staged` to identify what changed, and committing
+          # would clear the index.
           BODY_FILE=$(mktemp)
           uv --project schedule-tools run schedules pr-summary > "${BODY_FILE}"
+
+          git commit -m "chore(schedules): auto-extract ${DATE}"
+          git push --force origin "${BRANCH}"
 
           if EXISTING=$(gh pr list --head "${BRANCH}" --json number --jq '.[0].number') && [ -n "${EXISTING}" ]; then
             gh pr edit "${EXISTING}" --body-file "${BODY_FILE}"
