@@ -135,6 +135,75 @@ def test_normalize_strips_periods_and_collapses_whitespace():
     assert _normalize("Lap  Swim   6:00 a.m.") == "lap swim 6:00 am"
 
 
+def test_cross_line_pdf_text_grounds_evidence():
+    # pypdf serializes calendar grids as program-label-band then time-band,
+    # so verbatim cell text never appears as a contiguous substring. The
+    # grounder must accept evidence whose tokens appear in order within a
+    # window of the source text, even when intervening cells are interleaved.
+    pdf_text = _normalize(
+        "Lap Swim Lap Swim Lap Swim Lap Swim Rec/Family Swim\n"
+        "11:00 AM - 1:00 PM 11:00 AM - 1:00 PM 11:30 AM - 1:30 PM "
+        "11:00 AM - 1:00 PM 10:45 AM - 12:00 PM"
+    )
+    payload = {
+        "sessions": [
+            {
+                "day": "tuesday",
+                "type": "lap_swim",
+                "start": "11:00",
+                "end": "13:00",
+                "evidence": "Lap Swim 11:00 AM - 1:00 PM",
+            }
+        ]
+    }
+    result = grounding_from_text(pdf_text, payload)
+    entry = result.sessions[0]
+    assert entry.evidence_in_pdf is True, "cross-line cell text must ground"
+    assert entry.grounded is True
+
+
+def test_ignore_only_evidence_is_not_grounded():
+    # Model emits a row whose evidence references an ignore-list program
+    # with no allowed-type token. This is a policy error and must fail.
+    pdf_text = _normalize("MASTER'S SWIM TEAM Tuesday 5:30PM - 7:00PM")
+    payload = {
+        "sessions": [
+            {
+                "day": "tuesday",
+                "type": "lap_swim",
+                "start": "17:30",
+                "end": "19:00",
+                "evidence": "MASTER'S SWIM TEAM 5:30PM - 7:00PM",
+            }
+        ]
+    }
+    result = grounding_from_text(pdf_text, payload)
+    entry = result.sessions[0]
+    assert entry.grounded is False
+
+
+def test_multi_program_cell_with_kept_type_is_grounded():
+    # A single cell can list multiple co-existing programs ("LAP SWIM /
+    # SELF GUIDED EXERCISE 9:00–11:00"). When the kept type is also present,
+    # the row must ground despite the ignore-list token.
+    pdf_text = _normalize(
+        "LAP SWIM (4) SELF GUIDED EXERCISE (2) 9:00 AM - 11:00 AM"
+    )
+    payload = {
+        "sessions": [
+            {
+                "day": "tuesday",
+                "type": "lap_swim",
+                "start": "09:00",
+                "end": "11:00",
+                "evidence": "LAP SWIM (4) SELF GUIDED EXERCISE (2) 9:00 AM - 11:00 AM",
+            }
+        ]
+    }
+    result = grounding_from_text(pdf_text, payload)
+    assert result.grounded_count == 1
+
+
 def test_paraphrased_evidence_with_matching_type_and_time_is_not_grounded():
     # Evidence is plausible prose containing the right type+time tokens but is
     # NOT a verbatim substring of the PDF. The grounding check must reject it.

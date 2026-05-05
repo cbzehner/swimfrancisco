@@ -1,9 +1,9 @@
 {
-  "cost_estimate": "prompt_tokens=1359, candidate_tokens=1954, total_tokens=3313",
-  "extracted_at": "2026-04-21T02:02:19.636604+00:00",
+  "cost_estimate": "prompt_tokens=1508, candidate_tokens=1912, total_tokens=3420",
+  "extracted_at": "2026-05-05T02:33:22.095805+00:00",
   "grounding": {
-    "grounded_count": 20,
-    "ratio": 0.9091,
+    "grounded_count": 19,
+    "ratio": 0.9048,
     "sessions": [
       {
         "evidence_in_pdf": true,
@@ -87,10 +87,10 @@
       },
       {
         "evidence_in_pdf": true,
-        "grounded": true,
+        "grounded": false,
         "index": 10,
         "missing_evidence": false,
-        "start_in_evidence": true,
+        "start_in_evidence": false,
         "type_in_evidence": true
       },
       {
@@ -103,10 +103,10 @@
       },
       {
         "evidence_in_pdf": true,
-        "grounded": false,
+        "grounded": true,
         "index": 12,
         "missing_evidence": false,
-        "start_in_evidence": false,
+        "start_in_evidence": true,
         "type_in_evidence": true
       },
       {
@@ -159,16 +159,8 @@
       },
       {
         "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 19,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
         "grounded": false,
-        "index": 20,
+        "index": 19,
         "missing_evidence": false,
         "start_in_evidence": false,
         "type_in_evidence": true
@@ -176,40 +168,40 @@
       {
         "evidence_in_pdf": true,
         "grounded": true,
-        "index": 21,
+        "index": 20,
         "missing_evidence": false,
         "start_in_evidence": true,
         "type_in_evidence": true
       }
     ],
-    "total": 22
+    "total": 21
   },
   "model": "gemini-3.1-flash-lite-preview",
   "payload": {
     "closures": [
       {
         "end": "2026-05-25",
-        "reason": "FEDERAL HOLIDAY",
+        "reason": "Federal Holiday",
         "start": "2026-05-25"
       },
       {
         "end": "2026-06-19",
-        "reason": "FEDERAL HOLIDAY",
+        "reason": "Federal Holiday",
         "start": "2026-06-19"
       },
       {
         "end": "2026-03-19",
-        "reason": "3rd Thursday training",
+        "reason": "Training",
         "start": "2026-03-19"
       },
       {
         "end": "2026-04-16",
-        "reason": "3rd Thursday training",
+        "reason": "Training",
         "start": "2026-04-16"
       },
       {
         "end": "2026-05-21",
-        "reason": "3rd Thursday training",
+        "reason": "Training",
         "start": "2026-05-21"
       }
     ],
@@ -222,13 +214,6 @@
         "evidence": "LAP SWIM 7:30 - 8:30 AM",
         "start": "07:30",
         "type": "lap_swim"
-      },
-      {
-        "day": "sunday",
-        "end": "11:00",
-        "evidence": "SWIM LESSONS\u2020 9:00 - 11:00 AM",
-        "start": "09:00",
-        "type": "lessons"
       },
       {
         "day": "sunday",
@@ -250,13 +235,6 @@
         "evidence": "LAP SWIM 7:30 - 10:00AM",
         "start": "07:30",
         "type": "lap_swim"
-      },
-      {
-        "day": "monday",
-        "end": "11:30",
-        "evidence": "SWIM LESSONS\u2020 10:15 - 11:30 AM",
-        "start": "10:15",
-        "type": "lessons"
       },
       {
         "day": "monday",
@@ -304,14 +282,16 @@
         "day": "tuesday",
         "end": "19:30",
         "evidence": "FAMILY/LAP SWIM (2 lanes)**",
+        "notes": "Lap Swim (4 Lanes)",
+        "pool": "2 lanes",
         "start": "18:15",
         "type": "family_swim"
       },
       {
         "day": "tuesday",
         "end": "19:30",
-        "evidence": "Lap Swim (4 Lanes) 6:15 - 7:30PM",
-        "pool": "4 lanes",
+        "evidence": "FAMILY/LAP SWIM (2 lanes)** Lap Swim (4 Lanes) 6:15 - 7:30PM",
+        "pool": "2 lanes",
         "start": "18:15",
         "type": "lap_swim"
       },
@@ -354,6 +334,13 @@
       },
       {
         "day": "thursday",
+        "end": "11:45",
+        "evidence": "SENIOR SWIM/ AEROBICS** 10:15 - 11:45 AM",
+        "start": "10:15",
+        "type": "senior_swim"
+      },
+      {
+        "day": "thursday",
         "end": "15:30",
         "evidence": "LAP SWIM 12:30 - 3:30PM",
         "notes": "Closed every 3rd Thursday of the month for training",
@@ -371,7 +358,7 @@
       {
         "day": "thursday",
         "end": "19:30",
-        "evidence": "Lap Swim (3 Lanes) 6:15 - 7:30PM",
+        "evidence": "FAMILY/LAP SWIM (3 lanes)** Lap Swim (3 Lanes) 6:15 - 7:30PM",
         "pool": "3 lanes",
         "start": "18:15",
         "type": "lap_swim"
@@ -379,13 +366,13 @@
     ]
   },
   "pdf_sha256": "f580f358615eb222d31249ebe28d5a67fe9d7aa473493559754696849d8c798f",
-  "prompt_sha256": "fac318d4b8d445a3c7c475624fec55f088c776770ed31fa24ec6d753d775fcab",
+  "prompt_sha256": "176c2e48fb132bd451dab954f66763fdc4bd9f0c3798baf37f68e699cf2167bd",
   "provider": "gemini",
-  "schema_sha256": "9621f34615c358c5f9409c9df1c5217d7d8fed31d0bff8c7e72f66f4af3382b6",
+  "schema_sha256": "2fd2318cf6431c3570fc660353cef45eeb81a742f74879e86f99dddf505a8ade",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28501",
   "usage": {
-    "candidates_token_count": 1954,
-    "prompt_token_count": 1359,
-    "total_token_count": 3313
+    "candidates_token_count": 1912,
+    "prompt_token_count": 1508,
+    "total_token_count": 3420
   }
 }

@@ -1,12 +1,12 @@
 {
-  "cost_estimate": "input_tokens=4665, output_tokens=2670",
-  "extracted_at": "2026-04-18T03:10:00.392214+00:00",
+  "cost_estimate": "input_tokens=4831, output_tokens=2313",
+  "extracted_at": "2026-05-05T02:32:09.905203+00:00",
   "grounding": {
-    "grounded_count": 26,
+    "grounded_count": 23,
     "ratio": 1.0,
     "sessions": [
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 0,
         "missing_evidence": false,
@@ -14,7 +14,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 1,
         "missing_evidence": false,
@@ -22,7 +22,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 2,
         "missing_evidence": false,
@@ -30,7 +30,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 3,
         "missing_evidence": false,
@@ -38,7 +38,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 4,
         "missing_evidence": false,
@@ -46,7 +46,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 5,
         "missing_evidence": false,
@@ -54,7 +54,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 6,
         "missing_evidence": false,
@@ -62,7 +62,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 7,
         "missing_evidence": false,
@@ -70,7 +70,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 8,
         "missing_evidence": false,
@@ -78,7 +78,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 9,
         "missing_evidence": false,
@@ -86,7 +86,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 10,
         "missing_evidence": false,
@@ -94,7 +94,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 11,
         "missing_evidence": false,
@@ -102,7 +102,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 12,
         "missing_evidence": false,
@@ -110,7 +110,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 13,
         "missing_evidence": false,
@@ -118,7 +118,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 14,
         "missing_evidence": false,
@@ -126,7 +126,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 15,
         "missing_evidence": false,
@@ -134,7 +134,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 16,
         "missing_evidence": false,
@@ -142,7 +142,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 17,
         "missing_evidence": false,
@@ -150,7 +150,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 18,
         "missing_evidence": false,
@@ -158,7 +158,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 19,
         "missing_evidence": false,
@@ -166,7 +166,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 20,
         "missing_evidence": false,
@@ -174,7 +174,7 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 21,
         "missing_evidence": false,
@@ -182,65 +182,37 @@
         "type_in_evidence": true
       },
       {
-        "evidence_in_pdf": false,
+        "evidence_in_pdf": true,
         "grounded": true,
         "index": 22,
         "missing_evidence": false,
         "start_in_evidence": true,
         "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": false,
-        "grounded": true,
-        "index": 23,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": false,
-        "grounded": true,
-        "index": 24,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": false,
-        "grounded": true,
-        "index": 25,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
       }
     ],
-    "total": 26
+    "total": 23
   },
   "model": "claude-sonnet-4-6",
   "payload": {
     "closures": [
       {
         "end": "2026-03-19",
-        "pool": "Hamilton Aquatic Center",
-        "reason": "Department Training \u2014 pool closed Thursdays 3/19/26, 4/16/26, & 5/21/26 from 11am to 2:30pm",
+        "reason": "Department Training \u2014 pool closed 11am to 2:30pm (Thursday closure)",
         "start": "2026-03-19"
       },
       {
         "end": "2026-04-16",
-        "pool": "Hamilton Aquatic Center",
-        "reason": "Department Training \u2014 pool closed Thursdays 3/19/26, 4/16/26, & 5/21/26 from 11am to 2:30pm",
+        "reason": "Department Training \u2014 pool closed 11am to 2:30pm (Thursday closure)",
         "start": "2026-04-16"
       },
       {
         "end": "2026-05-21",
-        "pool": "Hamilton Aquatic Center",
-        "reason": "Department Training \u2014 pool closed Thursdays 3/19/26, 4/16/26, & 5/21/26 from 11am to 2:30pm",
+        "reason": "Department Training \u2014 pool closed 11am to 2:30pm (Thursday closure)",
         "start": "2026-05-21"
       },
       {
         "end": "2026-06-06",
-        "pool": "All SFRPD Pools",
-        "reason": "Aquatics In Service Training \u2014 all SFRPD pools closed Saturday 6/6/26 from 8:30am to 12:30pm",
+        "reason": "All SFRPD Pools closed 8:30am\u201312:30pm for Aquatics In Service Training",
         "start": "2026-06-06"
       }
     ],
@@ -315,7 +287,7 @@
         "day": "thursday",
         "end": "12:30",
         "evidence": "## LAP SWIM (6) ## Pool is CLOSED : 3/19, 4/16, 5/21 11:00 AM - 12:30 PM",
-        "notes": "Pool is CLOSED: 3/19, 4/16, 5/21",
+        "notes": "Pool is CLOSED on Thursdays 3/19/26, 4/16/26, & 5/21/26 from 11am to 2:30pm for Department Training",
         "start": "11:00",
         "type": "lap_swim"
       },
@@ -327,15 +299,6 @@
         "type": "lap_swim"
       },
       {
-        "day": "saturday",
-        "end": "12:00",
-        "evidence": "^ SWIM LESSONS ^ ( 1 lane + small pool) 9:00 am - 12:00 pm",
-        "notes": "Prior registration required",
-        "pool": "1 lane + small pool",
-        "start": "09:00",
-        "type": "lessons"
-      },
-      {
         "day": "tuesday",
         "end": "15:00",
         "evidence": "REC / FAMILY SWIM (2) LAP SWIM (4) 1:00 PM - 3:00 PM",
@@ -367,7 +330,7 @@
         "day": "thursday",
         "end": "14:30",
         "evidence": "## REC / FAMILY SWIM (2) LAP SWIM (4) ## Pool is CLOSED : 3/19, 4/16, 5/21 1:00 PM - 2:30 PM",
-        "notes": "Pool is CLOSED: 3/19, 4/16, 5/21",
+        "notes": "Pool is CLOSED on Thursdays 3/19/26, 4/16/26, & 5/21/26 from 11am to 2:30pm for Department Training",
         "start": "13:00",
         "type": "family_swim"
       },
@@ -375,7 +338,7 @@
         "day": "thursday",
         "end": "14:30",
         "evidence": "## REC / FAMILY SWIM (2) LAP SWIM (4) ## Pool is CLOSED : 3/19, 4/16, 5/21 1:00 PM - 2:30 PM",
-        "notes": "Pool is CLOSED: 3/19, 4/16, 5/21",
+        "notes": "Pool is CLOSED on Thursdays 3/19/26, 4/16/26, & 5/21/26 from 11am to 2:30pm for Department Training",
         "start": "13:00",
         "type": "lap_swim"
       },
@@ -401,22 +364,6 @@
         "type": "family_swim"
       },
       {
-        "day": "tuesday",
-        "end": "18:00",
-        "evidence": "**YOUTH / HS SWIM TEAM ** ^ SWIM LESSONS ^ 3:30 PM - 6:00 PM",
-        "notes": "Shared with Youth/HS Swim Team. Prior registration required.",
-        "start": "15:30",
-        "type": "lessons"
-      },
-      {
-        "day": "thursday",
-        "end": "18:00",
-        "evidence": "**YOUTH / HS SWIM TEAM ** ^ SWIM LESSONS ^ 3:30 PM - 6:00 PM",
-        "notes": "Shared with Youth/HS Swim Team. Prior registration required.",
-        "start": "15:30",
-        "type": "lessons"
-      },
-      {
         "day": "saturday",
         "end": "17:00",
         "evidence": "LAP SWIM (6) 4:00 PM - 5:00 PM",
@@ -440,12 +387,12 @@
     ]
   },
   "pdf_sha256": "adab5f0df897db91aba3ecfa9499e267fe5341c90843b5db93a425f55c2729ed",
-  "prompt_sha256": "9c56ebb241e188dee0166143f20af6bd334820da8489c79246416c277a3fc8ea",
+  "prompt_sha256": "176c2e48fb132bd451dab954f66763fdc4bd9f0c3798baf37f68e699cf2167bd",
   "provider": "anthropic",
-  "schema_sha256": "77c48baf08b6eeae576f18ada9a5480f534e7a7b224e918311811aacf166de12",
+  "schema_sha256": "2fd2318cf6431c3570fc660353cef45eeb81a742f74879e86f99dddf505a8ade",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28496",
   "usage": {
-    "input_tokens": 4665,
-    "output_tokens": 2670
+    "input_tokens": 4831,
+    "output_tokens": 2313
   }
 }

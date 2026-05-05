@@ -1,9 +1,9 @@
 {
-  "cost_estimate": "input_tokens=3713, output_tokens=1663",
-  "extracted_at": "2026-04-18T02:48:33.487467+00:00",
+  "cost_estimate": "input_tokens=4453, output_tokens=1647",
+  "extracted_at": "2026-05-05T02:33:37.968977+00:00",
   "grounding": {
     "grounded_count": 20,
-    "ratio": 0.8333,
+    "ratio": 1.0,
     "sessions": [
       {
         "evidence_in_pdf": true,
@@ -164,41 +164,9 @@
         "missing_evidence": false,
         "start_in_evidence": true,
         "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": false,
-        "index": 20,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": false
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": false,
-        "index": 21,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": false
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": false,
-        "index": 22,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": false
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": false,
-        "index": 23,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": false
       }
     ],
-    "total": 24
+    "total": 20
   },
   "model": "claude-sonnet-4-6",
   "payload": {
@@ -215,17 +183,17 @@
       },
       {
         "end": "2026-03-19",
-        "reason": "3rd Thursday of month pool closed 11:00-2:00 for training",
+        "reason": "3rd Thursday of month pool closed 11:00-2:00 for staff training",
         "start": "2026-03-19"
       },
       {
         "end": "2026-04-16",
-        "reason": "3rd Thursday of month pool closed 11:00-2:00 for training",
+        "reason": "3rd Thursday of month pool closed 11:00-2:00 for staff training",
         "start": "2026-04-16"
       },
       {
         "end": "2026-05-21",
-        "reason": "3rd Thursday of month pool closed 11:00-2:00 for training",
+        "reason": "3rd Thursday of month pool closed 11:00-2:00 for staff training",
         "start": "2026-05-21"
       }
     ],
@@ -238,13 +206,6 @@
         "evidence": "LAP SWIM 7:30 - 8:30 AM",
         "start": "07:30",
         "type": "lap_swim"
-      },
-      {
-        "day": "sunday",
-        "end": "11:00",
-        "evidence": "SWIM LESSONS\u2020 9:00 - 11:00 AM",
-        "start": "09:00",
-        "type": "lessons"
       },
       {
         "day": "sunday",
@@ -266,20 +227,6 @@
         "evidence": "LAP SWIM 7:30 - 10:00 AM",
         "start": "07:30",
         "type": "lap_swim"
-      },
-      {
-        "day": "monday",
-        "end": "11:30",
-        "evidence": "SWIM LESSONS\u2020 10:15 - 11:30 AM",
-        "start": "10:15",
-        "type": "lessons"
-      },
-      {
-        "day": "monday",
-        "end": "13:00",
-        "evidence": "SENIOR/ THERAPY** 11:45 - 1:00 PM",
-        "start": "11:45",
-        "type": "senior_swim"
       },
       {
         "day": "monday",
@@ -320,8 +267,17 @@
         "day": "tuesday",
         "end": "19:30",
         "evidence": "FAMILY/LAP SWIM (2 lanes)** Lap Swim (4 Lanes) 6:15 - 7:30PM",
+        "notes": "2 lanes family swim",
         "start": "18:15",
         "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "19:30",
+        "evidence": "FAMILY/LAP SWIM (2 lanes)** Lap Swim (4 Lanes) 6:15 - 7:30PM",
+        "notes": "4 lanes lap swim",
+        "start": "18:15",
+        "type": "lap_swim"
       },
       {
         "day": "wednesday",
@@ -341,8 +297,17 @@
         "day": "wednesday",
         "end": "15:30",
         "evidence": "FAMILY (2 lanes)/LAP SWIM (4 lanes) 2:00 - 3:30 PM",
+        "notes": "2 lanes family swim",
         "start": "14:00",
         "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:30",
+        "evidence": "FAMILY (2 lanes)/LAP SWIM (4 lanes) 2:00 - 3:30 PM",
+        "notes": "4 lanes lap swim",
+        "start": "14:00",
+        "type": "lap_swim"
       },
       {
         "day": "thursday",
@@ -361,7 +326,8 @@
       {
         "day": "thursday",
         "end": "15:30",
-        "evidence": "LAP SWIM 12:30 - 3:30PM",
+        "evidence": "LAP SWIM 12:30 - 3:30PM Closed every 3rd Thursday of the month for training",
+        "notes": "Closed every 3rd Thursday of the month for training",
         "start": "12:30",
         "type": "lap_swim"
       },
@@ -369,46 +335,27 @@
         "day": "thursday",
         "end": "19:30",
         "evidence": "FAMILY/LAP SWIM (3 lanes)** Lap Swim (3 Lanes) 6:15 - 7:30PM",
+        "notes": "3 lanes family swim; 3rd Thursday of month pool closed 11:00-2:00 for training (3/19, 4/16, 5/21)",
         "start": "18:15",
         "type": "family_swim"
       },
       {
-        "day": "monday",
-        "end": "18:00",
-        "evidence": "SWIM TEAM\u2021 4:00 - 6:00 PM",
-        "start": "16:00",
-        "type": "lap_swim"
-      },
-      {
-        "day": "tuesday",
-        "end": "18:00",
-        "evidence": "SWIM TEAM\u2021 4:00 - 6:00 PM",
-        "start": "16:00",
-        "type": "lap_swim"
-      },
-      {
-        "day": "wednesday",
-        "end": "18:00",
-        "evidence": "SWIM TEAM\u2021 4:00 - 6:00 PM",
-        "start": "16:00",
-        "type": "lap_swim"
-      },
-      {
         "day": "thursday",
-        "end": "18:00",
-        "evidence": "SWIM TEAM\u2021 4:00 - 6:00 PM",
-        "start": "16:00",
+        "end": "19:30",
+        "evidence": "FAMILY/LAP SWIM (3 lanes)** Lap Swim (3 Lanes) 6:15 - 7:30PM",
+        "notes": "3 lanes lap swim; 3rd Thursday of month pool closed 11:00-2:00 for training (3/19, 4/16, 5/21)",
+        "start": "18:15",
         "type": "lap_swim"
       }
     ]
   },
   "pdf_sha256": "f580f358615eb222d31249ebe28d5a67fe9d7aa473493559754696849d8c798f",
-  "prompt_sha256": "24a24994cd43864fa7dbf09c495c947d4986ec88307b89e272659fb3dd49dd9e",
+  "prompt_sha256": "176c2e48fb132bd451dab954f66763fdc4bd9f0c3798baf37f68e699cf2167bd",
   "provider": "anthropic",
-  "schema_sha256": "7bd50481cfa763ea810391021daf61e1bbfdbe7184496c976b486a53a05afe7c",
+  "schema_sha256": "2fd2318cf6431c3570fc660353cef45eeb81a742f74879e86f99dddf505a8ade",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/28501",
   "usage": {
-    "input_tokens": 3713,
-    "output_tokens": 1663
+    "input_tokens": 4453,
+    "output_tokens": 1647
   }
 }
