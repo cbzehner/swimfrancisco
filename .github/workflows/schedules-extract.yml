@@ -83,16 +83,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git fetch origin
-          if git rev-parse --verify "origin/${BRANCH}" >/dev/null 2>&1; then
-            git checkout -B "${BRANCH}" "origin/${BRANCH}"
-            git add data/
-            git commit -m "chore(schedules): auto-extract ${DATE} (refresh)" || true
-          else
-            git checkout -b "${BRANCH}"
-            git commit -m "chore(schedules): auto-extract ${DATE}"
-          fi
-          git push --force-with-lease origin "${BRANCH}"
+          # Always create the branch fresh from current HEAD with the
+          # staged data/ changes. Force-push overwrites any prior content;
+          # the PR body gets updated below to reflect the latest state.
+          git checkout -B "${BRANCH}"
+          git commit -m "chore(schedules): auto-extract ${DATE}"
+          git push --force origin "${BRANCH}"
 
           BODY_FILE=$(mktemp)
           uv --project schedule-tools run schedules pr-summary > "${BODY_FILE}"
