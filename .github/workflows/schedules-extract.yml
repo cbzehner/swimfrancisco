@@ -95,35 +95,7 @@ jobs:
           git push --force-with-lease origin "${BRANCH}"
 
           BODY_FILE=$(mktemp)
-          {
-            echo "## Auto-extract ${DATE}"
-            echo
-            echo "This PR was opened by the weekly \`schedules-extract\` workflow."
-            echo "It contains regenerated provider artifacts under \`data/\`."
-            echo "**No \`content/spots/\` or \`reviewed.json\` changes are included.**"
-            echo
-            echo "Reviewer next steps:"
-            echo "1. Pull this branch locally."
-            echo "2. Run \`just schedules-review\` for any pool flagged below."
-            echo "3. Verify each row against the source PDF, edit \`reviewed.json\`, save."
-            echo "4. Commit \`reviewed.json\` + \`content/spots/<slug>.md\` to this branch and merge."
-            echo
-            echo "## Extraction report"
-            echo
-            if [ -f tmp/extraction-report.md ]; then
-              cat tmp/extraction-report.md
-            else
-              echo "_No extraction report produced._"
-            fi
-            echo
-            echo "## Eval (vs current reviewed.json ground truth)"
-            echo
-            if [ -f tmp/eval.md ]; then
-              cat tmp/eval.md
-            else
-              echo "_No eval report produced._"
-            fi
-          } > "${BODY_FILE}"
+          uv --project schedule-tools run schedules pr-summary > "${BODY_FILE}"
 
           if EXISTING=$(gh pr list --head "${BRANCH}" --json number --jq '.[0].number') && [ -n "${EXISTING}" ]; then
             gh pr edit "${EXISTING}" --body-file "${BODY_FILE}"

@@ -14,6 +14,7 @@ from .paths import (
 )
 from .eval import collect_pool_evals, render_report, write_report
 from .pipeline import run_pipeline
+from .pr_summary import render_pr_body
 from .project import ProjectError, project as _project
 from .review import (
     FinalizeError,
@@ -144,6 +145,18 @@ def review_command(slug: str | None) -> None:
     except FinalizeError as exc:
         raise click.ClickException(str(exc)) from exc
     click.echo(f"Wrote {final}")
+
+
+@cli.command("pr-summary")
+def pr_summary_command() -> None:
+    """Print a PR-optimized summary of currently-staged data/ changes.
+
+    Designed for the auto-extract workflow: highlights pools whose artifact
+    files changed, one-liners every other pool, and appends `tmp/eval.md`
+    if present. Shells out to `git diff --staged` so it must run after
+    `git add data/` and before commit.
+    """
+    click.echo(render_pr_body())
 
 
 @cli.command("eval")
