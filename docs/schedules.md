@@ -201,6 +201,37 @@ sample of disagreements (extra rows the model emitted, missing rows it dropped).
 
 Run before and after any prompt or schema tweak; require improvement, not regression.
 
+## Auto-extract workflow
+
+The `.github/workflows/schedules-extract.yml` action runs every Monday at
+09:00 PT and on `workflow_dispatch`. It re-runs extraction with both Gemini
+and Anthropic in `--dry-run --force` mode — provider artifacts under
+`data/<slug>/<date>-<sha12>/` get written, but `content/spots/` and
+`reviewed.json` are never touched. If anything changed under `data/`, the
+action commits to a `auto/schedules-extract-YYYY-MM-DD` branch and opens or
+updates a PR with the extraction report and eval scorecard in the body.
+
+Reviewer flow on an auto-PR:
+
+1. Pull the branch locally.
+2. Run `just schedules-review` for any pool the report flags.
+3. Verify each row against the source PDF in `$EDITOR`.
+4. Save `reviewed.json`; the projection writes `content/spots/<slug>.md`.
+5. Commit those two files to the PR branch and merge.
+
+Public-repo safety: the workflow has no `pull_request` or
+`pull_request_target` triggers, only `schedule` and `workflow_dispatch`.
+Forks cannot run it. `concurrency.cancel-in-progress` caps cost at one
+extraction at a time. Set monthly budget caps on `GOOGLE_API_KEY` and
+`ANTHROPIC_API_KEY` in their respective dashboards as belt-and-suspenders.
+
+Required repo secrets: `GOOGLE_API_KEY`, `ANTHROPIC_API_KEY`. The default
+`GITHUB_TOKEN` (auto-provisioned with `contents: write` and
+`pull-requests: write`) is enough to push the branch and open the PR.
+
 ## Future
 
-The v3 path is still the same: a GitHub Action can wrap `just schedules-extract` and open a PR whenever the content diff is non-empty.
+The v4 path is auto-merge for trivially-confident updates: when an
+auto-PR's eval F1 is at or above the prior baseline AND the row diff vs
+prior `reviewed.json` is below a threshold, allow the bot to mark itself
+mergeable after a quiet period. Out of scope today; humans always review.

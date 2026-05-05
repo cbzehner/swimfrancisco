@@ -1,0 +1,136 @@
+name: schedules-extract
+
+# Auto-extracts SF Rec & Park pool schedule PDFs and opens a PR when
+# new artifacts are produced. Humans always review the resulting PR via
+# `just schedules-review` before merging — this workflow never edits
+# content/spots/ or reviewed.json files.
+#
+# Public-repo safety: only `schedule` and `workflow_dispatch` triggers
+# (forks cannot trigger workflows that need our secrets). No
+# pull_request_target. Least-privilege permissions block.
+
+on:
+  schedule:
+    # Mon 16:00 UTC = Mon 09:00 PT (after PST/PDT both)
+    - cron: '0 16 * * MON'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: schedules-extract
+  cancel-in-progress: true
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    env:
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Sync schedule-tools deps
+        run: uv --project schedule-tools sync
+
+      - name: Extract with Gemini (no content writes)
+        # --dry-run skips the merge into content/spots/ and reviewed.json
+        # remains untouched. Provider artifacts under data/<slug>/.../ ARE
+        # written. --force bypasses the unchanged shortcut so the run
+        # always reflects the current PDF.
+        run: uv --project schedule-tools run schedules extract --provider gemini --force --dry-run
+        continue-on-error: true
+
+      - name: Extract with Anthropic (no content writes)
+        run: uv --project schedule-tools run schedules extract --provider anthropic --force --dry-run
+        continue-on-error: true
+
+      - name: Run eval against committed reviewed.json
+        run: uv --project schedule-tools run schedules eval --stdout > tmp/eval.md
+        continue-on-error: true
+
+      - name: Detect new or changed artifacts
+        id: detect
+        run: |
+          git add data/
+          if git diff --staged --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes detected; nothing to PR."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git diff --staged --stat | head -50
+          fi
+
+      - name: Open or update PR
+        if: steps.detect.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          DATE=$(date +%Y-%m-%d)
+          BRANCH="auto/schedules-extract-${DATE}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin
+          if git rev-parse --verify "origin/${BRANCH}" >/dev/null 2>&1; then
+            git checkout -B "${BRANCH}" "origin/${BRANCH}"
+            git add data/
+            git commit -m "chore(schedules): auto-extract ${DATE} (refresh)" || true
+          else
+            git checkout -b "${BRANCH}"
+            git commit -m "chore(schedules): auto-extract ${DATE}"
+          fi
+          git push --force-with-lease origin "${BRANCH}"
+
+          BODY_FILE=$(mktemp)
+          {
+            echo "## Auto-extract ${DATE}"
+            echo
+            echo "This PR was opened by the weekly \`schedules-extract\` workflow."
+            echo "It contains regenerated provider artifacts under \`data/\`."
+            echo "**No \`content/spots/\` or \`reviewed.json\` changes are included.**"
+            echo
+            echo "Reviewer next steps:"
+            echo "1. Pull this branch locally."
+            echo "2. Run \`just schedules-review\` for any pool flagged below."
+            echo "3. Verify each row against the source PDF, edit \`reviewed.json\`, save."
+            echo "4. Commit \`reviewed.json\` + \`content/spots/<slug>.md\` to this branch and merge."
+            echo
+            echo "## Extraction report"
+            echo
+            if [ -f tmp/extraction-report.md ]; then
+              cat tmp/extraction-report.md
+            else
+              echo "_No extraction report produced._"
+            fi
+            echo
+            echo "## Eval (vs current reviewed.json ground truth)"
+            echo
+            if [ -f tmp/eval.md ]; then
+              cat tmp/eval.md
+            else
+              echo "_No eval report produced._"
+            fi
+          } > "${BODY_FILE}"
+
+          if EXISTING=$(gh pr list --head "${BRANCH}" --json number --jq '.[0].number') && [ -n "${EXISTING}" ]; then
+            gh pr edit "${EXISTING}" --body-file "${BODY_FILE}"
+            echo "Updated existing PR #${EXISTING}"
+          else
+            gh pr create \
+              --head "${BRANCH}" \
+              --base main \
+              --title "chore(schedules): auto-extract ${DATE}" \
+              --body-file "${BODY_FILE}"
+          fi
