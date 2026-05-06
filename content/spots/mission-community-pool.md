@@ -10,6 +10,7 @@ lat = 37.7598
 lng = -122.4222
 website = "https://sfrecpark.org/facilities/facility/details/Mission-Community-Pool-217"
 cost = "paid"
+setpoint_label = "80–82°F"
 schedule_effective = "2026-05-12"
 last_verified_at = "2026-05-03"
 

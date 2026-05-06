@@ -10,6 +10,7 @@ lat = 37.7500
 lng = -122.4121
 website = "https://sfrecpark.org/facilities/facility/details/Garfield-Pool-214"
 cost = "paid"
+setpoint_label = "80–82°F"
 schedule_effective = "2026-03-15"
 last_verified_at = "2026-04-17"
 

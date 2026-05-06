@@ -10,6 +10,7 @@ lat = 37.7371
 lng = -122.4757
 website = "https://sfrecpark.org/facilities/facility/details/Sava-Pool-220"
 cost = "paid"
+setpoint_label = "80–82°F"
 schedule_effective = "2026-01-06"
 last_verified_at = "2026-04-16"
 

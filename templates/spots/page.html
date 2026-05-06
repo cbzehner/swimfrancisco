@@ -56,10 +56,13 @@
         <a href="{{ place_href }}" target="_blank" rel="noopener">{{ extra.address }}</a>
       </p>
     {% endif %}
-    {% if extra.subtype or extra.website or extra.address %}
+    {% if extra.subtype or extra.website or extra.address or extra.setpoint_label %}
       <p class="official">
         {% if extra.subtype %}<span class="subtype">{{ extra.subtype | upper }}</span>{% endif %}
-        {% if extra.subtype and extra.website %} · {% endif %}
+        {% if extra.setpoint_label %}
+          {% if extra.subtype %} · {% endif %}<span class="setpoint">WATER {{ extra.setpoint_label | upper }}</span>
+        {% endif %}
+        {% if (extra.subtype or extra.setpoint_label) and extra.website %} · {% endif %}
         {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">OFFICIAL PAGE</a>{% endif %}
         {% if extra.address %}
           {% if extra.subtype or extra.website %} · {% endif %}

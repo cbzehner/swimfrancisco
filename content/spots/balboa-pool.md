@@ -10,6 +10,7 @@ lat = 37.7266
 lng = -122.4432
 website = "https://sfrecpark.org/facilities/facility/details/Balboa-Pool-212"
 cost = "paid"
+setpoint_label = "80–82°F"
 schedule_effective = "2026-03-17"
 last_verified_at = "2026-04-17"
 
