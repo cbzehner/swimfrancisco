@@ -166,6 +166,11 @@ Airport departure board aesthetic. Split-flap animation.
 - **Endpoints:**
   - `GET /api/conditions` — all open water conditions (homepage bulk fetch)
   - `GET /api/conditions/:slug` — single spot (detail pages)
+- **Per-spot record shape** (`SpotConditions` in `worker/src/assemble.ts`):
+  - Flat temp fields: `water_temp_f`, `water_temp_c`, `temp_observed_at`, `temp_station_id`, `temp_station_type` — either all set or all null
+  - `tide` summary or null
+  - `temp_stale: boolean` and `tide_stale: boolean` — true when the field was reused from the last-good KV value because the upstream fetch returned nothing (24h freshness ceiling)
+  - `updated_at` ISO 8601 UTC of the assembly run
 - Keep it simple, but prioritize error handling over brevity
 
 ### API Sources (free, no keys required)
