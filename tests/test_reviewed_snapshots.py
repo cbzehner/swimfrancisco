@@ -97,6 +97,30 @@ def test_canonicalize_payload_preserves_pool_field():
     assert canonical["sessions"][0]["pool"] == "deep"
 
 
+def test_canonicalize_payload_preserves_timed_closure_fields():
+    payload = {
+        "schedule_effective": "2026-03-17",
+        "sessions": [],
+        "closures": [
+            {
+                "start": "2026-05-21",
+                "end": "2026-05-21",
+                "reason": "Staff training",
+                "start_time": "11:00",
+                "end_time": "15:00",
+            }
+        ],
+    }
+    canonical = canonicalize_payload(payload)
+    assert canonical["closures"][0] == {
+        "start": "2026-05-21",
+        "end": "2026-05-21",
+        "reason": "Staff training",
+        "start_time": "11:00",
+        "end_time": "15:00",
+    }
+
+
 def test_canonicalize_payload_identical_on_equivalent_inputs():
     a = {
         "schedule_effective": "2026-03-17",

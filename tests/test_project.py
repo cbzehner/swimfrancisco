@@ -48,7 +48,32 @@ def test_project_writes_sessions_to_content_md(tmp_path):
 
     rendered = (content / "hamilton-pool.md").read_text()
     assert "schedule_effective = \"2026-03-17\"" in rendered
+    assert "last_verified_at = \"2026-04-18\"" in rendered
     assert rendered.count("[[extra.sessions]]") == 5
+
+
+def test_project_preserves_timed_closures(tmp_path):
+    data = tmp_path / "data"
+    content = tmp_path / "content" / "spots"
+    envelope = _valid_envelope("hamilton-pool", "a" * 64)
+    envelope["payload"]["closures"] = [
+        {
+            "start": "2026-05-21",
+            "end": "2026-05-21",
+            "reason": "Staff training",
+            "start_time": "11:00",
+            "end_time": "15:00",
+        }
+    ]
+    reviewed = _write_reviewed_json(data, "hamilton-pool", "a" * 64, envelope)
+    _seed_content_md(content, "hamilton-pool")
+
+    project(slug="hamilton-pool", reviewed_json_path=reviewed, content_spots_dir=content)
+
+    rendered = (content / "hamilton-pool.md").read_text()
+    assert "reason = \"Staff training\"" in rendered
+    assert "start_time = \"11:00\"" in rendered
+    assert "end_time = \"15:00\"" in rendered
 
 
 def test_project_is_idempotent(tmp_path):

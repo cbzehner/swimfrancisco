@@ -19,7 +19,12 @@ DAY_ORDER = {
 }
 
 
-def merge(pool_md_path: Path, extracted: dict[str, Any]) -> MergeResult:
+def merge(
+    pool_md_path: Path,
+    extracted: dict[str, Any],
+    *,
+    last_verified_at: str | None = None,
+) -> MergeResult:
     original_text = pool_md_path.read_text()
     frontmatter_text, body = _split_frontmatter(original_text)
     document = tomlkit.parse(frontmatter_text)
@@ -28,6 +33,8 @@ def merge(pool_md_path: Path, extracted: dict[str, Any]) -> MergeResult:
     before = read_schedule_snapshot(pool_md_path)
     after = _normalized_schedule_payload(extracted)
     changed = before != after
+    if last_verified_at is not None:
+        changed = changed or extra.get("last_verified_at") != last_verified_at
 
     if not changed:
         return MergeResult(
@@ -45,6 +52,8 @@ def merge(pool_md_path: Path, extracted: dict[str, Any]) -> MergeResult:
         extra["schedule_effective_end"] = after["schedule_effective_end"]
     elif "schedule_effective_end" in extra:
         del extra["schedule_effective_end"]
+    if last_verified_at is not None:
+        extra["last_verified_at"] = last_verified_at
 
     updated = tomlkit.dumps(document).rstrip("\n")
     pool_md_path.write_text(f"+++\n{updated}\n+++\n{body}")
@@ -107,8 +116,6 @@ def _normalize_sessions(raw_sessions: list[dict]) -> list[dict[str, str]]:
 
 
 def _normalize_closures(raw_closures: list[dict]) -> list[dict[str, str]]:
-    # Closures are facility-wide, all-day, date-only per the v1 contract
-    # (see docs/schedules.md).
     normalized = []
     for closure in raw_closures:
         item: dict[str, str] = {
@@ -116,8 +123,23 @@ def _normalize_closures(raw_closures: list[dict]) -> list[dict[str, str]]:
             "end": str(closure["end"]),
             "reason": str(closure["reason"]),
         }
+        start_time = closure.get("start_time")
+        end_time = closure.get("end_time")
+        if isinstance(start_time, str) and start_time.strip():
+            item["start_time"] = start_time.strip()
+        if isinstance(end_time, str) and end_time.strip():
+            item["end_time"] = end_time.strip()
         normalized.append(item)
-    return sorted(normalized, key=lambda item: (item["start"], item["end"], item["reason"]))
+    return sorted(
+        normalized,
+        key=lambda item: (
+            item["start"],
+            item["end"],
+            item.get("start_time", ""),
+            item.get("end_time", ""),
+            item["reason"],
+        ),
+    )
 
 
 def _build_sessions_value(sessions: list[dict[str, str]]):
@@ -147,6 +169,10 @@ def _build_closures_value(closures: list[dict[str, str]]):
         table["start"] = closure["start"]
         table["end"] = closure["end"]
         table["reason"] = closure["reason"]
+        if "start_time" in closure:
+            table["start_time"] = closure["start_time"]
+        if "end_time" in closure:
+            table["end_time"] = closure["end_time"]
         aot.append(table)
     return aot
 
@@ -161,4 +187,3 @@ def _split_frontmatter(text: str) -> tuple[str, str]:
     if boundary < 0:
         raise ValueError("Content file frontmatter is not properly closed.")
     return remainder[:boundary], remainder[boundary + len(closing) :]
-

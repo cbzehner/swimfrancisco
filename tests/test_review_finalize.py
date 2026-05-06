@@ -51,7 +51,9 @@ def test_finalize_happy_path(tmp_path):
 
     assert result == reviewed
     assert reviewed.exists()
-    assert "[[extra.sessions]]" in (content / "hamilton-pool.md").read_text()
+    rendered = (content / "hamilton-pool.md").read_text()
+    assert "[[extra.sessions]]" in rendered
+    assert "last_verified_at = \"2026-04-19\"" in rendered
 
 
 def test_finalize_rejects_malformed_json(tmp_path):

@@ -33,7 +33,7 @@ def load_reviewed_snapshot_from_path(
 
 
 _SESSION_COMPARE_KEYS = ("day", "type", "start", "end", "pool")
-_CLOSURE_COMPARE_KEYS = ("start", "end", "reason")
+_CLOSURE_COMPARE_KEYS = ("start", "end", "reason", "start_time", "end_time")
 
 
 def _project(source: dict, keys: tuple[str, ...]) -> dict:
@@ -61,5 +61,4 @@ def canonicalize_payload(payload: dict) -> dict:
     if "schedule_effective_end" in payload and payload["schedule_effective_end"] is not None:
         canonical["schedule_effective_end"] = payload["schedule_effective_end"]
     return canonical
-
 

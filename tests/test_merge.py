@@ -46,3 +46,41 @@ def test_merge_updates_only_schedule_fields(tmp_path):
     assert 'website = "https://sfrecpark.org/facilities/facility/details/Hamilton-Pool-215"' in updated
     assert "Memorial Day" in updated
     assert "A heated indoor pool" in updated
+
+
+def test_merge_preserves_partial_day_closure_fields(tmp_path):
+    source = ROOT / "content" / "spots" / "hamilton-pool.md"
+    target = tmp_path / source.name
+    target.write_text(source.read_text())
+
+    merge(
+        target,
+        {
+            "sessions": read_schedule_snapshot(target)["sessions"],
+            "closures": [
+                {
+                    "start": "2026-05-21",
+                    "end": "2026-05-21",
+                    "reason": "Staff training",
+                    "start_time": "11:00",
+                    "end_time": "15:00",
+                }
+            ],
+            "schedule_effective": "2026-03-17",
+            "schedule_effective_end": "2026-06-06",
+        },
+    )
+
+    snapshot = read_schedule_snapshot(target)
+    assert snapshot["closures"] == [
+        {
+            "start": "2026-05-21",
+            "end": "2026-05-21",
+            "reason": "Staff training",
+            "start_time": "11:00",
+            "end_time": "15:00",
+        }
+    ]
+    updated = target.read_text()
+    assert 'start_time = "11:00"' in updated
+    assert 'end_time = "15:00"' in updated
