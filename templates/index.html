@@ -88,7 +88,7 @@
           </td>
           <td>—</td>
           <td>—</td>
-          <td>—</td>
+          <td>{% if page.extra.type == 'pool' and page.extra.setpoint_label %}{{ page.extra.setpoint_label | upper }}{% else %}—{% endif %}</td>
         </tr>
       {% endfor %}
     </tbody>
