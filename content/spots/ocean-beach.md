@@ -16,7 +16,6 @@ description_short = "Three-mile open Pacific beach with powerful surf and danger
 hazards = ["powerful rip currents", "large shore break", "sneaker waves", "cold water year-round", "no lifeguards outside designated hours"]
 clubs = []
 common_distances = []
-last_verified_at = "2026-04-16"
 +++
 
 Ocean Beach stretches for roughly three miles along the western edge of the city. It is one of the most hazardous beaches on the California coast — heavy surf, powerful rip currents, and sneaker waves have caused numerous drownings. Swimming here is for experienced open water swimmers only, and even then only under calm conditions.

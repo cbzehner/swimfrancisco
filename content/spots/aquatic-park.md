@@ -20,7 +20,6 @@ clubs = [
   { name = "Dolphin Swimming & Boating Club", url = "https://dolphinclub.org/" },
 ]
 common_distances = ["0.25mi to breakwater", "1mi loop"]
-last_verified_at = "2026-04-16"
 +++
 
 Aquatic Park is a protected cove on the northern waterfront, sheltered by a curved municipal pier. Calm conditions year-round make it the go-to open water training ground in the city. The [South End Rowing Club](https://serc.com/) and [Dolphin Club](https://dolphinclub.org/) both occupy clubhouses on the beach and run regular swims.

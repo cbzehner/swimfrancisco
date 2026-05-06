@@ -88,7 +88,6 @@ def test_open_water_item_list_sections_render(built_site: Path) -> None:
     assert "South End Rowing Club" in html
     assert "<h2>Common distances</h2>" in html
     assert "1mi loop" in html
-    assert "LAST VERIFIED APR 16, 2026" in html
 
 
 def test_open_water_empty_item_lists_are_suppressed(built_site: Path) -> None:
@@ -112,25 +111,27 @@ def test_closures_render_without_object_literal_across_all_pools(built_site: Pat
 def test_pool_meta_dates_render_in_human_format(built_site: Path) -> None:
     html = _read(built_site, "balboa-pool")
     assert "SCHEDULE EFFECTIVE FROM MAR 17, 2026 TO JUN 6, 2026" in html
-    assert "SOURCE SF REC & PARKS · REVIEWED APR 17, 2026" in html
-    assert 'data-tooltip="LAST VERIFIED APR 17, 2026"' in html
-    assert 'aria-label="LAST VERIFIED APR 17, 2026"' in html
-    assert 'title="LAST VERIFIED APR 17, 2026"' in html
-    assert "class=trust-dot tabindex=0>● PDF REVIEWED</span>" in html
-    assert "· LAST VERIFIED APR 17, 2026" not in html
-    assert html.index("OFFICIAL PAGE") < html.index('data-tooltip="LAST VERIFIED APR 17, 2026"')
+    assert "SOURCE SF REC & PARKS" in html
+    assert "REVIEWED" not in html
+    assert "PDF REVIEWED" not in html
+    assert "LAST VERIFIED" not in html
     assert html.index("recently reopened after a $9M renovation") < html.index(
         "SCHEDULE EFFECTIVE FROM MAR 17, 2026 TO JUN 6, 2026"
     )
 
 
-def test_homepage_renders_trust_layer(built_site: Path) -> None:
+def test_homepage_omits_trust_column(built_site: Path) -> None:
     html = (built_site / "index.html").read_text()
-    assert "<th>TRUST" in html
-    assert "data-slug=mission-community-pool" in html
-    assert "REVIEWED AGAINST SF REC & PARK PDF ON 2026-05-03" in html
-    assert 'aria-label="REVIEWED AGAINST SF REC & PARK PDF ON 2026-05-03"' in html
-    assert 'title="REVIEWED AGAINST SF REC & PARK PDF ON 2026-05-03"' in html
-    assert "data-slug=sava-pool" in html
-    assert "NO REVIEWED DROP-IN SCHEDULE YET" in html
-    assert "NOAA/NDBC" in html
+    assert "<th>TRUST" not in html
+    assert "trust-cell" not in html
+    assert "REVIEWED AGAINST SF REC & PARK PDF" not in html
+    assert "NO REVIEWED DROP-IN SCHEDULE YET" not in html
+    assert "NOAA/NDBC CONDITIONS UPDATED HOURLY" not in html
+
+
+def test_footer_renders_sources_and_credit(built_site: Path) -> None:
+    html = (built_site / "index.html").read_text()
+    assert "Pool hours · SF Rec & Park · Open-water · NOAA + NDBC" in html
+    assert "Made in San Francisco by" in html
+    # Sources line above byline (sources first, byline last as the page signature).
+    assert html.index("Pool hours · SF Rec & Park") < html.index("Made in San Francisco by")

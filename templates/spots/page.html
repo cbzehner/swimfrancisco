@@ -65,16 +65,8 @@
         {% endif %}
         {% if (extra.subtype or extra.setpoint_label) and extra.website %} · {% endif %}
         {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">OFFICIAL PAGE</a>{% endif %}
-        {% if extra.type == "pool" and extra.last_verified_at %}
-          {% if extra.subtype or extra.setpoint_label or extra.website %} · {% endif %}
-          <span class="trust-dot"
-                data-tooltip="LAST VERIFIED {{ self::format_iso_date(iso=extra.last_verified_at) }}"
-                aria-label="LAST VERIFIED {{ self::format_iso_date(iso=extra.last_verified_at) }}"
-                title="LAST VERIFIED {{ self::format_iso_date(iso=extra.last_verified_at) }}"
-                tabindex="0">● PDF REVIEWED</span>
-        {% endif %}
         {% if extra.address %}
-          {% if extra.subtype or extra.website or extra.last_verified_at %} · {% endif %}
+          {% if extra.subtype or extra.setpoint_label or extra.website %} · {% endif %}
           <span class="address-actions" aria-label="Directions">
             <span class="address-actions-label">DIRECTIONS</span>
             <a href="{{ apple_dir }}" target="_blank" rel="noopener">APPLE</a>
@@ -298,7 +290,7 @@
       {% if extra.schedule_effective %}
         <footer class="meta">
           <p class="meta-source">
-            {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">SOURCE SF REC &amp; PARKS{% if extra.last_verified_at %} · REVIEWED {{ self::format_iso_date(iso=extra.last_verified_at) }}{% endif %}</a>{% else %}SOURCE SF REC &amp; PARKS{% if extra.last_verified_at %} · REVIEWED {{ self::format_iso_date(iso=extra.last_verified_at) }}{% endif %}{% endif %}
+            {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">SOURCE SF REC &amp; PARKS</a>{% else %}SOURCE SF REC &amp; PARKS{% endif %}
           </p>
           <p class="meta-effective">
             SCHEDULE EFFECTIVE FROM {{ self::format_iso_date(iso=extra.schedule_effective) }}{% if extra.schedule_effective_end %} TO {{ self::format_iso_date(iso=extra.schedule_effective_end) }}{% endif %}
@@ -334,9 +326,6 @@
 
     <footer class="meta">
       <p class="meta-source">SOURCE NOAA/NDBC · UPDATED HOURLY</p>
-      {% if extra.last_verified_at %}
-        <p class="meta-verified">LAST VERIFIED {{ self::format_iso_date(iso=extra.last_verified_at) }}</p>
-      {% endif %}
     </footer>
   {% endif %}
 {% endblock %}

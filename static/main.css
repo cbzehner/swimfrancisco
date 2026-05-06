@@ -44,6 +44,11 @@ main {
   color: inherit;
 }
 
+.site-footer-sources,
+.site-footer-credit {
+  margin: 0.25rem 0;
+}
+
 h1, h2, h3 {
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -283,37 +288,6 @@ table.board {
   &.no-pools td:nth-child(4) {
     display: none;
   }
-}
-
-.trust-cell {
-  color: var(--fg-dim);
-  font-size: 0.78rem;
-  white-space: nowrap;
-}
-
-[data-tooltip] {
-  position: relative;
-}
-
-[data-tooltip]:hover::after,
-[data-tooltip]:focus::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  z-index: 10;
-  left: 0;
-  top: calc(100% + 0.35rem);
-  width: max-content;
-  max-width: min(24rem, 80vw);
-  padding: 0.35rem 0.5rem;
-  border: 1px solid var(--fg);
-  background: var(--bg);
-  color: var(--fg);
-  font-size: 0.72rem;
-  line-height: 1.3;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  white-space: normal;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
 /* --- Detail page -------------------------------------------------------- */
@@ -953,11 +927,10 @@ table.board tbody tr.flap {
   flex: 1 1 auto;
 }
 
-/* Freshness dot + meta ---------------------------------------------------- */
+/* Detail page meta footer ------------------------------------------------- */
 
 .meta-source,
-.meta-effective,
-.meta-verified {
+.meta-effective {
   margin: 0.25rem 0;
   font-size: 0.8rem;
   text-transform: uppercase;

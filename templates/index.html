@@ -58,25 +58,10 @@
         <th>STATUS</th>
         <th>NEXT</th>
         <th>TEMP</th>
-        <th>TRUST</th>
       </tr>
     </thead>
     <tbody>
       {% for page in spots.pages %}
-        {% set sessions = page.extra.sessions | default(value=[]) %}
-        {% if page.extra.type == 'pool' and sessions | length > 0 and page.extra.last_verified_at %}
-          {% set trust_label = "REVIEWED AGAINST SF REC & PARK PDF ON " ~ page.extra.last_verified_at %}
-          {% set trust_value = "PDF" %}
-        {% elif page.extra.type == 'pool' %}
-          {% set trust_label = "NO REVIEWED DROP-IN SCHEDULE YET" %}
-          {% set trust_value = "REVIEW" %}
-        {% elif page.extra.type == 'open_water' %}
-          {% set trust_label = "NOAA/NDBC CONDITIONS UPDATED HOURLY" %}
-          {% set trust_value = "NOAA/NDBC" %}
-        {% else %}
-          {% set trust_label = "" %}
-          {% set trust_value = "—" %}
-        {% endif %}
         <tr
           data-slug="{{ page.slug }}"
           data-type="{{ page.extra.type }}"
@@ -98,12 +83,6 @@
           <td>—</td>
           <td>—</td>
           <td>{% if page.extra.type == 'pool' and page.extra.setpoint_label %}{{ page.extra.setpoint_label | upper }}{% else %}—{% endif %}</td>
-          <td class="trust-cell"
-              {% if trust_label %}
-                data-tooltip="{{ trust_label }}" aria-label="{{ trust_label }}" title="{{ trust_label }}"
-              {% endif %}>
-            {{ trust_value }}
-          </td>
         </tr>
       {% endfor %}
     </tbody>
