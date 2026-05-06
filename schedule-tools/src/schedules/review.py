@@ -204,7 +204,7 @@ def finalize_draft(
 
     result = validate(raw.get("payload", {}))
     if not result.ok:
-        raise FinalizeError("; ".join(result.violations))
+        raise FinalizeError("; ".join(v.message for v in result.violations))
 
     matched = _payload_matches_any_provider(raw.get("payload", {}), reviewed_json_path.parent)
     if matched is not None:

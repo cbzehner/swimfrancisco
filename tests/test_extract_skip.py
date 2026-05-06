@@ -171,9 +171,9 @@ def test_extract_uses_cached_provider_when_prompt_hashes_match(tmp_path, monkeyp
         slugs=[SLUG], provider="gemini", compare_with=None, force=False, dry_run=True,
     )
 
-    from schedules.models import Failed as _Failed
-    if isinstance(results[0], _Failed):
-        raise AssertionError(f"pipeline Failed: {results[0].error!r}")
+    from schedules.models import Aborted, Rejected
+    if isinstance(results[0], (Aborted, Rejected)):
+        raise AssertionError(f"pipeline failed: {results[0].error!r}")
     assert isinstance(results[0], Proposed), results[0]
     assert exit_code == 0
     assert results[0].sessions_count == 5

@@ -65,7 +65,7 @@ def test_validate_rejects_partial_day_closure_with_only_one_time():
     }
     result = validate(payload)
     assert result.ok is False
-    assert any("both start_time and end_time" in v for v in result.violations)
+    assert any(v.code == "incomplete_closure_time_range" for v in result.violations)
 
 
 def test_validate_rejects_partial_day_closure_with_inverted_times():
@@ -82,7 +82,7 @@ def test_validate_rejects_partial_day_closure_with_inverted_times():
     }
     result = validate(payload)
     assert result.ok is False
-    assert any("invalid time range" in v for v in result.violations)
+    assert any(v.code == "invalid_closure_time_range" for v in result.violations)
 
 
 def test_validate_rejects_partial_day_closure_on_multi_day_range():
@@ -99,5 +99,5 @@ def test_validate_rejects_partial_day_closure_on_multi_day_range():
     }
     result = validate(payload)
     assert result.ok is False
-    assert any("multi-day" in v for v in result.violations)
+    assert any(v.code == "multi_day_closure_with_time_range" for v in result.violations)
 

@@ -31,7 +31,7 @@ def project(
 
     result = validate(canonical)
     if not result.ok:
-        raise ProjectError("; ".join(result.violations))
+        raise ProjectError("; ".join(v.message for v in result.violations))
 
     md_path = content_spots_dir / f"{slug}.md"
     if not md_path.exists():

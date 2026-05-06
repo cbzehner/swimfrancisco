@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from schedules.models import Failed, PoolResult, Proposed, ReviewNote, Skipped, Unchanged
+from schedules.models import Aborted, PoolResult, Proposed, Rejected, ReviewNote, Skipped, Unchanged, Violation
 from schedules.report import write_report
 
 
@@ -28,7 +28,6 @@ def _proposed(**overrides: object) -> Proposed:
         "prior_sessions_count": 5,
         "closures_count": 0,
         "schedule_effective": "2026-04-01",
-        "invariants_passed": True,
         "cost_estimate": "$0.01",
     }
     defaults.update(overrides)
@@ -48,7 +47,6 @@ def _unchanged(**overrides: object) -> Unchanged:
         "sessions_count": 5,
         "closures_count": 0,
         "schedule_effective": "2026-04-01",
-        "invariants_passed": True,
     }
     defaults.update(overrides)
     return Unchanged(**defaults)  # type: ignore[arg-type]
@@ -66,16 +64,41 @@ def _skipped(**overrides: object) -> Skipped:
     return Skipped(**defaults)  # type: ignore[arg-type]
 
 
-def _failed(**overrides: object) -> Failed:
+def _aborted(**overrides: object) -> Aborted:
     defaults: dict[str, object] = {
         "slug": "rossi-pool",
         "official_page_url": "https://example.test/rossi",
         "pdf_url": "https://example.test/rossi.pdf",
         "source_status": "published",
         "error": "boom",
+        "prior_sessions_count": 0,
+        "prior_closures_count": 0,
+        "prior_schedule_effective": None,
     }
     defaults.update(overrides)
-    return Failed(**defaults)  # type: ignore[arg-type]
+    return Aborted(**defaults)  # type: ignore[arg-type]
+
+
+def _rejected(**overrides: object) -> Rejected:
+    defaults: dict[str, object] = {
+        "slug": "rossi-pool",
+        "official_page_url": "https://example.test/rossi",
+        "pdf_url": "https://example.test/rossi.pdf",
+        "source_status": "published",
+        "error": "Validation refused the extracted payload.",
+        "provider": "anthropic",
+        "model": "claude",
+        "pdf_sha256": "a" * 64,
+        "page_count": 1,
+        "sessions_count": 0,
+        "prior_sessions_count": 8,
+        "closures_count": 0,
+        "schedule_effective": None,
+        "cost_estimate": "$0.01",
+        "violations": [],
+    }
+    defaults.update(overrides)
+    return Rejected(**defaults)  # type: ignore[arg-type]
 
 
 def _render(results: list[PoolResult], tmp_path: Path) -> str:
@@ -89,7 +112,7 @@ class TestSummaryHeader:
             _proposed(slug="a"),
             _unchanged(slug="b"),
             _skipped(slug="c"),
-            _failed(slug="d"),
+            _aborted(slug="d"),
         ]
         text = _render(results, tmp_path)
         assert "4 pools processed, 1 succeeded, 1 unchanged, 1 skipped, 1 failed" in text
@@ -126,21 +149,15 @@ class TestPoolBlock:
         assert "- sessions: 7 (+0 vs last run)" in text
 
     def test_invariants_ok_vs_violations(self, tmp_path: Path) -> None:
-        ok_text = _render([_proposed(slug="ok", invariants_passed=True)], tmp_path)
+        ok_text = _render([_proposed(slug="ok")], tmp_path)
         bad_text = _render(
             [
-                _failed(
+                _rejected(
                     slug="bad",
-                    error="Validation refused the extracted payload.",
-                    provider="anthropic",
-                    model="claude",
-                    pdf_sha256="a" * 64,
-                    page_count=1,
-                    sessions_count=0,
-                    prior_sessions_count=8,
-                    closures_count=0,
-                    schedule_effective=None,
-                    violations=["session_ends_before_start", "duplicate_closure"],
+                    violations=[
+                        Violation(code="invalid_session_time_range", message="session_ends_before_start"),
+                        Violation(code="invalid_closure_date_range", message="duplicate_closure"),
+                    ],
                 )
             ],
             tmp_path,
@@ -179,7 +196,7 @@ class TestPoolBlock:
     def test_failed_error_renders(self, tmp_path: Path) -> None:
         text = _render(
             [
-                _failed(
+                _aborted(
                     slug="broke",
                     error="Semantic delta validation blocked merge.",
                 ),

@@ -13,7 +13,7 @@ helpers and is exercised here.
 
 from __future__ import annotations
 
-from schedules.models import Failed, PoolEntry, PoolResult, Proposed, Skipped, Unchanged
+from schedules.models import Aborted, PoolEntry, PoolResult, Proposed, Skipped, Unchanged
 from schedules.pipeline import (
     _identity_kwargs,
     compute_exit_code,
@@ -38,7 +38,6 @@ def _unchanged(slug: str) -> Unchanged:
         sessions_count=0,
         closures_count=0,
         schedule_effective="2026-01-01",
-        invariants_passed=True,
     )
 
 
@@ -56,19 +55,21 @@ def _proposed(slug: str, *, written: bool = True) -> Proposed:
         prior_sessions_count=5,
         closures_count=0,
         schedule_effective="2026-01-01",
-        invariants_passed=True,
         cost_estimate="$0.01",
         written=written,
     )
 
 
-def _failed(slug: str) -> Failed:
-    return Failed(
+def _failed(slug: str) -> Aborted:
+    return Aborted(
         slug=slug,
         official_page_url="",
         pdf_url="",
         source_status="published",
         error="boom",
+        prior_sessions_count=0,
+        prior_closures_count=0,
+        prior_schedule_effective=None,
     )
 
 

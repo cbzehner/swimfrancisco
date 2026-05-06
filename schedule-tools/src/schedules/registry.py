@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import tomllib
+from typing import get_args
 
-from .models import PoolEntry
+from .models import PoolEntry, SourceStatus
 from .paths import CONTENT_SPOTS_DIR, REGISTRY_PATH
+
+
+_VALID_SOURCE_STATUSES = frozenset(get_args(SourceStatus))
 
 
 def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
@@ -32,8 +36,11 @@ def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
 
         if notes is not None and not isinstance(notes, str):
             raise ValueError(f"notes for {slug!r} must be a string.")
-        if not isinstance(source_status, str) or not source_status.strip():
-            raise ValueError(f"source_status for {slug!r} must be a non-empty string.")
+        if source_status not in _VALID_SOURCE_STATUSES:
+            valid = ", ".join(sorted(_VALID_SOURCE_STATUSES))
+            raise ValueError(
+                f"source_status for {slug!r} must be one of: {valid}. Got: {source_status!r}"
+            )
 
         entries.append(
             PoolEntry(

@@ -2,10 +2,56 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 
 ExtractedPayload = dict[str, Any]
+
+
+ViolationCode = Literal[
+    "sessions_dropped_to_zero",
+    "too_few_weekly_sessions",
+    "invalid_session_time_range",
+    "invalid_closure_date_range",
+    "incomplete_closure_time_range",
+    "invalid_closure_time_range",
+    "multi_day_closure_with_time_range",
+    "invalid_schedule_effective_date",
+]
+
+
+ReviewNoteKind = Literal[
+    "multi_grid_suspected",
+    "provider_session_count_disagreement",
+    "provider_session_diff",
+    "provider_closure_diff",
+    "provider_schedule_effective_diff",
+    "delta_session_count_shift",
+    "delta_session_types_missing",
+    "delta_schedule_effective_regressed",
+    "grounding_coverage_low",
+    "compare_provider_failed",
+    "legacy_note",
+]
+
+
+Severity = Literal["info", "warning", "error"]
+
+
+SourceStatus = Literal[
+    "published",
+    "closed_without_current_schedule",
+    "missing_current_schedule",
+]
+
+
+@dataclass(frozen=True)
+class Violation:
+    code: ViolationCode
+    message: str
+
+    def __str__(self) -> str:
+        return self.message
 
 
 @dataclass(frozen=True)
@@ -13,7 +59,7 @@ class PoolEntry:
     slug: str
     pdf_url: str
     official_page_url: str
-    source_status: str = "published"
+    source_status: SourceStatus = "published"
     notes: str | None = None
 
 
@@ -30,7 +76,7 @@ class FetchResult:
 @dataclass(frozen=True)
 class ValidationResult:
     ok: bool
-    violations: list[str]
+    violations: list[Violation]
     stats: dict[str, int]
     catastrophic: bool = False
 
@@ -54,9 +100,9 @@ class ProviderResult:
 
 @dataclass(frozen=True)
 class ReviewNote:
-    kind: str
+    kind: ReviewNoteKind
     message: str
-    severity: str = "warning"
+    severity: Severity = "warning"
     evidence: dict[str, Any] = field(default_factory=dict)
 
 
@@ -99,7 +145,7 @@ class PoolResultBase:
     slug: str
     official_page_url: str
     pdf_url: str
-    source_status: str
+    source_status: SourceStatus
 
 
 @dataclass(frozen=True)
@@ -121,7 +167,6 @@ class Unchanged(PoolResultBase):
     sessions_count: int
     closures_count: int
     schedule_effective: str
-    invariants_passed: bool
     review_notes: list[ReviewNote] = field(default_factory=list)
     cost_estimate: str = "unchanged"
     artifact_paths: dict[str, str] = field(default_factory=dict)
@@ -129,7 +174,7 @@ class Unchanged(PoolResultBase):
 
 @dataclass(frozen=True)
 class Proposed(PoolResultBase):
-    """Fresh extraction that validated cleanly. May or may not have been written."""
+    """Fresh extraction that passed catastrophic-validation. May still carry advisory violations."""
 
     provider: str
     model: str
@@ -139,37 +184,43 @@ class Proposed(PoolResultBase):
     prior_sessions_count: int
     closures_count: int
     schedule_effective: str | None
-    invariants_passed: bool
     cost_estimate: str
-    violations: list[str] = field(default_factory=list)
+    violations: list[Violation] = field(default_factory=list)
     review_notes: list[ReviewNote] = field(default_factory=list)
     artifact_paths: dict[str, str] = field(default_factory=dict)
     written: bool = False
 
 
 @dataclass(frozen=True)
-class Failed(PoolResultBase):
-    """Extraction failed — either by exception or by validation refusing the payload.
+class Rejected(PoolResultBase):
+    """Extraction completed but validation refused the payload (e.g. sessions dropped to 0)."""
 
-    Rich fields are populated if extraction got far enough to produce them.
-    """
-
-    error: str = ""
-    provider: str | None = None
-    model: str | None = None
-    pdf_sha256: str | None = None
-    page_count: int | None = None
-    sessions_count: int | None = None
-    prior_sessions_count: int | None = None
-    closures_count: int | None = None
-    schedule_effective: str | None = None
-    violations: list[str] = field(default_factory=list)
+    error: str
+    provider: str
+    model: str
+    pdf_sha256: str
+    page_count: int
+    sessions_count: int
+    prior_sessions_count: int
+    closures_count: int
+    schedule_effective: str | None
+    cost_estimate: str
+    violations: list[Violation]
     review_notes: list[ReviewNote] = field(default_factory=list)
-    cost_estimate: str | None = None
     artifact_paths: dict[str, str] = field(default_factory=dict)
 
 
-PoolResult = Skipped | Unchanged | Proposed | Failed
+@dataclass(frozen=True)
+class Aborted(PoolResultBase):
+    """Run aborted by an exception in fetch/extract/merge — no completed extraction."""
+
+    error: str
+    prior_sessions_count: int
+    prior_closures_count: int
+    prior_schedule_effective: str | None
+
+
+PoolResult = Skipped | Unchanged | Proposed | Rejected | Aborted
 
 
 def needs_review(result: PoolResult) -> bool:
@@ -177,4 +228,6 @@ def needs_review(result: PoolResult) -> bool:
         return result.source_status != "published"
     if isinstance(result, Unchanged):
         return bool(result.review_notes)
+    if isinstance(result, Aborted):
+        return True
     return bool(result.violations or result.review_notes or result.source_status != "published")

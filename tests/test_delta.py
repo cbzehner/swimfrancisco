@@ -40,4 +40,4 @@ def test_validate_flags_drop_to_zero_as_catastrophic():
     extracted = {"sessions": [], "closures": []}
     result = validate(extracted, prior_sessions_count=8)
     assert result.catastrophic is True
-    assert any("sessions_count dropped to 0" in violation for violation in result.violations)
+    assert any(v.code == "sessions_dropped_to_zero" for v in result.violations)
