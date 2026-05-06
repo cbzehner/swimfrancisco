@@ -285,6 +285,37 @@ table.board {
   }
 }
 
+.trust-cell {
+  color: var(--fg-dim);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]:hover::after,
+[data-tooltip]:focus::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  z-index: 10;
+  left: 0;
+  top: calc(100% + 0.35rem);
+  width: max-content;
+  max-width: min(24rem, 80vw);
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--fg);
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 0.72rem;
+  line-height: 1.3;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: normal;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
 /* --- Detail page -------------------------------------------------------- */
 
 .back,
@@ -814,7 +845,9 @@ table.board tbody tr.flap {
     & th:nth-child(2),
     & td:nth-child(2),
     & th:nth-child(5),
-    & td:nth-child(5) {
+    & td:nth-child(5),
+    & th:nth-child(6),
+    & td:nth-child(6) {
       display: none;
     }
   }

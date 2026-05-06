@@ -57,6 +57,7 @@
         <th>STATUS</th>
         <th>NEXT</th>
         <th>TEMP</th>
+        <th>TRUST</th>
       </tr>
     </thead>
     <tbody>
@@ -89,6 +90,24 @@
           <td>—</td>
           <td>—</td>
           <td>{% if page.extra.type == 'pool' and page.extra.setpoint_label %}{{ page.extra.setpoint_label | upper }}{% else %}—{% endif %}</td>
+          <td class="trust-cell"
+              {% if page.extra.type == 'pool' and sessions | length > 0 and page.extra.last_verified_at %}
+                data-tooltip="REVIEWED AGAINST SF REC &amp; PARK PDF ON {{ page.extra.last_verified_at }}"
+              {% elif page.extra.type == 'pool' %}
+                data-tooltip="NO REVIEWED DROP-IN SCHEDULE YET"
+              {% elif page.extra.type == 'open_water' %}
+                data-tooltip="NOAA/NDBC CONDITIONS UPDATED HOURLY"
+              {% endif %}>
+            {% if page.extra.type == 'pool' and sessions | length > 0 and page.extra.last_verified_at %}
+              PDF
+            {% elif page.extra.type == 'pool' %}
+              REVIEW
+            {% elif page.extra.type == 'open_water' %}
+              NOAA/NDBC
+            {% else %}
+              —
+            {% endif %}
+          </td>
         </tr>
       {% endfor %}
     </tbody>
