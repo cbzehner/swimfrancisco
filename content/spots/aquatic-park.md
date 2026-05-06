@@ -12,6 +12,7 @@ cost = "free"
 noaa_tide_station = "9414290"
 temp_station_id = "9414290"
 temp_station_type = "noaa"
+temp_fallback_station_id = "9414750"
 description_short = "Protected cove, calm water, popular with swim clubs"
 hazards = ["boat traffic outside cove", "cold water year-round"]
 clubs = [

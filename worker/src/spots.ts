@@ -34,20 +34,20 @@ export const SPOTS: SpotConfig[] = [
     title: "Baker Beach",
     tempStationId: "46237",
     tempStationType: "ndbc",
-    tideStationId: "9414290",
+    tideStationId: "9414275",
   },
   {
     slug: "ocean-beach",
     title: "Ocean Beach",
     tempStationId: "46237",
     tempStationType: "ndbc",
-    tideStationId: "9414290",
+    tideStationId: "9414275",
   },
   {
     slug: "china-beach",
     title: "China Beach",
     tempStationId: "46237",
     tempStationType: "ndbc",
-    tideStationId: "9414290",
+    tideStationId: "9414275",
   },
 ];

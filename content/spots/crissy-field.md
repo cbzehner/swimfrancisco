@@ -12,6 +12,7 @@ cost = "free"
 noaa_tide_station = "9414290"
 temp_station_id = "9414290"
 temp_station_type = "noaa"
+temp_fallback_station_id = "9414750"
 description_short = "Bay beach inside the Golden Gate with strong tidal currents"
 hazards = ["strong tidal currents", "cold water year-round", "boat and ship traffic"]
 clubs = []
