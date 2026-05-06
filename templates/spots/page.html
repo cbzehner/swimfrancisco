@@ -6,7 +6,7 @@
     <section class="{{ class }}">
       <h2>{{ title }}</h2>
       <ul>
-        {% for item in items %}<li>{{ item }}</li>{% endfor %}
+        {% for item in items %}<li>{% if item is object %}{% if item.url %}<a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.name }}</a>{% else %}{{ item.name }}{% endif %}{% else %}{{ item }}{% endif %}</li>{% endfor %}
       </ul>
     </section>
   {% endif %}
