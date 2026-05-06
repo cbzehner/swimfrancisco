@@ -2,6 +2,7 @@
   "name": "swimfrancisco",
   "version": "0.1.0",
   "private": true,
+  "license": "GPL-3.0-only",
   "type": "module",
   "description": "Swim Francisco conditions Worker — hourly cron fetches NOAA/NDBC, serves /api/conditions.",
   "scripts": {

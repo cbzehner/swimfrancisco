@@ -23,24 +23,15 @@
 // board still renders and all rows remain visible.
 
 import { computeNextOpenOffset, nowInPacific, sortByRank } from "./helpers/board.mjs";
+import { TYPE_TOKENS, TYPE_TO_TOKEN, isDropInType } from "./helpers/programs.mjs";
 import { renderBoard } from "./status.js";
 
-const POOL_SESSION_TYPES = new Set(["lap_swim", "family_swim", "senior_swim"]);
 const EARTH_RADIUS_MILES = 3958.8;
 const TYPE_NONE = "none";
 
 // Hash routing: short tokens in window.location.hash, joined by "+".
 // Filters own the hash. The `/map/` vs `/` switch is a real navigation
 // (plain <a href>), not a hash token — see view-switcher in the template.
-const TYPE_TOKENS = {
-  lap: "lap_swim",
-  beach: "open_water",
-  family: "family_swim",
-  senior: "senior_swim",
-};
-const TYPE_TO_TOKEN = Object.fromEntries(
-  Object.entries(TYPE_TOKENS).map(([token, type]) => [type, token]),
-);
 // Hash tokens this module owns — stripped and rewritten on every state sync.
 // Includes the sort token even though sort isn't a filter, because the same
 // hash-round-trip logic applies. `next-open` and `open-now` are legacy
@@ -117,7 +108,7 @@ function rowMatchesType(row, type) {
   if (type === "open_water") {
     return row.getAttribute("data-type") === "open_water";
   }
-  if (!POOL_SESSION_TYPES.has(type)) return false;
+  if (!isDropInType(type)) return false;
   if (row.getAttribute("data-type") !== "pool") return false;
   const schedule = readSchedule(row);
   if (!schedule || !Array.isArray(schedule.sessions)) return false;
@@ -192,7 +183,7 @@ function sortRowsByNextOpen(rows, allowedTypes, now) {
 }
 
 function allowedPoolTypes(state) {
-  const active = Array.from(state.types).filter((type) => POOL_SESSION_TYPES.has(type));
+  const active = Array.from(state.types).filter((type) => isDropInType(type));
   return active.length > 0 ? active : null;
 }
 

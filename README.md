@@ -75,7 +75,7 @@ Zola, plain JS (no build step for frontend), Leaflet (lazy-loaded for map view),
 
 ## License
 
-TBD.
+GPL-3.0-only. See [`LICENSE`](LICENSE).
 
 ## Links
 

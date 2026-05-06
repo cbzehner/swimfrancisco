@@ -1,6 +1,7 @@
 {
   "name": "swimfrancisco-monorepo",
   "private": true,
+  "license": "GPL-3.0-only",
   "description": "Root package.json declaring the Worker as an npm workspace so Cloudflare Workers Builds' auto `npm install` at the repo root succeeds. The Worker itself lives in `worker/`.",
   "workspaces": [
     "worker"

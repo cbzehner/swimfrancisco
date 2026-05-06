@@ -1,17 +1,12 @@
-# Cloudflare Pages redirects / rewrites.
+# Static hosting rewrite fallback.
 #
 # This file is copied verbatim from static/ into public/_redirects by Zola.
-# Cloudflare Pages consumes it at deploy time.
+# The current production path is Cloudflare Workers Builds, where
+# worker/wrangler.toml routes /api/* through the Worker before static assets.
 #
-# The rule below is ONLY needed if the Worker is deployed on a separate
-# subdomain (e.g. api.swimfrancisco.com) AND Pages is NOT configured with a
-# same-origin route like swimfrancisco.com/api/*. It rewrites same-origin
-# /api/* requests to the Worker so the browser never makes a cross-origin
-# call (status 200 = rewrite/proxy, not a visible 3xx redirect).
-#
-# If the Worker is bound to swimfrancisco.com/api/* directly via a Workers
-# route (recommended — see docs/deploy.md option C), this rule is a harmless
-# no-op because the Worker route wins before Pages serves anything.
+# The rule below is only for a legacy split deploy where the static site is
+# hosted separately and the Worker lives on api.swimfrancisco.com. It rewrites
+# same-origin /api/* calls to that Worker endpoint (status 200 = proxy rewrite).
 #
 # Uncomment once api.swimfrancisco.com is live:
 # /api/*  https://api.swimfrancisco.com/api/:splat  200

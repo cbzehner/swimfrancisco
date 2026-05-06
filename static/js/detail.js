@@ -10,12 +10,7 @@ import {
   nowInPacific,
   parseHHMM,
 } from "./helpers/board.mjs";
-
-const PROGRAM_LABEL = {
-  lap_swim: "LAP",
-  family_swim: "FAMILY",
-  senior_swim: "SENIOR",
-};
+import { PROGRAM_LABEL } from "./helpers/programs.mjs";
 
 const DAY_LABEL_SHORT = {
   sunday: "SUN",

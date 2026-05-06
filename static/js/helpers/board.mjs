@@ -4,6 +4,8 @@
 // node:test without a DOM. DOM-facing wrappers live in the parent files and
 // delegate to these.
 
+import { isDropInType } from "./programs.mjs";
+
 const DAY_KEYS = [
   "sunday",
   "monday",
@@ -137,8 +139,6 @@ export function closureCopy(closure) {
   return `Closed through ${formatISODateHuman(closure.end)}`;
 }
 
-const DROP_IN_TYPES = new Set(["lap_swim", "family_swim", "senior_swim"]);
-
 function normalizeAllowedTypes(allowedTypes) {
   if (allowedTypes == null) return null;
   const values = allowedTypes instanceof Set
@@ -210,7 +210,7 @@ export function findNextDropIn(schedule, now, allowedTypes = null) {
   const normalized = [];
   for (const session of sessions) {
     if (!session || typeof session !== "object") continue;
-    if (!DROP_IN_TYPES.has(session.type)) continue;
+    if (!isDropInType(session.type)) continue;
     if (allowed && !allowed.has(session.type)) continue;
     const day = typeof session.day === "string" ? session.day.toLowerCase() : null;
     const start = parseHHMM(session.start);
@@ -451,7 +451,7 @@ export function computeDetailStatus(schedule, now) {
   const todayKey = DAY_KEYS[now.getDay()];
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const todayAll = normalized.filter((s) => s.day === todayKey);
-  const todayDropIn = todayAll.filter((s) => DROP_IN_TYPES.has(s.type));
+  const todayDropIn = todayAll.filter((s) => isDropInType(s.type));
 
   const activeDropIn = todayDropIn.filter(
     (s) => s.start <= nowMinutes && nowMinutes < s.end,
@@ -475,7 +475,7 @@ export function computeDetailStatus(schedule, now) {
     };
   }
 
-  const anyDropInThisWeek = normalized.some((s) => DROP_IN_TYPES.has(s.type));
+  const anyDropInThisWeek = normalized.some((s) => isDropInType(s.type));
   if (!anyDropInThisWeek) {
     return { ...EMPTY_DETAIL, kind: "NO_DROPIN_WEEK" };
   }
