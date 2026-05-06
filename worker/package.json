@@ -6,8 +6,10 @@
   "type": "module",
   "description": "Swim Francisco conditions Worker — hourly cron fetches NOAA/NDBC, serves /api/conditions.",
   "scripts": {
+    "generate-spots": "node ../scripts/generate-worker-spots.mjs",
     "dev": "wrangler dev --test-scheduled",
     "deploy": "wrangler deploy",
+    "pretypecheck": "node ../scripts/generate-worker-spots.mjs",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

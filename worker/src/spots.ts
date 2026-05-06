@@ -1,5 +1,6 @@
-// Static spot → station mapping for the 5 open-water swims.
-// Sourced from content/spots/{slug}.md frontmatter; small fixed list, inlined.
+// AUTO-GENERATED from content/spots/*.md — do not edit by hand.
+// Regenerate via `node scripts/generate-worker-spots.mjs`
+// (runs automatically from wrangler [build] before dev and deploy).
 
 export type TempStationType = "noaa" | "ndbc";
 
@@ -8,7 +9,7 @@ export interface SpotConfig {
   title: string;
   tempStationId: string;
   tempStationType: TempStationType;
-  tempFallbackStationId?: string; // NOAA only
+  tempFallbackStationId?: string;
   tideStationId: string;
 }
 
@@ -22,6 +23,20 @@ export const SPOTS: SpotConfig[] = [
     tideStationId: "9414290",
   },
   {
+    slug: "baker-beach",
+    title: "Baker Beach",
+    tempStationId: "46237",
+    tempStationType: "ndbc",
+    tideStationId: "9414275",
+  },
+  {
+    slug: "china-beach",
+    title: "China Beach",
+    tempStationId: "46237",
+    tempStationType: "ndbc",
+    tideStationId: "9414275",
+  },
+  {
     slug: "crissy-field",
     title: "Crissy Field / East Beach",
     tempStationId: "9414290",
@@ -30,22 +45,8 @@ export const SPOTS: SpotConfig[] = [
     tideStationId: "9414290",
   },
   {
-    slug: "baker-beach",
-    title: "Baker Beach",
-    tempStationId: "46237",
-    tempStationType: "ndbc",
-    tideStationId: "9414275",
-  },
-  {
     slug: "ocean-beach",
     title: "Ocean Beach",
-    tempStationId: "46237",
-    tempStationType: "ndbc",
-    tideStationId: "9414275",
-  },
-  {
-    slug: "china-beach",
-    title: "China Beach",
     tempStationId: "46237",
     tempStationType: "ndbc",
     tideStationId: "9414275",

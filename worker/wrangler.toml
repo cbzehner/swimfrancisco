@@ -2,6 +2,11 @@ name = "swimfrancisco"
 main = "src/index.ts"
 compatibility_date = "2025-01-01"
 
+# Regenerate src/spots.ts from content/spots/*.md before bundling so the
+# open-water station mapping has a single source of truth (the markdown).
+[build]
+command = "node ../scripts/generate-worker-spots.mjs"
+
 # Three crons:
 #  - `0 * * * *` — hourly NOAA/NDBC refresh (unchanged).
 #  - `5 7 * * *` and `5 8 * * *` — daily rebuild candidates. Cron expressions
