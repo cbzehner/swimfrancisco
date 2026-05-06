@@ -8,15 +8,10 @@
 All five open-water spots currently display only the single next-upcoming
 tide extremum fetched from NOAA. Two user-visible shortcomings:
 
-1. **Uniformity across spots.** All five open-water records share NOAA
-   station 9414290 (documented in `docs/spec.md`). This is correct — NOAA
-   does not publish separate prediction stations for Baker, Ocean, or
-   China Beach; 9414290 is the authoritative reference for the SF Gate
-   region. Subordinate-station offsets exist but their correction is
-   small (≤15 min timing, ≤10% amplitude) and does not change tide
-   *phase*, which is what actually drives swim decisions. This spec
-   accepts the shared-station display as correct and does not introduce
-   subordinate offsets.
+1. **Station coverage.** Bay spots use NOAA station 9414290. Ocean-side
+   spots use 9414275, the Ocean Beach outer-coast station. This keeps
+   tide predictions aligned with the spot config in `content/spots/*.md`
+   and `worker/src/spots.ts`.
 2. **Horizon is too narrow.** The dominant SF open-water use case is
    planning a dawn swim the night before. "Next low at 11:42 pm" shown
    at 9 pm doesn't answer "when's the tide change tomorrow morning." A
@@ -42,8 +37,8 @@ data.
 
 ## Non-goals
 
-- No subordinate-station offsets. All five spots show identical tide
-  data sourced from 9414290.
+- No subordinate-station offsets beyond each spot's configured NOAA tide
+  station.
 - No tide charts, curves, or graphical visualizations.
 - No 7-day reference table.
 - No per-spot tide annotations (e.g. "flood pushes you to the sauna at

@@ -234,7 +234,7 @@ def _render_eval_section(*, data_root: Path, changed_slugs: set[str]) -> list[st
         lines.append(_eval_aggregate_row(provider, by_provider[provider]))
     lines.append("")
     lines.append(
-        "Per-codebase F1 on `(day, type, start, end)` row identity. "
+        "Per-codebase F1 on `(day, type, start, end, pool)` row identity. "
         "Run `just schedules-eval --stdout` for the full per-pool breakdown."
     )
     lines.append("")

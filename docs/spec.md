@@ -5,9 +5,9 @@ swimfrancisco.com — a live-updating database of all the places to swim in San 
 
 ## Architecture
 
-- **Static site:** Zola on Cloudflare Pages
+- **Static site:** Zola served by a single Cloudflare Worker in the Workers Builds model
 - **Live data:** Cloudflare Worker (TypeScript), hourly cron, KV storage
-- **Scraping pipeline (v2):** Python (devenv + uv, pdfplumber + Haiku) via GitHub Actions — deferred, hand-curate for v1
+- **Schedule extraction:** Python (devenv + uv) with Gemini/Anthropic PDF extraction, human-reviewed `reviewed.json`, and projection into `content/spots/*.md`
 - **Domain:** swimfrancisco.com on Cloudflare
 - **Dev environment:** devenv + uv
 
@@ -33,9 +33,9 @@ swimfrancisco.com — a live-updating database of all the places to swim in San 
 |------|------|-------------|-------------|
 | Aquatic Park | Bay | 9414290 (fallback: 9414750) | 9414290 |
 | Crissy Field / East Beach | Bay | 9414290 (fallback: 9414750) | 9414290 |
-| Baker Beach | Ocean | NDBC 46237 | 9414290 |
-| Ocean Beach | Ocean | NDBC 46237 | 9414290 |
-| China Beach | Ocean | NDBC 46237 | 9414290 |
+| Baker Beach | Ocean | NDBC 46237 | 9414275 |
+| Ocean Beach | Ocean | NDBC 46237 | 9414275 |
+| China Beach | Ocean | NDBC 46237 | 9414275 |
 
 Bay water: ~60-64°F. Ocean water: ~56-58°F. Delta of 4-7°F.
 
@@ -65,7 +65,7 @@ end = "08:30"
 
 [[extra.sessions]]
 day = "monday"
-type = "open_swim"
+type = "family_swim"
 start = "12:00"
 end = "14:00"
 
@@ -101,6 +101,7 @@ cost = "free"
 noaa_tide_station = "9414290"
 temp_station_id = "9414290"
 temp_station_type = "noaa"
+temp_fallback_station_id = "9414750"
 description_short = "Protected cove, calm water, popular with swim clubs"
 hazards = ["boat traffic outside cove", "cold water year-round"]
 clubs = ["South End Rowing Club", "Dolphin Swimming & Boating Club"]
@@ -120,20 +121,20 @@ Airport departure board aesthetic. Split-flap animation.
 
 **Homepage = departure board:**
 
-| SPOT | TYPE | STATUS | NEXT | TEMP |
-|------|------|--------|------|------|
-| Hamilton Pool | LAP SWIM | OPEN | Closes 3pm | 80°F |
-| Sava Pool | OPEN SWIM | CLOSED | Tomorrow 10am | — |
-| Aquatic Park | OPEN WATER | — | — | 56°F |
+| SPOT | TYPE | STATUS | NEXT | TEMP | TRUST |
+|------|------|--------|------|------|-------|
+| Hamilton Pool | INDOOR | OPEN | Closes 15:00 | 80°F | PDF |
+| Sava Pool | INDOOR | CLOSED | Closed through Sep 21, 2026 | — | REVIEW |
+| Aquatic Park | BEACH | OPEN | — | 56°F | NOAA/NDBC |
 
 - Default sort: open-first, then alphabetical
-- Filters: **Open Now** (toggle), **Type** (pills: Lap / Open / Family / Open Water)
+- Filters: **Open** sort, **Type** (pills: Lap / Beach / Family / Senior)
 - Sort: **Distance** (button, triggers geolocation → re-sort by distance; board view only)
 - Map view toggle (Leaflet + OpenStreetMap), not the default
 
 **Mobile (primary):**
-- 3 columns: SPOT, STATUS, TEMP
-- Tap row to expand: shows NEXT, TYPE, link to detail page
+- Compact columns prioritize SPOT, STATUS, and NEXT; TYPE, TEMP, and TRUST collapse at phone widths
+- Tap row to expand: shows hidden row context and link to detail page
 - Split-flap animation preserved
 
 **Animation:**
@@ -153,13 +154,13 @@ Airport departure board aesthetic. Split-flap animation.
   1. Computes STATUS/NEXT client-side by checking current time against the embedded schedule + closures
   2. Fetches `/api/conditions` and injects water temp/conditions into rows by `data-slug`
 - Without JS: full schedule table is visible, but no computed STATUS/NEXT columns and no live water temp
-- Open water spots never show OPEN/CLOSED — they show conditions (temp, tide, last updated) and let the swimmer decide
+- Open-water rows show `OPEN` as access status and leave safety decisions to condition details (temp, tide, hazards)
 
 ## Cloudflare Worker
 
 - TypeScript, lives in `worker/` directory
 - **Cron Trigger:** runs hourly
-  - Fetches NOAA Tides & Currents API (station 9414290, fallback 9414750) for bay temp + tides
+  - Fetches NOAA Tides & Currents API for bay temp (9414290, fallback 9414750) and per-spot tide predictions
   - Fetches NDBC buoy 46237 data for ocean temp
   - Writes per-spot JSON to KV + bulk `all` key
 - **Endpoints:**
@@ -172,31 +173,23 @@ Airport departure board aesthetic. Split-flap animation.
 - NOAA Tides & Currents: `https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?station=STATION_ID&product=water_temperature&units=english&time_zone=lst_ldt&format=json`
 - NDBC real-time: `https://www.ndbc.noaa.gov/data/realtime2/46237.txt`
 
-## Scraping Pipeline (v2 — deferred)
+## Schedule Extraction
 
-For v1, hand-curate all pool data. 9 pools with quarterly schedule changes don't justify automation yet.
-
-When ready to automate (v2):
-
-1. Weekly GitHub Action fetches SF Rec & Parks pool schedule PDF
-2. Parse with `pdfplumber` for table extraction
-3. Validate/clean with Haiku (LLM fallback for messy formatting)
-4. Write Zola content files (one `.md` per spot)
-5. Store raw PDF in repo for debugging
-6. **Open a PR for human review** — do not auto-push to `main`
-
-Tools: Python, pdfplumber, Anthropic API (Haiku), potentially Exa/Firecrawl for web scraping.
+The pool schedule extractor is a local and CI-runnable Python CLI under
+`schedule-tools/`. It fetches SF Rec & Park PDFs, runs Gemini and/or Anthropic
+against the PDF with a JSON schema, stores source/provider/review artifacts
+under `data/<slug>/<date>-<sha12>/`, and requires human approval of
+`reviewed.json` before projecting into `content/spots/*.md`.
 
 ## Deploy
 
-- **On push to `main`:** Cloudflare Pages rebuilds from Zola output
-- **v1:** manual content updates pushed to `main`
-- **v2:** weekly GitHub Actions scrape → opens PR for review
-- **Worker:** deployed separately via `wrangler`
+- **On push to `main`:** Cloudflare Workers Builds runs the Zola build and deploys the Worker/static assets together
+- **Daily:** Worker cron triggers a Workers Builds deploy hook at 00:05 PT so date-sensitive HTML stays current
+- **Schedules:** weekly GitHub Action writes provider artifacts to an auto PR; humans review before `content/spots/*.md` changes merge
 
 ## Future (not v1)
 
-- Automated scraping pipeline (see "Scraping Pipeline" section above)
+- Higher-confidence auto-merge for trivially safe schedule refreshes
 - Private clubs/gyms with membership opt-in (Bay Club, Olympic Club, Equinox, etc.)
 - Crowd-sourced condition updates
 - Amenities, pool specs, swim routes on detail pages

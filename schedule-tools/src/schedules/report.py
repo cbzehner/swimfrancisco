@@ -33,10 +33,10 @@ def write_report(results: list[PoolResult], path: Path = REPORT_PATH) -> Path:
             "## Next Steps",
             "",
             "- Review `git diff content/spots/`.",
-            "- Inspect raw artifacts under `data/artifacts/` for any flagged pool.",
-            "- Commit reviewed snapshots under `data/reviewed-snapshots/` when you intentionally lock a pool to a specific PDF hash.",
+            "- Inspect raw artifacts under `data/<slug>/<fetch-date>-<sha12>/` for any flagged pool.",
+            "- Run `just schedules-review` for provider outputs that need human approval.",
             "- Review flagged pools against the source PDFs before committing.",
-            "- Suggested add command: `git add content/spots data/extraction-state.json data/reviewed-snapshots`.",
+            "- Suggested add command after review: `git add content/spots data/`.",
             "",
         ]
     )

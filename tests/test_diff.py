@@ -2,7 +2,7 @@ from schedules.diff import compare_payloads
 
 
 def test_compare_payloads_flags_pool_only_session_disagreement():
-    # Providers agree on (day, type, start, end) but disagree on the pool zone
+    # Providers agree on day/type/time but disagree on the pool zone
     # label. Before the session key included `pool`, this was invisible.
     primary = {
         "sessions": [

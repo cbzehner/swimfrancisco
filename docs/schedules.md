@@ -200,9 +200,10 @@ just schedules-eval --all-dirs    # include historical review dirs (default: lat
 
 The eval reads existing per-review artifacts — no API calls. For each pool with a
 committed `reviewed.json`, it diffs every same-dir provider artifact against the
-human-reviewed payload using `(day, type, start, end)` as the row identity. Output
-is per-provider aggregate plus per-pool/per-artifact precision/recall/F1, plus a
-sample of disagreements (extra rows the model emitted, missing rows it dropped).
+human-reviewed payload using `(day, type, start, end, pool)` as the row identity.
+Output is per-provider aggregate plus per-pool/per-artifact precision/recall/F1,
+plus a sample of disagreements (extra rows the model emitted, missing rows it
+dropped).
 
 Run before and after any prompt or schema tweak; require improvement, not regression.
 

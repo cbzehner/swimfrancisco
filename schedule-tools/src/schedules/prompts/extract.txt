@@ -32,11 +32,10 @@ Rules:
 - If the PDF explicitly lists an end date for the schedule period, set schedule_effective_end to that ISO date. Otherwise return null.
 - closures.start and closures.end must be ISO dates (YYYY-MM-DD).
 - Preserve distinct sessions even if they share the same day or type.
-- Do not emit the same (day, type, start, end) tuple more than once.
+- Do not emit the same (day, type, start, end, pool) tuple more than once.
 - If a cell contains two session types separated by `/` or `&` (e.g. `REC/FAMILY SWIM / LAP SWIM`), emit one session per type. If the cell notes a different end time for one of them (e.g. `Lap until 4pm`), apply that end time to the matching session.
 - If a cell labels a pool section in parentheses (e.g. `(shallow pool)`, `(deep)`, `(deep / shallow)`, `(Lap/Therapy)`), set the session's `pool` field to that label, lowercased and stripped of the word "pool" (e.g. `shallow`, `deep`, `deep / shallow`, `lap/therapy`). Leave `pool` absent when the PDF shows no section label.
 - If the PDF contains multiple pages and each page has its own day-grid AND its own pool header (e.g. different temperature/dimensions like `86°F/30°C, 27 Meters` vs `76°F/30°C, 25 Meters`), treat each page as a separate pool's schedule. Emit sessions from every page, and set each session's `pool` field based on that page's header — prefer `warm` for the hotter pool and `cool` for the cooler pool when temperatures differ, otherwise use the most specific label the PDF supplies.
 - If a cell has a visible caveat that applies to that specific session (e.g. `Closed every 3rd Thursday of the month for training`), put the caveat verbatim in the session's `notes` field. Do not put whole-facility closure text in `notes`.
 - If a cell shows MULTIPLE time ranges for different programs in the same slot (e.g. `SENIOR/THERAPY SWIM (2 LANES) [9:30AM-10:30AM] / DEEP WATER EXERCISE (1 LANE) [9:00AM-10:45AM]`), use the time range PAIRED with the allowed program label, not the cell's outer/encompassing time. Here SENIOR THERAPY is 9:30-10:30, NOT 9:00-10:45.
 - For each session, set `evidence` to the exact line of text from the PDF that contained this row's time and type. Copy characters verbatim; do not paraphrase, summarize, or translate. If a session is represented by more than one visible line on the PDF, concatenate those lines with a single space.
-

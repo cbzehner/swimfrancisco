@@ -193,9 +193,9 @@ class TestPoolBlock:
             [
                 _proposed(
                     artifact_paths={
-                        "payload": "data/artifacts/x/payload.json",
-                        "reviewed-snapshot": "data/reviewed-snapshots/x.json",
-                        "pdf": "data/pdf/x.pdf",
+                        "payload": "data/hamilton-pool/2026-04-19-aaaaaaaaaaaa/gemini-model.json",
+                        "reviewed-snapshot": "data/hamilton-pool/2026-04-19-aaaaaaaaaaaa/reviewed.json",
+                        "pdf": "data/hamilton-pool/2026-04-19-aaaaaaaaaaaa/source.pdf",
                     }
                 )
             ],
@@ -203,9 +203,9 @@ class TestPoolBlock:
         )
         lines = [line for line in text.splitlines() if line.startswith("- artifact[")]
         assert lines == [
-            "- artifact[reviewed-snapshot]: data/reviewed-snapshots/x.json",
-            "- artifact[payload]: data/artifacts/x/payload.json",
-            "- artifact[pdf]: data/pdf/x.pdf",
+            "- artifact[reviewed-snapshot]: data/hamilton-pool/2026-04-19-aaaaaaaaaaaa/reviewed.json",
+            "- artifact[payload]: data/hamilton-pool/2026-04-19-aaaaaaaaaaaa/gemini-model.json",
+            "- artifact[pdf]: data/hamilton-pool/2026-04-19-aaaaaaaaaaaa/source.pdf",
         ]
 
 
@@ -214,4 +214,5 @@ class TestFooter:
         text = _render([], tmp_path)
         assert "## Next Steps" in text
         assert "git diff content/spots/" in text
-        assert "data/reviewed-snapshots" in text
+        assert "data/<slug>/<fetch-date>-<sha12>/" in text
+        assert "git add content/spots data/" in text
