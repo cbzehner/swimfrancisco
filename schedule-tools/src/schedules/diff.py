@@ -131,9 +131,11 @@ def _session_key(session: dict) -> tuple[str, str, str, str, str, str]:
     )
 
 
-def _closure_key(closure: dict) -> tuple[str, str, str]:
+def _closure_key(closure: dict) -> tuple[str, str, str, str, str]:
     return (
         str(closure.get("start")),
         str(closure.get("end")),
         str(closure.get("reason")),
+        str(closure.get("start_time", "")),
+        str(closure.get("end_time", "")),
     )

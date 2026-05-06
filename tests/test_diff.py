@@ -67,3 +67,34 @@ def test_compare_payloads_flags_provider_differences():
     assert "provider_session_diff" in kinds
     assert "provider_closure_diff" in kinds
     assert "provider_schedule_effective_diff" in kinds
+
+
+def test_compare_payloads_flags_timed_closure_disagreement():
+    primary = {
+        "sessions": [],
+        "closures": [
+            {
+                "start": "2026-05-21",
+                "end": "2026-05-21",
+                "reason": "Staff training",
+                "start_time": "11:00",
+                "end_time": "15:00",
+            }
+        ],
+        "schedule_effective": "2026-03-17",
+    }
+    secondary = {
+        "sessions": [],
+        "closures": [
+            {
+                "start": "2026-05-21",
+                "end": "2026-05-21",
+                "reason": "Staff training",
+            }
+        ],
+        "schedule_effective": "2026-03-17",
+    }
+
+    flags = compare_payloads("gemini", primary, "anthropic", secondary)
+    kinds = {flag.kind for flag in flags}
+    assert "provider_closure_diff" in kinds

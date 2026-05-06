@@ -24,6 +24,7 @@ class RowKey:
     type: str
     start: str
     end: str
+    pool: str
 
     @classmethod
     def from_session(cls, session: dict) -> "RowKey":
@@ -32,6 +33,7 @@ class RowKey:
             type=str(session.get("type", "")),
             start=str(session.get("start", "")),
             end=str(session.get("end", "")),
+            pool=str(session.get("pool", "")),
         )
 
 
@@ -87,6 +89,7 @@ def _diff_payloads(truth: dict, extracted: dict, sample_n: int = 3) -> tuple[set
             extra_samples.append({
                 "day": s.get("day"), "type": s.get("type"),
                 "start": s.get("start"), "end": s.get("end"),
+                "pool": s.get("pool", ""),
                 "evidence": s.get("evidence", "")[:120],
             })
     missing_samples = []
@@ -95,6 +98,7 @@ def _diff_payloads(truth: dict, extracted: dict, sample_n: int = 3) -> tuple[set
             missing_samples.append({
                 "day": s.get("day"), "type": s.get("type"),
                 "start": s.get("start"), "end": s.get("end"),
+                "pool": s.get("pool", ""),
                 "evidence": s.get("evidence", "")[:120],
             })
 
@@ -167,7 +171,7 @@ def render_report(evals: Iterable[PoolEval]) -> str:
     lines.append(f"_Generated {datetime.now().isoformat(timespec='seconds')}_")
     lines.append("")
     lines.append("Diffs each provider artifact against the human-reviewed `reviewed.json`")
-    lines.append("payload in the same review dir. Row identity is `(day, type, start, end)`.")
+    lines.append("payload in the same review dir. Row identity is `(day, type, start, end, pool)`.")
     lines.append("")
 
     # Per-provider rollup

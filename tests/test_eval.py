@@ -65,6 +65,19 @@ def test_collect_extra_and_missing(tmp_path):
     assert e.f1 == 0.0
 
 
+def test_collect_treats_pool_field_as_row_identity(tmp_path):
+    truth = [_row("monday", "lap_swim", "07:00", "08:00") | {"pool": "warm"}]
+    extracted = [_row("monday", "lap_swim", "07:00", "08:00") | {"pool": "cool"}]
+    _write_review(tmp_path, "x-pool", "2026-04-19", "abcdef123456", truth, extracted)
+    evals = collect_pool_evals(data_root=tmp_path)
+
+    assert len(evals) == 1
+    e = evals[0]
+    assert e.true_positives == 0
+    assert e.false_positives == 1
+    assert e.false_negatives == 1
+
+
 def test_default_excludes_older_review_dirs(tmp_path):
     sessions = [_row("monday", "lap_swim", "07:00", "08:00")]
     _write_review(tmp_path, "x-pool", "2026-04-10", "aaaaaaaaaaaa", sessions, sessions)
@@ -89,5 +102,6 @@ def test_render_report_includes_aggregate_and_pool_rows(tmp_path):
     evals = collect_pool_evals(data_root=tmp_path)
     report = render_report(evals)
     assert "Aggregate by provider" in report
+    assert "Row identity is `(day, type, start, end, pool)`." in report
     assert "Per pool / artifact" in report
     assert "x-pool" in report
