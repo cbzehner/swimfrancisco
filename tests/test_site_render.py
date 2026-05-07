@@ -131,7 +131,7 @@ def test_homepage_omits_trust_column(built_site: Path) -> None:
 
 def test_footer_renders_sources_and_credit(built_site: Path) -> None:
     html = (built_site / "index.html").read_text()
-    assert "Pool hours · SF Rec & Park · Open-water · NOAA + NDBC" in html
+    assert "Pool hours from SF Rec & Park · Open-water from NOAA + NDBC" in html
     assert "Made in San Francisco by" in html
     # Sources line above byline (sources first, byline last as the page signature).
-    assert html.index("Pool hours · SF Rec & Park") < html.index("Made in San Francisco by")
+    assert html.index("Pool hours from SF Rec & Park") < html.index("Made in San Francisco by")
