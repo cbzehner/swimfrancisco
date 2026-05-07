@@ -2,10 +2,14 @@ name = "swimfrancisco"
 main = "src/index.ts"
 compatibility_date = "2025-01-01"
 
-# Regenerate src/spots.ts from content/spots/*.md before bundling so the
-# open-water station mapping has a single source of truth (the markdown).
-[build]
-command = "node ../scripts/generate-worker-spots.mjs"
+# `worker/src/spots.ts` is generated from content/spots/*.md frontmatter
+# by `scripts/generate-worker-spots.mjs`. Regeneration runs locally via
+# the `pretypecheck` npm script and `just check` enforces it via the
+# `test_worker_spots.py` parity test, so the committed file is always
+# up-to-date by the time CWB picks it up. We do NOT use a wrangler [build]
+# hook here — wrangler 4.x runs custom builds from the deploy invocation's
+# CWD (repo root in CWB) rather than the wrangler.toml directory, which
+# breaks relative paths in CWB's /opt/buildhome/repo sandbox.
 
 # Three crons:
 #  - `0 * * * *` — hourly NOAA/NDBC refresh (unchanged).
