@@ -90,9 +90,11 @@ Consistent across all seven hero diagrams.
   "Made in San Francisco by @cbzehner" line.
 - Add a small "How this works →" link below the spot grid on the home
   page. Subtle, not a banner.
-- Sticky right-side TOC at desktop widths listing the seven anchors,
-  scrollspy-highlighted as the user scrolls. Collapses on mobile to a
-  single "Jump to…" select.
+- Sticky **right-rail** TOC at desktop widths listing the seven
+  anchors, scrollspy-highlighted as the user scrolls. Collapses on
+  mobile to a single "Jump to…" select. Right-rail (rather than left)
+  visually distinguishes `/how-it-works` from the home page's
+  left-column spot filters.
 
 ## Repo layout
 
@@ -142,13 +144,15 @@ During the writing phase, content comes from:
 - Lazy-loading Leaflet write-up (folded into §2 as two sentences here).
 - Premortem post: "Things that almost killed this project."
 
-## Open questions
+## Code-excerpt link format
 
-- Should the TOC be left-rail or right-rail at desktop widths? Right
-  feels more reference-doc; left feels more reading-experience. Lean
-  right because the existing index already uses left for spot
-  filtering — visual separation by view.
-- Should code excerpts link to a specific commit SHA on GitHub or to
-  `main`? `main` is friendlier; commit SHA is durable. Lean `main`,
-  with a footer note that "code excerpts may have evolved — see the
-  repo for current source."
+Code excerpts link to a **specific commit SHA** on GitHub (not
+`main`), so line numbers and content always match the prose. The page
+includes a small footer note:
+
+> Excerpts are pinned to commit `<sha>`. Browse the current source at
+> github.com/cbzehner/swimfrancisco.
+
+The pinned SHA is captured at the time the page is written and only
+updated intentionally (e.g. when a section is rewritten to reflect a
+significant code change).
