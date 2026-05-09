@@ -31,21 +31,16 @@ spot's record, keyed by slug, in one ~6 KB JSON document:
 ```ts
 // worker/src/index.ts
 if (path === "/api/conditions") {
-  return handleAll(request, env);
-}
-
-const spotMatch = path.match(/^\/api\/conditions\/([a-z0-9-]+)$/);
-if (spotMatch) {
-  return handleSpot(request, env, spotMatch[1]);
+  return handleConditions(request, env);
 }
 ```
 
 {{ diagram(name="api", caption="One request returns the whole board, not one per spot.") }}
 
-A per-spot endpoint exists for the detail pages, but the home page
-never touches it. KV holds the bulk record under a single `all` key
-alongside the per-slug keys, so reading the whole board costs one KV
-read, not fourteen.
+Detail pages reuse the same response and key into it by slug, so every
+page on the site is hydrated by a single edge-cached fetch. KV holds
+the slug-keyed record under one key, so reading the whole board costs
+one KV read, not fourteen.
 
 ## Cloudflare Workers + KV
 
@@ -55,24 +50,23 @@ it fetches fresh data and writes KV. Nothing else lives in between.
 
 {{ diagram(name="workers", caption="Two entry points: fetch and scheduled. Both go through KV.") }}
 
-KV holds one key per spot plus a bulk key:
+KV holds the single conditions record:
 
 ```ts
 // worker/src/kv.ts
-const PREFIX = "conditions:";
-const ALL_KEY = "all";
+const KEY = "conditions";
 
-export async function readAllRaw(kv: KVNamespace): Promise<string | null> {
-  return kv.get(ALL_KEY);
+export async function readConditionsRaw(kv: KVNamespace): Promise<string | null> {
+  return kv.get(KEY);
 }
 
-export async function readSpotRaw(kv: KVNamespace, slug: string): Promise<string | null> {
-  return kv.get(`${PREFIX}${slug}`);
+export async function writeConditions(kv: KVNamespace, value: Conditions): Promise<void> {
+  await kv.put(KEY, JSON.stringify(value));
 }
 ```
 
-The home page reads `all`. Spot pages read `conditions:<slug>`. The
-cron writes both — fifteen keys total — once an hour.
+Every page reads `conditions`. The cron writes it once an hour after
+assembling all fourteen spot records.
 
 ```ts
 // worker/src/index.ts
@@ -80,7 +74,7 @@ async fetch(request, env) {
   if (request.method !== "GET") {
     return new Response("method not allowed", { status: 405, ... });
   }
-  // route to handleAll / handleSpot
+  // route to handleConditions
 },
 
 async scheduled(event, env, ctx) {

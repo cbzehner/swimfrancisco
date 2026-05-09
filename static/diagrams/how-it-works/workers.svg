@@ -30,8 +30,7 @@
 
   <!-- fetch routes -->
   <rect class="b" x="180" y="160" width="140" height="40"/>
-  <text class="t ts" x="250" y="178" text-anchor="middle">/api/conditions</text>
-  <text class="t ts" x="250" y="192" text-anchor="middle">/api/conditions/:slug</text>
+  <text class="t ts" x="250" y="185" text-anchor="middle">/api/conditions</text>
 
   <rect class="b" x="180" y="218" width="140" height="40"/>
   <text class="t ts" x="250" y="236" text-anchor="middle">static assets</text>

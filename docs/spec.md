@@ -162,10 +162,9 @@ Airport departure board aesthetic. Split-flap animation.
 - **Cron Trigger:** runs hourly
   - Fetches NOAA Tides & Currents API for bay temp (9414290, fallback 9414750) and per-spot tide predictions
   - Fetches NDBC buoy 46237 data for ocean temp
-  - Writes per-spot JSON to KV + bulk `all` key
+  - Writes the slug-keyed bulk record to KV under the single `conditions` key
 - **Endpoints:**
-  - `GET /api/conditions` — all open water conditions (homepage bulk fetch)
-  - `GET /api/conditions/:slug` — single spot (detail pages)
+  - `GET /api/conditions` — slug-keyed conditions for every spot (board + detail pages)
 - **Per-spot record shape** (`SpotConditions` in `worker/src/assemble.ts`):
   - Flat temp fields: `water_temp_f`, `water_temp_c`, `temp_observed_at`, `temp_station_id`, `temp_station_type` — either all set or all null
   - `tide` summary or null

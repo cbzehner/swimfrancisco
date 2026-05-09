@@ -1,10 +1,10 @@
 // Swim Francisco conditions Worker.
 // - Cron (hourly): fetch NOAA 9414290 + fallback 9414750 (bay temp + tides)
 //   and NDBC 46237 (ocean temp); assemble per-spot records; write KV.
-// - HTTP: GET /api/conditions → bulk `all`; GET /api/conditions/:slug → spot.
+// - HTTP: GET /api/conditions → slug-keyed bulk record from KV.
 
 import { assembleAndPersist } from "./assemble";
-import { readAllRaw, readSpotRaw } from "./kv";
+import { readConditionsRaw } from "./kv";
 import { corsHeaders, preflight } from "./cors";
 import { triggerRebuild } from "./deploy";
 import { classifyTick } from "./schedule";
@@ -51,15 +51,9 @@ function serviceUnavailable(request: Request, message: string): Response {
   });
 }
 
-async function handleAll(request: Request, env: Env): Promise<Response> {
-  const raw = await readAllRaw(env.CONDITIONS);
+async function handleConditions(request: Request, env: Env): Promise<Response> {
+  const raw = await readConditionsRaw(env.CONDITIONS);
   if (!raw) return serviceUnavailable(request, "conditions not yet available");
-  return jsonResponse(request, raw);
-}
-
-async function handleSpot(request: Request, env: Env, slug: string): Promise<Response> {
-  const raw = await readSpotRaw(env.CONDITIONS, slug);
-  if (!raw) return notFound(request, `no conditions for slug ${slug}`);
   return jsonResponse(request, raw);
 }
 
@@ -78,12 +72,7 @@ export default {
     const path = url.pathname.replace(/\/+$/, "");
 
     if (path === "/api/conditions") {
-      return handleAll(request, env);
-    }
-
-    const spotMatch = path.match(/^\/api\/conditions\/([a-z0-9-]+)$/);
-    if (spotMatch) {
-      return handleSpot(request, env, spotMatch[1]);
+      return handleConditions(request, env);
     }
 
     return notFound(request, "not found");

@@ -4,7 +4,7 @@
 import { SPOTS, type SpotConfig } from "./spots";
 import { fetchTempWithFallback, fetchNoaaTides, type NoaaTideData } from "./noaa";
 import { fetchNdbc } from "./ndbc";
-import { readSpot, writeSpot, writeAll } from "./kv";
+import { readConditions, writeConditions } from "./kv";
 
 export interface TideSummary {
   station_id: string;
@@ -45,7 +45,7 @@ const NULL_TEMP_FIELDS = {
   temp_station_type: null,
 } satisfies Pick<SpotConditions, "water_temp_f" | "water_temp_c" | "temp_observed_at" | "temp_station_id" | "temp_station_type">;
 
-export type AllConditions = Record<string, SpotConditions>;
+export type Conditions = Record<string, SpotConditions>;
 
 const FRESHNESS_CEILING_MS = 24 * 60 * 60 * 1000;
 
@@ -153,10 +153,9 @@ async function assembleSpot(
   spot: SpotConfig,
   tideCache: Map<string, Promise<TideSummary | null>>,
   updatedAt: string,
-  kv: KVNamespace,
+  previous: SpotConditions | null,
 ): Promise<SpotConditions> {
-  const [previous, reading, tideFromApi] = await Promise.all([
-    readSpot(kv, spot.slug),
+  const [reading, tideFromApi] = await Promise.all([
     fetchTempForSpot(spot),
     getOrFetchTide(tideCache, spot.tideStationId),
   ]);
@@ -174,30 +173,23 @@ async function assembleSpot(
   };
 }
 
-// Assemble every spot, write per-slug keys and the `all` bulk key.
-export async function assembleAndPersist(kv: KVNamespace): Promise<AllConditions> {
+// Assemble every spot and write the single conditions key.
+export async function assembleAndPersist(kv: KVNamespace): Promise<Conditions> {
   const updatedAt = new Date().toISOString();
   const tideCache = new Map<string, Promise<TideSummary | null>>();
+  const previous = (await readConditions(kv)) ?? {};
 
   const records = await Promise.all(
-    SPOTS.map(async (spot) => {
-      const record = await assembleSpot(spot, tideCache, updatedAt, kv);
-      try {
-        await writeSpot(kv, spot.slug, record);
-      } catch (err) {
-        console.error(`KV write failed for ${spot.slug}:`, err);
-      }
-      return record;
-    }),
+    SPOTS.map((spot) => assembleSpot(spot, tideCache, updatedAt, previous[spot.slug] ?? null)),
   );
 
-  const all: AllConditions = Object.fromEntries(records.map((r) => [r.slug, r]));
+  const next: Conditions = Object.fromEntries(records.map((r) => [r.slug, r]));
 
   try {
-    await writeAll(kv, all);
+    await writeConditions(kv, next);
   } catch (err) {
-    console.error("KV write failed for `all`:", err);
+    console.error("KV write failed:", err);
   }
 
-  return all;
+  return next;
 }

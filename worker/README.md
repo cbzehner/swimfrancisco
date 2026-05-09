@@ -4,14 +4,13 @@ Cloudflare Worker that fetches water conditions from NOAA CO-OPS and NDBC, assem
 
 ## Routes
 
-- `GET /api/conditions` — bulk record for all spots
-- `GET /api/conditions/:slug` — single spot (e.g. `/api/conditions/aquatic-park`)
+- `GET /api/conditions` — slug-keyed record for every spot
 
 Responses are JSON with `cache-control: public, max-age=60, s-maxage=300`. CORS allows `swimfrancisco.com`, `*.swimfrancisco.pages.dev`, and `localhost`.
 
 ## Scheduled trigger
 
-A cron trigger runs hourly (`0 * * * *`, see `wrangler.toml`). The scheduled handler calls `assembleAndPersist`, which fetches upstream data and writes per-slug + `all` keys to KV.
+A cron trigger runs hourly (`0 * * * *`, see `wrangler.toml`). The scheduled handler calls `assembleAndPersist`, which fetches upstream data and writes the single `conditions` key to KV.
 
 ## Deploy prereqs
 

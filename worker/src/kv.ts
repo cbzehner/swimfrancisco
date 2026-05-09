@@ -1,27 +1,19 @@
-// KV helpers for conditions storage.
-// Layout: one key per slug (`conditions:<slug>`) + one `all` bulk key.
+// KV helper for the conditions record.
+// Single key holds the slug-keyed bulk record; the cron writes it, the
+// HTTP handler reads it, and the assembler reads it back as last-good.
 
-import type { SpotConditions, AllConditions } from "./assemble";
+import type { Conditions } from "./assemble";
 
-const PREFIX = "conditions:";
-const ALL_KEY = "all";
+const KEY = "conditions";
 
-export async function readSpot(kv: KVNamespace, slug: string): Promise<SpotConditions | null> {
-  return kv.get<SpotConditions>(`${PREFIX}${slug}`, "json");
+export async function writeConditions(kv: KVNamespace, value: Conditions): Promise<void> {
+  await kv.put(KEY, JSON.stringify(value));
 }
 
-export async function writeSpot(kv: KVNamespace, slug: string, value: SpotConditions): Promise<void> {
-  await kv.put(`${PREFIX}${slug}`, JSON.stringify(value));
+export async function readConditionsRaw(kv: KVNamespace): Promise<string | null> {
+  return kv.get(KEY);
 }
 
-export async function writeAll(kv: KVNamespace, value: AllConditions): Promise<void> {
-  await kv.put(ALL_KEY, JSON.stringify(value));
-}
-
-export async function readSpotRaw(kv: KVNamespace, slug: string): Promise<string | null> {
-  return kv.get(`${PREFIX}${slug}`);
-}
-
-export async function readAllRaw(kv: KVNamespace): Promise<string | null> {
-  return kv.get(ALL_KEY);
+export async function readConditions(kv: KVNamespace): Promise<Conditions | null> {
+  return kv.get<Conditions>(KEY, "json");
 }
