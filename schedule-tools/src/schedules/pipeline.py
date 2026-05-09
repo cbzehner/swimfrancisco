@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import os
-from dataclasses import dataclass
 from pathlib import Path
 
 from .artifacts import save_artifact_bundle, skip_if_fresh
@@ -11,7 +10,7 @@ from .envelope import EnvelopeValidationError, validate_envelope
 from .fetch import FetchResult, fetch_pdf
 from .grounding import grounding_from_text, normalize_pdf_text
 from .merge import read_schedule_snapshot
-from .models import Aborted, GroundingResult, PoolEntry, PoolResult, Proposed, Rejected, ReviewNote, Skipped, Unchanged, ValidationResult
+from .models import Aborted, GroundingResult, PoolEntry, PoolResult, Proposed, Rejected, ReviewNote, Skipped, Unchanged
 from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH, artifact_path, reviewed_path
 from .providers import extract as extract_with_provider
 from .providers.anthropic_provider import DEFAULT_MODEL as ANTHROPIC_DEFAULT_MODEL
@@ -106,21 +105,6 @@ def _load_reviewed_envelope(path: Path, expected_slug: str, expected_sha: str) -
     return raw
 
 
-@dataclass
-class _Extraction:
-    """In-flight state for a single pool while phases run.
-
-    Built incrementally: extraction phase populates payload/model/etc;
-    compare phase appends to review_notes & artifact_paths; finalize reads everything.
-    """
-    payload: dict
-    model: str
-    cost_estimate: str
-    review_notes: list[ReviewNote]
-    artifact_paths: dict[str, str]
-    pdf_text_normalized: str
-
-
 def _build_unchanged(entry: PoolEntry, fetch_result: FetchResult, reviewed_file: Path) -> Unchanged:
     envelope = _load_reviewed_envelope(reviewed_file, entry.slug, fetch_result.sha256)
     payload = envelope["payload"]
@@ -135,173 +119,6 @@ def _build_unchanged(entry: PoolEntry, fetch_result: FetchResult, reviewed_file:
         schedule_effective=str(payload.get("schedule_effective") or ""),
         review_notes=[],
         artifact_paths={"reviewed-snapshot": str(reviewed_file)},
-    )
-
-
-def _extract_or_load(
-    entry: PoolEntry,
-    fetch_result: FetchResult,
-    *,
-    provider: str,
-    prompt: str,
-    force: bool,
-    compare_with: str | None,
-    prior_snapshot: dict,
-) -> _Extraction:
-    """Run the LLM extraction (or load the provider cache when fresh) and assemble base review notes."""
-    date = fetch_result.path.parent.name[:10]
-    page_texts = extract_page_texts(fetch_result.bytes)
-    pdf_signals = analyze_page_texts(page_texts)
-    pdf_text_normalized = normalize_pdf_text(page_texts)
-
-    default_model = _default_model(provider)
-    use_cached = (
-        not force
-        and not compare_with
-        and skip_if_fresh(
-            slug=entry.slug,
-            date=date,
-            pdf_sha256=fetch_result.sha256,
-            provider=provider,
-            model=default_model,
-            prompt=prompt,
-            schema=EXTRACTION_SCHEMA,
-        )
-    )
-
-    if use_cached:
-        cached_path = artifact_path(entry.slug, date, fetch_result.sha256, provider, default_model)
-        cached = json.loads(cached_path.read_text())
-        payload = cached["payload"]
-        model = cached.get("model", default_model)
-        cost_estimate = cached.get("cost_estimate", "cached")
-        artifact_paths = {provider: str(cached_path)}
-        grounding = grounding_from_text(pdf_text_normalized, payload)
-    else:
-        primary = extract_with_provider(provider, fetch_result.bytes, prompt, EXTRACTION_SCHEMA)
-        payload = primary.payload
-        model = primary.model
-        cost_estimate = primary.cost_estimate
-        grounding = grounding_from_text(pdf_text_normalized, payload)
-        artifact_paths = save_artifact_bundle(
-            slug=entry.slug,
-            date=date,
-            provider=provider,
-            model=model,
-            source_pdf_url=entry.pdf_url,
-            pdf_sha256=fetch_result.sha256,
-            prompt=prompt,
-            schema=EXTRACTION_SCHEMA,
-            payload=payload,
-            usage=primary.usage,
-            cost_estimate=cost_estimate,
-            grounding=grounding,
-        )
-
-    review_notes: list[ReviewNote] = []
-    review_notes.extend(source_notes_for_payload(pdf_signals, payload))
-    review_notes.extend(_grounding_notes(provider, grounding))
-    review_notes.extend(check_delta(payload, prior_snapshot))
-
-    return _Extraction(
-        payload=payload,
-        model=model,
-        cost_estimate=cost_estimate,
-        review_notes=review_notes,
-        artifact_paths=artifact_paths,
-        pdf_text_normalized=pdf_text_normalized,
-    )
-
-
-def _apply_compare(
-    extraction: _Extraction,
-    *,
-    entry: PoolEntry,
-    fetch_result: FetchResult,
-    primary_provider: str,
-    compare_with: str,
-    prompt: str,
-) -> None:
-    """Run the comparison provider; append diff/grounding notes and artifacts to extraction."""
-    date = fetch_result.path.parent.name[:10]
-    try:
-        compare = extract_with_provider(compare_with, fetch_result.bytes, prompt, EXTRACTION_SCHEMA)
-        compare_grounding = grounding_from_text(extraction.pdf_text_normalized, compare.payload)
-        extraction.review_notes.extend(_grounding_notes(compare_with, compare_grounding))
-        extraction.artifact_paths.update(
-            save_artifact_bundle(
-                slug=entry.slug,
-                date=date,
-                provider=compare_with,
-                model=compare.model,
-                source_pdf_url=entry.pdf_url,
-                pdf_sha256=fetch_result.sha256,
-                prompt=prompt,
-                schema=EXTRACTION_SCHEMA,
-                payload=compare.payload,
-                usage=compare.usage,
-                cost_estimate=compare.cost_estimate,
-                grounding=compare_grounding,
-            )
-        )
-        extraction.review_notes.extend(
-            compare_payloads(primary_provider, extraction.payload, compare_with, compare.payload)
-        )
-    except Exception as exc:  # noqa: BLE001
-        extraction.review_notes.append(
-            ReviewNote(
-                kind="compare_provider_failed",
-                message=f"{compare_with} comparison run failed: {exc}",
-                severity="warning",
-            )
-        )
-
-
-def _finalize(
-    entry: PoolEntry,
-    extraction: _Extraction,
-    fetch_result: FetchResult,
-    validation: ValidationResult,
-    *,
-    provider: str,
-    prior_sessions_count: int,
-) -> Rejected | Proposed:
-    # The pipeline never writes content/spots/*.md directly. Whether the
-    # extraction is clean or carries advisory violations, it lands as a
-    # review candidate; `schedules review` is the only path that projects
-    # an approved snapshot into content. Catastrophic validation still
-    # routes to Rejected so the operator sees the refusal explicitly.
-    if validation.catastrophic:
-        return Rejected(
-            **_identity_kwargs(entry),
-            error="Validation refused the extracted payload.",
-            provider=provider,
-            model=extraction.model,
-            pdf_sha256=fetch_result.sha256,
-            page_count=fetch_result.page_count,
-            sessions_count=validation.stats["sessions"],
-            prior_sessions_count=prior_sessions_count,
-            closures_count=validation.stats["closures"],
-            schedule_effective=extraction.payload.get("schedule_effective"),
-            violations=validation.violations,
-            review_notes=extraction.review_notes,
-            cost_estimate=extraction.cost_estimate,
-            artifact_paths=extraction.artifact_paths,
-        )
-    return Proposed(
-        **_identity_kwargs(entry),
-        provider=provider,
-        model=extraction.model,
-        pdf_sha256=fetch_result.sha256,
-        page_count=fetch_result.page_count,
-        sessions_count=validation.stats["sessions"],
-        prior_sessions_count=prior_sessions_count,
-        closures_count=validation.stats["closures"],
-        schedule_effective=extraction.payload.get("schedule_effective"),
-        violations=validation.violations,
-        review_notes=extraction.review_notes,
-        cost_estimate=extraction.cost_estimate,
-        artifact_paths=extraction.artifact_paths,
     )
 
 
@@ -323,45 +140,147 @@ def _process_entry(
         )
 
     try:
+        # PDF fetch + path setup
         fetch_result = fetch_pdf(entry.slug, entry.pdf_url)
         date = fetch_result.path.parent.name[:10]
         reviewed_file = reviewed_path(entry.slug, date, fetch_result.sha256)
 
-        # Fast-path: reviewed.json exists ⇒ the pool is locked to this PDF.
+        # Reviewed-snapshot fast path: SHA matches a hand-approved snapshot.
         if not force and not compare_with and reviewed_file.exists():
             return _build_unchanged(entry, fetch_result, reviewed_file)
 
-        extraction = _extract_or_load(
-            entry,
-            fetch_result,
-            provider=provider,
-            prompt=prompt,
-            force=force,
-            compare_with=compare_with,
-            prior_snapshot=prior_snapshot,
+        # PDF text + signals (reused for grounding both providers if bakeoff).
+        page_texts = extract_page_texts(fetch_result.bytes)
+        pdf_signals = analyze_page_texts(page_texts)
+        pdf_text_normalized = normalize_pdf_text(page_texts)
+
+        # Primary extraction (LLM call or cached artifact).
+        default_model = _default_model(provider)
+        use_cached = (
+            not force
+            and not compare_with
+            and skip_if_fresh(
+                slug=entry.slug,
+                date=date,
+                pdf_sha256=fetch_result.sha256,
+                provider=provider,
+                model=default_model,
+                prompt=prompt,
+                schema=EXTRACTION_SCHEMA,
+            )
         )
 
-        if compare_with:
-            _apply_compare(
-                extraction,
-                entry=entry,
-                fetch_result=fetch_result,
-                primary_provider=provider,
-                compare_with=compare_with,
+        if use_cached:
+            cached_path = artifact_path(entry.slug, date, fetch_result.sha256, provider, default_model)
+            cached = json.loads(cached_path.read_text())
+            payload = cached["payload"]
+            model = cached.get("model", default_model)
+            cost_estimate = cached.get("cost_estimate", "cached")
+            artifact_paths = {provider: str(cached_path)}
+            primary_usage: dict | None = None
+        else:
+            primary = extract_with_provider(provider, fetch_result.bytes, prompt, EXTRACTION_SCHEMA)
+            payload = primary.payload
+            model = primary.model
+            cost_estimate = primary.cost_estimate
+            artifact_paths = {}  # filled in once grounding is computed
+            primary_usage = primary.usage
+
+        # Compute grounding once, used for both the artifact bundle (when fresh)
+        # and the review-note assembly. Cached artifacts already have their
+        # grounding section persisted; no need to re-save the bundle.
+        grounding = grounding_from_text(pdf_text_normalized, payload)
+
+        if not use_cached:
+            artifact_paths = save_artifact_bundle(
+                slug=entry.slug,
+                date=date,
+                provider=provider,
+                model=model,
+                source_pdf_url=entry.pdf_url,
+                pdf_sha256=fetch_result.sha256,
                 prompt=prompt,
+                schema=EXTRACTION_SCHEMA,
+                payload=payload,
+                usage=primary_usage or {},
+                cost_estimate=cost_estimate,
+                grounding=grounding,
             )
 
-        validation = validate(
-            extraction.payload,
-            prior_sessions_count=len(prior_snapshot["sessions"]),
-        )
-        return _finalize(
-            entry,
-            extraction,
-            fetch_result,
-            validation,
+        # Review notes from three sources: PDF signals, grounding, prior-vs-current delta.
+        review_notes: list[ReviewNote] = [
+            *source_notes_for_payload(pdf_signals, payload),
+            *_grounding_notes(provider, grounding),
+            *check_delta(payload, prior_snapshot),
+        ]
+
+        # Optional bakeoff against a second provider.
+        if compare_with:
+            try:
+                compare = extract_with_provider(compare_with, fetch_result.bytes, prompt, EXTRACTION_SCHEMA)
+                compare_grounding = grounding_from_text(pdf_text_normalized, compare.payload)
+                review_notes.extend(_grounding_notes(compare_with, compare_grounding))
+                artifact_paths.update(
+                    save_artifact_bundle(
+                        slug=entry.slug,
+                        date=date,
+                        provider=compare_with,
+                        model=compare.model,
+                        source_pdf_url=entry.pdf_url,
+                        pdf_sha256=fetch_result.sha256,
+                        prompt=prompt,
+                        schema=EXTRACTION_SCHEMA,
+                        payload=compare.payload,
+                        usage=compare.usage,
+                        cost_estimate=compare.cost_estimate,
+                        grounding=compare_grounding,
+                    )
+                )
+                review_notes.extend(compare_payloads(provider, payload, compare_with, compare.payload))
+            except Exception as exc:  # noqa: BLE001
+                review_notes.append(
+                    ReviewNote(
+                        kind="compare_provider_failed",
+                        message=f"{compare_with} comparison run failed: {exc}",
+                        severity="warning",
+                    )
+                )
+
+        # Catastrophic validation is the one automated gate; everything else is
+        # advisory and routes to Proposed for human review.
+        validation = validate(payload, prior_sessions_count=len(prior_snapshot["sessions"]))
+
+        if validation.catastrophic:
+            return Rejected(
+                **_identity_kwargs(entry),
+                error="Validation refused the extracted payload.",
+                provider=provider,
+                model=model,
+                pdf_sha256=fetch_result.sha256,
+                page_count=fetch_result.page_count,
+                sessions_count=validation.stats["sessions"],
+                prior_sessions_count=len(prior_snapshot["sessions"]),
+                closures_count=validation.stats["closures"],
+                schedule_effective=payload.get("schedule_effective"),
+                violations=validation.violations,
+                review_notes=review_notes,
+                cost_estimate=cost_estimate,
+                artifact_paths=artifact_paths,
+            )
+        return Proposed(
+            **_identity_kwargs(entry),
             provider=provider,
+            model=model,
+            pdf_sha256=fetch_result.sha256,
+            page_count=fetch_result.page_count,
+            sessions_count=validation.stats["sessions"],
             prior_sessions_count=len(prior_snapshot["sessions"]),
+            closures_count=validation.stats["closures"],
+            schedule_effective=payload.get("schedule_effective"),
+            violations=validation.violations,
+            review_notes=review_notes,
+            cost_estimate=cost_estimate,
+            artifact_paths=artifact_paths,
         )
     except Exception as exc:  # noqa: BLE001
         return Aborted(
