@@ -54,10 +54,10 @@ SCHEDULES_ANTHROPIC_MODEL=claude-sonnet-4-6
 
 ## Usage
 
-Dry-run a single pool:
+Run a single pool:
 
 ```sh
-just schedules-dry-run --only hamilton-pool
+just schedules-extract --only hamilton-pool
 ```
 
 Run the full published registry:
@@ -77,10 +77,12 @@ Useful flags on `extract`:
 - `--provider anthropic|gemini`
 - `--only slug1,slug2`
 - `--force`
-- `--dry-run` — skip content/state writes but still produce the report.
 
-`schedules debug bakeoff` is always observational — it never writes to
-`content/spots/` or any `data/` file.
+`extract` never writes `content/spots/*.md` or `reviewed.json` — those
+only change through `schedules review`. The pipeline produces provider
+artifacts under `data/<slug>/<date>-<sha12>/` and a review report; the
+operator approves changes by hand. `schedules debug bakeoff` is the
+same: observational only.
 
 **Exit codes:** the `extract` command exits non-zero when any pool failed
 (hard-blocked or errored). Partial failure never exits 0; shell automation
@@ -211,11 +213,11 @@ Run before and after any prompt or schema tweak; require improvement, not regres
 
 The `.github/workflows/schedules-extract.yml` action runs every Monday at
 09:00 PT and on `workflow_dispatch`. It re-runs extraction with both Gemini
-and Anthropic in `--dry-run --force` mode — provider artifacts under
-`data/<slug>/<date>-<sha12>/` get written, but `content/spots/` and
-`reviewed.json` are never touched. If anything changed under `data/`, the
-action commits to a `auto/schedules-extract-YYYY-MM-DD` branch and opens or
-updates a PR with the extraction report and eval scorecard in the body.
+and Anthropic — provider artifacts under `data/<slug>/<date>-<sha12>/`
+get written, while `content/spots/` and `reviewed.json` stay untouched
+(the pipeline never writes those). If anything changed under `data/`, the
+action commits to an `auto/schedules-extract-YYYY-MM-DD` branch and opens
+or updates a PR with the extraction report and eval scorecard in the body.
 
 Reviewer flow on an auto-PR:
 

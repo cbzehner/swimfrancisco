@@ -10,7 +10,7 @@ from .delta import check_delta
 from .envelope import EnvelopeValidationError, validate_envelope
 from .fetch import FetchResult, fetch_pdf
 from .grounding import grounding_from_text, normalize_pdf_text
-from .merge import merge, read_schedule_snapshot
+from .merge import read_schedule_snapshot
 from .models import Aborted, GroundingResult, PoolEntry, PoolResult, Proposed, Rejected, ReviewNote, Skipped, Unchanged, ValidationResult
 from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH, artifact_path, reviewed_path
 from .providers import extract as extract_with_provider
@@ -25,17 +25,6 @@ from .validate import validate
 
 _GROUNDING_MIN_RATIO = 0.9
 _GROUNDING_EVIDENCE_SAMPLE = 5
-
-
-def should_write(*, dry_run: bool, compare_with: str | None, catastrophic: bool) -> bool:
-    """Return True iff the pipeline may mutate content or state.
-
-    Gating invariants (all must be False for a write to happen):
-    - dry_run: operator asked for a no-write pass
-    - compare_with: bakeoff mode is observational by default
-    - catastrophic: validation refused the new payload (e.g. sessions dropped to 0)
-    """
-    return not (dry_run or compare_with is not None or catastrophic)
 
 
 def compute_exit_code(results: list[PoolResult]) -> int:
@@ -276,13 +265,12 @@ def _finalize(
     *,
     provider: str,
     prior_sessions_count: int,
-    write_allowed: bool,
 ) -> Rejected | Proposed:
-    if write_allowed:
-        merge_result = merge(CONTENT_SPOTS_DIR / f"{entry.slug}.md", extraction.payload)
-    else:
-        merge_result = None
-
+    # The pipeline never writes content/spots/*.md directly. Whether the
+    # extraction is clean or carries advisory violations, it lands as a
+    # review candidate; `schedules review` is the only path that projects
+    # an approved snapshot into content. Catastrophic validation still
+    # routes to Rejected so the operator sees the refusal explicitly.
     if validation.catastrophic:
         return Rejected(
             **_identity_kwargs(entry),
@@ -313,7 +301,6 @@ def _finalize(
         violations=validation.violations,
         review_notes=extraction.review_notes,
         cost_estimate=extraction.cost_estimate,
-        written=bool(merge_result and merge_result.written),
         artifact_paths=extraction.artifact_paths,
     )
 
@@ -324,7 +311,6 @@ def _process_entry(
     provider: str,
     compare_with: str | None,
     force: bool,
-    dry_run: bool,
     prompt: str,
 ) -> PoolResult:
     prior_snapshot = read_schedule_snapshot(CONTENT_SPOTS_DIR / f"{entry.slug}.md")
@@ -369,11 +355,6 @@ def _process_entry(
             extraction.payload,
             prior_sessions_count=len(prior_snapshot["sessions"]),
         )
-        write_allowed = should_write(
-            dry_run=dry_run,
-            compare_with=compare_with,
-            catastrophic=validation.catastrophic,
-        )
         return _finalize(
             entry,
             extraction,
@@ -381,7 +362,6 @@ def _process_entry(
             validation,
             provider=provider,
             prior_sessions_count=len(prior_snapshot["sessions"]),
-            write_allowed=write_allowed,
         )
     except Exception as exc:  # noqa: BLE001
         return Aborted(
@@ -399,7 +379,6 @@ def run_pipeline(
     provider: str,
     compare_with: str | None,
     force: bool,
-    dry_run: bool,
 ) -> tuple[int, Path, list[PoolResult]]:
     registry = load_registry()
     selected = [entry for entry in registry if slugs is None or entry.slug in slugs]
@@ -415,7 +394,6 @@ def run_pipeline(
             provider=provider,
             compare_with=compare_with,
             force=force,
-            dry_run=dry_run,
             prompt=prompt,
         )
         for entry in selected

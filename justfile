@@ -35,9 +35,6 @@ refresh-conditions:
 schedules *args:
     set -a; [ ! -f .env ] || . ./.env; set +a; uv --project schedule-tools run schedules "$@"
 
-schedules-dry-run *args:
-    set -a; [ ! -f .env ] || . ./.env; set +a; uv --project schedule-tools run schedules extract --dry-run "$@"
-
 schedules-extract *args:
     set -a; [ ! -f .env ] || . ./.env; set +a; uv --project schedule-tools run schedules extract "$@"
 

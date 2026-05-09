@@ -1,14 +1,11 @@
 """Tests for pipeline pure helpers.
 
 The pipeline itself has heavy external dependencies (network, provider APIs,
-filesystem). These tests cover the pure helpers that gate its two operator-
-trust properties:
+filesystem). These tests cover the pure helper that gates its operator-trust
+property: honest exit codes — partial failures must not exit 0.
 
-- honest exit codes (partial failures must not exit 0)
-- safe compare mode (`--compare-with` must not write to content or state)
-
-Full-integration tests are out of scope; the invariant lives in the gate
-helpers and is exercised here.
+Full-integration tests are out of scope; the invariant lives in the helper
+and is exercised here.
 """
 
 from __future__ import annotations
@@ -17,7 +14,6 @@ from schedules.models import Aborted, PoolEntry, PoolResult, Proposed, Skipped, 
 from schedules.pipeline import (
     _identity_kwargs,
     compute_exit_code,
-    should_write,
 )
 
 
@@ -41,7 +37,7 @@ def _unchanged(slug: str) -> Unchanged:
     )
 
 
-def _proposed(slug: str, *, written: bool = True) -> Proposed:
+def _proposed(slug: str) -> Proposed:
     return Proposed(
         slug=slug,
         official_page_url="",
@@ -56,7 +52,6 @@ def _proposed(slug: str, *, written: bool = True) -> Proposed:
         closures_count=0,
         schedule_effective="2026-01-01",
         cost_estimate="$0.01",
-        written=written,
     )
 
 
@@ -92,24 +87,6 @@ class TestComputeExitCode:
 
     def test_zero_for_empty(self) -> None:
         assert compute_exit_code([]) == 0
-
-
-class TestShouldWrite:
-    def test_writes_when_live_run(self) -> None:
-        assert should_write(dry_run=False, compare_with=None, catastrophic=False) is True
-
-    def test_dry_run_blocks_writes(self) -> None:
-        assert should_write(dry_run=True, compare_with=None, catastrophic=False) is False
-
-    def test_catastrophic_blocks_writes(self) -> None:
-        assert should_write(dry_run=False, compare_with=None, catastrophic=True) is False
-
-    def test_compare_mode_blocks_writes(self) -> None:
-        # Compare mode is observational by default — operator trust property.
-        assert should_write(dry_run=False, compare_with="anthropic", catastrophic=False) is False
-
-    def test_compare_mode_blocks_writes_even_when_validation_ok(self) -> None:
-        assert should_write(dry_run=False, compare_with="gemini", catastrophic=False) is False
 
 
 class TestIdentityKwargs:

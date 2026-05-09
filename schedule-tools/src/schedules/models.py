@@ -174,7 +174,9 @@ class Unchanged(PoolResultBase):
 
 @dataclass(frozen=True)
 class Proposed(PoolResultBase):
-    """Fresh extraction that passed catastrophic-validation. May still carry advisory violations."""
+    """Fresh extraction that passed catastrophic-validation. Sits as a
+    review candidate; never written to content/spots/*.md by the pipeline.
+    May still carry advisory violations and review notes."""
 
     provider: str
     model: str
@@ -188,7 +190,6 @@ class Proposed(PoolResultBase):
     violations: list[Violation] = field(default_factory=list)
     review_notes: list[ReviewNote] = field(default_factory=list)
     artifact_paths: dict[str, str] = field(default_factory=dict)
-    written: bool = False
 
 
 @dataclass(frozen=True)

@@ -43,16 +43,17 @@ jobs:
         run: uv --project schedule-tools sync
 
       - name: Extract with Gemini (no content writes)
-        # --dry-run skips the merge into content/spots/ and reviewed.json
-        # remains untouched. Provider artifacts under data/<slug>/.../ ARE
-        # written, but only when the cache check fails (PDF sha changed,
-        # or prompt/schema sha changed, or no cached artifact exists).
-        # No --force: pools with fresh artifacts produce no diff at all.
-        run: uv --project schedule-tools run schedules extract --provider gemini --dry-run
+        # `extract` never writes content/spots/*.md or reviewed.json — those
+        # only change through `schedules review`. Provider artifacts under
+        # data/<slug>/.../ ARE written, but only when the cache check fails
+        # (PDF sha changed, or prompt/schema sha changed, or no cached
+        # artifact exists). No --force: pools with fresh artifacts produce
+        # no diff at all.
+        run: uv --project schedule-tools run schedules extract --provider gemini
         continue-on-error: true
 
       - name: Extract with Anthropic (no content writes)
-        run: uv --project schedule-tools run schedules extract --provider anthropic --dry-run
+        run: uv --project schedule-tools run schedules extract --provider anthropic
         continue-on-error: true
 
       - name: Run eval against committed reviewed.json

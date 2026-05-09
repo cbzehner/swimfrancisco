@@ -65,12 +65,10 @@ def _summary_line(results: list[PoolResult]) -> str:
     show_default="env SCHEDULES_PROVIDER or gemini",
 )
 @click.option("--force", is_flag=True, help="Re-fetch PDFs and bypass the unchanged shortcut.")
-@click.option("--dry-run", is_flag=True, help="Skip content/state writes but still write the report.")
 def extract(
     only: str | None,
     provider: str,
     force: bool,
-    dry_run: bool,
 ) -> None:
     """Fetch PDFs, extract schedules, and write a review report."""
 
@@ -80,7 +78,6 @@ def extract(
         provider=provider,
         compare_with=None,
         force=force,
-        dry_run=dry_run,
     )
     click.echo(f"Wrote {report_path}")
     click.echo(_summary_line(results))
@@ -228,7 +225,6 @@ def debug_bakeoff(
         provider=provider,
         compare_with=compare_with,
         force=force,
-        dry_run=False,
     )
     click.echo(f"Wrote {report_path}")
     click.echo(_summary_line(results))

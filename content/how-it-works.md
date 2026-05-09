@@ -103,19 +103,21 @@ enough to catch them all matched garbage.
 
 The current pipeline hands each PDF to an LLM (Anthropic or Gemini,
 with a bakeoff mode) and asks for structured JSON. That alone would be
-too fragile for a homepage, so four safety nets sit between the model
-and `content/spots/*.md`.
+too fragile for a homepage, so the pipeline never writes to
+`content/spots/*.md` directly — a human reviews every extraction
+first. Three checks frame what the reviewer sees, and a fourth gate
+blocks the model from sneaking past them in the catastrophic case.
 
-{{ diagram(name="pdf-extraction", caption="PDF → SHA cache → LLM → grounding → validation → reviewed lock → merge.") }}
+{{ diagram(name="pdf-extraction", caption="PDF → SHA cache → LLM → grounding → validation → reviewed lock → human → merge.") }}
 
 **1. SHA-keyed cache.** Each fetched PDF gets a SHA-256. A matching
 SHA reuses the existing review directory; a mismatch triggers a fresh
 extraction. "Did the PDF change?" becomes a hash equality.
 
-**2. Grounding.** Every extracted session must come with an evidence
-string. The grounding step normalizes the PDF text and checks that the
-evidence's significant tokens appear *in order* within a 250-character
-window:
+**2. Grounding (advisory).** Every extracted session must come with
+an evidence string. The grounding step normalizes the PDF text and
+checks that the evidence's significant tokens appear *in order*
+within a 250-character window:
 
 ```python
 # schedule-tools/src/schedules/grounding.py
@@ -144,10 +146,14 @@ def _evidence_locally_grounded(evidence: str, pdf_text: str) -> bool:
 
 A literal substring check fails on calendar PDFs because the tokens
 don't print contiguous. The window-and-order check tolerates the
-layout but still rejects answers the model paraphrased.
+layout but still rejects answers the model paraphrased. Coverage
+shows up as a percentage in the review report so the reviewer knows
+which sessions to scrutinize — it doesn't block the extraction from
+becoming a review candidate.
 
-**3. Validation gate.** Even with grounded evidence, the writer
-refuses payloads that look catastrophically wrong:
+**3. Validation gate (catastrophic only).** This is the one
+automated step that actually refuses an extraction. It fires only on
+payloads that look catastrophically wrong:
 
 ```python
 # schedule-tools/src/schedules/validate.py
@@ -160,13 +166,17 @@ if prior_sessions_count and len(sessions) == 0:
 ```
 
 If a pool had thirty drop-in sessions yesterday and the LLM extracts
-zero today, the merge step blocks the write. The PDF probably changed
-in a way the prompt doesn't handle yet. Yesterday's slightly-stale
-data beats silently writing an empty schedule.
+zero today, the pipeline rejects the result outright — no review
+candidate is produced. The PDF probably changed in a way the prompt
+doesn't handle yet. Yesterday's slightly-stale data beats silently
+flagging an empty schedule for review.
 
-**4. Reviewed-snapshot lock.** Once an operator reviews an extraction
-by hand, a `reviewed.json` keyed to the PDF's SHA is written next to
-the source. Future runs short-circuit until the PDF changes:
+**4. Reviewed-snapshot lock + human review.** Anything that survives
+catastrophic validation lands as a review candidate. An operator
+reviews it by hand against the source PDF, and `schedules review`
+projects the approved payload into `content/spots/*.md` and writes a
+`reviewed.json` keyed to the PDF's SHA. Future runs short-circuit
+until the PDF changes:
 
 ```python
 # schedule-tools/src/schedules/pipeline.py

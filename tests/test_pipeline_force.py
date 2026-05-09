@@ -136,7 +136,7 @@ def test_force_bypasses_reviewed_fast_path(tmp_path, monkeypatch):
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", fake_extract)
 
     exit_code, _, results = run_pipeline(
-        slugs=[SLUG], provider="gemini", compare_with=None, force=True, dry_run=True,
+        slugs=[SLUG], provider="gemini", compare_with=None, force=True,
     )
 
     assert exit_code == 0
@@ -155,7 +155,7 @@ def test_compare_with_bypasses_reviewed_fast_path(tmp_path, monkeypatch):
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", fake_extract)
 
     exit_code, _, results = run_pipeline(
-        slugs=[SLUG], provider="gemini", compare_with="anthropic", force=False, dry_run=True,
+        slugs=[SLUG], provider="gemini", compare_with="anthropic", force=False,
     )
 
     assert exit_code == 0
