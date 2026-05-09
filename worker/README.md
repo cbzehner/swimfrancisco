@@ -6,7 +6,7 @@ Cloudflare Worker that fetches water conditions from NOAA CO-OPS and NDBC, assem
 
 - `GET /api/conditions` — slug-keyed record for every spot
 
-Responses are JSON with `cache-control: public, max-age=60, s-maxage=300`. CORS allows `swimfrancisco.com`, `*.swimfrancisco.pages.dev`, and `localhost`.
+Responses are JSON with `cache-control: public, max-age=900` (15 min at both client and edge). CORS allows `swimfrancisco.com`, `*.swimfrancisco.pages.dev`, and `localhost`.
 
 ## Scheduled trigger
 

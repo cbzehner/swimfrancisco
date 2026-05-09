@@ -14,8 +14,10 @@ export interface Env {
   WORKERS_BUILDS_DEPLOY_HOOK: string;
 }
 
-// Data refreshes hourly via cron; bound clients to 5min and edge to 15min.
-const JSON_CACHE_CONTROL = "public, max-age=300, s-maxage=900";
+// Data refreshes hourly via cron; cache 15 min at both client and edge.
+// Same value at both layers — the previous 5/15 min asymmetry didn't earn
+// its keep when the underlying data only changes once an hour.
+const JSON_CACHE_CONTROL = "public, max-age=900";
 const NEGATIVE_CACHE_CONTROL = "public, max-age=60";
 
 function jsonResponse(request: Request, body: string, status = 200): Response {

@@ -2,6 +2,13 @@ name = "swimfrancisco"
 main = "src/index.ts"
 compatibility_date = "2025-01-01"
 
+# Workers Logs persisted to the dashboard. `invocation_logs` adds the
+# auto-generated request/response/metadata line per invocation alongside
+# any console.* calls already in the handler.
+[observability.logs]
+enabled = true
+invocation_logs = true
+
 # One hourly cron. Every tick refreshes NOAA/NDBC data; the tick that
 # happens to land at 00:00 PT also fires a rebuild (handler-side check
 # via `isPtMidnight`), keeping the server-rendered day-of-week current.

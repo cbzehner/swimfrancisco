@@ -192,13 +192,15 @@ The cache headers on the JSON response are tuned to the cron rate:
 
 ```ts
 // worker/src/index.ts
-// Data refreshes hourly via cron; bound clients to 5min and edge to 15min.
-const JSON_CACHE_CONTROL = "public, max-age=300, s-maxage=900";
+// Data refreshes hourly via cron; cache 15 min at both client and edge.
+const JSON_CACHE_CONTROL = "public, max-age=900";
 ```
 
-Five minutes on the client, fifteen at the Cloudflare edge. Most
-visitors never reach the Worker at all — the edge serves the response
-straight from cache.
+Fifteen minutes at both layers. Most visitors never reach the Worker
+at all — the Cloudflare edge serves the response straight from cache,
+and even when they do, the browser holds onto it for the rest of the
+quarter-hour. Data only changes once an hour, so the asymmetric
+client/edge TTLs the original code carried weren't earning anything.
 
 The assembly step also tolerates upstream failure. Each spot's record
 carries two stale flags, `temp_stale` and `tide_stale`, set when the
