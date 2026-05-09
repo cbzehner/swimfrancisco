@@ -6,7 +6,7 @@ import subprocess
 
 import click
 
-from .models import Aborted, PoolResult, Proposed, Rejected, Skipped, Unchanged
+from .models import Aborted, Extracted, PoolResult, Skipped, Unchanged
 from .paths import (
     CONTENT_SPOTS_DIR,
     DATA_DIR,
@@ -43,10 +43,14 @@ def _parse_slugs(only: str | None) -> list[str] | None:
 
 
 def _summary_line(results: list[PoolResult]) -> str:
-    failed = sum(isinstance(result, (Rejected, Aborted)) for result in results)
+    succeeded = sum(isinstance(result, Extracted) and not result.catastrophic for result in results)
+    failed = sum(
+        isinstance(result, Aborted) or (isinstance(result, Extracted) and result.catastrophic)
+        for result in results
+    )
     return (
         f"{len(results)} pools processed; "
-        f"{sum(isinstance(result, Proposed) for result in results)} succeeded, "
+        f"{succeeded} succeeded, "
         f"{sum(isinstance(result, Unchanged) for result in results)} unchanged, "
         f"{sum(isinstance(result, Skipped) for result in results)} skipped, "
         f"{failed} failed."

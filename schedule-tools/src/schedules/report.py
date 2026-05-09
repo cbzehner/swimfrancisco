@@ -2,17 +2,20 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .models import Aborted, PoolResult, Proposed, Rejected, ReviewNote, Skipped, Unchanged, Violation, needs_review
+from .models import Aborted, Extracted, PoolResult, ReviewNote, Skipped, Unchanged, Violation, needs_review
 from .paths import REPORT_PATH
 
 
 def write_report(results: list[PoolResult], path: Path = REPORT_PATH) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    succeeded = sum(isinstance(result, Proposed) for result in results)
+    succeeded = sum(isinstance(result, Extracted) and not result.catastrophic for result in results)
     unchanged = sum(isinstance(result, Unchanged) for result in results)
     skipped = sum(isinstance(result, Skipped) for result in results)
-    failed = sum(isinstance(result, (Rejected, Aborted)) for result in results)
+    failed = sum(
+        isinstance(result, Aborted) or (isinstance(result, Extracted) and result.catastrophic)
+        for result in results
+    )
     flagged = sum(needs_review(result) for result in results)
 
     lines = [
@@ -50,8 +53,8 @@ def _status_label(result: PoolResult) -> str:
         return "skipped"
     if isinstance(result, Unchanged):
         return "unchanged"
-    if isinstance(result, Proposed):
-        return "success"
+    if isinstance(result, Extracted):
+        return "failed" if result.catastrophic else "success"
     return "failed"
 
 
@@ -83,7 +86,7 @@ def _render_pool_block(result: PoolResult) -> list[str]:
         lines.append("")
         return lines
 
-    # Unchanged | Proposed | Rejected — all share rich extraction fields.
+    # Unchanged | Extracted — both share rich extraction fields.
     lines.append(f"- provider: {result.provider}")
     lines.append(f"- model: {result.model}")
     lines.append(f"- pdf_sha256: {result.pdf_sha256[:12]}")
@@ -119,8 +122,8 @@ def _render_pool_block(result: PoolResult) -> list[str]:
     ):
         lines.append(f"- artifact[{name}]: {pool_path}")
 
-    if isinstance(result, Rejected):
-        lines.append(f"- error: {result.error}")
+    if isinstance(result, Extracted) and result.catastrophic:
+        lines.append("- error: Validation refused the extracted payload.")
 
     lines.append("")
     return lines
@@ -129,18 +132,18 @@ def _render_pool_block(result: PoolResult) -> list[str]:
 def _prior_sessions_count(result: PoolResult) -> int | None:
     if isinstance(result, Unchanged):
         return result.sessions_count
-    if isinstance(result, (Proposed, Rejected)):
+    if isinstance(result, Extracted):
         return result.prior_sessions_count
     return None
 
 
 def _violations(result: PoolResult) -> list[Violation]:
-    if isinstance(result, (Proposed, Rejected)):
+    if isinstance(result, Extracted):
         return result.violations
     return []
 
 
 def _review_notes(result: PoolResult) -> list[ReviewNote]:
-    if isinstance(result, (Unchanged, Proposed, Rejected)):
+    if isinstance(result, (Unchanged, Extracted)):
         return result.review_notes
     return []

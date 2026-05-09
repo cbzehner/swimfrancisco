@@ -7,7 +7,7 @@ from pathlib import Path
 from schedules import artifacts as artifacts_mod
 from schedules import paths as paths_mod
 from schedules import registry as registry_mod
-from schedules.models import FetchResult, Proposed, Unchanged
+from schedules.models import Extracted, FetchResult, Unchanged
 from schedules.pipeline import run_pipeline
 from schedules.report import write_report
 from schedules.schema import EXTRACTION_SCHEMA as _EXTRACTION_SCHEMA
@@ -171,10 +171,13 @@ def test_extract_uses_cached_provider_when_prompt_hashes_match(tmp_path, monkeyp
         slugs=[SLUG], provider="gemini", compare_with=None, force=False,
     )
 
-    from schedules.models import Aborted, Rejected
-    if isinstance(results[0], (Aborted, Rejected)):
-        raise AssertionError(f"pipeline failed: {results[0].error!r}")
-    assert isinstance(results[0], Proposed), results[0]
+    from schedules.models import Aborted
+    first = results[0]
+    if isinstance(first, Aborted):
+        raise AssertionError(f"pipeline aborted: {first.error!r}")
+    if isinstance(first, Extracted) and first.catastrophic:
+        raise AssertionError(f"pipeline rejected: {first.violations!r}")
+    assert isinstance(first, Extracted), first
     assert exit_code == 0
     assert results[0].sessions_count == 5
 
@@ -213,4 +216,4 @@ def test_extract_reruns_after_prompt_change(tmp_path, monkeypatch):
 
     assert exit_code == 0
     assert call_count["n"] == 1
-    assert isinstance(results[0], Proposed)
+    assert isinstance(results[0], Extracted)

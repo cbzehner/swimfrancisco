@@ -10,11 +10,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from schedules.models import Aborted, PoolResult, Proposed, Rejected, ReviewNote, Skipped, Unchanged, Violation
+from schedules.models import Aborted, Extracted, PoolResult, ReviewNote, Skipped, Unchanged, Violation
 from schedules.report import write_report
 
 
-def _proposed(**overrides: object) -> Proposed:
+def _proposed(**overrides: object) -> Extracted:
     defaults: dict[str, object] = {
         "slug": "rossi-pool",
         "official_page_url": "https://example.test/rossi",
@@ -31,7 +31,7 @@ def _proposed(**overrides: object) -> Proposed:
         "cost_estimate": "$0.01",
     }
     defaults.update(overrides)
-    return Proposed(**defaults)  # type: ignore[arg-type]
+    return Extracted(**defaults)  # type: ignore[arg-type]
 
 
 def _unchanged(**overrides: object) -> Unchanged:
@@ -79,13 +79,12 @@ def _aborted(**overrides: object) -> Aborted:
     return Aborted(**defaults)  # type: ignore[arg-type]
 
 
-def _rejected(**overrides: object) -> Rejected:
+def _rejected(**overrides: object) -> Extracted:
     defaults: dict[str, object] = {
         "slug": "rossi-pool",
         "official_page_url": "https://example.test/rossi",
         "pdf_url": "https://example.test/rossi.pdf",
         "source_status": "published",
-        "error": "Validation refused the extracted payload.",
         "provider": "anthropic",
         "model": "claude",
         "pdf_sha256": "a" * 64,
@@ -95,10 +94,11 @@ def _rejected(**overrides: object) -> Rejected:
         "closures_count": 0,
         "schedule_effective": None,
         "cost_estimate": "$0.01",
+        "catastrophic": True,
         "violations": [],
     }
     defaults.update(overrides)
-    return Rejected(**defaults)  # type: ignore[arg-type]
+    return Extracted(**defaults)  # type: ignore[arg-type]
 
 
 def _render(results: list[PoolResult], tmp_path: Path) -> str:

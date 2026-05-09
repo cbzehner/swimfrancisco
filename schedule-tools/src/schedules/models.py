@@ -173,10 +173,17 @@ class Unchanged(PoolResultBase):
 
 
 @dataclass(frozen=True)
-class Proposed(PoolResultBase):
-    """Fresh extraction that passed catastrophic-validation. Sits as a
-    review candidate; never written to content/spots/*.md by the pipeline.
-    May still carry advisory violations and review notes."""
+class Extracted(PoolResultBase):
+    """Fresh LLM extraction. Sits as a review candidate — the pipeline
+    never writes content/spots/*.md directly; `schedules review` is the
+    only path that lands an approved snapshot.
+
+    `catastrophic=True` means catastrophic validation refused the payload
+    (e.g. sessions_dropped_to_zero). The result still records what the LLM
+    produced for the review report; the run exits non-zero. Non-catastrophic
+    results may still carry advisory violations and review notes for the
+    operator to skim before approving.
+    """
 
     provider: str
     model: str
@@ -187,26 +194,8 @@ class Proposed(PoolResultBase):
     closures_count: int
     schedule_effective: str | None
     cost_estimate: str
+    catastrophic: bool = False
     violations: list[Violation] = field(default_factory=list)
-    review_notes: list[ReviewNote] = field(default_factory=list)
-    artifact_paths: dict[str, str] = field(default_factory=dict)
-
-
-@dataclass(frozen=True)
-class Rejected(PoolResultBase):
-    """Extraction completed but validation refused the payload (e.g. sessions dropped to 0)."""
-
-    error: str
-    provider: str
-    model: str
-    pdf_sha256: str
-    page_count: int
-    sessions_count: int
-    prior_sessions_count: int
-    closures_count: int
-    schedule_effective: str | None
-    cost_estimate: str
-    violations: list[Violation]
     review_notes: list[ReviewNote] = field(default_factory=list)
     artifact_paths: dict[str, str] = field(default_factory=dict)
 
@@ -221,7 +210,7 @@ class Aborted(PoolResultBase):
     prior_schedule_effective: str | None
 
 
-PoolResult = Skipped | Unchanged | Proposed | Rejected | Aborted
+PoolResult = Skipped | Unchanged | Extracted | Aborted
 
 
 def needs_review(result: PoolResult) -> bool:

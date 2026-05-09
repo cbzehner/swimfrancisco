@@ -10,7 +10,7 @@ and is exercised here.
 
 from __future__ import annotations
 
-from schedules.models import Aborted, PoolEntry, PoolResult, Proposed, Skipped, Unchanged
+from schedules.models import Aborted, Extracted, PoolEntry, PoolResult, Skipped, Unchanged
 from schedules.pipeline import (
     _identity_kwargs,
     compute_exit_code,
@@ -37,8 +37,8 @@ def _unchanged(slug: str) -> Unchanged:
     )
 
 
-def _proposed(slug: str) -> Proposed:
-    return Proposed(
+def _proposed(slug: str) -> Extracted:
+    return Extracted(
         slug=slug,
         official_page_url="",
         pdf_url="",

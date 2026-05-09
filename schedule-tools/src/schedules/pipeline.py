@@ -10,7 +10,7 @@ from .envelope import EnvelopeValidationError, validate_envelope
 from .fetch import FetchResult, fetch_pdf
 from .grounding import grounding_from_text, normalize_pdf_text
 from .merge import read_schedule_snapshot
-from .models import Aborted, GroundingResult, PoolEntry, PoolResult, Proposed, Rejected, ReviewNote, Skipped, Unchanged
+from .models import Aborted, Extracted, GroundingResult, PoolEntry, PoolResult, ReviewNote, Skipped, Unchanged
 from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH, artifact_path, reviewed_path
 from .providers import extract as extract_with_provider
 from .providers.anthropic_provider import DEFAULT_MODEL as ANTHROPIC_DEFAULT_MODEL
@@ -28,7 +28,16 @@ _GROUNDING_EVIDENCE_SAMPLE = 5
 
 def compute_exit_code(results: list[PoolResult]) -> int:
     """Non-zero when any pool failed. Partial failure must not exit 0."""
-    return 1 if any(isinstance(result, (Rejected, Aborted)) for result in results) else 0
+    return 1 if any(_failed(result) for result in results) else 0
+
+
+def _failed(result: PoolResult) -> bool:
+    """A pool counts as failed if the run aborted or validation refused."""
+    if isinstance(result, Aborted):
+        return True
+    if isinstance(result, Extracted):
+        return result.catastrophic
+    return False
 
 
 def _identity_kwargs(entry: PoolEntry) -> dict:
@@ -246,28 +255,12 @@ def _process_entry(
                     )
                 )
 
-        # Catastrophic validation is the one automated gate; everything else is
-        # advisory and routes to Proposed for human review.
+        # Catastrophic validation routes to a non-zero exit (Extracted with
+        # catastrophic=True); advisory violations land on the result for the
+        # operator to weigh during review.
         validation = validate(payload, prior_sessions_count=len(prior_snapshot["sessions"]))
 
-        if validation.catastrophic:
-            return Rejected(
-                **_identity_kwargs(entry),
-                error="Validation refused the extracted payload.",
-                provider=provider,
-                model=model,
-                pdf_sha256=fetch_result.sha256,
-                page_count=fetch_result.page_count,
-                sessions_count=validation.stats["sessions"],
-                prior_sessions_count=len(prior_snapshot["sessions"]),
-                closures_count=validation.stats["closures"],
-                schedule_effective=payload.get("schedule_effective"),
-                violations=validation.violations,
-                review_notes=review_notes,
-                cost_estimate=cost_estimate,
-                artifact_paths=artifact_paths,
-            )
-        return Proposed(
+        return Extracted(
             **_identity_kwargs(entry),
             provider=provider,
             model=model,
@@ -277,9 +270,10 @@ def _process_entry(
             prior_sessions_count=len(prior_snapshot["sessions"]),
             closures_count=validation.stats["closures"],
             schedule_effective=payload.get("schedule_effective"),
+            cost_estimate=cost_estimate,
+            catastrophic=validation.catastrophic,
             violations=validation.violations,
             review_notes=review_notes,
-            cost_estimate=cost_estimate,
             artifact_paths=artifact_paths,
         )
     except Exception as exc:  # noqa: BLE001
