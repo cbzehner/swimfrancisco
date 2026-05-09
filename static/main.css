@@ -1083,11 +1083,10 @@ table.board tbody tr.flap {
   justify-content: center;
 }
 
-.hiw-diagram-frame svg {
+.hiw-diagram-frame img {
   display: block;
   max-width: 100%;
   height: auto;
-  color: var(--fg); /* SVG strokes/text use currentColor */
 }
 
 .hiw-diagram-caption {

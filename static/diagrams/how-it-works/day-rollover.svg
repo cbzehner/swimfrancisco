@@ -2,14 +2,14 @@
   <title id="day-title">Day rollover at 00:05 PT</title>
   <desc id="day-desc">Two daily crons cover PST and PDT so a rebuild fires at 00:05 Pacific year-round. The hourly cron at minute 0 keeps refreshing data alongside it.</desc>
   <style>
-    .b { fill: none; stroke: currentColor; stroke-width: 1.5; }
-    .t { fill: currentColor; font-family: ui-monospace, "Share Tech Mono", SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; letter-spacing: 0.05em; }
+    .b { fill: none; stroke: #f5c518; stroke-width: 1.5; }
+    .t { fill: #f5c518; font-family: ui-monospace, "Share Tech Mono", SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; letter-spacing: 0.05em; }
     .tl { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; }
     .ts { font-size: 9.5px; opacity: 0.8; }
-    .axis { stroke: currentColor; stroke-width: 1.5; }
-    .tick { stroke: currentColor; stroke-width: 1; opacity: 0.55; }
-    .mark-rebuild { stroke: currentColor; stroke-width: 2.5; }
-    .mark-refresh { stroke: currentColor; stroke-width: 1.2; opacity: 0.5; stroke-dasharray: 2 2; }
+    .axis { stroke: #f5c518; stroke-width: 1.5; }
+    .tick { stroke: #f5c518; stroke-width: 1; opacity: 0.55; }
+    .mark-rebuild { stroke: #f5c518; stroke-width: 2.5; }
+    .mark-refresh { stroke: #f5c518; stroke-width: 1.2; opacity: 0.5; stroke-dasharray: 2 2; }
   </style>
 
   <text class="t tl" x="20" y="28">CRON SCHEDULE · DAILY VIEW</text>

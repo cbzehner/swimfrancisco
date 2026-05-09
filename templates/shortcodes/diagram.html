@@ -1,9 +1,12 @@
-{# Inline a hand-authored SVG diagram from static/diagrams/how-it-works/.
-   Usage in markdown:  {{ diagram(name="api", caption="Request fan-out: before vs. after") }}
-   The SVG is read at build time so it can inherit page CSS and adds no extra request. #}
-{% set path = "diagrams/how-it-works/" ~ name ~ ".svg" %}
-{% set raw = load_data(path=path, format="plain") %}
+{# Render a hand-authored SVG diagram from static/diagrams/how-it-works/ as an
+   <img>. Inlining via load_data was the original plan, but Zola's HTML
+   minifier lowercases SVG attribute names (viewBox → viewbox), which the
+   browser ignores, so SVGs collapsed to their default 300×150 size. Serving
+   the file unchanged via <img> bypasses the minifier and preserves case.
+   The diagram colors are hardcoded amber (#f5c518) to match --fg, since
+   <img>-loaded SVGs don't inherit the parent page's currentColor. #}
+{% set src = "/diagrams/how-it-works/" ~ name ~ ".svg" %}
 <figure class="hiw-diagram" aria-label="{{ caption | default(value=name) }}">
-  <div class="hiw-diagram-frame">{{ raw | safe }}</div>
+  <div class="hiw-diagram-frame"><img src="{{ src }}" alt="{{ caption | default(value=name) }}" loading="lazy"></div>
   {% if caption %}<figcaption class="hiw-diagram-caption">{{ caption }}</figcaption>{% endif %}
 </figure>

@@ -2,16 +2,16 @@
   <title id="pdf-title">LLM PDF extraction pipeline</title>
   <desc id="pdf-desc">PDF flows through SHA cache, LLM extraction, grounding check, validation gate, and reviewed-snapshot lock before being merged into content.</desc>
   <style>
-    .b { fill: none; stroke: currentColor; stroke-width: 1.5; }
-    .t { fill: currentColor; font-family: ui-monospace, "Share Tech Mono", SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; letter-spacing: 0.05em; }
+    .b { fill: none; stroke: #f5c518; stroke-width: 1.5; }
+    .t { fill: #f5c518; font-family: ui-monospace, "Share Tech Mono", SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; letter-spacing: 0.05em; }
     .tl { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; }
     .ts { font-size: 9.5px; opacity: 0.78; }
-    .a { fill: none; stroke: currentColor; stroke-width: 1.5; marker-end: url(#arr); }
-    .ax { fill: none; stroke: currentColor; stroke-width: 1.2; stroke-dasharray: 5 3; opacity: 0.6; marker-end: url(#arr); }
+    .a { fill: none; stroke: #f5c518; stroke-width: 1.5; marker-end: url(#arr); }
+    .ax { fill: none; stroke: #f5c518; stroke-width: 1.2; stroke-dasharray: 5 3; opacity: 0.6; marker-end: url(#arr); }
   </style>
   <defs>
     <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+      <path d="M0,0 L10,5 L0,10 z" fill="#f5c518"/>
     </marker>
   </defs>
 
