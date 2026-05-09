@@ -51,12 +51,36 @@ Single long-scroll page with seven anchored sections:
 | 0 | Overview         | `#overview`     | ~150  | 0    | Full-system flow                        |
 | 1 | One combined API | `#api`          | ~250  | 1    | Request fan-out: before vs. after       |
 | 2 | Workers + KV     | `#workers`      | ~350  | 2    | Worker request lifecycle                |
-| 3 | PDF parsing      | `#pdf-parsing`  | ~450  | 2    | PDF → row → JSON pipeline               |
+| 3 | LLM PDF extraction | `#pdf-extraction` | ~500 | 3 | PDF → LLM → grounding/validation → merge |
 | 4 | Caching + serving| `#cache`        | ~300  | 1    | Cron tick + KV state                    |
 | 5 | Day rollover     | `#day-rollover` | ~200  | 1    | PT vs. UTC timeline                     |
 | 6 | NOAA / NDBC      | `#fallback`     | ~250  | 1    | Station offline → coalesce path         |
 
-Total: ~2,000 words, 8 code excerpts, 7 hand-authored SVG diagrams.
+Total: ~2,050 words, 9 code excerpts, 7 hand-authored SVG diagrams.
+
+### Note on §3 framing
+
+The `schedule-tools/` pipeline is not a regex/pdfplumber parser. It's
+an LLM extraction (Anthropic or Gemini, configurable, with bakeoff
+mode) plus a multi-stage safety net:
+
+- **SHA-keyed PDF cache** to avoid re-extracting unchanged sources.
+- **Grounding check** — every extracted session must have an evidence
+  string, and the evidence's tokens must appear in order within a
+  ~250-char window of the PDF text. Paraphrased answers fail.
+- **Validation gate** — refuses to write if `sessions_count` drops to
+  zero from a previously non-zero state (catastrophic), and warns on
+  too-few sessions, invalid time ranges, multi-day closures with time
+  ranges, etc.
+- **Delta notes** — compares against the prior snapshot and flags
+  changes for human review.
+- **Reviewed-snapshot lock** — once an operator has manually verified
+  a PDF's extraction, a `reviewed.json` keyed to the PDF's SHA
+  fast-paths future runs (no LLM call until the PDF changes).
+
+§3 is the longest section and the most distinctive part of the post.
+"How we use LLMs to parse city PDFs and keep them honest" is the HN
+hook in this section.
 
 ### Section anatomy
 
