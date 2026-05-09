@@ -188,7 +188,7 @@ under `data/<slug>/<date>-<sha12>/`, and requires human approval of
 ## Deploy
 
 - **On push to `main`:** Cloudflare Workers Builds runs the Zola build and deploys the Worker/static assets together
-- **Daily:** Worker cron triggers a Workers Builds deploy hook at 00:05 PT so date-sensitive HTML stays current
+- **Daily:** the hourly Worker cron also triggers a Workers Builds deploy hook on the tick at 00:00 PT so date-sensitive HTML stays current
 - **Schedules:** weekly GitHub Action writes provider artifacts to an auto PR; humans review before `content/spots/*.md` changes merge
 
 ## Future (not v1)

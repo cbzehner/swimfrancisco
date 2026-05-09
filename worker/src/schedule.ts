@@ -1,18 +1,16 @@
-// Pure dispatch for the Worker `scheduled` handler. Given a cron tick's
-// scheduledTime (ms since epoch, UTC), returns which branch should run.
-// Extracted so the DST-sensitive PT-hour + UTC-minute logic is unit-testable
-// without stubbing the Worker runtime.
-export type TickKind = "rebuild" | "refresh";
+// Pure helper for the Worker `scheduled` handler. Returns true when the
+// hourly cron tick lands at 00:00 PT — the moment the daily rebuild should
+// also fire. `Intl.DateTimeFormat` with `America/Los_Angeles` handles the
+// PST/PDT shift transparently, so the caller doesn't need DST awareness.
+// Extracted so it can be unit-tested without stubbing the Worker runtime.
 
-export function classifyTick(scheduledTime: number): TickKind {
-  const at = new Date(scheduledTime);
+export function isPtMidnight(scheduledTime: number): boolean {
   const ptHour = Number(
     new Intl.DateTimeFormat("en-US", {
       timeZone: "America/Los_Angeles",
       hour: "2-digit",
       hour12: false,
-    }).format(at),
+    }).format(new Date(scheduledTime)),
   );
-  const minute = at.getUTCMinutes();
-  return ptHour === 0 && minute === 5 ? "rebuild" : "refresh";
+  return ptHour === 0;
 }

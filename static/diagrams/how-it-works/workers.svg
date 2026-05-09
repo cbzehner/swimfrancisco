@@ -41,8 +41,8 @@
 
   <!-- scheduled branches -->
   <rect class="b" x="320" y="160" width="140" height="40"/>
-  <text class="t ts" x="390" y="178" text-anchor="middle">classifyTick</text>
-  <text class="t ts" x="390" y="192" text-anchor="middle">rebuild | refresh</text>
+  <text class="t ts" x="390" y="178" text-anchor="middle">isPtMidnight</text>
+  <text class="t ts" x="390" y="192" text-anchor="middle">refresh + rebuild?</text>
 
   <rect class="b" x="320" y="218" width="140" height="40"/>
   <text class="t ts" x="390" y="236" text-anchor="middle">assembleAndPersist</text>

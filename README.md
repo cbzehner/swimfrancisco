@@ -53,7 +53,7 @@ just check            # full local verification: tests + zola build
 
 ## Deploy
 
-Pushes to `main` auto-deploy through Cloudflare Workers Builds. The build command runs `zola build`; the deploy command runs `npx wrangler deploy --config worker/wrangler.toml`. A daily 00:05 PT Worker cron triggers a rebuild so date-sensitive rendered HTML stays current. After a fresh KV bootstrap, `/api/conditions` returns 503 until the hourly cron populates conditions; see `docs/deploy.md` for the full runbook.
+Pushes to `main` auto-deploy through Cloudflare Workers Builds. The build command runs `zola build`; the deploy command runs `npx wrangler deploy --config worker/wrangler.toml`. The hourly Worker cron also triggers a rebuild on the tick that lands at 00:00 PT so date-sensitive rendered HTML stays current. After a fresh KV bootstrap, `/api/conditions` returns 503 until the hourly cron populates conditions; see `docs/deploy.md` for the full runbook.
 
 ## Adding or updating spots
 

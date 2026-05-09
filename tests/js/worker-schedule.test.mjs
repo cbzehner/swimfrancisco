@@ -1,31 +1,31 @@
-// Locks in the branch selection for the scheduled handler. Two UTC crons
-// cover the year (`5 7 UTC` = 00:05 PDT; `5 8 UTC` = 00:05 PST), and the
-// hourly `0 * * * *` must always fall through to NOAA refresh — including
-// at 00:00 PT. These inputs cover PDT midnight, PST midnight, the hourly
-// edge case at 00:00 PT, and an arbitrary non-midnight tick.
+// Locks in the rebuild gate. The hourly cron `0 * * * *` fires every UTC
+// hour; the handler also triggers a rebuild on the tick that lands at
+// 00:00 PT. Inputs cover PDT midnight, PST midnight, an off-midnight PT
+// tick during PDT, and a midday non-rebuild tick.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { classifyTick } from "../../worker/src/schedule.ts";
+import { isPtMidnight } from "../../worker/src/schedule.ts";
 
-test("PDT midnight (5 7 UTC on 2026-06-15) → rebuild", () => {
-  assert.equal(classifyTick(Date.UTC(2026, 5, 15, 7, 5)), "rebuild");
+test("PDT midnight (07:00 UTC on 2026-06-15) → rebuild", () => {
+  assert.equal(isPtMidnight(Date.UTC(2026, 5, 15, 7, 0)), true);
 });
 
-test("PST midnight (5 8 UTC on 2026-01-15) → rebuild", () => {
-  assert.equal(classifyTick(Date.UTC(2026, 0, 15, 8, 5)), "rebuild");
+test("PST midnight (08:00 UTC on 2026-01-15) → rebuild", () => {
+  assert.equal(isPtMidnight(Date.UTC(2026, 0, 15, 8, 0)), true);
 });
 
-test("hourly tick at 00:00 PT (PDT, 2026-06-15 07:00 UTC) → refresh", () => {
-  assert.equal(classifyTick(Date.UTC(2026, 5, 15, 7, 0)), "refresh");
+test("hourly tick at 12:00 PT (PST, 2026-01-15 20:00 UTC) → no rebuild", () => {
+  assert.equal(isPtMidnight(Date.UTC(2026, 0, 15, 20, 0)), false);
 });
 
-test("hourly tick at 12:00 PT (PST, 2026-01-15 20:00 UTC) → refresh", () => {
-  assert.equal(classifyTick(Date.UTC(2026, 0, 15, 20, 0)), "refresh");
+test("01:00 PT during PDT (2026-06-15 08:00 UTC) → no rebuild", () => {
+  // The PST-midnight UTC hour (08:00) is 01:00 PT during PDT — must not rebuild.
+  assert.equal(isPtMidnight(Date.UTC(2026, 5, 15, 8, 0)), false);
 });
 
-test("off-PT-midnight daily tick (PST on 2026-06-15 08:05 UTC = 01:05 PDT) → refresh", () => {
-  // During PDT, the PST cron `5 8 UTC` lands at 01:05 PT, not midnight.
-  assert.equal(classifyTick(Date.UTC(2026, 5, 15, 8, 5)), "refresh");
+test("23:00 PT during PST (2026-01-15 07:00 UTC) → no rebuild", () => {
+  // The PDT-midnight UTC hour (07:00) is 23:00 PT during PST — must not rebuild.
+  assert.equal(isPtMidnight(Date.UTC(2026, 0, 15, 7, 0)), false);
 });

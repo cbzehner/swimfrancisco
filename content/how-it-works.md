@@ -78,11 +78,10 @@ async fetch(request, env) {
 },
 
 async scheduled(event, env, ctx) {
-  if (classifyTick(event.scheduledTime) === "rebuild") {
-    ctx.waitUntil(triggerRebuild(env.WORKERS_BUILDS_DEPLOY_HOOK, ...));
-    return;
-  }
   ctx.waitUntil(assembleAndPersist(env.CONDITIONS).catch(...));
+  if (isPtMidnight(event.scheduledTime)) {
+    ctx.waitUntil(triggerRebuild(env.WORKERS_BUILDS_DEPLOY_HOOK, ...));
+  }
 },
 ```
 
@@ -224,41 +223,38 @@ marked stale and the UI flagged the temp as old too. Splitting into
 per-field flags lets the UI mark one reading stale without casting
 doubt on the rest.
 
-## Day rollover at 00:05 PT
+## Day rollover at 00:00 PT
 
 The home page renders the day of the week server-side. "Today is
 Thursday" is part of the static HTML. So at midnight Pacific, the page
 goes stale by exactly one day until the next build.
 
-The fix is a daily rebuild. Two daily crons in `wrangler.toml` cover
-PST (`5 8 * * *` UTC) and PDT (`5 7 * * *` UTC), so one fires at 00:05
-Pacific year-round. The hourly cron at minute 0 keeps doing its
-data-refresh job alongside it.
+The fix runs off the same hourly cron that refreshes data. Twenty-four
+times a day the Worker fetches NOAA and NDBC; on the one tick that
+lands at 00:00 PT, it also pings the Workers Builds deploy hook.
 
-{{ diagram(name="day-rollover", caption="Two daily crons cover DST. The hourly cron at minute 0 is unaffected.") }}
+{{ diagram(name="day-rollover", caption="One hourly cron. The tick at PT midnight refreshes data and triggers a rebuild.") }}
 
-The Worker dispatches by classifying the tick. Pacific hour 0 plus UTC
-minute 5 means rebuild; everything else means refresh:
+The handler check is a one-liner that asks `Intl` for the PT hour,
+which handles the PDT/PST shift transparently:
 
 ```ts
 // worker/src/schedule.ts
-export function classifyTick(scheduledTime: number): TickKind {
-  const at = new Date(scheduledTime);
+export function isPtMidnight(scheduledTime: number): boolean {
   const ptHour = Number(
     new Intl.DateTimeFormat("en-US", {
       timeZone: "America/Los_Angeles",
       hour: "2-digit",
       hour12: false,
-    }).format(at),
+    }).format(new Date(scheduledTime)),
   );
-  const minute = at.getUTCMinutes();
-  return ptHour === 0 && minute === 5 ? "rebuild" : "refresh";
+  return ptHour === 0;
 }
 ```
 
-The minute-5 offset is the only reason the hourly cron and the daily
-rebuild can coexist without colliding. Minute 0 belongs to data
-refresh. The rebuild takes minute 5.
+PT midnight maps to one UTC hour per day — `07:00` during PDT,
+`08:00` during PST. The cron config never has to know which; the
+handler asks the question fresh on every tick.
 
 ## NOAA / NDBC fallback
 

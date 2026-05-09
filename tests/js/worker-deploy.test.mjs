@@ -1,7 +1,7 @@
 // Pin the contract for the daily-rebuild helper. The Worker's scheduled
-// handler calls triggerRebuild exactly once per day at 00:05 PT; this test
-// locks in success on 2xx and throw-with-status on non-ok, so a silent 5xx
-// cannot go unnoticed in `wrangler tail`.
+// handler calls triggerRebuild on the hourly tick that lands at 00:00 PT;
+// this test locks in success on 2xx and throw-with-status on non-ok, so a
+// silent 5xx cannot go unnoticed in `wrangler tail`.
 //
 // Imported directly from the TypeScript source; Node 22.6+ strips types.
 
@@ -11,7 +11,7 @@ import assert from "node:assert/strict";
 import { triggerRebuild } from "../../worker/src/deploy.ts";
 
 const HOOK = "https://example.invalid/hook";
-const SCHEDULED_AT = Date.UTC(2026, 3, 18, 7, 5);
+const SCHEDULED_AT = Date.UTC(2026, 3, 18, 7, 0);
 
 let originalFetch;
 let fetchCalls;

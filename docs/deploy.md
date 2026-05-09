@@ -6,9 +6,10 @@ as static assets and handles `/api/*` requests. Terraform owns the durable
 infrastructure around it (KV, DNS, the `www → apex` redirect, the apex
 custom-domain binding).
 
-Push to `main` auto-deploys via Workers Builds. A Worker cron at 00:05 PT
-POSTs to a Workers Builds deploy hook to daily-rebuild the site so that
-date-tick-over fields in the rendered HTML stay correct.
+Push to `main` auto-deploys via Workers Builds. The Worker's hourly
+cron POSTs to a Workers Builds deploy hook on the tick that lands at
+00:00 PT to daily-rebuild the site so date-tick-over fields in the
+rendered HTML stay correct.
 
 ---
 
@@ -131,8 +132,8 @@ wrangler triggers deploy
 ```
 
 `deploy` publishes Worker code; `triggers deploy` registers cron patterns.
-In the dashboard: Worker → Settings → Triggers should show three crons
-(`0 * * * *`, `5 7 * * *`, `5 8 * * *`).
+In the dashboard: Worker → Settings → Triggers should show one cron
+(`0 * * * *`).
 
 ### 9. Bootstrap KV immediately
 
@@ -151,24 +152,21 @@ curl -sSf https://swimfrancisco.com/api/conditions | head -c 400   # API served
 ```
 
 Within 24 hours, Workers Builds → Deployments should show exactly one
-hook-triggered build at ~00:05 PT in addition to any push-triggered builds.
+hook-triggered build at 00:00 PT in addition to any push-triggered builds.
 
 ---
 
 ## Daily rebuild cron
 
-The Worker's `scheduled` handler dispatches by PT hour + minute derived from
-`event.scheduledTime`:
+The Worker's `scheduled` handler runs both side-effects on every tick:
 
-- **PT hour 0, minute 5** → calls `triggerRebuild(WORKERS_BUILDS_DEPLOY_HOOK, …)`.
-  Two UTC crons cover the year (`5 7 * * *` = 00:05 PDT,
-  `5 8 * * *` = 00:05 PST); exactly one matches PT midnight on any
-  given day.
-- **Any other tick** → calls `assembleAndPersist(env.CONDITIONS)` (hourly
-  NOAA/NDBC refresh).
-
-The minute-5 gate is load-bearing: the hourly cron has minute 0 and always
-falls through to the NOAA refresh, including the 00:00 PT hourly tick.
+- Always calls `assembleAndPersist(env.CONDITIONS)` for the hourly
+  NOAA/NDBC refresh.
+- When `isPtMidnight(event.scheduledTime)` returns true, also calls
+  `triggerRebuild(WORKERS_BUILDS_DEPLOY_HOOK, …)`. PT midnight maps to
+  exactly one UTC hour per day (`07:00` during PDT, `08:00` during PST);
+  `Intl.DateTimeFormat` handles the DST shift, so the cron config stays
+  a single `0 * * * *` entry.
 
 Tail the Worker to watch a firing:
 
@@ -177,8 +175,8 @@ cd worker
 wrangler tail --format pretty
 ```
 
-You should see one `daily-rebuild scheduledTime=...T07:05Z status=200`
-line per day.
+You should see one `daily-rebuild scheduledTime=...T07:00Z status=200`
+line per day (or `T08:00Z` during PST).
 
 ### Manual rebuild
 

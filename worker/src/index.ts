@@ -7,7 +7,7 @@ import { assembleAndPersist } from "./assemble";
 import { readConditionsRaw } from "./kv";
 import { corsHeaders, preflight } from "./cors";
 import { triggerRebuild } from "./deploy";
-import { classifyTick } from "./schedule";
+import { isPtMidnight } from "./schedule";
 
 export interface Env {
   CONDITIONS: KVNamespace;
@@ -79,24 +79,22 @@ export default {
   },
 
   async scheduled(event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
-    // Daily rebuild: fires once per calendar day at 00:05 PT year-round.
-    // Two daily crons in wrangler.toml cover PST (`5 8 UTC`) and PDT (`5 7 UTC`);
-    // `classifyTick` gates on PT hour 0 + UTC minute 5 so the hourly cron
-    // (minute 0) always falls through to the NOAA refresh path, including at
-    // 00:00 PT. Dispatch logic lives in ./schedule.ts and is unit-tested.
-    if (classifyTick(event.scheduledTime) === "rebuild") {
-      ctx.waitUntil(
-        triggerRebuild(env.WORKERS_BUILDS_DEPLOY_HOOK, event.scheduledTime).catch((err) => {
-          console.error("triggerRebuild failed:", err);
-        }),
-      );
-      return;
-    }
-
+    // Every hourly tick refreshes data. The tick that lands at 00:00 PT
+    // also triggers a rebuild so the day-of-week rendered in static HTML
+    // turns over with the calendar day. PT midnight maps to exactly one
+    // UTC hour per day (DST-aware via Intl), so the rebuild fires once.
     ctx.waitUntil(
       assembleAndPersist(env.CONDITIONS).catch((err) => {
         console.error("assembleAndPersist failed:", err);
       }),
     );
+
+    if (isPtMidnight(event.scheduledTime)) {
+      ctx.waitUntil(
+        triggerRebuild(env.WORKERS_BUILDS_DEPLOY_HOOK, event.scheduledTime).catch((err) => {
+          console.error("triggerRebuild failed:", err);
+        }),
+      );
+    }
   },
 } satisfies ExportedHandler<Env>;
