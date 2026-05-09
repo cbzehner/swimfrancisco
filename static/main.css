@@ -948,3 +948,252 @@ table.board tbody tr.flap {
   /* Prose stays natural case — do NOT uppercase. */
   text-transform: none;
 }
+
+/* --- /how-it-works ------------------------------------------------------- */
+
+.hiw {
+  margin-top: 1.5rem;
+}
+
+.hiw-lede {
+  border-top: 1px solid var(--fg);
+  border-bottom: 1px solid var(--fg);
+  padding: 0.75rem 0;
+  margin: 1rem 0 2rem;
+}
+
+.hiw-eyebrow {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  color: var(--fg-dim);
+  text-transform: uppercase;
+}
+
+.hiw-title {
+  margin: 0;
+  font-size: 1.4rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.hiw-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 200px;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.hiw-prose {
+  /* Prose case is natural; only headings shout. */
+  text-transform: none;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--fg);
+  min-width: 0;
+}
+
+.hiw-prose h2 {
+  font-size: 1.05rem;
+  margin: 2.5rem 0 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--row-sep);
+  scroll-margin-top: 1rem;
+}
+
+.hiw-prose h2:first-of-type {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 1.5rem;
+}
+
+.hiw-prose p {
+  margin: 0.75rem 0;
+}
+
+.hiw-prose strong {
+  color: var(--fg);
+}
+
+.hiw-prose blockquote {
+  border-left: 2px solid var(--fg);
+  margin: 1rem 0;
+  padding: 0.25rem 0 0.25rem 0.9rem;
+  color: var(--fg-dim);
+  font-style: italic;
+}
+
+.hiw-prose blockquote em {
+  color: var(--fg);
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  margin-right: 0.4rem;
+}
+
+/* Code excerpts: navy-on-amber inversion is too loud. Stay on a slightly
+   lighter navy with amber text and a 1px amber rule on the left. */
+.hiw-prose pre {
+  background: rgba(245, 197, 24, 0.05);
+  border-left: 2px solid var(--fg);
+  padding: 0.75rem 0.9rem;
+  margin: 0.9rem 0;
+  overflow-x: auto;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.hiw-prose pre code {
+  font-family: inherit;
+  color: var(--fg);
+  background: none;
+  padding: 0;
+}
+
+.hiw-prose code {
+  font-family: ui-monospace, "Share Tech Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  background: rgba(245, 197, 24, 0.1);
+  color: var(--fg);
+  padding: 0.05rem 0.3rem;
+  font-size: 0.85em;
+}
+
+.hiw-prose hr {
+  border: none;
+  border-top: 1px solid var(--fg);
+  margin: 2.5rem 0 1.5rem;
+}
+
+.hiw-prose a {
+  text-decoration: underline;
+}
+
+/* Diagrams: amber-on-navy figures with a thin amber rule. SVG inherits
+   page colors via currentColor where authored that way. */
+.hiw-diagram {
+  margin: 1.25rem 0 1.5rem;
+}
+
+.hiw-diagram-frame {
+  border: 1px solid var(--fg);
+  background: var(--bg);
+  padding: 0.75rem;
+  display: flex;
+  justify-content: center;
+}
+
+.hiw-diagram-frame svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  color: var(--fg); /* SVG strokes/text use currentColor */
+}
+
+.hiw-diagram-caption {
+  margin: 0.4rem 0 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--fg-dim);
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* Right-rail TOC. Sticky on desktop; collapses to a top strip on mobile. */
+.hiw-toc {
+  position: sticky;
+  top: 1rem;
+  border-left: 1px solid var(--fg);
+  padding: 0.25rem 0 0.25rem 0.9rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  align-self: start;
+}
+
+.hiw-toc-label {
+  display: block;
+  color: var(--fg-dim);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  margin-bottom: 0.5rem;
+}
+
+.hiw-toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: hiw-toc;
+}
+
+.hiw-toc-list li {
+  counter-increment: hiw-toc;
+  margin: 0.35rem 0;
+  opacity: 0.6;
+}
+
+.hiw-toc-list li.is-active {
+  opacity: 1;
+  font-weight: 700;
+}
+
+.hiw-toc-list a {
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.hiw-toc-list a::before {
+  content: counter(hiw-toc, decimal-leading-zero) "  ";
+  color: var(--fg-dim);
+  margin-right: 0.25rem;
+}
+
+/* Home-page link to /how-it-works under the board. Subtle, not a banner. */
+.hiw-link-home {
+  margin: 2rem 0 0;
+  text-align: center;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+}
+
+.hiw-link-home a {
+  color: var(--fg-dim);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--fg-dim);
+  padding-bottom: 1px;
+}
+
+.hiw-link-home a:hover,
+.hiw-link-home a:focus {
+  color: var(--fg);
+  border-bottom-color: var(--fg);
+}
+
+/* Tablet + phone: collapse TOC to a horizontal strip above the prose. */
+@media (max-width: 900px) {
+  .hiw-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .hiw-toc {
+    order: -1;
+    position: static;
+    border-left: none;
+    border-top: 1px solid var(--fg);
+    border-bottom: 1px solid var(--fg);
+    padding: 0.5rem 0;
+  }
+
+  .hiw-toc-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+  }
+
+  .hiw-toc-list li {
+    margin: 0;
+  }
+}

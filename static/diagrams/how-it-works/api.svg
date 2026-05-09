@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 280" role="img" aria-labelledby="api-title api-desc">
+  <title id="api-title">One request returns the whole board</title>
+  <desc id="api-desc">Naive design fans out one request per spot. The current design returns the full board in a single JSON response.</desc>
+  <style>
+    .b { fill: none; stroke: currentColor; stroke-width: 1.5; }
+    .bd { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-dasharray: 3 3; opacity: 0.55; }
+    .t { fill: currentColor; font-family: ui-monospace, "Share Tech Mono", SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; letter-spacing: 0.05em; }
+    .tl { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; }
+    .ts { font-size: 9.5px; opacity: 0.75; }
+    .a { fill: none; stroke: currentColor; stroke-width: 1.5; marker-end: url(#arr); }
+    .ad { fill: none; stroke: currentColor; stroke-width: 1.2; opacity: 0.45; marker-end: url(#arrd); }
+  </style>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+    </marker>
+    <marker id="arrd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="currentColor" opacity="0.45"/>
+    </marker>
+  </defs>
+
+  <!-- Headers -->
+  <text class="t tl" x="160" y="22" text-anchor="middle">BEFORE</text>
+  <text class="t tl" x="480" y="22" text-anchor="middle">AFTER</text>
+
+  <line class="bd" x1="320" y1="0" x2="320" y2="280"/>
+
+  <!-- LEFT: 14 fan-out -->
+  <rect class="b" x="40" y="50" width="100" height="40"/>
+  <text class="t tl" x="90" y="75" text-anchor="middle">CLIENT</text>
+
+  <rect class="bd" x="220" y="35" width="80" height="22"/>
+  <text class="t ts" x="260" y="50" text-anchor="middle">/api/spots/1</text>
+  <rect class="bd" x="220" y="62" width="80" height="22"/>
+  <text class="t ts" x="260" y="77" text-anchor="middle">/api/spots/2</text>
+  <rect class="bd" x="220" y="89" width="80" height="22"/>
+  <text class="t ts" x="260" y="104" text-anchor="middle">/api/spots/3</text>
+  <text class="t ts" x="260" y="135" text-anchor="middle" opacity="0.5">…</text>
+  <rect class="bd" x="220" y="155" width="80" height="22"/>
+  <text class="t ts" x="260" y="170" text-anchor="middle">/api/spots/14</text>
+
+  <line class="ad" x1="140" y1="60" x2="220" y2="46"/>
+  <line class="ad" x1="140" y1="68" x2="220" y2="73"/>
+  <line class="ad" x1="140" y1="76" x2="220" y2="100"/>
+  <line class="ad" x1="140" y1="84" x2="220" y2="166"/>
+
+  <text class="t ts" x="160" y="220" text-anchor="middle">14 REQUESTS · 14 KV READS</text>
+
+  <!-- RIGHT: 1 request -->
+  <rect class="b" x="360" y="50" width="100" height="40"/>
+  <text class="t tl" x="410" y="75" text-anchor="middle">CLIENT</text>
+
+  <rect class="b" x="540" y="55" width="84" height="32"/>
+  <text class="t ts" x="582" y="76" text-anchor="middle">/api/conditions</text>
+
+  <line class="a" x1="460" y1="70" x2="540" y2="70"/>
+
+  <rect class="b" x="540" y="120" width="84" height="80"/>
+  <text class="t ts" x="582" y="138" text-anchor="middle">{ all }</text>
+  <text class="t ts" x="582" y="153" text-anchor="middle">aquatic-park…</text>
+  <text class="t ts" x="582" y="168" text-anchor="middle">baker-beach…</text>
+  <text class="t ts" x="582" y="183" text-anchor="middle">china-beach…</text>
+  <text class="t ts" x="582" y="198" text-anchor="middle">…</text>
+
+  <line class="a" x1="582" y1="87" x2="582" y2="120"/>
+  <text class="t ts" x="592" y="105">KV.get</text>
+
+  <text class="t ts" x="480" y="220" text-anchor="middle">1 REQUEST · 1 KV READ</text>
+</svg>

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}How it works — Swim Francisco{% endblock %}
+
+{% block content %}
+  <header class="site-header">
+    <div class="site-header-row">
+      <h1><a href="{{ config.base_url }}/" class="site-title">{{ config.title }}</a></h1>
+      <div class="site-header-actions">
+        <div class="view-switcher" role="group" aria-label="View">
+          <a href="/" data-target-path="/" class="view-switcher-link" aria-label="View board">BOARD</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <article class="hiw">
+    <header class="hiw-lede">
+      <p class="hiw-eyebrow">SWIM FRANCISCO · HOW IT WORKS</p>
+      <h2 class="hiw-title">{{ page.title }}</h2>
+    </header>
+
+    <div class="hiw-layout">
+      <main class="hiw-prose">
+        {{ page.content | safe }}
+      </main>
+
+      {% if page.toc %}
+        <nav class="hiw-toc" aria-label="On this page">
+          <span class="hiw-toc-label">CONTENTS</span>
+          <ol class="hiw-toc-list">
+            {% for h in page.toc %}
+              <li><a href="#{{ h.id }}" data-toc-target="{{ h.id }}">{{ h.title }}</a></li>
+            {% endfor %}
+          </ol>
+        </nav>
+      {% endif %}
+    </div>
+  </article>
+{% endblock %}
+
+{% block scripts %}
+  <script type="module" src="{{ get_url(path='js/scrollspy.js') }}"></script>
+{% endblock %}

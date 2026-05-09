@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 280" role="img" aria-labelledby="cache-title cache-desc">
+  <title id="cache-title">Cron writes KV; HTTP reads KV</title>
+  <desc id="cache-desc">NOAA and NDBC are never on the request path. The hourly cron is the only writer; clients read from the edge cache fronted by KV.</desc>
+  <style>
+    .b { fill: none; stroke: currentColor; stroke-width: 1.5; }
+    .t { fill: currentColor; font-family: ui-monospace, "Share Tech Mono", SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; letter-spacing: 0.05em; }
+    .tl { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; }
+    .ts { font-size: 9.5px; opacity: 0.78; }
+    .a { fill: none; stroke: currentColor; stroke-width: 1.5; marker-end: url(#arr); }
+  </style>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <!-- Top row: cron path (write) -->
+  <text class="t ts" x="20" y="22">WRITE PATH · once an hour</text>
+  <line class="b" x1="20" y1="28" x2="200" y2="28"/>
+
+  <rect class="b" x="20" y="40" width="120" height="38"/>
+  <text class="t tl" x="80" y="64" text-anchor="middle">HOURLY CRON</text>
+
+  <rect class="b" x="180" y="40" width="120" height="38"/>
+  <text class="t tl" x="240" y="64" text-anchor="middle">NOAA · NDBC</text>
+
+  <rect class="b" x="340" y="40" width="120" height="38"/>
+  <text class="t tl" x="400" y="60" text-anchor="middle">ASSEMBLE</text>
+  <text class="t ts" x="400" y="74" text-anchor="middle">+ coalesce stale</text>
+
+  <rect class="b" x="500" y="40" width="120" height="38"/>
+  <text class="t tl" x="560" y="64" text-anchor="middle">KV</text>
+
+  <line class="a" x1="140" y1="59" x2="180" y2="59"/>
+  <line class="a" x1="300" y1="59" x2="340" y2="59"/>
+  <line class="a" x1="460" y1="59" x2="500" y2="59"/>
+
+  <!-- Divider -->
+  <line class="b" x1="20" y1="120" x2="620" y2="120" stroke-dasharray="3 3" opacity="0.5"/>
+
+  <!-- Bottom row: read path -->
+  <text class="t ts" x="20" y="148">READ PATH · per request</text>
+  <line class="b" x1="20" y1="154" x2="180" y2="154"/>
+
+  <rect class="b" x="20" y="170" width="120" height="38"/>
+  <text class="t tl" x="80" y="194" text-anchor="middle">CLIENT</text>
+
+  <rect class="b" x="180" y="170" width="120" height="38"/>
+  <text class="t tl" x="240" y="190" text-anchor="middle">EDGE CACHE</text>
+  <text class="t ts" x="240" y="204" text-anchor="middle">s-maxage 15m</text>
+
+  <rect class="b" x="340" y="170" width="120" height="38"/>
+  <text class="t tl" x="400" y="194" text-anchor="middle">WORKER</text>
+
+  <rect class="b" x="500" y="170" width="120" height="38"/>
+  <text class="t tl" x="560" y="194" text-anchor="middle">KV</text>
+
+  <line class="a" x1="140" y1="189" x2="180" y2="189"/>
+  <line class="a" x1="300" y1="189" x2="340" y2="189"/>
+  <line class="a" x1="460" y1="189" x2="500" y2="189"/>
+
+  <!-- TTL annotations -->
+  <text class="t ts" x="80" y="232" text-anchor="middle">max-age 5m</text>
+  <text class="t ts" x="240" y="232" text-anchor="middle">most hits resolve here</text>
+  <text class="t ts" x="400" y="232" text-anchor="middle">on miss only</text>
+  <text class="t ts" x="560" y="232" text-anchor="middle">conditions:&lt;slug&gt;</text>
+</svg>

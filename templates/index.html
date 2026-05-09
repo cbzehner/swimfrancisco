@@ -89,6 +89,10 @@
   </table>
 
   <div id="map-view"{% if not is_map_view %} hidden{% endif %}></div>
+
+  {% if not is_map_view %}
+    <p class="hiw-link-home"><a href="/how-it-works/">How this works →</a></p>
+  {% endif %}
 {% endblock %}
 {% block scripts %}
   <script type="module" src="{{ get_url(path='js/status.js') }}"></script>

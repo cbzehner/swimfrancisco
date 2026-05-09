@@ -1,0 +1,9 @@
+{# Inline a hand-authored SVG diagram from static/diagrams/how-it-works/.
+   Usage in markdown:  {{ diagram(name="api", caption="Request fan-out: before vs. after") }}
+   The SVG is read at build time so it can inherit page CSS and adds no extra request. #}
+{% set path = "diagrams/how-it-works/" ~ name ~ ".svg" %}
+{% set raw = load_data(path=path, format="plain") %}
+<figure class="hiw-diagram" aria-label="{{ caption | default(value=name) }}">
+  <div class="hiw-diagram-frame">{{ raw | safe }}</div>
+  {% if caption %}<figcaption class="hiw-diagram-caption">{{ caption }}</figcaption>{% endif %}
+</figure>
