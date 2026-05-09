@@ -9,30 +9,24 @@ commit_sha = "7d75629"
 github_repo = "https://github.com/cbzehner/swimfrancisco"
 +++
 
-The site you're reading from is a static Zola build served by a single
-Cloudflare Worker. The Worker also handles `/api/conditions`, fetches NOAA
-and NDBC data on an hourly cron, caches the assembled records in KV, and
-triggers a daily rebuild at 00:05 Pacific. There's a Python pipeline that
-hands SF Rec & Park pool schedule PDFs to an LLM and refuses to write the
-result if it looks wrong.
+Swim Francisco is a live status board for fourteen places to swim in San
+Francisco: nine city pools and five open-water spots. One Cloudflare
+Worker serves the whole site — static pages, API, hourly data refresh,
+daily rebuild. A small Python pipeline hands pool schedule PDFs to an
+LLM and refuses to write the result if it looks wrong.
 
-This page walks through six micro-systems behind that, in the order a
-request to the homepage exercises them.
+This page walks through six pieces of that, in the order a request to
+the home page exercises them.
 
-{{ diagram(name="overview", caption="Full-system flow: build, request, cron.") }}
+{{ diagram(name="overview", caption="Build, request, cron — three paths through one Worker.") }}
 
 ## One combined `/api/conditions` endpoint
 
-The board renders fourteen rows. Five are open-water spots that need a
-water temperature and a tide; the rest are pools whose schedules ship with
-the static build. A naive design fans out one request per spot — fourteen
-JSON loads on first paint.
+The home page renders fourteen spots and makes one HTTP request to do
+it. A naïve design would make fourteen, one per row.
 
-The Worker collapses that. A single `GET /api/conditions` returns every
-spot's record, keyed by slug, in one ~6 KB JSON document. The page-load
-cost is one request, regardless of how many spots are on the board.
-
-{{ diagram(name="api", caption="One request returns the whole board, not one per spot.") }}
+The Worker collapses the fan-out. `GET /api/conditions` returns every
+spot's record, keyed by slug, in one ~6 KB JSON document:
 
 ```ts
 // worker/src/index.ts
@@ -46,20 +40,22 @@ if (spotMatch) {
 }
 ```
 
-There's also a per-spot endpoint for the detail pages, but the home page
-never touches it. KV stores the bulk record under a single `all` key
-alongside the per-slug keys, so reading the whole board costs one KV read,
-not fourteen.
+{{ diagram(name="api", caption="One request returns the whole board, not one per spot.") }}
+
+A per-spot endpoint exists for the detail pages, but the home page
+never touches it. KV holds the bulk record under a single `all` key
+alongside the per-slug keys, so reading the whole board costs one KV
+read, not fourteen.
 
 ## Cloudflare Workers + KV
 
-The Worker has two jobs. On HTTP requests it serves the static Zola build
-(via Workers Static Assets) and answers `/api/*`. On a cron tick it fetches
-fresh data and writes KV. There's no application server in between.
+The Worker has two jobs. On HTTP requests it serves the static Zola
+build (via Workers Static Assets) and answers `/api/*`. On a cron tick
+it fetches fresh data and writes KV. Nothing else lives in between.
 
-{{ diagram(name="workers", caption="One Worker, two entry points: fetch and scheduled.") }}
+{{ diagram(name="workers", caption="Two entry points: fetch and scheduled. Both go through KV.") }}
 
-KV is layered out as one key per spot plus one bulk key:
+KV holds one key per spot plus a bulk key:
 
 ```ts
 // worker/src/kv.ts
@@ -75,8 +71,8 @@ export async function readSpotRaw(kv: KVNamespace, slug: string): Promise<string
 }
 ```
 
-The home page reads `all`. Spot pages read `conditions:<slug>`. The cron
-writes both — fifteen keys total — once an hour.
+The home page reads `all`. Spot pages read `conditions:<slug>`. The
+cron writes both — fifteen keys total — once an hour.
 
 ```ts
 // worker/src/index.ts
@@ -96,38 +92,36 @@ async scheduled(event, env, ctx) {
 },
 ```
 
-The map view lazy-loads Leaflet, so the home page ships ~50 KB of HTML +
-CSS + JS over the wire. No bundler. No framework. Vanilla `<script
-type="module">` and a `main.css`.
+The map view lazy-loads Leaflet, so the home page ships about 50 KB of
+HTML, CSS, and JS over the wire. No bundler. No framework. Vanilla
+`<script type="module">` and a single `main.css`.
 
 ## LLM PDF extraction (kept honest)
 
-The pool schedules don't come from an API. They come from PDFs hosted on
-sfrecpark.org — calendar grids with program labels and time ranges
-distributed across cells, formatted differently per pool. There's no
-official feed.
+SF Rec & Park doesn't publish pool schedules as data. They publish
+PDFs: calendar grids with program labels and time ranges in cells,
+formatted differently per pool, on sfrecpark.org.
 
-The original plan was a regex parser. It died fast. Calendar PDFs serialize
-through `pypdf` with the program label and time range often on different
-lines, with cells from other days interleaved between them. Any regex
-strict enough to be correct missed half the rows; any regex loose enough
-to catch them all matched garbage.
+The first attempt was a regex parser. It died fast. Calendar PDFs come
+out of `pypdf` with the program label and time range often on
+different lines, with cells from other days interleaved between them.
+A regex strict enough to be correct missed half the rows; a regex loose
+enough to catch them all matched garbage.
 
-The current pipeline hands each PDF to an LLM (Anthropic or Gemini, with
-a bakeoff mode) and asks for structured JSON. That alone would be too
-fragile for the homepage, so there are four safety nets between the model
+The current pipeline hands each PDF to an LLM (Anthropic or Gemini,
+with a bakeoff mode) and asks for structured JSON. That alone would be
+too fragile for a homepage, so four safety nets sit between the model
 and `content/spots/*.md`.
 
-{{ diagram(name="pdf-extraction", caption="PDF → LLM → grounding → validation → reviewed lock → merge.") }}
+{{ diagram(name="pdf-extraction", caption="PDF → SHA cache → LLM → grounding → validation → reviewed lock → merge.") }}
 
-**1. SHA-keyed cache.** Every fetched PDF is keyed by its SHA-256. A
-matching SHA reuses the existing review directory; a mismatch triggers a
-fresh extraction. This avoids re-running the LLM on byte-identical inputs
-and makes "did the PDF change?" a `==` on a hash.
+**1. SHA-keyed cache.** Each fetched PDF gets a SHA-256. A matching
+SHA reuses the existing review directory; a mismatch triggers a fresh
+extraction. "Did the PDF change?" becomes a hash equality.
 
 **2. Grounding.** Every extracted session must come with an evidence
 string. The grounding step normalizes the PDF text and checks that the
-evidence's significant tokens appear *in order* within a ~250-character
+evidence's significant tokens appear *in order* within a 250-character
 window:
 
 ```python
@@ -156,11 +150,11 @@ def _evidence_locally_grounded(evidence: str, pdf_text: str) -> bool:
 ```
 
 A literal substring check fails on calendar PDFs because the tokens
-don't appear contiguous. The window-and-order check tolerates the
-layout while still rejecting hallucinations.
+don't print contiguous. The window-and-order check tolerates the
+layout but still rejects answers the model paraphrased.
 
-**3. Validation gate.** Even with grounded evidence, the writer refuses
-the payload if it looks catastrophically wrong:
+**3. Validation gate.** Even with grounded evidence, the writer
+refuses payloads that look catastrophically wrong:
 
 ```python
 # schedule-tools/src/schedules/validate.py
@@ -172,14 +166,14 @@ if prior_sessions_count and len(sessions) == 0:
     catastrophic = True
 ```
 
-If a pool had thirty drop-in sessions yesterday and the LLM extracts zero
-today, the merge step is blocked. The PDF probably changed in a way the
-prompt doesn't handle yet, and silently writing an empty schedule would
-be worse than yesterday's slightly stale data.
+If a pool had thirty drop-in sessions yesterday and the LLM extracts
+zero today, the merge step blocks the write. The PDF probably changed
+in a way the prompt doesn't handle yet. Yesterday's slightly-stale
+data beats silently writing an empty schedule.
 
-**4. Reviewed-snapshot lock.** Once an operator manually reviews an
-extraction, a `reviewed.json` keyed to the PDF's SHA is written. The
-fast-path skips the LLM entirely until the PDF changes:
+**4. Reviewed-snapshot lock.** Once an operator reviews an extraction
+by hand, a `reviewed.json` keyed to the PDF's SHA is written next to
+the source. Future runs short-circuit until the PDF changes:
 
 ```python
 # schedule-tools/src/schedules/pipeline.py
@@ -187,21 +181,21 @@ if not force and not compare_with and reviewed_file.exists():
     return _build_unchanged(entry, fetch_result, reviewed_file)
 ```
 
-> *Aside.* The pools whose set-point temperatures show under WATER on
-> their detail pages came from an email to SF Rec & Park asking for
-> official targets. They responded. The temperatures display with the
-> source attributed in the footer.
+> *Aside.* The set-point temperatures shown under WATER on the pool
+> detail pages came from an email I sent to SF Rec & Park asking for
+> the official numbers. They wrote back. The temperatures display
+> with attribution in the page footer.
 
 ## Caching and serving
 
-The hourly cron is what keeps the temps and tides on the board fresh.
-Each tick fetches the upstream sources, assembles a record per spot,
-and writes KV. The HTTP handler never calls NOAA or NDBC — it only
-reads what the last cron put in KV.
+The hourly cron keeps temps and tides fresh. Each tick fetches the
+upstream sources, assembles a record per spot, and writes KV. The HTTP
+handler never calls NOAA or NDBC. It only reads what the last cron put
+in KV.
 
-{{ diagram(name="cache", caption="Cron writes KV; fetch reads KV. NOAA and NDBC are never on the request path.") }}
+{{ diagram(name="cache", caption="Cron writes KV; fetch reads KV. NOAA and NDBC sit behind the cron, off the request path.") }}
 
-The cache layering on the JSON response is deliberate:
+The cache headers on the JSON response are tuned to the cron rate:
 
 ```ts
 // worker/src/index.ts
@@ -209,15 +203,14 @@ The cache layering on the JSON response is deliberate:
 const JSON_CACHE_CONTROL = "public, max-age=300, s-maxage=900";
 ```
 
-Five minutes on the client and fifteen at the Cloudflare edge means most
-visitors never reach the Worker at all. The hourly cron is the upstream
-refresh rate; the cache TTLs are tuned so the edge stays fresh enough to
-match.
+Five minutes on the client, fifteen at the Cloudflare edge. Most
+visitors never reach the Worker at all — the edge serves the response
+straight from cache.
 
 The assembly step also tolerates upstream failure. Each spot's record
-carries a per-field stale flag — `temp_stale` and `tide_stale` — set
-when the assembler had to reuse the previous KV value because the
-upstream fetch returned nothing:
+carries two stale flags, `temp_stale` and `tide_stale`, set when the
+assembler reused the previous KV value because the upstream fetch came
+back empty:
 
 ```ts
 // worker/src/assemble.ts
@@ -231,11 +224,11 @@ function coalesceTemp(fresh, previous, previousIsFresh) {
 }
 ```
 
-The flag was a single `stale: bool` originally. When the tide station
-went offline but the temperature reading was fine, the whole record got
-marked stale and the UI flagged the temperature as old too. Splitting
-into per-field flags lets the UI show that one reading is stale without
-casting doubt on the rest.
+The flag was a single `stale: bool` originally. When a tide station
+went down but the temperature reading was fine, the whole record got
+marked stale and the UI flagged the temp as old too. Splitting into
+per-field flags lets the UI mark one reading stale without casting
+doubt on the rest.
 
 ## Day rollover at 00:05 PT
 
@@ -244,13 +237,13 @@ Thursday" is part of the static HTML. So at midnight Pacific, the page
 goes stale by exactly one day until the next build.
 
 The fix is a daily rebuild. Two daily crons in `wrangler.toml` cover
-PST (`5 8 * * * UTC`) and PDT (`5 7 * * * UTC`), so one fires at 00:05
+PST (`5 8 * * *` UTC) and PDT (`5 7 * * *` UTC), so one fires at 00:05
 Pacific year-round. The hourly cron at minute 0 keeps doing its
 data-refresh job alongside it.
 
-{{ diagram(name="day-rollover", caption="PT vs. UTC: two daily crons cover DST; the hourly cron is unaffected.") }}
+{{ diagram(name="day-rollover", caption="Two daily crons cover DST. The hourly cron at minute 0 is unaffected.") }}
 
-The Worker dispatches by classifying the tick. Pacific hour 0 + UTC
+The Worker dispatches by classifying the tick. Pacific hour 0 plus UTC
 minute 5 means rebuild; everything else means refresh:
 
 ```ts
@@ -270,19 +263,22 @@ export function classifyTick(scheduledTime: number): TickKind {
 ```
 
 The minute-5 offset is the only reason the hourly cron and the daily
-rebuild can coexist. Minute 0 is owned by data refresh; the rebuild
-takes minute 5.
+rebuild can coexist without colliding. Minute 0 belongs to data
+refresh. The rebuild takes minute 5.
 
 ## NOAA / NDBC fallback
 
+Stations go offline. The bay temperature sensor was dark for most of a
+week last winter. The page can't just show a dash and shrug — most
+readers want a number, even one a few hours old.
+
 Three upstream sources feed the open-water spots: NOAA station 9414290
-(bay temperature + tides), 9414750 (a fallback temperature station for
-the bay), and NDBC buoy 46237 (ocean temperature). Stations go offline.
-The bay temperature sensor was dark for most of a week last winter.
+(bay temperature and tides), 9414750 (a fallback temperature station
+for the bay), and NDBC buoy 46237 (ocean temperature).
 
-{{ diagram(name="fallback", caption="When a station is silent, the assembler reuses the last good KV value and marks the field stale.") }}
+{{ diagram(name="fallback", caption="Primary down, fallback down — the assembler reuses the previous KV value and marks the field stale.") }}
 
-The temperature fetch falls back to a secondary station when the primary
+The temperature fetch tries the secondary station when the primary
 returns nothing or errors:
 
 ```ts
@@ -307,14 +303,14 @@ export async function fetchTempWithFallback(
 }
 ```
 
-If both primary and fallback come back empty, the assembler reads the
-previous KV record and reuses its temperature fields, marking
-`temp_stale: true`. The same is true for tides: `tide_stale: true` when
-the prediction was reused from the last good value.
+If both come back empty, the assembler reads the previous KV record
+and reuses its temperature fields, marking `temp_stale: true`. Tides
+work the same way: `tide_stale: true` when the prediction was reused
+from the last good value.
 
-The freshness ceiling is twenty-four hours. If the previous record is
-older than that, the fields go to `null` and the UI shows a dash. Stale
-data that's stale enough to mislead is worse than no data.
+The freshness ceiling is twenty-four hours. Past that, the fields go
+to `null` and the UI shows a dash. Stale data old enough to mislead is
+worse than no data.
 
 ---
 
