@@ -23,6 +23,15 @@
     <div class="hiw-layout">
       <main class="hiw-prose">
         {{ page.content | safe }}
+
+        {% if page.extra.commit_sha and page.extra.github_repo %}
+          <hr>
+          <p>
+            The site is open source. Code excerpts above are pinned to commit
+            <a href="{{ page.extra.github_repo }}/tree/{{ page.extra.commit_sha }}"><code>{{ page.extra.commit_sha }}</code></a>.
+            Browse the current source at <a href="{{ page.extra.github_repo }}">{{ page.extra.github_repo }}</a>.
+          </p>
+        {% endif %}
       </main>
 
       {% if page.toc %}

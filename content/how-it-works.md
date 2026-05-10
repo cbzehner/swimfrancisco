@@ -5,7 +5,7 @@ template = "how-it-works.html"
 insert_anchor_links = "left"
 
 [extra]
-commit_sha = "7d75629"
+commit_sha = "35764ad"
 github_repo = "https://github.com/cbzehner/swimfrancisco"
 +++
 
@@ -108,7 +108,7 @@ too fragile for a homepage, so the pipeline never writes to
 first. Three checks frame what the reviewer sees, and a fourth gate
 blocks the model from sneaking past them in the catastrophic case.
 
-{{ diagram(name="pdf-extraction", caption="PDF → SHA cache → LLM → grounding → validation → reviewed lock → human → merge.") }}
+{{ diagram(name="pdf-extraction", caption="Reviewed-lock SHA match fast-paths to content. Otherwise LLM → grounding → validation; catastrophic refusal exits non-zero, everything else awaits human review before content/spots is touched.") }}
 
 **1. SHA-keyed cache.** Each fetched PDF gets a SHA-256. A matching
 SHA reuses the existing review directory; a mismatch triggers a fresh
@@ -313,9 +313,3 @@ from the last good value.
 The freshness ceiling is twenty-four hours. Past that, the fields go
 to `null` and the UI shows a dash. Stale data old enough to mislead is
 worse than no data.
-
----
-
-The site is open source. Code excerpts above are pinned to commit
-[`{{ page.extra.commit_sha }}`]({{ page.extra.github_repo }}/tree/{{ page.extra.commit_sha }}).
-Browse the current source at [{{ page.extra.github_repo }}]({{ page.extra.github_repo }}).
