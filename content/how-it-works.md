@@ -22,11 +22,9 @@ the home page exercises them.
 
 ## One combined `/api/conditions` endpoint
 
-The home page renders fourteen spots and makes one HTTP request to do
-it. A naïve design would make fourteen, one per row.
-
-The Worker collapses the fan-out. `GET /api/conditions` returns every
-spot's record, keyed by slug, in one ~6 KB JSON document:
+The home page renders fourteen spots from a single HTTP request.
+`GET /api/conditions` returns every spot's record, keyed by slug, in
+one ~6 KB JSON document:
 
 ```ts
 // worker/src/index.ts
@@ -35,12 +33,12 @@ if (path === "/api/conditions") {
 }
 ```
 
-{{ diagram(name="api", caption="One request returns the whole board, not one per spot.") }}
+{{ diagram(name="api", caption="Every page on the site hydrates from this one fetch.") }}
 
 Detail pages reuse the same response and key into it by slug, so every
 page on the site is hydrated by a single edge-cached fetch. KV holds
-the slug-keyed record under one key, so reading the whole board costs
-one KV read, not fourteen.
+the slug-keyed record under one key; reading the whole board is one
+KV read.
 
 ## Cloudflare Workers + KV
 
