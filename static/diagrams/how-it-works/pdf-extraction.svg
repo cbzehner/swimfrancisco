@@ -35,8 +35,8 @@
   <line class="a" x1="270" y1="74" x2="300" y2="74"/>
 
   <!-- Yes → fast path to content -->
-  <line class="a" x1="440" y1="74" x2="620" y2="74"/>
-  <text class="t ts" x="530" y="68" text-anchor="middle">yes · fast path</text>
+  <line class="a" x1="440" y1="74" x2="540" y2="74"/>
+  <text class="t ts" x="490" y="68" text-anchor="middle">yes · fast path</text>
 
   <!-- No → LLM extract -->
   <line class="a" x1="370" y1="98" x2="370" y2="130"/>

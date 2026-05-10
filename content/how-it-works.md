@@ -1,105 +1,103 @@
 +++
 title = "How it works"
-description = "What Swim Francisco is, why it exists, and how the data path works — pool PDFs through an LLM, NOAA hourly, all on one Cloudflare Worker."
+description = "I built a status board for the fourteen places to swim in San Francisco. PDFs through an LLM, NOAA hourly, all on one Cloudflare Worker for the cost of a domain name."
 template = "how-it-works.html"
 insert_anchor_links = "left"
 
 [extra]
-commit_sha = "16e93a9"
-github_repo = "https://github.com/cbzehner/swimfrancisco"
+commit_sha = "d6f35c1"
 +++
 
-## What Swim Francisco is
+Last winter I was trying to answer one boring question before
+leaving the house: can I swim right now?
 
-A status board for the fourteen places to swim in San Francisco —
-nine public pools and five open-water spots — on one page. Every
-spot shows whether it's open right now and, for the bay and ocean
-spots, the current water temperature and the next tide.
+The answer was split across a city PDF, the pool's detail page on
+sfrecpark.org, NOAA water temperature, NOAA tide predictions, and —
+for the ocean spots — a different NOAA station entirely. Every
+source was public. None of it was assembled.
 
-## Why it exists
+Swim Francisco is the page I wanted. Fourteen swim spots in San
+Francisco — nine pools and five open-water spots — on one board,
+with pool status, bay and ocean temperature, and the next tide.
+There's no app, no account, no ads, no tracking. The audience is me
+and people like me, checking before heading out.
 
-The information already exists, just not in one place.
+The system underneath is small: Zola for the static build, one
+Cloudflare Worker, one KV key, hourly NOAA/NDBC fetches, and a
+human-reviewed LLM pipeline for the city's pool PDFs. The runtime
+path is just edge cache, Worker, KV.
 
-SF Rec & Park publishes pool schedules as PDFs on sfrecpark.org —
-calendar grids, formatted differently per pool, no machine-readable
-feed. NOAA publishes bay and ocean water temperatures, but on
-different endpoints than tides, and the tide station for ocean spots
-isn't the same as the temperature station for the bay. Anyone
-wanting a quick "is Hamilton open right now?" or "what's the bay at
-Aquatic Park today?" answer has to assemble three or four sources by
-hand and re-do it every time the schedule rolls.
+This page is how it's wired together, and why some of it is wired
+the way it is.
 
-Swim Francisco assembles them once, refreshes data hourly, rebuilds
-the page when the calendar day rolls over, and serves the result as
-a static site. There's no app, no account, no ads, no tracking. The
-intended audience is the people who built it: city swimmers checking
-the board before heading out.
-
-## How it works at a high level
+## What's running here
 
 Three pipelines feed one static site.
 
-1. **Pool schedules** come from PDFs on sfrecpark.org. Each PDF goes
-   through an LLM that returns structured JSON. A human reviews
-   every extraction against the source PDF before it lands. The
-   approved result becomes frontmatter on a markdown file.
+Pool schedules come from PDFs on sfrecpark.org. An LLM extracts
+them. I review every result against the source by hand. The
+approved data lands as markdown frontmatter that Zola compiles into
+HTML.
 
-2. **Open-water conditions** come from NOAA water-temperature and
-   tide-prediction endpoints, plus an NDBC buoy for ocean
-   temperature. A Cloudflare Worker cron fetches them every hour,
-   tolerates upstream failures with last-good fallbacks, and writes
-   one slug-keyed JSON record to KV.
+Open-water conditions come from NOAA and NDBC. A Cloudflare Worker
+cron fetches them every hour, tolerates upstream failures with last-
+good fallbacks, and writes one slug-keyed JSON record to KV.
 
-3. **The site itself** is a static build by Zola. Every push to
-   `main` triggers a fresh build through Cloudflare Workers Builds.
-   A separate cron tick at 00:00 PT triggers another build daily, so
-   date-sensitive HTML (like "today is Thursday" on pool detail
-   pages) stays current.
+The Worker is also the HTTP server. The browser loads static HTML,
+computes pool status from schedule data embedded in the page, and
+fetches `/api/conditions` once to hydrate live water temperatures
+and tides on the open-water rows. Most of those fetches never hit
+the origin: Cloudflare's edge caches the response.
 
 {{ diagram(name="overview", caption="Build, request, cron — three paths through one Worker.") }}
 
-The browser loads static HTML, computes pool status from schedule
-data embedded in the page, and fetches `/api/conditions` once to
-hydrate live water temperatures and tides on the open-water rows.
-Most of those fetches never reach the origin: the response is cached
-at the Cloudflare edge for fifteen minutes, and the browser caches
-it for the same window.
-
-The rest of the page walks each pipeline in turn, then covers the
-serving infrastructure, what it costs, and a few tidbits.
+The runtime never calls an LLM. PDF extraction is offline tooling
+that runs from my laptop or weekly from a GitHub Action. By the
+time anyone hits the site, the schedules in `content/spots/*.md`
+are static text I approved by hand.
 
 ## Reading the PDFs
 
-SF Rec & Park doesn't publish pool schedules as data. They publish
-PDFs: calendar grids with program labels and time ranges in cells,
-formatted differently per pool.
+I tried regex first.
 
-A regex parser was the first attempt. It was too brittle for the
-layout. `pypdf` extracts the program label and the time range on
-different lines, with cells from other days interleaved. A regex
-strict enough to be correct missed half the rows; a regex loose
-enough to catch them all matched garbage.
+`pypdf` extracts text from a PDF page in reading order — but on a
+calendar grid, that order interleaves cells from different days.
+The program label `LAP SWIM` would land on one line, the time range
+`6:00 AM – 7:30 AM` on another, with three unrelated cells between
+them. A regex strict enough to be correct missed half the rows. A
+regex loose enough to catch them all matched garbage. I shipped
+that, watched it produce wrong schedules, and threw it out within a
+week.
 
-The current pipeline hands each PDF to an LLM (Anthropic or Gemini,
-with a bakeoff mode) and asks for structured JSON. Because LLM
-output is too variable to land in `content/spots/*.md` directly,
-every extraction is reviewed by hand. Three checks frame what the
-reviewer sees, and a fourth gate refuses outright when validation
-catches an obvious failure.
+The current pipeline hands each PDF to Anthropic or Gemini and asks
+for structured JSON. That alone isn't trustworthy enough for a
+homepage, so four guardrails sit between the model output and
+content:
+
+| Guardrail | Blocks? | Catches |
+|---|:---:|---|
+| SHA cache | yes | unchanged PDFs (skip the LLM) |
+| Grounding | no | rows the model paraphrased rather than read |
+| Validation | yes | catastrophic drops (sessions → 0) |
+| Human review | yes | plausible-but-wrong extractions |
 
 {{ diagram(name="pdf-extraction", caption="Reviewed-lock SHA match fast-paths to content. Otherwise LLM → grounding → validation; catastrophic refusal exits non-zero, everything else awaits human review before content/spots is touched.") }}
 
-**1. SHA-keyed cache.** Each fetched PDF gets a SHA-256. A matching
-SHA reuses the existing review directory; a mismatch triggers a
-fresh extraction. "Did the PDF change?" becomes hash equality.
+**SHA cache.** Each fetched PDF gets a SHA-256. A matching SHA
+reuses the existing review directory; a mismatch triggers a fresh
+extraction. "Did the PDF change?" becomes hash equality.
 
-**2. Grounding (advisory).** Every extracted session must come with
-an evidence string. The grounding step normalizes the PDF text and
-checks that the evidence's significant tokens appear *in order*
-within a 250-character window:
+**Grounding (advisory).** Every extracted session must carry an
+evidence string. A normalize-and-window check verifies the
+evidence's significant tokens appear *in order* within a 250-character
+window of the PDF text. A literal substring check fails on calendar
+PDFs because the tokens don't print contiguous; the window-and-order
+tolerance accepts the messy layout but still rejects answers the
+model paraphrased from outside the source.
+
+`schedule-tools/src/schedules/grounding.py`
 
 ```python
-# schedule-tools/src/schedules/grounding.py
 def _evidence_locally_grounded(evidence: str, pdf_text: str) -> bool:
     if evidence in pdf_text:
         return True
@@ -123,18 +121,18 @@ def _evidence_locally_grounded(evidence: str, pdf_text: str) -> bool:
     return False
 ```
 
-A literal substring check fails on calendar PDFs because the tokens
-don't print contiguous. The window-and-order check tolerates the
-layout but still rejects answers the model paraphrased. Coverage
-shows up as a percentage in the review report so the reviewer knows
-which sessions to scrutinize. It doesn't block the extraction from
-becoming a review candidate.
+Coverage shows up in the review report as a percentage so I know
+which sessions to scrutinize. It doesn't block the extraction.
 
-**3. Validation gate (catastrophic only).** This is the one
-automated step that actually refuses an extraction:
+**Validation gate.** If a pool had thirty drop-in sessions yesterday
+and the LLM extracts zero today, the run exits non-zero. The PDF
+probably changed in a way the prompt doesn't handle yet; better to
+surface that as a hard failure than as an empty review queue entry I
+might rubber-stamp at midnight.
+
+`schedule-tools/src/schedules/validate.py`
 
 ```python
-# schedule-tools/src/schedules/validate.py
 if prior_sessions_count and len(sessions) == 0:
     violations.append(Violation(
         code="sessions_dropped_to_zero",
@@ -143,72 +141,70 @@ if prior_sessions_count and len(sessions) == 0:
     catastrophic = True
 ```
 
-If a pool had thirty drop-in sessions yesterday and the LLM extracts
-zero today, the run exits non-zero. The PDF probably changed in a
-way the prompt doesn't handle yet; better to surface that as a hard
-failure than as an empty review queue entry that might get
-rubber-stamped.
-
-**4. Human review.** Anything that survives catastrophic validation
-lands as a review candidate — provider artifacts under
-`data/<slug>/<date>-<sha12>/` plus a markdown report. The operator
-runs `schedules review`, which opens the source PDF and a draft
-`reviewed.json` in their editor side by side. On save,
-`finalize_draft` rejects the draft if it's byte-identical to the
-provider's payload (no review actually happened) and otherwise
-projects the approved payload into `content/spots/<slug>.md` and
-writes the `reviewed.json` keyed to the PDF's SHA. Future runs
-short-circuit until the PDF changes:
-
-```python
-# schedule-tools/src/schedules/pipeline.py
-if not force and not compare_with and reviewed_file.exists():
-    return _build_unchanged(entry, fetch_result, reviewed_file)
-```
-
-The whole pipeline is offline tooling. It runs from a developer
-machine or, weekly, from a GitHub Action that opens a PR with any
-new PDFs surfaced for review. The Cloudflare Worker that serves the
-site never executes any of this.
+**I review the rest by hand.** Whatever survives validation lands
+as a review candidate — provider artifacts under
+`data/<slug>/<date>-<sha12>/` and a markdown report. Running
+`schedules review` opens the source PDF and a draft `reviewed.json`
+in my editor side by side. On save, `finalize_draft` rejects the
+draft if it's byte-identical to the provider's payload (no review
+actually happened) and otherwise projects the approved payload into
+`content/spots/<slug>.md` and writes the `reviewed.json` keyed to
+the PDF's SHA. Future runs short-circuit until the PDF changes.
 
 ## Static build
 
-The site is generated by Zola from `content/spots/*.md`. Each spot
-gets one markdown file with TOML frontmatter — the schedule, the
-title, station identifiers, links to the official source.
+Zola compiles `content/spots/*.md` into HTML. Each spot is one
+markdown file with TOML frontmatter — schedule, title, station IDs,
+links to the official source.
 
-Pool rows on the board carry their schedule in the static HTML as a
-`data-schedule` attribute, written by Zola at build time. Pool
-status (open / closed hours / closed today) is computed in the
-browser by `static/js/status.js` against the visitor's wall-clock
-time, so even a deeply cached page reflects the current minute:
+Pool rows on the board carry their schedule directly in the static
+HTML as a `data-schedule` attribute. The browser reads it back and
+computes status (open / closed hours / closed today) against the
+visitor's wall-clock time, so even a deeply cached page reflects the
+current minute.
+
+`static/js/status.js`
 
 ```js
-// static/js/status.js
 const poolRows = root.querySelectorAll('table.board tbody tr[data-type="pool"]');
 // ... read row.getAttribute("data-schedule"), compute "OPEN until 7:00 PM"
 ```
 
-`worker/src/spots.ts` regenerates from `content/spots/*.md` on every
-build. That generated file is what the open-water cron iterates over
-to know which slugs and station IDs to fetch. There's no runtime
-database join between content and the cron — the bridge is a build
-step.
+The frontend has no bundler and no framework. Every JS file in
+`static/js/` ships as-is via `<script type="module">`. The home page
+total wire weight, gzipped, is around 50 KB including the map view
+— Leaflet only loads when someone clicks the map button. This isn't
+a moral statement about JavaScript ecosystems. The site has so
+little client logic that adding a build step would be more code
+than the JS it builds.
+
+The build also generates `worker/src/spots.ts` from the same
+`content/spots/*.md` files. That generated TypeScript is what the
+open-water cron iterates over to know which slugs and stations to
+fetch. There's no runtime database join between content and the
+cron — the bridge is a build step.
+
+The first version of that build step lived in `wrangler.toml` as a
+`[build]` hook that ran `node ../scripts/generate-worker-spots.mjs`
+on every deploy. That worked locally and broke production. Cloudflare
+Workers Builds runs the hook from `/opt/buildhome/repo`, not from
+the directory holding `wrangler.toml`, so `../scripts/...` resolved
+outside the cloned repo. Two pushes failed silently; production sat
+on a stale Worker for a day before I noticed. The fix was less
+clever: commit the generated `spots.ts`, regenerate it before
+typecheck so it stays current locally, and let a parity test fail
+in CI if `content/spots/*.md` and `worker/src/spots.ts` ever drift.
 
 Pool detail pages render the day of the week server-side. "Today is
-Thursday" is part of the static HTML, with the matching weekday row
-highlighted. At midnight Pacific, that HTML goes stale by exactly
-one day until the next build. A daily cron fixes it.
+Thursday" lives in the static HTML, with the matching weekday row
+highlighted. At midnight Pacific the HTML goes stale by exactly one
+day until the next deploy. I solved that with a daily rebuild that
+piggybacks on the existing hourly cron — when the cron tick lands
+at 00:00 PT, the handler also POSTs to a Workers Builds deploy hook.
 
-{{ diagram(name="day-rollover", caption="One hourly cron. The tick at PT midnight refreshes data and triggers a rebuild.") }}
-
-The cron that refreshes data also handles the rebuild. On the one
-hourly tick that lands at 00:00 PT, the handler additionally POSTs
-to a Workers Builds deploy hook, which kicks Zola to rebuild and
-redeploy:
+`worker/src/schedule.ts`
 
 ```ts
-// worker/src/schedule.ts
 export function isPtMidnight(scheduledTime: number): boolean {
   const ptHour = Number(
     new Intl.DateTimeFormat("en-US", {
@@ -221,17 +217,15 @@ export function isPtMidnight(scheduledTime: number): boolean {
 }
 ```
 
-PT midnight maps to one UTC hour per day — `07:00` during PDT,
-`08:00` during PST. `Intl` handles the DST shift, so the cron config
-stays a single `0 * * * *` entry.
-
 ## Live data and caching
 
-The hourly Worker cron has two responsibilities. Always: refresh
-data. Sometimes: trigger the daily rebuild.
+The Worker's `scheduled` handler runs once an hour. Every tick:
+fetch upstream, write KV. The PT-midnight tick also fires the
+rebuild.
+
+`worker/src/index.ts`
 
 ```ts
-// worker/src/index.ts
 async scheduled(event, env, ctx) {
   ctx.waitUntil(assembleAndPersist(env.CONDITIONS).catch(...));
   if (isPtMidnight(event.scheduledTime)) {
@@ -240,37 +234,56 @@ async scheduled(event, env, ctx) {
 },
 ```
 
-`assembleAndPersist` runs through the five open-water spots in
-parallel, fetches upstream data, and writes a single KV value:
+`assembleAndPersist` fetches the five open-water spots in parallel
+and writes one KV value at the key `conditions`. Four upstream
+stations feed those records: NOAA `9414290` for bay water
+temperature and tides, NOAA `9414750` as a fallback bay temperature
+station, NOAA `9414275` for tide predictions at Ocean Beach / Baker
+/ China, and NDBC buoy `46237` for ocean water temperature.
 
-```ts
-// worker/src/kv.ts
-const KEY = "conditions";
-```
+The KV layout used to be different. The original design had one key
+per spot plus a bulk key called `all`, fronted by `/api/conditions`
+for the bulk read and `/api/conditions/:slug` for per-spot reads.
+Detail pages never used the per-spot route — they keyed into the
+bulk response by slug. So the cron did 14 reads + 15 writes every
+hour to feed an endpoint nothing called. Collapsing to one
+`conditions` key dropped that to 1 read + 1 write per tick and made
+the cost table boring.
 
-Four upstream stations feed the records: NOAA `9414290` (bay water
-temp + tides), NOAA `9414750` (fallback bay temp), NOAA `9414275`
-(Ocean Beach / Baker / China tide predictions), and NDBC buoy
-`46237` (ocean water temp).
-
-{{ diagram(name="cache", caption="Cron writes one KV key. Fetch reads it. NOAA and NDBC sit behind the cron, off the request path.") }}
-
-### Tolerating upstream failure
+### Yesterday's data beats no data
 
 Stations go offline. The bay water temp sensor was dark for most of
-a week last winter. Each spot's record carries two stale flags:
-`temp_stale` and `tide_stale`, set when the assembler reused the
-previous KV value because the upstream fetch came back empty. The
-flags are per-field rather than per-record so the UI can mark a
-reused tide reading without making a fresh temperature look stale.
+a week last winter. Each spot's record carries two stale flags —
+`temp_stale` and `tide_stale` — set when the assembler reused the
+previous KV value because the upstream fetch came back empty.
+
+> *Stale data old enough to mislead is worse than no data.*
+
+The flags are per-field on purpose. The first version had a single
+`stale: bool`, and the first time a tide station went down with a
+healthy temperature reading, the record marked the *temperature* as
+stale because the *whole record* was reused. Splitting into
+`temp_stale` and `tide_stale` lets the UI flag only what actually
+came from cold storage.
+
+The same principle ended up everywhere: the temperature fallback
+chain reuses the previous KV value, the validation gate refuses
+sessions-dropped-to-zero rather than silently writing it, and the
+reviewed-snapshot lock keeps `content/spots` stable until I approve
+a new extraction. I didn't plan the pattern. It kept being the
+answer when an upstream went weird.
 
 {{ diagram(name="fallback", caption="Primary down, fallback down — the assembler reuses the previous KV value and marks the field stale.") }}
 
 The temperature fetch tries the secondary station when the primary
-returns nothing or errors:
+returns nothing or errors. If both come back empty, the assembler
+reuses the previous KV record's temperature with `temp_stale: true`.
+Tides work the same way. The freshness ceiling is twenty-four hours
+— past that, the fields go to `null` and the UI shows a dash.
+
+`worker/src/noaa.ts`
 
 ```ts
-// worker/src/noaa.ts
 export async function fetchTempWithFallback(primaryId, fallbackId) {
   try {
     const reading = await fetchNoaaTemp(primaryId);
@@ -283,31 +296,15 @@ export async function fetchTempWithFallback(primaryId, fallbackId) {
 }
 ```
 
-If both come back empty, the assembler reuses the previous KV
-record's fields and marks the appropriate flag. The freshness
-ceiling is twenty-four hours — past that, the fields go to `null`
-and the UI shows a dash. Stale data old enough to mislead is worse
-than no data.
+### The edge cache (and one place I lied)
 
-### Serving the response
-
-The browser fetches `/api/conditions` once after the page loads and
-keys into the response by slug:
-
-```js
-// static/js/conditions.js
-const rows = root.querySelectorAll('table.board tbody tr[data-type="open_water"]');
-// ... fill conditions[slug] into the row
-```
-
-The Worker's fetch handler writes successful responses to
-`caches.default` on miss and serves from there on subsequent
-requests in the same colo. With `Cache-Control: public, max-age=900`
-and `Vary: Origin`, each allowed origin gets its own 15-minute cache
-entry per region:
+The fetch handler checks `caches.default` first, serves any hit, and
+on miss reads KV, builds the response, and writes to the cache
+asynchronously via `ctx.waitUntil`. With `Cache-Control: public,
+max-age=900` and `Vary: Origin`, each allowed origin gets its own
+15-minute cache entry per Cloudflare colo.
 
 ```ts
-// worker/src/index.ts
 const cache = caches.default;
 const cacheKey = new Request(CONDITIONS_CACHE_KEY_URL, request);
 
@@ -319,67 +316,71 @@ const raw = await readConditionsRaw(env.CONDITIONS);
 ctx.waitUntil(cache.put(cacheKey, response.clone()));
 ```
 
-{{ diagram(name="api", caption="Edge cache fronts the Worker fronts KV. Most requests in any given colo never reach KV, let alone NOAA.") }}
+That's the current design. The earlier version of this writeup
+described it the same way — and was wrong. The Worker set the
+Cache-Control header but never wrote to `caches.default`. Browsers
+cached for 15 minutes; every cache miss read KV. I had to either
+soften the prose to match the code or fix the code to match the
+prose. I fixed the code.
 
-Most fetches in any given region never read KV — the edge serves
-straight from cache. The browser holds the same response for the
-same fifteen minutes, so the typical visitor never reaches the
-Worker at all.
+There's a second gotcha I haven't fixed yet. Production currently
+serves `Cache-Control: public, max-age=14400` (four hours), not the
+fifteen minutes the Worker sets. Cloudflare's zone-level Browser
+Cache TTL setting is rewriting the response header on egress. With
+hourly data, a four-hour browser cache means a visitor refreshing
+at the wrong moment can see open-water data up to about five hours
+old. Pool status is fine — it's computed client-side from
+server-rendered schedule HTML, so it's always current to the minute.
+But the open-water numbers can lag. Outstanding to-do: flip the zone
+setting to "Respect Existing Headers" and let the Worker's 15-minute
+TTL win. If you're deploying a Worker with a Cache-Control header
+and your data looks oddly stale, your zone might be quietly
+overriding you.
 
-## Serving infrastructure and cost
+## What it costs
 
-The whole site runs on Cloudflare's free tier. There's exactly one
-Worker, exactly one KV namespace, and Workers Builds for the static
-build:
+Everything runs on Cloudflare's free tier. One Worker, one KV
+namespace, Workers Builds, and Workers Static Assets:
 
-{{ diagram(name="workers", caption="Two entry points: fetch and scheduled. Both go through the conditions key in KV.") }}
-
-Costs add up like this, against Cloudflare's published free-tier
-limits as of 2026:
-
-| Resource | Free tier | Used |
+| Resource | Free tier (2026) | Used |
 |---|---|---|
-| Workers requests | 100,000 / day | well under (~few thousand visits/day, mostly edge-cached) |
-| Worker CPU | 10 ms / request | <2 ms typical (one cache lookup + maybe one KV read) |
-| KV reads | 100,000 / day | hundreds — only on cache miss, once per colo per 15 min |
-| KV writes | 1,000 / day | 24 (one per hourly cron tick) |
-| Workers Builds | 3,000 build-min / month | ~30 (one daily rebuild + push-driven deploys) |
+| Workers requests | 100k / day | well under (most served from edge cache) |
+| Worker CPU | 10 ms / request | typically 1–2 ms |
+| KV reads | 100k / day | hundreds — only on cache miss |
+| KV writes | 1k / day | 24 (one per hourly cron tick) |
+| Workers Builds | within free-tier monthly minutes | ~30 build-min / month |
 | Static asset bandwidth | unlimited | n/a |
 
-Out-of-pocket cost is the domain registration. Everything else is
-zero on this traffic shape, with substantial headroom — Workers
-free-tier requests would cover roughly 30× the current traffic
-before hitting any limit, and KV reads scale with cache misses, not
-with visitors.
+Out-of-pocket cost is the domain registration. Anthropic and Google
+API calls during PDF extraction add another line item, but those
+run from my laptop or weekly from CI, not on the production Worker.
+Pool PDFs change rarely — a quarter or so of the year — so the bill
+is well under a dollar a month on either provider.
 
-The two paid additions worth flagging: Anthropic and Google API
-calls during PDF extraction. Those run from a developer machine or
-weekly GitHub Action, not the production Worker. With a few
-extractions per quarter (PDFs change infrequently) and grounding
-running on cached PDF text rather than the LLM, the bill is low —
-under $1/month at current cadence on either provider.
+I haven't bothered measuring the precise hit rate or daily request
+count. The point of the table isn't a cost-tuning exercise; it's
+that nothing on this list is even close to a boundary, with
+substantial headroom to grow.
 
-## A few tidbits
+## Notes
 
 The set-point temperatures shown under WATER on the pool detail
-pages didn't come from a public source. SF Rec & Park doesn't
-publish them anywhere I could find. I sent them an email asking if
-the official numbers existed; they wrote back with the figures. The
-temperatures display on each pool's detail page with attribution in
-the page footer.
+pages weren't published anywhere I could find. I emailed SF Rec &
+Park asking whether the official numbers existed. They wrote back
+with the figures, which is how every pool's detail page now shows
+the set-point with attribution in the footer.
 
-The "yesterday's data is better than no data" call surfaced in
-several places independently. The temperature fallback chain reuses
-the previous KV value with a stale flag. The validation gate refuses
-sessions-dropped-to-zero rather than silently writing it. The
-schedule pipeline's reviewed-snapshot lock projects whatever was
-last approved. The pattern wasn't planned; it's what kept happening
-when an upstream went weird.
+One of the nine pools — Sava — is currently closed without a
+published schedule. The board still lists it; the pipeline marks
+it `source_status = "closed_without_current_schedule"` and the page
+shows the closure. Making the registry honest about that was easier
+than making the page pretend.
 
-The frontend has no bundler and no framework. Every JS file in
-`static/js/` is shipped as-is via `<script type="module">`. The home
-page total wire weight, gzipped, is around 50 KB including the map
-view (which lazy-loads Leaflet only when the map button is clicked).
-This isn't a moral statement about JavaScript ecosystems; it's that
-the site has so little client logic that adding a build step would
-be more code than the JS it builds.
+---
+
+I didn't build this to learn a new framework. I built it to go
+swimming without fighting a PDF. Keeping the client dumb, treating
+the LLM as an untrusted data parser behind a human review gate, and
+letting Cloudflare's edge do the serving means the site costs the
+price of a domain and asks for almost no maintenance. That's the
+whole architecture.

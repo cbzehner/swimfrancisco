@@ -33,3 +33,4 @@ tmp/
 
 # Git worktrees
 .worktrees/
+.browser-artifacts/
