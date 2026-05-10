@@ -71,11 +71,28 @@ const rows = root.querySelectorAll('table.board tbody tr[data-type="open_water"]
 // ... fill conditions[slug] into the row
 ```
 
-The response carries `Cache-Control: public, max-age=900`, so the
-browser holds the JSON for fifteen minutes between requests. The
-Worker doesn't write to `caches.default`, so every miss hits the
-origin — but with one fetch per visitor per quarter-hour, the load
-is light.
+The Worker writes successful responses to `caches.default` on miss
+and serves from there on subsequent requests in the same colo. With
+`Cache-Control: public, max-age=900` and `Vary: Origin`, each allowed
+origin gets its own 15-minute cache entry per region:
+
+```ts
+// worker/src/index.ts
+const cache = caches.default;
+const cacheKey = new Request(CONDITIONS_CACHE_KEY_URL, request);
+
+const cached = await cache.match(cacheKey);
+if (cached) return cached;
+
+const raw = await readConditionsRaw(env.CONDITIONS);
+// ... build response ...
+ctx.waitUntil(cache.put(cacheKey, response.clone()));
+```
+
+Most fetches in any given region never read KV — the edge serves
+straight from cache. The browser holds the same response for the
+same fifteen minutes, so the typical visitor never reaches the
+Worker at all.
 
 ## The scheduled path
 

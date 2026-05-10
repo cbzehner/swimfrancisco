@@ -14,11 +14,16 @@ export interface Env {
   WORKERS_BUILDS_DEPLOY_HOOK: string;
 }
 
-// Data refreshes hourly via cron; cache 15 min at both client and edge.
-// Same value at both layers — the previous 5/15 min asymmetry didn't earn
-// its keep when the underlying data only changes once an hour.
+// Data refreshes hourly via cron. The Worker writes successful conditions
+// responses to caches.default on miss, so most fetches in a given colo are
+// served straight from the edge without re-reading KV. Vary: Origin (set in
+// corsHeaders) gives each allowed origin its own cache entry.
 const JSON_CACHE_CONTROL = "public, max-age=900";
 const NEGATIVE_CACHE_CONTROL = "public, max-age=60";
+
+// Canonical URL used as the Cache API key. Decouples the cache key from the
+// incoming request's URL shape (trailing slashes, etc.).
+const CONDITIONS_CACHE_KEY_URL = "https://swimfrancisco.com/api/conditions";
 
 function jsonResponse(request: Request, body: string, status = 200): Response {
   return new Response(body, {
@@ -53,14 +58,28 @@ function serviceUnavailable(request: Request, message: string): Response {
   });
 }
 
-async function handleConditions(request: Request, env: Env): Promise<Response> {
+async function handleConditions(
+  request: Request,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<Response> {
+  const cache = caches.default;
+  // Inheriting headers from `request` preserves the Origin used for Vary keying.
+  const cacheKey = new Request(CONDITIONS_CACHE_KEY_URL, request);
+
+  const cached = await cache.match(cacheKey);
+  if (cached) return cached;
+
   const raw = await readConditionsRaw(env.CONDITIONS);
   if (!raw) return serviceUnavailable(request, "conditions not yet available");
-  return jsonResponse(request, raw);
+
+  const response = jsonResponse(request, raw);
+  ctx.waitUntil(cache.put(cacheKey, response.clone()));
+  return response;
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     if (request.method === "OPTIONS") return preflight(request);
 
     if (request.method !== "GET") {
@@ -74,7 +93,7 @@ export default {
     const path = url.pathname.replace(/\/+$/, "");
 
     if (path === "/api/conditions") {
-      return handleConditions(request, env);
+      return handleConditions(request, env, ctx);
     }
 
     return notFound(request, "not found");

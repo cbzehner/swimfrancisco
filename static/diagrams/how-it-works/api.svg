@@ -39,5 +39,5 @@
   <text class="t ts" x="440" y="76" text-anchor="middle">kv.get</text>
 
   <!-- Footer callout -->
-  <text class="t ts" x="320" y="190" text-anchor="middle">1 REQUEST · 1 KV READ · ~3 KB · BROWSER-CACHED 15 MIN</text>
+  <text class="t ts" x="320" y="190" text-anchor="middle">1 REQUEST · ~3 KB · EDGE-CACHED 15 MIN · KV READ ON MISS</text>
 </svg>
