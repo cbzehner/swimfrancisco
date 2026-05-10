@@ -32,12 +32,12 @@
   <text class="t ts" x="550" y="90" text-anchor="middle">aquatic-park: { … }</text>
   <text class="t ts" x="550" y="106" text-anchor="middle">baker-beach: { … }</text>
   <text class="t ts" x="550" y="122" text-anchor="middle">china-beach: { … }</text>
-  <text class="t ts" x="550" y="138" text-anchor="middle">…</text>
-  <text class="t ts" x="550" y="154" text-anchor="middle">14 spots total</text>
+  <text class="t ts" x="550" y="138" text-anchor="middle">crissy-field: { … }</text>
+  <text class="t ts" x="550" y="154" text-anchor="middle">ocean-beach: { … }</text>
 
   <line class="a" x1="400" y1="82" x2="480" y2="82"/>
   <text class="t ts" x="440" y="76" text-anchor="middle">kv.get</text>
 
   <!-- Footer callout -->
-  <text class="t ts" x="320" y="190" text-anchor="middle">1 REQUEST · 1 KV READ · ~6 KB · EDGE-CACHED 15 MIN</text>
+  <text class="t ts" x="320" y="190" text-anchor="middle">1 REQUEST · 1 KV READ · ~3 KB · BROWSER-CACHED 15 MIN</text>
 </svg>
