@@ -17,6 +17,16 @@ const DAY_KEYS = [
 ];
 
 const PLACEHOLDER = "\u2014"; // em dash
+const MIN_USEFUL_WINDOW_OVERLAP_MINUTES = 45;
+
+const HORIZON_DEFINITIONS = Object.freeze([
+  { id: "this-morning", label: "This Morning", dayOffset: 0, start: "06:00", end: "11:00" },
+  { id: "this-afternoon", label: "This Afternoon", dayOffset: 0, start: "12:00", end: "17:00" },
+  { id: "this-evening", label: "This Evening", dayOffset: 0, start: "17:00", end: "21:00" },
+  { id: "tomorrow-morning", label: "Tomorrow Morning", dayOffset: 1, start: "06:00", end: "11:00" },
+  { id: "tomorrow-afternoon", label: "Tomorrow Afternoon", dayOffset: 1, start: "12:00", end: "17:00" },
+  { id: "tomorrow-evening", label: "Tomorrow Evening", dayOffset: 1, start: "17:00", end: "21:00" },
+]);
 
 export function parseHHMM(value) {
   if (typeof value !== "string") return null;
@@ -73,6 +83,45 @@ export function formatISODate(date) {
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
+}
+
+function dateWithDayOffset(now, offset) {
+  const date = new Date(now);
+  date.setDate(date.getDate() + offset);
+  return date;
+}
+
+function horizonFromDefinition(def, now) {
+  const date = dateWithDayOffset(now, def.dayOffset);
+  const start = parseHHMM(def.start);
+  const end = parseHHMM(def.end);
+  return {
+    id: def.id,
+    label: def.label,
+    kind: "window",
+    dayOffset: def.dayOffset,
+    date: formatISODate(date),
+    day: DAY_KEYS[date.getDay()],
+    start,
+    end,
+  };
+}
+
+export function getHorizonOptions(now = nowInPacific()) {
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const options = [{ id: "now", label: "Now", kind: "point" }];
+  for (const def of HORIZON_DEFINITIONS) {
+    const horizon = horizonFromDefinition(def, now);
+    if (horizon.start === null || horizon.end === null) continue;
+    if (def.dayOffset === 0 && horizon.end <= nowMinutes) continue;
+    options.push(horizon);
+  }
+  return options;
+}
+
+export function resolveHorizon(id, now = nowInPacific()) {
+  const options = getHorizonOptions(now);
+  return options.find((option) => option.id === id) ?? options[0];
 }
 
 export function formatISODateHuman(isoDate) {
@@ -190,6 +239,30 @@ function findNextSession(normalized, closures, now) {
     }
   }
   return null;
+}
+
+function closureOverlapsWindow(closure, dateISO, windowStart, windowEnd) {
+  if (!closure || typeof closure !== "object") return false;
+  if (typeof closure.pool === "string" && closure.pool.length > 0) return false;
+  const start = typeof closure.start === "string" ? closure.start : null;
+  const end = typeof closure.end === "string" ? closure.end : null;
+  if (!start || !end) return false;
+  if (dateISO < start || dateISO > end) return false;
+
+  const closureStart = parseHHMM(closure.start_time);
+  const closureEnd = parseHHMM(closure.end_time);
+  if (closureStart === null || closureEnd === null) return true;
+  return closureEnd > windowStart && closureStart < windowEnd;
+}
+
+function sessionOverlapsClosure(session, closures, dateISO) {
+  return closures.some((closure) => {
+    if (!closureOverlapsWindow(closure, dateISO, session.start, session.end)) return false;
+    const closureStart = parseHHMM(closure.start_time);
+    const closureEnd = parseHHMM(closure.end_time);
+    if (closureStart === null || closureEnd === null) return true;
+    return closureEnd > session.start && closureStart < session.end;
+  });
 }
 
 // Return the next drop-in session (lap / family / senior) that starts strictly
@@ -361,6 +434,91 @@ export function computeNextOpenOffset(schedule, now, allowedTypes = null) {
   const best = findNextSession(normalized, closures, now);
   if (!best) return Number.POSITIVE_INFINITY;
   return best.offset * 1440 + best.session.start - nowMinutes;
+}
+
+export function computeWindowAvailability(schedule, horizon, allowedTypes = null) {
+  if (!horizon || horizon.kind !== "window") {
+    return {
+      kind: "INVALID",
+      status: PLACEHOLDER,
+      next: PLACEHOLDER,
+      sortRank: Number.POSITIVE_INFINITY,
+      bestSession: null,
+    };
+  }
+  if (!schedule || typeof schedule !== "object") {
+    return {
+      kind: "NO_SESSION",
+      status: "NO SESSION",
+      next: PLACEHOLDER,
+      sortRank: 3,
+      bestSession: null,
+    };
+  }
+
+  const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
+  const closures = allClosures(schedule);
+  const blockingClosure = closures.find((closure) => (
+    closureOverlapsWindow(closure, horizon.date, horizon.start, horizon.end) &&
+    (parseHHMM(closure.start_time) === null || parseHHMM(closure.end_time) === null)
+  ));
+
+  if (blockingClosure) {
+    return {
+      kind: "CLOSED",
+      status: "CLOSED",
+      next: typeof blockingClosure.reason === "string"
+        ? blockingClosure.reason.toUpperCase()
+        : PLACEHOLDER,
+      sortRank: 4,
+      bestSession: null,
+    };
+  }
+
+  if (sessions.length === 0) {
+    return {
+      kind: "NO_SESSION",
+      status: "NO SESSION",
+      next: "Schedule not verified",
+      sortRank: 3,
+      bestSession: null,
+    };
+  }
+
+  const normalized = normalizeSessions(sessions, allowedTypes)
+    .filter((session) => isDropInType(session.type))
+    .filter((session) => session.day === horizon.day)
+    .filter((session) => session.end > horizon.start && session.start < horizon.end)
+    .filter((session) => !sessionOverlapsClosure(session, closures, horizon.date))
+    .map((session) => ({
+      ...session,
+      overlap: Math.min(session.end, horizon.end) - Math.max(session.start, horizon.start),
+    }))
+    .filter((session) => session.overlap > 0)
+    .sort((a, b) => {
+      if (a.start !== b.start) return a.start - b.start;
+      return b.overlap - a.overlap;
+    });
+
+  if (normalized.length === 0) {
+    return {
+      kind: "NO_SESSION",
+      status: "NO SESSION",
+      next: PLACEHOLDER,
+      sortRank: 3,
+      bestSession: null,
+    };
+  }
+
+  const bestSession = normalized[0];
+  const limited = bestSession.overlap < MIN_USEFUL_WINDOW_OVERLAP_MINUTES;
+  return {
+    kind: limited ? "LIMITED" : "AVAILABLE",
+    status: limited ? "LIMITED" : "AVAILABLE",
+    next: PLACEHOLDER,
+    sortRank: limited ? 1 : 0,
+    bestSession,
+  };
 }
 
 // Assign a baseline rank to each item via the provided setter. Keeps this

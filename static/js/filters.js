@@ -22,9 +22,14 @@
 // No frameworks, plain DOM APIs, progressive enhancement: without JS the
 // board still renders and all rows remain visible.
 
-import { computeNextOpenOffset, nowInPacific, sortByRank } from "./helpers/board.mjs";
+import {
+  computeNextOpenOffset,
+  computeWindowAvailability,
+  nowInPacific,
+  sortByRank,
+} from "./helpers/board.mjs";
 import { TYPE_TOKENS, TYPE_TO_TOKEN, isDropInType } from "./helpers/programs.mjs";
-import { renderBoard } from "./status.js";
+import { getCurrentHorizon, renderBoard } from "./status.js";
 
 const EARTH_RADIUS_MILES = 3958.8;
 const TYPE_NONE = "none";
@@ -78,7 +83,7 @@ function updateViewSwitcherHref() {
   if (!link) return;
   const target = link.dataset.targetPath;
   if (!target) return;
-  link.setAttribute("href", target + window.location.hash);
+  link.setAttribute("href", target + window.location.search + window.location.hash);
 }
 
 // Parse a row's data-schedule JSON (same shape as status.js expects).
@@ -160,12 +165,21 @@ function sortRowsByDistance(rows, userCoords) {
 // Sort visible rows by the soonest time they can be used. Open-water rows
 // and currently open pool sessions rank as "now" (0). Pools with no known
 // upcoming drop-in session fall to the end. Stable via baseline rank.
-function sortRowsByNextOpen(rows, allowedTypes, now) {
+function sortRowsByNextOpen(rows, allowedTypes, now, horizon) {
   const decorated = rows.map((row, index) => {
-    const offset =
-      row.getAttribute("data-type") === "open_water"
-        ? 0
-        : computeNextOpenOffset(readSchedule(row), now, allowedTypes);
+    let offset;
+    if (horizon?.kind === "window") {
+      if (row.getAttribute("data-type") === "open_water") {
+        offset = 2;
+      } else {
+        offset = computeWindowAvailability(readSchedule(row), horizon, allowedTypes).sortRank;
+      }
+    } else {
+      offset =
+        row.getAttribute("data-type") === "open_water"
+          ? 0
+          : computeNextOpenOffset(readSchedule(row), now, allowedTypes);
+    }
     const baselineRank = Number(row.dataset.baselineRank);
     return {
       row,
@@ -227,6 +241,7 @@ function triggerFlap(rows) {
 function applyFilters(tbody, state) {
   const poolTypes = allowedPoolTypes(state);
   renderBoard(document, poolTypes);
+  const horizon = getCurrentHorizon();
   const rows = Array.from(tbody.querySelectorAll("tr"));
   const visible = [];
   rows.forEach((row) => {
@@ -239,7 +254,7 @@ function applyFilters(tbody, state) {
     state.sortByDistance && state.userCoords
       ? sortRowsByDistance(visible, state.userCoords)
       : state.sortByNextOpen
-        ? sortRowsByNextOpen(visible, poolTypes, nowInPacific())
+        ? sortRowsByNextOpen(visible, poolTypes, nowInPacific(), horizon)
       : sortByRank(visible, (row) => Number(row.dataset.baselineRank));
 
   // Move visible rows to the top in their new order; hidden rows retain
@@ -400,6 +415,10 @@ function init() {
   // Keep state in sync if the hash changes (back/forward, manual edit).
   window.addEventListener("hashchange", () => {
     restoreFromHash(controls);
+    updateViewSwitcherHref();
+  });
+  document.addEventListener("sf:horizon-changed", () => {
+    applyFilters(tbody, controls.state);
     updateViewSwitcherHref();
   });
 }

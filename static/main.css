@@ -100,9 +100,87 @@ a {
 
 .site-header-actions {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
+}
+
+.horizon-control {
+  position: relative;
+}
+
+.horizon-button,
+.horizon-menu button {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--fg);
+  border-radius: 2px;
+  font: inherit;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.horizon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 11rem;
+  padding: 0.35rem 0.75rem;
+}
+
+.horizon-button::after {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-0.1rem);
+  flex: 0 0 auto;
+}
+
+.horizon-button:hover,
+.horizon-button:focus,
+.horizon-menu button:hover,
+.horizon-menu button:focus {
+  background: rgba(245, 197, 24, 0.12);
+}
+
+.horizon-button[aria-expanded="true"] {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.horizon-menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  min-width: max(100%, 14rem);
+  border: 1px solid var(--fg);
+  background: var(--bg);
+  box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.35);
+}
+
+.horizon-menu button {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--row-sep);
+  border-radius: 0;
+  padding: 0.55rem 0.75rem;
+  text-align: left;
+}
+
+.horizon-menu button:last-child {
+  border-bottom: 0;
+}
+
+.horizon-menu button[aria-checked="true"] {
+  background: var(--accent);
+  color: var(--bg);
 }
 
 /* --- Controls row (filters only) ---------------------------------------- */
@@ -779,10 +857,45 @@ table.board tbody tr.flap {
     padding: 1rem 0.75rem;
   }
 
-  /* Site header: keep the view switcher in the top-right; title can shrink
-     or wrap beneath it on very narrow viewports. */
   .site-header-row {
     gap: 0.5rem;
+  }
+
+  .site-header-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .site-header-actions > *,
+  .sort-group button,
+  .view-switcher,
+  .view-switcher .view-switcher-link {
+    min-width: 0;
+  }
+
+  .horizon-control {
+    grid-column: 1 / -1;
+  }
+
+  .horizon-button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .horizon-menu {
+    width: 100%;
+  }
+
+  .sort-group {
+    display: contents;
+  }
+
+  .sort-group button,
+  .view-switcher .view-switcher-link {
+    width: 100%;
+    text-align: center;
   }
 
   .board-controls {
@@ -797,27 +910,26 @@ table.board tbody tr.flap {
     }
   }
 
-  .sort-group {
-    gap: 0.4rem;
-  }
-
   .filters button {
     font-size: 0.75rem;
     padding: 0.3rem 0.65rem;
   }
 
+  .horizon-button,
+  .horizon-menu button,
   .sort-group button,
   .view-switcher .view-switcher-link {
     font-size: 0.75rem;
-    padding: 0.3rem 0.7rem;
+    padding: 0.3rem 0.45rem;
   }
 
-  /* Hide TYPE (col 2) and TEMP (col 5); keep SPOT, STATUS, NEXT.
-     NEXT is more actionable than TEMP for pool-goers deciding whether to
-     leave the house; hidden columns still surface on the detail page. */
+  /* Hide TYPE, STATUS, and TEMP; keep SPOT + NEXT. NEXT is the most compact
+     planning signal once rows are sorted by current/future availability. */
   table.board {
     & th:nth-child(2),
     & td:nth-child(2),
+    & th:nth-child(3),
+    & td:nth-child(3),
     & th:nth-child(5),
     & td:nth-child(5),
     & th:nth-child(6),
@@ -828,18 +940,6 @@ table.board tbody tr.flap {
 
   .conditions dl {
     grid-template-columns: 1fr;
-  }
-}
-
-/* Narrow-phone breakpoint: drop STATUS too, leaving only SPOT + NEXT.
-   At this width the OPEN sort can bring the next usable spots to the top;
-   users scanning an unfiltered board see "NEXT" as the universal signal. */
-@media (max-width: 420px) {
-  table.board {
-    & th:nth-child(3),
-    & td:nth-child(3) {
-      display: none;
-    }
   }
 }
 

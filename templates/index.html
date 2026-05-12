@@ -14,6 +14,14 @@
       <h1><a href="{{ config.base_url }}/" class="site-title">{{ config.title }}</a></h1>
       <div class="site-header-actions">
         {% if not is_map_view %}
+          <div class="horizon-control">
+            <button type="button"
+                    class="horizon-button"
+                    data-horizon-button
+                    aria-haspopup="menu"
+                    aria-expanded="false">Now</button>
+            <div class="horizon-menu" data-horizon-menu role="menu" hidden></div>
+          </div>
           <div class="sort-group" role="group" aria-label="Sort">
             <button type="button" data-filter="open-now" aria-label="Sort by next open time">OPEN</button>
             <button type="button" data-action="sort-distance" aria-label="Sort by distance">NEAREST</button>

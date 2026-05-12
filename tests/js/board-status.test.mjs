@@ -9,12 +9,15 @@ import assert from "node:assert/strict";
 import {
   computeStatus,
   computeDetailStatus,
+  computeWindowAvailability,
   sortByRank,
   captureBaselineRanks,
   computeNextOpenOffset,
   findActiveClosure,
   findNextDropIn,
+  getHorizonOptions,
   nowInPacific,
+  resolveHorizon,
 } from "../../static/js/helpers/board.mjs";
 
 test("computeStatus uses 'Closed through' for inclusive end dates", () => {
@@ -375,6 +378,82 @@ test("nowInPacific reflects PT wall-clock during PST (UTC-8)", () => {
   assert.equal(pt.getDay(), 3); // Wednesday
   assert.equal(pt.getHours(), 23);
   assert.equal(pt.getMinutes(), 30);
+});
+
+test("getHorizonOptions omits same-day windows that have already ended", () => {
+  const now = new Date("2026-04-14T11:00:00"); // Tuesday 11:00 local
+  const ids = getHorizonOptions(now).map((option) => option.id);
+  assert.deepEqual(ids, [
+    "now",
+    "this-afternoon",
+    "this-evening",
+    "tomorrow-morning",
+    "tomorrow-afternoon",
+    "tomorrow-evening",
+  ]);
+});
+
+test("resolveHorizon falls back to Now when a URL horizon is no longer available", () => {
+  const now = new Date("2026-04-14T21:30:00"); // all same-day windows ended
+  assert.equal(resolveHorizon("this-evening", now).id, "now");
+});
+
+test("computeWindowAvailability marks a useful overlapping session available", () => {
+  const horizon = resolveHorizon("this-afternoon", new Date("2026-04-14T11:00:00"));
+  const result = computeWindowAvailability(BASIC_SCHEDULE, horizon, ["lap_swim"]);
+  assert.equal(result.kind, "AVAILABLE");
+  assert.equal(result.status, "AVAILABLE");
+  assert.equal(result.bestSession.type, "lap_swim");
+  assert.equal(result.bestSession.start, 12 * 60 + 30);
+});
+
+test("computeWindowAvailability marks short overlaps limited", () => {
+  const schedule = {
+    sessions: [{ day: "tuesday", type: "lap_swim", start: "16:30", end: "17:10" }],
+    closures: [],
+  };
+  const horizon = resolveHorizon("this-afternoon", new Date("2026-04-14T11:00:00"));
+  const result = computeWindowAvailability(schedule, horizon, ["lap_swim"]);
+  assert.equal(result.kind, "LIMITED");
+  assert.equal(result.status, "LIMITED");
+});
+
+test("computeWindowAvailability returns no session when filters exclude the overlap", () => {
+  const horizon = resolveHorizon("this-afternoon", new Date("2026-04-14T11:00:00"));
+  const result = computeWindowAvailability(BASIC_SCHEDULE, horizon, ["senior_swim"]);
+  assert.equal(result.kind, "NO_SESSION");
+  assert.equal(result.status, "NO SESSION");
+});
+
+test("computeWindowAvailability treats all-day closures as closed", () => {
+  const schedule = {
+    sessions: BASIC_SCHEDULE.sessions,
+    closures: [{ start: "2026-04-14", end: "2026-04-14", reason: "maintenance" }],
+  };
+  const horizon = resolveHorizon("this-afternoon", new Date("2026-04-14T11:00:00"));
+  const result = computeWindowAvailability(schedule, horizon);
+  assert.equal(result.kind, "CLOSED");
+  assert.equal(result.status, "CLOSED");
+});
+
+test("computeWindowAvailability skips sessions blocked by partial closures", () => {
+  const schedule = {
+    sessions: [
+      { day: "tuesday", type: "lap_swim", start: "12:30", end: "14:00" },
+      { day: "tuesday", type: "lap_swim", start: "15:00", end: "16:00" },
+    ],
+    closures: [{
+      start: "2026-04-14",
+      end: "2026-04-14",
+      start_time: "12:00",
+      end_time: "14:30",
+      reason: "training",
+    }],
+  };
+  const horizon = resolveHorizon("this-afternoon", new Date("2026-04-14T11:00:00"));
+  const result = computeWindowAvailability(schedule, horizon);
+  assert.equal(result.kind, "AVAILABLE");
+  assert.equal(result.bestSession.start, 15 * 60);
 });
 
 test("computeDetailStatus treats pre-season as a synthetic closure", () => {
