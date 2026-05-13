@@ -138,9 +138,7 @@ export function formatISODateHuman(isoDate) {
   return `${monthLabels[monthIndex]} ${Number(day)}, ${year}`;
 }
 
-// Return the active facility-wide closure (if any) covering `now`. Closures
-// with a non-empty `pool` field are zone-scoped and do NOT close the whole
-// facility — they are rendered as detail-page banners but ignored here.
+// Return the active closure (if any) covering `now`.
 export function findActiveClosure(closures, now) {
   if (!Array.isArray(closures) || closures.length === 0) return null;
   const today = formatISODate(now);
@@ -150,7 +148,6 @@ export function findActiveClosure(closures, now) {
     const start = typeof closure.start === "string" ? closure.start : null;
     const end = typeof closure.end === "string" ? closure.end : null;
     if (!start || !end) continue;
-    if (typeof closure.pool === "string" && closure.pool.length > 0) continue;
     if (today < start || today > end) continue;
     // Partial-day closures (single-date with start_time/end_time) only block
     // during their explicit window. Outside that window the pool is open
@@ -214,7 +211,6 @@ function findNextSession(normalized, closures, now) {
     // sessions whose start lands inside the partial window.
     const dayClosures = closures.filter((c) => {
       if (!c || typeof c !== "object") return false;
-      if (typeof c.pool === "string" && c.pool.length > 0) return false;
       const start = typeof c.start === "string" ? c.start : null;
       const end = typeof c.end === "string" ? c.end : null;
       return Boolean(start && end && dateISO >= start && dateISO <= end);
@@ -243,7 +239,6 @@ function findNextSession(normalized, closures, now) {
 
 function closureOverlapsWindow(closure, dateISO, windowStart, windowEnd) {
   if (!closure || typeof closure !== "object") return false;
-  if (typeof closure.pool === "string" && closure.pool.length > 0) return false;
   const start = typeof closure.start === "string" ? closure.start : null;
   const end = typeof closure.end === "string" ? closure.end : null;
   if (!start || !end) return false;

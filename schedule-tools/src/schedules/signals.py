@@ -38,8 +38,7 @@ def analyze_page_texts(page_texts: list[str]) -> PdfSignals:
     )
 
 
-def source_notes_for_payload(signals: PdfSignals, payload: dict) -> list[ReviewNote]:
-    del payload  # unused — reserved for future payload-aware signals
+def source_notes_for_signals(signals: PdfSignals) -> list[ReviewNote]:
     notes: list[ReviewNote] = []
 
     if len(signals.grid_header_pages) >= 2:

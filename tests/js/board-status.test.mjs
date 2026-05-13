@@ -75,23 +75,7 @@ test("sortByRank is stable and keeps unknown ranks at the tail", () => {
   assert.deepEqual(sorted.map((x) => x.id), ["B", "D", "A", "C"]);
 });
 
-test("computeStatus ignores zone-scoped closures (non-empty closure.pool)", () => {
-  const now = new Date("2026-04-17T10:00:00");
-  const schedule = {
-    sessions: [
-      { day: "friday", type: "lap_swim", start: "09:00", end: "11:00" },
-    ],
-    closures: [
-      { start: "2026-04-17", end: "2026-04-17", reason: "training", pool: "deep" },
-    ],
-  };
-  const { status } = computeStatus(schedule, now);
-  // 2026-04-17 is a Friday; no session is active at 10:00 (session is 09:00-11:00, so actually active).
-  // We expect OPEN because the zone closure does not close the facility, AND a session is live.
-  assert.equal(status, "OPEN");
-});
-
-test("computeStatus honors facility-wide closures (empty closure.pool)", () => {
+test("computeStatus honors closures", () => {
   const now = new Date("2026-04-17T10:00:00");
   const schedule = {
     sessions: [
@@ -285,17 +269,6 @@ test("computeDetailStatus CLOSED_TODAY for facility-wide closure", () => {
   assert.equal(r.closureReason, "In-service training");
   assert.equal(r.is_drop_in, false);
   assert.equal(r.nextDropIn.day, "wednesday");
-});
-
-test("computeDetailStatus ignores zone-scoped closures", () => {
-  const zoneOnly = {
-    sessions: BASIC_SCHEDULE.sessions,
-    closures: [{ start: "2026-04-14", end: "2026-04-14", reason: "deep end down", pool: "deep" }],
-  };
-  const now = new Date("2026-04-14T13:00:00");
-  const r = computeDetailStatus(zoneOnly, now);
-  assert.equal(r.kind, "OPEN");
-  assert.equal(r.closureReason, null);
 });
 
 test("computeDetailStatus boundary: now === start is OPEN", () => {

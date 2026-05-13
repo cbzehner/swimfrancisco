@@ -19,7 +19,7 @@ from .registry import load_registry
 from .diff import compare_payloads
 from .report import write_report
 from .schema import EXTRACTION_SCHEMA
-from .signals import analyze_page_texts, extract_page_texts, source_notes_for_payload
+from .signals import analyze_page_texts, extract_page_texts, source_notes_for_signals
 from .validate import validate
 
 _GROUNDING_MIN_RATIO = 0.9
@@ -218,7 +218,7 @@ def _process_entry(
 
         # Review notes from three sources: PDF signals, grounding, prior-vs-current delta.
         review_notes: list[ReviewNote] = [
-            *source_notes_for_payload(pdf_signals, payload),
+            *source_notes_for_signals(pdf_signals),
             *_grounding_notes(provider, grounding),
             *check_delta(payload, prior_snapshot),
         ]

@@ -125,7 +125,7 @@ def _setup_world(tmp_path: Path, monkeypatch, *, with_reviewed: bool, with_cache
         "schedules.pipeline.grounding_from_text",
         lambda _text, _payload: GroundingResult(sessions=[], grounded_count=0, total=0),
     )
-    monkeypatch.setattr("schedules.pipeline.source_notes_for_payload", lambda _sig, _payload: [])
+    monkeypatch.setattr("schedules.pipeline.source_notes_for_signals", lambda _sig: [])
     monkeypatch.setattr("schedules.pipeline.check_delta", lambda _payload, _prior: [])
 
     source_pdf = review_dir / "source.pdf"

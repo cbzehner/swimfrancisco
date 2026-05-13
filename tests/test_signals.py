@@ -1,4 +1,4 @@
-from schedules.signals import analyze_page_texts, source_notes_for_payload
+from schedules.signals import analyze_page_texts, source_notes_for_signals
 
 
 def test_analyze_page_texts_detects_multi_grid():
@@ -11,13 +11,6 @@ def test_analyze_page_texts_detects_multi_grid():
     assert signals.page_count == 2
     assert signals.grid_header_pages == [1, 2]
 
-    notes = source_notes_for_payload(
-        signals,
-        {
-            "sessions": [{"day": "saturday", "type": "lap_swim", "start": "15:30", "end": "18:00"}],
-            "closures": [],
-            "schedule_effective": "2026-03-17",
-        },
-    )
+    notes = source_notes_for_signals(signals)
     messages = [note.message for note in notes]
     assert any("repeated day-grid pages" in message for message in messages)
