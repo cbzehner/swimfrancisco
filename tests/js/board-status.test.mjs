@@ -239,6 +239,21 @@ test("computeNextOpenOffset puts schedules without upcoming sessions at the tail
   );
 });
 
+test("computeNextOpenOffset respects effective-window closures", () => {
+  const schedule = {
+    sessions: [{ day: "tuesday", type: "lap_swim", start: "07:30", end: "09:30" }],
+    closures: [],
+    effective_start: "2026-05-12",
+    effective_end: "2026-06-06",
+  };
+
+  const before = new Date("2026-05-05T08:00:00-07:00");
+  assert.equal(computeNextOpenOffset(schedule, before), 7 * 1440 - 30);
+
+  const after = new Date("2026-06-09T08:00:00-07:00");
+  assert.equal(computeNextOpenOffset(schedule, after), Number.POSITIVE_INFINITY);
+});
+
 test("computeDetailStatus OPEN during a single drop-in session", () => {
   const now = new Date("2026-04-14T13:00:00"); // Tue 13:00 — inside lap 12:30-14:00
   const r = computeDetailStatus(BASIC_SCHEDULE, now);

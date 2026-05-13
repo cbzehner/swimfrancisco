@@ -3,33 +3,6 @@ from __future__ import annotations
 from schedules import paths
 
 
-def test_pdf_dir_is_under_data_dir():
-    assert paths.pdf_dir("hamilton-pool") == paths.DATA_DIR / "pdfs" / "hamilton-pool"
-
-
-def test_pdf_filename_is_date_dash_prefix():
-    sha = "a" * 64
-    assert paths.pdf_filename("2026-04-17", sha) == "2026-04-17-aaaaaaaaaaaa.pdf"
-
-
-def test_latest_pdf_returns_none_when_dir_absent(tmp_path, monkeypatch):
-    monkeypatch.setattr(paths, "DATA_DIR", tmp_path)
-    assert paths.latest_pdf("hamilton-pool") is None
-
-
-def test_latest_pdf_picks_highest_date(tmp_path, monkeypatch):
-    monkeypatch.setattr(paths, "DATA_DIR", tmp_path)
-    slug_dir = tmp_path / "pdfs" / "hamilton-pool"
-    slug_dir.mkdir(parents=True)
-    older = slug_dir / "2026-01-01-aaaaaaaaaaaa.pdf"
-    newer = slug_dir / "2026-04-17-bbbbbbbbbbbb.pdf"
-    older.write_bytes(b"x")
-    newer.write_bytes(b"y")
-    assert paths.latest_pdf("hamilton-pool") == newer
-
-
-# Consolidated-layout helpers (Task 2): data/<slug>/<date>-<sha12>/
-
 def test_review_dir_shape(tmp_path):
     p = paths.review_dir("hamilton-pool", "2026-04-19", "a" * 64, root=tmp_path)
     assert p.name == "2026-04-19-aaaaaaaaaaaa"

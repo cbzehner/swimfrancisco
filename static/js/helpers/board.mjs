@@ -414,7 +414,7 @@ export function computeNextOpenOffset(schedule, now, allowedTypes = null) {
   if (!schedule || typeof schedule !== "object") return Number.POSITIVE_INFINITY;
 
   const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
-  const closures = Array.isArray(schedule.closures) ? schedule.closures : [];
+  const closures = allClosures(schedule);
   if (sessions.length === 0) return Number.POSITIVE_INFINITY;
 
   const normalized = normalizeSessions(sessions, allowedTypes);

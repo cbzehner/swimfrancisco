@@ -366,20 +366,30 @@ function attachHandlers(tbody, filtersRoot) {
     });
   }
 
-  return { state, nextOpenButton, typeButtons, distanceButton };
+  return { state, tbody, nextOpenButton, typeButtons, distanceButton };
 }
 
-// Apply hash tokens by dispatching clicks on buttons whose desired pressed-
-// state differs from current. Reuses existing handlers (which also sync hash,
-// idempotently).
+// Apply hash tokens without dispatching button clicks. Distance sorting needs
+// an explicit user gesture because it can prompt for geolocation.
 function restoreFromHash(controls) {
   const tokens = readHashTokens();
-  const { state, nextOpenButton, typeButtons, distanceButton } = controls;
+  const { state, tbody, nextOpenButton, typeButtons, distanceButton } = controls;
+  let changed = false;
 
   if (nextOpenButton) {
     const want = tokens.has("open") || tokens.has("next-open") || tokens.has("open-now");
-    if (want !== state.sortByNextOpen) nextOpenButton.click();
+    if (want !== state.sortByNextOpen) {
+      state.sortByNextOpen = want;
+      nextOpenButton.setAttribute("aria-pressed", String(want));
+      changed = true;
+      if (want && state.sortByDistance) {
+        state.sortByDistance = false;
+        state.userCoords = null;
+        distanceButton?.setAttribute("aria-pressed", "false");
+      }
+    }
   }
+
   const typeButtonsArray = Array.from(typeButtons);
   const desiredTypeButton = typeButtonsArray.find((button) => {
     const type = button.getAttribute("data-type");
@@ -392,11 +402,24 @@ function restoreFromHash(controls) {
     (button) => button.getAttribute("aria-pressed") === "true",
   );
   if (desiredTypeButton && desiredTypeButton !== pressedTypeButton) {
-    desiredTypeButton.click();
+    const desiredType = desiredTypeButton.getAttribute("data-type");
+    state.types.clear();
+    if (desiredType && desiredType !== TYPE_NONE) state.types.add(desiredType);
+    setPressed(typeButtonsArray, desiredType || TYPE_NONE);
+    changed = true;
   }
-  if (distanceButton) {
-    const want = tokens.has("distance");
-    if (want !== state.sortByDistance) distanceButton.click();
+
+  const shouldDropDistanceToken = tokens.has("distance") && !state.sortByDistance;
+  if (distanceButton && state.sortByDistance && !tokens.has("distance")) {
+    state.sortByDistance = false;
+    state.userCoords = null;
+    distanceButton.setAttribute("aria-pressed", "false");
+    changed = true;
+  }
+
+  if (changed) applyFilters(tbody, state);
+  if (changed || shouldDropDistanceToken || tokens.has("next-open") || tokens.has("open-now")) {
+    syncStateToHash(state);
   }
 }
 

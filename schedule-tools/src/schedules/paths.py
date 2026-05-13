@@ -8,9 +8,6 @@ REPO_ROOT = PROJECT_ROOT.parent
 
 CONTENT_SPOTS_DIR = REPO_ROOT / "content" / "spots"
 DATA_DIR = REPO_ROOT / "data"
-PDF_CACHE_DIR = DATA_DIR / "pdfs"
-ARTIFACTS_DIR = DATA_DIR / "artifacts"
-STATE_PATH = DATA_DIR / "extraction-state.json"
 TMP_DIR = REPO_ROOT / "tmp"
 REPORT_PATH = TMP_DIR / "extraction-report.md"
 REGISTRY_PATH = PACKAGE_ROOT / "registry.toml"
@@ -22,22 +19,6 @@ def relative_to_repo(path: Path) -> str:
         return str(path.relative_to(REPO_ROOT))
     except ValueError:
         return str(path)
-
-
-def pdf_dir(slug: str) -> Path:
-    return DATA_DIR / "pdfs" / slug
-
-
-def pdf_filename(date: str, pdf_sha256: str) -> str:
-    return f"{date}-{pdf_sha256[:12]}.pdf"
-
-
-def latest_pdf(slug: str) -> Path | None:
-    directory = pdf_dir(slug)
-    if not directory.is_dir():
-        return None
-    files = sorted(directory.glob("*.pdf"))
-    return files[-1] if files else None
 
 
 def slugify(value: str) -> str:
