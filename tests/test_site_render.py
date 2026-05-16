@@ -211,6 +211,7 @@ def test_homepage_preserves_redesign_dom_contract(built_site: Path) -> None:
 
 def test_map_page_keeps_board_hidden_and_map_visible(built_site: Path) -> None:
     html = (built_site / "map" / "index.html").read_text()
+    assert "<body class=map-page>" in html
     assert "class=board hidden" in html
     assert "id=map-view hidden" not in html
     assert "js/map.js" in html

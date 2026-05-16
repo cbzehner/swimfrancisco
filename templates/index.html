@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% import "macros/schedule.html" as schedule_macros %}
 {% import "macros/bulletin.html" as bulletin_macros %}
+{% block body_attrs %}{% if section.extra.view | default(value='') == 'map' %} class="map-page"{% endif %}{% endblock %}
 {% block extra_head %}
   {% set_global is_map_view = section.extra.view | default(value='') == 'map' %}
   {% if is_map_view %}
@@ -157,9 +158,6 @@
 
   <div id="map-view"{% if not is_map_view %} hidden{% endif %}></div>
 
-  {% if not is_map_view %}
-    <p class="hiw-link-home"><a href="/how-it-works/">How this works →</a></p>
-  {% endif %}
 {% endblock %}
 {% block scripts %}
   <script type="module" src="{{ get_url(path='js/status.js') }}"></script>

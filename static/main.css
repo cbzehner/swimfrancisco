@@ -1063,15 +1063,6 @@ table.board tbody tr.flap td {
   margin: 16px 28px 0;
 }
 
-.hiw-link-home {
-  margin: 16px 28px 0;
-  font-family: var(--mono);
-  font-size: 10.5px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
 /* ── Field Notes / how-it-works article ────────────────────────────────── */
 .hiw {
   padding: 34px 28px 18px;
@@ -1207,6 +1198,26 @@ table.board tbody tr.flap td {
   background: #c2d6db;
 }
 
+body.map-page {
+  overflow: hidden;
+}
+body.map-page main {
+  max-width: none;
+  height: 100svh;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  border-left: 0;
+  border-right: 0;
+}
+body.map-page #map-view {
+  height: auto;
+  min-height: 0;
+  border-bottom: 0;
+}
+body.map-page .site-footer {
+  display: none;
+}
+
 /* Branded marker — red/teal/ochre dot with ink ring */
 .sf-marker .sf-marker-dot {
   display: block;
@@ -1335,6 +1346,12 @@ table.board tbody tr.flap td {
 /* ── Phone tweaks ──────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
   body { padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
+  body.map-page {
+    padding-bottom: 0;
+  }
+  body.map-page main {
+    height: calc(100svh - 86px - env(safe-area-inset-bottom));
+  }
   main {
     border-left: 0;
     border-right: 0;
@@ -1413,7 +1430,6 @@ table.board tbody tr.flap td {
   .closure-banners,
   .description,
   .conditions, .hazards, .clubs, .distances,
-  .hiw-link-home,
   .meta, .meta-source, .meta-effective,
   .closure-banner-zone { margin-left: 16px; margin-right: 16px; padding-left: 16px; padding-right: 16px; }
   .bulletin-hero,
