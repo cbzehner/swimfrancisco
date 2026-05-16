@@ -13,6 +13,25 @@ import { PROGRAM_LABEL } from "./helpers/programs.mjs";
 
 let currentHorizon = resolveHorizon(readHorizonParam(), nowInPacific());
 
+const HORIZON_TITLES = {
+  "this-morning": "FOG-LIFT WINDOW",
+  "this-afternoon": "LUNCH BREAK LANES",
+  "this-evening": "AFTER-WORK WATER",
+  "tomorrow-morning": "SET THE ALARM",
+  "tomorrow-afternoon": "CLEAR THE CALENDAR",
+  "tomorrow-evening": "GOLDEN HOUR TOMORROW",
+};
+
+function currentTimeTitle(now = nowInPacific()) {
+  const hour = now.getHours();
+  if (hour < 5) return "NIGHT SWIM";
+  if (hour < 10) return "BEFORE BREAKFAST";
+  if (hour < 14) return "LUNCH BREAK LANES";
+  if (hour < 17) return "POST-FOG SWIM";
+  if (hour < 21) return "AFTER-WORK WATER";
+  return "NIGHT SWIM";
+}
+
 function readHorizonParam() {
   if (typeof window === "undefined") return "now";
   return new URLSearchParams(window.location.search).get("when") || "now";
@@ -27,6 +46,26 @@ function writeHorizonParam(horizonId) {
     url.searchParams.set("when", horizonId);
   }
   history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+}
+
+function applyHorizonChrome(horizon) {
+  const isNow = !horizon || horizon.id === "now";
+  const title = isNow ? currentTimeTitle() : HORIZON_TITLES[horizon.id] || horizon.label.toUpperCase();
+  document.querySelectorAll("[data-horizon-title]").forEach((node) => {
+    node.textContent = `·${title}·`;
+  });
+  document.querySelectorAll("[data-horizon-button]").forEach((node) => {
+    node.textContent = isNow ? "Now" : horizon.label;
+  });
+  document.querySelectorAll("[data-horizon-stamp-label]").forEach((node) => {
+    node.textContent = isNow ? "OPEN NOW" : horizon.label.toUpperCase();
+  });
+
+  const banner = document.querySelector("[data-time-banner]");
+  if (!banner) return;
+  banner.hidden = isNow;
+  const label = banner.querySelector("[data-time-banner-label]");
+  if (label) label.textContent = isNow ? "Right now" : horizon.label;
 }
 
 export function getCurrentHorizon() {
@@ -51,20 +90,56 @@ function formatWindowNext(result) {
   return `${program} ${formatHHMM(session.start)}\u2013${formatHHMM(session.end)}`;
 }
 
+function cell(row, name) {
+  return row.querySelector(`[data-cell="${name}"]`);
+}
+
+function statusClass(status, type) {
+  if (type === "open_water" || status === "OCEAN") return "is-ocean";
+  if (status === "OPEN" || status === "AVAILABLE" || status === "LIMITED") return "is-open";
+  if (status.includes("6:30") || status.includes("SOON")) return "is-soon";
+  return "is-closed";
+}
+
+function setStatus(statusCell, status, type, sublabel = "") {
+  let pill = statusCell.querySelector(".status-pill");
+  if (!pill) {
+    statusCell.textContent = "";
+    pill = document.createElement("span");
+    pill.className = "status-pill";
+    statusCell.append(pill);
+  }
+  statusCell.dataset.statusValue = status;
+  pill.textContent = status;
+  pill.className = `status-pill ${statusClass(status, type)}`;
+
+  let sub = statusCell.querySelector(".status-sub");
+  if (sublabel) {
+    if (!sub) {
+      sub = document.createElement("span");
+      sub.className = "status-sub";
+      statusCell.append(sub);
+    }
+    sub.textContent = sublabel;
+  } else if (sub) {
+    sub.remove();
+  }
+}
+
 // Apply computed STATUS/NEXT. Pools compute from their schedule; open-water
-// rows have no schedule and are always accessible, so they render as OPEN
-// with no NEXT — keeping a consistent visual rhythm with pool rows.
+// rows have no schedule and are always accessible, so they render as OCEAN.
 function applyStatuses(root, now, allowedTypes = null) {
   const horizon = currentHorizon.id === "now" ? resolveHorizon("now", now) : currentHorizon;
   const poolRows = root.querySelectorAll('table.board tbody tr[data-type="pool"]');
   poolRows.forEach((row) => {
-    const cells = row.querySelectorAll("td");
-    if (cells.length < 4) return;
+    const statusCell = cell(row, "status");
+    const nextCell = cell(row, "next");
+    if (!statusCell || !nextCell) return;
     const schedule = readSchedule(row);
     if (horizon.kind === "window") {
       const result = computeWindowAvailability(schedule, horizon, allowedTypes);
-      cells[2].textContent = result.status;
-      cells[3].textContent = formatWindowNext(result);
+      setStatus(statusCell, result.status, "pool");
+      nextCell.textContent = formatWindowNext(result);
       row.dataset.windowRank = String(result.sortRank);
       row.classList.toggle("is-open", result.status === "AVAILABLE" || result.status === "LIMITED");
       return;
@@ -73,42 +148,45 @@ function applyStatuses(root, now, allowedTypes = null) {
     const { status, next } = schedule
       ? computeStatus(schedule, now, allowedTypes)
       : { status: PLACEHOLDER, next: PLACEHOLDER };
-    cells[2].textContent = status;
-    cells[3].textContent = next;
+    setStatus(statusCell, status, "pool");
+    nextCell.textContent = next;
     row.dataset.windowRank = status === "OPEN" ? "0" : "3";
     row.classList.toggle("is-open", status === "OPEN");
   });
 
   const beachRows = root.querySelectorAll('table.board tbody tr[data-type="open_water"]');
   beachRows.forEach((row) => {
-    const cells = row.querySelectorAll("td");
-    if (cells.length < 4) return;
+    const statusCell = cell(row, "status");
+    const nextCell = cell(row, "next");
+    if (!statusCell || !nextCell) return;
     if (horizon.kind === "window") {
-      cells[2].textContent = "ACCESS";
-      cells[3].textContent = "CHECK CONDITIONS";
+      setStatus(statusCell, "OCEAN", "open_water");
+      nextCell.textContent = "CHECK CONDITIONS";
       row.dataset.windowRank = "2";
       row.classList.remove("is-open");
     } else {
-      cells[2].textContent = "OPEN";
-      cells[3].textContent = PLACEHOLDER;
+      setStatus(statusCell, "OCEAN", "open_water", "YEAR-ROUND");
+      nextCell.textContent = PLACEHOLDER;
       row.dataset.windowRank = "0";
       row.classList.add("is-open");
     }
   });
 }
 
-// Sort rows: open pools first, then everything else alphabetically by SPOT label.
+// Sort rows: pools first, with open/available pools above closed pools, then
+// beaches alphabetically at the bottom.
 function sortRows(rows, horizon) {
   const decorated = rows.map((row, index) => {
-    const cells = row.querySelectorAll("td");
     const isPool = row.getAttribute("data-type") === "pool";
-    const statusText = cells.length > 2 ? cells[2].textContent.trim() : "";
+    const statusCell = cell(row, "status");
+    const statusText = statusCell?.dataset.statusValue || statusCell?.textContent.trim() || "";
     const isOpenPool = isPool && statusText === "OPEN";
-    const label = cells.length > 0 ? cells[0].textContent.trim().toUpperCase() : "";
+    const label = cell(row, "spot")?.textContent.trim().toUpperCase() || "";
     const windowRank = Number(row.dataset.windowRank);
     return {
       row,
       index,
+      beachRank: isPool ? 0 : 1,
       isOpenPool,
       windowRank: Number.isFinite(windowRank) ? windowRank : Number.POSITIVE_INFINITY,
       label,
@@ -116,6 +194,7 @@ function sortRows(rows, horizon) {
   });
 
   decorated.sort((a, b) => {
+    if (a.beachRank !== b.beachRank) return a.beachRank - b.beachRank;
     if (horizon.kind === "window" && a.windowRank !== b.windowRank) {
       return a.windowRank - b.windowRank;
     }
@@ -146,24 +225,41 @@ export function renderBoard(root, allowedTypes = null, now = nowInPacific()) {
   });
 }
 
+function findHorizonMenu() {
+  return document.querySelector("[data-horizon-menu]");
+}
+
 function closeHorizonMenu(control) {
   const button = control.querySelector("[data-horizon-button]");
-  const menu = control.querySelector("[data-horizon-menu]");
+  const menu = findHorizonMenu();
   if (!button || !menu) return;
   menu.hidden = true;
   button.setAttribute("aria-expanded", "false");
 }
 
+function positionHorizonMenu(button) {
+  const rect = button.getBoundingClientRect();
+  const top = rect.bottom + 4;
+  const isMobile = window.matchMedia("(max-width: 640px)").matches;
+  const left = isMobile ? 16 : rect.left;
+  const width = isMobile ? window.innerWidth - 32 : Math.max(rect.width, 256);
+  const root = document.documentElement.style;
+  root.setProperty("--horizon-menu-top", `${Math.round(top)}px`);
+  root.setProperty("--horizon-menu-left", `${Math.round(left)}px`);
+  root.setProperty("--horizon-menu-width", `${Math.round(width)}px`);
+}
+
 function openHorizonMenu(control) {
   const button = control.querySelector("[data-horizon-button]");
-  const menu = control.querySelector("[data-horizon-menu]");
+  const menu = findHorizonMenu();
   if (!button || !menu) return;
   menu.hidden = false;
+  positionHorizonMenu(button);
   button.setAttribute("aria-expanded", "true");
 }
 
 function toggleHorizonMenu(control) {
-  const menu = control.querySelector("[data-horizon-menu]");
+  const menu = findHorizonMenu();
   if (!menu) return;
   if (menu.hidden) {
     openHorizonMenu(control);
@@ -175,13 +271,14 @@ function toggleHorizonMenu(control) {
 function applyHorizon(id, now = nowInPacific()) {
   currentHorizon = resolveHorizon(id, now);
   writeHorizonParam(currentHorizon.id);
+  applyHorizonChrome(currentHorizon);
   renderBoard(document);
   document.dispatchEvent(new CustomEvent("sf:horizon-changed", { detail: currentHorizon }));
 }
 
 function populateHorizonMenu(control, now) {
   const button = control.querySelector("[data-horizon-button]");
-  const menu = control.querySelector("[data-horizon-menu]");
+  const menu = findHorizonMenu();
   if (!button || !menu) return;
   const options = getHorizonOptions(now);
   const selected = options.some((option) => option.id === currentHorizon.id)
@@ -189,6 +286,7 @@ function populateHorizonMenu(control, now) {
     : "now";
   currentHorizon = resolveHorizon(selected, now);
   button.textContent = currentHorizon.label;
+  applyHorizonChrome(currentHorizon);
   menu.replaceChildren(
     ...options.map((option) => {
       const el = document.createElement("button");
@@ -210,7 +308,10 @@ function populateHorizonMenu(control, now) {
 
 function initHorizonControl(now) {
   const control = document.querySelector(".horizon-control");
-  if (!control) return;
+  if (!control) {
+    applyHorizonChrome(currentHorizon);
+    return;
+  }
   const button = control.querySelector("[data-horizon-button]");
   if (!button) return;
   populateHorizonMenu(control, now);
@@ -221,11 +322,27 @@ function initHorizonControl(now) {
   });
 
   document.addEventListener("click", (event) => {
-    if (!control.contains(event.target)) closeHorizonMenu(control);
+    const menu = findHorizonMenu();
+    if (control.contains(event.target)) return;
+    if (menu && menu.contains(event.target)) return;
+    closeHorizonMenu(control);
   });
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") closeHorizonMenu(control);
+  });
+
+  window.addEventListener("resize", () => {
+    if (button.getAttribute("aria-expanded") === "true") positionHorizonMenu(button);
+  });
+
+  window.addEventListener("scroll", () => {
+    if (button.getAttribute("aria-expanded") === "true") positionHorizonMenu(button);
+  });
+
+  document.querySelector("[data-time-banner-reset]")?.addEventListener("click", () => {
+    applyHorizon("now");
+    populateHorizonMenu(control, nowInPacific());
   });
 }
 

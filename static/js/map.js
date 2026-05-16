@@ -46,12 +46,19 @@ function collectVisibleSpots() {
     if (lat === null || lng === null) return;
     const slug = row.getAttribute("data-slug") || "";
     const type = row.getAttribute("data-type") || "";
-    const cells = row.querySelectorAll("td");
-    const name = cells[0]?.querySelector("a")?.textContent.trim() ?? "";
-    const typeLabel = cells[1]?.textContent.trim() ?? "";
-    const status = cells[2]?.textContent.trim() ?? "";
-    const next = cells[3]?.textContent.trim() ?? "";
-    const temp = cells[4]?.textContent.trim() ?? "";
+    const name = row.querySelector('[data-cell="spot"] a')?.textContent.trim() ?? "";
+    const typeLabel =
+      row.querySelector('[data-cell="spot"] .spot-subtitle')?.textContent.trim() ||
+      row.getAttribute("data-subtype") ||
+      type;
+    const statusCell = row.querySelector('[data-cell="status"]');
+    const status =
+      statusCell?.dataset.statusValue ||
+      statusCell?.querySelector(".status-pill")?.textContent.trim() ||
+      statusCell?.textContent.trim() ||
+      "";
+    const next = row.querySelector('[data-cell="next"]')?.textContent.trim() ?? "";
+    const temp = row.querySelector('[data-cell="water"]')?.textContent.trim() ?? "";
     spots.push({ slug, type, name, lat, lng, typeLabel, status, next, temp });
   });
   return spots;
@@ -120,7 +127,10 @@ function createPopupHTML(spot) {
 
 function createMarkerIcon(L, spot) {
   const isOpen = spot.status === "OPEN";
-  const cls = `sf-marker${isOpen ? " sf-marker-open" : ""}`;
+  const cls =
+    spot.type === "open_water"
+      ? "sf-marker sf-marker-open-water"
+      : `sf-marker${isOpen ? " sf-marker-open" : ""}`;
   return L.divIcon({
     className: cls,
     html: '<span class="sf-marker-dot"></span>',

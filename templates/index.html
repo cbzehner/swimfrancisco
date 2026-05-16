@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% import "macros/schedule.html" as schedule_macros %}
+{% import "macros/bulletin.html" as bulletin_macros %}
 {% block extra_head %}
   {% set_global is_map_view = section.extra.view | default(value='') == 'map' %}
   {% if is_map_view %}
@@ -9,34 +10,44 @@
 
 {% block title %}Swim Francisco — where to swim right now{% endblock %}
 {% block content %}
+  {% set bulletin = load_data(path="data/bulletin.json") %}
   <header class="site-header">
     <div class="site-header-row">
-      <h1><a href="{{ config.base_url }}/" class="site-title">{{ config.title }}</a></h1>
+      <h1><a href="{{ config.base_url }}/" class="site-title">SWIM<span class="brand-dot">·</span>FRANCISCO</a></h1>
+      {{ bulletin_macros::badge() }}
       <div class="site-header-actions">
-        {% if not is_map_view %}
-          <div class="horizon-control">
-            <button type="button"
-                    class="horizon-button"
-                    data-horizon-button
-                    aria-haspopup="menu"
-                    aria-expanded="false">Now</button>
-            <div class="horizon-menu" data-horizon-menu role="menu" hidden></div>
-          </div>
-          <div class="sort-group" role="group" aria-label="Sort">
-            <button type="button" data-filter="open-now" aria-label="Sort by next open time">OPEN</button>
-            <button type="button" data-action="sort-distance" aria-label="Sort by distance">NEAREST</button>
-          </div>
-        {% endif %}
-        <div class="view-switcher" role="group" aria-label="View">
-          {% if is_map_view %}
-            <a href="/" data-target-path="/" class="view-switcher-link" aria-label="View board">BOARD</a>
-          {% else %}
-            <a href="/map/" data-target-path="/map/" class="view-switcher-link" aria-label="View map">MAP</a>
-          {% endif %}
-        </div>
+        <a href="/" data-target-path="/" class="site-nav-link{% if not is_map_view %} is-active{% endif %}" aria-label="View board">THE BOARD</a>
+        <a href="/map/" data-target-path="/map/" class="site-nav-link{% if is_map_view %} is-active{% endif %}" aria-label="View map">MAP</a>
+        <a href="/how-it-works/" class="site-nav-link">FIELD NOTES</a>
       </div>
     </div>
   </header>
+
+  {% if not is_map_view %}
+    <div class="bulletin-strip" aria-label="Current conditions">
+      <div><span class="k">Today</span><span class="v" data-today-date>—</span></div>
+      <div><span class="k">Time</span><span class="v num" data-pt-time>—</span></div>
+      <div><span class="k">Bay</span><span class="v red num" data-bay-temp-strip>—</span></div>
+      <div><span class="k">Ocean</span><span class="v teal num" data-ocean-temp-strip>—</span></div>
+      <div><span class="k">Tide</span><span class="v num" data-next-tide>—</span></div>
+      <div><span class="k">Updated</span><span class="v num" data-conditions-updated>—</span></div>
+    </div>
+
+    <section class="bulletin-hero">
+      <div class="eyebrow">No. {{ bulletin.label }} · Live bulletin · right now</div>
+      <h2>
+        <span class="red">SWIM</span>
+        <span>SAN</span> <span class="teal">FRANCISCO.</span>
+      </h2>
+      <p class="hero-line" data-horizon-title>·BEFORE BREAKFAST·</p>
+      <p class="deck">
+        <span class="em" data-open-count>—</span>
+        <span data-open-count-label>places open now</span>.
+        Bay <span class="em" data-bay-temp>—</span>, ocean <span class="em" data-ocean-temp>—</span>.
+      </p>
+      <div class="hero-stamp" aria-hidden="true"><span data-horizon-stamp-label>OPEN NOW</span> · <span data-open-count>—</span></div>
+    </section>
+  {% endif %}
 
   <noscript>
     <p class="noscript-notice">
@@ -46,26 +57,57 @@
   </noscript>
 
   <div class="board-controls">
-    <div class="filters" aria-label="Filters">
+    {% if not is_map_view %}
+      <div class="control-cluster">
+        <span class="control-label">When</span>
+        <div class="horizon-control">
+          <button type="button"
+                  class="horizon-button"
+                  data-horizon-button
+                  aria-haspopup="menu"
+                  aria-expanded="false">Now</button>
+        </div>
+      </div>
+    {% endif %}
+    <div class="filters control-cluster" role="group" aria-label="Filters">
+      <span class="control-label">Show</span>
       <div class="filter-group" role="group" aria-label="Type Filter">
         <button type="button" data-filter="type" data-type="none">ALL</button>
         <button type="button" data-filter="type" data-type="lap_swim">LAP</button>
-        <button type="button" data-filter="type" data-type="open_water">BEACH</button>
         <button type="button" data-filter="type" data-type="family_swim">FAMILY</button>
         <button type="button" data-filter="type" data-type="senior_swim">SENIOR</button>
+        <button type="button" data-filter="type" data-type="open_water">BEACH</button>
       </div>
     </div>
+    {% if not is_map_view %}
+      <div class="sort-group control-cluster" role="group" aria-label="Sort">
+        <span class="control-label">Sort</span>
+        <button type="button" data-filter="open-now" aria-label="Sort by next open time">OPEN NEXT</button>
+        <button type="button" data-action="sort-distance" aria-label="Sort by distance">NEAREST</button>
+      </div>
+    {% endif %}
   </div>
+  {% if not is_map_view %}
+    <div class="horizon-menu" data-horizon-menu role="menu" hidden></div>
+  {% endif %}
+
+  {% if not is_map_view %}
+    <div class="time-banner" data-time-banner hidden>
+      <span class="time-banner-k">Plan ahead</span>
+      <span class="time-banner-v" data-time-banner-label>Right now</span>
+      <button type="button" data-time-banner-reset>Back to now</button>
+    </div>
+  {% endif %}
 
   {% set spots = get_section(path='spots/_index.md') %}
   <table class="board"{% if is_map_view %} hidden{% endif %}>
     <thead>
       <tr>
         <th>SPOT</th>
-        <th>TYPE</th>
         <th>STATUS</th>
         <th>NEXT</th>
-        <th>TEMP</th>
+        <th>WATER</th>
+        <th>LOCALE</th>
       </tr>
     </thead>
     <tbody>
@@ -78,19 +120,36 @@
           data-lng="{{ page.extra.lng }}"
           data-schedule='{{ schedule_macros::data_schedule(extra=page.extra) }}'
         >
-          <td><a href="{{ page.permalink }}">{{ page.title | upper }}</a></td>
-          <td>
-            {% if page.extra.type == 'pool' %}
-              {{ page.extra.subtype | default(value='') | upper }}
-            {% elif page.extra.type == 'open_water' %}
-              BEACH
-            {% else %}
-              {{ page.extra.type | upper }}
-            {% endif %}
+          <td data-cell="spot">
+            <a href="{{ page.permalink }}">{{ page.title | upper }}</a>
+            <span class="spot-subtitle">
+              {% if page.extra.type == 'open_water' %}
+                {{ page.extra.description_short | default(value='OPEN WATER') | upper }}
+              {% else %}
+                {{ page.extra.subtype | default(value='POOL') | upper }} · {{ page.extra.setpoint_label | default(value='25YD') | upper }}
+              {% endif %}
+            </span>
           </td>
-          <td>—</td>
-          <td>—</td>
-          <td>{% if page.extra.type == 'pool' and page.extra.setpoint_label %}{{ page.extra.setpoint_label | upper }}{% else %}—{% endif %}</td>
+          <td data-cell="status"><span class="status-pill">—</span></td>
+          <td data-cell="next">—</td>
+          <td data-cell="water">{% if page.extra.type == 'pool' and page.extra.setpoint_label %}{{ page.extra.setpoint_label | upper }}{% else %}—{% endif %}</td>
+          <td data-cell="locale">
+            {% if page.extra.cost == "free" %}
+              <span class="cost-badge is-free">Free</span>
+            {% elif page.extra.cost == "paid" %}
+              <span class="cost-badge is-paid">Paid</span>
+            {% endif %}
+            <span class="locale-text">
+              {% if page.extra.address %}
+                {{ page.extra.address | split(pat=',') | nth(n=1) | default(value=page.extra.subtype | default(value='SF')) | upper }}
+              {% elif page.extra.subtype %}
+                {{ page.extra.subtype | upper }}
+              {% else %}
+                SF
+              {% endif %}
+            </span>
+            <span class="row-arrow" aria-hidden="true">→</span>
+          </td>
         </tr>
       {% endfor %}
     </tbody>

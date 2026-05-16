@@ -30,7 +30,7 @@ tmp/
 # Brainstorming / scratch
 .superpowers/
 .browser-artifacts/
+test-results/
 
 # Git worktrees
 .worktrees/
-.browser-artifacts/

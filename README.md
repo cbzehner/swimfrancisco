@@ -22,7 +22,7 @@ docs/            spec.md, plan.md, deploy.md, design-concepts.md
 ```sh
 devenv shell          # enter the Nix-managed dev environment
 just serve            # run the site with live reload at http://127.0.0.1:1111
-just build            # produce public/
+just build            # refresh data/bulletin.json and produce public/
 zola check            # validate links and content
 ```
 
@@ -53,7 +53,7 @@ just check            # full local verification: tests + zola build
 
 ## Deploy
 
-Pushes to `main` auto-deploy through Cloudflare Workers Builds. The build command runs `zola build`; the deploy command runs `npx wrangler deploy --config worker/wrangler.toml`. The hourly Worker cron also triggers a rebuild on the tick that lands at 00:00 PT so date-sensitive rendered HTML stays current. After a fresh KV bootstrap, `/api/conditions` returns 503 until the hourly cron populates conditions; see `docs/deploy.md` for the full runbook.
+Pushes to `main` auto-deploy through Cloudflare Workers Builds. The build command runs `npm run build`; the deploy command runs `npx wrangler deploy --config worker/wrangler.toml`. The hourly Worker cron also triggers a rebuild on the tick that lands at 00:00 PT so date-sensitive rendered HTML stays current. After a fresh KV bootstrap, `/api/conditions` returns 503 until the hourly cron populates conditions; see `docs/deploy.md` for the full runbook.
 
 ## Adding or updating spots
 
@@ -61,7 +61,7 @@ Create a new file at `content/spots/<slug>.md` with TOML frontmatter. See `docs/
 
 For new **open-water** spots, the Worker's station mapping is regenerated from the markdown frontmatter automatically — `wrangler dev` and `wrangler deploy` invoke `scripts/generate-worker-spots.mjs` via the `[build]` hook. Pools do not need worker changes.
 
-For pool schedule refreshes, use the local extractor in `docs/schedules.md`. It lives in `schedule-tools/`, is `uv`-managed, reads provider credentials from a gitignored root `.env` loaded by `devenv`'s built-in dotenv integration, has a `schedules debug bakeoff` subcommand that runs two providers and saves raw review artifacts alongside the PDF under `data/<slug>/<date>-<sha12>/`, and locks manually reviewed payloads via a committed `reviewed.json` in the same directory.
+For pool schedule refreshes, use the local extractor in `docs/schedules.md`. It lives in `schedule-tools/`, is `uv`-managed, reads provider credentials from a gitignored root `.env` loaded by `devenv`'s built-in dotenv integration, has a `schedules debug bakeoff` subcommand that runs two providers and saves raw review artifacts alongside the PDF under `data/<slug>/<date>-<sha12>/`, and locks manually reviewed payloads via a committed `reviewed.json` in the same directory. Run `node scripts/generate-bulletin.mjs` after adding or editing a reviewed payload so the site badge increments from `BULLETIN 00`; `npm run build` and `just build` do this automatically.
 
 ## Tech stack
 

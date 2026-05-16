@@ -81,7 +81,7 @@ Dashboard → Workers & Pages → Create → Workers → Connect to Git. Select
 | Field | Value |
 |---|---|
 | Project name | `swimfrancisco` |
-| Build command | `zola build` |
+| Build command | `npm run build` |
 | Deploy command | `npx wrangler deploy --config worker/wrangler.toml` |
 | Root directory | `/` |
 | Builds for non-production branches | Enabled (gives PR previews) |

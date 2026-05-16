@@ -7,6 +7,9 @@ import { nowInPacific } from "./helpers/board.mjs";
 import { formatTideSummary } from "./helpers/tide.mjs";
 
 const DEFAULT_ENDPOINT = "/api/conditions";
+const BAY_SLUGS = ["aquatic-park", "crissy-field"];
+const OCEAN_SLUGS = ["ocean-beach", "baker-beach", "china-beach"];
+const AVAILABLE_STATUSES = new Set(["OPEN", "AVAILABLE", "LIMITED", "OCEAN"]);
 
 // Format a Fahrenheit temperature from a conditions record.
 // Accepts `water_temp_f` directly, or converts from `water_temp_c`.
@@ -21,6 +24,99 @@ function extractTemp(record) {
   }
   if (fahrenheit === null) return null;
   return `${Math.round(fahrenheit)}\u00B0F`;
+}
+
+function firstRecordWithTemp(conditions, slugs) {
+  for (const slug of slugs) {
+    const record = conditions[slug];
+    if (extractTemp(record)) return record;
+  }
+  return null;
+}
+
+function firstRecordWithTide(conditions, slugs) {
+  for (const slug of slugs) {
+    const record = conditions[slug];
+    if (formatTideSummary(record, nowInPacific())) return record;
+  }
+  return null;
+}
+
+function setText(root, selector, value) {
+  if (!value) return;
+  root.querySelectorAll(selector).forEach((node) => {
+    node.textContent = value;
+  });
+}
+
+function formatPacificDate(now) {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Los_Angeles",
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  }).format(now);
+}
+
+function formatPacificTime(now) {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Los_Angeles",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(now);
+}
+
+function formatUpdatedAt(conditions) {
+  const timestamps = Object.values(conditions)
+    .map((record) => Date.parse(record?.updated_at || ""))
+    .filter((value) => Number.isFinite(value));
+  if (timestamps.length === 0) return null;
+  return formatPacificTime(new Date(Math.max(...timestamps)));
+}
+
+function openCountLabel(count) {
+  const horizonLabel = document.querySelector("[data-horizon-button]")?.textContent.trim() || "Now";
+  const unit = count === 1 ? "place" : "places";
+  const normalized = horizonLabel.toLowerCase();
+  if (normalized !== "now") return `${unit} available ${normalized}`;
+  return `${unit} open now`;
+}
+
+function applyBoardSummary(root) {
+  const rows = Array.from(root.querySelectorAll("table.board tbody tr:not([hidden])"));
+  if (rows.length === 0) return;
+  const count = rows.filter((row) => {
+    const status =
+      row.querySelector('[data-cell="status"]')?.dataset.statusValue ||
+      row.querySelector('[data-cell="status"] .status-pill')?.textContent.trim().toUpperCase() ||
+      row.querySelector('[data-cell="status"]')?.textContent.trim().toUpperCase() ||
+      "";
+    return AVAILABLE_STATUSES.has(status);
+  }).length;
+  setText(root, "[data-open-count]", String(count));
+  setText(root, "[data-open-count-label]", openCountLabel(count));
+}
+
+function applyBulletinStrip(root, conditions) {
+  const now = nowInPacific();
+  setText(root, "[data-today-date]", formatPacificDate(now));
+  setText(root, "[data-pt-time]", formatPacificTime(now));
+
+  if (!conditions || typeof conditions !== "object") return;
+  const bayRecord = firstRecordWithTemp(conditions, BAY_SLUGS);
+  const oceanRecord = firstRecordWithTemp(conditions, OCEAN_SLUGS);
+  const tideRecord = firstRecordWithTide(conditions, BAY_SLUGS) || firstRecordWithTide(conditions, OCEAN_SLUGS);
+  const bayTemp = extractTemp(bayRecord);
+  const oceanTemp = extractTemp(oceanRecord);
+  const tideSummary = formatTideSummary(tideRecord, now);
+  const updated = formatUpdatedAt(conditions);
+
+  setText(root, "[data-bay-temp]", bayTemp);
+  setText(root, "[data-bay-temp-strip]", bayTemp);
+  setText(root, "[data-ocean-temp]", oceanTemp);
+  setText(root, "[data-ocean-temp-strip]", oceanTemp);
+  setText(root, "[data-next-tide]", tideSummary);
+  setText(root, "[data-conditions-updated]", updated);
 }
 
 // Fetch and parse the conditions bulk endpoint. Returns null on any failure.
@@ -40,6 +136,7 @@ async function fetchConditions(url) {
 // the detail-page conditions panel, when present. `conditions` is keyed by slug.
 function applyConditions(root, conditions) {
   if (!conditions || typeof conditions !== "object") return;
+  applyBulletinStrip(root, conditions);
 
   const rows = root.querySelectorAll(
     'table.board tbody tr[data-type="open_water"]',
@@ -49,9 +146,9 @@ function applyConditions(root, conditions) {
     if (!slug) return;
     const temp = extractTemp(conditions[slug]);
     if (!temp) return;
-    const cells = row.querySelectorAll("td");
-    if (cells.length < 5) return;
-    cells[4].textContent = temp;
+    const tempCell = row.querySelector('[data-cell="water"]');
+    if (!tempCell) return;
+    tempCell.textContent = temp;
   });
 
   // Tide predictions arrive as zoneless station-local (Pacific) ISO strings.
@@ -77,14 +174,19 @@ function applyConditions(root, conditions) {
 }
 
 async function init() {
+  applyBoardSummary(document);
+  applyBulletinStrip(document, null);
   const endpoint = (typeof window !== "undefined" && window.SWIMFRANCISCO_API) || DEFAULT_ENDPOINT;
   const conditions = await fetchConditions(endpoint);
-  if (!conditions) return;
-  applyConditions(document, conditions);
+  if (conditions) applyConditions(document, conditions);
   // Expose for other modules (e.g. map popups) and signal availability.
   window.SWIMFRANCISCO_CONDITIONS = conditions;
   document.dispatchEvent(new CustomEvent("sf:conditions-loaded"));
 }
+
+document.addEventListener("sf:status-applied", () => applyBoardSummary(document));
+document.addEventListener("sf:horizon-changed", () => applyBoardSummary(document));
+document.addEventListener("sf:filters-applied", () => applyBoardSummary(document));
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
@@ -97,4 +199,3 @@ if (document.readyState === "loading") {
     /* swallow — placeholders remain */
   });
 }
-

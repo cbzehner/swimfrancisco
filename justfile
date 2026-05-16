@@ -4,6 +4,7 @@ default:
     @just --list
 
 build:
+    node scripts/generate-bulletin.mjs
     zola build
 
 sync:
@@ -13,6 +14,7 @@ dev:
     devenv up
 
 serve:
+    node scripts/generate-bulletin.mjs
     zola serve --interface 127.0.0.1 --port 1111
 
 test-python:

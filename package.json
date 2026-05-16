@@ -3,6 +3,10 @@
   "private": true,
   "license": "GPL-3.0-only",
   "description": "Root package.json declaring the Worker as an npm workspace so Cloudflare Workers Builds' auto `npm install` at the repo root succeeds. The Worker itself lives in `worker/`.",
+  "scripts": {
+    "generate-bulletin": "node scripts/generate-bulletin.mjs",
+    "build": "node scripts/generate-bulletin.mjs && zola build"
+  },
   "workspaces": [
     "worker"
   ]

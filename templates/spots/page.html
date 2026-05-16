@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% import "macros/schedule.html" as schedule_macros %}
+{% import "macros/bulletin.html" as bulletin_macros %}
 {% block title %}{{ page.title }} — Swim Francisco{% endblock %}
 
 {% macro item_list(title, class, items) %}
@@ -48,34 +49,58 @@
   {% set google_dir = "https://www.google.com/maps/dir/?api=1&destination=" ~ destination_enc %}
   {% set apple_dir = "https://maps.apple.com/?daddr=" ~ destination_enc %}
 
-  <p class="back"><a href="{{ config.base_url }}/">&larr; BOARD</a></p>
-
-  <header>
-    <h1>{{ page.title }}</h1>
-    {% if extra.address %}
-      <p class="address">
-        <a href="{{ place_href }}" target="_blank" rel="noopener">{{ extra.address }}</a>
-      </p>
-    {% endif %}
-    {% if extra.subtype or extra.website or extra.address or extra.setpoint_label %}
-      <p class="official">
-        {% if extra.subtype %}<span class="subtype">{{ extra.subtype | upper }}</span>{% endif %}
-        {% if extra.setpoint_label %}
-          {% if extra.subtype %} · {% endif %}<span class="setpoint">WATER {{ extra.setpoint_label | upper }}</span>
-        {% endif %}
-        {% if (extra.subtype or extra.setpoint_label) and extra.website %} · {% endif %}
-        {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">OFFICIAL PAGE</a>{% endif %}
-        {% if extra.address %}
-          {% if extra.subtype or extra.setpoint_label or extra.website %} · {% endif %}
-          <span class="address-actions" aria-label="Directions">
-            <span class="address-actions-label">DIRECTIONS</span>
-            <a href="{{ apple_dir }}" target="_blank" rel="noopener">APPLE</a>
-            <a href="{{ google_dir }}" target="_blank" rel="noopener">GOOGLE</a>
-          </span>
-        {% endif %}
-      </p>
-    {% endif %}
+  <header class="site-header">
+    <div class="site-header-row">
+      <h1><a href="{{ config.base_url }}/" class="site-title">SWIM<span class="brand-dot">·</span>FRANCISCO</a></h1>
+      {{ bulletin_macros::badge() }}
+      <div class="site-header-actions">
+        <a href="/" data-target-path="/" class="site-nav-link is-active" aria-label="View board">THE BOARD</a>
+        <a href="/map/" data-target-path="/map/" class="site-nav-link" aria-label="View map">MAP</a>
+        <a href="/how-it-works/" class="site-nav-link">FIELD NOTES</a>
+      </div>
+    </div>
   </header>
+
+  <div class="bulletin-strip" aria-label="Current conditions">
+    <div><span class="k">Today</span><span class="v" data-today-date>—</span></div>
+    <div><span class="k">Time</span><span class="v num" data-pt-time>—</span></div>
+    <div><span class="k">Bay</span><span class="v red num" data-bay-temp-strip>—</span></div>
+    <div><span class="k">Ocean</span><span class="v teal num" data-ocean-temp-strip>—</span></div>
+    <div><span class="k">Tide</span><span class="v num" data-next-tide>—</span></div>
+    <div><span class="k">Updated</span><span class="v num" data-conditions-updated>—</span></div>
+  </div>
+
+  <section class="spot-detail-head">
+    <p class="back"><a href="{{ config.base_url }}/">&larr; BOARD</a></p>
+    {% set title_parts = page.title | split(pat=' ') %}
+    <h1>
+      {% for part in title_parts -%}
+        {%- if loop.last -%}
+          <span class="accent{% if extra.type == 'open_water' %} accent-teal{% endif %}">{{ part | upper }}.</span>
+        {%- else -%}
+          {{ part | upper }}{% if not loop.last %} {% endif %}
+        {%- endif -%}
+      {%- endfor %}
+    </h1>
+    <p class="meta">
+      {% if extra.address %}<span class="key"><a href="{{ place_href }}" target="_blank" rel="noopener">{{ extra.address | upper }}</a></span>{% endif %}
+      {% if extra.subtype %}<span class="subtype">{{ extra.subtype | upper }}</span>{% endif %}
+      {% if extra.setpoint_label %}<span class="setpoint">WATER {{ extra.setpoint_label | upper }}</span>{% endif %}
+      {% if extra.cost == "paid" %}
+        <span class="cost-badge is-paid">Paid</span>
+      {% elif extra.cost == "free" %}
+        <span class="cost-badge is-free">Free</span>
+      {% endif %}
+      {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">OFFICIAL PAGE</a>{% endif %}
+      {% if extra.address %}
+        <span class="address-actions" aria-label="Directions">
+          <span class="address-actions-label">DIRECTIONS</span>
+          <a href="{{ apple_dir }}" target="_blank" rel="noopener">APPLE</a>
+          <a href="{{ google_dir }}" target="_blank" rel="noopener">GOOGLE</a>
+        </span>
+      {% endif %}
+    </p>
+  </section>
 
   {% if extra.type == "pool" %}
     {% set sessions = extra.sessions | default(value=[]) %}
@@ -304,13 +329,18 @@
       <p class="description">{{ extra.description_short }}</p>
     {% endif %}
 
-    <section class="conditions" data-slug="{{ page.slug }}">
-      <h2>Current conditions</h2>
-      <dl>
-        <dt>Water temp</dt>
-        <dd data-field="water_temp">—</dd>
-        <dt>Tide</dt>
-        <dd data-field="tide">—</dd>
+    <section class="conditions condition-slab" data-slug="{{ page.slug }}">
+      <p class="condition-label">Water temperature · live</p>
+      <p class="condition-temp"><span data-field="water_temp">—</span></p>
+      <dl class="condition-grid">
+        <div>
+          <dt>Next tide</dt>
+          <dd data-field="tide">—</dd>
+        </div>
+        <div>
+          <dt>Source</dt>
+          <dd>NOAA {{ extra.noaa_tide_station | default(value='') }}</dd>
+        </div>
       </dl>
     </section>
 
@@ -333,6 +363,7 @@
   {% if page.extra.type == "open_water" %}
     <script type="module" src="{{ get_url(path='js/conditions.js') }}"></script>
   {% elif page.extra.type == "pool" %}
+    <script type="module" src="{{ get_url(path='js/conditions.js') }}"></script>
     <script type="module" src="{{ get_url(path='js/detail.js') }}"></script>
   {% endif %}
 {% endblock %}

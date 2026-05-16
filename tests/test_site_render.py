@@ -12,6 +12,8 @@ the already-built HTML.
 
 from __future__ import annotations
 
+import json
+import hashlib
 import shutil
 import subprocess
 from pathlib import Path
@@ -127,6 +129,108 @@ def test_homepage_omits_trust_column(built_site: Path) -> None:
     assert "REVIEWED AGAINST SF REC & PARK PDF" not in html
     assert "NO REVIEWED DROP-IN SCHEDULE YET" not in html
     assert "NOAA/NDBC CONDITIONS UPDATED HOURLY" not in html
+
+
+def test_homepage_renders_bulletin_redesign_shell(built_site: Path) -> None:
+    html = (built_site / "index.html").read_text()
+    assert "class=bulletin-hero" in html
+    assert "<span class=red>SWIM</span> <span>SAN</span> <span class=teal>FRANCISCO.</span>" in html
+    assert "class=bulletin-strip" in html
+    assert "No. 00 · Live bulletin · right now" in html
+    assert "BULLETIN 00" in html
+    assert "BULLETIN 14" not in html
+    assert "data-open-count" in html
+    assert "data-conditions-updated" in html
+    assert "data-sun-range" not in html
+
+
+def test_bulletin_number_matches_reviewed_schedule_snapshots() -> None:
+    bulletin = json.loads((ROOT / "data" / "bulletin.json").read_text())
+    reviewed_paths = sorted((ROOT / "data").glob("*/*/reviewed.json"))
+    digest = hashlib.sha256()
+    for path in reviewed_paths:
+        digest.update(str(path.relative_to(ROOT)).encode())
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    assert bulletin["reviewed_count"] == len(reviewed_paths)
+    assert bulletin["schedule_fingerprint"] == digest.hexdigest()
+    assert bulletin["label"] == f"{bulletin['number']:02d}"
+
+
+def test_bulletin_generator_increments_when_reviewed_payload_changes(tmp_path: Path) -> None:
+    if shutil.which("node") is None:
+        pytest.skip("node binary not available")
+
+    reviewed = tmp_path / "data" / "balboa-pool" / "2026-05-01-a" / "reviewed.json"
+    reviewed.parent.mkdir(parents=True)
+    reviewed.write_text('{"sessions":[{"day":"monday"}]}\n')
+
+    script = ROOT / "scripts" / "generate-bulletin.mjs"
+
+    def run_generator() -> dict[str, object]:
+        result = subprocess.run(
+            ["node", str(script)],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, result.stderr
+        return json.loads((tmp_path / "data" / "bulletin.json").read_text())
+
+    assert run_generator()["label"] == "00"
+    assert run_generator()["label"] == "00"
+
+    reviewed.write_text('{"sessions":[{"day":"tuesday"}]}\n')
+    assert run_generator()["label"] == "01"
+
+    another_reviewed = tmp_path / "data" / "coffman-pool" / "2026-05-02-b" / "reviewed.json"
+    another_reviewed.parent.mkdir(parents=True)
+    another_reviewed.write_text('{"sessions":[{"day":"wednesday"}]}\n')
+    assert run_generator()["label"] == "02"
+
+
+def test_homepage_preserves_redesign_dom_contract(built_site: Path) -> None:
+    html = (built_site / "index.html").read_text()
+    assert "OPEN NEXT" in html
+    assert "OPEN FIRST" not in html
+    controls_start = html.index("class=board-controls")
+    menu_start = html.index("class=horizon-menu", controls_start)
+    assert "data-horizon-menu" not in html[controls_start:menu_start]
+    filters = html.index('class="filters control-cluster"')
+    filter_group = html[filters : filters + 120]
+    assert "aria-label=Filters" in filter_group
+    assert "role=group" in filter_group
+    spot = html.index("data-cell=spot")
+    status = html.index("data-cell=status")
+    next_cell = html.index("data-cell=next")
+    water = html.index("data-cell=water")
+    locale = html.index("data-cell=locale")
+    assert spot < status < next_cell < water < locale
+
+
+def test_map_page_keeps_board_hidden_and_map_visible(built_site: Path) -> None:
+    html = (built_site / "map" / "index.html").read_text()
+    assert "class=board hidden" in html
+    assert "id=map-view hidden" not in html
+    assert "js/map.js" in html
+
+
+def test_homepage_renders_cost_badges_without_hardcoded_price(built_site: Path) -> None:
+    html = (built_site / "index.html").read_text()
+    assert 'class="cost-badge is-free">Free</span>' in html
+    assert 'class="cost-badge is-paid">Paid</span>' in html
+    assert 'class="cost-badge is-paid">$7</span>' not in html
+
+
+def test_spot_detail_uses_print_header_and_preserves_long_titles(built_site: Path) -> None:
+    html = _read(built_site, "martin-luther-king-jr-pool")
+    assert "class=spot-detail-head" in html
+    assert "MARTIN LUTHER KING JR. <span class=accent>POOL.</span>" in html
+    assert "class=bulletin-strip" in html
+    assert "OFFICIAL PAGE" in html
+    assert "DIRECTIONS" in html
+    assert 'class="cost-badge is-paid">Paid</span>' in html
 
 
 def test_footer_renders_sources_and_credit(built_site: Path) -> None:

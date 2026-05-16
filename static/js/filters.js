@@ -79,11 +79,11 @@ function syncStateToHash(state) {
 // filter hash so navigating preserves filter state. Middle-click / cmd-click
 // work naturally because we update the actual attribute.
 function updateViewSwitcherHref() {
-  const link = document.querySelector(".view-switcher-link");
-  if (!link) return;
-  const target = link.dataset.targetPath;
-  if (!target) return;
-  link.setAttribute("href", target + window.location.search + window.location.hash);
+  document.querySelectorAll("[data-target-path]").forEach((link) => {
+    const target = link.dataset.targetPath;
+    if (!target) return;
+    link.setAttribute("href", target + window.location.search + window.location.hash);
+  });
 }
 
 // Parse a row's data-schedule JSON (same shape as status.js expects).
@@ -105,13 +105,17 @@ function readNumber(row, attr) {
   return Number.isFinite(value) ? value : null;
 }
 
+function isBeach(row) {
+  return row.getAttribute("data-type") === "open_water";
+}
+
 // Pure: does this row match a single type-pill selection?
 // For `open_water` → match rows whose data-type is "open_water".
 // For pool session types (lap_swim/family_swim) → true iff any
 // session inside data-schedule has a matching `type` field.
 function rowMatchesType(row, type) {
   if (type === "open_water") {
-    return row.getAttribute("data-type") === "open_water";
+    return isBeach(row);
   }
   if (!isDropInType(type)) return false;
   if (row.getAttribute("data-type") !== "pool") return false;
@@ -144,7 +148,8 @@ function haversineMiles(lat1, lng1, lat2, lng2) {
 }
 
 // When Distance sort is active, order visible rows by ascending distance
-// from userCoords. Rows missing lat/lng fall to the end. Stable via index.
+// from userCoords, keeping beaches below pools when both are visible. Rows
+// missing lat/lng fall to the end of their group. Stable via index.
 function sortRowsByDistance(rows, userCoords) {
   const decorated = rows.map((row, index) => {
     const lat = readNumber(row, "data-lat");
@@ -153,30 +158,31 @@ function sortRowsByDistance(rows, userCoords) {
       lat !== null && lng !== null
         ? haversineMiles(userCoords.latitude, userCoords.longitude, lat, lng)
         : Number.POSITIVE_INFINITY;
-    return { row, index, distance };
+    return { row, index, distance, beachRank: isBeach(row) ? 1 : 0 };
   });
   decorated.sort((a, b) => {
+    if (a.beachRank !== b.beachRank) return a.beachRank - b.beachRank;
     if (a.distance !== b.distance) return a.distance - b.distance;
     return a.index - b.index;
   });
   return decorated.map((item) => item.row);
 }
 
-// Sort visible rows by the soonest time they can be used. Open-water rows
-// and currently open pool sessions rank as "now" (0). Pools with no known
-// upcoming drop-in session fall to the end. Stable via baseline rank.
+// Sort visible rows by the soonest pool time, keeping beaches below pools
+// when both are visible. Pools with no known upcoming drop-in session fall
+// to the end of the pool group. Stable via baseline rank.
 function sortRowsByNextOpen(rows, allowedTypes, now, horizon) {
   const decorated = rows.map((row, index) => {
     let offset;
     if (horizon?.kind === "window") {
-      if (row.getAttribute("data-type") === "open_water") {
+      if (isBeach(row)) {
         offset = 2;
       } else {
         offset = computeWindowAvailability(readSchedule(row), horizon, allowedTypes).sortRank;
       }
     } else {
       offset =
-        row.getAttribute("data-type") === "open_water"
+        isBeach(row)
           ? 0
           : computeNextOpenOffset(readSchedule(row), now, allowedTypes);
     }
@@ -184,11 +190,13 @@ function sortRowsByNextOpen(rows, allowedTypes, now, horizon) {
     return {
       row,
       index,
+      beachRank: isBeach(row) ? 1 : 0,
       offset,
       baselineRank: Number.isFinite(baselineRank) ? baselineRank : Number.POSITIVE_INFINITY,
     };
   });
   decorated.sort((a, b) => {
+    if (a.beachRank !== b.beachRank) return a.beachRank - b.beachRank;
     if (a.offset !== b.offset) return a.offset - b.offset;
     if (a.baselineRank !== b.baselineRank) return a.baselineRank - b.baselineRank;
     return a.index - b.index;
@@ -264,7 +272,7 @@ function applyFilters(tbody, state) {
   // TEMP column only carries data for beaches and NEXT only for pools.
   // Hide either when its rows aren't visible so pool-only or beach-only
   // views aren't padded with "—" placeholders.
-  const hasBeach = ordered.some((row) => row.getAttribute("data-type") === "open_water");
+  const hasBeach = ordered.some((row) => isBeach(row));
   const hasPool = ordered.some((row) => row.getAttribute("data-type") === "pool");
   const table = tbody.closest("table.board");
   if (table) {
