@@ -1,7 +1,7 @@
-// /how-it-works TOC scrollspy — highlight the anchor closest to the
+// Field Notes TOC scrollspy — highlight the anchor closest to the
 // reading position. Vanilla, ~30 lines, no library.
 
-const links = Array.from(document.querySelectorAll(".hiw-toc-list a[data-toc-target]"));
+const links = Array.from(document.querySelectorAll(".fn-toc-list a[data-toc-target]"));
 const targets = links
   .map((link) => {
     const id = link.getAttribute("data-toc-target");

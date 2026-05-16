@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% import "macros/bulletin.html" as bulletin_macros %}
+
+{% block title %}Field Notes — Swim Francisco{% endblock %}
+
+{% block content %}
+  <header class="site-header">
+    <div class="site-header-row">
+      <h1><a href="{{ config.base_url }}/" class="site-title">SWIM<span class="brand-dot">·</span>FRANCISCO</a></h1>
+      {{ bulletin_macros::badge() }}
+      <div class="site-header-actions">
+        <a href="/" data-target-path="/" class="site-nav-link" aria-label="View board">THE BOARD</a>
+        <a href="/map/" data-target-path="/map/" class="site-nav-link" aria-label="View map">MAP</a>
+        <a href="/field-notes/" class="site-nav-link is-active">FIELD NOTES</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="bulletin-strip" aria-label="Field notes">
+    <div><span class="k">Field</span><span class="v">Notes</span></div>
+    <div><span class="k">Issue</span><span class="v red">{{ section.extra.issue | default(value="01") }}</span></div>
+    <div><span class="k">Question</span><span class="v">Can I swim?</span></div>
+    <div><span class="k">Pools</span><span class="v">SF Rec</span></div>
+    <div><span class="k">Water</span><span class="v teal">NOAA</span></div>
+    <div><span class="k">Build</span><span class="v">Zola</span></div>
+  </div>
+
+  <section class="fn-hero">
+    <p class="fn-eyebrow">SWIM FRANCISCO · BUILD LOG</p>
+    <h2>FIELD NOTES.</h2>
+    <p>{{ section.description }}</p>
+    <div class="fn-hero-stamp" aria-hidden="true">ISSUE 01 · FIVE NOTES</div>
+  </section>
+
+  <article class="fn-overview">
+    <section class="fn-system-map" aria-labelledby="fn-system-title">
+      <div class="fn-system-copy">
+        <p class="fn-eyebrow">SYSTEM MAP · FIVE ROUTES</p>
+        <h3 id="fn-system-title">One board, three paths.</h3>
+        <p data-system-detail>
+          Schedules enter before deploy, water arrives by cron, and each visitor gets
+          static HTML that still knows the time.
+        </p>
+        <a href="{{ get_url(path='field-notes/pool-schedule-pipeline/') }}" data-system-link>READ THE PIPELINE NOTE</a>
+      </div>
+
+      <div class="fn-system-board" role="group" aria-label="Swim Francisco system map">
+        <button type="button"
+                class="fn-system-node is-active"
+                data-system-title="Reviewed schedules"
+                data-system-detail="City PDFs go through model extraction, grounding, validation, and a human review gate before they become spot frontmatter."
+                data-system-link="{{ get_url(path='field-notes/pool-schedule-pipeline/') }}">
+          <span>01</span>
+          <strong>PDFs</strong>
+          <small>LLM + review</small>
+        </button>
+        <button type="button"
+                class="fn-system-node"
+                data-system-title="Static build"
+                data-system-detail="Zola renders the board and detail pages. Pool schedules ship in the HTML, so the browser can answer open-now questions without a database."
+                data-system-link="{{ get_url(path='field-notes/static-site-live-time/') }}">
+          <span>02</span>
+          <strong>Zola</strong>
+          <small>HTML + data</small>
+        </button>
+        <button type="button"
+                class="fn-system-node"
+                data-system-title="Hourly water data"
+                data-system-detail="The Worker cron fetches NOAA and NDBC data, writes one KV record, and marks stale temperature or tide fields separately."
+                data-system-link="{{ get_url(path='field-notes/live-conditions/') }}">
+          <span>03</span>
+          <strong>Water</strong>
+          <small>NOAA + NDBC</small>
+        </button>
+        <button type="button"
+                class="fn-system-node"
+                data-system-title="Bulletin interface"
+                data-system-detail="The redesign turns the status board into a city bulletin, with horizon copy and a publication number tied to reviewed schedule changes."
+                data-system-link="{{ get_url(path='field-notes/bulletin-redesign/') }}">
+          <span>04</span>
+          <strong>Bulletin</strong>
+          <small>print language</small>
+        </button>
+        <button type="button"
+                class="fn-system-node"
+                data-system-title="Map mode"
+                data-system-detail="The map keeps filters and geography, then drops the board and footer so the view can fill the screen on mobile."
+                data-system-link="{{ get_url(path='field-notes/map-view/') }}">
+          <span>05</span>
+          <strong>Map</strong>
+          <small>focused mode</small>
+        </button>
+      </div>
+    </section>
+
+    <div class="fn-prose">
+      {{ section.content | safe }}
+    </div>
+  </article>
+{% endblock %}
+
+{% block scripts %}
+  <script type="module" src="{{ get_url(path='js/field-notes.js') }}"></script>
+{% endblock %}

@@ -217,6 +217,27 @@ def test_map_page_keeps_board_hidden_and_map_visible(built_site: Path) -> None:
     assert "js/map.js" in html
 
 
+def test_field_notes_render_as_section_with_deep_dives(built_site: Path) -> None:
+    html = (built_site / "field-notes" / "index.html").read_text()
+    assert "FIELD NOTES." in html
+    assert "class=fn-system-map" in html
+    assert "data-system-title=\"Reviewed schedules\"" in html
+    assert "js/field-notes.js" in html
+    assert "class=fn-card" not in html
+    assert "https://swimfrancisco.com/field-notes/pool-schedule-pipeline" in html
+    assert "https://swimfrancisco.com/field-notes/live-conditions" in html
+    assert "https://swimfrancisco.com/field-notes/map-view" in html
+    assert "/how-it-works/" not in html
+    assert not (built_site / "how-it-works" / "index.html").exists()
+
+
+def test_field_note_page_renders_history_trail(built_site: Path) -> None:
+    html = (built_site / "field-notes" / "pool-schedule-pipeline" / "index.html").read_text()
+    assert "FIELD NOTE · PDFS" in html
+    assert "fd28fc7, 2a0ad7c, 4a9958a, c9f9565" in html
+    assert "byte-identical to the model output" in html
+
+
 def test_homepage_renders_cost_badges_without_hardcoded_price(built_site: Path) -> None:
     html = (built_site / "index.html").read_text()
     assert 'class="cost-badge is-free">Free</span>' in html
@@ -238,5 +259,7 @@ def test_footer_renders_sources_and_credit(built_site: Path) -> None:
     html = (built_site / "index.html").read_text()
     assert "Pool hours from SF Rec & Park · Open-water from NOAA + NDBC" in html
     assert "Made in San Francisco by" in html
+    assert "href=/field-notes/>Field notes</a>" in html
+    assert "/how-it-works/" not in html
     # Sources line above byline (sources first, byline last as the page signature).
     assert html.index("Pool hours from SF Rec & Park") < html.index("Made in San Francisco by")
