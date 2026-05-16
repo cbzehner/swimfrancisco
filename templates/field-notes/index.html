@@ -26,76 +26,64 @@
   </div>
 
   <section class="fn-hero">
-    <p class="fn-eyebrow">SWIM FRANCISCO · BUILD LOG</p>
+    <p class="fn-eyebrow">SWIM FRANCISCO · TECHNICAL FIELD NOTES</p>
     <h2>FIELD NOTES.</h2>
     <p>{{ section.description }}</p>
-    <div class="fn-hero-stamp" aria-hidden="true">ISSUE 01 · FIVE NOTES</div>
+    <div class="fn-hero-stamp" aria-hidden="true">ISSUE 01 · FIVE LANES</div>
   </section>
 
   <article class="fn-overview">
-    <section class="fn-system-map" aria-labelledby="fn-system-title">
-      <div class="fn-system-copy">
-        <p class="fn-eyebrow">SYSTEM MAP · FIVE ROUTES</p>
-        <h3 id="fn-system-title">One board, three paths.</h3>
-        <p data-system-detail>
-          Schedules enter before deploy, water arrives by cron, and each visitor gets
-          static HTML that still knows the time.
+    <section class="fn-swim-lane" aria-labelledby="fn-swim-lane-title">
+      <div class="fn-lane-copy">
+        <p class="fn-eyebrow">THE SWIM LANE · OVERVIEW</p>
+        <h3 id="fn-swim-lane-title" data-lane-title>Source + Review Lane.</h3>
+        <p data-lane-detail>
+          Public sources enter here: city PDFs, source pages, model extraction,
+          grounding, validation, and human review before anything reaches the board.
         </p>
-        <a href="{{ get_url(path='field-notes/pool-schedule-pipeline/') }}" data-system-link>READ THE PIPELINE NOTE</a>
+        <a href="{{ get_url(path='field-notes/source-review-lane/') }}" data-lane-link>READ THE SOURCE + REVIEW DIVE</a>
       </div>
 
-      <div class="fn-system-board" role="group" aria-label="Swim Francisco system map">
-        <button type="button"
-                class="fn-system-node is-active"
-                data-system-title="Reviewed schedules"
-                data-system-detail="City PDFs go through model extraction, grounding, validation, and a human review gate before they become spot frontmatter."
-                data-system-link="{{ get_url(path='field-notes/pool-schedule-pipeline/') }}">
-          <span>01</span>
-          <strong>PDFs</strong>
-          <small>LLM + review</small>
-        </button>
-        <button type="button"
-                class="fn-system-node"
-                data-system-title="Static build"
-                data-system-detail="Zola renders the board and detail pages. Pool schedules ship in the HTML, so the browser can answer open-now questions without a database."
-                data-system-link="{{ get_url(path='field-notes/static-site-live-time/') }}">
-          <span>02</span>
-          <strong>Zola</strong>
-          <small>HTML + data</small>
-        </button>
-        <button type="button"
-                class="fn-system-node"
-                data-system-title="Hourly water data"
-                data-system-detail="The Worker cron fetches NOAA and NDBC data, writes one KV record, and marks stale temperature or tide fields separately."
-                data-system-link="{{ get_url(path='field-notes/live-conditions/') }}">
-          <span>03</span>
-          <strong>Water</strong>
-          <small>NOAA + NDBC</small>
-        </button>
-        <button type="button"
-                class="fn-system-node"
-                data-system-title="Bulletin interface"
-                data-system-detail="The redesign turns the status board into a city bulletin, with horizon copy and a publication number tied to reviewed schedule changes."
-                data-system-link="{{ get_url(path='field-notes/bulletin-redesign/') }}">
-          <span>04</span>
-          <strong>Bulletin</strong>
-          <small>print language</small>
-        </button>
-        <button type="button"
-                class="fn-system-node"
-                data-system-title="Map mode"
-                data-system-detail="The map keeps filters and geography, then drops the board and footer so the view can fill the screen on mobile."
-                data-system-link="{{ get_url(path='field-notes/map-view/') }}">
-          <span>05</span>
-          <strong>Map</strong>
-          <small>focused mode</small>
-        </button>
-      </div>
+      <ol class="fn-lane-list" aria-label="Deep dives">
+        {% for note in section.pages %}
+          {% if note.extra.kind | default(value="") == "deep_dive" %}
+            <li>
+              <a class="fn-lane{% if note.extra.lane_number == 1 %} is-active{% endif %}"
+                 href="{{ note.permalink | safe }}"
+                 data-lane-title="{{ note.title }}"
+                 data-lane-detail="{{ note.description }}"
+                 data-lane-link="{{ note.permalink | safe }}">
+                <span class="fn-lane-number">Lane {{ note.extra.lane_number }}</span>
+                <span class="fn-lane-rule" aria-hidden="true"></span>
+                <strong>{{ note.extra.lane_label }}</strong>
+                <small>{{ note.description }}</small>
+                <span class="fn-lane-cta">{{ note.extra.cta | default(value="Read the dive") }}</span>
+              </a>
+            </li>
+          {% endif %}
+        {% endfor %}
+      </ol>
     </section>
 
     <div class="fn-prose">
       {{ section.content | safe }}
     </div>
+
+    <section class="fn-lap-notes" aria-labelledby="fn-lap-notes-title">
+      <p class="fn-eyebrow">LAP NOTES · SHORT STORIES</p>
+      <h3 id="fn-lap-notes-title">Small pieces worth a lap.</h3>
+      <div class="fn-lap-grid">
+        {% for note in section.pages %}
+          {% if note.extra.kind | default(value="") == "lap_note" %}
+            <a class="fn-lap-card" href="{{ note.permalink | safe }}">
+              <span>{{ note.extra.lane_label | default(value="Lane") }}</span>
+              <strong>{{ note.title }}</strong>
+              <small>{{ note.description }}</small>
+            </a>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </section>
   </article>
 {% endblock %}
 

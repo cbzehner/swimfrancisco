@@ -18,9 +18,9 @@
 
   <div class="bulletin-strip" aria-label="Field note">
     <div><span class="k">Field</span><span class="v">Notes</span></div>
-    <div><span class="k">Topic</span><span class="v red">{{ page.extra.topic | default(value="Note") }}</span></div>
+    <div><span class="k">Type</span><span class="v red">{% if page.extra.kind | default(value="") == "lap_note" %}Lap Note{% else %}Deep Dive{% endif %}</span></div>
+    <div><span class="k">Lane</span><span class="v">{{ page.extra.lane_label | default(value=page.extra.topic | default(value="Note")) }}</span></div>
     <div><span class="k">Commit</span><span class="v num">{{ page.extra.commit_sha | default(value="—") }}</span></div>
-    <div><span class="k">Pools</span><span class="v">SF Rec</span></div>
     <div><span class="k">Water</span><span class="v teal">NOAA</span></div>
     <div><span class="k">Build</span><span class="v">Zola</span></div>
   </div>
@@ -28,7 +28,13 @@
   <article class="fn-article">
     <p class="back"><a href="/field-notes/">&larr; FIELD NOTES</a></p>
     <header class="fn-article-head">
-      <p class="fn-eyebrow">FIELD NOTE · {{ page.extra.topic | default(value="NOTE") }}</p>
+      <p class="fn-eyebrow">
+        {% if page.extra.kind | default(value="") == "lap_note" %}
+          LAP NOTE · {{ page.extra.lane_label | default(value="LANE") }}
+        {% else %}
+          DEEP DIVE · LANE {{ page.extra.lane_number | default(value="") }} · {{ page.extra.lane_label | default(value="LANE") }}
+        {% endif %}
+      </p>
       <h2>{{ page.title }}</h2>
       <p>{{ page.description }}</p>
     </header>

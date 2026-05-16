@@ -1,6 +1,6 @@
 +++
 title = "Field Notes"
-description = "Notes from building Swim Francisco: the PDF mistakes, water-data edge cases, design turns, and small decisions behind the board."
+description = "A technical map of how Swim Francisco turns scattered public swim data into one live board."
 sort_by = "weight"
 template = "field-notes/index.html"
 page_template = "field-notes/page.html"
@@ -10,21 +10,22 @@ insert_anchor_links = "left"
 issue = "01"
 +++
 
-Swim Francisco started with a dull question before leaving the house:
-can I swim right now?
+Swim Francisco is a small static site wrapped around a messy data
+problem. Pool schedules start as city PDFs. Open-water conditions
+come from NOAA and NDBC. The board has to answer a human question:
+can I swim, where, and what should I know before I leave?
 
-The answer lived in too many places: city PDFs, pool detail pages,
-NOAA stations, NDBC buoys, tide tables, and a few facts that only
-showed up after the board gave a wrong answer. Field Notes is where I
-write those parts down.
+The Swim Lane is the overview. It shows the system as a path from
+raw public sources to a swimmer making a decision: source data,
+review, build, runtime, board, swimmer.
 
-The site stays small on purpose. Zola renders the board and spot
-pages. One Cloudflare Worker serves the site, refreshes open-water
-conditions, and writes one KV record. Pool schedules go through an
-LLM, but only behind a review gate; production never calls a model.
+The lane pages are the deep dives. They explain the core machinery:
+where data enters, where it gets trusted, how it ships, how the
+Worker refreshes conditions, and how the browser turns schedules into
+status.
 
-The first set of notes follows the bugs and decisions that changed
-the shape of the project: PDF extraction, stale water data, Pacific
-midnight, the print-bulletin redesign, and the map becoming its own
-mode. Next up: outer-coast tide stations, partial-day closures, shared
-PDF cells, and the bulletin number tied to reviewed schedule changes.
+Lap Notes are shorter. They cover the small incidents that are too
+specific for the overview but too sharp to bury: a broken Cloudflare
+build hook, a tide station correction, a review guard that refuses
+untouched model output, and the bulletin number that moves only when
+reviewed schedules change.

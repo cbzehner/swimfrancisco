@@ -220,22 +220,40 @@ def test_map_page_keeps_board_hidden_and_map_visible(built_site: Path) -> None:
 def test_field_notes_render_as_section_with_deep_dives(built_site: Path) -> None:
     html = (built_site / "field-notes" / "index.html").read_text()
     assert "FIELD NOTES." in html
-    assert "class=fn-system-map" in html
-    assert "data-system-title=\"Reviewed schedules\"" in html
+    assert "class=fn-swim-lane" in html
+    assert "data-lane-title=\"Source + Review Lane\"" in html
     assert "js/field-notes.js" in html
-    assert "class=fn-card" not in html
-    assert "https://swimfrancisco.com/field-notes/pool-schedule-pipeline" in html
-    assert "https://swimfrancisco.com/field-notes/live-conditions" in html
-    assert "https://swimfrancisco.com/field-notes/map-view" in html
+    assert "THE SWIM LANE" in html
+    assert "LAP NOTES" in html
+    assert "https://swimfrancisco.com/field-notes/source-review-lane/" in html
+    assert "https://swimfrancisco.com/field-notes/runtime-lane/" in html
+    assert "https://swimfrancisco.com/field-notes/swimmer-path/" in html
+    assert "The tide station was too far inside the bay" in html
     assert "/how-it-works/" not in html
     assert not (built_site / "how-it-works" / "index.html").exists()
 
 
 def test_field_note_page_renders_history_trail(built_site: Path) -> None:
-    html = (built_site / "field-notes" / "pool-schedule-pipeline" / "index.html").read_text()
-    assert "FIELD NOTE · PDFS" in html
+    html = (built_site / "field-notes" / "source-review-lane" / "index.html").read_text()
+    assert "DEEP DIVE · LANE 1 · Source + Review" in html
     assert "fd28fc7, 2a0ad7c, 4a9958a, c9f9565" in html
-    assert "byte-identical to the model output" in html
+    assert "refuses byte-identical reviews" in html
+    lap = (built_site / "field-notes" / "byte-identical-reviews" / "index.html").read_text()
+    assert "LAP NOTE · Source + Review" in lap
+    assert "The review tool rejects byte-identical drafts" in lap
+
+
+def test_field_notes_preserve_previous_subpage_urls(built_site: Path) -> None:
+    aliases = {
+        "map-view": "swimmer-path",
+        "bulletin-redesign": "swimmer-path",
+        "live-conditions": "runtime-lane",
+        "static-site-live-time": "build-lane",
+        "pool-schedule-pipeline": "source-review-lane",
+    }
+    for old_slug, new_slug in aliases.items():
+        html = (built_site / "field-notes" / old_slug / "index.html").read_text()
+        assert f"/field-notes/{new_slug}/" in html
 
 
 def test_homepage_renders_cost_badges_without_hardcoded_price(built_site: Path) -> None:
