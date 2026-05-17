@@ -16,6 +16,9 @@ last_verified_at = "2026-05-03"
 
 # Seasonal outdoor pool; Spring 2026 schedule runs 2026-05-12 through 2026-06-06.
 schedule_effective_end = "2026-06-06"
+access_mode = "public"
+payment_model = "session"
+schedule_basis = "swim_schedule"
 
 [[extra.closures]]
 start = "2026-05-21"

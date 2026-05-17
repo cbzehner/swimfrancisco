@@ -1,0 +1,69 @@
+{
+  "cost_estimate": "deterministic",
+  "extracted_at": "2026-05-17T15:53:01.824053+00:00",
+  "model": "ymca-location-html-v1",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "19:45",
+        "evidence": "Monday-Friday: 6:30 a.m. \u2013 7:45 p.m.",
+        "label": "Facility hours",
+        "start": "06:30"
+      },
+      {
+        "day": "tuesday",
+        "end": "19:45",
+        "evidence": "Monday-Friday: 6:30 a.m. \u2013 7:45 p.m.",
+        "label": "Facility hours",
+        "start": "06:30"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:45",
+        "evidence": "Monday-Friday: 6:30 a.m. \u2013 7:45 p.m.",
+        "label": "Facility hours",
+        "start": "06:30"
+      },
+      {
+        "day": "thursday",
+        "end": "19:45",
+        "evidence": "Monday-Friday: 6:30 a.m. \u2013 7:45 p.m.",
+        "label": "Facility hours",
+        "start": "06:30"
+      },
+      {
+        "day": "friday",
+        "end": "19:45",
+        "evidence": "Monday-Friday: 6:30 a.m. \u2013 7:45 p.m.",
+        "label": "Facility hours",
+        "start": "06:30"
+      },
+      {
+        "day": "saturday",
+        "end": "15:45",
+        "evidence": "Saturday and Sunday: 8:00 a.m. \u2013 3:45 p.m.",
+        "label": "Facility hours",
+        "start": "08:00"
+      },
+      {
+        "day": "sunday",
+        "end": "15:45",
+        "evidence": "Saturday and Sunday: 8:00 a.m. \u2013 3:45 p.m.",
+        "label": "Facility hours",
+        "start": "08:00"
+      }
+    ],
+    "closures": [],
+    "schedule_basis": "facility_hours",
+    "schedule_effective": "2026-05-17",
+    "sessions": []
+  },
+  "pdf_sha256": "54f49481ad6f1027b1fdd6ab90a6da4a37436360f25940768e9f3e698b308c82",
+  "prompt_sha256": "f61aea063461b7d02e6e993bc9cf3962503e1b69da06bee1ae5d2f1210a81de9",
+  "provider": "direct",
+  "schema_sha256": "1c0869dc8a4441cb9285092e806b9bc281171cc705f406f8596b0870d5864121",
+  "source_pdf_url": "https://www.ymcasf.org/location/chinatown-ymca/",
+  "usage": {}
+}

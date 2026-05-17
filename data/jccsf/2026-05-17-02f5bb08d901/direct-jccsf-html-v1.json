@@ -1,0 +1,167 @@
+{
+  "cost_estimate": "deterministic",
+  "extracted_at": "2026-05-17T15:55:52.171549+00:00",
+  "model": "jccsf-html-v1",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [],
+    "closures": [],
+    "schedule_basis": "swim_schedule",
+    "schedule_effective": "2026-05-17",
+    "sessions": [
+      {
+        "day": "monday",
+        "end": "12:00",
+        "evidence": "Recreation & Family Swim morning hours.",
+        "start": "05:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "monday",
+        "end": "21:45",
+        "evidence": "The Lap Pool is available for lap swimming during Aquatics Center hours.",
+        "start": "05:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "monday",
+        "end": "21:45",
+        "evidence": "Recreation & Family Swim afternoon/evening hours.",
+        "start": "13:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "11:30",
+        "evidence": "Recreation & Family Swim morning hours.",
+        "start": "05:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "21:45",
+        "evidence": "The Lap Pool is available for lap swimming during Aquatics Center hours.",
+        "start": "05:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "21:45",
+        "evidence": "Recreation & Family Swim afternoon/evening hours.",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "12:00",
+        "evidence": "Recreation & Family Swim morning hours.",
+        "start": "05:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "21:45",
+        "evidence": "The Lap Pool is available for lap swimming during Aquatics Center hours.",
+        "start": "05:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "21:45",
+        "evidence": "Recreation & Family Swim afternoon/evening hours.",
+        "start": "13:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "12:00",
+        "evidence": "Recreation & Family Swim morning hours.",
+        "start": "05:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "21:45",
+        "evidence": "The Lap Pool is available for lap swimming during Aquatics Center hours.",
+        "start": "05:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "21:45",
+        "evidence": "Recreation & Family Swim afternoon/evening hours.",
+        "start": "13:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "12:00",
+        "evidence": "Recreation & Family Swim morning hours.",
+        "start": "05:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "21:45",
+        "evidence": "The Lap Pool is available for lap swimming during Aquatics Center hours.",
+        "start": "05:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "21:45",
+        "evidence": "Recreation & Family Swim afternoon/evening hours.",
+        "start": "13:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "08:00",
+        "evidence": "Recreation & Family Swim morning hours.",
+        "start": "07:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "18:45",
+        "evidence": "The Lap Pool is available for lap swimming during Aquatics Center hours.",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "18:45",
+        "evidence": "Recreation & Family Swim afternoon/evening hours.",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "08:00",
+        "evidence": "Recreation & Family Swim morning hours.",
+        "start": "07:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "18:45",
+        "evidence": "The Lap Pool is available for lap swimming during Aquatics Center hours.",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "18:45",
+        "evidence": "Recreation & Family Swim afternoon/evening hours.",
+        "start": "14:00",
+        "type": "family_swim"
+      }
+    ]
+  },
+  "pdf_sha256": "02f5bb08d901fda7b9b4043126d859b37008fea2977c3a6c73421080a6453298",
+  "prompt_sha256": "721bb09111c5997215222e098b067ddc7bac48be9fdc5beb8d11299be165e512",
+  "provider": "direct",
+  "schema_sha256": "1c0869dc8a4441cb9285092e806b9bc281171cc705f406f8596b0870d5864121",
+  "source_pdf_url": "https://www.jccsf.org/fitness/aquatics/",
+  "usage": {}
+}

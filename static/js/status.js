@@ -4,6 +4,8 @@
 
 import { PLACEHOLDER, computeStatus, captureBaselineRanks, nowInPacific } from "./helpers/board.mjs";
 import {
+  computeAccessStatus,
+  computeAccessWindowAvailability,
   computeWindowAvailability,
   formatHHMM,
   getHorizonOptions,
@@ -96,7 +98,8 @@ function cell(row, name) {
 
 function statusClass(status, type) {
   if (type === "open_water" || status === "OCEAN") return "is-ocean";
-  if (status === "OPEN" || status === "AVAILABLE" || status === "LIMITED") return "is-open";
+  if (status === "OPEN" || status === "AVAILABLE" || status === "LIMITED" || status === "ACCESS") return "is-open";
+  if (status === "CHECK") return "is-info";
   if (status.includes("6:30") || status.includes("SOON")) return "is-soon";
   return "is-closed";
 }
@@ -136,22 +139,31 @@ function applyStatuses(root, now, allowedTypes = null) {
     const nextCell = cell(row, "next");
     if (!statusCell || !nextCell) return;
     const schedule = readSchedule(row);
+    const hasSessions = schedule && Array.isArray(schedule.sessions) && schedule.sessions.length > 0;
+    const hasAccessHours = schedule && Array.isArray(schedule.access_hours) && schedule.access_hours.length > 0;
     if (horizon.kind === "window") {
-      const result = computeWindowAvailability(schedule, horizon, allowedTypes);
+      const result = hasSessions
+        ? computeWindowAvailability(schedule, horizon, allowedTypes)
+        : computeAccessWindowAvailability(schedule, horizon);
       setStatus(statusCell, result.status, "pool");
-      nextCell.textContent = formatWindowNext(result);
+      nextCell.textContent = hasSessions ? formatWindowNext(result) : result.next;
       row.dataset.windowRank = String(result.sortRank);
-      row.classList.toggle("is-open", result.status === "AVAILABLE" || result.status === "LIMITED");
+      row.classList.toggle("is-open", result.status === "AVAILABLE" || result.status === "LIMITED" || result.status === "ACCESS");
       return;
     }
 
-    const { status, next } = schedule
+    const accessLabel = row.getAttribute("data-access-label") || "";
+    const { status, next } = hasSessions
       ? computeStatus(schedule, now, allowedTypes)
-      : { status: PLACEHOLDER, next: PLACEHOLDER };
+      : hasAccessHours
+        ? computeAccessStatus(schedule, now)
+      : accessLabel
+        ? { status: "CHECK", next: "OFFICIAL SITE" }
+        : { status: PLACEHOLDER, next: PLACEHOLDER };
     setStatus(statusCell, status, "pool");
     nextCell.textContent = next;
-    row.dataset.windowRank = status === "OPEN" ? "0" : "3";
-    row.classList.toggle("is-open", status === "OPEN");
+    row.dataset.windowRank = status === "OPEN" || status === "ACCESS" ? "0" : "3";
+    row.classList.toggle("is-open", status === "OPEN" || status === "ACCESS");
   });
 
   const beachRows = root.querySelectorAll('table.board tbody tr[data-type="open_water"]');
@@ -180,7 +192,8 @@ function sortRows(rows, horizon) {
     const isPool = row.getAttribute("data-type") === "pool";
     const statusCell = cell(row, "status");
     const statusText = statusCell?.dataset.statusValue || statusCell?.textContent.trim() || "";
-    const isOpenPool = isPool && statusText === "OPEN";
+    const isOpenPool = isPool && (statusText === "OPEN" || statusText === "ACCESS");
+    const isUnverifiedPool = isPool && (statusText === "CHECK" || statusText === PLACEHOLDER);
     const label = cell(row, "spot")?.textContent.trim().toUpperCase() || "";
     const windowRank = Number(row.dataset.windowRank);
     return {
@@ -188,6 +201,7 @@ function sortRows(rows, horizon) {
       index,
       beachRank: isPool ? 0 : 1,
       isOpenPool,
+      isUnverifiedPool,
       windowRank: Number.isFinite(windowRank) ? windowRank : Number.POSITIVE_INFINITY,
       label,
     };
@@ -199,6 +213,7 @@ function sortRows(rows, horizon) {
       return a.windowRank - b.windowRank;
     }
     if (a.isOpenPool !== b.isOpenPool) return a.isOpenPool ? -1 : 1;
+    if (a.isUnverifiedPool !== b.isUnverifiedPool) return a.isUnverifiedPool ? 1 : -1;
     if (a.label < b.label) return -1;
     if (a.label > b.label) return 1;
     return a.index - b.index;

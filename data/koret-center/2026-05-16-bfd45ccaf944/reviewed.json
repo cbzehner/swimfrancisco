@@ -1,0 +1,63 @@
+{
+  "slug": "koret-center",
+  "pdf_sha256": "bfd45ccaf944971b70afac9b58cdde4f8a6b44b7752e6d5aaec6535e144cd9ad",
+  "reviewed_at": "2026-05-16",
+  "source_pdf_url": "https://docs.google.com/spreadsheets/d/1PcFSl3ndScM2-SZnubwDvBlbhpmbFsVjEPK-yGilZU0/edit?gid=1958899859&pli=1",
+  "payload": {
+    "access_hours": [],
+    "closures": [],
+    "schedule_effective": "2026-05-16",
+    "sessions": [
+      {
+        "day": "monday",
+        "end": "21:00",
+        "evidence": "Monday Hours: 6am - 9pm (Subject to change due to emergency) Shallow & Mini Lane Lane 1 Lane 2 Lane 3 Lane 4 Lane 5 Lane 6 Lane 7 Lane 8 Bulk Head Lane 9 Lane 10 Lane 11 Lane 12 Lane 13 Lane 14 Lane 15 DEEP",
+        "start": "06:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "21:00",
+        "evidence": "Tuesday Hours: 6am - 9pm (Subject to change due to emergency) Shallow & Mini Lane Lane 1 Lane 2 Lane 3 Lane 4 Lane 5 Lane 6 Lane 7 Lane 8 Bulk Head Lane 9 Lane 10 Lane 11 Lane 12 Lane 13 Lane 14 Lane 15 DEEP",
+        "start": "06:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "21:00",
+        "evidence": "Wednesday Hours: 6am - 9pm (Subject to change due to emergency) Shallow & Mini Lane Lane 1 Lane 2 Lane 3 Lane 4 Lane 5 Lane 6 Lane 7 Lane 8 Bulk Head Lane 9 Lane 10 Lane 11 Lane 12 Lane 13 Lane 14 Lane 15 DEEP",
+        "start": "06:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "21:00",
+        "evidence": "Thursday Hours: 6am - 9pm (Subject to change due to emergency) Shallow & Mini Lane Lane 1 Lane 2 Lane 3 Lane 4 Lane 5 Lane 6 Lane 7 Lane 8 Bulk Head Lane 9 Lane 10 Lane 11 Lane 12 Lane 13 Lane 14 Lane 15 DEEP",
+        "start": "06:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "21:00",
+        "evidence": "Friday Hours: 6am - 9pm (Subject to change due to emergency) Shallow & Mini Lane Lane 1 Lane 2 Lane 3 Lane 4 Lane 5 Lane 6 Lane 7 Lane 8 Bulk Head Lane 9 Lane 10 Lane 11 Lane 12 Lane 13 Lane 14 Lane 15 DEEP",
+        "start": "06:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "18:00",
+        "evidence": "Weekend sheet lists 8am-6pm pool hours.",
+        "start": "08:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "18:00",
+        "evidence": "Weekend sheet lists 8am-6pm pool hours.",
+        "start": "08:00",
+        "type": "lap_swim"
+      }
+    ],
+    "schedule_basis": "pool_hours"
+  }
+}

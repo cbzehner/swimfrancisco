@@ -46,6 +46,7 @@ const OWNED_TOKENS = new Set([
   "next-open",
   "open-now",
   "distance",
+  "memberships",
   ...Object.keys(TYPE_TOKENS),
 ]);
 
@@ -67,6 +68,7 @@ function syncStateToHash(state) {
   for (const token of OWNED_TOKENS) tokens.delete(token);
   if (state.sortByNextOpen) tokens.add("open");
   if (state.sortByDistance) tokens.add("distance");
+  if (state.includeMemberships) tokens.add("memberships");
   for (const type of state.types) {
     const token = TYPE_TO_TOKEN[type];
     if (token) tokens.add(token);
@@ -132,6 +134,10 @@ function rowMatchesType(row, type) {
 function rowPassesFilters(row, state) {
   const type = activeType(state);
   if (type && type !== TYPE_NONE && !rowMatchesType(row, type)) return false;
+  const accessMode = row.getAttribute("data-access-mode") || "public";
+  if (!state.includeMemberships && (accessMode === "membership" || accessMode === "private")) {
+    return false;
+  }
   return true;
 }
 
@@ -291,12 +297,23 @@ function attachHandlers(tbody, filtersRoot) {
   const state = {
     sortByNextOpen: false,
     types: new Set(),
+    includeMemberships: false,
     sortByDistance: false,
     userCoords: null,
   };
 
   const distanceButton = document.querySelector('button[data-action="sort-distance"]');
   const nextOpenButton = document.querySelector('button[data-filter="open-now"]');
+  const membershipButton = document.querySelector('button[data-filter="access"][data-access="memberships"]');
+  if (membershipButton) {
+    membershipButton.setAttribute("aria-pressed", "false");
+    membershipButton.addEventListener("click", () => {
+      state.includeMemberships = !state.includeMemberships;
+      membershipButton.setAttribute("aria-pressed", String(state.includeMemberships));
+      applyFilters(tbody, state);
+      syncStateToHash(state);
+    });
+  }
   if (nextOpenButton) {
     nextOpenButton.setAttribute("aria-pressed", "false");
     nextOpenButton.addEventListener("click", () => {
@@ -374,14 +391,14 @@ function attachHandlers(tbody, filtersRoot) {
     });
   }
 
-  return { state, tbody, nextOpenButton, typeButtons, distanceButton };
+  return { state, tbody, nextOpenButton, typeButtons, distanceButton, membershipButton };
 }
 
 // Apply hash tokens without dispatching button clicks. Distance sorting needs
 // an explicit user gesture because it can prompt for geolocation.
 function restoreFromHash(controls) {
   const tokens = readHashTokens();
-  const { state, tbody, nextOpenButton, typeButtons, distanceButton } = controls;
+  const { state, tbody, nextOpenButton, typeButtons, distanceButton, membershipButton } = controls;
   let changed = false;
 
   if (nextOpenButton) {
@@ -395,6 +412,15 @@ function restoreFromHash(controls) {
         state.userCoords = null;
         distanceButton?.setAttribute("aria-pressed", "false");
       }
+    }
+  }
+
+  if (membershipButton) {
+    const wantMemberships = tokens.has("memberships");
+    if (wantMemberships !== state.includeMemberships) {
+      state.includeMemberships = wantMemberships;
+      membershipButton.setAttribute("aria-pressed", String(wantMemberships));
+      changed = true;
     }
   }
 
@@ -442,6 +468,7 @@ function init() {
   const controls = attachHandlers(tbody, filtersRoot);
   // Apply any filter tokens present in the URL hash on load.
   restoreFromHash(controls);
+  applyFilters(tbody, controls.state);
   updateViewSwitcherHref();
   // Keep state in sync if the hash changes (back/forward, manual edit).
   window.addEventListener("hashchange", () => {

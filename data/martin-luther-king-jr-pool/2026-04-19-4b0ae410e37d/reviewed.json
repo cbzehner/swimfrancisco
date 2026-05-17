@@ -216,7 +216,8 @@
         "start": "15:30",
         "type": "lap_swim"
       }
-    ]
+    ],
+    "schedule_basis": "swim_schedule"
   },
   "pdf_sha256": "4b0ae410e37d66393704fb70dff8e5ce3d42c8c919a6872038cefe8e9097a590",
   "reviewed_at": "2026-04-20",

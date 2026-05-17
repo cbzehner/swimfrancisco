@@ -46,8 +46,20 @@ def merge(
         )
 
     extra["sessions"] = _build_sessions_value(after["sessions"])
+    if after["access_hours"]:
+        extra["access_hours"] = _build_access_hours_value(after["access_hours"])
+    elif "access_hours" in extra:
+        del extra["access_hours"]
+    if after["access_exceptions"]:
+        extra["access_exceptions"] = _build_access_exceptions_value(after["access_exceptions"])
+    elif "access_exceptions" in extra:
+        del extra["access_exceptions"]
     extra["closures"] = _build_closures_value(after["closures"])
     extra["schedule_effective"] = after["schedule_effective"]
+    if after["schedule_basis"] is not None:
+        extra["schedule_basis"] = after["schedule_basis"]
+    elif "schedule_basis" in extra:
+        del extra["schedule_basis"]
     if after["schedule_effective_end"] is not None:
         extra["schedule_effective_end"] = after["schedule_effective_end"]
     elif "schedule_effective_end" in extra:
@@ -72,8 +84,11 @@ def read_schedule_snapshot(pool_md_path: Path) -> dict[str, Any]:
     extra = document.get("extra", {})
     return {
         "sessions": _normalize_sessions(list(extra.get("sessions", []))),
+        "access_hours": _normalize_access_hours(list(extra.get("access_hours", []))),
+        "access_exceptions": _normalize_access_exceptions(list(extra.get("access_exceptions", []))),
         "closures": _normalize_closures(list(extra.get("closures", []))),
         "schedule_effective": extra.get("schedule_effective"),
+        "schedule_basis": extra.get("schedule_basis"),
         "schedule_effective_end": extra.get("schedule_effective_end"),
     }
 
@@ -81,8 +96,11 @@ def read_schedule_snapshot(pool_md_path: Path) -> dict[str, Any]:
 def _normalized_schedule_payload(extracted: dict[str, Any]) -> dict[str, Any]:
     return {
         "sessions": _normalize_sessions(extracted.get("sessions", [])),
+        "access_hours": _normalize_access_hours(extracted.get("access_hours", [])),
+        "access_exceptions": _normalize_access_exceptions(extracted.get("access_exceptions", [])),
         "closures": _normalize_closures(extracted.get("closures", [])),
         "schedule_effective": extracted.get("schedule_effective"),
+        "schedule_basis": extracted.get("schedule_basis"),
         "schedule_effective_end": extracted.get("schedule_effective_end"),
     }
 
@@ -111,6 +129,56 @@ def _normalize_sessions(raw_sessions: list[dict]) -> list[dict[str, str]]:
             item["end"],
             item["type"],
             item.get("pool", ""),
+        ),
+    )
+
+
+def _normalize_access_hours(raw_access_hours: list[dict]) -> list[dict[str, str]]:
+    normalized = []
+    for access_hour in raw_access_hours:
+        item: dict[str, str] = {
+            "day": str(access_hour["day"]),
+            "start": str(access_hour["start"]),
+            "end": str(access_hour["end"]),
+            "label": str(access_hour["label"]),
+        }
+        notes = access_hour.get("notes")
+        if isinstance(notes, str) and notes.strip():
+            item["notes"] = notes.strip()
+        normalized.append(item)
+    return sorted(
+        normalized,
+        key=lambda item: (
+            DAY_ORDER.get(item["day"], 99),
+            item["start"],
+            item["end"],
+            item["label"],
+        ),
+    )
+
+
+def _normalize_access_exceptions(raw_access_exceptions: list[dict]) -> list[dict[str, str]]:
+    normalized = []
+    for access_exception in raw_access_exceptions:
+        item: dict[str, str] = {
+            "date": str(access_exception["date"]),
+            "start": str(access_exception["start"]),
+            "end": str(access_exception["end"]),
+            "label": str(access_exception["label"]),
+            "reason": str(access_exception["reason"]),
+        }
+        notes = access_exception.get("notes")
+        if isinstance(notes, str) and notes.strip():
+            item["notes"] = notes.strip()
+        normalized.append(item)
+    return sorted(
+        normalized,
+        key=lambda item: (
+            item["date"],
+            item["start"],
+            item["end"],
+            item["label"],
+            item["reason"],
         ),
     )
 
@@ -156,6 +224,39 @@ def _build_sessions_value(sessions: list[dict[str, str]]):
             table["pool"] = session["pool"]
         if "notes" in session:
             table["notes"] = session["notes"]
+        aot.append(table)
+    return aot
+
+
+def _build_access_hours_value(access_hours: list[dict[str, str]]):
+    if not access_hours:
+        return tomlkit.array()
+    aot = tomlkit.aot()
+    for access_hour in access_hours:
+        table = tomlkit.table()
+        table["day"] = access_hour["day"]
+        table["start"] = access_hour["start"]
+        table["end"] = access_hour["end"]
+        table["label"] = access_hour["label"]
+        if "notes" in access_hour:
+            table["notes"] = access_hour["notes"]
+        aot.append(table)
+    return aot
+
+
+def _build_access_exceptions_value(access_exceptions: list[dict[str, str]]):
+    if not access_exceptions:
+        return tomlkit.array()
+    aot = tomlkit.aot()
+    for access_exception in access_exceptions:
+        table = tomlkit.table()
+        table["date"] = access_exception["date"]
+        table["start"] = access_exception["start"]
+        table["end"] = access_exception["end"]
+        table["label"] = access_exception["label"]
+        table["reason"] = access_exception["reason"]
+        if "notes" in access_exception:
+            table["notes"] = access_exception["notes"]
         aot.append(table)
     return aot
 

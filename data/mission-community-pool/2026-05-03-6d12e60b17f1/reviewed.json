@@ -159,6 +159,7 @@
         "start": "15:30",
         "type": "lap_swim"
       }
-    ]
+    ],
+    "schedule_basis": "swim_schedule"
   }
 }

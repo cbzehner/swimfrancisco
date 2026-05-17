@@ -194,6 +194,7 @@
         "start": "18:30",
         "type": "family_swim"
       }
-    ]
+    ],
+    "schedule_basis": "swim_schedule"
   }
 }

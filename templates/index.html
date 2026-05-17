@@ -59,7 +59,7 @@
 
   <div class="board-controls">
     {% if not is_map_view %}
-      <div class="control-cluster">
+      <div class="control-cluster when-group">
         <span class="control-label">When</span>
         <div class="horizon-control">
           <button type="button"
@@ -72,12 +72,15 @@
     {% endif %}
     <div class="filters control-cluster" role="group" aria-label="Filters">
       <span class="control-label">Show</span>
-      <div class="filter-group" role="group" aria-label="Type Filter">
+      <div class="filter-group type-filter" role="group" aria-label="Type Filter">
         <button type="button" data-filter="type" data-type="none">ALL</button>
         <button type="button" data-filter="type" data-type="lap_swim">LAP</button>
         <button type="button" data-filter="type" data-type="family_swim">FAMILY</button>
         <button type="button" data-filter="type" data-type="senior_swim">SENIOR</button>
         <button type="button" data-filter="type" data-type="open_water">BEACH</button>
+      </div>
+      <div class="filter-group access-filter" role="group" aria-label="Access Filter">
+        <button type="button" data-filter="access" data-access="memberships">MEMBERSHIPS</button>
       </div>
     </div>
     {% if not is_map_view %}
@@ -117,6 +120,9 @@
           data-slug="{{ page.slug }}"
           data-type="{{ page.extra.type }}"
           data-subtype="{{ page.extra.subtype | default(value='') }}"
+          data-access-label="{{ page.extra.access_label | default(value='') }}"
+          data-access-mode="{{ page.extra.access_mode | default(value='public') }}"
+          data-payment-model="{{ page.extra.payment_model | default(value='unknown') }}"
           data-lat="{{ page.extra.lat }}"
           data-lng="{{ page.extra.lng }}"
           data-schedule='{{ schedule_macros::data_schedule(extra=page.extra) }}'
@@ -135,7 +141,9 @@
           <td data-cell="next">—</td>
           <td data-cell="water">{% if page.extra.type == 'pool' and page.extra.setpoint_label %}{{ page.extra.setpoint_label | upper }}{% else %}—{% endif %}</td>
           <td data-cell="locale">
-            {% if page.extra.cost == "free" %}
+            {% if page.extra.access_label %}
+              <span class="cost-badge {{ page.extra.access_badge_class | default(value='is-paid') }}">{{ page.extra.access_label }}</span>
+            {% elif page.extra.cost == "free" %}
               <span class="cost-badge is-free">Free</span>
             {% elif page.extra.cost == "paid" %}
               <span class="cost-badge is-paid">Paid</span>

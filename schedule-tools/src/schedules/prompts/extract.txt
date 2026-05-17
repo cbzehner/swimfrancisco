@@ -30,6 +30,7 @@ Rules:
 - A closure that has no qualifying time language (e.g. "Memorial Day", "Closed for repairs through Sep 21") is all-day; omit start_time/end_time.
 - schedule_effective is the schedule start date.
 - If the PDF explicitly lists an end date for the schedule period, set schedule_effective_end to that ISO date. Otherwise return null.
+- Set schedule_basis to `swim_schedule`. SF Recreation and Parks PDFs publish specific drop-in swim sessions, not merely facility hours.
 - closures.start and closures.end must be ISO dates (YYYY-MM-DD).
 - Preserve distinct sessions even if they share the same day or type.
 - Do not emit the same (day, type, start, end, pool) tuple more than once.

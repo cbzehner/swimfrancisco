@@ -1,0 +1,69 @@
+{
+  "cost_estimate": "deterministic",
+  "extracted_at": "2026-05-17T15:55:59.576207+00:00",
+  "model": "ucsf-fitness-html-v1",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "21:00",
+        "evidence": "Facility Hours: Monday-Friday, 6:00 am-9:00 pm",
+        "label": "Facility hours",
+        "start": "06:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "21:00",
+        "evidence": "Facility Hours: Monday-Friday, 6:00 am-9:00 pm",
+        "label": "Facility hours",
+        "start": "06:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "21:00",
+        "evidence": "Facility Hours: Monday-Friday, 6:00 am-9:00 pm",
+        "label": "Facility hours",
+        "start": "06:00"
+      },
+      {
+        "day": "thursday",
+        "end": "21:00",
+        "evidence": "Facility Hours: Monday-Friday, 6:00 am-9:00 pm",
+        "label": "Facility hours",
+        "start": "06:00"
+      },
+      {
+        "day": "friday",
+        "end": "21:00",
+        "evidence": "Facility Hours: Monday-Friday, 6:00 am-9:00 pm",
+        "label": "Facility hours",
+        "start": "06:00"
+      },
+      {
+        "day": "saturday",
+        "end": "16:00",
+        "evidence": "Facility Hours: Saturday-Sunday, 8:00 am-4:00 pm",
+        "label": "Facility hours",
+        "start": "08:00"
+      },
+      {
+        "day": "sunday",
+        "end": "16:00",
+        "evidence": "Facility Hours: Saturday-Sunday, 8:00 am-4:00 pm",
+        "label": "Facility hours",
+        "start": "08:00"
+      }
+    ],
+    "closures": [],
+    "schedule_basis": "facility_hours",
+    "schedule_effective": "2026-05-17",
+    "sessions": []
+  },
+  "pdf_sha256": "e09eb7696fa37835e03dcc9584e64f2240cbd8f60522362f174d0fed07fceffc",
+  "prompt_sha256": "f06afb94b556370f708cdd9aeb55856314c460037982430d77b4639024d077ab",
+  "provider": "direct",
+  "schema_sha256": "1c0869dc8a4441cb9285092e806b9bc281171cc705f406f8596b0870d5864121",
+  "source_pdf_url": "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/millberry-fitness-center-ucsf-parnassus",
+  "usage": {}
+}

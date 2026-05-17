@@ -44,3 +44,127 @@ pdf_url = "https://sfrecpark.org/DocumentCenter/View/27654"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Sava-Pool-220"
 source_status = "closed_without_current_schedule"
 notes = "As of 2026-04-17 Sava Pool remained closed for repairs and the facility page only exposed an old Fall 2025 PDF; keep this entry skipped until the pool reopens with a current schedule."
+
+[[pool]]
+slug = "jccsf"
+pdf_url = "https://www.jccsf.org/fitness/aquatics/"
+official_page_url = "https://www.jccsf.org/fitness/aquatics/"
+source_kind = "jccsf_html"
+notes = "Direct extractor models lap swim from Aquatics Center hours and recreation/family swim from the public aquatics page. The full lane breakdown is linked from JCCSF via SharePoint and is not yet parsed."
+
+[[pool]]
+slug = "koret-center"
+pdf_url = "https://docs.google.com/spreadsheets/d/1PcFSl3ndScM2-SZnubwDvBlbhpmbFsVjEPK-yGilZU0/edit?gid=1958899859&pli=1"
+official_page_url = "https://www.usfca.edu/koret/facilities/indoor-swimming"
+source_kind = "koret_google_sheet"
+notes = "Direct extractor reads the public Google Sheet tabs and models pool hours as lap swim; lane-count/event details remain in source evidence."
+
+[[pool]]
+slug = "pomeroy-pool"
+pdf_url = "https://www.prrcsf.org/therapeutic-swim"
+official_page_url = "https://www.prrcsf.org/pool"
+source_kind = "pomeroy_html"
+notes = "Direct extractor reads the public therapeutic swim table. Lap swim means slow therapeutic lap swim."
+
+[[pool]]
+slug = "24-hour-fitness-potrero"
+pdf_url = "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
+official_page_url = "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
+source_status = "access_hours_only"
+source_kind = "twenty_four_hour_fitness_html"
+notes = "Official page confirms gym hours and an indoor lap pool, but not lane/open swim availability; keep as access-hours-only until a real pool schedule source is found."
+
+[[pool]]
+slug = "bay-club-gateway"
+pdf_url = "https://www.bayclubs.com/sf-campus"
+official_page_url = "https://www.bayclubs.com/sf-campus"
+source_status = "access_hours_only"
+notes = "Official site exposes club hours and class calendar endpoints, but not public lap-lane availability; keep as access-hours-only."
+
+[[pool]]
+slug = "presidio-ymca-letterman"
+pdf_url = "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"
+official_page_url = "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"
+source_status = "access_hours_only"
+source_kind = "ymca_location_html"
+notes = "Location page has pool/facility hours and links to the YMCA pool schedule area, but the actual schedule content is not available in static HTML."
+
+[[pool]]
+slug = "stonestown-ymca"
+pdf_url = "https://www.ymcasf.org/location/stonestown-family-ymca/"
+official_page_url = "https://www.ymcasf.org/location/stonestown-family-ymca/"
+source_status = "access_hours_only"
+source_kind = "ymca_location_html"
+notes = "Location page has fitness center hours and pool closure notes, but not a concrete lane schedule in static HTML."
+
+[[pool]]
+slug = "embarcadero-ymca"
+pdf_url = "https://www.ymcasf.org/location/embarcadero-ymca/"
+official_page_url = "https://www.ymcasf.org/location/embarcadero-ymca/"
+source_status = "access_hours_only"
+source_kind = "ymca_location_html"
+notes = "Location page publishes facility hours plus the rule that pool hours open 30 minutes after and close 30 minutes before facility hours; no lane schedule is available in static HTML."
+
+[[pool]]
+slug = "chinatown-ymca"
+pdf_url = "https://www.ymcasf.org/location/chinatown-ymca/"
+official_page_url = "https://www.ymcasf.org/location/chinatown-ymca/"
+source_status = "access_hours_only"
+source_kind = "ymca_location_html"
+notes = "Location page confirms a saltwater pool and publishes facility hours, but not concrete lap/open swim sessions in static HTML."
+
+[[pool]]
+slug = "fitness-sf-fillmore"
+pdf_url = "https://fitnesssf.com/location/fillmore"
+official_page_url = "https://fitnesssf.com/location/fillmore"
+source_status = "access_hours_only"
+source_kind = "fitness_sf_html"
+notes = "Official location page publishes club hours and the help center confirms a 25-yard pool with lap-swim lane reservations; no lane availability schedule is published."
+
+[[pool]]
+slug = "city-sports-20th-ave"
+pdf_url = "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914"
+official_page_url = "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914"
+source_status = "access_hours_only"
+source_kind = "city_sports_html"
+notes = "Official location page confirms a lap pool and publishes club hours, but not lap-lane availability."
+
+[[pool]]
+slug = "24-hour-fitness-ocean"
+pdf_url = "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport"
+official_page_url = "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport"
+source_status = "access_hours_only"
+source_kind = "twenty_four_hour_fitness_html"
+notes = "Official page confirms an indoor lap pool, but the club is temporarily closed for renovation until May 23, 2026."
+
+[[pool]]
+slug = "equinox-sports-club-sf"
+pdf_url = "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco"
+official_page_url = "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco"
+source_status = "access_hours_only"
+source_kind = "equinox_html"
+notes = "Official page confirms an indoor pool and publishes club hours, but not lap-lane availability."
+
+[[pool]]
+slug = "sfsu-mashouf"
+pdf_url = "https://campusrec.sfsu.edu/Aquatics"
+official_page_url = "https://campusrec.sfsu.edu/Aquatics"
+source_status = "access_hours_only"
+source_kind = "sfsu_aquatics_html"
+notes = "Official aquatics page publishes natatorium hours and describes a lap pool, but not lane-level public availability."
+
+[[pool]]
+slug = "ucsf-millberry"
+pdf_url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/millberry-fitness-center-ucsf-parnassus"
+official_page_url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/millberry-fitness-center-ucsf-parnassus"
+source_status = "access_hours_only"
+source_kind = "ucsf_fitness_html"
+notes = "Official page publishes facility hours; pool-specific schedule source still needs verification."
+
+[[pool]]
+slug = "ucsf-bakar"
+pdf_url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
+official_page_url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
+source_status = "access_hours_only"
+source_kind = "ucsf_bakar_html"
+notes = "Official page has facility hours and pool amenities; schedule page is JavaScript-rendered and needs API/browser investigation before schedule ingestion."

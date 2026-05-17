@@ -1,0 +1,68 @@
+{
+  "cost_estimate": "deterministic",
+  "extracted_at": "2026-05-17T15:15:39.208751+00:00",
+  "model": "ymca-location-html-v1",
+  "payload": {
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "21:00",
+        "evidence": "Monday: 5:30 am \u2013 9:00 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "tuesday",
+        "end": "21:00",
+        "evidence": "Tuesday: 5:30 am \u2013 9:00 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "wednesday",
+        "end": "21:00",
+        "evidence": "Wednesday: 5:30 am \u2013 9:00 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "thursday",
+        "end": "21:00",
+        "evidence": "Thursday: 5:30 am \u2013 9:00 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "friday",
+        "end": "21:00",
+        "evidence": "Friday: 5:30 am \u2013 9:00 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "saturday",
+        "end": "17:00",
+        "evidence": "Saturday: 7:00 am \u2013 5:00 pm",
+        "label": "Facility hours",
+        "start": "07:00"
+      },
+      {
+        "day": "sunday",
+        "end": "17:00",
+        "evidence": "Sunday: 7:00 am \u2013 5:00 pm",
+        "label": "Facility hours",
+        "start": "07:00"
+      }
+    ],
+    "closures": [],
+    "schedule_basis": "facility_hours",
+    "schedule_effective": "2026-05-17",
+    "sessions": []
+  },
+  "pdf_sha256": "038fca4dfa5d880382cc242297e8ec1d4ce37dc583a40472e1e65db0dc5f0ae1",
+  "prompt_sha256": "f61aea063461b7d02e6e993bc9cf3962503e1b69da06bee1ae5d2f1210a81de9",
+  "provider": "direct",
+  "schema_sha256": "ce178bdd36fc489f2508db84dc8e305ba482daf97045cb51b27dcbc1ca744e76",
+  "source_pdf_url": "https://www.ymcasf.org/location/stonestown-family-ymca/",
+  "usage": {}
+}

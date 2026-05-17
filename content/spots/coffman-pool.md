@@ -17,6 +17,9 @@ last_verified_at = "2026-04-20"
 # Manually reviewed against the Spring 2026 Coffman Pool schedule PDF.
 # Youth synchro team rows are omitted; shared public rec/family-lap blocks are represented in the flat site schema.
 schedule_effective_end = "2026-06-06"
+access_mode = "public"
+payment_model = "session"
+schedule_basis = "swim_schedule"
 
 [[extra.sessions]]
 day = "tuesday"

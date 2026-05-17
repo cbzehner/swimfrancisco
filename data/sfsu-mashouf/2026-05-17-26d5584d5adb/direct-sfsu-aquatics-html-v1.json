@@ -1,0 +1,62 @@
+{
+  "cost_estimate": "deterministic",
+  "extracted_at": "2026-05-17T15:55:59.122930+00:00",
+  "model": "sfsu-aquatics-html-v1",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "20:00",
+        "evidence": "Monday-Thursday: 10am-8pm",
+        "label": "Natatorium hours",
+        "start": "10:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "20:00",
+        "evidence": "Monday-Thursday: 10am-8pm",
+        "label": "Natatorium hours",
+        "start": "10:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "20:00",
+        "evidence": "Monday-Thursday: 10am-8pm",
+        "label": "Natatorium hours",
+        "start": "10:00"
+      },
+      {
+        "day": "thursday",
+        "end": "20:00",
+        "evidence": "Monday-Thursday: 10am-8pm",
+        "label": "Natatorium hours",
+        "start": "10:00"
+      },
+      {
+        "day": "friday",
+        "end": "16:00",
+        "evidence": "Friday-Saturday: Noon-4pm",
+        "label": "Natatorium hours",
+        "start": "12:00"
+      },
+      {
+        "day": "saturday",
+        "end": "16:00",
+        "evidence": "Friday-Saturday: Noon-4pm",
+        "label": "Natatorium hours",
+        "start": "12:00"
+      }
+    ],
+    "closures": [],
+    "schedule_basis": "pool_hours",
+    "schedule_effective": "2026-05-17",
+    "sessions": []
+  },
+  "pdf_sha256": "26d5584d5adb5ed40d54b52d7cc97b467e2b378645e6aacee75ac351e19571b7",
+  "prompt_sha256": "cdbd4d363ed9e37f4d2f295dc4876375f125b25695442fcedc8e7f6863385617",
+  "provider": "direct",
+  "schema_sha256": "1c0869dc8a4441cb9285092e806b9bc281171cc705f406f8596b0870d5864121",
+  "source_pdf_url": "https://campusrec.sfsu.edu/Aquatics",
+  "usage": {}
+}

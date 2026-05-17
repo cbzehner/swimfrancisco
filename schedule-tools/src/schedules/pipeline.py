@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .artifacts import save_artifact_bundle, skip_if_fresh
 from .delta import check_delta
+from .direct_sources import extract_direct
 from .envelope import EnvelopeValidationError, validate_envelope
 from .fetch import FetchResult, fetch_pdf
 from .grounding import grounding_from_text, normalize_pdf_text
@@ -126,6 +127,7 @@ def _build_unchanged(entry: PoolEntry, fetch_result: FetchResult, reviewed_file:
         sessions_count=len(payload.get("sessions") or []),
         closures_count=len(payload.get("closures") or []),
         schedule_effective=str(payload.get("schedule_effective") or ""),
+        schedule_basis=payload.get("schedule_basis"),
         review_notes=[],
         artifact_paths={"reviewed-snapshot": str(reviewed_file)},
     )
@@ -141,7 +143,8 @@ def _process_entry(
 ) -> PoolResult:
     prior_snapshot = read_schedule_snapshot(CONTENT_SPOTS_DIR / f"{entry.slug}.md")
 
-    if entry.source_status != "published":
+    can_extract_access_hours = entry.source_status == "access_hours_only" and entry.source_kind != "sfrecpark_pdf"
+    if entry.source_status != "published" and not can_extract_access_hours:
         return Skipped(
             **_identity_kwargs(entry),
             reason="No current schedule PDF is available for this pool.",
@@ -149,6 +152,9 @@ def _process_entry(
         )
 
     try:
+        if entry.source_kind != "sfrecpark_pdf":
+            return _process_direct_entry(entry)
+
         # PDF fetch + path setup
         fetch_result = fetch_pdf(entry.slug, entry.pdf_url)
         date = fetch_result.path.parent.name[:10]
@@ -270,7 +276,82 @@ def _process_entry(
             prior_sessions_count=len(prior_snapshot["sessions"]),
             closures_count=validation.stats["closures"],
             schedule_effective=payload.get("schedule_effective"),
+            schedule_basis=payload.get("schedule_basis"),
             cost_estimate=cost_estimate,
+            catastrophic=validation.catastrophic,
+            violations=validation.violations,
+            review_notes=review_notes,
+            artifact_paths=artifact_paths,
+        )
+    except Exception as exc:  # noqa: BLE001
+        return Aborted(
+            **_identity_kwargs(entry),
+            error=str(exc),
+            prior_sessions_count=len(prior_snapshot["sessions"]),
+            prior_closures_count=len(prior_snapshot["closures"]),
+            prior_schedule_effective=prior_snapshot["schedule_effective"],
+        )
+
+
+def _process_direct_entry(entry: PoolEntry) -> PoolResult:
+    prior_snapshot = read_schedule_snapshot(CONTENT_SPOTS_DIR / f"{entry.slug}.md")
+    try:
+        extracted = extract_direct(entry)
+        fetch_result = extracted.fetch_result
+        date = fetch_result.path.parent.name[:10]
+        reviewed_file = reviewed_path(entry.slug, date, fetch_result.sha256)
+
+        if reviewed_file.exists():
+            return _build_unchanged(
+                entry,
+                FetchResult(
+                    path=fetch_result.path,
+                    sha256=fetch_result.sha256,
+                    bytes=fetch_result.text.encode("utf-8"),
+                    from_cache=fetch_result.from_cache,
+                    page_count=0,
+                    response_url=fetch_result.response_url,
+                ),
+                reviewed_file,
+            )
+
+        payload = extracted.payload
+        review_notes = [
+            ReviewNote(
+                kind="legacy_note",
+                message=note,
+                severity="info",
+            )
+            for note in extracted.notes
+        ]
+        review_notes.extend(check_delta(payload, prior_snapshot))
+        validation = validate(payload, prior_sessions_count=len(prior_snapshot["sessions"]))
+        artifact_paths = save_artifact_bundle(
+            slug=entry.slug,
+            date=date,
+            provider="direct",
+            model=extracted.model,
+            source_pdf_url=entry.pdf_url,
+            pdf_sha256=fetch_result.sha256,
+            prompt=f"direct:{entry.source_kind}",
+            schema=EXTRACTION_SCHEMA,
+            payload=payload,
+            usage={},
+            cost_estimate="deterministic",
+            grounding=None,
+        )
+        return Extracted(
+            **_identity_kwargs(entry),
+            provider="direct",
+            model=extracted.model,
+            pdf_sha256=fetch_result.sha256,
+            page_count=0,
+            sessions_count=validation.stats["sessions"],
+            prior_sessions_count=len(prior_snapshot["sessions"]),
+            closures_count=validation.stats["closures"],
+            schedule_effective=payload.get("schedule_effective"),
+            schedule_basis=payload.get("schedule_basis"),
+            cost_estimate="deterministic",
             catastrophic=validation.catastrophic,
             violations=validation.violations,
             review_notes=review_notes,

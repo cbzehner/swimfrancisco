@@ -16,6 +16,8 @@ description_short = "Ocean-side beach just outside the Gate with strong surf and
 hazards = ["rip currents", "large shore break", "cold water year-round", "no lifeguards"]
 clubs = []
 common_distances = []
+access_mode = "public"
+payment_model = "free"
 +++
 
 Baker Beach faces the open Pacific just south of the Golden Gate, with dramatic views of the bridge and the Marin Headlands. The surf, cold water, and rip currents make it a serious open water environment — wetsuits and conservative swim plans are the norm.

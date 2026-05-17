@@ -27,6 +27,7 @@ def _valid_envelope() -> dict:
         "source_pdf_url": "https://example.com/schedule.pdf",
         "payload": {
             "schedule_effective": "2026-03-17",
+            "schedule_basis": "swim_schedule",
             "sessions": [
                 {"day": d, "type": "lap_swim", "start": "07:00", "end": "08:00"}
                 for d in ("monday", "tuesday", "wednesday", "thursday", "friday")
@@ -39,6 +40,16 @@ def _valid_envelope() -> dict:
 def test_schema_accepts_minimal_envelope():
     schema = _load_schema()
     jsonschema.validate(instance=_valid_envelope(), schema=schema)
+
+
+def test_schema_accepts_access_hours_without_sessions():
+    schema = _load_schema()
+    envelope = _valid_envelope()
+    envelope["payload"]["sessions"] = []
+    envelope["payload"]["access_hours"] = [
+        {"day": "monday", "start": "05:30", "end": "20:30", "label": "Facility hours"}
+    ]
+    jsonschema.validate(instance=envelope, schema=schema)
 
 
 @pytest.mark.parametrize(

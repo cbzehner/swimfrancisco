@@ -348,14 +348,20 @@ h1, h2, h3 {
 .board-controls {
   position: relative;
   z-index: 30;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 18px;
+  display: grid;
+  grid-template-columns:
+    minmax(18rem, calc(var(--control-label-width) + 10px + var(--control-field-width)))
+    minmax(0, 1fr);
+  grid-template-areas:
+    "when filters"
+    "sort filters";
+  align-items: start;
+  gap: 12px 20px;
   padding: 14px 28px;
   background: var(--paper-2);
   border-bottom: 2px solid var(--ink);
 }
+.when-group { grid-area: when; }
 .control-cluster {
   display: grid;
   grid-template-columns: var(--control-label-width) max-content;
@@ -370,14 +376,16 @@ h1, h2, h3 {
   color: var(--muted);
 }
 .filters {
+  grid-area: filters;
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: var(--control-label-width) max-content;
-  align-items: center;
+  grid-template-columns: var(--control-label-width) minmax(0, 1fr);
+  align-items: start;
   gap: 10px;
 }
 .sort-group {
+  grid-area: sort;
   position: relative;
   z-index: 1;
   display: grid;
@@ -391,7 +399,12 @@ h1, h2, h3 {
 .sort-group button {
   min-width: 0;
 }
-.filters .filter-group { display: flex; flex-wrap: wrap; gap: 6px; }
+.filters .filter-group {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
 .sort-group button { justify-content: center; }
 .filters button,
 .sort-group button,
@@ -425,6 +438,19 @@ h1, h2, h3 {
   color: var(--paper);
 }
 .sort-group button[aria-pressed="true"]::after { content: ""; }
+
+@media (max-width: 1040px) and (min-width: 721px) {
+  .board-controls {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "when"
+      "filters"
+      "sort";
+  }
+  .horizon-button {
+    width: min(var(--control-field-width), calc(100vw - 2 * 28px - var(--control-label-width) - 10px));
+  }
+}
 
 .time-banner {
   display: flex;
@@ -484,6 +510,8 @@ h1, h2, h3 {
 }
 .cost-badge.is-free { background: var(--teal);  color: var(--paper); }
 .cost-badge.is-paid { background: var(--ochre); color: var(--ink); }
+.cost-badge.is-member { background: var(--ink); color: var(--paper); }
+.cost-badge.is-limited { background: var(--paper); color: var(--ink); border: 1.5px solid var(--ink); }
 
 /* ── Board table (existing markup) ─────────────────────────────────────── */
 table.board {
@@ -574,6 +602,7 @@ table.board tr[data-type="open_water"] [data-cell="status"] {
 .status-pill.is-soon { background: var(--ochre); border-color: var(--ochre); color: var(--ink); }
 .status-pill.is-ocean { background: var(--teal); border-color: var(--teal); color: var(--paper); }
 .status-pill.is-closed { background: var(--paper-2); color: var(--muted); }
+.status-pill.is-info { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 .status-sub {
   display: block;
   margin-top: 5px;
@@ -941,6 +970,69 @@ table.board tbody tr.flap td {
 .closure-banner-zone  { color: var(--muted); }
 .closure-banner-reason { color: var(--ink-2); }
 
+/* ── Access / pricing ──────────────────────────────────────────────────── */
+.access-panel {
+  margin: 16px 28px 0;
+  border: 2px solid var(--ink);
+  background: var(--paper-2);
+  padding: 14px 18px;
+}
+.access-panel h2 {
+  font-family: var(--display);
+  font-size: 20px;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+.access-summary {
+  margin: 0 0 12px;
+  max-width: 74ch;
+  color: var(--ink-2);
+}
+.pricing-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin: 0;
+  border-top: 2px solid var(--ink);
+}
+.pricing-list div {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.35fr) 1fr;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 2px solid var(--ink);
+}
+.pricing-list dt,
+.pricing-list dd,
+.access-notes {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.pricing-list dt { color: var(--muted); }
+.pricing-list dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin: 0;
+  color: var(--ink-2);
+}
+.pricing-price {
+  font-family: var(--display);
+  color: var(--red);
+}
+.pricing-list a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.access-notes {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+}
+
 /* ── Hazards / clubs / distances ───────────────────────────────────────── */
 .hazards, .clubs, .distances { margin: 16px 28px 0; }
 .hazards h2, .clubs h2, .distances h2 {
@@ -964,6 +1056,71 @@ table.board tbody tr.flap td {
 .hazards li::before { content: "▲"; color: var(--red); margin-right: 8px; }
 .clubs a { color: var(--ink); }
 .clubs a:hover { color: var(--red); }
+.club-card {
+  font-family: var(--body);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.club-card::before { content: none; }
+.club-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.club-card-head a,
+.club-card-head span:first-child {
+  font-family: var(--display);
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.club-access,
+.club-links,
+.club-meta,
+.club-card p {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.club-access {
+  color: var(--red);
+  font-weight: 700;
+}
+.club-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 18px;
+  margin: 10px 0 0;
+}
+.club-meta div {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  gap: 10px;
+}
+.club-meta dt {
+  color: var(--muted);
+}
+.club-meta dd {
+  margin: 0;
+  color: var(--ink);
+}
+.club-card p {
+  margin: 10px 0 0;
+  color: var(--muted);
+}
+.club-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 10px;
+}
+.club-links a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 
 .conditions {
   margin: 16px 28px 0;
@@ -1644,6 +1801,7 @@ body.map-page .site-footer {
   .site-title .brand-swim { color: var(--red); }
   .site-title .brand-city { color: var(--teal); }
   .site-badge { display: none; }
+  .site-footer { display: none; }
   .site-header-actions {
     position: fixed;
     left: 0;
@@ -1710,6 +1868,7 @@ body.map-page .site-footer {
   .spot-detail-head,
   .status-slab,
   .closure-banners,
+  .access-panel,
   .description,
   .conditions, .hazards, .clubs, .distances,
   .meta, .meta-source, .meta-effective,
@@ -1726,27 +1885,23 @@ body.map-page .site-footer {
     position: sticky;
     top: 56px;
     z-index: 70;
-    flex-wrap: nowrap;
-    overflow-x: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    overflow: visible;
     padding: 10px 16px 14px;
-    gap: 6px;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    gap: 8px;
     isolation: isolate;
-  }
-  .board-controls::-webkit-scrollbar {
-    width: 0;
-    height: 0;
-    display: none;
   }
   .control-cluster,
   .filters,
   .filters .filter-group,
   .sort-group {
-    flex: 0 0 auto;
-    flex-wrap: nowrap;
+    flex: 0 1 auto;
+    flex-wrap: wrap;
   }
   .control-cluster,
+  .filters,
   .sort-group {
     display: flex;
   }
@@ -1763,6 +1918,16 @@ body.map-page .site-footer {
     min-height: 44px;
     display: inline-flex;
     align-items: center;
+  }
+  .filters .filter-group {
+    display: contents;
+  }
+  .club-meta {
+    grid-template-columns: 1fr;
+  }
+  .club-meta div {
+    grid-template-columns: 1fr;
+    gap: 3px;
   }
   .bulletin-strip {
     display: flex;

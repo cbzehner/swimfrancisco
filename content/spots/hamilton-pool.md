@@ -17,6 +17,9 @@ last_verified_at = "2026-04-17"
 # Manually reviewed against the Spring 2026 schedule PDF.
 # Wednesday/Friday 15:00-18:00 high-school swim meet blocks are intentionally omitted; they are not public lessons.
 schedule_effective_end = "2026-06-06"
+access_mode = "public"
+payment_model = "session"
+schedule_basis = "swim_schedule"
 
 [[extra.sessions]]
 day = "tuesday"

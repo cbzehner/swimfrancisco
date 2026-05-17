@@ -1,0 +1,63 @@
+{
+  "slug": "fitness-sf-fillmore",
+  "pdf_sha256": "0b7af804cb9357189fe50fb7da3c5158b5d226b3848ef5a2eb87dbb60baebd94",
+  "reviewed_at": "2026-05-17",
+  "source_pdf_url": "https://fitnesssf.com/location/fillmore",
+  "payload": {
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "23:59",
+        "evidence": "Mon-Thu: 5 am - 12 am",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "23:59",
+        "evidence": "Mon-Thu: 5 am - 12 am",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "23:59",
+        "evidence": "Mon-Thu: 5 am - 12 am",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "thursday",
+        "end": "23:59",
+        "evidence": "Mon-Thu: 5 am - 12 am",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "friday",
+        "end": "23:00",
+        "evidence": "Fri: 5 am - 11 pm",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "saturday",
+        "end": "20:00",
+        "evidence": "Sat-Sun: 7 am - 8 pm",
+        "label": "Club hours",
+        "start": "07:00"
+      },
+      {
+        "day": "sunday",
+        "end": "20:00",
+        "evidence": "Sat-Sun: 7 am - 8 pm",
+        "label": "Club hours",
+        "start": "07:00"
+      }
+    ],
+    "closures": [],
+    "schedule_basis": "pool_hours",
+    "schedule_effective": "2026-05-17",
+    "sessions": []
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "cost_estimate": "deterministic",
+  "extracted_at": "2026-05-17T15:15:39.415165+00:00",
+  "model": "ymca-location-html-v1",
+  "payload": {
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "19:45",
+        "evidence": "Monday-Friday: 6:30 a.m. \u2013 7:45 p.m.",
+        "label": "Facility hours",
+        "start": "06:30"
+      },
+      {
+        "day": "tuesday",
+        "end": "19:45",
+        "evidence": "Monday-Friday: 6:30 a.m. \u2013 7:45 p.m.",
+        "label": "Facility hours",
+        "start": "06:30"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:45",
+        "evidence": "Monday-Friday: 6:30 a.m. \u2013 7:45 p.m.",
+        "label": "Facility hours",
+        "start": "06:30"
+      },
+      {
+        "day": "thursday",
+        "end": "19:45",
+        "evidence": "Monday-Friday: 6:30 a.m. \u2013 7:45 p.m.",
+        "label": "Facility hours",
+        "start": "06:30"
+      },
+      {
+        "day": "friday",
+        "end": "19:45",
+        "evidence": "Monday-Friday: 6:30 a.m. \u2013 7:45 p.m.",
+        "label": "Facility hours",
+        "start": "06:30"
+      },
+      {
+        "day": "saturday",
+        "end": "15:45",
+        "evidence": "Saturday and Sunday: 8:00 a.m. \u2013 3:45 p.m.",
+        "label": "Facility hours",
+        "start": "08:00"
+      },
+      {
+        "day": "sunday",
+        "end": "15:45",
+        "evidence": "Saturday and Sunday: 8:00 a.m. \u2013 3:45 p.m.",
+        "label": "Facility hours",
+        "start": "08:00"
+      }
+    ],
+    "closures": [],
+    "schedule_basis": "facility_hours",
+    "schedule_effective": "2026-05-17",
+    "sessions": []
+  },
+  "pdf_sha256": "47e91563cdbb6244600e88fcf3caca8a13f08607f5c515e19e46369c82e90804",
+  "prompt_sha256": "f61aea063461b7d02e6e993bc9cf3962503e1b69da06bee1ae5d2f1210a81de9",
+  "provider": "direct",
+  "schema_sha256": "ce178bdd36fc489f2508db84dc8e305ba482daf97045cb51b27dcbc1ca744e76",
+  "source_pdf_url": "https://www.ymcasf.org/location/chinatown-ymca/",
+  "usage": {}
+}

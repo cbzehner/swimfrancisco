@@ -16,6 +16,8 @@ description_short = "Small sheltered ocean cove below Sea Cliff, calmer than nei
 hazards = ["rip currents", "cold water year-round", "seasonal lifeguards only"]
 clubs = []
 common_distances = []
+access_mode = "public"
+payment_model = "free"
 +++
 
 China Beach is a small pocket cove tucked below the Sea Cliff neighborhood between Baker Beach and Lands End. Sheltered by headlands on both sides, it sees gentler surf than Ocean or Baker Beach, though it is still ocean water with rip currents and cold temperatures.

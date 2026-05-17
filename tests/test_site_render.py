@@ -16,6 +16,7 @@ import json
 import hashlib
 import shutil
 import subprocess
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -40,6 +41,28 @@ def built_site(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 def _read(built_site: Path, slug: str) -> str:
     return (built_site / "spots" / slug / "index.html").read_text()
+
+
+def test_all_spots_have_access_classification() -> None:
+    valid_access_modes = {"public", "limited_public", "membership", "private"}
+    valid_payment_models = {"free", "session", "day_pass", "membership", "therapy", "unknown"}
+    valid_schedule_bases = {
+        "swim_schedule",
+        "pool_hours",
+        "facility_hours",
+        "amenity_only",
+        "temporarily_closed",
+        "unknown",
+    }
+    for path in sorted((ROOT / "content" / "spots").glob("*.md")):
+        if path.name == "_index.md":
+            continue
+        frontmatter = path.read_text().split("+++", 2)[1]
+        extra = tomllib.loads(frontmatter)["extra"]
+        assert extra.get("access_mode") in valid_access_modes, path.name
+        assert extra.get("payment_model") in valid_payment_models, path.name
+        if extra.get("type") == "pool":
+            assert extra.get("schedule_basis") in valid_schedule_bases, path.name
 
 
 def test_pool_detail_never_renders_object_literal_for_closures(built_site: Path) -> None:
@@ -88,8 +111,25 @@ def test_open_water_item_list_sections_render(built_site: Path) -> None:
     assert "boat traffic outside cove" in html
     assert "<h2>Clubs</h2>" in html
     assert "South End Rowing Club" in html
+    assert "Tue / Thu / Sat 09:00-18:00 Jun-Nov; 08:00-17:00 Dec-May" in html
+    assert "Mon / Wed / Fri 08:00-17:00 May-Oct" in html
+    assert "$12 cash/check or $12.67 card" in html
     assert "<h2>Common distances</h2>" in html
     assert "1mi loop" in html
+
+
+def test_access_panel_renders_pricing_options(built_site: Path) -> None:
+    html = _read(built_site, "aquatic-park")
+    assert "<h2>Access</h2>" in html
+    assert "Public cove" in html
+    assert "clubhouses are separate" in html
+    assert "Public day-use Tue / Thu / Sat, 09:00-18:00 Jun-Nov and 08:00-17:00 Dec-May" in html
+    assert "Public day-use Mon / Wed / Fri" in html
+
+    jcc = _read(built_site, "jccsf")
+    assert 'class="cost-badge is-member">Members</span>' in jcc
+    assert "Fitness Center member" in jcc
+    assert "Non-member / guest" in jcc
 
 
 def test_open_water_empty_item_lists_are_suppressed(built_site: Path) -> None:
@@ -113,7 +153,7 @@ def test_closures_render_without_object_literal_across_all_pools(built_site: Pat
 def test_pool_meta_dates_render_in_human_format(built_site: Path) -> None:
     html = _read(built_site, "balboa-pool")
     assert "SCHEDULE EFFECTIVE FROM MAR 17, 2026 TO JUN 6, 2026" in html
-    assert "SOURCE SF REC & PARKS" in html
+    assert "SOURCE OFFICIAL SITE" in html
     assert "REVIEWED" not in html
     assert "PDF REVIEWED" not in html
     assert "LAST VERIFIED" not in html
@@ -133,11 +173,12 @@ def test_homepage_omits_trust_column(built_site: Path) -> None:
 
 def test_homepage_renders_bulletin_redesign_shell(built_site: Path) -> None:
     html = (built_site / "index.html").read_text()
+    bulletin = json.loads((ROOT / "data" / "bulletin.json").read_text())
     assert "class=bulletin-hero" in html
     assert "<span class=red>SWIM</span> <span>SAN</span> <span class=teal>FRANCISCO.</span>" in html
     assert "class=bulletin-strip" in html
-    assert "No. 00 · Live bulletin · right now" in html
-    assert "BULLETIN 00" in html
+    assert f"No. {bulletin['label']} · Live bulletin · right now" in html
+    assert f"BULLETIN {bulletin['label']}" in html
     assert "BULLETIN 14" not in html
     assert "data-open-count" in html
     assert "data-conditions-updated" in html
@@ -155,10 +196,11 @@ def test_bulletin_number_matches_reviewed_schedule_snapshots() -> None:
         digest.update(b"\0")
     assert bulletin["reviewed_count"] == len(reviewed_paths)
     assert bulletin["schedule_fingerprint"] == digest.hexdigest()
+    assert isinstance(bulletin["released_schedule_fingerprint"], str)
     assert bulletin["label"] == f"{bulletin['number']:02d}"
 
 
-def test_bulletin_generator_increments_when_reviewed_payload_changes(tmp_path: Path) -> None:
+def test_bulletin_generator_preserves_number_until_release(tmp_path: Path) -> None:
     if shutil.which("node") is None:
         pytest.skip("node binary not available")
 
@@ -168,9 +210,9 @@ def test_bulletin_generator_increments_when_reviewed_payload_changes(tmp_path: P
 
     script = ROOT / "scripts" / "generate-bulletin.mjs"
 
-    def run_generator() -> dict[str, object]:
+    def run_generator(*args: str) -> dict[str, object]:
         result = subprocess.run(
-            ["node", str(script)],
+            ["node", str(script), *args],
             cwd=tmp_path,
             capture_output=True,
             text=True,
@@ -182,17 +224,23 @@ def test_bulletin_generator_increments_when_reviewed_payload_changes(tmp_path: P
     assert run_generator()["label"] == "00"
 
     reviewed.write_text('{"sessions":[{"day":"tuesday"}]}\n')
-    assert run_generator()["label"] == "01"
+    assert run_generator()["label"] == "00"
+    assert run_generator("--release")["label"] == "01"
+    assert run_generator("--release")["label"] == "01"
 
     another_reviewed = tmp_path / "data" / "coffman-pool" / "2026-05-02-b" / "reviewed.json"
     another_reviewed.parent.mkdir(parents=True)
     another_reviewed.write_text('{"sessions":[{"day":"wednesday"}]}\n')
-    assert run_generator()["label"] == "02"
+    assert run_generator()["label"] == "01"
+    assert run_generator("--release")["label"] == "02"
 
 
 def test_homepage_preserves_redesign_dom_contract(built_site: Path) -> None:
     html = (built_site / "index.html").read_text()
     assert "OPEN NEXT" in html
+    assert "MEMBERSHIPS" in html
+    assert 'data-access-mode=membership' in html
+    assert 'data-payment-model=membership' in html
     assert "OPEN FIRST" not in html
     controls_start = html.index("class=board-controls")
     menu_start = html.index("class=horizon-menu", controls_start)
@@ -275,9 +323,8 @@ def test_spot_detail_uses_print_header_and_preserves_long_titles(built_site: Pat
 
 def test_footer_renders_sources_and_credit(built_site: Path) -> None:
     html = (built_site / "index.html").read_text()
-    assert "Pool hours from SF Rec & Park · Open-water from NOAA + NDBC" in html
+    assert "Pool hours from SF Rec & Park · Open-water from NOAA + NDBC" not in html
+    assert "site-footer-sources" not in html
     assert "Made in San Francisco by" in html
     assert "href=/field-notes/>Field notes</a>" in html
     assert "/how-it-works/" not in html
-    # Sources line above byline (sources first, byline last as the page signature).
-    assert html.index("Pool hours from SF Rec & Park") < html.index("Made in San Francisco by")

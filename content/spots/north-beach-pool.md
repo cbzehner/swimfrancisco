@@ -17,6 +17,9 @@ last_verified_at = "2026-04-17"
 # Manually reviewed against the Spring 2026 schedule PDF.
 # This facility publishes two separate pool pages; the rows below are a flat facility-level aggregate until the site schema can label sessions by pool.
 schedule_effective_end = "2026-06-06"
+access_mode = "public"
+payment_model = "session"
+schedule_basis = "swim_schedule"
 
 [[extra.sessions]]
 day = "tuesday"

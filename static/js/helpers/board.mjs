@@ -237,6 +237,73 @@ function findNextSession(normalized, closures, now) {
   return null;
 }
 
+function dateMatchesException(accessException, dateISO) {
+  return Boolean(
+    accessException &&
+    typeof accessException === "object" &&
+    accessException.date === dateISO,
+  );
+}
+
+function normalizeAccessExceptions(accessExceptions) {
+  if (!Array.isArray(accessExceptions)) return [];
+  const out = [];
+  for (const accessException of accessExceptions) {
+    if (!accessException || typeof accessException !== "object") continue;
+    const date = typeof accessException.date === "string" ? accessException.date : null;
+    const start = parseHHMM(accessException.start);
+    const end = parseHHMM(accessException.end);
+    const label = typeof accessException.label === "string" ? accessException.label : "Access";
+    const reason = typeof accessException.reason === "string" ? accessException.reason : "";
+    if (!date || start === null || end === null) continue;
+    if (end <= start) continue;
+    out.push({ date, start, end, label, reason });
+  }
+  return out;
+}
+
+function accessWindowsForDate(schedule, date) {
+  const dateISO = formatISODate(date);
+  const exceptions = normalizeAccessExceptions(schedule.access_exceptions)
+    .filter((accessException) => dateMatchesException(accessException, dateISO))
+    .sort((a, b) => a.start - b.start);
+  if (exceptions.length > 0) return exceptions;
+
+  const dayKey = DAY_KEYS[date.getDay()];
+  return normalizeAccessHours(schedule.access_hours)
+    .filter((access) => access.day === dayKey)
+    .sort((a, b) => a.start - b.start);
+}
+
+function findNextAccessWindow(schedule, closures, now) {
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  for (let offset = 0; offset <= 7; offset += 1) {
+    const date = new Date(now);
+    date.setDate(date.getDate() + offset);
+    const dateISO = formatISODate(date);
+    const dayClosures = closures.filter((c) => (
+      c && typeof c === "object" &&
+      typeof c.start === "string" &&
+      typeof c.end === "string" &&
+      dateISO >= c.start &&
+      dateISO <= c.end
+    ));
+    if (dayClosures.some((c) => parseHHMM(c.start_time) === null || parseHHMM(c.end_time) === null)) {
+      continue;
+    }
+    const partialWindows = dayClosures
+      .map((c) => ({ start: parseHHMM(c.start_time), end: parseHHMM(c.end_time) }))
+      .filter((w) => w.start !== null && w.end !== null);
+    const candidates = accessWindowsForDate(schedule, date)
+      .filter((access) => offset > 0 || access.start > nowMinutes)
+      .filter((access) => !partialWindows.some((w) => access.start >= w.start && access.start < w.end));
+    if (candidates.length > 0) {
+      return { offset, access: candidates[0] };
+    }
+  }
+  return null;
+}
+
 function closureOverlapsWindow(closure, dateISO, windowStart, windowEnd) {
   if (!closure || typeof closure !== "object") return false;
   const start = typeof closure.start === "string" ? closure.start : null;
@@ -405,6 +472,35 @@ export function computeStatus(schedule, now, allowedTypes = null) {
   return { status: "CLOSED", next: label };
 }
 
+export function computeAccessStatus(schedule, now) {
+  const empty = { status: PLACEHOLDER, next: PLACEHOLDER };
+  if (!schedule || typeof schedule !== "object") return empty;
+
+  const hasAccessHours = normalizeAccessHours(schedule.access_hours).length > 0;
+  const hasAccessExceptions = normalizeAccessExceptions(schedule.access_exceptions).length > 0;
+  if (!hasAccessHours && !hasAccessExceptions) return empty;
+
+  const closures = allClosures(schedule);
+  const activeClosure = findActiveClosure(closures, now);
+  if (activeClosure) {
+    return { status: "CLOSED", next: closureCopy(activeClosure) };
+  }
+
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const current = accessWindowsForDate(schedule, now)
+    .find((access) => access.start <= nowMinutes && nowMinutes < access.end);
+  if (current) {
+    return { status: "ACCESS", next: `Until ${formatHHMM(current.end)}` };
+  }
+
+  const best = findNextAccessWindow(schedule, closures, now);
+  if (!best) return { status: "CHECK", next: "OFFICIAL SITE" };
+  const label = best.offset === 0
+    ? `Access ${formatHHMM(best.access.start)}`
+    : `Access ${DAY_KEYS[dateWithDayOffset(now, best.offset).getDay()].slice(0, 3).toUpperCase()} ${formatHHMM(best.access.start)}`;
+  return { status: "CHECK", next: label };
+}
+
 export function computeNextOpenOffset(schedule, now, allowedTypes = null) {
   if (!schedule || typeof schedule !== "object") return Number.POSITIVE_INFINITY;
 
@@ -516,6 +612,40 @@ export function computeWindowAvailability(schedule, horizon, allowedTypes = null
   };
 }
 
+export function computeAccessWindowAvailability(schedule, horizon) {
+  if (!horizon || horizon.kind !== "window" || !schedule || typeof schedule !== "object") {
+    return { status: PLACEHOLDER, next: PLACEHOLDER, sortRank: 3 };
+  }
+  const accessHours = normalizeAccessHours(schedule.access_hours);
+  const accessExceptions = normalizeAccessExceptions(schedule.access_exceptions);
+  if (accessHours.length === 0 && accessExceptions.length === 0) {
+    return { status: "CHECK", next: "OFFICIAL SITE", sortRank: 3 };
+  }
+  const closures = allClosures(schedule);
+  const blockingClosure = closures.find((closure) => (
+    closureOverlapsWindow(closure, horizon.date, horizon.start, horizon.end) &&
+    (parseHHMM(closure.start_time) === null || parseHHMM(closure.end_time) === null)
+  ));
+  if (blockingClosure) {
+    return { status: "CLOSED", next: PLACEHOLDER, sortRank: 4 };
+  }
+
+  const horizonDate = new Date(`${horizon.date}T00:00:00`);
+  const overlaps = accessWindowsForDate(schedule, horizonDate)
+    .filter((access) => access.end > horizon.start && access.start < horizon.end)
+    .filter((access) => !closures.some((closure) => closureOverlapsWindow(closure, horizon.date, access.start, access.end)))
+    .sort((a, b) => a.start - b.start);
+  if (overlaps.length === 0) {
+    return { status: "CHECK", next: PLACEHOLDER, sortRank: 3 };
+  }
+  const access = overlaps[0];
+  return {
+    status: "ACCESS",
+    next: `${formatHHMM(access.start)}-${formatHHMM(access.end)}`,
+    sortRank: 2,
+  };
+}
+
 // Assign a baseline rank to each item via the provided setter. Keeps this
 // pure (no DOM knowledge here); status.js passes a setter that writes to
 // `row.dataset.baselineRank`.
@@ -572,6 +702,22 @@ function normalizeSessions(sessions, allowedTypes = null) {
     if (!day || !DAY_KEYS.includes(day) || !type || start === null || end === null) continue;
     if (end <= start) continue;
     out.push({ day, type, start, end });
+  }
+  return out;
+}
+
+function normalizeAccessHours(accessHours) {
+  if (!Array.isArray(accessHours)) return [];
+  const out = [];
+  for (const access of accessHours) {
+    if (!access || typeof access !== "object") continue;
+    const day = typeof access.day === "string" ? access.day.toLowerCase() : null;
+    const start = parseHHMM(access.start);
+    const end = parseHHMM(access.end);
+    const label = typeof access.label === "string" ? access.label : "Access";
+    if (!day || !DAY_KEYS.includes(day) || start === null || end === null) continue;
+    if (end <= start) continue;
+    out.push({ day, start, end, label });
   }
   return out;
 }

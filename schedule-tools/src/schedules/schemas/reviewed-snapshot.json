@@ -45,6 +45,11 @@
           "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
           "description": "Start of the window this schedule is valid for."
         },
+        "schedule_basis": {
+          "type": "string",
+          "enum": ["swim_schedule", "pool_hours", "facility_hours", "amenity_only", "temporarily_closed", "unknown"],
+          "description": "What the source proves: a true swim schedule, pool hours, facility hours, amenity existence, temporary closure, or unknown."
+        },
         "schedule_effective_end": {
           "type": ["string", "null"],
           "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
@@ -52,9 +57,18 @@
         },
         "sessions": {
           "type": "array",
-          "minItems": 1,
-          "description": "Weekly swim sessions. validate() rejects payloads with fewer than 5; schema only enforces shape.",
+          "description": "Weekly swim sessions. May be empty when access_hours carries an access-only source.",
           "items": { "$ref": "#/$defs/session" }
+        },
+        "access_hours": {
+          "type": "array",
+          "description": "Weekly facility, member, or public day-use access windows that are not strong enough to count as swim sessions.",
+          "items": { "$ref": "#/$defs/access_hour" }
+        },
+        "access_exceptions": {
+          "type": "array",
+          "description": "Date-specific access windows that override weekly access_hours, such as holiday hours.",
+          "items": { "$ref": "#/$defs/access_exception" }
         },
         "closures": {
           "type": "array",
@@ -98,6 +112,68 @@
         "notes": {
           "type": "string",
           "description": "Optional reviewer note. Stripped on canonicalization."
+        }
+      }
+    },
+    "access_hour": {
+      "type": "object",
+      "required": ["day", "start", "end", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "day": {
+          "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+        },
+        "start": {
+          "type": "string",
+          "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+        },
+        "end": {
+          "type": "string",
+          "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "access_exception": {
+      "type": "object",
+      "required": ["date", "start", "end", "label", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "date": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "start": {
+          "type": "string",
+          "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+        },
+        "end": {
+          "type": "string",
+          "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
         }
       }
     },

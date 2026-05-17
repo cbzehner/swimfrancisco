@@ -1,11 +1,17 @@
 {% macro data_schedule(extra) -%}
   {%- set sessions = extra.sessions | default(value=[]) -%}
+  {%- set access_hours = extra.access_hours | default(value=[]) -%}
+  {%- set access_exceptions = extra.access_exceptions | default(value=[]) -%}
   {%- set closures = extra.closures | default(value=[]) -%}
+  {%- set schedule_basis = extra.schedule_basis | default(value="unknown") -%}
   {%- set effective_start = extra.schedule_effective | default(value="") -%}
   {%- set effective_end = extra.schedule_effective_end | default(value="") -%}
   {%- set sessions_json = sessions | json_encode -%}
+  {%- set access_hours_json = access_hours | json_encode -%}
+  {%- set access_exceptions_json = access_exceptions | json_encode -%}
   {%- set closures_json = closures | json_encode -%}
+  {%- set schedule_basis_json = schedule_basis | json_encode -%}
   {%- set effective_start_json = effective_start | json_encode -%}
   {%- set effective_end_json = effective_end | json_encode -%}
-  {{- '{"sessions":' ~ sessions_json ~ ',"closures":' ~ closures_json ~ ',"effective_start":' ~ effective_start_json ~ ',"effective_end":' ~ effective_end_json ~ '}' | safe -}}
+  {{- '{"sessions":' ~ sessions_json ~ ',"access_hours":' ~ access_hours_json ~ ',"access_exceptions":' ~ access_exceptions_json ~ ',"closures":' ~ closures_json ~ ',"schedule_basis":' ~ schedule_basis_json ~ ',"effective_start":' ~ effective_start_json ~ ',"effective_end":' ~ effective_end_json ~ '}' | safe -}}
 {%- endmacro data_schedule %}

@@ -1,0 +1,63 @@
+{
+  "slug": "presidio-ymca-letterman",
+  "pdf_sha256": "d129dbfcd653770de625082bbcfd05ae2043cc656fa7155102289e8fc59b7105",
+  "reviewed_at": "2026-05-17",
+  "source_pdf_url": "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/",
+  "payload": {
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "20:30",
+        "evidence": "Monday: 5:30 am \u2013 8:30 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "tuesday",
+        "end": "20:30",
+        "evidence": "Tuesday: 5:30 am \u2013 8:30 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "wednesday",
+        "end": "20:30",
+        "evidence": "Wednesday: 5:30 am \u2013 8:30 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "thursday",
+        "end": "20:30",
+        "evidence": "Thursday: 5:30 am \u2013 8:30 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "friday",
+        "end": "20:30",
+        "evidence": "Friday: 5:30 am \u2013 8:30 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "saturday",
+        "end": "16:30",
+        "evidence": "Saturday: 7:00 am \u2013 4:30 pm",
+        "label": "Facility hours",
+        "start": "07:00"
+      },
+      {
+        "day": "sunday",
+        "end": "16:30",
+        "evidence": "Sunday: 7:00 am \u2013 4:30 pm",
+        "label": "Facility hours",
+        "start": "07:00"
+      }
+    ],
+    "closures": [],
+    "schedule_basis": "facility_hours",
+    "schedule_effective": "2026-05-17",
+    "sessions": []
+  }
+}

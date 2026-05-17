@@ -98,6 +98,8 @@ def _render_pool_block(result: PoolResult) -> list[str]:
     lines.append(f"- closures: {result.closures_count}")
     if result.schedule_effective:
         lines.append(f"- schedule_effective: {result.schedule_effective}")
+    if result.schedule_basis:
+        lines.append(f"- schedule_basis: {result.schedule_basis}")
 
     violations = _violations(result)
     if isinstance(result, Unchanged):

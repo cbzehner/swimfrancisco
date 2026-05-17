@@ -1,0 +1,62 @@
+{
+  "cost_estimate": "deterministic",
+  "extracted_at": "2026-05-17T15:53:01.430865+00:00",
+  "model": "ymca-location-html-v1",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "20:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "06:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "20:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "06:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "20:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "06:00"
+      },
+      {
+        "day": "thursday",
+        "end": "20:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "06:00"
+      },
+      {
+        "day": "friday",
+        "end": "20:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "18:00"
+      },
+      {
+        "day": "saturday",
+        "end": "16:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "07:30"
+      }
+    ],
+    "closures": [],
+    "schedule_basis": "pool_hours",
+    "schedule_effective": "2026-05-17",
+    "sessions": []
+  },
+  "pdf_sha256": "f0aea00d396f22de8c4a428c0a61963fe988f84f4eb656e4a97bef3606ec6bd9",
+  "prompt_sha256": "f61aea063461b7d02e6e993bc9cf3962503e1b69da06bee1ae5d2f1210a81de9",
+  "provider": "direct",
+  "schema_sha256": "1c0869dc8a4441cb9285092e806b9bc281171cc705f406f8596b0870d5864121",
+  "source_pdf_url": "https://www.ymcasf.org/location/embarcadero-ymca/",
+  "usage": {}
+}

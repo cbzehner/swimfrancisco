@@ -33,6 +33,8 @@ def load_reviewed_snapshot_from_path(
 
 
 _SESSION_COMPARE_KEYS = ("day", "type", "start", "end", "pool")
+_ACCESS_HOUR_COMPARE_KEYS = ("day", "start", "end", "label")
+_ACCESS_EXCEPTION_COMPARE_KEYS = ("date", "start", "end", "label", "reason")
 _CLOSURE_COMPARE_KEYS = ("start", "end", "reason", "start_time", "end_time")
 
 
@@ -53,12 +55,26 @@ def canonicalize_payload(payload: dict) -> dict:
     closures = [_project(closure, _CLOSURE_COMPARE_KEYS) for closure in payload.get("closures") or []]
     closures.sort(key=lambda c: tuple(c.get(key, "") for key in _CLOSURE_COMPARE_KEYS))
 
+    access_hours = [
+        _project(access_hour, _ACCESS_HOUR_COMPARE_KEYS)
+        for access_hour in payload.get("access_hours") or []
+    ]
+    access_hours.sort(key=lambda a: tuple(a.get(key, "") for key in _ACCESS_HOUR_COMPARE_KEYS))
+
+    access_exceptions = [
+        _project(access_exception, _ACCESS_EXCEPTION_COMPARE_KEYS)
+        for access_exception in payload.get("access_exceptions") or []
+    ]
+    access_exceptions.sort(key=lambda a: tuple(a.get(key, "") for key in _ACCESS_EXCEPTION_COMPARE_KEYS))
+
     canonical: dict = {
         "schedule_effective": payload.get("schedule_effective"),
+        "schedule_basis": payload.get("schedule_basis"),
         "sessions": sessions,
+        "access_hours": access_hours,
+        "access_exceptions": access_exceptions,
         "closures": closures,
     }
     if "schedule_effective_end" in payload and payload["schedule_effective_end"] is not None:
         canonical["schedule_effective_end"] = payload["schedule_effective_end"]
     return canonical
-

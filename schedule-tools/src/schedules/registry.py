@@ -3,11 +3,12 @@ from __future__ import annotations
 import tomllib
 from typing import get_args
 
-from .models import PoolEntry, SourceStatus
+from .models import PoolEntry, SourceKind, SourceStatus
 from .paths import CONTENT_SPOTS_DIR, REGISTRY_PATH
 
 
 _VALID_SOURCE_STATUSES = frozenset(get_args(SourceStatus))
+_VALID_SOURCE_KINDS = frozenset(get_args(SourceKind))
 
 
 def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
@@ -24,6 +25,7 @@ def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
         pdf_url = _require_string(raw_entry, "pdf_url", index)
         official_page_url = _require_string(raw_entry, "official_page_url", index)
         source_status = raw_entry.get("source_status", "published")
+        source_kind = raw_entry.get("source_kind", "sfrecpark_pdf")
         notes = raw_entry.get("notes")
 
         if slug in seen_slugs:
@@ -41,6 +43,11 @@ def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
             raise ValueError(
                 f"source_status for {slug!r} must be one of: {valid}. Got: {source_status!r}"
             )
+        if source_kind not in _VALID_SOURCE_KINDS:
+            valid = ", ".join(sorted(_VALID_SOURCE_KINDS))
+            raise ValueError(
+                f"source_kind for {slug!r} must be one of: {valid}. Got: {source_kind!r}"
+            )
 
         entries.append(
             PoolEntry(
@@ -48,6 +55,7 @@ def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
                 pdf_url=pdf_url,
                 official_page_url=official_page_url,
                 source_status=source_status,
+                source_kind=source_kind,
                 notes=notes,
             )
         )
@@ -60,4 +68,3 @@ def _require_string(raw_entry: dict, field: str, index: int) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"Registry entry #{index} is missing required field {field!r}.")
     return value.strip()
-

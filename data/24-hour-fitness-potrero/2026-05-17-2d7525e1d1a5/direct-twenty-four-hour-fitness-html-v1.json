@@ -1,0 +1,68 @@
+{
+  "cost_estimate": "deterministic",
+  "extracted_at": "2026-05-17T15:12:46.046662+00:00",
+  "model": "twenty-four-hour-fitness-html-v1",
+  "payload": {
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "22:00",
+        "evidence": "Monday - Thursday: 05:00 AM - 10:00 PM",
+        "label": "Gym hours",
+        "start": "05:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "22:00",
+        "evidence": "Monday - Thursday: 05:00 AM - 10:00 PM",
+        "label": "Gym hours",
+        "start": "05:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "22:00",
+        "evidence": "Monday - Thursday: 05:00 AM - 10:00 PM",
+        "label": "Gym hours",
+        "start": "05:00"
+      },
+      {
+        "day": "thursday",
+        "end": "22:00",
+        "evidence": "Monday - Thursday: 05:00 AM - 10:00 PM",
+        "label": "Gym hours",
+        "start": "05:00"
+      },
+      {
+        "day": "friday",
+        "end": "21:00",
+        "evidence": "Friday: 05:00 AM - 09:00 PM",
+        "label": "Gym hours",
+        "start": "05:00"
+      },
+      {
+        "day": "saturday",
+        "end": "20:00",
+        "evidence": "Saturday - Sunday: 06:00 AM - 08:00 PM",
+        "label": "Gym hours",
+        "start": "06:00"
+      },
+      {
+        "day": "sunday",
+        "end": "20:00",
+        "evidence": "Saturday - Sunday: 06:00 AM - 08:00 PM",
+        "label": "Gym hours",
+        "start": "06:00"
+      }
+    ],
+    "closures": [],
+    "schedule_basis": "facility_hours",
+    "schedule_effective": "2026-05-17",
+    "sessions": []
+  },
+  "pdf_sha256": "2d7525e1d1a5aa974eaa8c1b8371330e101dd46877389aeb03d8ee595ea1c20f",
+  "prompt_sha256": "03eee14261fe48668ae6e1ae2c9bfc14ceddb86ab899274257f52ca6309b93a7",
+  "provider": "direct",
+  "schema_sha256": "ce178bdd36fc489f2508db84dc8e305ba482daf97045cb51b27dcbc1ca744e76",
+  "source_pdf_url": "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport",
+  "usage": {}
+}

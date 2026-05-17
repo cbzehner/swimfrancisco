@@ -17,6 +17,9 @@ last_verified_at = "2026-04-17"
 # Manually reviewed against the Spring 2026 Balboa Pool schedule PDF.
 # SFUSD-only rows are omitted; Tuesday parent/child intro and Friday masters swim are represented in the public schedule.
 schedule_effective_end = "2026-06-06"
+access_mode = "public"
+payment_model = "session"
+schedule_basis = "swim_schedule"
 
 [[extra.sessions]]
 day = "tuesday"

@@ -12,6 +12,9 @@ ViolationCode = Literal[
     "sessions_dropped_to_zero",
     "too_few_weekly_sessions",
     "invalid_session_time_range",
+    "invalid_access_exception_date",
+    "invalid_access_exception_time_range",
+    "invalid_schedule_basis",
     "invalid_closure_date_range",
     "incomplete_closure_time_range",
     "invalid_closure_time_range",
@@ -40,8 +43,36 @@ Severity = Literal["info", "warning", "error"]
 
 SourceStatus = Literal[
     "published",
+    "access_hours_only",
     "closed_without_current_schedule",
     "missing_current_schedule",
+]
+
+
+SourceKind = Literal[
+    "sfrecpark_pdf",
+    "bay_club_gateway_html",
+    "twenty_four_hour_fitness_html",
+    "jccsf_html",
+    "koret_google_sheet",
+    "pomeroy_html",
+    "city_sports_html",
+    "equinox_html",
+    "fitness_sf_html",
+    "sfsu_aquatics_html",
+    "ucsf_fitness_html",
+    "ucsf_bakar_html",
+    "ymca_location_html",
+]
+
+
+ScheduleBasis = Literal[
+    "swim_schedule",
+    "pool_hours",
+    "facility_hours",
+    "amenity_only",
+    "temporarily_closed",
+    "unknown",
 ]
 
 
@@ -60,6 +91,7 @@ class PoolEntry:
     pdf_url: str
     official_page_url: str
     source_status: SourceStatus = "published"
+    source_kind: SourceKind = "sfrecpark_pdf"
     notes: str | None = None
 
 
@@ -167,6 +199,7 @@ class Unchanged(PoolResultBase):
     sessions_count: int
     closures_count: int
     schedule_effective: str
+    schedule_basis: str | None = None
     review_notes: list[ReviewNote] = field(default_factory=list)
     cost_estimate: str = "unchanged"
     artifact_paths: dict[str, str] = field(default_factory=dict)
@@ -194,6 +227,7 @@ class Extracted(PoolResultBase):
     closures_count: int
     schedule_effective: str | None
     cost_estimate: str
+    schedule_basis: str | None = None
     catastrophic: bool = False
     violations: list[Violation] = field(default_factory=list)
     review_notes: list[ReviewNote] = field(default_factory=list)

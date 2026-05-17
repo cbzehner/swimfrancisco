@@ -1,0 +1,81 @@
+{
+  "slug": "chinatown-ymca",
+  "pdf_sha256": "1e4024338d986e09c55a0147e66c608af519e187456234c237db42be1e721002",
+  "reviewed_at": "2026-05-17",
+  "source_pdf_url": "https://www.ymcasf.org/location/chinatown-ymca/",
+  "payload": {
+    "access_exceptions": [
+      {
+        "date": "2026-05-25",
+        "end": "13:30",
+        "evidence": "Monday, May 25 (Memorial Day) 7:00 a.m. \u2013 2:00 p.m. Pool Hours: 8:00 a.m. \u2013 1:30 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Memorial Day",
+        "start": "08:00"
+      },
+      {
+        "date": "2026-06-19",
+        "end": "13:30",
+        "evidence": "Friday, June 19 (Juneteenth) 7:00 a.m. \u2013 2:00 p.m. Pool Hours: 8:00 a.m. \u2013 1:30 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Juneteenth",
+        "start": "08:00"
+      }
+    ],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "19:45",
+        "evidence": "Monday-Friday: 6:30 a.m. \u2013 7:45 p.m.",
+        "label": "Facility hours",
+        "start": "06:30"
+      },
+      {
+        "day": "tuesday",
+        "end": "19:45",
+        "evidence": "Monday-Friday: 6:30 a.m. \u2013 7:45 p.m.",
+        "label": "Facility hours",
+        "start": "06:30"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:45",
+        "evidence": "Monday-Friday: 6:30 a.m. \u2013 7:45 p.m.",
+        "label": "Facility hours",
+        "start": "06:30"
+      },
+      {
+        "day": "thursday",
+        "end": "19:45",
+        "evidence": "Monday-Friday: 6:30 a.m. \u2013 7:45 p.m.",
+        "label": "Facility hours",
+        "start": "06:30"
+      },
+      {
+        "day": "friday",
+        "end": "19:45",
+        "evidence": "Monday-Friday: 6:30 a.m. \u2013 7:45 p.m.",
+        "label": "Facility hours",
+        "start": "06:30"
+      },
+      {
+        "day": "saturday",
+        "end": "15:45",
+        "evidence": "Saturday and Sunday: 8:00 a.m. \u2013 3:45 p.m.",
+        "label": "Facility hours",
+        "start": "08:00"
+      },
+      {
+        "day": "sunday",
+        "end": "15:45",
+        "evidence": "Saturday and Sunday: 8:00 a.m. \u2013 3:45 p.m.",
+        "label": "Facility hours",
+        "start": "08:00"
+      }
+    ],
+    "closures": [],
+    "schedule_basis": "facility_hours",
+    "schedule_effective": "2026-05-17",
+    "sessions": []
+  }
+}

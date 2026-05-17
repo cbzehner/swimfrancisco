@@ -19,13 +19,21 @@
    Do instead: use the `just schedules-*` wrappers, which load root `.env` before provider calls; raw `uv --project schedule-tools run schedules ...` calls still need `set -a && source .env && set +a`.
 
 ## Domain Behavior Guardrails
-1. **[2026-04-20] `content/spots/*.md` is the source of truth; `data/<slug>/<date>-<sha12>/` is a regeneration aid**
+1. **[2026-05-16] Pool price badges are coarse; access/pricing details live in spot frontmatter**
+   Do instead: keep `cost`/`access_label` as board-level scan labels, and model real access in `access_summary`, `access_notes`, and repeated `[[extra.pricing]]` rows so member, guest, public, and limited-access paths can differ.
+2. **[2026-05-16] Direct provider hours are not always swim sessions**
+   Do instead: set `source_kind` per provider, emit `extra.access_hours` for facility/member/day-use access, and only emit `extra.sessions` when the source actually publishes pool/lap/open-swim availability. Leave providers skipped when the public site has no usable hours or lane source.
+3. **[2026-05-17] Holiday hours override weekly access hours**
+   Do instead: encode reduced holiday access as `extra.access_exceptions`, not closures, when the pool remains open for a shorter date-specific window.
+4. **[2026-05-17] Default discovery stays public-first; membership pools are opt-in**
+   Do instead: include membership-only gyms/YMCAs/university/community fitness centers as secondary coverage, but hide them from the default board behind an explicit membership/private toggle. Skip hotel-only pools, residential pools, invitation-only private clubs, and schools without a real public/community access path.
+5. **[2026-04-20] `content/spots/*.md` is the source of truth; `data/<slug>/<date>-<sha12>/` is a regeneration aid**
    Do instead: treat checked-in markdown as authoritative. Each per-review directory holds `source.pdf`, per-provider JSON, and `reviewed.json` (present ⇔ human-approved). Every new PDF sha256 requires a fresh human pass via `schedules review` — there is no auto-ratification.
-2. **[2026-05-04] Mission's Spring 2026 schedule has a reviewed PDF**
+6. **[2026-05-04] Mission's Spring 2026 schedule has a reviewed PDF**
    Do instead: use `data/mission-community-pool/2026-05-03-6d12e60b17f1/` and registry URL `DocumentCenter/View/28959` as the current reviewed Mission source; remember timed staff-training closures are represented conservatively by the v1 all-day closure model.
-3. **[2026-04-17] Do not publish stale Sava schedules**
+7. **[2026-04-17] Do not publish stale Sava schedules**
    Do instead: leave `sava-pool` skipped until the official facility page publishes a current schedule PDF, then review that new hash.
-4. **[2026-04-17] SFRP vocabulary: REC/FAMILY SWIM is one program, not two**
+8. **[2026-04-17] SFRP vocabulary: REC/FAMILY SWIM is one program, not two**
    Do instead: always map REC SWIM, RECREATION SWIM, REC/FAMILY SWIM, FAMILY SWIM to `family_swim`. `open_swim` is no longer in the enum. Instructor-led programs (WATER/DEEP WATER/SELF GUIDED EXERCISE, AEROBICS, MASTERS, SYNCHRO, PIRANHAS, WATER POLO, HOCKEY) are ignored entirely; SFUSD classes become closure entries.
 
 ## User Directives

@@ -17,6 +17,9 @@ last_verified_at = "2026-04-17"
 # Manually reviewed against the Garfield Spring 2026 schedule PDF.
 # School-only and misaligned small-pool lesson rows are intentionally omitted from the public schedule.
 schedule_effective_end = "2026-06-04"
+access_mode = "public"
+payment_model = "session"
+schedule_basis = "swim_schedule"
 
 [[extra.sessions]]
 day = "monday"

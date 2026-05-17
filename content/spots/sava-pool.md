@@ -16,6 +16,9 @@ last_verified_at = "2026-04-16"
 
 # Sava Pool is closed for repairs; anticipated reopening summer 2026.
 # TBD: verify session times once the pool reopens and a new schedule is published.
+access_mode = "public"
+payment_model = "session"
+schedule_basis = "swim_schedule"
 
 [[extra.closures]]
 start = "2026-04-16"

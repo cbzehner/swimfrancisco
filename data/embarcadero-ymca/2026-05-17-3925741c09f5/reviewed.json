@@ -1,0 +1,74 @@
+{
+  "slug": "embarcadero-ymca",
+  "pdf_sha256": "3925741c09f51a03df1638cb2c60242629514a8ae2db162137b13757c504957f",
+  "reviewed_at": "2026-05-17",
+  "source_pdf_url": "https://www.ymcasf.org/location/embarcadero-ymca/",
+  "payload": {
+    "access_exceptions": [
+      {
+        "date": "2026-05-25",
+        "end": "13:30",
+        "evidence": "Monday, May 25 (Memorial Day) 7:00 a.m. \u2013 2:00 p.m. Pool Closes at 1:30 p.m.",
+        "label": "Holiday pool hours",
+        "reason": "Memorial Day",
+        "start": "07:30"
+      },
+      {
+        "date": "2026-06-19",
+        "end": "13:30",
+        "evidence": "Friday, June 19, (Juneteenth) 7:00 a.m. \u2013 2:00 p.m. Pool Closes at 1:30 p.m.",
+        "label": "Holiday pool hours",
+        "reason": "Juneteenth",
+        "start": "07:30"
+      }
+    ],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "20:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "06:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "20:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "06:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "20:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "06:00"
+      },
+      {
+        "day": "thursday",
+        "end": "20:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "06:00"
+      },
+      {
+        "day": "friday",
+        "end": "20:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "18:00"
+      },
+      {
+        "day": "saturday",
+        "end": "16:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "07:30"
+      }
+    ],
+    "closures": [],
+    "schedule_basis": "pool_hours",
+    "schedule_effective": "2026-05-17",
+    "sessions": []
+  }
+}

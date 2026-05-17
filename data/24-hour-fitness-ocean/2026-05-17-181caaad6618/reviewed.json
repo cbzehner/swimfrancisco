@@ -1,0 +1,19 @@
+{
+  "slug": "24-hour-fitness-ocean",
+  "pdf_sha256": "181caaad66187aa9c485a6467f2ea7aa9bd4762f4837158995782d613434aeca",
+  "reviewed_at": "2026-05-17",
+  "source_pdf_url": "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport",
+  "payload": {
+    "access_hours": [],
+    "closures": [
+      {
+        "end": "2026-05-22",
+        "reason": "Temporarily closed for renovation",
+        "start": "2026-05-17"
+      }
+    ],
+    "schedule_basis": "temporarily_closed",
+    "schedule_effective": "2026-05-17",
+    "sessions": []
+  }
+}

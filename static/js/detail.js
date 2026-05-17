@@ -5,6 +5,7 @@
 // server-rendered by the daily rebuild.
 
 import {
+  computeAccessStatus,
   computeDetailStatus,
   formatHHMM,
   nowInPacific,
@@ -67,11 +68,15 @@ function formatNextLine(result) {
 }
 
 function applyStatusSlab(root, schedule, now) {
-  const result = computeDetailStatus(schedule, now);
+  const hasSessions = schedule && Array.isArray(schedule.sessions) && schedule.sessions.length > 0;
+  const hasAccessHours = schedule && Array.isArray(schedule.access_hours) && schedule.access_hours.length > 0;
+  const result = hasSessions || !hasAccessHours
+    ? computeDetailStatus(schedule, now)
+    : computeAccessStatus(schedule, now);
   const statusEl = root.querySelector('[data-field="status"]');
   const nextEl = root.querySelector('[data-field="next"]');
-  if (statusEl) statusEl.textContent = formatStatusLine(result);
-  if (nextEl) nextEl.textContent = formatNextLine(result);
+  if (statusEl) statusEl.textContent = result.kind ? formatStatusLine(result) : result.status;
+  if (nextEl) nextEl.textContent = result.kind ? formatNextLine(result) : result.next;
   return result;
 }
 

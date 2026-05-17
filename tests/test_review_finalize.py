@@ -120,6 +120,22 @@ def test_finalize_rejects_byte_identical_provider_payload(tmp_path):
     assert reviewed.exists()
 
 
+def test_finalize_allows_byte_identical_direct_payload(tmp_path):
+    data_root = tmp_path / "data"
+    envelope = _valid_draft_envelope("pomeroy-pool", "a" * 64)
+    reviewed = _write_reviewed(data_root, "pomeroy-pool", "a" * 64, envelope)
+    path = reviewed.parent / "direct-pomeroy-html-v1.json"
+    path.write_text(json.dumps({"provider": "direct", "payload": envelope["payload"]}))
+    _seed_content_md(tmp_path / "content" / "spots", "pomeroy-pool")
+
+    result = finalize_draft(
+        reviewed_json_path=reviewed,
+        content_spots_dir=tmp_path / "content" / "spots",
+    )
+
+    assert result == reviewed
+
+
 def test_finalize_accepts_payload_with_any_diff_from_provider(tmp_path):
     data_root = tmp_path / "data"
     envelope = _valid_draft_envelope("hamilton-pool", "a" * 64)

@@ -17,6 +17,9 @@ last_verified_at = "2026-04-17"
 # Manually reviewed against the Spring 2026 Rossi Pool schedule PDF.
 # Evening shared family/lap blocks are represented as both family and lap sessions in the flat site schema.
 schedule_effective_end = "2026-06-04"
+access_mode = "public"
+payment_model = "session"
+schedule_basis = "swim_schedule"
 
 [[extra.sessions]]
 day = "monday"

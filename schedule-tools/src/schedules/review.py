@@ -171,6 +171,8 @@ def _payload_matches_any_provider(payload: dict, review_dir: Path) -> str | None
             provider = json.loads(provider_path.read_text())
         except (OSError, json.JSONDecodeError):
             continue
+        if provider.get("provider") == "direct":
+            continue
         if _canonical_payload(provider.get("payload", {})) == target:
             return provider_path.name
     return None

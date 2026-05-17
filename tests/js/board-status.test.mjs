@@ -8,6 +8,8 @@ import assert from "node:assert/strict";
 
 import {
   computeStatus,
+  computeAccessStatus,
+  computeAccessWindowAvailability,
   computeDetailStatus,
   computeWindowAvailability,
   sortByRank,
@@ -38,6 +40,90 @@ test("computeStatus uses 'Closed through' for inclusive end dates", () => {
     "Closed through Apr 20, 2026",
     "inclusive end date must read 'through', not 'until'",
   );
+});
+
+test("computeAccessStatus reports facility access without verified swim sessions", () => {
+  const now = new Date("2026-04-14T06:00:00"); // Tuesday
+  const schedule = {
+    sessions: [],
+    access_hours: [
+      { day: "tuesday", start: "05:30", end: "20:30", label: "Facility hours" },
+    ],
+    closures: [],
+  };
+  assert.deepEqual(computeAccessStatus(schedule, now), {
+    status: "ACCESS",
+    next: "Until 20:30",
+  });
+});
+
+test("computeAccessStatus lets date-specific access exceptions override weekly hours", () => {
+  const schedule = {
+    sessions: [],
+    access_hours: [
+      { day: "monday", start: "06:00", end: "20:30", label: "Pool hours" },
+    ],
+    access_exceptions: [
+      { date: "2026-05-25", start: "07:30", end: "13:30", label: "Holiday pool hours", reason: "Memorial Day" },
+    ],
+    closures: [],
+  };
+
+  assert.deepEqual(computeAccessStatus(schedule, new Date("2026-05-25T07:00:00")), {
+    status: "CHECK",
+    next: "Access 07:30",
+  });
+  assert.deepEqual(computeAccessStatus(schedule, new Date("2026-05-25T14:00:00")), {
+    status: "CHECK",
+    next: "Access MON 06:00",
+  });
+});
+
+test("computeAccessWindowAvailability uses access hours for plan-ahead windows", () => {
+  const horizon = {
+    kind: "window",
+    day: "tuesday",
+    date: "2026-04-14",
+    start: 6 * 60,
+    end: 11 * 60,
+  };
+  const schedule = {
+    sessions: [],
+    access_hours: [
+      { day: "tuesday", start: "05:30", end: "20:30", label: "Facility hours" },
+    ],
+    closures: [],
+  };
+  assert.deepEqual(computeAccessWindowAvailability(schedule, horizon), {
+    status: "ACCESS",
+    next: "05:30-20:30",
+    sortRank: 2,
+  });
+});
+
+test("computeAccessWindowAvailability uses access exceptions for plan-ahead windows", () => {
+  const horizon = {
+    kind: "window",
+    day: "monday",
+    date: "2026-05-25",
+    start: 6 * 60,
+    end: 11 * 60,
+  };
+  const schedule = {
+    sessions: [],
+    access_hours: [
+      { day: "monday", start: "06:00", end: "20:30", label: "Pool hours" },
+    ],
+    access_exceptions: [
+      { date: "2026-05-25", start: "07:30", end: "13:30", label: "Holiday pool hours", reason: "Memorial Day" },
+    ],
+    closures: [],
+  };
+  assert.deepEqual(computeAccessWindowAvailability(schedule, horizon), {
+    status: "ACCESS",
+    next: "07:30-13:30",
+    sortRank: 2,
+  });
 });
 
 test("captureBaselineRanks + sortByRank restores baseline order after reshuffle", () => {
