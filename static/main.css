@@ -1775,12 +1775,12 @@ body.map-page .site-footer {
 
 /* ── Phone tweaks ──────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
-  body { padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
+  body { padding-bottom: calc(58px + env(safe-area-inset-bottom)); }
   body.map-page {
     padding-bottom: 0;
   }
   body.map-page main {
-    height: calc(100svh - 86px - env(safe-area-inset-bottom));
+    height: calc(100svh - 58px - env(safe-area-inset-bottom));
   }
   main {
     border-left: 0;
@@ -1814,13 +1814,13 @@ body.map-page .site-footer {
     background: var(--ink);
     color: var(--paper);
     border-top: 3px solid var(--ink);
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
   }
   .site-nav-link {
     position: relative;
     display: block;
-    min-height: 68px;
-    padding: 18px 4px 10px;
+    min-height: 58px;
+    padding: 17px 4px 8px;
     text-align: center;
     color: rgba(241, 230, 207, 0.58);
     font-size: 11px;
@@ -1885,31 +1885,39 @@ body.map-page .site-footer {
     position: sticky;
     top: 56px;
     z-index: 70;
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "when sort sort"
+      "filters filters filters";
     align-items: stretch;
     overflow: visible;
-    padding: 10px 16px 14px;
+    padding: 10px 10px 12px;
     gap: 8px;
     isolation: isolate;
   }
-  .control-cluster,
-  .filters,
-  .filters .filter-group,
-  .sort-group {
-    flex: 0 1 auto;
-    flex-wrap: wrap;
+  .when-group {
+    grid-area: when;
+    display: block;
   }
-  .control-cluster,
-  .filters,
   .sort-group {
+    grid-area: sort;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .filters {
+    grid-area: filters;
     display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
   }
   .control-label { display: none; }
   .horizon-control {
     z-index: 75;
+    height: 100%;
   }
-  .horizon-button { min-width: 0; width: auto; }
+  .horizon-button { min-width: 0; width: 100%; height: 100%; }
   .horizon-button,
   .horizon-menu button,
   .filters button,
@@ -1918,6 +1926,19 @@ body.map-page .site-footer {
     min-height: 44px;
     display: inline-flex;
     align-items: center;
+  }
+  .sort-group button {
+    width: 100%;
+    justify-content: center;
+  }
+  .filters button {
+    flex: 0 1 auto;
+    justify-content: center;
+    min-width: 0;
+    padding: 6px 5px;
+    font-size: 9px;
+    letter-spacing: 0.035em;
+    white-space: nowrap;
   }
   .filters .filter-group {
     display: contents;
