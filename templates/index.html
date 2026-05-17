@@ -14,7 +14,7 @@
   {% set bulletin = load_data(path="data/bulletin.json") %}
   <header class="site-header">
     <div class="site-header-row">
-      <h1><a href="{{ config.base_url }}/" class="site-title">SWIM<span class="brand-dot">·</span>FRANCISCO</a></h1>
+      <h1><a href="{{ config.base_url }}/" class="site-title"><span class="brand-swim">SWIM</span><span class="brand-dot">·</span><span class="brand-city">FRANCISCO</span></a></h1>
       {{ bulletin_macros::badge() }}
       <div class="site-header-actions">
         <a href="/" data-target-path="/" class="site-nav-link{% if not is_map_view %} is-active{% endif %}" aria-label="View board">THE BOARD</a>
