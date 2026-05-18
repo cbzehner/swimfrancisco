@@ -1,6 +1,6 @@
 {
   "cost_estimate": "deterministic",
-  "extracted_at": "2026-05-17T15:55:59.576207+00:00",
+  "extracted_at": "2026-05-18T16:55:38.688614+00:00",
   "model": "ucsf-fitness-html-v1",
   "payload": {
     "access_exceptions": [],
@@ -57,7 +57,7 @@
     ],
     "closures": [],
     "schedule_basis": "facility_hours",
-    "schedule_effective": "2026-05-17",
+    "schedule_effective": "2026-05-18",
     "sessions": []
   },
   "pdf_sha256": "e09eb7696fa37835e03dcc9584e64f2240cbd8f60522362f174d0fed07fceffc",

@@ -1,6 +1,6 @@
 {
   "cost_estimate": "deterministic",
-  "extracted_at": "2026-05-17T15:55:55.108486+00:00",
+  "extracted_at": "2026-05-18T16:55:34.454310+00:00",
   "model": "twenty-four-hour-fitness-html-v1",
   "payload": {
     "access_exceptions": [],
@@ -57,7 +57,7 @@
     ],
     "closures": [],
     "schedule_basis": "facility_hours",
-    "schedule_effective": "2026-05-17",
+    "schedule_effective": "2026-05-18",
     "sessions": []
   },
   "pdf_sha256": "c884d75c863b6d85f22a3bcb1b089f496657b57de79d920a5d910a0318581dba",

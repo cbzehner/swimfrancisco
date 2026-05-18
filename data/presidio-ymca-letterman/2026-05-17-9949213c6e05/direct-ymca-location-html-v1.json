@@ -1,6 +1,6 @@
 {
   "cost_estimate": "deterministic",
-  "extracted_at": "2026-05-17T15:55:55.289797+00:00",
+  "extracted_at": "2026-05-18T16:55:34.886373+00:00",
   "model": "ymca-location-html-v1",
   "payload": {
     "access_exceptions": [],
@@ -57,7 +57,7 @@
     ],
     "closures": [],
     "schedule_basis": "facility_hours",
-    "schedule_effective": "2026-05-17",
+    "schedule_effective": "2026-05-18",
     "sessions": []
   },
   "pdf_sha256": "9949213c6e05240307e5bf1ddb8f5d14e266d6e89d31cacaad78c35d81c7f698",

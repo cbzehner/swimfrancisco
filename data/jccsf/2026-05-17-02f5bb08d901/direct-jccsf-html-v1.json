@@ -1,13 +1,13 @@
 {
   "cost_estimate": "deterministic",
-  "extracted_at": "2026-05-17T15:55:52.171549+00:00",
+  "extracted_at": "2026-05-18T16:55:33.033677+00:00",
   "model": "jccsf-html-v1",
   "payload": {
     "access_exceptions": [],
     "access_hours": [],
     "closures": [],
     "schedule_basis": "swim_schedule",
-    "schedule_effective": "2026-05-17",
+    "schedule_effective": "2026-05-18",
     "sessions": [
       {
         "day": "monday",
