@@ -1,6 +1,6 @@
 {
   "cost_estimate": "deterministic",
-  "extracted_at": "2026-05-17T15:55:56.284966+00:00",
+  "extracted_at": "2026-05-25T16:41:20.360307+00:00",
   "model": "fitness-sf-html-v1",
   "payload": {
     "access_exceptions": [],
@@ -57,7 +57,7 @@
     ],
     "closures": [],
     "schedule_basis": "pool_hours",
-    "schedule_effective": "2026-05-17",
+    "schedule_effective": "2026-05-25",
     "sessions": []
   },
   "pdf_sha256": "1411e9cb9425888bac87c6d92279ddb7dd402dadfc0676ca438ae73ee7b4893e",

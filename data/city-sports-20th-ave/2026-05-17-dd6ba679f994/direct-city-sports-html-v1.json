@@ -1,6 +1,6 @@
 {
   "cost_estimate": "deterministic",
-  "extracted_at": "2026-05-17T15:55:57.297301+00:00",
+  "extracted_at": "2026-05-25T16:41:21.590478+00:00",
   "model": "city-sports-html-v1",
   "payload": {
     "access_exceptions": [],
@@ -57,7 +57,7 @@
     ],
     "closures": [],
     "schedule_basis": "facility_hours",
-    "schedule_effective": "2026-05-17",
+    "schedule_effective": "2026-05-25",
     "sessions": []
   },
   "pdf_sha256": "dd6ba679f9947825ea92fad333247cb0f842b9d0980e9a7a8f1b194efb376007",
