@@ -1,4 +1,5 @@
 +++
+draft = true
 title = "Why untouched model output is refused"
 description = "The review tool rejects byte-identical drafts so model output cannot pass as human review."
 date = 2026-05-16

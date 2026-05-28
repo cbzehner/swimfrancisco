@@ -1,4 +1,5 @@
 +++
+draft = true
 title = "Swimmer Path"
 description = "How the product turns schedules and conditions into a decision someone can make before leaving home."
 date = 2026-05-16

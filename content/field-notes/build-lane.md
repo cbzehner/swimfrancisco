@@ -1,4 +1,5 @@
 +++
+draft = true
 title = "Build Lane"
 description = "How reviewed content becomes static pages, Worker spot data, and the visible bulletin number."
 date = 2026-05-16

@@ -1,4 +1,5 @@
 +++
+draft = true
 title = "The tide station was too far inside the bay"
 description = "Outer-coast beaches needed an ocean-coast tide station, not the same station as Aquatic Park."
 date = 2026-05-16

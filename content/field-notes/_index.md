@@ -1,4 +1,5 @@
 +++
+draft = true
 title = "Field Notes"
 description = "A technical map of how Swim Francisco turns scattered public swim data into one live board."
 sort_by = "weight"

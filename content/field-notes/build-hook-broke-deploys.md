@@ -1,4 +1,5 @@
 +++
+draft = true
 title = "The build hook that broke deploys"
 description = "A relative path worked locally and failed inside Cloudflare Workers Builds."
 date = 2026-05-16

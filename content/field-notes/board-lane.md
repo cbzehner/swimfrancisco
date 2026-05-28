@@ -1,4 +1,5 @@
 +++
+draft = true
 title = "Board Lane"
 description = "How the browser combines static schedules, live conditions, filters, horizons, and map state."
 date = 2026-05-16

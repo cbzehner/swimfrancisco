@@ -1,4 +1,5 @@
 +++
+draft = true
 title = "Source + Review Lane"
 description = "How city PDFs, source pages, models, and human review become trusted pool schedules."
 date = 2026-05-16

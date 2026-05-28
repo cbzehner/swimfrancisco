@@ -1,4 +1,5 @@
 +++
+draft = true
 title = "What moves the bulletin number"
 description = "The masthead counter changes when reviewed schedule payloads change, not when the site gets a coat of paint."
 date = 2026-05-16
