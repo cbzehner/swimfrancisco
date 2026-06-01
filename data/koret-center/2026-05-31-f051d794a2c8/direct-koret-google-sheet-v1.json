@@ -1,0 +1,62 @@
+{
+  "cost_estimate": "deterministic",
+  "extracted_at": "2026-06-01T05:29:51.065428+00:00",
+  "model": "koret-google-sheet-v1",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [],
+    "closures": [],
+    "schedule_basis": "pool_hours",
+    "schedule_effective": "2026-05-31",
+    "sessions": [
+      {
+        "day": "monday",
+        "end": "19:00",
+        "evidence": "Monday Hours: 7am-7pm (Summer Hours) Shallow & Mini Lane Lane 1 Lane 2 Lane 3 Lane 4 Lane 5 Lane 6 Lane 7 Lane 8 Bulk Head Lane 9 Lane 10 Lane 11 Lane 12 Lane 13 Lane 14 Lane 15 DEEP",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "19:00",
+        "evidence": "Tuesday Hours: 7am-7pm (Summer Hours) Shallow & Mini Lane Lane 1 Lane 2 Lane 3 Lane 4 Lane 5 Lane 6 Lane 7 Lane 8 Bulk Head Lane 9 Lane 10 Lane 11 Lane 12 Lane 13 Lane 14 Lane 15 DEEP",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:00",
+        "evidence": "Wednesday Hours: 7am-7pm (Summer Hours) Shallow & Mini Lane Lane 1 Lane 2 Lane 3 Lane 4 Lane 5 Lane 6 Lane 7 Lane 8 Bulk Head Lane 9 Lane 10 Lane 11 Lane 12 Lane 13 Lane 14 Lane 15 DEEP",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "19:00",
+        "evidence": "Thursday Hours: 7am-7pm (Summer Hours) Shallow & Mini Lane Lane 1 Lane 2 Lane 3 Lane 4 Lane 5 Lane 6 Lane 7 Lane 8 Bulk Head Lane 9 Lane 10 Lane 11 Lane 12 Lane 13 Lane 14 Lane 15 DEEP",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "19:00",
+        "evidence": "Friday Hours: 7am-7pm (Summer Hours) Shallow & Mini Lane Lane 1 Lane 2 Lane 3 Lane 4 Lane 5 Lane 6 Lane 7 Lane 8 Bulk Head Lane 9 Lane 10 Lane 11 Lane 12 Lane 13 Lane 14 Lane 15 DEEP",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "16:00",
+        "evidence": "Saturday Hours: 8am-4pm (Summer Hours) Shallow & Mini Lane Lane 1 Lane 2 Lane 3 Lane 4 Lane 5 Lane 6 Lane 7 Lane 8 Bulk Head Lane 9 Lane 10 Lane 11 Lane 12 Lane 13 Lane 14 Lane 15 DEEP",
+        "start": "08:00",
+        "type": "lap_swim"
+      }
+    ]
+  },
+  "pdf_sha256": "f051d794a2c812bfb712dfa775cdbfe39d611e5bbf2889e5c3ab8f0d051096f4",
+  "prompt_sha256": "d890ba6f8d2dfd4dbae8cfba507a0e627b9100313325103fdc48ac549ca8dcc2",
+  "provider": "direct",
+  "schema_sha256": "1c0869dc8a4441cb9285092e806b9bc281171cc705f406f8596b0870d5864121",
+  "source_pdf_url": "https://docs.google.com/spreadsheets/d/1PcFSl3ndScM2-SZnubwDvBlbhpmbFsVjEPK-yGilZU0/edit?gid=1958899859&pli=1",
+  "usage": {}
+}

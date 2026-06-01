@@ -1,0 +1,69 @@
+{
+  "cost_estimate": "deterministic",
+  "extracted_at": "2026-06-01T05:35:57.508218+00:00",
+  "model": "ucsf-bakar-html-v1",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "20:30",
+        "evidence": "Pool Hours (Mission Bay only): Monday-Friday: 10:00 am-8:30 pm",
+        "label": "Pool hours",
+        "start": "10:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "20:30",
+        "evidence": "Pool Hours (Mission Bay only): Monday-Friday: 10:00 am-8:30 pm",
+        "label": "Pool hours",
+        "start": "10:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "20:30",
+        "evidence": "Pool Hours (Mission Bay only): Monday-Friday: 10:00 am-8:30 pm",
+        "label": "Pool hours",
+        "start": "10:00"
+      },
+      {
+        "day": "thursday",
+        "end": "20:30",
+        "evidence": "Pool Hours (Mission Bay only): Monday-Friday: 10:00 am-8:30 pm",
+        "label": "Pool hours",
+        "start": "10:00"
+      },
+      {
+        "day": "friday",
+        "end": "20:30",
+        "evidence": "Pool Hours (Mission Bay only): Monday-Friday: 10:00 am-8:30 pm",
+        "label": "Pool hours",
+        "start": "10:00"
+      },
+      {
+        "day": "saturday",
+        "end": "17:30",
+        "evidence": "Pool Hours (Mission Bay only): Saturdays-Sundays: 8:00 am-5:30 pm",
+        "label": "Pool hours",
+        "start": "08:00"
+      },
+      {
+        "day": "sunday",
+        "end": "17:30",
+        "evidence": "Pool Hours (Mission Bay only): Saturdays-Sundays: 8:00 am-5:30 pm",
+        "label": "Pool hours",
+        "start": "08:00"
+      }
+    ],
+    "closures": [],
+    "schedule_basis": "pool_hours",
+    "schedule_effective": "2026-05-31",
+    "sessions": []
+  },
+  "pdf_sha256": "9fda009e700fdfc92b2013da3b175e338f512fb13f2bd25a8514dd8cc81b9ce3",
+  "prompt_sha256": "7861382b4959b8bca2cd6cf50be503365dec8816adef1589323c04b6b4193fc9",
+  "provider": "direct",
+  "schema_sha256": "1c0869dc8a4441cb9285092e806b9bc281171cc705f406f8596b0870d5864121",
+  "source_pdf_url": "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation",
+  "usage": {}
+}

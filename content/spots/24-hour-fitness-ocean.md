@@ -15,17 +15,55 @@ access_badge_class = "is-member"
 setpoint_label = "lap"
 access_mode = "membership"
 payment_model = "membership"
-schedule_basis = "temporarily_closed"
-access_summary = "24 Hour Fitness Ocean lists an indoor lap pool, but the official club page says the club is temporarily closed for renovation until May 23, 2026."
-access_notes = ["Keep this out of active swim planning until the official page shows the club has reopened."]
+schedule_basis = "facility_hours"
+access_summary = "24 Hour Fitness Ocean lists an indoor lap pool and current club hours. Treat those as member access hours, not verified lap-lane availability."
+access_notes = ["Official 24 Hour Fitness pages expose gym hours and pool amenities, but not lane counts, pool-program conflicts, or lap-lane reservations."]
 sessions = []
-schedule_effective = "2026-05-17"
-last_verified_at = "2026-05-17"
+closures = []
+schedule_effective = "2026-05-25"
+last_verified_at = "2026-05-31"
 
-[[extra.closures]]
-start = "2026-05-17"
-end = "2026-05-22"
-reason = "Temporarily closed for renovation"
+[[extra.access_hours]]
+day = "monday"
+start = "05:00"
+end = "23:59"
+label = "Gym hours"
+
+[[extra.access_hours]]
+day = "tuesday"
+start = "00:00"
+end = "23:59"
+label = "Gym hours"
+
+[[extra.access_hours]]
+day = "wednesday"
+start = "00:00"
+end = "23:59"
+label = "Gym hours"
+
+[[extra.access_hours]]
+day = "thursday"
+start = "00:00"
+end = "23:59"
+label = "Gym hours"
+
+[[extra.access_hours]]
+day = "friday"
+start = "00:00"
+end = "21:00"
+label = "Gym hours"
+
+[[extra.access_hours]]
+day = "saturday"
+start = "05:00"
+end = "21:00"
+label = "Gym hours"
+
+[[extra.access_hours]]
+day = "sunday"
+start = "05:00"
+end = "21:00"
+label = "Gym hours"
 +++
 
-24 Hour Fitness Ocean is a membership gym pool entry held in a temporary-closure state until renovation ends.
+24 Hour Fitness Ocean is a reopened membership gym pool entry. Use the official club page for current member-access details before going.

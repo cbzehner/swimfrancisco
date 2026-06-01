@@ -390,17 +390,46 @@ def _extract_koret(text: str) -> dict:
     for sheet_name, csv_text in _split_koret_sheets(text).items():
         rows = list(csv.reader(StringIO(csv_text)))
         if sheet_name == "Weekend":
-            sessions.extend(_weekly_hours_sessions(
-                "lap_swim",
-                {"saturday": ("08:00", "18:00"), "sunday": ("08:00", "18:00")},
-                evidence="Weekend sheet lists 8am-6pm pool hours.",
-            ))
+            first_row = " ".join(cell for cell in rows[0] if cell).strip() if rows else ""
+            sessions.extend(_koret_weekend_sessions(first_row))
             continue
         day = sheet_name.lower()
         first_row = " ".join(cell for cell in rows[0] if cell).strip() if rows else ""
         start, end = _parse_hours_range(first_row)
         sessions.append(_session(day, "lap_swim", start, end, first_row))
     return _payload("pool_hours", sessions)
+
+
+def _koret_weekend_sessions(first_row: str) -> list[dict]:
+    row = _squash(first_row)
+    sessions: list[dict] = []
+    for label, day in (("Saturday", "saturday"), ("Sunday", "sunday")):
+        match = re.search(
+            rf"{label}\s+Hours:?\s*(.*?)(?=(?:Saturday|Sunday)\s+Hours:?|$)",
+            row,
+            flags=re.IGNORECASE,
+        )
+        if not match:
+            continue
+        hours_text = match.group(1).strip()
+        if hours_text.lower().startswith("closed"):
+            continue
+        start, end = _parse_hours_range(hours_text)
+        sessions.append(_session(day, "lap_swim", start, end, f"{label} Hours: {hours_text}"))
+    if sessions:
+        return sessions
+
+    match = re.search(r"Weekend\s+Hours:?\s*(.*)", row, flags=re.IGNORECASE)
+    if not match:
+        return []
+    hours_text = match.group(1).strip()
+    if hours_text.lower().startswith("closed"):
+        return []
+    start, end = _parse_hours_range(hours_text)
+    return [
+        _session("saturday", "lap_swim", start, end, f"Weekend Hours: {hours_text}"),
+        _session("sunday", "lap_swim", start, end, f"Weekend Hours: {hours_text}"),
+    ]
 
 
 def _split_koret_sheets(text: str) -> dict[str, str]:
@@ -493,13 +522,17 @@ def _extract_fitness_sf(html: str) -> dict:
     friday_start, friday_end = _parse_hours_range(friday_hours)
     weekend_start, weekend_end = _parse_hours_range(weekend_hours)
     return _payload("pool_hours", [], access_hours=[
+        _access_hour("monday", weekday_start, "10:00", "Pool hours", f"Mon-Thu: {weekday_hours}; pool cleaning 10am-12pm Monday"),
+        _access_hour("monday", "12:00", weekday_end, "Pool hours", f"Mon-Thu: {weekday_hours}; pool cleaning 10am-12pm Monday"),
         *[
-            _access_hour(day, weekday_start, weekday_end, "Club hours", f"Mon-Thu: {weekday_hours}")
-            for day in ("monday", "tuesday", "wednesday", "thursday")
+            _access_hour(day, weekday_start, weekday_end, "Pool hours", f"Mon-Thu: {weekday_hours}")
+            for day in ("tuesday", "wednesday")
         ],
-        _access_hour("friday", friday_start, friday_end, "Club hours", f"Fri: {friday_hours}"),
-        _access_hour("saturday", weekend_start, weekend_end, "Club hours", f"Sat-Sun: {weekend_hours}"),
-        _access_hour("sunday", weekend_start, weekend_end, "Club hours", f"Sat-Sun: {weekend_hours}"),
+        _access_hour("thursday", weekday_start, "13:00", "Pool hours", f"Mon-Thu: {weekday_hours}; pool cleaning 1pm-3pm Thursday"),
+        _access_hour("thursday", "15:00", weekday_end, "Pool hours", f"Mon-Thu: {weekday_hours}; pool cleaning 1pm-3pm Thursday"),
+        _access_hour("friday", friday_start, friday_end, "Pool hours", f"Fri: {friday_hours}"),
+        _access_hour("saturday", weekend_start, weekend_end, "Pool hours", f"Sat-Sun: {weekend_hours}"),
+        _access_hour("sunday", weekend_start, weekend_end, "Pool hours", f"Sat-Sun: {weekend_hours}"),
     ])
 
 
@@ -546,7 +579,29 @@ def _extract_ucsf_fitness(html: str) -> dict:
 
 
 def _extract_ucsf_bakar(html: str) -> dict:
-    return _extract_ucsf_fitness(html)
+    text = _html_text(html)
+    match = re.search(
+        r"Pool Hours\s*\(Mission Bay only\):\s*Monday-Friday:\s*([^S]+?)\s*Saturdays-Sundays:\s*(.+?)(?:\s*\(|Components|Business Unit|$)",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if not match:
+        raise DirectSourceError("UCSF page did not expose Mission Bay pool hours.")
+    weekday_hours, weekend_hours = match.groups()
+    weekday_start, weekday_end = _parse_hours_range(weekday_hours)
+    weekend_start, weekend_end = _parse_hours_range(weekend_hours)
+    return _payload(
+        "pool_hours",
+        [],
+        access_hours=[
+            *[
+                _access_hour(day, weekday_start, weekday_end, "Pool hours", f"Pool Hours (Mission Bay only): Monday-Friday: {weekday_hours}")
+                for day in ("monday", "tuesday", "wednesday", "thursday", "friday")
+            ],
+            _access_hour("saturday", weekend_start, weekend_end, "Pool hours", f"Pool Hours (Mission Bay only): Saturdays-Sundays: {weekend_hours}"),
+            _access_hour("sunday", weekend_start, weekend_end, "Pool hours", f"Pool Hours (Mission Bay only): Saturdays-Sundays: {weekend_hours}"),
+        ],
+    )
 
 
 def _extract_ymca_location(html: str) -> dict:

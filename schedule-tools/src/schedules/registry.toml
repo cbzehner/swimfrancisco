@@ -57,7 +57,7 @@ slug = "koret-center"
 pdf_url = "https://docs.google.com/spreadsheets/d/1PcFSl3ndScM2-SZnubwDvBlbhpmbFsVjEPK-yGilZU0/edit?gid=1958899859&pli=1"
 official_page_url = "https://www.usfca.edu/koret/facilities/indoor-swimming"
 source_kind = "koret_google_sheet"
-notes = "Direct extractor reads the public Google Sheet tabs and models pool hours as lap swim; lane-count/event details remain in source evidence."
+notes = "Direct extractor reads the public Google Sheet tabs and models pool hours as lap swim. Official page says lap lanes are open during all pool hours, but lane counts vary with lessons, teams, and events."
 
 [[pool]]
 slug = "pomeroy-pool"
@@ -119,7 +119,7 @@ pdf_url = "https://fitnesssf.com/location/fillmore"
 official_page_url = "https://fitnesssf.com/location/fillmore"
 source_status = "access_hours_only"
 source_kind = "fitness_sf_html"
-notes = "Official location page publishes club hours and the help center confirms a 25-yard pool with lap-swim lane reservations; no lane availability schedule is published."
+notes = "Official location page publishes club hours and the help center confirms a 25-yard pool. Current help copy says reservations are not active; when all lanes have three swimmers, a one-hour time limit applies. Older help copy still mentions 30-minute slots opening 15 minutes before the hour. No lane availability schedule is published."
 
 [[pool]]
 slug = "city-sports-20th-ave"
@@ -135,7 +135,7 @@ pdf_url = "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport"
 official_page_url = "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport"
 source_status = "access_hours_only"
 source_kind = "twenty_four_hour_fitness_html"
-notes = "Official page confirms an indoor lap pool, but the club is temporarily closed for renovation until May 23, 2026."
+notes = "Official page confirms an indoor lap pool and current gym hours after the renovation notice cleared, but not lane/open swim availability."
 
 [[pool]]
 slug = "equinox-sports-club-sf"
@@ -163,8 +163,8 @@ notes = "Official page publishes facility hours; pool-specific schedule source s
 
 [[pool]]
 slug = "ucsf-bakar"
-pdf_url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
+pdf_url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation"
 official_page_url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
 source_status = "access_hours_only"
 source_kind = "ucsf_bakar_html"
-notes = "Official page has facility hours and pool amenities; schedule page is JavaScript-rendered and needs API/browser investigation before schedule ingestion."
+notes = "UCSF's Fitness and Recreation page publishes Mission Bay pool hours separately from Bakar facility hours; those are modeled as pool access hours. It still does not expose lane availability or lesson conflicts as structured schedule data."

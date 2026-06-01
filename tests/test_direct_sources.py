@@ -70,11 +70,22 @@ def test_koret_google_sheet_extractor_reads_weekday_and_weekend_hours():
 --- Friday ---
 "Friday Hours: 6am - 9pm (Subject to change due to emergency) ","Lane 1"
 --- Weekend ---
-"","Saturday Hours: 8am - 6pm (Subject to change due to emergency) Lane 1"
+"","Saturday Hours: 8am - 4pm (Subject to change due to emergency) Lane 1"
 """
     )
 
     assert any(s["day"] == "monday" and s["start"] == "06:00" and s["end"] == "21:00" for s in payload["sessions"])
+    assert any(s["day"] == "saturday" and s["start"] == "08:00" and s["end"] == "16:00" for s in payload["sessions"])
+    assert not any(s["day"] == "sunday" for s in payload["sessions"])
+
+
+def test_koret_google_sheet_extractor_reads_shared_weekend_hours():
+    payload = _extract_koret(
+        """--- Weekend ---
+"","Weekend Hours: 8am - 6pm Lane 1"
+"""
+    )
+
     assert any(s["day"] == "saturday" and s["start"] == "08:00" and s["end"] == "18:00" for s in payload["sessions"])
     assert any(s["day"] == "sunday" and s["start"] == "08:00" and s["end"] == "18:00" for s in payload["sessions"])
 
@@ -191,7 +202,9 @@ def test_fitness_sf_extractor_reads_pool_hours_from_location_hours():
     )
 
     assert payload["schedule_basis"] == "pool_hours"
-    assert any(a["day"] == "thursday" and a["end"] == "23:59" for a in payload["access_hours"])
+    assert any(a["day"] == "monday" and a["start"] == "05:00" and a["end"] == "10:00" for a in payload["access_hours"])
+    assert any(a["day"] == "monday" and a["start"] == "12:00" and a["end"] == "23:59" for a in payload["access_hours"])
+    assert any(a["day"] == "thursday" and a["start"] == "15:00" and a["end"] == "23:59" for a in payload["access_hours"])
 
 
 def test_sfsu_extractor_reads_natatorium_hours():
@@ -208,18 +221,18 @@ def test_sfsu_extractor_reads_natatorium_hours():
     assert any(a["day"] == "friday" and a["start"] == "12:00" for a in payload["access_hours"])
 
 
-def test_ucsf_bakar_extractor_reads_facility_hours():
+def test_ucsf_bakar_extractor_reads_mission_bay_pool_hours():
     payload = _extract_ucsf_bakar(
         """
-        <p>Facility Hours: Monday-Friday, 6:00 am-9:00 pm;
-        Saturday-Sunday, 8:00 am-6:00 pm</p>
+        <p>Pool Hours (Mission Bay only): Monday-Friday: 10:00 am-8:30 pm
+        Saturdays-Sundays: 8:00 am-5:30 pm (subject to change availability around swim lessons)</p>
         """
     )
 
-    assert payload["schedule_basis"] == "facility_hours"
+    assert payload["schedule_basis"] == "pool_hours"
     assert len(payload["access_hours"]) == 7
-    assert any(a["day"] == "monday" and a["start"] == "06:00" for a in payload["access_hours"])
-    assert any(a["day"] == "sunday" and a["end"] == "18:00" for a in payload["access_hours"])
+    assert any(a["day"] == "monday" and a["start"] == "10:00" and a["end"] == "20:30" for a in payload["access_hours"])
+    assert any(a["day"] == "sunday" and a["start"] == "08:00" and a["end"] == "17:30" for a in payload["access_hours"])
 
 
 def test_ucsf_fitness_extractor_handles_millberry_page():

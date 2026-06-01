@@ -13,15 +13,15 @@ cost = "paid"
 access_label = "Members"
 access_badge_class = "is-member"
 setpoint_label = "indoor + roof"
-access_summary = "Bakar Fitness Center at UCSF Mission Bay is a membership fitness center with both an indoor swimming pool and an outdoor rooftop pool."
-access_notes = ["The indoor pool reopened after renovation in June 2025; confirm current pool schedules through UCSF Fitness and Recreation."]
+access_summary = "Bakar Fitness Center at UCSF Mission Bay is a membership fitness center with both an indoor swimming pool and an outdoor rooftop pool. UCSF publishes Mission Bay pool hours separately from building hours."
+access_notes = ["Pool hours are subject to change around swim lessons; UCSF does not publish lane counts or lane conflicts as structured schedule data."]
 sessions = []
 closures = []
-schedule_effective = "2026-05-17"
-last_verified_at = "2026-05-17"
+schedule_effective = "2026-05-31"
+last_verified_at = "2026-05-31"
 access_mode = "limited_public"
 payment_model = "membership"
-schedule_basis = "facility_hours"
+schedule_basis = "pool_hours"
 
 [[extra.pricing]]
 label = "Member"
@@ -41,45 +41,45 @@ payment_model = "unknown"
 
 [[extra.access_hours]]
 day = "monday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
+start = "10:00"
+end = "20:30"
+label = "Pool hours"
 
 [[extra.access_hours]]
 day = "tuesday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
+start = "10:00"
+end = "20:30"
+label = "Pool hours"
 
 [[extra.access_hours]]
 day = "wednesday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
+start = "10:00"
+end = "20:30"
+label = "Pool hours"
 
 [[extra.access_hours]]
 day = "thursday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
+start = "10:00"
+end = "20:30"
+label = "Pool hours"
 
 [[extra.access_hours]]
 day = "friday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
+start = "10:00"
+end = "20:30"
+label = "Pool hours"
 
 [[extra.access_hours]]
 day = "saturday"
 start = "08:00"
-end = "18:00"
-label = "Facility hours"
+end = "17:30"
+label = "Pool hours"
 
 [[extra.access_hours]]
 day = "sunday"
 start = "08:00"
-end = "18:00"
-label = "Facility hours"
+end = "17:30"
+label = "Pool hours"
 +++
 
 Bakar is the Mission Bay fitness-center option, notable for having both indoor water and an outdoor rooftop pool.
