@@ -1,6 +1,6 @@
 {
   "cost_estimate": "deterministic",
-  "extracted_at": "2026-05-17T15:56:00.021382+00:00",
+  "extracted_at": "2026-06-01T17:59:43.439017+00:00",
   "model": "ucsf-bakar-html-v1",
   "payload": {
     "access_exceptions": [],
@@ -57,7 +57,7 @@
     ],
     "closures": [],
     "schedule_basis": "facility_hours",
-    "schedule_effective": "2026-05-17",
+    "schedule_effective": "2026-06-01",
     "sessions": []
   },
   "pdf_sha256": "1cfcf0fc321aeb3e7c51ee5452db30b22699308f3e8d8711b7e78c04f6be8eab",

@@ -1,6 +1,6 @@
 {
   "cost_estimate": "deterministic",
-  "extracted_at": "2026-05-17T15:55:54.641913+00:00",
+  "extracted_at": "2026-06-01T17:59:35.604467+00:00",
   "model": "pomeroy-html-v1",
   "payload": {
     "access_exceptions": [],
@@ -18,7 +18,7 @@
       }
     ],
     "schedule_basis": "swim_schedule",
-    "schedule_effective": "2026-05-17",
+    "schedule_effective": "2026-06-01",
     "sessions": [
       {
         "day": "monday",
