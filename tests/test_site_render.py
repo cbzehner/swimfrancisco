@@ -12,8 +12,10 @@ the already-built HTML.
 
 from __future__ import annotations
 
+import html
 import json
 import hashlib
+import re
 import shutil
 import subprocess
 import tomllib
@@ -41,6 +43,15 @@ def built_site(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 def _read(built_site: Path, slug: str) -> str:
     return (built_site / "spots" / slug / "index.html").read_text()
+
+
+def _json_ld_objects(rendered_html: str) -> list[dict[str, object]]:
+    scripts = re.findall(
+        r"<script type=application/ld\+json>\s*(.*?)\s*</script>",
+        rendered_html,
+        flags=re.S,
+    )
+    return [json.loads(html.unescape(script)) for script in scripts]
 
 
 def test_all_spots_have_access_classification() -> None:
@@ -304,3 +315,90 @@ def test_footer_renders_sources_and_credit(built_site: Path) -> None:
     assert "Made in San Francisco by" in html
     assert "/field-notes/" not in html
     assert "/how-it-works/" not in html
+
+
+def test_homepage_renders_search_metadata_and_website_json_ld(built_site: Path) -> None:
+    html_text = (built_site / "index.html").read_text()
+    assert "<link href=https://swimfrancisco.com/ rel=canonical>" in html_text
+    assert "Find where to swim right now in San Francisco: lap swim, family swim" in html_text
+    assert 'property=og:title' in html_text
+
+    objects = _json_ld_objects(html_text)
+    website = next(obj for obj in objects if obj["@type"] == "WebSite")
+    assert website["name"] == "Swim Francisco"
+    assert website["url"] == "https://swimfrancisco.com"
+    assert "lap swim" in website["description"]
+
+
+def test_map_page_has_distinct_canonical_and_description(built_site: Path) -> None:
+    html_text = (built_site / "map" / "index.html").read_text()
+    assert "<title>San Francisco swim map — Swim Francisco</title>" in html_text
+    assert "<link href=https://swimfrancisco.com/map/ rel=canonical>" in html_text
+    assert "Map of San Francisco pools, beaches, and open-water swim spots" in html_text
+    assert not _json_ld_objects(html_text)
+
+
+def test_spot_pages_render_valid_place_and_breadcrumb_json_ld(built_site: Path) -> None:
+    aquatic = _read(built_site, "aquatic-park")
+    assert "<title>Aquatic Park open-water conditions and access — Swim Francisco</title>" in aquatic
+    assert "<link href=https://swimfrancisco.com/spots/aquatic-park/ rel=canonical>" in aquatic
+    assert "Aquatic Park open-water swimming in San Francisco" in aquatic
+
+    aquatic_objects = _json_ld_objects(aquatic)
+    place = next(obj for obj in aquatic_objects if obj["@type"] == "Beach")
+    assert place["name"] == "Aquatic Park"
+    assert place["url"] == "https://swimfrancisco.com/spots/aquatic-park/"
+    assert place["isAccessibleForFree"] is True
+    assert place["geo"] == {
+        "@type": "GeoCoordinates",
+        "latitude": 37.8063,
+        "longitude": -122.4223,
+    }
+
+    breadcrumb = next(obj for obj in aquatic_objects if obj["@type"] == "BreadcrumbList")
+    assert [item["name"] for item in breadcrumb["itemListElement"]] == [
+        "Swim Francisco",
+        "Aquatic Park",
+    ]
+
+    garfield = _read(built_site, "garfield-pool")
+    assert "Garfield Pool swim schedule and access — Swim Francisco" in garfield
+    pool_objects = _json_ld_objects(garfield)
+    pool = next(obj for obj in pool_objects if obj["@type"] == "SportsActivityLocation")
+    assert pool["name"] == "Garfield Pool"
+    assert pool["isAccessibleForFree"] is False
+
+
+def test_robots_and_sitemap_are_search_console_ready(built_site: Path) -> None:
+    robots = (built_site / "robots.txt").read_text()
+    for user_agent in [
+        "OAI-SearchBot",
+        "ChatGPT-User",
+        "GPTBot",
+        "PerplexityBot",
+        "Perplexity-User",
+        "Claude-SearchBot",
+        "Claude-User",
+        "ClaudeBot",
+        "Google-Extended",
+        "Bingbot",
+        "*",
+    ]:
+        assert f"User-agent: {user_agent}\nAllow: /" in robots
+    assert "Sitemap: https://swimfrancisco.com/sitemap.xml" in robots
+
+    sitemap = (built_site / "sitemap.xml").read_text()
+    assert "<loc>https://swimfrancisco.com/</loc>" in sitemap
+    assert "<loc>https://swimfrancisco.com/map/</loc>" in sitemap
+    assert "<loc>https://swimfrancisco.com/spots/aquatic-park/</loc>" in sitemap
+    assert "https://swimfrancisco.com/field-notes/" not in sitemap
+
+
+def test_llms_txt_points_agents_at_canonical_swim_pages(built_site: Path) -> None:
+    llms = (built_site / "llms.txt").read_text()
+    assert "# Swim Francisco" in llms
+    assert "https://swimfrancisco.com/" in llms
+    assert "https://swimfrancisco.com/map/" in llms
+    assert "https://swimfrancisco.com/sitemap.xml" in llms
+    assert "https://swimfrancisco.com/spots/aquatic-park/" in llms
+    assert "https://swimfrancisco.com/spots/garfield-pool/" in llms

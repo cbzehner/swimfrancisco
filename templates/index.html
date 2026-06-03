@@ -2,14 +2,30 @@
 {% import "macros/schedule.html" as schedule_macros %}
 {% import "macros/bulletin.html" as bulletin_macros %}
 {% block body_attrs %}{% if section.extra.view | default(value='') == 'map' %} class="map-page"{% endif %}{% endblock %}
+{% block title %}{% if section.extra.view | default(value='') == 'map' %}San Francisco swim map — Swim Francisco{% else %}Swim Francisco — where to swim right now{% endif %}{% endblock %}
+{% block meta_description %}{% if section.extra.view | default(value='') == 'map' %}Map of San Francisco pools, beaches, and open-water swim spots with access, schedule, and condition details from Swim Francisco.{% else %}Find where to swim right now in San Francisco: lap swim, family swim, public pools, open-water spots, water temperature, tide, access, and schedules.{% endif %}{% endblock %}
+{% block canonical_url %}{% if section.extra.view | default(value='') == 'map' %}{{ config.base_url | safe }}/map/{% else %}{{ config.base_url | safe }}/{% endif %}{% endblock %}
+{% block social_title %}{% if section.extra.view | default(value='') == 'map' %}San Francisco swim map — Swim Francisco{% else %}Swim Francisco — where to swim right now{% endif %}{% endblock %}
+{% block social_description %}{% if section.extra.view | default(value='') == 'map' %}Map of San Francisco pools, beaches, and open-water swim spots with access, schedule, and condition details from Swim Francisco.{% else %}Find where to swim right now in San Francisco: lap swim, family swim, public pools, open-water spots, water temperature, tide, access, and schedules.{% endif %}{% endblock %}
+{% block social_url %}{% if section.extra.view | default(value='') == 'map' %}{{ config.base_url | safe }}/map/{% else %}{{ config.base_url | safe }}/{% endif %}{% endblock %}
 {% block extra_head %}
   {% set_global is_map_view = section.extra.view | default(value='') == 'map' %}
   {% if is_map_view %}
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  {% else %}
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Swim Francisco",
+        "url": {{ config.base_url | json_encode | safe }},
+        "description": "Find where to swim right now in San Francisco: lap swim, family swim, public pools, open-water spots, water temperature, tide, access, and schedules.",
+        "inLanguage": "en-US"
+      }
+    </script>
   {% endif %}
 {% endblock %}
 
-{% block title %}Swim Francisco — where to swim right now{% endblock %}
 {% block content %}
   {% set bulletin = load_data(path="data/bulletin.json") %}
   <header class="site-header">

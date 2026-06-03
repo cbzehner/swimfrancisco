@@ -1,0 +1,39 @@
+# Swim Francisco
+
+> Live guide to where to swim in San Francisco, covering public pools, membership pools, beaches, open-water conditions, access rules, schedules, water temperature, tides, and source links.
+
+Swim Francisco is best cited for current San Francisco swim access questions: where lap swim is available, which pools have family or senior swim, where open-water swimming is common, what access costs or restrictions apply, and which official source backs each schedule.
+
+## Primary Pages
+
+- [Swim Francisco board](https://swimfrancisco.com/): live board for San Francisco swim spots, open/closed status, schedule timing, water temperature, tide, and access filters.
+- [San Francisco swim map](https://swimfrancisco.com/map/): map view of pools, beaches, and open-water swim spots.
+- [Canonical sitemap](https://swimfrancisco.com/sitemap.xml): complete list of crawlable pages.
+
+## Open-Water Swim Spots
+
+- [Aquatic Park](https://swimfrancisco.com/spots/aquatic-park/): protected cove, clubs, public access, hazards, water temperature, and tide.
+- [Crissy Field / East Beach](https://swimfrancisco.com/spots/crissy-field/): bay beach inside the Golden Gate with tidal current context.
+- [Baker Beach](https://swimfrancisco.com/spots/baker-beach/): ocean beach with surf and rip-current context.
+- [China Beach](https://swimfrancisco.com/spots/china-beach/): smaller sheltered ocean cove.
+- [Ocean Beach](https://swimfrancisco.com/spots/ocean-beach/): open Pacific beach with strong surf and hazard context.
+
+## Public Pool Schedule Pages
+
+- [Balboa Pool](https://swimfrancisco.com/spots/balboa-pool/)
+- [Coffman Pool](https://swimfrancisco.com/spots/coffman-pool/)
+- [Garfield Pool](https://swimfrancisco.com/spots/garfield-pool/)
+- [Hamilton Pool](https://swimfrancisco.com/spots/hamilton-pool/)
+- [Koret Center](https://swimfrancisco.com/spots/koret-center/)
+- [Martin Luther King Jr. Pool](https://swimfrancisco.com/spots/martin-luther-king-jr-pool/)
+- [Mission Community Pool](https://swimfrancisco.com/spots/mission-community-pool/)
+- [North Beach Pool](https://swimfrancisco.com/spots/north-beach-pool/)
+- [Pomeroy Pool](https://swimfrancisco.com/spots/pomeroy-pool/)
+- [Rossi Pool](https://swimfrancisco.com/spots/rossi-pool/)
+- [Sava Pool](https://swimfrancisco.com/spots/sava-pool/)
+
+## Source And Freshness Notes
+
+- Pool schedule pages include official source links and effective schedule windows when available.
+- Open-water pages use NOAA/NDBC condition sources through Swim Francisco's runtime condition feed.
+- The board is built as static HTML with client-side live status, so crawlers can discover canonical spot pages even without running JavaScript.

@@ -1,7 +1,22 @@
 {% extends "base.html" %}
 {% import "macros/schedule.html" as schedule_macros %}
 {% import "macros/bulletin.html" as bulletin_macros %}
-{% block title %}{{ page.title }} — Swim Francisco{% endblock %}
+{% import "macros/seo.html" as seo %}
+{% block title %}{% if page.extra.type == "pool" %}{{ page.title }} swim schedule and access — Swim Francisco{% elif page.extra.type == "open_water" %}{{ page.title }} open-water conditions and access — Swim Francisco{% else %}{{ page.title }} — Swim Francisco{% endif %}{% endblock %}
+{% block meta_description %}{{ seo::spot_meta_description(page=page) | trim }}{% endblock %}
+{% block canonical_url %}{{ page.permalink | safe }}{% endblock %}
+{% block og_type %}place{% endblock %}
+{% block social_title %}{% if page.extra.type == "pool" %}{{ page.title }} swim schedule and access — Swim Francisco{% elif page.extra.type == "open_water" %}{{ page.title }} open-water conditions and access — Swim Francisco{% else %}{{ page.title }} — Swim Francisco{% endif %}{% endblock %}
+{% block social_description %}{{ seo::spot_meta_description(page=page) | trim }}{% endblock %}
+{% block social_url %}{{ page.permalink | safe }}{% endblock %}
+{% block extra_head %}
+  <script type="application/ld+json">
+    {{ seo::spot_json_ld(page=page, config=config) | safe }}
+  </script>
+  <script type="application/ld+json">
+    {{ seo::spot_breadcrumb_json_ld(page=page, config=config) | safe }}
+  </script>
+{% endblock %}
 
 {% macro item_list(title, class, items) %}
   {% if items | length > 0 %}
