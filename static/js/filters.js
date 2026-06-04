@@ -25,9 +25,9 @@
 import {
   computeNextOpenOffset,
   computeWindowAvailability,
-  nowInPacific,
   sortByRank,
 } from "./helpers/board.mjs";
+import { pacificWallClockDate } from "./helpers/pacific.mjs";
 import { TYPE_TOKENS, TYPE_TO_TOKEN, isDropInType } from "./helpers/programs.mjs";
 import { getCurrentHorizon, renderBoard } from "./status.js";
 
@@ -268,7 +268,7 @@ function applyFilters(tbody, state) {
     state.sortByDistance && state.userCoords
       ? sortRowsByDistance(visible, state.userCoords)
       : state.sortByNextOpen
-        ? sortRowsByNextOpen(visible, poolTypes, nowInPacific(), horizon)
+        ? sortRowsByNextOpen(visible, poolTypes, pacificWallClockDate(), horizon)
       : sortByRank(visible, (row) => Number(row.dataset.baselineRank));
 
   // Move visible rows to the top in their new order; hidden rows retain

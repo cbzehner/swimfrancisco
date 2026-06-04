@@ -8,9 +8,9 @@ import {
   computeAccessStatus,
   computeDetailStatus,
   formatHHMM,
-  nowInPacific,
   parseHHMM,
 } from "./helpers/board.mjs";
+import { pacificWallClockDate } from "./helpers/pacific.mjs";
 import { PROGRAM_LABEL } from "./helpers/programs.mjs";
 
 const DAY_LABEL_SHORT = {
@@ -137,7 +137,7 @@ function init() {
   // Every SF pool is in Pacific — reason about time in PT regardless of the
   // visitor's browser timezone, so the server-rendered today block and the
   // client-side "NOW" marker agree for non-PT visitors.
-  const now = nowInPacific();
+  const now = pacificWallClockDate();
   const result = applyStatusSlab(root, schedule, now);
   decorateTodayBlock(root, now, result);
 }

@@ -4,7 +4,7 @@
 // `sf:filters-applied`. No client-side view toggling — the VIEW BOARD link
 // is a plain <a href="/"> and the browser handles navigation.
 
-import { nowInPacific } from "./helpers/board.mjs";
+import { pacificWallClockDate } from "./helpers/pacific.mjs";
 import { formatTideSummary } from "./helpers/tide.mjs";
 
 const LEAFLET_JS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
@@ -86,7 +86,7 @@ function popupRow(label, value) {
 function beachConditions(spot) {
   const conditions = (typeof window !== "undefined" && window.SWIMFRANCISCO_CONDITIONS) || null;
   const record = conditions ? conditions[spot.slug] : null;
-  const tide = record ? formatTideSummary(record, nowInPacific()) : null;
+  const tide = record ? formatTideSummary(record, pacificWallClockDate()) : null;
   return { temp: spot.temp, tide };
 }
 

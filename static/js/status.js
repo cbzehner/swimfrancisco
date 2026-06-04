@@ -2,18 +2,21 @@
 // Pure helpers live in ./helpers/board.mjs and are exercised by node:test;
 // this file handles the DOM glue.
 
-import { PLACEHOLDER, computeStatus, captureBaselineRanks, nowInPacific } from "./helpers/board.mjs";
 import {
+  PLACEHOLDER,
+  captureBaselineRanks,
   computeAccessStatus,
   computeAccessWindowAvailability,
+  computeStatus,
   computeWindowAvailability,
   formatHHMM,
   getHorizonOptions,
   resolveHorizon,
 } from "./helpers/board.mjs";
+import { pacificWallClockDate } from "./helpers/pacific.mjs";
 import { PROGRAM_LABEL } from "./helpers/programs.mjs";
 
-let currentHorizon = resolveHorizon(readHorizonParam(), nowInPacific());
+let currentHorizon = resolveHorizon(readHorizonParam(), pacificWallClockDate());
 
 const HORIZON_TITLES = {
   "this-morning": "FOG-LIFT WINDOW",
@@ -24,7 +27,7 @@ const HORIZON_TITLES = {
   "tomorrow-evening": "GOLDEN HOUR TOMORROW",
 };
 
-function currentTimeTitle(now = nowInPacific()) {
+function currentTimeTitle(now = pacificWallClockDate()) {
   const hour = now.getHours();
   if (hour < 5) return "NIGHT SWIM";
   if (hour < 10) return "BEFORE BREAKFAST";
@@ -227,7 +230,7 @@ function reorderDom(tbody, sortedRows) {
   sortedRows.forEach((row) => tbody.appendChild(row));
 }
 
-export function renderBoard(root, allowedTypes = null, now = nowInPacific()) {
+export function renderBoard(root, allowedTypes = null, now = pacificWallClockDate()) {
   const tbody = root.querySelector("table.board tbody");
   if (!tbody) return;
   currentHorizon = resolveHorizon(currentHorizon.id, now);
@@ -304,7 +307,7 @@ function activateFocusedHorizonItem(control) {
   const item = document.activeElement;
   if (!item || item.getAttribute("role") !== "menuitemradio" || !item.value) return;
   applyHorizon(item.value);
-  populateHorizonMenu(control, nowInPacific());
+  populateHorizonMenu(control, pacificWallClockDate());
   closeHorizonMenuAndFocusButton(control);
 }
 
@@ -319,7 +322,7 @@ function toggleHorizonMenu(control) {
   }
 }
 
-function applyHorizon(id, now = nowInPacific()) {
+function applyHorizon(id, now = pacificWallClockDate()) {
   currentHorizon = resolveHorizon(id, now);
   writeHorizonParam(currentHorizon.id);
   applyHorizonChrome(currentHorizon);
@@ -348,7 +351,7 @@ function populateHorizonMenu(control, now) {
       el.setAttribute("aria-checked", String(option.id === selected));
       el.addEventListener("click", () => {
         applyHorizon(option.id);
-        populateHorizonMenu(control, nowInPacific());
+        populateHorizonMenu(control, pacificWallClockDate());
         closeHorizonMenuAndFocusButton(control);
       });
       return el;
@@ -368,14 +371,14 @@ function initHorizonControl(now) {
   populateHorizonMenu(control, now);
 
   button.addEventListener("click", () => {
-    populateHorizonMenu(control, nowInPacific());
+    populateHorizonMenu(control, pacificWallClockDate());
     toggleHorizonMenu(control);
   });
 
   button.addEventListener("keydown", (event) => {
     if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
     event.preventDefault();
-    populateHorizonMenu(control, nowInPacific());
+    populateHorizonMenu(control, pacificWallClockDate());
     openHorizonMenu(control);
     focusHorizonMenuItem(event.key === "ArrowUp" ? -1 : 1);
   });
@@ -424,14 +427,14 @@ function initHorizonControl(now) {
 
   document.querySelector("[data-time-banner-reset]")?.addEventListener("click", () => {
     applyHorizon("now");
-    populateHorizonMenu(control, nowInPacific());
+    populateHorizonMenu(control, pacificWallClockDate());
   });
 }
 
 function init() {
   // All SF pools are in Pacific; reason about "now" in PT regardless of the
   // visitor's browser timezone.
-  const now = nowInPacific();
+  const now = pacificWallClockDate();
   initHorizonControl(now);
   renderBoard(document, null, now);
   // Signal to filters.js that status cells are populated and rows are in

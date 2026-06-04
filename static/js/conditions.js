@@ -3,8 +3,7 @@
 // matching rows on the board and the detail page panel.
 // Fails silently — missing data leaves the existing em-dash placeholders.
 
-import { nowInPacific } from "./helpers/board.mjs";
-import { formatPacificDate, formatPacificTime } from "./helpers/pacific.mjs";
+import { formatPacificDate, formatPacificTime, pacificWallClockDate } from "./helpers/pacific.mjs";
 import { formatTideSummary } from "./helpers/tide.mjs";
 
 const DEFAULT_ENDPOINT = "/api/conditions";
@@ -83,7 +82,7 @@ function applyBoardSummary(root) {
 
 function applyBulletinStrip(root, conditions) {
   const instant = new Date();
-  const now = nowInPacific(instant);
+  const now = pacificWallClockDate(instant);
   setText(root, "[data-today-date]", formatPacificDate(instant));
   setText(root, "[data-pt-time]", formatPacificTime(instant));
 
@@ -141,7 +140,7 @@ function applyConditions(root, conditions) {
   // Tide predictions arrive as zoneless station-local (Pacific) ISO strings.
   // Pinning `now` to PT wall-clock keeps the "past" filter correct for
   // visitors whose browser is outside Pacific time.
-  const now = nowInPacific();
+  const now = pacificWallClockDate();
   const panels = root.querySelectorAll("section.conditions[data-slug]");
   panels.forEach((panel) => {
     const slug = panel.getAttribute("data-slug");
