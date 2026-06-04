@@ -4,6 +4,7 @@
 // Fails silently — missing data leaves the existing em-dash placeholders.
 
 import { nowInPacific } from "./helpers/board.mjs";
+import { formatPacificDate, formatPacificTime } from "./helpers/pacific.mjs";
 import { formatTideSummary } from "./helpers/tide.mjs";
 
 const DEFAULT_ENDPOINT = "/api/conditions";
@@ -34,10 +35,10 @@ function firstRecordWithTemp(conditions, slugs) {
   return null;
 }
 
-function firstRecordWithTide(conditions, slugs) {
+function firstRecordWithTide(conditions, slugs, now) {
   for (const slug of slugs) {
     const record = conditions[slug];
-    if (formatTideSummary(record, nowInPacific())) return record;
+    if (formatTideSummary(record, now)) return record;
   }
   return null;
 }
@@ -47,23 +48,6 @@ function setText(root, selector, value) {
   root.querySelectorAll(selector).forEach((node) => {
     node.textContent = value;
   });
-}
-
-function formatPacificDate(now) {
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/Los_Angeles",
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  }).format(now);
-}
-
-function formatPacificTime(now) {
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/Los_Angeles",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(now);
 }
 
 function formatUpdatedAt(conditions) {
@@ -98,14 +82,17 @@ function applyBoardSummary(root) {
 }
 
 function applyBulletinStrip(root, conditions) {
-  const now = nowInPacific();
-  setText(root, "[data-today-date]", formatPacificDate(now));
-  setText(root, "[data-pt-time]", formatPacificTime(now));
+  const instant = new Date();
+  const now = nowInPacific(instant);
+  setText(root, "[data-today-date]", formatPacificDate(instant));
+  setText(root, "[data-pt-time]", formatPacificTime(instant));
 
   if (!conditions || typeof conditions !== "object") return;
   const bayRecord = firstRecordWithTemp(conditions, BAY_SLUGS);
   const oceanRecord = firstRecordWithTemp(conditions, OCEAN_SLUGS);
-  const tideRecord = firstRecordWithTide(conditions, BAY_SLUGS) || firstRecordWithTide(conditions, OCEAN_SLUGS);
+  const tideRecord =
+    firstRecordWithTide(conditions, BAY_SLUGS, now) ||
+    firstRecordWithTide(conditions, OCEAN_SLUGS, now);
   const bayTemp = extractTemp(bayRecord);
   const oceanTemp = extractTemp(oceanRecord);
   const tideSummary = formatTideSummary(tideRecord, now);
