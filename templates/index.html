@@ -148,7 +148,7 @@
               {% if page.extra.type == 'open_water' %}
                 {{ page.extra.description_short | default(value='OPEN WATER') | upper }}
               {% else %}
-                {{ page.extra.subtype | default(value='POOL') | upper }} · {{ page.extra.setpoint_label | default(value='25YD') | upper }}
+                {{ page.extra.subtype | default(value='POOL') | upper }}
               {% endif %}
             </span>
           </td>

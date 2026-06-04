@@ -298,6 +298,19 @@ def test_homepage_renders_cost_badges_without_hardcoded_price(built_site: Path) 
     assert 'class="cost-badge is-paid">$7</span>' not in html
 
 
+def test_board_uses_water_column_as_the_only_temperature_surface(built_site: Path) -> None:
+    html = (built_site / "index.html").read_text()
+    assert "INDOOR · 80–82°F" not in html
+    assert "OUTDOOR · 80–82°F" not in html
+    assert "THERAPEUTIC INDOOR · 92°F" not in html
+    assert "data-cell=water>80–82°F" in html
+    assert "data-cell=water>92°F" in html
+
+    css = (built_site / "main.css").read_text()
+    assert 'tr[data-type="open_water"] [data-cell="water"]' not in css
+    assert 'tr.is-open [data-cell="water"]' not in css
+
+
 def test_spot_detail_uses_print_header_and_preserves_long_titles(built_site: Path) -> None:
     html = _read(built_site, "martin-luther-king-jr-pool")
     assert "class=spot-detail-head" in html

@@ -612,17 +612,6 @@ table.board tr[data-type="open_water"] [data-cell="status"] {
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
-table.board [data-cell="water"] {
-  font-family: var(--display);
-  font-size: 18px;
-}
-table.board tr[data-type="open_water"] [data-cell="water"] {
-  color: var(--teal);
-  font-size: 26px;
-}
-table.board tr.is-open [data-cell="water"] {
-  color: var(--red);
-}
 .row-arrow {
   float: right;
   color: var(--red);
