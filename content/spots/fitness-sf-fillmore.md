@@ -6,6 +6,7 @@ slug = "fitness-sf-fillmore"
 type = "pool"
 subtype = "membership indoor"
 address = "1455 Fillmore St, San Francisco, CA 94115"
+locale_label = "Fillmore"
 lat = 37.783
 lng = -122.4328
 website = "https://fitnesssf.com/location/fillmore"

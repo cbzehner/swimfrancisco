@@ -5,6 +5,7 @@ slug = "baker-beach"
 [extra]
 type = "open_water"
 address = "1504 Pershing Dr, San Francisco, CA 94129"
+locale_label = "Presidio"
 lat = 37.7937
 lng = -122.4836
 website = "https://www.nps.gov/places/000/baker-beach.htm"

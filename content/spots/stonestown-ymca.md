@@ -6,6 +6,7 @@ slug = "stonestown-ymca"
 type = "pool"
 subtype = "membership indoor"
 address = "333 Eucalyptus Dr, San Francisco, CA 94132"
+locale_label = "Stonestown"
 lat = 37.7311
 lng = -122.4762
 website = "https://www.ymcasf.org/location/stonestown-family-ymca/"

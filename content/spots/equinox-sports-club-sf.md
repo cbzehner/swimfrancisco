@@ -6,6 +6,7 @@ slug = "equinox-sports-club-sf"
 type = "pool"
 subtype = "membership indoor"
 address = "747 Market St, San Francisco, CA 94103"
+locale_label = "Market Street"
 lat = 37.7866
 lng = -122.4043
 website = "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco"

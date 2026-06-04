@@ -6,6 +6,7 @@ slug = "bay-club-gateway"
 type = "pool"
 subtype = "private outdoor"
 address = "370 Drumm St, San Francisco, CA 94111"
+locale_label = "Embarcadero"
 lat = 37.8033
 lng = -122.4019
 website = "https://www.bayclubs.com/gateway/"

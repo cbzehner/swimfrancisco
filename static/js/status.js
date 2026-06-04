@@ -252,6 +252,11 @@ function closeHorizonMenu(control) {
   button.setAttribute("aria-expanded", "false");
 }
 
+function closeHorizonMenuAndFocusButton(control) {
+  closeHorizonMenu(control);
+  control.querySelector("[data-horizon-button]")?.focus();
+}
+
 function positionHorizonMenu(button) {
   const rect = button.getBoundingClientRect();
   const top = rect.bottom + 4;
@@ -273,11 +278,42 @@ function openHorizonMenu(control) {
   button.setAttribute("aria-expanded", "true");
 }
 
+function horizonMenuItems(menu = findHorizonMenu()) {
+  return menu ? Array.from(menu.querySelectorAll("button[role='menuitemradio']")) : [];
+}
+
+function focusHorizonMenuItem(direction = 1) {
+  const items = horizonMenuItems();
+  if (!items.length) return;
+  const checkedIndex = items.findIndex((item) => item.getAttribute("aria-checked") === "true");
+  const targetIndex = checkedIndex >= 0 ? checkedIndex : direction < 0 ? items.length - 1 : 0;
+  items[targetIndex].focus();
+}
+
+function focusAdjacentHorizonItem(direction) {
+  const items = horizonMenuItems();
+  if (!items.length) return;
+  const currentIndex = items.indexOf(document.activeElement);
+  const nextIndex = currentIndex < 0
+    ? direction < 0 ? items.length - 1 : 0
+    : (currentIndex + direction + items.length) % items.length;
+  items[nextIndex].focus();
+}
+
+function activateFocusedHorizonItem(control) {
+  const item = document.activeElement;
+  if (!item || item.getAttribute("role") !== "menuitemradio" || !item.value) return;
+  applyHorizon(item.value);
+  populateHorizonMenu(control, nowInPacific());
+  closeHorizonMenuAndFocusButton(control);
+}
+
 function toggleHorizonMenu(control) {
   const menu = findHorizonMenu();
   if (!menu) return;
   if (menu.hidden) {
     openHorizonMenu(control);
+    focusHorizonMenuItem();
   } else {
     closeHorizonMenu(control);
   }
@@ -313,7 +349,7 @@ function populateHorizonMenu(control, now) {
       el.addEventListener("click", () => {
         applyHorizon(option.id);
         populateHorizonMenu(control, nowInPacific());
-        closeHorizonMenu(control);
+        closeHorizonMenuAndFocusButton(control);
       });
       return el;
     }),
@@ -336,6 +372,14 @@ function initHorizonControl(now) {
     toggleHorizonMenu(control);
   });
 
+  button.addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+    event.preventDefault();
+    populateHorizonMenu(control, nowInPacific());
+    openHorizonMenu(control);
+    focusHorizonMenuItem(event.key === "ArrowUp" ? -1 : 1);
+  });
+
   document.addEventListener("click", (event) => {
     const menu = findHorizonMenu();
     if (control.contains(event.target)) return;
@@ -344,7 +388,30 @@ function initHorizonControl(now) {
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeHorizonMenu(control);
+    const menu = findHorizonMenu();
+    if (!menu || menu.hidden) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeHorizonMenuAndFocusButton(control);
+      return;
+    }
+    if (!menu.contains(document.activeElement)) return;
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      focusAdjacentHorizonItem(1);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      focusAdjacentHorizonItem(-1);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      horizonMenuItems()[0]?.focus();
+    } else if (event.key === "End") {
+      event.preventDefault();
+      horizonMenuItems().at(-1)?.focus();
+    } else if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      activateFocusedHorizonItem(control);
+    }
   });
 
   window.addEventListener("resize", () => {

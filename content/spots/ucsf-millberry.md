@@ -6,6 +6,7 @@ slug = "ucsf-millberry"
 type = "pool"
 subtype = "campus indoor"
 address = "500 Parnassus Ave, San Francisco, CA 94143"
+locale_label = "Parnassus"
 lat = 37.7631
 lng = -122.4588
 website = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/millberry-fitness-center-ucsf-parnassus"

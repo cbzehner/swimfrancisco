@@ -6,6 +6,7 @@ slug = "hamilton-pool"
 type = "pool"
 subtype = "indoor"
 address = "1900 Geary Blvd, San Francisco, CA 94115"
+locale_label = "Western Addition"
 lat = 37.7847
 lng = -122.4340
 website = "https://sfrecpark.org/facilities/facility/details/Hamilton-Pool-215"

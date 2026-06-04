@@ -6,6 +6,7 @@ slug = "martin-luther-king-jr-pool"
 type = "pool"
 subtype = "indoor"
 address = "5701 3rd St, San Francisco, CA 94124"
+locale_label = "Bayview"
 lat = 37.7210
 lng = -122.3896
 website = "https://sfrecpark.org/facilities/facility/details/Martin-Luther-King-Jr-Pool-216"

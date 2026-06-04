@@ -6,6 +6,7 @@ slug = "chinatown-ymca"
 type = "pool"
 subtype = "membership indoor"
 address = "855 Sacramento St, San Francisco, CA 94108"
+locale_label = "Chinatown"
 lat = 37.7937
 lng = -122.4071
 website = "https://www.ymcasf.org/location/chinatown-ymca/"

@@ -6,6 +6,7 @@ slug = "coffman-pool"
 type = "pool"
 subtype = "indoor"
 address = "1701 Visitacion Ave, San Francisco, CA 94134"
+locale_label = "Visitacion Valley"
 lat = 37.7105
 lng = -122.4105
 website = "https://sfrecpark.org/facilities/facility/details/Coffman-Pool-213"

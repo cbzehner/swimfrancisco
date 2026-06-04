@@ -5,6 +5,7 @@ slug = "china-beach"
 [extra]
 type = "open_water"
 address = "390 Sea Cliff Ave, San Francisco, CA 94121"
+locale_label = "Sea Cliff"
 lat = 37.7886
 lng = -122.4911
 website = "https://www.nps.gov/goga/planyourvisit/chinabeach.htm"

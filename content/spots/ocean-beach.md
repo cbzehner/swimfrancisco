@@ -5,6 +5,7 @@ slug = "ocean-beach"
 [extra]
 type = "open_water"
 address = "1000 Great Hwy, San Francisco, CA 94121"
+locale_label = "Ocean Beach"
 lat = 37.7594
 lng = -122.5107
 website = "https://www.nps.gov/goga/planyourvisit/oceanbeach.htm"

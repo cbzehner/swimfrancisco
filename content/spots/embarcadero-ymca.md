@@ -6,6 +6,7 @@ slug = "embarcadero-ymca"
 type = "pool"
 subtype = "membership indoor"
 address = "169 Steuart St, San Francisco, CA 94105"
+locale_label = "Embarcadero"
 lat = 37.7932
 lng = -122.3926
 website = "https://www.ymcasf.org/location/embarcadero-ymca/"

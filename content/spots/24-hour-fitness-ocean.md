@@ -6,6 +6,7 @@ slug = "24-hour-fitness-ocean"
 type = "pool"
 subtype = "gym indoor"
 address = "1850 Ocean Ave, San Francisco, CA 94112"
+locale_label = "Ocean Ave"
 lat = 37.7251
 lng = -122.4618
 website = "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport"

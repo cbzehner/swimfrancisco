@@ -40,14 +40,14 @@
   </header>
 
   {% if not is_map_view %}
-    <div class="bulletin-strip" aria-label="Current conditions">
+    <section class="bulletin-strip" aria-label="Current conditions">
       <div><span class="k">Today</span><span class="v" data-today-date>—</span></div>
       <div><span class="k">Time</span><span class="v num" data-pt-time>—</span></div>
       <div><span class="k">Bay</span><span class="v red num" data-bay-temp-strip>—</span></div>
       <div><span class="k">Ocean</span><span class="v teal num" data-ocean-temp-strip>—</span></div>
       <div><span class="k">Tide</span><span class="v num" data-next-tide>—</span></div>
       <div><span class="k">Updated</span><span class="v num" data-conditions-updated>—</span></div>
-    </div>
+    </section>
 
     <section class="bulletin-hero">
       <div class="eyebrow">No. {{ bulletin.label }} · Live bulletin · right now</div>
@@ -81,6 +81,7 @@
                   class="horizon-button"
                   data-horizon-button
                   aria-haspopup="menu"
+                  aria-controls="horizon-menu"
                   aria-expanded="false">Now</button>
         </div>
       </div>
@@ -107,7 +108,7 @@
     {% endif %}
   </div>
   {% if not is_map_view %}
-    <div class="horizon-menu" data-horizon-menu role="menu" hidden></div>
+    <div id="horizon-menu" class="horizon-menu" data-horizon-menu role="menu" hidden></div>
   {% endif %}
 
   {% if not is_map_view %}
@@ -144,13 +145,15 @@
         >
           <td data-cell="spot">
             <a href="{{ page.permalink }}">{{ page.title | upper }}</a>
-            <span class="spot-subtitle">
-              {% if page.extra.type == 'open_water' %}
-                {{ page.extra.description_short | default(value='OPEN WATER') | upper }}
-              {% else %}
+            {% if page.extra.type == 'open_water' %}
+              <span class="spot-subtitle spot-subtitle--description">
+                {{ page.extra.description_short | default(value='Open water') }}
+              </span>
+            {% else %}
+              <span class="spot-subtitle">
                 {{ page.extra.subtype | default(value='POOL') | upper }}
-              {% endif %}
-            </span>
+              </span>
+            {% endif %}
           </td>
           <td data-cell="status"><span class="status-pill">—</span></td>
           <td data-cell="next">—</td>
@@ -164,7 +167,9 @@
               <span class="cost-badge is-paid">Paid</span>
             {% endif %}
             <span class="locale-text">
-              {% if page.extra.address %}
+              {% if page.extra.locale_label %}
+                {{ page.extra.locale_label | upper }}
+              {% elif page.extra.address %}
                 {{ page.extra.address | split(pat=',') | nth(n=1) | default(value=page.extra.subtype | default(value='SF')) | upper }}
               {% elif page.extra.subtype %}
                 {{ page.extra.subtype | upper }}

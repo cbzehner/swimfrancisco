@@ -6,6 +6,7 @@ slug = "sava-pool"
 type = "pool"
 subtype = "indoor"
 address = "2695 19th Ave, San Francisco, CA 94132"
+locale_label = "Parkside"
 lat = 37.7371
 lng = -122.4757
 website = "https://sfrecpark.org/facilities/facility/details/Sava-Pool-220"

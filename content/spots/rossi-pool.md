@@ -6,6 +6,7 @@ slug = "rossi-pool"
 type = "pool"
 subtype = "indoor"
 address = "600 Arguello Blvd, San Francisco, CA 94118"
+locale_label = "Richmond"
 lat = 37.7809
 lng = -122.4580
 website = "https://sfrecpark.org/495/Rossi-Pool"

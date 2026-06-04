@@ -6,6 +6,7 @@ slug = "24-hour-fitness-potrero"
 type = "pool"
 subtype = "gym indoor"
 address = "1645 Bryant St, San Francisco, CA 94103"
+locale_label = "Potrero"
 lat = 37.7665
 lng = -122.4105
 website = "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"

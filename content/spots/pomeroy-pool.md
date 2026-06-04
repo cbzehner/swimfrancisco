@@ -6,6 +6,7 @@ slug = "pomeroy-pool"
 type = "pool"
 subtype = "therapeutic indoor"
 address = "207 Skyline Blvd, San Francisco, CA 94132"
+locale_label = "Lake Merced"
 lat = 37.7298
 lng = -122.5019
 website = "https://www.prrcsf.org/pool"

@@ -6,6 +6,7 @@ slug = "ucsf-bakar"
 type = "pool"
 subtype = "private indoor/outdoor"
 address = "1675 Owens St, San Francisco, CA 94158"
+locale_label = "Mission Bay"
 lat = 37.7678
 lng = -122.3933
 website = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"

@@ -6,6 +6,7 @@ slug = "sfsu-mashouf"
 type = "pool"
 subtype = "campus indoor"
 address = "755 Font Blvd, San Francisco, CA 94132"
+locale_label = "SFSU"
 lat = 37.7248
 lng = -122.4839
 website = "https://campusrec.sfsu.edu/Aquatics"

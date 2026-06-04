@@ -6,6 +6,7 @@ slug = "city-sports-20th-ave"
 type = "pool"
 subtype = "membership indoor"
 address = "3201 20th Ave, San Francisco, CA 94132"
+locale_label = "Stonestown"
 lat = 37.7288
 lng = -122.4756
 website = "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914"

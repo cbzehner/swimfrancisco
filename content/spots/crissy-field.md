@@ -5,6 +5,7 @@ slug = "crissy-field"
 [extra]
 type = "open_water"
 address = "603 Mason St, San Francisco, CA 94129"
+locale_label = "Presidio"
 lat = 37.8042
 lng = -122.4660
 website = "https://presidio.gov/explore/attractions/crissy-field"

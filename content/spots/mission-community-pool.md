@@ -6,6 +6,7 @@ slug = "mission-community-pool"
 type = "pool"
 subtype = "outdoor"
 address = "101 Linda St, San Francisco, CA 94110"
+locale_label = "Mission"
 lat = 37.7598
 lng = -122.4222
 website = "https://sfrecpark.org/facilities/facility/details/Mission-Community-Pool-217"

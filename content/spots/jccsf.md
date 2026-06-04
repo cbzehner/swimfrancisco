@@ -6,6 +6,7 @@ slug = "jccsf"
 type = "pool"
 subtype = "private indoor"
 address = "3200 California St, San Francisco, CA 94118"
+locale_label = "Laurel Heights"
 lat = 37.7876
 lng = -122.4472
 website = "https://www.jccsf.org/fitness/aquatics/"

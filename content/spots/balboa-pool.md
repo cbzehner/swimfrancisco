@@ -6,6 +6,7 @@ slug = "balboa-pool"
 type = "pool"
 subtype = "indoor"
 address = "51 Havelock St, San Francisco, CA 94112"
+locale_label = "Ingleside"
 lat = 37.7266
 lng = -122.4432
 website = "https://sfrecpark.org/facilities/facility/details/Balboa-Pool-212"

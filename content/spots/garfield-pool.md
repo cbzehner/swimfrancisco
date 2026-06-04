@@ -6,6 +6,7 @@ slug = "garfield-pool"
 type = "pool"
 subtype = "indoor"
 address = "1271 Treat Ave, San Francisco, CA 94110"
+locale_label = "Mission"
 lat = 37.7500
 lng = -122.4121
 website = "https://sfrecpark.org/facilities/facility/details/Garfield-Pool-214"

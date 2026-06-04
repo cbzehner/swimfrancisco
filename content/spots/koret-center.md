@@ -6,6 +6,7 @@ slug = "koret-center"
 type = "pool"
 subtype = "campus indoor"
 address = "2130 Fulton St, San Francisco, CA 94117"
+locale_label = "USF"
 lat = 37.7766
 lng = -122.4513
 website = "https://www.usfca.edu/koret/facilities/indoor-swimming"

@@ -146,14 +146,14 @@
     </div>
   </header>
 
-  <div class="bulletin-strip" aria-label="Current conditions">
+  <section class="bulletin-strip" aria-label="Current conditions">
     <div><span class="k">Today</span><span class="v" data-today-date>—</span></div>
     <div><span class="k">Time</span><span class="v num" data-pt-time>—</span></div>
     <div><span class="k">Bay</span><span class="v red num" data-bay-temp-strip>—</span></div>
     <div><span class="k">Ocean</span><span class="v teal num" data-ocean-temp-strip>—</span></div>
     <div><span class="k">Tide</span><span class="v num" data-next-tide>—</span></div>
     <div><span class="k">Updated</span><span class="v num" data-conditions-updated>—</span></div>
-  </div>
+  </section>
 
   <section class="spot-detail-head">
     <p class="back"><a href="{{ config.base_url }}/">&larr; BOARD</a></p>
@@ -180,7 +180,7 @@
       {% endif %}
       {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">OFFICIAL PAGE</a>{% endif %}
       {% if extra.address %}
-        <span class="address-actions" aria-label="Directions">
+        <span class="address-actions" role="group" aria-label="Directions">
           <span class="address-actions-label">DIRECTIONS</span>
           <a href="{{ apple_dir }}" target="_blank" rel="noopener">APPLE</a>
           <a href="{{ google_dir }}" target="_blank" rel="noopener">GOOGLE</a>

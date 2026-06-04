@@ -6,6 +6,7 @@ slug = "presidio-ymca-letterman"
 type = "pool"
 subtype = "membership indoor"
 address = "1151 Gorgas Ave, San Francisco, CA 94129"
+locale_label = "Presidio"
 lat = 37.8005
 lng = -122.4500
 website = "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"

@@ -6,6 +6,7 @@ slug = "north-beach-pool"
 type = "pool"
 subtype = "indoor"
 address = "661 Lombard St, San Francisco, CA 94133"
+locale_label = "North Beach"
 lat = 37.8028
 lng = -122.4132
 website = "https://sfrecpark.org/facilities/facility/details/North-Beach-Pool-218"
