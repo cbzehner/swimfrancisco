@@ -211,7 +211,7 @@ def test_bulletin_number_matches_reviewed_schedule_snapshots() -> None:
     assert bulletin["label"] == f"{bulletin['number']:02d}"
 
 
-def test_bulletin_generator_preserves_number_until_release(tmp_path: Path) -> None:
+def test_bulletin_generator_bumps_number_when_reviewed_schedules_change(tmp_path: Path) -> None:
     if shutil.which("node") is None:
         pytest.skip("node binary not available")
 
@@ -235,15 +235,14 @@ def test_bulletin_generator_preserves_number_until_release(tmp_path: Path) -> No
     assert run_generator()["label"] == "00"
 
     reviewed.write_text('{"sessions":[{"day":"tuesday"}]}\n')
-    assert run_generator()["label"] == "00"
-    assert run_generator("--release")["label"] == "01"
-    assert run_generator("--release")["label"] == "01"
+    assert run_generator()["label"] == "01"
+    assert run_generator()["label"] == "01"
 
     another_reviewed = tmp_path / "data" / "coffman-pool" / "2026-05-02-b" / "reviewed.json"
     another_reviewed.parent.mkdir(parents=True)
     another_reviewed.write_text('{"sessions":[{"day":"wednesday"}]}\n')
-    assert run_generator()["label"] == "01"
-    assert run_generator("--release")["label"] == "02"
+    assert run_generator()["label"] == "02"
+    assert run_generator()["label"] == "02"
 
 
 def test_homepage_preserves_redesign_dom_contract(built_site: Path) -> None:

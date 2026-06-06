@@ -119,8 +119,11 @@ fast-path.
    `content/spots/<slug>.md`, and leaves `reviewed.json` on disk.
 6. Spot-check flagged pools against the source PDF before accepting a
    content diff.
-7. Commit `content/spots/` and the per-review directory (`source.pdf`,
-   provider JSONs, `reviewed.json`) once the diff looks trustworthy.
+7. Run `just release`. If the reviewed schedule fingerprint changed, the
+   visible bulletin number bumps automatically.
+8. Commit `content/spots/`, `data/bulletin.json`, the registry change if
+   the PDF URL moved, and the per-review directory (`source.pdf`, provider
+   JSONs, `reviewed.json`) once the diff looks trustworthy.
 
 Every new PDF requires a fresh human pass via `schedules review` — there
 is no auto-ratification shortcut. If a re-exported PDF has identical
@@ -190,6 +193,9 @@ To review a specific pool: `just schedules-review --slug hamilton-pool`.
 
 If finalization fails after `reviewed.json` is written (rare; projection error), re-run `just schedules project <slug>` to finish.
 
+If you edit an already-reviewed `reviewed.json` by hand, re-run
+`just schedules project <slug>`, then `just release`.
+
 To start over from raw extraction on a given pool, delete its `reviewed.json` and re-run `just schedules-review`.
 
 ## Eval
@@ -225,7 +231,8 @@ Reviewer flow on an auto-PR:
 2. Run `just schedules-review` for any pool the report flags.
 3. Verify each row against the source PDF in `$EDITOR`.
 4. Save `reviewed.json`; the projection writes `content/spots/<slug>.md`.
-5. Commit those two files to the PR branch and merge.
+5. Run `just release`.
+6. Commit the reviewed files to the PR branch and merge.
 
 Public-repo safety: the workflow has no `pull_request` or
 `pull_request_target` triggers, only `schedule` and `workflow_dispatch`.

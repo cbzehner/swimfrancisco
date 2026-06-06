@@ -5,7 +5,6 @@ import path from "node:path";
 const root = process.cwd();
 const dataDir = path.join(root, "data");
 const outPath = path.join(root, "data", "bulletin.json");
-const release = process.argv.includes("--release") || process.env.BULLETIN_RELEASE === "1";
 
 async function reviewedSnapshotPaths(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -49,8 +48,8 @@ const releasedFingerprint =
       ? existing.schedule_fingerprint
       : scheduleFingerprint;
 const releasePending = releasedFingerprint !== scheduleFingerprint;
-const number = release && releasePending ? existingNumber + 1 : existingNumber;
-const releasedScheduleFingerprint = release && releasePending ? scheduleFingerprint : releasedFingerprint;
+const number = releasePending ? existingNumber + 1 : existingNumber;
+const releasedScheduleFingerprint = releasePending ? scheduleFingerprint : releasedFingerprint;
 
 const payload = {
   schedule_fingerprint: scheduleFingerprint,
@@ -63,6 +62,5 @@ const payload = {
 await writeFile(outPath, `${JSON.stringify(payload, null, 2)}\n`);
 console.log(
   `Wrote bulletin ${payload.label} from ${snapshots.length} reviewed schedules to ` +
-    path.relative(root, outPath) +
-    (releasePending && !release ? " (number preserved; pass --release to bump)" : ""),
+    path.relative(root, outPath),
 );

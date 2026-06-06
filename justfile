@@ -7,6 +7,10 @@ build:
     node scripts/generate-bulletin.mjs
     zola build
 
+release:
+    node scripts/generate-bulletin.mjs
+    just check
+
 sync:
     uv --project schedule-tools sync
 

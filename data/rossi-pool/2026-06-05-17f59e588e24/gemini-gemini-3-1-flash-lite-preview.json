@@ -1,0 +1,371 @@
+{
+  "cost_estimate": "prompt_tokens=2164, candidate_tokens=1797, total_tokens=3961",
+  "extracted_at": "2026-06-06T05:38:56.358727+00:00",
+  "grounding": {
+    "grounded_count": 22,
+    "ratio": 1.0,
+    "sessions": [
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 0,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 1,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 2,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 3,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 4,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 5,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 6,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 7,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 8,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 9,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 10,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 11,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 12,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 13,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 14,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 15,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 16,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 17,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 18,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 19,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 20,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 21,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      }
+    ],
+    "total": 22
+  },
+  "model": "gemini-3.1-flash-lite-preview",
+  "payload": {
+    "closures": [
+      {
+        "end": "2026-06-19",
+        "reason": "Juneteenth",
+        "start": "2026-06-19"
+      },
+      {
+        "end": "2026-07-04",
+        "reason": "Independence Day",
+        "start": "2026-07-04"
+      }
+    ],
+    "schedule_basis": "swim_schedule",
+    "schedule_effective": "2026-06-07",
+    "schedule_effective_end": "2026-08-13",
+    "sessions": [
+      {
+        "day": "sunday",
+        "end": "08:30",
+        "evidence": "Lap Swim 7:30-8:30 AM",
+        "start": "07:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "14:00",
+        "evidence": "Rec/Family Swim 12:30-2:00 PM",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim 2:30-3:30PM",
+        "start": "14:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "12:00",
+        "evidence": "Parent and Tot (Family swim for kids up to 6 and their Parents) 11:00-12:00PM",
+        "start": "11:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "monday",
+        "end": "08:15",
+        "evidence": "Lap Swim 7:00-8:15 AM",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "monday",
+        "end": "15:45",
+        "evidence": "Lap Swim 2:00-3:45PM",
+        "start": "14:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "monday",
+        "end": "19:30",
+        "evidence": "Lap Swim 6:15-7:30PM",
+        "start": "18:15",
+        "type": "lap_swim"
+      },
+      {
+        "day": "monday",
+        "end": "13:30",
+        "evidence": "Rec/Family Swim 11:00-1:30PM",
+        "start": "11:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "08:15",
+        "evidence": "Lap Swim 7:00-8:15 AM",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "13:45",
+        "evidence": "Lap Swim 12:45-1:45PM 6:15-7:30PM (3 lanes)",
+        "start": "12:45",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "19:30",
+        "evidence": "Lap Swim 6:15-7:30PM (3 lanes)",
+        "start": "18:15",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim 2:00-3:30PM 6:15-7:30PM (3 lanes)",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "19:30",
+        "evidence": "Rec/Family Swim 6:15-7:30PM (3 lanes)",
+        "start": "18:15",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "12:30",
+        "evidence": "Senior/Therapy Swim 11:00-12:30PM",
+        "start": "11:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:45",
+        "evidence": "Lap Swim 2:00-3:45PM",
+        "start": "14:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "13:30",
+        "evidence": "Rec/Family Swim 11:00-1:30PM",
+        "start": "11:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "08:15",
+        "evidence": "Lap Swim 7:00-8:15AM",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "13:45",
+        "evidence": "Lap Swim 12:45-1:45PM 6:15-7:30PM (3 lanes)",
+        "start": "12:45",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "19:30",
+        "evidence": "Lap Swim 6:15-7:30PM (3 lanes)",
+        "start": "18:15",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim 2:00-3:30PM 6:15-7:30PM (3 lanes)",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "19:30",
+        "evidence": "Rec/Family Swim 6:15-7:30PM (3 lanes)",
+        "start": "18:15",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "12:30",
+        "evidence": "Senior/Therapy Swim 11:00AM-12:30PM",
+        "start": "11:00",
+        "type": "senior_swim"
+      }
+    ]
+  },
+  "pdf_sha256": "17f59e588e243545020f1c68e0feee3d45e5a97d521de490240a4932a9095012",
+  "prompt_sha256": "767c303b00fe033354ecc77ad95349cdb164c91a01d19b0d96c629bbb4ef39cc",
+  "provider": "gemini",
+  "schema_sha256": "1c0869dc8a4441cb9285092e806b9bc281171cc705f406f8596b0870d5864121",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29326",
+  "usage": {
+    "candidates_token_count": 1797,
+    "prompt_token_count": 2164,
+    "total_token_count": 3961
+  }
+}

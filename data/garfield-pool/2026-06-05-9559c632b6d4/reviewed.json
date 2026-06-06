@@ -1,0 +1,213 @@
+{
+  "slug": "garfield-pool",
+  "pdf_sha256": "9559c632b6d4bb7bd92957c653d2eb3b51821523f9aff6d9349daa35ef88e468",
+  "reviewed_at": "2026-06-05",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29321",
+  "payload": {
+    "closures": [
+      {
+        "end": "2026-06-19",
+        "reason": "Juneteenth",
+        "start": "2026-06-19"
+      },
+      {
+        "end": "2026-07-04",
+        "reason": "Independence Day",
+        "start": "2026-07-04"
+      }
+    ],
+    "schedule_basis": "swim_schedule",
+    "schedule_effective": "2026-06-07",
+    "schedule_effective_end": "2026-08-13",
+    "sessions": [
+      {
+        "day": "sunday",
+        "end": "10:30",
+        "evidence": "8:30-10:30 AM (Main)",
+        "notes": "Reviewed against Summer 2026 PDF table.",
+        "pool": "main",
+        "start": "08:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "14:00",
+        "evidence": "12:30-2 PM (Main)",
+        "pool": "main",
+        "start": "12:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "14:00",
+        "evidence": "12:30-2 PM (Shallow)",
+        "pool": "shallow",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "16:30",
+        "evidence": "2:30-4:30 PM",
+        "start": "14:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "monday",
+        "end": "08:30",
+        "evidence": "7-8:30 AM (Main)",
+        "pool": "main",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "monday",
+        "end": "19:00",
+        "evidence": "5:30-7 PM (Main)",
+        "pool": "main",
+        "start": "17:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "monday",
+        "end": "08:30",
+        "evidence": "7-8:30 AM (Shallow)",
+        "pool": "shallow",
+        "start": "07:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "monday",
+        "end": "15:15",
+        "evidence": "1:15-3:15 PM",
+        "start": "13:15",
+        "type": "family_swim"
+      },
+      {
+        "day": "monday",
+        "end": "19:00",
+        "evidence": "5:30-7 PM (Shallow)",
+        "pool": "shallow",
+        "start": "17:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "monday",
+        "end": "12:45",
+        "evidence": "11:30 AM-12:45 PM (Main)",
+        "pool": "main",
+        "start": "11:30",
+        "type": "senior_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "08:30",
+        "evidence": "7-8:30 AM (Main)",
+        "pool": "main",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "08:30",
+        "evidence": "7-8:30 AM (Shallow)",
+        "pool": "shallow",
+        "start": "07:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:15",
+        "evidence": "1:15-3:15 PM",
+        "start": "13:15",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "12:45",
+        "evidence": "11:30 AM-12:45 PM (Main)",
+        "pool": "main",
+        "start": "11:30",
+        "type": "senior_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "08:30",
+        "evidence": "7-8:30 AM (Main)",
+        "pool": "main",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:00",
+        "evidence": "5:30-7 PM (Main)",
+        "pool": "main",
+        "start": "17:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "08:30",
+        "evidence": "7-8:30 AM (Shallow)",
+        "pool": "shallow",
+        "start": "07:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:15",
+        "evidence": "1:15-3:15 PM",
+        "start": "13:15",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:00",
+        "evidence": "5:30-7 PM (Shallow)",
+        "pool": "shallow",
+        "start": "17:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "12:45",
+        "evidence": "11:30 AM-12:45 PM (Main)",
+        "pool": "main",
+        "start": "11:30",
+        "type": "senior_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "08:30",
+        "evidence": "7-8:30 AM (Main)",
+        "pool": "main",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "08:30",
+        "evidence": "7-8:30 AM (Shallow)",
+        "pool": "shallow",
+        "start": "07:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "15:15",
+        "evidence": "1:15-3:15 PM",
+        "start": "13:15",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "12:45",
+        "evidence": "11:30 AM-12:45 PM (Main-2 Lanes)",
+        "pool": "main-2 lanes",
+        "start": "11:30",
+        "type": "senior_swim"
+      }
+    ]
+  }
+}
