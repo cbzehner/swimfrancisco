@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+{%- set site_url = "https://swimfrancisco.com" %}
+{%- for entry in entries %}
+  {%- set canonical_url = entry.permalink
+    | replace(from=site_url ~ "/es/", to=site_url ~ "/")
+    | replace(from=site_url ~ "/zh-Hant/", to=site_url ~ "/")
+    | replace(from=site_url ~ "/fil/", to=site_url ~ "/")
+    | replace(from=site_url ~ "/vi/", to=site_url ~ "/") %}
+  {%- set es_url = canonical_url | replace(from=site_url ~ "/", to=site_url ~ "/es/") %}
+  {%- set zh_url = canonical_url | replace(from=site_url ~ "/", to=site_url ~ "/zh-Hant/") %}
+  {%- set fil_url = canonical_url | replace(from=site_url ~ "/", to=site_url ~ "/fil/") %}
+  {%- set vi_url = canonical_url | replace(from=site_url ~ "/", to=site_url ~ "/vi/") %}
+  <url>
+    <loc>{{ entry.permalink | safe }}</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="{{ canonical_url | safe }}" />
+    <xhtml:link rel="alternate" hreflang="es" href="{{ es_url | safe }}" />
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="{{ zh_url | safe }}" />
+    <xhtml:link rel="alternate" hreflang="fil" href="{{ fil_url | safe }}" />
+    <xhtml:link rel="alternate" hreflang="vi" href="{{ vi_url | safe }}" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="{{ canonical_url | safe }}" />
+    {%- if entry.updated %}
+    <lastmod>{{ entry.updated }}</lastmod>
+    {%- endif %}
+  </url>
+{%- endfor %}
+</urlset>

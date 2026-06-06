@@ -1,5 +1,6 @@
+{% import "macros/seo.html" as seo %}
 <!DOCTYPE html>
-<html lang="{{ config.default_language }}">
+<html lang="{{ lang | default(value=config.default_language) }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -12,6 +13,8 @@
   <meta property="og:title" content="{% block social_title %}Swim Francisco{% endblock %}">
   <meta property="og:description" content="{% block social_description %}{{ config.description }}{% endblock %}">
   <meta property="og:url" content="{% block social_url %}{{ current_url | default(value=config.base_url ~ '/') | safe }}{% endblock %}">
+  {{ seo::og_locale_tags(active_lang=lang) }}
+  {% block alternate_links %}{% endblock %}
   <meta name="twitter:card" content="summary">
   <link rel="icon" type="image/svg+xml" href="{{ get_url(path='favicon.svg') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,8 +28,107 @@
     {% block content %}{% endblock %}
   </main>
   <footer class="site-footer">
-    <p class="site-footer-credit">Made in San Francisco by <a href="https://x.com/cbzehner" rel="me noopener" target="_blank">@cbzehner</a></p>
+    <p class="site-footer-credit">{{ trans(key='footer_credit', lang=lang) }} <a href="https://x.com/cbzehner" rel="me noopener" target="_blank">@cbzehner</a></p>
   </footer>
+  <script>
+    window.SWIMFRANCISCO_LANG = {{ lang | json_encode | safe }};
+    window.SWIMFRANCISCO_I18N = {
+      now: {{ trans(key='now', lang=lang) | json_encode | safe }},
+      right_now: {{ trans(key='right_now', lang=lang) | json_encode | safe }},
+      next: {{ trans(key='next', lang=lang) | json_encode | safe }},
+      next_word: {{ trans(key='next_word', lang=lang) | json_encode | safe }},
+      open_now: {{ trans(key='open_now', lang=lang) | json_encode | safe }},
+      status: {{ trans(key='status', lang=lang) | json_encode | safe }},
+      water: {{ trans(key='water', lang=lang) | json_encode | safe }},
+      tide: {{ trans(key='tide', lang=lang) | json_encode | safe }},
+      type: {{ trans(key='type', lang=lang) | json_encode | safe }},
+      directions: {{ trans(key='directions', lang=lang) | json_encode | safe }},
+      tide_high: {{ trans(key='tide_high', lang=lang) | json_encode | safe }},
+      tide_low: {{ trans(key='tide_low', lang=lang) | json_encode | safe }},
+      tide_generic: {{ trans(key='tide_generic', lang=lang) | json_encode | safe }},
+      place_singular: {{ trans(key='place_singular', lang=lang) | json_encode | safe }},
+      place_plural: {{ trans(key='place_plural', lang=lang) | json_encode | safe }},
+      available: {{ trans(key='available', lang=lang) | json_encode | safe }},
+      open_now_lower: {{ trans(key='open_now_lower', lang=lang) | json_encode | safe }},
+      lap: {{ trans(key='lap', lang=lang) | json_encode | safe }},
+      lap_swim: {{ trans(key='lap_swim', lang=lang) | json_encode | safe }},
+      family: {{ trans(key='family', lang=lang) | json_encode | safe }},
+      family_swim: {{ trans(key='family_swim', lang=lang) | json_encode | safe }},
+      senior: {{ trans(key='senior', lang=lang) | json_encode | safe }},
+      senior_swim: {{ trans(key='senior_swim', lang=lang) | json_encode | safe }},
+      status_open: {{ trans(key='status_open', lang=lang) | json_encode | safe }},
+      status_closed: {{ trans(key='status_closed', lang=lang) | json_encode | safe }},
+      status_closed_today: {{ trans(key='status_closed_today', lang=lang) | json_encode | safe }},
+      status_access: {{ trans(key='status_access', lang=lang) | json_encode | safe }},
+      status_check: {{ trans(key='status_check', lang=lang) | json_encode | safe }},
+      status_available: {{ trans(key='status_available', lang=lang) | json_encode | safe }},
+      status_limited: {{ trans(key='status_limited', lang=lang) | json_encode | safe }},
+      status_ocean: {{ trans(key='status_ocean', lang=lang) | json_encode | safe }},
+      status_year_round: {{ trans(key='status_year_round', lang=lang) | json_encode | safe }},
+      status_official_site: {{ trans(key='status_official_site', lang=lang) | json_encode | safe }},
+      status_check_conditions: {{ trans(key='status_check_conditions', lang=lang) | json_encode | safe }},
+      status_no_drop_in_today: {{ trans(key='status_no_drop_in_today', lang=lang) | json_encode | safe }},
+      status_no_drop_in_week: {{ trans(key='status_no_drop_in_week', lang=lang) | json_encode | safe }},
+      status_not_verified: {{ trans(key='status_not_verified', lang=lang) | json_encode | safe }},
+      status_until: {{ trans(key='status_until', lang=lang) | json_encode | safe }},
+      status_now: {{ trans(key='status_now', lang=lang) | json_encode | safe }},
+      status_schedule_starts: {{ trans(key='status_schedule_starts', lang=lang) | json_encode | safe }},
+      status_schedule_ended: {{ trans(key='status_schedule_ended', lang=lang) | json_encode | safe }},
+      status_closed_through: {{ trans(key='status_closed_through', lang=lang) | json_encode | safe }},
+      status_closed_window: {{ trans(key='status_closed_window', lang=lang) | json_encode | safe }},
+      status_closes: {{ trans(key='status_closes', lang=lang) | json_encode | safe }},
+      status_opens: {{ trans(key='status_opens', lang=lang) | json_encode | safe }},
+      status_access_at: {{ trans(key='status_access_at', lang=lang) | json_encode | safe }},
+      reason_memorial_day: {{ trans(key='reason_memorial_day', lang=lang) | json_encode | safe }},
+      reason_juneteenth: {{ trans(key='reason_juneteenth', lang=lang) | json_encode | safe }},
+      reason_independence_day: {{ trans(key='reason_independence_day', lang=lang) | json_encode | safe }},
+      reason_holiday_closure: {{ trans(key='reason_holiday_closure', lang=lang) | json_encode | safe }},
+      reason_in_service_training: {{ trans(key='reason_in_service_training', lang=lang) | json_encode | safe }},
+      reason_department_training: {{ trans(key='reason_department_training', lang=lang) | json_encode | safe }},
+      reason_aquatics_training: {{ trans(key='reason_aquatics_training', lang=lang) | json_encode | safe }},
+      reason_staff_training: {{ trans(key='reason_staff_training', lang=lang) | json_encode | safe }},
+      reason_temporarily_closed_for_renovation: {{ trans(key='reason_temporarily_closed_for_renovation', lang=lang) | json_encode | safe }},
+      reason_closed_for_repairs_summer_2026: {{ trans(key='reason_closed_for_repairs_summer_2026', lang=lang) | json_encode | safe }},
+      reason_pool_closed_5_21: {{ trans(key='reason_pool_closed_5_21', lang=lang) | json_encode | safe }},
+      reason_in_service_9_1: {{ trans(key='reason_in_service_9_1', lang=lang) | json_encode | safe }},
+      reason_monthly_aquatic_training: {{ trans(key='reason_monthly_aquatic_training', lang=lang) | json_encode | safe }},
+      reason_in_service_pool_closed_9_1: {{ trans(key='reason_in_service_pool_closed_9_1', lang=lang) | json_encode | safe }},
+      day_monday_short: {{ trans(key='day_monday_short', lang=lang) | json_encode | safe }},
+      day_tuesday_short: {{ trans(key='day_tuesday_short', lang=lang) | json_encode | safe }},
+      day_wednesday_short: {{ trans(key='day_wednesday_short', lang=lang) | json_encode | safe }},
+      day_thursday_short: {{ trans(key='day_thursday_short', lang=lang) | json_encode | safe }},
+      day_friday_short: {{ trans(key='day_friday_short', lang=lang) | json_encode | safe }},
+      day_saturday_short: {{ trans(key='day_saturday_short', lang=lang) | json_encode | safe }},
+      day_sunday_short: {{ trans(key='day_sunday_short', lang=lang) | json_encode | safe }},
+      month_jan: {{ trans(key='month_jan', lang=lang) | json_encode | safe }},
+      month_feb: {{ trans(key='month_feb', lang=lang) | json_encode | safe }},
+      month_mar: {{ trans(key='month_mar', lang=lang) | json_encode | safe }},
+      month_apr: {{ trans(key='month_apr', lang=lang) | json_encode | safe }},
+      month_may: {{ trans(key='month_may', lang=lang) | json_encode | safe }},
+      month_jun: {{ trans(key='month_jun', lang=lang) | json_encode | safe }},
+      month_jul: {{ trans(key='month_jul', lang=lang) | json_encode | safe }},
+      month_aug: {{ trans(key='month_aug', lang=lang) | json_encode | safe }},
+      month_sep: {{ trans(key='month_sep', lang=lang) | json_encode | safe }},
+      month_oct: {{ trans(key='month_oct', lang=lang) | json_encode | safe }},
+      month_nov: {{ trans(key='month_nov', lang=lang) | json_encode | safe }},
+      month_dec: {{ trans(key='month_dec', lang=lang) | json_encode | safe }},
+      horizon_this_morning: {{ trans(key='horizon_this_morning', lang=lang) | json_encode | safe }},
+      horizon_this_afternoon: {{ trans(key='horizon_this_afternoon', lang=lang) | json_encode | safe }},
+      horizon_this_evening: {{ trans(key='horizon_this_evening', lang=lang) | json_encode | safe }},
+      horizon_tomorrow_morning: {{ trans(key='horizon_tomorrow_morning', lang=lang) | json_encode | safe }},
+      horizon_tomorrow_afternoon: {{ trans(key='horizon_tomorrow_afternoon', lang=lang) | json_encode | safe }},
+      horizon_tomorrow_evening: {{ trans(key='horizon_tomorrow_evening', lang=lang) | json_encode | safe }},
+      horizon_fog_lift: {{ trans(key='horizon_fog_lift', lang=lang) | json_encode | safe }},
+      horizon_lunch: {{ trans(key='horizon_lunch', lang=lang) | json_encode | safe }},
+      horizon_after_work: {{ trans(key='horizon_after_work', lang=lang) | json_encode | safe }},
+      horizon_set_alarm: {{ trans(key='horizon_set_alarm', lang=lang) | json_encode | safe }},
+      horizon_clear_calendar: {{ trans(key='horizon_clear_calendar', lang=lang) | json_encode | safe }},
+      horizon_golden_hour: {{ trans(key='horizon_golden_hour', lang=lang) | json_encode | safe }},
+      horizon_night_swim: {{ trans(key='horizon_night_swim', lang=lang) | json_encode | safe }},
+      horizon_before_breakfast: {{ trans(key='horizon_before_breakfast', lang=lang) | json_encode | safe }},
+      horizon_post_fog: {{ trans(key='horizon_post_fog', lang=lang) | json_encode | safe }}
+    };
+  </script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

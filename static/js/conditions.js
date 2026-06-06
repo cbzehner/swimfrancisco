@@ -5,6 +5,7 @@
 
 import { formatPacificDate, formatPacificTime, pacificWallClockDate } from "./helpers/pacific.mjs";
 import { formatTideSummary } from "./helpers/tide.mjs";
+import { t } from "./helpers/i18n.mjs";
 
 const DEFAULT_ENDPOINT = "/api/conditions";
 const BAY_SLUGS = ["aquatic-park", "crissy-field"];
@@ -58,11 +59,12 @@ function formatUpdatedAt(conditions) {
 }
 
 function openCountLabel(count) {
-  const horizonLabel = document.querySelector("[data-horizon-button]")?.textContent.trim() || "Now";
-  const unit = count === 1 ? "place" : "places";
+  const nowLabel = t("now", "Now");
+  const horizonLabel = document.querySelector("[data-horizon-button]")?.textContent.trim() || nowLabel;
+  const unit = count === 1 ? t("place_singular", "place") : t("place_plural", "places");
   const normalized = horizonLabel.toLowerCase();
-  if (normalized !== "now") return `${unit} available ${normalized}`;
-  return `${unit} open now`;
+  if (normalized !== nowLabel.toLowerCase()) return `${unit} ${t("available", "available")} ${normalized}`;
+  return `${unit} ${t("open_now_lower", "open now")}`;
 }
 
 function applyBoardSummary(root) {

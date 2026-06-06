@@ -1,5 +1,9 @@
 const PACIFIC_TIME_ZONE = "America/Los_Angeles";
 
+function activeLocale() {
+  return globalThis.window?.SWIMFRANCISCO_LANG || "en-US";
+}
+
 // Return a Date whose local getters (getFullYear, getMonth, getDate, getDay,
 // getHours, getMinutes, getSeconds) reflect the wall-clock in Pacific time.
 // The returned Date's absolute instant is intentionally synthetic; use it only
@@ -32,7 +36,7 @@ export function pacificWallClockDate(instant) {
 }
 
 export function formatPacificDate(instant) {
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(activeLocale(), {
     timeZone: PACIFIC_TIME_ZONE,
     weekday: "short",
     month: "short",
@@ -41,7 +45,7 @@ export function formatPacificDate(instant) {
 }
 
 export function formatPacificTime(instant) {
-  const time = new Intl.DateTimeFormat("en-US", {
+  const time = new Intl.DateTimeFormat(activeLocale(), {
     timeZone: PACIFIC_TIME_ZONE,
     hour: "numeric",
     minute: "2-digit",

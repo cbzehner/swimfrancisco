@@ -9,17 +9,45 @@
   {%- endif -%}
 {%- endmacro spot_meta_description %}
 
-{% macro spot_json_ld(page, config) -%}
+{% macro og_locale_tags(active_lang) -%}
+  {%- if active_lang == "es" -%}{% set locale = "es_US" %}
+  {%- elif active_lang == "zh-Hant" -%}{% set locale = "zh_TW" %}
+  {%- elif active_lang == "fil" -%}{% set locale = "fil_PH" %}
+  {%- elif active_lang == "vi" -%}{% set locale = "vi_VN" %}
+  {%- else -%}{% set locale = "en_US" %}
+  {%- endif -%}
+  <meta property="og:locale" content="{{ locale }}">
+  {%- if active_lang != "en" %}<meta property="og:locale:alternate" content="en_US">{% endif -%}
+  {%- if active_lang != "es" %}<meta property="og:locale:alternate" content="es_US">{% endif -%}
+  {%- if active_lang != "zh-Hant" %}<meta property="og:locale:alternate" content="zh_TW">{% endif -%}
+  {%- if active_lang != "fil" %}<meta property="og:locale:alternate" content="fil_PH">{% endif -%}
+  {%- if active_lang != "vi" %}<meta property="og:locale:alternate" content="vi_VN">{% endif -%}
+{%- endmacro og_locale_tags %}
+
+{% macro alternate_links(content_path) -%}
+  <link rel="alternate" hreflang="en" href="{{ get_url(path=content_path, lang='en') | safe }}">
+  <link rel="alternate" hreflang="es" href="{{ get_url(path=content_path, lang='es') | safe }}">
+  <link rel="alternate" hreflang="zh-Hant" href="{{ get_url(path=content_path, lang='zh-Hant') | safe }}">
+  <link rel="alternate" hreflang="fil" href="{{ get_url(path=content_path, lang='fil') | safe }}">
+  <link rel="alternate" hreflang="vi" href="{{ get_url(path=content_path, lang='vi') | safe }}">
+  <link rel="alternate" hreflang="x-default" href="{{ get_url(path=content_path, lang='en') | safe }}">
+{%- endmacro alternate_links %}
+
+{% macro spot_json_ld(page, config, url="", description="", lang="en") -%}
   {%- set extra = page.extra -%}
   {%- set desc_short = extra.description_short | default(value="conditions, access, hazards, clubs, and common distances") -%}
   {%- set open_description = page.title ~ " open-water swimming in San Francisco: " ~ desc_short ~ "." -%}
   {%- set pool_description = page.title ~ " swim schedule, access, and location details in San Francisco." -%}
+  {%- set page_url = page.permalink -%}
+  {%- if url -%}{%- set page_url = url -%}{%- endif -%}
+  {%- set schema_description = description | default(value="") -%}
   {
     "@context": "https://schema.org",
     "@type": {% if extra.type == "open_water" %}"Beach"{% else %}"SportsActivityLocation"{% endif %},
     "name": {{ page.title | json_encode | safe }},
-    "url": {{ page.permalink | json_encode | safe }},
-    "description": {% if extra.type == "open_water" %}{{ open_description | json_encode | safe }}{% else %}{{ pool_description | json_encode | safe }}{% endif %},
+    "url": {{ page_url | json_encode | safe }},
+    "description": {% if schema_description %}{{ schema_description | json_encode | safe }}{% elif extra.type == "open_water" %}{{ open_description | json_encode | safe }}{% else %}{{ pool_description | json_encode | safe }}{% endif %},
+    "inLanguage": {{ lang | json_encode | safe }},
     {% if extra.address %}"address": {{ extra.address | json_encode | safe }},{% endif %}
     {% if extra.lat and extra.lng %}"geo": {
       "@type": "GeoCoordinates",
@@ -31,11 +59,14 @@
   }
 {%- endmacro spot_json_ld %}
 
-{% macro spot_breadcrumb_json_ld(page, config) -%}
+{% macro spot_breadcrumb_json_ld(page, config, url="", lang="en") -%}
   {%- set home_url = config.base_url ~ "/" -%}
+  {%- set page_url = page.permalink -%}
+  {%- if url -%}{%- set page_url = url -%}{%- endif -%}
   {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
+    "inLanguage": {{ lang | json_encode | safe }},
     "itemListElement": [
       {
         "@type": "ListItem",
@@ -47,7 +78,7 @@
         "@type": "ListItem",
         "position": 2,
         "name": {{ page.title | json_encode | safe }},
-        "item": {{ page.permalink | json_encode | safe }}
+        "item": {{ page_url | json_encode | safe }}
       }
     ]
   }

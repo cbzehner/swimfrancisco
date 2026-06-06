@@ -48,3 +48,19 @@ test("formatPacificTime renders a real UTC instant as Pacific time", () => {
 test("formatPacificDate renders the Pacific calendar day", () => {
   assert.equal(formatPacificDate(new Date("2026-04-19T06:59:00Z")), "Sat, Apr 18");
 });
+
+test("formatPacificDate and formatPacificTime use the active page language", () => {
+  const previousWindow = globalThis.window;
+  globalThis.window = { SWIMFRANCISCO_LANG: "es" };
+  try {
+    const instant = new Date("2026-04-19T06:59:00Z");
+    assert.equal(formatPacificDate(instant), "sáb, 18 abr");
+    assert.equal(formatPacificTime(instant), "23:59 PT");
+  } finally {
+    if (previousWindow === undefined) {
+      delete globalThis.window;
+    } else {
+      globalThis.window = previousWindow;
+    }
+  }
+});

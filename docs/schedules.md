@@ -94,6 +94,14 @@ The source of truth for a pool's schedule is `content/spots/<slug>.md`. The
 extractor and reviewed-snapshot machinery are regeneration aids — they
 help produce and verify that file, but they are not parallel authorities.
 
+Localized spot pages are intentionally separate from the schedule source of
+truth. When adding a new canonical `content/spots/<slug>.md`, also add sibling
+localized pages for every configured language (`<slug>.es.md`,
+`<slug>.zh-Hant.md`, `<slug>.fil.md`, `<slug>.vi.md`) with
+`extra.localized_from = "<slug>"`. The templates call `get_page(..., lang=...)`
+for each configured language so missing localized siblings should fail the
+build instead of silently publishing an English fallback.
+
 Everything for a given (slug, PDF) lives in one directory:
 
 ```

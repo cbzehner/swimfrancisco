@@ -1,0 +1,141 @@
+export function t(key, fallback = "") {
+  const dict = globalThis.window?.SWIMFRANCISCO_I18N;
+  return (dict && typeof dict[key] === "string" && dict[key]) || fallback;
+}
+
+export function statusLabel(status) {
+  const key = {
+    OPEN: "status_open",
+    CLOSED: "status_closed",
+    ACCESS: "status_access",
+    CHECK: "status_check",
+    AVAILABLE: "status_available",
+    LIMITED: "status_limited",
+    OCEAN: "status_ocean",
+  }[status];
+  return key ? t(key, status) : status;
+}
+
+export function programLabel(type) {
+  const key = {
+    lap_swim: "lap",
+    family_swim: "family",
+    senior_swim: "senior",
+  }[type];
+  return key ? t(key, type.toUpperCase()) : type.toUpperCase();
+}
+
+export function programLongLabel(type) {
+  const key = {
+    lap_swim: "lap_swim",
+    family_swim: "family_swim",
+    senior_swim: "senior_swim",
+  }[type];
+  return key ? t(key, programLabel(type)) : programLabel(type);
+}
+
+export function dayShortLabel(day) {
+  const key = {
+    monday: "day_monday_short",
+    tuesday: "day_tuesday_short",
+    wednesday: "day_wednesday_short",
+    thursday: "day_thursday_short",
+    friday: "day_friday_short",
+    saturday: "day_saturday_short",
+    sunday: "day_sunday_short",
+  }[day];
+  return key ? t(key, day.slice(0, 3).toUpperCase()) : String(day || "").toUpperCase();
+}
+
+function activeLanguage() {
+  return globalThis.window?.SWIMFRANCISCO_LANG || "en";
+}
+
+function monthLabel(month) {
+  const key = [
+    "month_jan",
+    "month_feb",
+    "month_mar",
+    "month_apr",
+    "month_may",
+    "month_jun",
+    "month_jul",
+    "month_aug",
+    "month_sep",
+    "month_oct",
+    "month_nov",
+    "month_dec",
+  ][month - 1];
+  const fallback = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][month - 1];
+  return key ? t(key, fallback) : "";
+}
+
+export function formatLocalizedISODate(isoDate) {
+  if (typeof isoDate !== "string") return "";
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate.trim());
+  if (!match) return isoDate;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (activeLanguage().startsWith("zh")) return `${year}年${month}月${day}日`;
+  const label = monthLabel(month);
+  if (activeLanguage().startsWith("en")) return `${label} ${day}, ${year}`;
+  return `${day} ${label} ${year}`;
+}
+
+export function closureReasonLabel(reason) {
+  const key = {
+    "Memorial Day": "reason_memorial_day",
+    Juneteenth: "reason_juneteenth",
+    "Independence Day": "reason_independence_day",
+    "Holiday Closure": "reason_holiday_closure",
+    "In Service Training": "reason_in_service_training",
+    "Inservice Training": "reason_in_service_training",
+    "In-Service (9am–1pm)": "reason_in_service_9_1",
+    "Department Training": "reason_department_training",
+    "Aquatics In Service Training": "reason_aquatics_training",
+    "Staff training": "reason_staff_training",
+    "Inservice Training Closure": "reason_in_service_training",
+    "In- Service Training: Pool Closed 9:00-1:00pm": "reason_in_service_pool_closed_9_1",
+    "Temporarily closed for renovation": "reason_temporarily_closed_for_renovation",
+    "Closed for repairs; anticipated reopening summer 2026": "reason_closed_for_repairs_summer_2026",
+    "Pool closed Thursday 5/21 11:30am–1pm": "reason_pool_closed_5_21",
+    "Every 3rd Thursday of the Month Closed for Aquatic Division Training 11:00am-2:00pm": "reason_monthly_aquatic_training",
+  }[reason];
+  return key ? t(key, reason) : reason;
+}
+
+export function statusNextLabel(result, placeholder = "—") {
+  if (!result || result.next === placeholder) return placeholder;
+  const args = result.nextArgs || {};
+  switch (result.nextKind) {
+    case "schedule_starts":
+      return `${t("status_schedule_starts", "Schedule starts")} ${formatLocalizedISODate(args.iso)}`;
+    case "schedule_ended":
+      return `${t("status_schedule_ended", "Schedule ended")} ${formatLocalizedISODate(args.iso)}`;
+    case "closed_through":
+      return `${t("status_closed_through", "Closed through")} ${formatLocalizedISODate(args.iso)}`;
+    case "closed_window":
+      return `${t("status_closed_window", "Closed")} ${args.start}\u2013${args.end}`;
+    case "not_verified":
+      return t("status_not_verified", "SCHEDULE NOT YET VERIFIED");
+    case "closes":
+      return `${t("status_closes", "Closes")} ${args.time}`;
+    case "opens_today":
+      return `${t("status_opens", "Opens")} ${args.time}`;
+    case "opens_day":
+      return `${t("status_opens", "Opens")} ${dayShortLabel(args.day)} ${args.time}`;
+    case "until":
+      return `${t("status_until", "UNTIL")} ${args.time}`;
+    case "official_site":
+      return t("status_official_site", "OFFICIAL SITE");
+    case "access_today":
+      return `${t("status_access_at", "Access")} ${args.time}`;
+    case "access_day":
+      return `${t("status_access_at", "Access")} ${dayShortLabel(args.day)} ${args.time}`;
+    case "closure_reason":
+      return closureReasonLabel(args.reason);
+    default:
+      return result.next || placeholder;
+  }
+}

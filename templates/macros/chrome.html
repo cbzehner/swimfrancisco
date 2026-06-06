@@ -1,0 +1,58 @@
+{% import "macros/bulletin.html" as bulletin_macros %}
+
+{% macro language_switcher(content_path, active_lang) %}
+  <nav class="language-switcher" aria-label="{{ trans(key='language', lang=active_lang) }}">
+    <a href="{{ get_url(path=content_path, lang='en') }}"{% if active_lang == 'en' %} aria-current="page"{% endif %}>EN</a>
+    <a href="{{ get_url(path=content_path, lang='es') }}"{% if active_lang == 'es' %} aria-current="page"{% endif %}>ES</a>
+    <a href="{{ get_url(path=content_path, lang='zh-Hant') }}"{% if active_lang == 'zh-Hant' %} aria-current="page"{% endif %}>中文</a>
+    <a href="{{ get_url(path=content_path, lang='fil') }}"{% if active_lang == 'fil' %} aria-current="page"{% endif %}>FIL</a>
+    <a href="{{ get_url(path=content_path, lang='vi') }}"{% if active_lang == 'vi' %} aria-current="page"{% endif %}>VI</a>
+  </nav>
+{% endmacro language_switcher %}
+
+{% macro access_badge_label(label, active_lang) -%}
+  {%- if label == "Members" -%}{{- trans(key='access_badge_members', lang=active_lang) -}}
+  {%- elif label == "Limited" -%}{{- trans(key='access_badge_limited', lang=active_lang) -}}
+  {%- elif label == "Therapy" -%}{{- trans(key='access_badge_therapy', lang=active_lang) -}}
+  {%- else -%}{{- label -}}
+  {%- endif -%}
+{%- endmacro access_badge_label %}
+
+{% macro spot_label(label, active_lang) -%}
+  {%- if label == "lap" -%}{{- trans(key='setpoint_lap', lang=active_lang) -}}
+  {%- elif label == "heated" -%}{{- trans(key='setpoint_heated', lang=active_lang) -}}
+  {%- elif label == "pool" -%}{{- trans(key='setpoint_pool', lang=active_lang) -}}
+  {%- elif label == "indoor" -%}{{- trans(key='setpoint_indoor', lang=active_lang) -}}
+  {%- elif label == "saltwater" -%}{{- trans(key='setpoint_saltwater', lang=active_lang) -}}
+  {%- elif label == "indoor + roof" -%}{{- trans(key='setpoint_indoor_roof', lang=active_lang) -}}
+  {%- elif label == "gym indoor" -%}{{- trans(key='subtype_gym_indoor', lang=active_lang) -}}
+  {%- elif label == "membership indoor" -%}{{- trans(key='subtype_membership_indoor', lang=active_lang) -}}
+  {%- elif label == "campus indoor" -%}{{- trans(key='subtype_campus_indoor', lang=active_lang) -}}
+  {%- elif label == "private indoor" -%}{{- trans(key='subtype_private_indoor', lang=active_lang) -}}
+  {%- elif label == "private indoor/outdoor" -%}{{- trans(key='subtype_private_indoor_outdoor', lang=active_lang) -}}
+  {%- elif label == "private outdoor" -%}{{- trans(key='subtype_private_outdoor', lang=active_lang) -}}
+  {%- elif label == "therapeutic indoor" -%}{{- trans(key='subtype_therapeutic_indoor', lang=active_lang) -}}
+  {%- elif label == "outdoor" -%}{{- trans(key='subtype_outdoor', lang=active_lang) -}}
+  {%- else -%}{{- label -}}
+  {%- endif -%}
+{%- endmacro spot_label %}
+
+{% macro site_header(active_view, content_path, active_lang) %}
+  <header class="site-header">
+    <div class="site-header-row">
+      <h1><a href="{{ get_url(path='@/_index.md', lang=active_lang) }}" class="site-title"><span class="brand-swim">SWIM</span><span class="brand-dot">·</span><span class="brand-city">FRANCISCO</span></a></h1>
+      {{ bulletin_macros::badge() }}
+      <div class="site-header-actions">
+        <a href="{{ get_url(path='@/_index.md', lang=active_lang) }}" data-target-path="{{ get_url(path='@/_index.md', lang=active_lang) }}" class="site-nav-link{% if active_view == 'board' %} is-active{% endif %}" aria-label="{{ trans(key='view_board', lang=active_lang) }}">{{ trans(key='nav_board', lang=active_lang) }}</a>
+        <a href="{{ get_url(path='@/map/_index.md', lang=active_lang) }}" data-target-path="{{ get_url(path='@/map/_index.md', lang=active_lang) }}" class="site-nav-link{% if active_view == 'map' %} is-active{% endif %}" aria-label="{{ trans(key='view_map', lang=active_lang) }}">{{ trans(key='nav_map', lang=active_lang) }}</a>
+        <nav class="language-switcher" aria-label="{{ trans(key='language', lang=active_lang) }}">
+          <a href="{{ get_url(path=content_path, lang='en') }}"{% if active_lang == 'en' %} aria-current="page"{% endif %}>EN</a>
+          <a href="{{ get_url(path=content_path, lang='es') }}"{% if active_lang == 'es' %} aria-current="page"{% endif %}>ES</a>
+          <a href="{{ get_url(path=content_path, lang='zh-Hant') }}"{% if active_lang == 'zh-Hant' %} aria-current="page"{% endif %}>中文</a>
+          <a href="{{ get_url(path=content_path, lang='fil') }}"{% if active_lang == 'fil' %} aria-current="page"{% endif %}>FIL</a>
+          <a href="{{ get_url(path=content_path, lang='vi') }}"{% if active_lang == 'vi' %} aria-current="page"{% endif %}>VI</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+{% endmacro site_header %}

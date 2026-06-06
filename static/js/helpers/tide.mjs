@@ -5,6 +5,8 @@
 // with `new Date(...)` treats them as local time, which matches the
 // station-local `now` passed in by the browser.
 
+import { t } from "./i18n.mjs";
+
 function pad2(n) {
   return String(n).padStart(2, "0");
 }
@@ -14,9 +16,9 @@ function formatClock(date) {
 }
 
 function labelFor(type) {
-  if (type === "H") return "high";
-  if (type === "L") return "low";
-  return "tide";
+  if (type === "H") return t("tide_high", "high");
+  if (type === "L") return t("tide_low", "low");
+  return t("tide_generic", "tide");
 }
 
 // Return a compact string describing the next upcoming tide prediction,
@@ -48,5 +50,5 @@ export function formatTideSummary(record, now) {
   const feet = typeof next.valueFt === "number" && Number.isFinite(next.valueFt)
     ? ` (${next.valueFt.toFixed(1)} ft)`
     : "";
-  return `Next ${label} ${time}${feet}`;
+  return `${t("next_word", "Next")} ${label} ${time}${feet}`;
 }

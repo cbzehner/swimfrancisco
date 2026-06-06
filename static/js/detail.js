@@ -10,18 +10,15 @@ import {
   formatHHMM,
   parseHHMM,
 } from "./helpers/board.mjs";
+import {
+  closureReasonLabel,
+  dayShortLabel,
+  formatLocalizedISODate,
+  programLabel,
+  statusNextLabel,
+  t,
+} from "./helpers/i18n.mjs";
 import { pacificWallClockDate } from "./helpers/pacific.mjs";
-import { PROGRAM_LABEL } from "./helpers/programs.mjs";
-
-const DAY_LABEL_SHORT = {
-  sunday: "SUN",
-  monday: "MON",
-  tuesday: "TUE",
-  wednesday: "WED",
-  thursday: "THU",
-  friday: "FRI",
-  saturday: "SAT",
-};
 
 function parseHHMMSafe(value) {
   return parseHHMM(typeof value === "string" ? value : "");
@@ -37,24 +34,39 @@ function readSchedule(root) {
   }
 }
 
+function formatClosureSuffix(result) {
+  if (result.closureKind === "PRE_SEASON" && result.closureTransitionDate) {
+    return `${t("status_schedule_starts", "Schedule starts")} ${formatLocalizedISODate(result.closureTransitionDate)}`.toUpperCase();
+  }
+  if (result.closureKind === "POST_SEASON" && result.closureTransitionDate) {
+    return `${t("status_schedule_ended", "Schedule ended")} ${formatLocalizedISODate(result.closureTransitionDate)}`.toUpperCase();
+  }
+  if (result.closureStartTime && result.closureEndTime) {
+    return `${t("status_closed_window", "Closed")} ${result.closureStartTime}\u2013${result.closureEndTime}`.toUpperCase();
+  }
+  return result.closureReason ? closureReasonLabel(result.closureReason).toUpperCase() : "";
+}
+
 function formatStatusLine(result) {
   switch (result.kind) {
     case "OPEN": {
-      const programs = result.activePrograms.map((p) => PROGRAM_LABEL[p] || p.toUpperCase()).join(" + ");
-      return `OPEN — ${programs} UNTIL ${formatHHMM(result.activeUntil)}`;
+      const programs = result.activePrograms.map((p) => programLabel(p)).join(" + ");
+      return `${t("status_open", "OPEN")} — ${programs} ${t("status_until", "UNTIL")} ${formatHHMM(result.activeUntil)}`;
     }
-    case "CLOSED_TODAY":
-      return result.closureReason
-        ? `CLOSED TODAY — ${result.closureReason.toUpperCase()}`
-        : "CLOSED TODAY";
+    case "CLOSED_TODAY": {
+      const suffix = formatClosureSuffix(result);
+      return suffix
+        ? `${t("status_closed_today", "CLOSED TODAY")} — ${suffix}`
+        : t("status_closed_today", "CLOSED TODAY");
+    }
     case "CLOSED_HOURS":
-      return "CLOSED";
+      return t("status_closed", "CLOSED");
     case "NO_DROPIN_TODAY":
-      return "NO DROP-IN TODAY";
+      return t("status_no_drop_in_today", "NO DROP-IN TODAY");
     case "NOT_VERIFIED":
-      return "SCHEDULE NOT YET VERIFIED";
+      return t("status_not_verified", "SCHEDULE NOT YET VERIFIED");
     case "NO_DROPIN_WEEK":
-      return "NO DROP-IN THIS WEEK";
+      return t("status_no_drop_in_week", "NO DROP-IN THIS WEEK");
     default:
       return "—";
   }
@@ -62,8 +74,8 @@ function formatStatusLine(result) {
 
 function formatNextLine(result) {
   if (!result.nextDropIn) return "—";
-  const program = PROGRAM_LABEL[result.nextDropIn.program] || result.nextDropIn.program.toUpperCase();
-  const day = DAY_LABEL_SHORT[result.nextDropIn.day] || result.nextDropIn.day.toUpperCase();
+  const program = programLabel(result.nextDropIn.program);
+  const day = dayShortLabel(result.nextDropIn.day);
   return `${program} · ${day} ${formatHHMM(result.nextDropIn.start)}`;
 }
 
@@ -76,7 +88,7 @@ function applyStatusSlab(root, schedule, now) {
   const statusEl = root.querySelector('[data-field="status"]');
   const nextEl = root.querySelector('[data-field="next"]');
   if (statusEl) statusEl.textContent = result.kind ? formatStatusLine(result) : result.status;
-  if (nextEl) nextEl.textContent = result.kind ? formatNextLine(result) : result.next;
+  if (nextEl) nextEl.textContent = result.kind ? formatNextLine(result) : statusNextLabel(result);
   return result;
 }
 
@@ -116,15 +128,12 @@ function decorateTodayBlock(root, now, statusResult) {
     if (!timeEl || !labelEl) continue;
 
     if (start <= nowMinutes && nowMinutes < end) {
-      if (!timeEl.textContent.startsWith("● ")) {
-        timeEl.textContent = `● ${timeEl.textContent}`;
-      }
-      labelEl.textContent = "NOW";
+      labelEl.textContent = t("status_now", "NOW");
       continue;
     }
 
     if (row === nextRow) {
-      labelEl.textContent = "NEXT";
+      labelEl.textContent = t("next", "NEXT");
     }
   }
 }

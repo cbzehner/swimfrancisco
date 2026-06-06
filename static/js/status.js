@@ -14,27 +14,47 @@ import {
   resolveHorizon,
 } from "./helpers/board.mjs";
 import { pacificWallClockDate } from "./helpers/pacific.mjs";
-import { PROGRAM_LABEL } from "./helpers/programs.mjs";
+import {
+  programLabel,
+  statusLabel,
+  statusNextLabel,
+  t,
+} from "./helpers/i18n.mjs";
 
 let currentHorizon = resolveHorizon(readHorizonParam(), pacificWallClockDate());
 
 const HORIZON_TITLES = {
-  "this-morning": "FOG-LIFT WINDOW",
-  "this-afternoon": "LUNCH BREAK LANES",
-  "this-evening": "AFTER-WORK WATER",
-  "tomorrow-morning": "SET THE ALARM",
-  "tomorrow-afternoon": "CLEAR THE CALENDAR",
-  "tomorrow-evening": "GOLDEN HOUR TOMORROW",
+  "this-morning": ["horizon_fog_lift", "FOG-LIFT WINDOW"],
+  "this-afternoon": ["horizon_lunch", "LUNCH BREAK LANES"],
+  "this-evening": ["horizon_after_work", "AFTER-WORK WATER"],
+  "tomorrow-morning": ["horizon_set_alarm", "SET THE ALARM"],
+  "tomorrow-afternoon": ["horizon_clear_calendar", "CLEAR THE CALENDAR"],
+  "tomorrow-evening": ["horizon_golden_hour", "GOLDEN HOUR TOMORROW"],
 };
+
+const HORIZON_LABEL_KEYS = {
+  now: ["now", "Now"],
+  "this-morning": ["horizon_this_morning", "This Morning"],
+  "this-afternoon": ["horizon_this_afternoon", "This Afternoon"],
+  "this-evening": ["horizon_this_evening", "This Evening"],
+  "tomorrow-morning": ["horizon_tomorrow_morning", "Tomorrow Morning"],
+  "tomorrow-afternoon": ["horizon_tomorrow_afternoon", "Tomorrow Afternoon"],
+  "tomorrow-evening": ["horizon_tomorrow_evening", "Tomorrow Evening"],
+};
+
+function horizonLabel(horizon) {
+  const [key, fallback] = HORIZON_LABEL_KEYS[horizon?.id] || [];
+  return key ? t(key, fallback) : horizon?.label || "";
+}
 
 function currentTimeTitle(now = pacificWallClockDate()) {
   const hour = now.getHours();
-  if (hour < 5) return "NIGHT SWIM";
-  if (hour < 10) return "BEFORE BREAKFAST";
-  if (hour < 14) return "LUNCH BREAK LANES";
-  if (hour < 17) return "POST-FOG SWIM";
-  if (hour < 21) return "AFTER-WORK WATER";
-  return "NIGHT SWIM";
+  if (hour < 5) return t("horizon_night_swim", "NIGHT SWIM");
+  if (hour < 10) return t("horizon_before_breakfast", "BEFORE BREAKFAST");
+  if (hour < 14) return t("horizon_lunch", "LUNCH BREAK LANES");
+  if (hour < 17) return t("horizon_post_fog", "POST-FOG SWIM");
+  if (hour < 21) return t("horizon_after_work", "AFTER-WORK WATER");
+  return t("horizon_night_swim", "NIGHT SWIM");
 }
 
 function readHorizonParam() {
@@ -55,22 +75,28 @@ function writeHorizonParam(horizonId) {
 
 function applyHorizonChrome(horizon) {
   const isNow = !horizon || horizon.id === "now";
-  const title = isNow ? currentTimeTitle() : HORIZON_TITLES[horizon.id] || horizon.label.toUpperCase();
+  const titleSource = HORIZON_TITLES[horizon.id];
+  const title = isNow
+    ? currentTimeTitle()
+    : titleSource
+      ? t(titleSource[0], titleSource[1])
+      : horizonLabel(horizon).toUpperCase();
+  const label = horizonLabel(horizon);
   document.querySelectorAll("[data-horizon-title]").forEach((node) => {
     node.textContent = `·${title}·`;
   });
   document.querySelectorAll("[data-horizon-button]").forEach((node) => {
-    node.textContent = isNow ? "Now" : horizon.label;
+    node.textContent = isNow ? t("now", "Now") : label;
   });
   document.querySelectorAll("[data-horizon-stamp-label]").forEach((node) => {
-    node.textContent = isNow ? "OPEN NOW" : horizon.label.toUpperCase();
+    node.textContent = isNow ? t("open_now", "OPEN NOW") : label.toUpperCase();
   });
 
   const banner = document.querySelector("[data-time-banner]");
   if (!banner) return;
   banner.hidden = isNow;
-  const label = banner.querySelector("[data-time-banner-label]");
-  if (label) label.textContent = isNow ? "Right now" : horizon.label;
+  const bannerLabel = banner.querySelector("[data-time-banner-label]");
+  if (bannerLabel) bannerLabel.textContent = isNow ? t("right_now", "Right now") : horizonLabel(horizon);
 }
 
 export function getCurrentHorizon() {
@@ -90,8 +116,8 @@ function readSchedule(row) {
 
 function formatWindowNext(result) {
   const session = result.bestSession;
-  if (!session) return result.next || PLACEHOLDER;
-  const program = PROGRAM_LABEL[session.type] || session.type.toUpperCase();
+  if (!session) return statusNextLabel(result, PLACEHOLDER);
+  const program = programLabel(session.type);
   return `${program} ${formatHHMM(session.start)}\u2013${formatHHMM(session.end)}`;
 }
 
@@ -103,7 +129,6 @@ function statusClass(status, type) {
   if (type === "open_water" || status === "OCEAN") return "is-ocean";
   if (status === "OPEN" || status === "AVAILABLE" || status === "LIMITED" || status === "ACCESS") return "is-open";
   if (status === "CHECK") return "is-info";
-  if (status.includes("6:30") || status.includes("SOON")) return "is-soon";
   return "is-closed";
 }
 
@@ -116,7 +141,7 @@ function setStatus(statusCell, status, type, sublabel = "") {
     statusCell.append(pill);
   }
   statusCell.dataset.statusValue = status;
-  pill.textContent = status;
+  pill.textContent = statusLabel(status);
   pill.className = `status-pill ${statusClass(status, type)}`;
 
   let sub = statusCell.querySelector(".status-sub");
@@ -149,24 +174,24 @@ function applyStatuses(root, now, allowedTypes = null) {
         ? computeWindowAvailability(schedule, horizon, allowedTypes)
         : computeAccessWindowAvailability(schedule, horizon);
       setStatus(statusCell, result.status, "pool");
-      nextCell.textContent = hasSessions ? formatWindowNext(result) : result.next;
+      nextCell.textContent = hasSessions ? formatWindowNext(result) : statusNextLabel(result, PLACEHOLDER);
       row.dataset.windowRank = String(result.sortRank);
       row.classList.toggle("is-open", result.status === "AVAILABLE" || result.status === "LIMITED" || result.status === "ACCESS");
       return;
     }
 
     const accessLabel = row.getAttribute("data-access-label") || "";
-    const { status, next } = hasSessions
+    const result = hasSessions
       ? computeStatus(schedule, now, allowedTypes)
       : hasAccessHours
         ? computeAccessStatus(schedule, now)
       : accessLabel
-        ? { status: "CHECK", next: "OFFICIAL SITE" }
+        ? { status: "CHECK", next: "OFFICIAL SITE", nextKind: "official_site", nextArgs: {} }
         : { status: PLACEHOLDER, next: PLACEHOLDER };
-    setStatus(statusCell, status, "pool");
-    nextCell.textContent = next;
-    row.dataset.windowRank = status === "OPEN" || status === "ACCESS" ? "0" : "3";
-    row.classList.toggle("is-open", status === "OPEN" || status === "ACCESS");
+    setStatus(statusCell, result.status, "pool");
+    nextCell.textContent = statusNextLabel(result, PLACEHOLDER);
+    row.dataset.windowRank = result.status === "OPEN" || result.status === "ACCESS" ? "0" : "3";
+    row.classList.toggle("is-open", result.status === "OPEN" || result.status === "ACCESS");
   });
 
   const beachRows = root.querySelectorAll('table.board tbody tr[data-type="open_water"]');
@@ -176,11 +201,11 @@ function applyStatuses(root, now, allowedTypes = null) {
     if (!statusCell || !nextCell) return;
     if (horizon.kind === "window") {
       setStatus(statusCell, "OCEAN", "open_water");
-      nextCell.textContent = "CHECK CONDITIONS";
+      nextCell.textContent = t("status_check_conditions", "CHECK CONDITIONS");
       row.dataset.windowRank = "2";
       row.classList.remove("is-open");
     } else {
-      setStatus(statusCell, "OCEAN", "open_water", "YEAR-ROUND");
+      setStatus(statusCell, "OCEAN", "open_water", t("status_year_round", "YEAR-ROUND"));
       nextCell.textContent = PLACEHOLDER;
       row.dataset.windowRank = "0";
       row.classList.add("is-open");
@@ -339,7 +364,7 @@ function populateHorizonMenu(control, now) {
     ? currentHorizon.id
     : "now";
   currentHorizon = resolveHorizon(selected, now);
-  button.textContent = currentHorizon.label;
+  button.textContent = horizonLabel(currentHorizon);
   applyHorizonChrome(currentHorizon);
   menu.replaceChildren(
     ...options.map((option) => {
@@ -347,7 +372,7 @@ function populateHorizonMenu(control, now) {
       el.type = "button";
       el.setAttribute("role", "menuitemradio");
       el.value = option.id;
-      el.textContent = option.label;
+      el.textContent = horizonLabel(option);
       el.setAttribute("aria-checked", String(option.id === selected));
       el.addEventListener("click", () => {
         applyHorizon(option.id);

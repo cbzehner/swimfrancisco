@@ -1,13 +1,16 @@
 {% extends "base.html" %}
 {% import "macros/schedule.html" as schedule_macros %}
 {% import "macros/bulletin.html" as bulletin_macros %}
+{% import "macros/chrome.html" as chrome %}
+{% import "macros/seo.html" as seo %}
 {% block body_attrs %}{% if section.extra.view | default(value='') == 'map' %} class="map-page"{% endif %}{% endblock %}
-{% block title %}{% if section.extra.view | default(value='') == 'map' %}San Francisco swim map — Swim Francisco{% else %}Swim Francisco — where to swim right now{% endif %}{% endblock %}
-{% block meta_description %}{% if section.extra.view | default(value='') == 'map' %}Map of San Francisco pools, beaches, and open-water swim spots with access, schedule, and condition details from Swim Francisco.{% else %}Find where to swim right now in San Francisco: lap swim, family swim, public pools, open-water spots, water temperature, tide, access, and schedules.{% endif %}{% endblock %}
-{% block canonical_url %}{% if section.extra.view | default(value='') == 'map' %}{{ config.base_url | safe }}/map/{% else %}{{ config.base_url | safe }}/{% endif %}{% endblock %}
-{% block social_title %}{% if section.extra.view | default(value='') == 'map' %}San Francisco swim map — Swim Francisco{% else %}Swim Francisco — where to swim right now{% endif %}{% endblock %}
-{% block social_description %}{% if section.extra.view | default(value='') == 'map' %}Map of San Francisco pools, beaches, and open-water swim spots with access, schedule, and condition details from Swim Francisco.{% else %}Find where to swim right now in San Francisco: lap swim, family swim, public pools, open-water spots, water temperature, tide, access, and schedules.{% endif %}{% endblock %}
-{% block social_url %}{% if section.extra.view | default(value='') == 'map' %}{{ config.base_url | safe }}/map/{% else %}{{ config.base_url | safe }}/{% endif %}{% endblock %}
+{% block title %}{% if section.extra.view | default(value='') == 'map' %}{{ trans(key='map_title', lang=lang) }}{% else %}{{ trans(key='home_title', lang=lang) }}{% endif %}{% endblock %}
+{% block meta_description %}{% if section.extra.view | default(value='') == 'map' %}{{ trans(key='map_meta', lang=lang) }}{% else %}{{ trans(key='home_meta', lang=lang) }}{% endif %}{% endblock %}
+{% block canonical_url %}{{ current_url | safe }}{% endblock %}
+{% block alternate_links %}{% if section.extra.view | default(value='') == 'map' %}{{ seo::alternate_links(content_path='@/map/_index.md') }}{% else %}{{ seo::alternate_links(content_path='@/_index.md') }}{% endif %}{% endblock %}
+{% block social_title %}{% if section.extra.view | default(value='') == 'map' %}{{ trans(key='map_title', lang=lang) }}{% else %}{{ trans(key='home_title', lang=lang) }}{% endif %}{% endblock %}
+{% block social_description %}{% if section.extra.view | default(value='') == 'map' %}{{ trans(key='map_meta', lang=lang) }}{% else %}{{ trans(key='home_meta', lang=lang) }}{% endif %}{% endblock %}
+{% block social_url %}{{ current_url | safe }}{% endblock %}
 {% block extra_head %}
   {% set_global is_map_view = section.extra.view | default(value='') == 'map' %}
   {% if is_map_view %}
@@ -19,8 +22,8 @@
         "@type": "WebSite",
         "name": "Swim Francisco",
         "url": {{ config.base_url | json_encode | safe }},
-        "description": "Find where to swim right now in San Francisco: lap swim, family swim, public pools, open-water spots, water temperature, tide, access, and schedules.",
-        "inLanguage": "en-US"
+        "description": {{ trans(key='home_meta', lang=lang) | json_encode | safe }},
+        "inLanguage": {{ lang | json_encode | safe }}
       }
     </script>
   {% endif %}
@@ -28,29 +31,24 @@
 
 {% block content %}
   {% set bulletin = load_data(path="data/bulletin.json") %}
-  <header class="site-header">
-    <div class="site-header-row">
-      <h1><a href="{{ config.base_url }}/" class="site-title"><span class="brand-swim">SWIM</span><span class="brand-dot">·</span><span class="brand-city">FRANCISCO</span></a></h1>
-      {{ bulletin_macros::badge() }}
-      <div class="site-header-actions">
-        <a href="/" data-target-path="/" class="site-nav-link{% if not is_map_view %} is-active{% endif %}" aria-label="View board">THE BOARD</a>
-        <a href="/map/" data-target-path="/map/" class="site-nav-link{% if is_map_view %} is-active{% endif %}" aria-label="View map">MAP</a>
-      </div>
-    </div>
-  </header>
+  {% if is_map_view %}
+    {{ chrome::site_header(active_view='map', content_path='@/map/_index.md', active_lang=lang) }}
+  {% else %}
+    {{ chrome::site_header(active_view='board', content_path='@/_index.md', active_lang=lang) }}
+  {% endif %}
 
   {% if not is_map_view %}
-    <section class="bulletin-strip" aria-label="Current conditions">
-      <div><span class="k">Today</span><span class="v" data-today-date>—</span></div>
-      <div><span class="k">Time</span><span class="v num" data-pt-time>—</span></div>
-      <div><span class="k">Bay</span><span class="v red num" data-bay-temp-strip>—</span></div>
-      <div><span class="k">Ocean</span><span class="v teal num" data-ocean-temp-strip>—</span></div>
-      <div><span class="k">Tide</span><span class="v num" data-next-tide>—</span></div>
-      <div><span class="k">Updated</span><span class="v num" data-conditions-updated>—</span></div>
+    <section class="bulletin-strip" aria-label="{{ trans(key='current_conditions', lang=lang) }}">
+      <div><span class="k">{{ trans(key='today', lang=lang) }}</span><span class="v" data-today-date>—</span></div>
+      <div><span class="k">{{ trans(key='time', lang=lang) }}</span><span class="v num" data-pt-time>—</span></div>
+      <div><span class="k">{{ trans(key='bay', lang=lang) }}</span><span class="v red num" data-bay-temp-strip>—</span></div>
+      <div><span class="k">{{ trans(key='ocean', lang=lang) }}</span><span class="v teal num" data-ocean-temp-strip>—</span></div>
+      <div><span class="k">{{ trans(key='tide', lang=lang) }}</span><span class="v num" data-next-tide>—</span></div>
+      <div><span class="k">{{ trans(key='updated', lang=lang) }}</span><span class="v num" data-conditions-updated>—</span></div>
     </section>
 
     <section class="bulletin-hero">
-      <div class="eyebrow">No. {{ bulletin.label }} · Live bulletin · right now</div>
+      <div class="eyebrow">{{ trans(key='hero_eyebrow', lang=lang) | replace(from='%{label}', to=bulletin.label) }}</div>
       <h2>
         <span class="red">SWIM</span>
         <span>SAN</span> <span class="teal">FRANCISCO.</span>
@@ -58,52 +56,51 @@
       <p class="hero-line" data-horizon-title>·BEFORE BREAKFAST·</p>
       <p class="deck">
         <span class="em" data-open-count>—</span>
-        <span data-open-count-label>places open now</span>.
-        Bay <span class="em" data-bay-temp>—</span>, ocean <span class="em" data-ocean-temp>—</span>.
+        <span data-open-count-label>{{ trans(key='places_open_now', lang=lang) }}</span>.
+        {{ trans(key='bay', lang=lang) }} <span class="em" data-bay-temp>—</span>, {{ trans(key='ocean', lang=lang) }} <span class="em" data-ocean-temp>—</span>.
       </p>
-      <div class="hero-stamp" aria-hidden="true"><span data-horizon-stamp-label>OPEN NOW</span> · <span data-open-count>—</span></div>
+      <div class="hero-stamp" aria-hidden="true"><span data-horizon-stamp-label>{{ trans(key='open_now', lang=lang) }}</span> · <span data-open-count>—</span></div>
     </section>
   {% endif %}
 
   <noscript>
     <p class="noscript-notice">
-      JAVASCRIPT IS DISABLED — LIVE STATUS AND FILTERS ARE UNAVAILABLE.
-      ALL SPOT DETAIL PAGES STILL WORK.
+      {{ trans(key='javascript_disabled', lang=lang) }}
     </p>
   </noscript>
 
   <div class="board-controls">
     {% if not is_map_view %}
       <div class="control-cluster when-group">
-        <span class="control-label">When</span>
+        <span class="control-label">{{ trans(key='when', lang=lang) }}</span>
         <div class="horizon-control">
           <button type="button"
                   class="horizon-button"
                   data-horizon-button
                   aria-haspopup="menu"
                   aria-controls="horizon-menu"
-                  aria-expanded="false">Now</button>
+                  aria-expanded="false">{{ trans(key='now', lang=lang) }}</button>
         </div>
       </div>
     {% endif %}
-    <div class="filters control-cluster" role="group" aria-label="Filters">
-      <span class="control-label">Show</span>
-      <div class="filter-group type-filter" role="group" aria-label="Type Filter">
-        <button type="button" data-filter="type" data-type="none">ALL</button>
-        <button type="button" data-filter="type" data-type="lap_swim">LAP</button>
-        <button type="button" data-filter="type" data-type="family_swim">FAMILY</button>
-        <button type="button" data-filter="type" data-type="senior_swim">SENIOR</button>
-        <button type="button" data-filter="type" data-type="open_water">BEACH</button>
+    <div class="filters control-cluster" role="group" aria-label="{{ trans(key='filters', lang=lang) }}">
+      <span class="control-label">{{ trans(key='show', lang=lang) }}</span>
+      <div class="filter-group type-filter" role="group" aria-label="{{ trans(key='type_filter', lang=lang) }}">
+        <button type="button" data-filter="type" data-type="none">{{ trans(key='all', lang=lang) }}</button>
+        <button type="button" data-filter="type" data-type="lap_swim">{{ trans(key='lap', lang=lang) }}</button>
+        <button type="button" data-filter="type" data-type="family_swim">{{ trans(key='family', lang=lang) }}</button>
+        <button type="button" data-filter="type" data-type="senior_swim">{{ trans(key='senior', lang=lang) }}</button>
+        <button type="button" data-filter="type" data-type="open_water">{{ trans(key='beach', lang=lang) }}</button>
       </div>
-      <div class="filter-group access-filter" role="group" aria-label="Access Filter">
-        <button type="button" data-filter="access" data-access="memberships">MEMBERSHIPS</button>
+      <div class="filter-group access-filter" role="group" aria-label="{{ trans(key='access_filter', lang=lang) }}">
+        <button type="button" data-filter="access" data-access="memberships">{{ trans(key='memberships', lang=lang) }}</button>
       </div>
     </div>
     {% if not is_map_view %}
-      <div class="sort-group control-cluster" role="group" aria-label="Sort">
-        <span class="control-label">Sort</span>
-        <button type="button" data-filter="open-now" aria-label="Sort by next open time">OPEN NEXT</button>
-        <button type="button" data-action="sort-distance" aria-label="Sort by distance">NEAREST</button>
+      <div class="sort-group control-cluster" role="group" aria-label="{{ trans(key='sort', lang=lang) }}">
+        <span class="control-label">{{ trans(key='sort', lang=lang) }}</span>
+        <button type="button" data-filter="open-now" aria-label="{{ trans(key='sort_next_aria', lang=lang) }}">{{ trans(key='open_next', lang=lang) }}</button>
+        <button type="button" data-action="sort-distance" aria-label="{{ trans(key='sort_distance_aria', lang=lang) }}">{{ trans(key='nearest', lang=lang) }}</button>
       </div>
     {% endif %}
   </div>
@@ -113,25 +110,26 @@
 
   {% if not is_map_view %}
     <div class="time-banner" data-time-banner hidden>
-      <span class="time-banner-k">Plan ahead</span>
-      <span class="time-banner-v" data-time-banner-label>Right now</span>
-      <button type="button" data-time-banner-reset>Back to now</button>
+      <span class="time-banner-k">{{ trans(key='plan_ahead', lang=lang) }}</span>
+      <span class="time-banner-v" data-time-banner-label>{{ trans(key='right_now', lang=lang) }}</span>
+      <button type="button" data-time-banner-reset>{{ trans(key='back_to_now', lang=lang) }}</button>
     </div>
   {% endif %}
 
-  {% set spots = get_section(path='spots/_index.md') %}
+  {% set spots = get_section(path='spots/_index.md', lang=config.default_language) %}
   <table class="board"{% if is_map_view %} hidden{% endif %}>
     <thead>
       <tr>
-        <th>SPOT</th>
-        <th>STATUS</th>
-        <th>NEXT</th>
-        <th>WATER</th>
-        <th>LOCALE</th>
+        <th>{{ trans(key='spot', lang=lang) }}</th>
+        <th>{{ trans(key='status', lang=lang) }}</th>
+        <th>{{ trans(key='next', lang=lang) }}</th>
+        <th>{{ trans(key='water', lang=lang) }}</th>
+        <th>{{ trans(key='locale', lang=lang) }}</th>
       </tr>
     </thead>
     <tbody>
       {% for page in spots.pages %}
+        {% set target_page = get_page(path="spots/" ~ page.slug ~ ".md", lang=lang) %}
         <tr
           data-slug="{{ page.slug }}"
           data-type="{{ page.extra.type }}"
@@ -144,27 +142,27 @@
           data-schedule='{{ schedule_macros::data_schedule(extra=page.extra) }}'
         >
           <td data-cell="spot">
-            <a href="{{ page.permalink }}">{{ page.title | upper }}</a>
+            <a href="{{ target_page.permalink }}">{{ page.title | upper }}</a>
             {% if page.extra.type == 'open_water' %}
               <span class="spot-subtitle spot-subtitle--description">
-                {{ page.extra.description_short | default(value='Open water') }}
+                {{ target_page.extra.description_short | default(value=page.extra.description_short | default(value=trans(key='open_water_fallback', lang=lang))) }}
               </span>
             {% else %}
               <span class="spot-subtitle">
-                {{ page.extra.subtype | default(value='POOL') | upper }}
+                {% if page.extra.subtype %}{{ chrome::spot_label(label=page.extra.subtype, active_lang=lang) | upper }}{% else %}POOL{% endif %}
               </span>
             {% endif %}
           </td>
           <td data-cell="status"><span class="status-pill">—</span></td>
           <td data-cell="next">—</td>
-          <td data-cell="water">{% if page.extra.type == 'pool' and page.extra.setpoint_label %}{{ page.extra.setpoint_label | upper }}{% else %}—{% endif %}</td>
+          <td data-cell="water">{% if page.extra.type == 'pool' and page.extra.setpoint_label %}{{ chrome::spot_label(label=page.extra.setpoint_label, active_lang=lang) | upper }}{% else %}—{% endif %}</td>
           <td data-cell="locale">
             {% if page.extra.access_label %}
-              <span class="cost-badge {{ page.extra.access_badge_class | default(value='is-paid') }}">{{ page.extra.access_label }}</span>
+              <span class="cost-badge {{ page.extra.access_badge_class | default(value='is-paid') }}">{{ chrome::access_badge_label(label=page.extra.access_label, active_lang=lang) }}</span>
             {% elif page.extra.cost == "free" %}
-              <span class="cost-badge is-free">Free</span>
+              <span class="cost-badge is-free">{{ trans(key='free', lang=lang) }}</span>
             {% elif page.extra.cost == "paid" %}
-              <span class="cost-badge is-paid">Paid</span>
+              <span class="cost-badge is-paid">{{ trans(key='paid', lang=lang) }}</span>
             {% endif %}
             <span class="locale-text">
               {% if page.extra.locale_label %}
@@ -172,7 +170,7 @@
               {% elif page.extra.address %}
                 {{ page.extra.address | split(pat=',') | nth(n=1) | default(value=page.extra.subtype | default(value='SF')) | upper }}
               {% elif page.extra.subtype %}
-                {{ page.extra.subtype | upper }}
+                {{ chrome::spot_label(label=page.extra.subtype, active_lang=lang) | upper }}
               {% else %}
                 SF
               {% endif %}

@@ -106,6 +106,10 @@ export function formatISODateHuman(isoDate) {
   return `${monthLabels[monthIndex]} ${Number(day)}, ${year}`;
 }
 
+function statusResult(status, next, nextKind = "", nextArgs = {}) {
+  return { status, next, nextKind, nextArgs };
+}
+
 // Return the active closure (if any) covering `now`.
 export function findActiveClosure(closures, now) {
   if (!Array.isArray(closures) || closures.length === 0) return null;
@@ -135,11 +139,9 @@ export function findActiveClosure(closures, now) {
 // exclusive upper bound).
 export function closureCopy(closure) {
   // Synthetic POST_SEASON closures end in year 9999 — a "closed through"
-  // line for that is nonsense. The reason field already carries the
-  // human-readable transition message ("Schedule ended JUN 6, 2026"), so
-  // surface that verbatim. Everything else (explicit closures + the
-  // PRE_SEASON synthetic, whose end is a real date) keeps the standard
-  // "Closed through <end>" copy.
+  // line for that is nonsense. The reason field carries the fallback
+  // transition message. Everything else (explicit closures + PRE_SEASON,
+  // whose end is a real date) keeps the standard "Closed through <end>" copy.
   if (closure.kind === "POST_SEASON" && typeof closure.reason === "string") {
     return closure.reason;
   }
@@ -151,6 +153,21 @@ export function closureCopy(closure) {
     return `Closed ${formatHHMM(startMin)}–${formatHHMM(endMin)}`;
   }
   return `Closed through ${formatISODateHuman(closure.end)}`;
+}
+
+function closureNext(closure) {
+  const startMin = parseHHMM(closure.start_time);
+  const endMin = parseHHMM(closure.end_time);
+  if (closure.kind === "PRE_SEASON" && typeof closure.transition_date === "string") {
+    return { nextKind: "schedule_starts", nextArgs: { iso: closure.transition_date } };
+  }
+  if (closure.kind === "POST_SEASON" && typeof closure.transition_date === "string") {
+    return { nextKind: "schedule_ended", nextArgs: { iso: closure.transition_date } };
+  }
+  if (startMin !== null && endMin !== null) {
+    return { nextKind: "closed_window", nextArgs: { start: formatHHMM(startMin), end: formatHHMM(endMin) } };
+  }
+  return { nextKind: "closed_through", nextArgs: { iso: closure.end } };
 }
 
 function normalizeAllowedTypes(allowedTypes) {
@@ -353,6 +370,7 @@ function derivedClosures(schedule) {
       end: dayBefore,
       reason: `Schedule starts ${formatISODateHuman(start)}`,
       kind: "PRE_SEASON",
+      transition_date: start,
     });
   }
   if (end) {
@@ -362,6 +380,7 @@ function derivedClosures(schedule) {
       end: "9999-12-31",
       reason: `Schedule ended ${formatISODateHuman(end)}`,
       kind: "POST_SEASON",
+      transition_date: end,
     });
   }
   return out;
@@ -396,25 +415,24 @@ function allClosures(schedule) {
 }
 
 export function computeStatus(schedule, now, allowedTypes = null) {
-  const empty = { status: PLACEHOLDER, next: PLACEHOLDER };
+  const empty = statusResult(PLACEHOLDER, PLACEHOLDER);
   if (!schedule || typeof schedule !== "object") return empty;
 
   const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
   const allowed = normalizeAllowedTypes(allowedTypes);
 
   // Pre-season, post-season, and explicit closures all flow through
-  // findActiveClosure so the dashboard renders one shape: status=CLOSED,
-  // next=closureCopy. Schedule transitions render naturally because the
-  // synthetic PRE_SEASON closure carries "Schedule starts <date>" as its
-  // reason, which findActiveClosure surfaces unchanged.
+  // findActiveClosure so the dashboard renders one shape: status=CLOSED
+  // with English fallback copy plus structured nextKind/nextArgs for i18n.
   const closures = allClosures(schedule);
   const activeClosure = findActiveClosure(closures, now);
   if (activeClosure) {
-    return { status: "CLOSED", next: closureCopy(activeClosure) };
+    const { nextKind, nextArgs } = closureNext(activeClosure);
+    return statusResult("CLOSED", closureCopy(activeClosure), nextKind, nextArgs);
   }
 
   if (sessions.length === 0) {
-    return { status: "CLOSED", next: "Schedule not yet verified" };
+    return statusResult("CLOSED", "Schedule not yet verified", "not_verified");
   }
 
   const todayKey = DAY_KEYS[now.getDay()];
@@ -427,21 +445,28 @@ export function computeStatus(schedule, now, allowedTypes = null) {
     (s) => s.day === todayKey && s.start <= nowMinutes && nowMinutes < s.end,
   );
   if (current) {
-    return { status: "OPEN", next: `Closes ${formatHHMM(current.end)}` };
+    return statusResult("OPEN", `Closes ${formatHHMM(current.end)}`, "closes", {
+      time: formatHHMM(current.end),
+    });
   }
 
   const best = findNextSession(normalized, closures, now);
-  if (!best) return { status: "CLOSED", next: PLACEHOLDER };
+  if (!best) return statusResult("CLOSED", PLACEHOLDER);
 
   const label = best.offset === 0
     ? `Opens ${formatHHMM(best.session.start)}`
     : `Opens ${best.session.day.slice(0, 3).toUpperCase()} ${formatHHMM(best.session.start)}`;
 
-  return { status: "CLOSED", next: label };
+  return statusResult(
+    "CLOSED",
+    label,
+    best.offset === 0 ? "opens_today" : "opens_day",
+    { day: best.session.day, time: formatHHMM(best.session.start) },
+  );
 }
 
 export function computeAccessStatus(schedule, now) {
-  const empty = { status: PLACEHOLDER, next: PLACEHOLDER };
+  const empty = statusResult(PLACEHOLDER, PLACEHOLDER);
   if (!schedule || typeof schedule !== "object") return empty;
 
   const hasAccessHours = normalizeAccessHours(schedule.access_hours).length > 0;
@@ -451,22 +476,30 @@ export function computeAccessStatus(schedule, now) {
   const closures = allClosures(schedule);
   const activeClosure = findActiveClosure(closures, now);
   if (activeClosure) {
-    return { status: "CLOSED", next: closureCopy(activeClosure) };
+    const { nextKind, nextArgs } = closureNext(activeClosure);
+    return statusResult("CLOSED", closureCopy(activeClosure), nextKind, nextArgs);
   }
 
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const current = accessWindowsForDate(schedule, now)
     .find((access) => access.start <= nowMinutes && nowMinutes < access.end);
   if (current) {
-    return { status: "ACCESS", next: `Until ${formatHHMM(current.end)}` };
+    return statusResult("ACCESS", `Until ${formatHHMM(current.end)}`, "until", {
+      time: formatHHMM(current.end),
+    });
   }
 
   const best = findNextAccessWindow(schedule, closures, now);
-  if (!best) return { status: "CHECK", next: "OFFICIAL SITE" };
+  if (!best) return statusResult("CHECK", "OFFICIAL SITE", "official_site");
   const label = best.offset === 0
     ? `Access ${formatHHMM(best.access.start)}`
     : `Access ${DAY_KEYS[dateWithDayOffset(now, best.offset).getDay()].slice(0, 3).toUpperCase()} ${formatHHMM(best.access.start)}`;
-  return { status: "CHECK", next: label };
+  return statusResult(
+    "CHECK",
+    label,
+    best.offset === 0 ? "access_today" : "access_day",
+    { day: DAY_KEYS[dateWithDayOffset(now, best.offset).getDay()], time: formatHHMM(best.access.start) },
+  );
 }
 
 export function computeNextOpenOffset(schedule, now, allowedTypes = null) {
@@ -529,6 +562,8 @@ export function computeWindowAvailability(schedule, horizon, allowedTypes = null
       next: typeof blockingClosure.reason === "string"
         ? blockingClosure.reason.toUpperCase()
         : PLACEHOLDER,
+      nextKind: typeof blockingClosure.reason === "string" ? "closure_reason" : "",
+      nextArgs: typeof blockingClosure.reason === "string" ? { reason: blockingClosure.reason } : {},
       sortRank: 4,
       bestSession: null,
     };
@@ -539,6 +574,8 @@ export function computeWindowAvailability(schedule, horizon, allowedTypes = null
       kind: "NO_SESSION",
       status: "NO SESSION",
       next: "Schedule not verified",
+      nextKind: "not_verified",
+      nextArgs: {},
       sortRank: 3,
       bestSession: null,
     };
@@ -587,7 +624,7 @@ export function computeAccessWindowAvailability(schedule, horizon) {
   const accessHours = normalizeAccessHours(schedule.access_hours);
   const accessExceptions = normalizeAccessExceptions(schedule.access_exceptions);
   if (accessHours.length === 0 && accessExceptions.length === 0) {
-    return { status: "CHECK", next: "OFFICIAL SITE", sortRank: 3 };
+    return { status: "CHECK", next: "OFFICIAL SITE", nextKind: "official_site", nextArgs: {}, sortRank: 3 };
   }
   const closures = allClosures(schedule);
   const blockingClosure = closures.find((closure) => (
@@ -706,6 +743,11 @@ export function computeDetailStatus(schedule, now) {
       kind: "CLOSED_TODAY",
       closureReason: typeof activeClosure.reason === "string" ? activeClosure.reason : null,
       closureKind: typeof activeClosure.kind === "string" ? activeClosure.kind : null,
+      closureTransitionDate: typeof activeClosure.transition_date === "string" ? activeClosure.transition_date : null,
+      closureStart: typeof activeClosure.start === "string" ? activeClosure.start : null,
+      closureEnd: typeof activeClosure.end === "string" ? activeClosure.end : null,
+      closureStartTime: typeof activeClosure.start_time === "string" ? activeClosure.start_time : null,
+      closureEndTime: typeof activeClosure.end_time === "string" ? activeClosure.end_time : null,
       nextDropIn: activeClosure.kind === "POST_SEASON" ? null : findNextDropIn(schedule, now),
     };
   }

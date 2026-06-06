@@ -50,10 +50,10 @@ test("computeAccessStatus reports facility access without verified swim sessions
     ],
     closures: [],
   };
-  assert.deepEqual(computeAccessStatus(schedule, now), {
-    status: "ACCESS",
-    next: "Until 20:30",
-  });
+  const result = computeAccessStatus(schedule, now);
+  assert.equal(result.status, "ACCESS");
+  assert.equal(result.next, "Until 20:30");
+  assert.equal(result.nextKind, "until");
 });
 
 test("computeAccessStatus lets date-specific access exceptions override weekly hours", () => {
@@ -68,14 +68,15 @@ test("computeAccessStatus lets date-specific access exceptions override weekly h
     closures: [],
   };
 
-  assert.deepEqual(computeAccessStatus(schedule, new Date("2026-05-25T07:00:00")), {
-    status: "CHECK",
-    next: "Access 07:30",
-  });
-  assert.deepEqual(computeAccessStatus(schedule, new Date("2026-05-25T14:00:00")), {
-    status: "CHECK",
-    next: "Access MON 06:00",
-  });
+  const beforeHolidayWindow = computeAccessStatus(schedule, new Date("2026-05-25T07:00:00"));
+  assert.equal(beforeHolidayWindow.status, "CHECK");
+  assert.equal(beforeHolidayWindow.next, "Access 07:30");
+  assert.equal(beforeHolidayWindow.nextKind, "access_today");
+
+  const afterHolidayWindow = computeAccessStatus(schedule, new Date("2026-05-25T14:00:00"));
+  assert.equal(afterHolidayWindow.status, "CHECK");
+  assert.equal(afterHolidayWindow.next, "Access MON 06:00");
+  assert.equal(afterHolidayWindow.nextKind, "access_day");
 });
 
 test("computeAccessWindowAvailability uses access hours for plan-ahead windows", () => {
@@ -549,9 +550,11 @@ test("computeStatus dashboard line for pre-season mirrors closure copy", () => {
     effective_end: "2026-06-06",
   };
   const before = new Date("2026-05-05T15:00:00-07:00");
-  const { status, next } = computeStatus(schedule, before);
+  const { status, next, nextKind, nextArgs } = computeStatus(schedule, before);
   assert.equal(status, "CLOSED");
   assert.equal(next, "Closed through May 11, 2026");
+  assert.equal(nextKind, "schedule_starts");
+  assert.deepEqual(nextArgs, { iso: "2026-05-12" });
 });
 
 test("computeStatus dashboard line for post-season uses 'Schedule ended'", () => {
@@ -562,9 +565,11 @@ test("computeStatus dashboard line for post-season uses 'Schedule ended'", () =>
     effective_end: "2026-06-06",
   };
   const after = new Date("2026-06-09T08:00:00-07:00");
-  const { status, next } = computeStatus(schedule, after);
+  const { status, next, nextKind, nextArgs } = computeStatus(schedule, after);
   assert.equal(status, "CLOSED");
   assert.equal(next, "Schedule ended Jun 6, 2026");
+  assert.equal(nextKind, "schedule_ended");
+  assert.deepEqual(nextArgs, { iso: "2026-06-06" });
 });
 
 test("findActiveClosure respects start_time/end_time on partial-day closures", () => {
@@ -600,11 +605,13 @@ test("computeStatus dashboard line for partial-day closure shows the time window
     }],
   };
   const during = new Date("2026-05-21T12:00:00-07:00");
-  const { status, next } = computeStatus(schedule, during);
+  const { status, next, nextKind, nextArgs } = computeStatus(schedule, during);
   assert.equal(status, "CLOSED");
   // No "through DATE" copy when a partial window is present — just the
   // time range, since the pool reopens later that same day.
   assert.equal(next, "Closed 11:00–14:00");
+  assert.equal(nextKind, "closed_window");
+  assert.deepEqual(nextArgs, { start: "11:00", end: "14:00" });
 });
 
 test("findNextSession skips sessions inside a partial-day closure", () => {
@@ -662,4 +669,3 @@ test("computeDetailStatus ignores effective_start when missing", () => {
   const result = computeDetailStatus(schedule, t);
   assert.equal(result.kind, "OPEN");
 });
-

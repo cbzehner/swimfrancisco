@@ -54,6 +54,28 @@ def _json_ld_objects(rendered_html: str) -> list[dict[str, object]]:
     return [json.loads(html.unescape(script)) for script in scripts]
 
 
+def _assert_hreflang_cluster(rendered_html: str, canonical_path: str) -> None:
+    assert f"href=https://swimfrancisco.com{canonical_path} hreflang=en rel=alternate" in rendered_html
+    assert f"href=https://swimfrancisco.com/es{canonical_path} hreflang=es rel=alternate" in rendered_html
+    assert f"href=https://swimfrancisco.com/zh-Hant{canonical_path} hreflang=zh-Hant rel=alternate" in rendered_html
+    assert f"href=https://swimfrancisco.com/fil{canonical_path} hreflang=fil rel=alternate" in rendered_html
+    assert f"href=https://swimfrancisco.com/vi{canonical_path} hreflang=vi rel=alternate" in rendered_html
+    assert f"href=https://swimfrancisco.com{canonical_path} hreflang=x-default rel=alternate" in rendered_html
+
+
+def _canonical_spot_extras() -> dict[str, dict[str, object]]:
+    extras: dict[str, dict[str, object]] = {}
+    for path in sorted((ROOT / "content" / "spots").glob("*.md")):
+        if path.name.startswith("_index"):
+            continue
+        frontmatter = path.read_text().split("+++", 2)[1]
+        extra = tomllib.loads(frontmatter)["extra"]
+        if "localized_from" in extra:
+            continue
+        extras[path.stem] = extra
+    return extras
+
+
 def test_all_spots_have_access_classification() -> None:
     valid_access_modes = {"public", "limited_public", "membership", "private"}
     valid_payment_models = {"free", "session", "day_pass", "membership", "therapy", "unknown"}
@@ -66,14 +88,88 @@ def test_all_spots_have_access_classification() -> None:
         "unknown",
     }
     for path in sorted((ROOT / "content" / "spots").glob("*.md")):
-        if path.name == "_index.md":
+        if path.name.startswith("_index"):
             continue
         frontmatter = path.read_text().split("+++", 2)[1]
         extra = tomllib.loads(frontmatter)["extra"]
+        if "localized_from" in extra:
+            continue
         assert extra.get("access_mode") in valid_access_modes, path.name
         assert extra.get("payment_model") in valid_payment_models, path.name
         if extra.get("type") == "pool":
             assert extra.get("schedule_basis") in valid_schedule_bases, path.name
+
+
+def test_canonical_labels_have_i18n_mappings() -> None:
+    extras_by_slug = _canonical_spot_extras()
+    chrome = (ROOT / "templates" / "macros" / "chrome.html").read_text()
+    spot_page = (ROOT / "templates" / "spots" / "page.html").read_text()
+    runtime_i18n = (ROOT / "static" / "js" / "helpers" / "i18n.mjs").read_text()
+
+    chrome_label_mappings = set(re.findall(r'label == "([^"]+)"', chrome))
+    access_window_mappings = set(re.findall(r'label == "([^"]+)"', spot_page))
+    template_reason_mappings = set(re.findall(r'reason == "([^"]+)"', spot_page))
+    js_reason_mappings = set(re.findall(r'"([^"]+)":\s*"reason_', runtime_i18n))
+    js_reason_mappings.update(re.findall(r"\n\s*([A-Za-z][A-Za-z0-9_]*)\s*:\s*\"reason_", runtime_i18n))
+
+    visible_spot_labels: set[str] = set()
+    access_badges: set[str] = set()
+    access_window_labels: set[str] = set()
+    closure_reasons: set[str] = set()
+
+    for extra in extras_by_slug.values():
+        if subtype := extra.get("subtype"):
+            visible_spot_labels.add(str(subtype))
+        if setpoint := extra.get("setpoint_label"):
+            setpoint = str(setpoint)
+            if re.search(r"[A-Za-z]", setpoint) and not re.search(r"\d|°", setpoint):
+                visible_spot_labels.add(setpoint)
+        if access_label := extra.get("access_label"):
+            access_badges.add(str(access_label))
+        for key in ("access_hours", "access_exceptions"):
+            for window in extra.get(key, []):
+                if label := window.get("label"):
+                    access_window_labels.add(str(label))
+        for closure in extra.get("closures", []):
+            if reason := closure.get("reason"):
+                closure_reasons.add(str(reason))
+
+    assert visible_spot_labels <= chrome_label_mappings
+    assert access_badges <= chrome_label_mappings
+    assert access_window_labels <= access_window_mappings
+    assert closure_reasons <= template_reason_mappings
+    assert closure_reasons <= js_reason_mappings
+
+
+def test_js_translation_keys_are_exported_to_runtime_payload() -> None:
+    config = tomllib.loads((ROOT / "config.toml").read_text())
+    translation_keys = set(config["translations"])
+    base = (ROOT / "templates" / "base.html").read_text()
+    exported_keys = {
+        key
+        for prop, key in re.findall(
+            r"([a-z][a-z0-9_]*):\s*{{\s*trans\(key='([^']+)'",
+            base,
+        )
+    }
+    assert exported_keys <= translation_keys
+
+    js_sources = "\n".join(
+        path.read_text()
+        for pattern in ("*.js", "*.mjs")
+        for path in (ROOT / "static" / "js").rglob(pattern)
+    )
+    runtime_i18n = (ROOT / "static" / "js" / "helpers" / "i18n.mjs").read_text()
+    status_js = (ROOT / "static" / "js" / "status.js").read_text()
+
+    used_translation_keys = set(re.findall(r'(?<![A-Za-z0-9_$])t\("([^"]+)"', js_sources))
+    used_translation_keys.update(set(re.findall(r'"([a-z][a-z0-9_]+)"', runtime_i18n)) & translation_keys)
+    used_translation_keys.update(
+        key
+        for key in re.findall(r'"([a-z][a-z0-9_]+)"', status_js)
+        if key.startswith("horizon_") or key == "now"
+    )
+    assert used_translation_keys <= exported_keys
 
 
 def test_pool_detail_never_renders_object_literal_for_closures(built_site: Path) -> None:
@@ -127,6 +223,74 @@ def test_open_water_item_list_sections_render(built_site: Path) -> None:
     assert "$12 cash/check or $12.67 card" in html
     assert "<h2>Common distances</h2>" in html
     assert "1mi loop" in html
+
+
+def test_localized_spot_pages_store_translated_markdown(built_site: Path) -> None:
+    aquatic = (built_site / "es" / "spots" / "aquatic-park" / "index.html").read_text()
+    assert "<title>Aquatic Park condiciones de aguas abiertas y acceso — Swim Francisco</title>" in aquatic
+    assert "Natación en aguas abiertas en Aquatic Park, San Francisco: Cala protegida" in aquatic
+    assert "<p class=description>Cala protegida en la ribera norte" in aquatic
+    assert "La cala y la playa de Aquatic Park son públicas y gratuitas" in aquatic
+    assert "Cala pública" in aquatic
+    assert "tráfico de embarcaciones fuera de la cala" in aquatic
+    assert "0.25 mi hasta el rompeolas" in aquatic
+    assert "Aquatic Park es una cala protegida" in aquatic
+    assert "principal lugar de entrenamiento de aguas abiertas" in aquatic
+    assert "The Aquatic Park cove and beach are public and free" not in aquatic
+    assert "boat traffic outside cove" not in aquatic
+
+    aquatic_objects = _json_ld_objects(aquatic)
+    aquatic_place = next(obj for obj in aquatic_objects if obj["@type"] == "Beach")
+    assert aquatic_place["url"] == "https://swimfrancisco.com/es/spots/aquatic-park/"
+    assert aquatic_place["inLanguage"] == "es"
+    assert str(aquatic_place["description"]).startswith("Natación en aguas abiertas")
+
+    baker = (built_site / "es" / "spots" / "baker-beach" / "index.html").read_text()
+    assert "corrientes de resaca" in baker
+    assert "large shore break" not in baker
+
+    garfield = (built_site / "es" / "spots" / "garfield-pool" / "index.html").read_text()
+    assert "<title>Garfield Pool horario de natación y acceso — Swim Francisco</title>" in garfield
+    assert "El horario empieza 7 JUN 2026" in garfield
+    assert "SIN HORARIO SIN CITA VIERNES Y SÁBADO" in garfield
+
+    mission = (built_site / "es" / "spots" / "mission-community-pool" / "index.html").read_text()
+    assert "Capacitación del personal" in mission
+
+    potrero = (built_site / "es" / "spots" / "24-hour-fitness-potrero" / "index.html").read_text()
+    assert "piscina cubierta de carriles" in potrero
+    assert "Usa la página del club para membresía" in potrero
+    assert "Gym pool access" not in potrero
+
+    chinatown = (built_site / "es" / "spots" / "chinatown-ymca" / "index.html").read_text()
+    assert "HORARIO DE FERIADO DE LA INSTALACIÓN" in chinatown
+    assert "AGUA SALADA" in chinatown
+    assert "AGUA AGUA SALADA" not in chinatown
+    assert "HOLIDAY FACILITY HOURS" not in chinatown
+
+    city_sports = (built_site / "es" / "spots" / "city-sports-20th-ave" / "index.html").read_text()
+    assert "MEMBRESÍA CUBIERTA" in city_sports
+    assert "MEMBERSHIP INDOOR" not in city_sports
+
+    jcc = (built_site / "es" / "spots" / "jccsf" / "index.html").read_text()
+    assert "PRIVADA CUBIERTA" in jcc
+    assert "PRIVATE INDOOR" not in jcc
+
+    spanish_board = (built_site / "es" / "index.html").read_text()
+    assert "Cala protegida en la ribera norte" in spanish_board
+    assert "MEMBRESÍA CUBIERTA" in spanish_board
+    assert "Protected cove, calm water" not in spanish_board
+    assert "MEMBERSHIP INDOOR" not in spanish_board
+
+    filipino_bakar = html.unescape((built_site / "fil" / "spots" / "ucsf-bakar" / "index.html").read_text())
+    assert "PRIBADONG PANLOOB/PANLABAS" in filipino_bakar
+    assert "Access ng miyembro" in filipino_bakar
+    assert "PRIVATE INDOOR/OUTDOOR" not in filipino_bakar
+
+    vietnamese_potrero = (built_site / "vi" / "spots" / "24-hour-fitness-potrero" / "index.html").read_text()
+    assert "Hội viên phòng gym" in vietnamese_potrero
+    assert "Hỏi câu lạc bộ" in vietnamese_potrero
+    assert "Gym member" not in vietnamese_potrero
 
 
 def test_access_panel_renders_pricing_options(built_site: Path) -> None:
@@ -332,6 +496,8 @@ def test_footer_renders_sources_and_credit(built_site: Path) -> None:
 def test_homepage_renders_search_metadata_and_website_json_ld(built_site: Path) -> None:
     html_text = (built_site / "index.html").read_text()
     assert "<link href=https://swimfrancisco.com/ rel=canonical>" in html_text
+    assert "<meta content=en_US property=og:locale>" in html_text
+    _assert_hreflang_cluster(html_text, "/")
     assert "Find where to swim right now in San Francisco: lap swim, family swim" in html_text
     assert 'property=og:title' in html_text
 
@@ -346,8 +512,24 @@ def test_map_page_has_distinct_canonical_and_description(built_site: Path) -> No
     html_text = (built_site / "map" / "index.html").read_text()
     assert "<title>San Francisco swim map — Swim Francisco</title>" in html_text
     assert "<link href=https://swimfrancisco.com/map/ rel=canonical>" in html_text
+    _assert_hreflang_cluster(html_text, "/map/")
     assert "Map of San Francisco pools, beaches, and open-water swim spots" in html_text
     assert not _json_ld_objects(html_text)
+
+
+def test_localized_pages_render_hreflang_and_open_graph_locale(built_site: Path) -> None:
+    spanish = (built_site / "es" / "spots" / "aquatic-park" / "index.html").read_text()
+    assert "<html lang=es>" in spanish
+    assert "<meta content=es_US property=og:locale>" in spanish
+    assert "<meta content=zh_TW property=og:locale:alternate>" in spanish
+    assert "<meta content=es_US property=og:locale:alternate>" not in spanish
+    _assert_hreflang_cluster(spanish, "/spots/aquatic-park/")
+
+    chinese = (built_site / "zh-Hant" / "index.html").read_text()
+    assert "<html lang=zh-Hant>" in chinese
+    assert "<meta content=zh_TW property=og:locale>" in chinese
+    assert "<meta content=zh_TW property=og:locale:alternate>" not in chinese
+    _assert_hreflang_cluster(chinese, "/")
 
 
 def test_spot_pages_render_valid_place_and_breadcrumb_json_ld(built_site: Path) -> None:
@@ -360,6 +542,7 @@ def test_spot_pages_render_valid_place_and_breadcrumb_json_ld(built_site: Path) 
     place = next(obj for obj in aquatic_objects if obj["@type"] == "Beach")
     assert place["name"] == "Aquatic Park"
     assert place["url"] == "https://swimfrancisco.com/spots/aquatic-park/"
+    assert place["inLanguage"] == "en"
     assert place["isAccessibleForFree"] is True
     assert place["geo"] == {
         "@type": "GeoCoordinates",
@@ -368,6 +551,7 @@ def test_spot_pages_render_valid_place_and_breadcrumb_json_ld(built_site: Path) 
     }
 
     breadcrumb = next(obj for obj in aquatic_objects if obj["@type"] == "BreadcrumbList")
+    assert breadcrumb["inLanguage"] == "en"
     assert [item["name"] for item in breadcrumb["itemListElement"]] == [
         "Swim Francisco",
         "Aquatic Park",
@@ -400,9 +584,14 @@ def test_robots_and_sitemap_are_search_console_ready(built_site: Path) -> None:
     assert "Sitemap: https://swimfrancisco.com/sitemap.xml" in robots
 
     sitemap = (built_site / "sitemap.xml").read_text()
+    assert 'xmlns:xhtml="http://www.w3.org/1999/xhtml"' in sitemap
     assert "<loc>https://swimfrancisco.com/</loc>" in sitemap
     assert "<loc>https://swimfrancisco.com/map/</loc>" in sitemap
     assert "<loc>https://swimfrancisco.com/spots/aquatic-park/</loc>" in sitemap
+    assert '<xhtml:link rel="alternate" hreflang="zh-Hant" href="https://swimfrancisco.com/zh-Hant/" />' in sitemap
+    assert '<xhtml:link rel="alternate" hreflang="x-default" href="https://swimfrancisco.com/" />' in sitemap
+    assert '<xhtml:link rel="alternate" hreflang="es" href="https://swimfrancisco.com/es/spots/aquatic-park/" />' in sitemap
+    assert '<xhtml:link rel="alternate" hreflang="x-default" href="https://swimfrancisco.com/spots/aquatic-park/" />' in sitemap
     assert "https://swimfrancisco.com/field-notes/" not in sitemap
 
 

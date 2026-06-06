@@ -1,20 +1,31 @@
 {% extends "base.html" %}
 {% import "macros/schedule.html" as schedule_macros %}
 {% import "macros/bulletin.html" as bulletin_macros %}
+{% import "macros/chrome.html" as chrome %}
 {% import "macros/seo.html" as seo %}
-{% block title %}{% if page.extra.type == "pool" %}{{ page.title }} swim schedule and access — Swim Francisco{% elif page.extra.type == "open_water" %}{{ page.title }} open-water conditions and access — Swim Francisco{% else %}{{ page.title }} — Swim Francisco{% endif %}{% endblock %}
-{% block meta_description %}{{ seo::spot_meta_description(page=page) | trim }}{% endblock %}
+{% block title %}{% if page.extra.localized_from %}{% set p = get_page(path="spots/" ~ page.extra.localized_from ~ ".md", lang=config.default_language) %}{% else %}{% set p = page %}{% endif %}{% if p.extra.type == "pool" %}{{ p.title }} {{ trans(key='spot_pool_title_suffix', lang=lang) }} — Swim Francisco{% elif p.extra.type == "open_water" %}{{ p.title }} {{ trans(key='spot_open_water_title_suffix', lang=lang) }} — Swim Francisco{% else %}{{ p.title }} — Swim Francisco{% endif %}{% endblock %}
+{% block meta_description %}{% if page.extra.localized_from %}{% set p = get_page(path="spots/" ~ page.extra.localized_from ~ ".md", lang=config.default_language) %}{% else %}{% set p = page %}{% endif %}{% set summary = page.extra.description_short | default(value=p.extra.description_short | default(value="")) %}{% if p.extra.type == "pool" %}{{ trans(key='spot_pool_meta', lang=lang) | replace(from='%{title}', to=p.title) }}{% elif p.extra.type == "open_water" %}{{ trans(key='spot_open_water_meta', lang=lang) | replace(from='%{title}', to=p.title) | replace(from='%{summary}', to=summary) }}{% else %}{{ seo::spot_meta_description(page=p) | trim }}{% endif %}{% endblock %}
 {% block canonical_url %}{{ page.permalink | safe }}{% endblock %}
+{% block alternate_links %}{% if page.extra.localized_from %}{% set alternate_slug = page.extra.localized_from %}{% else %}{% set alternate_slug = page.slug %}{% endif %}{% set alternate_path = "@/spots/" ~ alternate_slug ~ ".md" %}{{ seo::alternate_links(content_path=alternate_path) }}{% endblock %}
 {% block og_type %}place{% endblock %}
-{% block social_title %}{% if page.extra.type == "pool" %}{{ page.title }} swim schedule and access — Swim Francisco{% elif page.extra.type == "open_water" %}{{ page.title }} open-water conditions and access — Swim Francisco{% else %}{{ page.title }} — Swim Francisco{% endif %}{% endblock %}
-{% block social_description %}{{ seo::spot_meta_description(page=page) | trim }}{% endblock %}
+{% block social_title %}{% if page.extra.localized_from %}{% set p = get_page(path="spots/" ~ page.extra.localized_from ~ ".md", lang=config.default_language) %}{% else %}{% set p = page %}{% endif %}{% if p.extra.type == "pool" %}{{ p.title }} {{ trans(key='spot_pool_title_suffix', lang=lang) }} — Swim Francisco{% elif p.extra.type == "open_water" %}{{ p.title }} {{ trans(key='spot_open_water_title_suffix', lang=lang) }} — Swim Francisco{% else %}{{ p.title }} — Swim Francisco{% endif %}{% endblock %}
+{% block social_description %}{% if page.extra.localized_from %}{% set p = get_page(path="spots/" ~ page.extra.localized_from ~ ".md", lang=config.default_language) %}{% else %}{% set p = page %}{% endif %}{% set summary = page.extra.description_short | default(value=p.extra.description_short | default(value="")) %}{% if p.extra.type == "pool" %}{{ trans(key='spot_pool_meta', lang=lang) | replace(from='%{title}', to=p.title) }}{% elif p.extra.type == "open_water" %}{{ trans(key='spot_open_water_meta', lang=lang) | replace(from='%{title}', to=p.title) | replace(from='%{summary}', to=summary) }}{% else %}{{ seo::spot_meta_description(page=p) | trim }}{% endif %}{% endblock %}
 {% block social_url %}{{ page.permalink | safe }}{% endblock %}
 {% block extra_head %}
+  {% if page.extra.localized_from %}{% set p = get_page(path="spots/" ~ page.extra.localized_from ~ ".md", lang=config.default_language) %}{% else %}{% set p = page %}{% endif %}
+  {% set summary = page.extra.description_short | default(value=p.extra.description_short | default(value="")) %}
+  {% if p.extra.type == "pool" %}
+    {% set schema_description = trans(key='spot_pool_meta', lang=lang) | replace(from='%{title}', to=p.title) %}
+  {% elif p.extra.type == "open_water" %}
+    {% set schema_description = trans(key='spot_open_water_meta', lang=lang) | replace(from='%{title}', to=p.title) | replace(from='%{summary}', to=summary) %}
+  {% else %}
+    {% set schema_description = seo::spot_meta_description(page=p) | trim %}
+  {% endif %}
   <script type="application/ld+json">
-    {{ seo::spot_json_ld(page=page, config=config) | safe }}
+    {{ seo::spot_json_ld(page=p, config=config, url=page.permalink, description=schema_description | trim, lang=lang) | safe }}
   </script>
   <script type="application/ld+json">
-    {{ seo::spot_breadcrumb_json_ld(page=page, config=config) | safe }}
+    {{ seo::spot_breadcrumb_json_ld(page=p, config=config, url=page.permalink, lang=lang) | safe }}
   </script>
 {% endblock %}
 
@@ -29,10 +40,10 @@
   {% endif %}
 {% endmacro item_list %}
 
-{% macro club_list(items) %}
+{% macro club_list(items, active_lang) %}
   {% if items | length > 0 %}
     <section class="clubs">
-      <h2>Clubs</h2>
+      <h2>{{ trans(key='clubs', lang=active_lang) }}</h2>
       <ul class="club-list">
         {% for item in items %}
           <li class="club-card">
@@ -48,17 +59,17 @@
               {% if item.hours or item.fee %}
                 <dl class="club-meta">
                   {% if item.hours %}
-                    <div><dt>Public hours</dt><dd>{{ item.hours }}</dd></div>
+                    <div><dt>{{ trans(key='public_hours', lang=active_lang) }}</dt><dd>{{ item.hours }}</dd></div>
                   {% endif %}
                   {% if item.fee %}
-                    <div><dt>Day-use fee</dt><dd>{{ item.fee }}</dd></div>
+                    <div><dt>{{ trans(key='day_use_fee', lang=active_lang) }}</dt><dd>{{ item.fee }}</dd></div>
                   {% endif %}
                 </dl>
               {% endif %}
               {% if item.note %}<p>{{ item.note }}</p>{% endif %}
               <div class="club-links">
-                {% if item.url %}<a href="{{ item.url }}" target="_blank" rel="noopener">Details</a>{% endif %}
-                {% if item.source_url and item.source_url != item.url %}<a href="{{ item.source_url }}" target="_blank" rel="noopener">Source</a>{% endif %}
+                {% if item.url %}<a href="{{ item.url }}" target="_blank" rel="noopener">{{ trans(key='details', lang=active_lang) }}</a>{% endif %}
+                {% if item.source_url and item.source_url != item.url %}<a href="{{ item.source_url }}" target="_blank" rel="noopener">{{ trans(key='source', lang=active_lang) }}</a>{% endif %}
               </div>
             {% else %}
               {{ item }}
@@ -70,13 +81,14 @@
   {% endif %}
 {% endmacro club_list %}
 
-{% macro access_panel(extra) %}
-  {% set pricing = extra.pricing | default(value=[]) %}
-  {% set notes = extra.access_notes | default(value=[]) %}
-  {% if extra.access_summary or pricing | length > 0 or notes | length > 0 %}
+{% macro access_panel(extra, display_extra, active_lang) %}
+  {% set pricing = display_extra.pricing | default(value=extra.pricing | default(value=[])) %}
+  {% set notes = display_extra.access_notes | default(value=extra.access_notes | default(value=[])) %}
+  {% set summary = display_extra.access_summary | default(value=extra.access_summary | default(value="")) %}
+  {% if summary or pricing | length > 0 or notes | length > 0 %}
     <section class="access-panel">
-      <h2>Access</h2>
-      {% if extra.access_summary %}<p class="access-summary">{{ extra.access_summary }}</p>{% endif %}
+      <h2>{{ trans(key='access', lang=active_lang) }}</h2>
+      {% if summary %}<p class="access-summary">{{ summary }}</p>{% endif %}
       {% if pricing | length > 0 %}
         <dl class="pricing-list">
           {% for item in pricing %}
@@ -85,7 +97,7 @@
               <dd>
                 {% if item.price %}<span class="pricing-price">{{ item.price }}</span>{% endif %}
                 {% if item.note %}<span class="pricing-note">{{ item.note }}</span>{% endif %}
-                {% if item.url %}<a href="{{ item.url }}" target="_blank" rel="noopener">Details</a>{% endif %}
+                {% if item.url %}<a href="{{ item.url }}" target="_blank" rel="noopener">{{ trans(key='details', lang=active_lang) }}</a>{% endif %}
               </dd>
             </div>
           {% endfor %}
@@ -100,34 +112,85 @@
   {% endif %}
 {% endmacro access_panel %}
 
-{% macro format_iso_date(iso, with_year=true) -%}
+{% macro format_iso_date(iso, active_lang, with_year=true) -%}
   {%- if iso -%}
     {%- set parts = iso | split(pat="-") -%}
     {%- if parts | length == 3 -%}
-      {%- if parts[1] == "01" -%}{%- set month_label = "JAN" -%}
-      {%- elif parts[1] == "02" -%}{%- set month_label = "FEB" -%}
-      {%- elif parts[1] == "03" -%}{%- set month_label = "MAR" -%}
-      {%- elif parts[1] == "04" -%}{%- set month_label = "APR" -%}
-      {%- elif parts[1] == "05" -%}{%- set month_label = "MAY" -%}
-      {%- elif parts[1] == "06" -%}{%- set month_label = "JUN" -%}
-      {%- elif parts[1] == "07" -%}{%- set month_label = "JUL" -%}
-      {%- elif parts[1] == "08" -%}{%- set month_label = "AUG" -%}
-      {%- elif parts[1] == "09" -%}{%- set month_label = "SEP" -%}
-      {%- elif parts[1] == "10" -%}{%- set month_label = "OCT" -%}
-      {%- elif parts[1] == "11" -%}{%- set month_label = "NOV" -%}
-      {%- else -%}{%- set month_label = "DEC" -%}
+      {%- if parts[1] == "01" -%}{%- set month_label = trans(key='month_jan', lang=active_lang) -%}
+      {%- elif parts[1] == "02" -%}{%- set month_label = trans(key='month_feb', lang=active_lang) -%}
+      {%- elif parts[1] == "03" -%}{%- set month_label = trans(key='month_mar', lang=active_lang) -%}
+      {%- elif parts[1] == "04" -%}{%- set month_label = trans(key='month_apr', lang=active_lang) -%}
+      {%- elif parts[1] == "05" -%}{%- set month_label = trans(key='month_may', lang=active_lang) -%}
+      {%- elif parts[1] == "06" -%}{%- set month_label = trans(key='month_jun', lang=active_lang) -%}
+      {%- elif parts[1] == "07" -%}{%- set month_label = trans(key='month_jul', lang=active_lang) -%}
+      {%- elif parts[1] == "08" -%}{%- set month_label = trans(key='month_aug', lang=active_lang) -%}
+      {%- elif parts[1] == "09" -%}{%- set month_label = trans(key='month_sep', lang=active_lang) -%}
+      {%- elif parts[1] == "10" -%}{%- set month_label = trans(key='month_oct', lang=active_lang) -%}
+      {%- elif parts[1] == "11" -%}{%- set month_label = trans(key='month_nov', lang=active_lang) -%}
+      {%- else -%}{%- set month_label = trans(key='month_dec', lang=active_lang) -%}
       {%- endif -%}
       {%- set day = parts[2] | int -%}
       {%- set year = parts[0] | int -%}
-      {{- month_label }} {{ day }}{%- if with_year -%}, {{ year }}{%- endif -%}
+      {%- if active_lang == "zh-Hant" -%}
+        {%- if with_year -%}{{- year }}年{%- endif -%}{{- month_label }}{{ day }}日
+      {%- elif active_lang == "en" -%}
+        {{- month_label }} {{ day }}{%- if with_year -%}, {{ year }}{%- endif -%}
+      {%- else -%}
+        {{- day }} {{ month_label }}{% if with_year %} {{ year }}{% endif %}
+      {%- endif -%}
     {%- else -%}
       {{- iso | upper -}}
     {%- endif -%}
   {%- endif -%}
 {%- endmacro format_iso_date %}
 
+{% macro day_full(day, active_lang) -%}
+  {%- if day == "monday" -%}{{- trans(key='day_monday', lang=active_lang) -}}
+  {%- elif day == "tuesday" -%}{{- trans(key='day_tuesday', lang=active_lang) -}}
+  {%- elif day == "wednesday" -%}{{- trans(key='day_wednesday', lang=active_lang) -}}
+  {%- elif day == "thursday" -%}{{- trans(key='day_thursday', lang=active_lang) -}}
+  {%- elif day == "friday" -%}{{- trans(key='day_friday', lang=active_lang) -}}
+  {%- elif day == "saturday" -%}{{- trans(key='day_saturday', lang=active_lang) -}}
+  {%- elif day == "sunday" -%}{{- trans(key='day_sunday', lang=active_lang) -}}
+  {%- else -%}{{- day | upper -}}
+  {%- endif -%}
+{%- endmacro day_full %}
+
+{% macro closure_reason(reason, active_lang) -%}
+  {%- if reason == "Memorial Day" -%}{{- trans(key='reason_memorial_day', lang=active_lang) -}}
+  {%- elif reason == "Juneteenth" -%}{{- trans(key='reason_juneteenth', lang=active_lang) -}}
+  {%- elif reason == "Independence Day" -%}{{- trans(key='reason_independence_day', lang=active_lang) -}}
+  {%- elif reason == "Holiday Closure" -%}{{- trans(key='reason_holiday_closure', lang=active_lang) -}}
+  {%- elif reason == "In Service Training" or reason == "Inservice Training" or reason == "Inservice Training Closure" -%}{{- trans(key='reason_in_service_training', lang=active_lang) -}}
+  {%- elif reason == "In-Service (9am–1pm)" -%}{{- trans(key='reason_in_service_9_1', lang=active_lang) -}}
+  {%- elif reason == "Department Training" -%}{{- trans(key='reason_department_training', lang=active_lang) -}}
+  {%- elif reason == "Aquatics In Service Training" -%}{{- trans(key='reason_aquatics_training', lang=active_lang) -}}
+  {%- elif reason == "Staff training" -%}{{- trans(key='reason_staff_training', lang=active_lang) -}}
+  {%- elif reason == "In- Service Training: Pool Closed 9:00-1:00pm" -%}{{- trans(key='reason_in_service_pool_closed_9_1', lang=active_lang) -}}
+  {%- elif reason == "Temporarily closed for renovation" -%}{{- trans(key='reason_temporarily_closed_for_renovation', lang=active_lang) -}}
+  {%- elif reason == "Closed for repairs; anticipated reopening summer 2026" -%}{{- trans(key='reason_closed_for_repairs_summer_2026', lang=active_lang) -}}
+  {%- elif reason == "Pool closed Thursday 5/21 11:30am–1pm" -%}{{- trans(key='reason_pool_closed_5_21', lang=active_lang) -}}
+  {%- elif reason == "Every 3rd Thursday of the Month Closed for Aquatic Division Training 11:00am-2:00pm" -%}{{- trans(key='reason_monthly_aquatic_training', lang=active_lang) -}}
+  {%- else -%}{{- reason -}}
+  {%- endif -%}
+{%- endmacro closure_reason %}
+
+{% macro access_window_label(label, active_lang) -%}
+  {%- if label == "Facility hours" -%}{{- trans(key='access_label_facility_hours', lang=active_lang) -}}
+  {%- elif label == "Pool hours" -%}{{- trans(key='access_label_pool_hours', lang=active_lang) -}}
+  {%- elif label == "Gym hours" -%}{{- trans(key='access_label_gym_hours', lang=active_lang) -}}
+  {%- elif label == "Club hours" -%}{{- trans(key='access_label_club_hours', lang=active_lang) -}}
+  {%- elif label == "Natatorium hours" -%}{{- trans(key='access_label_natatorium_hours', lang=active_lang) -}}
+  {%- elif label == "Holiday facility hours" -%}{{- trans(key='access_label_holiday_facility_hours', lang=active_lang) -}}
+  {%- elif label == "Holiday pool hours" -%}{{- trans(key='access_label_holiday_pool_hours', lang=active_lang) -}}
+  {%- else -%}{{- label -}}
+  {%- endif -%}
+{%- endmacro access_window_label %}
+
 {% block content %}
-  {% set extra = page.extra %}
+  {% if page.extra.localized_from %}{% set render_page = get_page(path="spots/" ~ page.extra.localized_from ~ ".md", lang=config.default_language) %}{% else %}{% set render_page = page %}{% endif %}
+  {% set extra = render_page.extra %}
+  {% set spot_content_path = "@/spots/" ~ render_page.slug ~ ".md" %}
   {% set destination = extra.address | default(value="") %}
   {% if destination == "" %}{% set destination = extra.lat ~ "," ~ extra.lng %}{% endif %}
   {% set destination_enc = destination | urlencode %}
@@ -135,29 +198,20 @@
   {% set google_dir = "https://www.google.com/maps/dir/?api=1&destination=" ~ destination_enc %}
   {% set apple_dir = "https://maps.apple.com/?daddr=" ~ destination_enc %}
 
-  <header class="site-header">
-    <div class="site-header-row">
-      <h1><a href="{{ config.base_url }}/" class="site-title"><span class="brand-swim">SWIM</span><span class="brand-dot">·</span><span class="brand-city">FRANCISCO</span></a></h1>
-      {{ bulletin_macros::badge() }}
-      <div class="site-header-actions">
-        <a href="/" data-target-path="/" class="site-nav-link is-active" aria-label="View board">THE BOARD</a>
-        <a href="/map/" data-target-path="/map/" class="site-nav-link" aria-label="View map">MAP</a>
-      </div>
-    </div>
-  </header>
+  {{ chrome::site_header(active_view='board', content_path=spot_content_path, active_lang=lang) }}
 
-  <section class="bulletin-strip" aria-label="Current conditions">
-    <div><span class="k">Today</span><span class="v" data-today-date>—</span></div>
-    <div><span class="k">Time</span><span class="v num" data-pt-time>—</span></div>
-    <div><span class="k">Bay</span><span class="v red num" data-bay-temp-strip>—</span></div>
-    <div><span class="k">Ocean</span><span class="v teal num" data-ocean-temp-strip>—</span></div>
-    <div><span class="k">Tide</span><span class="v num" data-next-tide>—</span></div>
-    <div><span class="k">Updated</span><span class="v num" data-conditions-updated>—</span></div>
+  <section class="bulletin-strip" aria-label="{{ trans(key='current_conditions', lang=lang) }}">
+    <div><span class="k">{{ trans(key='today', lang=lang) }}</span><span class="v" data-today-date>—</span></div>
+    <div><span class="k">{{ trans(key='time', lang=lang) }}</span><span class="v num" data-pt-time>—</span></div>
+    <div><span class="k">{{ trans(key='bay', lang=lang) }}</span><span class="v red num" data-bay-temp-strip>—</span></div>
+    <div><span class="k">{{ trans(key='ocean', lang=lang) }}</span><span class="v teal num" data-ocean-temp-strip>—</span></div>
+    <div><span class="k">{{ trans(key='tide', lang=lang) }}</span><span class="v num" data-next-tide>—</span></div>
+    <div><span class="k">{{ trans(key='updated', lang=lang) }}</span><span class="v num" data-conditions-updated>—</span></div>
   </section>
 
   <section class="spot-detail-head">
-    <p class="back"><a href="{{ config.base_url }}/">&larr; BOARD</a></p>
-    {% set title_parts = page.title | split(pat=' ') %}
+    <p class="back"><a href="{{ get_url(path='@/_index.md', lang=lang) }}">&larr; {{ trans(key='board', lang=lang) }}</a></p>
+    {% set title_parts = render_page.title | split(pat=' ') %}
     <h1>
       {% for part in title_parts -%}
         {%- if loop.last -%}
@@ -169,19 +223,19 @@
     </h1>
     <p class="meta">
       {% if extra.address %}<span class="key"><a href="{{ place_href }}" target="_blank" rel="noopener">{{ extra.address | upper }}</a></span>{% endif %}
-      {% if extra.subtype %}<span class="subtype">{{ extra.subtype | upper }}</span>{% endif %}
-      {% if extra.setpoint_label %}<span class="setpoint">WATER {{ extra.setpoint_label | upper }}</span>{% endif %}
+      {% if extra.subtype %}<span class="subtype">{{ chrome::spot_label(label=extra.subtype, active_lang=lang) | upper }}</span>{% endif %}
+      {% if extra.setpoint_label %}<span class="setpoint">{{ trans(key='water', lang=lang) }} {{ chrome::spot_label(label=extra.setpoint_label, active_lang=lang) | upper }}</span>{% endif %}
       {% if extra.access_label %}
-        <span class="cost-badge {{ extra.access_badge_class | default(value='is-paid') }}">{{ extra.access_label }}</span>
+        <span class="cost-badge {{ extra.access_badge_class | default(value='is-paid') }}">{{ chrome::access_badge_label(label=extra.access_label, active_lang=lang) }}</span>
       {% elif extra.cost == "paid" %}
-        <span class="cost-badge is-paid">Paid</span>
+        <span class="cost-badge is-paid">{{ trans(key='paid', lang=lang) }}</span>
       {% elif extra.cost == "free" %}
-        <span class="cost-badge is-free">Free</span>
+        <span class="cost-badge is-free">{{ trans(key='free', lang=lang) }}</span>
       {% endif %}
-      {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">OFFICIAL PAGE</a>{% endif %}
+      {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">{{ trans(key='official_page', lang=lang) }}</a>{% endif %}
       {% if extra.address %}
-        <span class="address-actions" role="group" aria-label="Directions">
-          <span class="address-actions-label">DIRECTIONS</span>
+        <span class="address-actions" role="group" aria-label="{{ trans(key='directions', lang=lang) }}">
+          <span class="address-actions-label">{{ trans(key='directions', lang=lang) }}</span>
           <a href="{{ apple_dir }}" target="_blank" rel="noopener">APPLE</a>
           <a href="{{ google_dir }}" target="_blank" rel="noopener">GOOGLE</a>
         </span>
@@ -215,19 +269,19 @@
 
       <section class="status-slab" aria-live="polite">
         <div class="status-slab-row">
-          <span class="status-slab-label">STATUS</span>
-          <span class="status-slab-value" data-field="status">{% if pre_effective or post_effective %}CLOSED TODAY{% else %}—{% endif %}</span>
+          <span class="status-slab-label">{{ trans(key='status', lang=lang) }}</span>
+          <span class="status-slab-value" data-field="status">{% if pre_effective or post_effective %}{{ trans(key='status_closed_today', lang=lang) }}{% else %}—{% endif %}</span>
         </div>
         <div class="status-slab-row">
-          <span class="status-slab-label">NEXT</span>
-          <span class="status-slab-value" data-field="next">{% if pre_effective %}Schedule starts {{ self::format_iso_date(iso=effective_start) }}{% elif post_effective %}Schedule ended {{ self::format_iso_date(iso=effective_end) }}{% else %}—{% endif %}</span>
+          <span class="status-slab-label">{{ trans(key='next', lang=lang) }}</span>
+          <span class="status-slab-value" data-field="next">{% if pre_effective %}{{ trans(key='status_schedule_starts', lang=lang) }} {{ self::format_iso_date(iso=effective_start, active_lang=lang) }}{% elif post_effective %}{{ trans(key='status_schedule_ended', lang=lang) }} {{ self::format_iso_date(iso=effective_end, active_lang=lang) }}{% else %}—{% endif %}</span>
         </div>
       </section>
 
-      {{ self::access_panel(extra=extra) }}
+      {{ self::access_panel(extra=extra, display_extra=page.extra, active_lang=lang) }}
 
       {% set today_weekday = today_ts_tb | date(format="%A", timezone="America/Los_Angeles") | lower %}
-      {% set today_weekday_label = today_ts_tb | date(format="%A", timezone="America/Los_Angeles") | upper %}
+      {% set today_weekday_label = self::day_full(day=today_weekday, active_lang=lang) %}
       {% set drop_in_types_tb = ["lap_swim", "family_swim", "senior_swim"] %}
       {% set today_sessions = sessions | filter(attribute="day", value=today_weekday) %}
       {% set today_drop_in = [] %}
@@ -239,10 +293,18 @@
 
       {% if schedule_in_window and today_drop_in | length > 0 %}
         <section class="today-block" data-field="today" data-day="{{ today_weekday }}">
-          <p class="today-block-heading">TODAY · {{ today_weekday_label }}</p>
+          <p class="today-block-heading">{{ trans(key='today_caps', lang=lang) }} · {{ today_weekday_label }}</p>
           <ul class="today-block-list">
             {% for s in today_drop_in %}
-              {% set plabel_tb = s.type | replace(from="_swim", to="") | upper %}
+              {% if s.type == "lap_swim" %}
+                {% set plabel_tb = trans(key='lap', lang=lang) %}
+              {% elif s.type == "family_swim" %}
+                {% set plabel_tb = trans(key='family', lang=lang) %}
+              {% elif s.type == "senior_swim" %}
+                {% set plabel_tb = trans(key='senior', lang=lang) %}
+              {% else %}
+                {% set plabel_tb = s.type | replace(from="_swim", to="") | upper %}
+              {% endif %}
               <li data-start="{{ s.start }}" data-end="{{ s.end }}" data-program="{{ s.type }}">
                 <span class="time">{{ s.start }}–{{ s.end }}</span>
                 <span class="program">{{ plabel_tb }}</span>
@@ -254,7 +316,7 @@
       {% endif %}
 
       {% set day_order = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] %}
-      {% set day_labels = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"] %}
+      {% set day_labels = [trans(key='day_monday_short', lang=lang), trans(key='day_tuesday_short', lang=lang), trans(key='day_wednesday_short', lang=lang), trans(key='day_thursday_short', lang=lang), trans(key='day_friday_short', lang=lang), trans(key='day_saturday_short', lang=lang), trans(key='day_sunday_short', lang=lang)] %}
       {% set lap_sessions = sessions | filter(attribute="type", value="lap_swim") %}
       {% set family_sessions = sessions | filter(attribute="type", value="family_swim") %}
       {% set senior_sessions = sessions | filter(attribute="type", value="senior_swim") %}
@@ -284,34 +346,34 @@
         {# Parallel flat arrays — Tera can't parse nested array literals in {% set %}. #}
         {% if senior_sessions | length > 0 %}
           {% set program_keys     = ["lap_swim", "family_swim", "senior_swim"] %}
-          {% set program_labels   = ["LAP SWIM", "FAMILY SWIM", "SENIOR SWIM"] %}
+          {% set program_labels   = [trans(key='lap_swim', lang=lang), trans(key='family_swim', lang=lang), trans(key='senior_swim', lang=lang)] %}
           {% set program_crossnav = ["lap", "family", ""] %}
         {% else %}
           {% set program_keys     = ["lap_swim", "family_swim"] %}
-          {% set program_labels   = ["LAP SWIM", "FAMILY SWIM"] %}
+          {% set program_labels   = [trans(key='lap_swim', lang=lang), trans(key='family_swim', lang=lang)] %}
           {% set program_crossnav = ["lap", "family"] %}
         {% endif %}
 
         <section class="weekly-grid">
-          <h2 class="weekly-grid-title">WEEKLY · BY PROGRAM</h2>
+          <h2 class="weekly-grid-title">{{ trans(key='weekly_by_program', lang=lang) }}</h2>
           <div class="weekly-grid-meta">
             {% if omitted_day_order | length > 0 %}
               <p class="weekly-grid-note">
-                NO DROP-IN HOURS
+                {{ trans(key='no_drop_in_hours', lang=lang) }}
                 {% for day in omitted_day_order %}
                   {% if loop.index0 > 0 %}
-                    {% if loop.last %} AND {% else %}, {% endif %}
+                    {% if loop.last %} {{ trans(key='list_and', lang=lang) }} {% else %}, {% endif %}
                   {% endif %}
-                  {{ day | upper }}
+                  {{ self::day_full(day=day, active_lang=lang) }}
                 {% endfor %}
               </p>
             {% endif %}
-            <nav class="weekly-grid-crossnav-strip" aria-label="Related pools">
+            <nav class="weekly-grid-crossnav-strip" aria-label="{{ trans(key='related_pools', lang=lang) }}">
               {% for pkey in program_keys %}
                 {% set pi = loop.index0 %}
                 {% set pcross = program_crossnav[pi] %}
                 {% if pcross %}
-                  <a class="weekly-grid-crossnav" href="{{ config.base_url }}/#{{ pcross }}">→ OTHER {{ pcross | upper }} POOLS</a>
+                  <a class="weekly-grid-crossnav" href="{{ get_url(path='@/_index.md', lang=lang) }}#{{ pcross }}">→ {% if pcross == "lap" %}{{ trans(key='other_lap_pools', lang=lang) }}{% elif pcross == "family" %}{{ trans(key='other_family_pools', lang=lang) }}{% endif %}</a>
                 {% endif %}
               {% endfor %}
             </nav>
@@ -334,7 +396,7 @@
                 <span class="weekly-grid-rowlabel" role="rowheader">
                   {{ plabel }}
                   {% if pcross %}
-                    <a class="weekly-grid-crossnav" href="{{ config.base_url }}/#{{ pcross }}">→ OTHER {{ pcross | upper }} POOLS</a>
+                    <a class="weekly-grid-crossnav" href="{{ get_url(path='@/_index.md', lang=lang) }}#{{ pcross }}">→ {% if pcross == "lap" %}{{ trans(key='other_lap_pools', lang=lang) }}{% elif pcross == "family" %}{{ trans(key='other_family_pools', lang=lang) }}{% endif %}</a>
                   {% endif %}
                 </span>
                 {% for day in display_day_order %}
@@ -361,9 +423,9 @@
         </section>
       {% elif access_hours | length > 0 %}
         <section class="weekly-grid">
-          <h2 class="weekly-grid-title">WEEKLY · ACCESS HOURS</h2>
+          <h2 class="weekly-grid-title">{{ trans(key='weekly_access_hours', lang=lang) }}</h2>
           <div class="weekly-grid-meta">
-            <p class="weekly-grid-note">FACILITY ACCESS HOURS ONLY · CHECK THE OFFICIAL SITE FOR POOL-LANE AVAILABILITY</p>
+            <p class="weekly-grid-note">{{ trans(key='access_hours_only', lang=lang) }}</p>
           </div>
           <div class="weekly-grid-table" role="table" style="--weekday-count: 7;">
             <div class="weekly-grid-head" role="row">
@@ -375,7 +437,7 @@
               {% endfor %}
             </div>
             <div class="weekly-grid-row" role="row" data-program="access_hours">
-              <span class="weekly-grid-rowlabel" role="rowheader">ACCESS</span>
+              <span class="weekly-grid-rowlabel" role="rowheader">{{ trans(key='access', lang=lang) }}</span>
               {% for day in day_order %}
                 {% set cell = access_hours | filter(attribute="day", value=day) %}
                 <span class="weekly-grid-cell" role="cell"
@@ -396,7 +458,7 @@
           </div>
         </section>
       {% else %}
-        <p class="fallback">Schedule not yet verified.</p>
+        <p class="fallback">{{ trans(key='schedule_not_verified_sentence', lang=lang) }}</p>
       {% endif %}
       {# Anchor the 14-day window in America/Los_Angeles so the build host's
          timezone can't shift the window by a day. 1209600 = 14 × 86400.
@@ -418,18 +480,18 @@
       {% endfor %}
 
       {% if upcoming_closures | length > 0 %}
-        <section class="closure-banners" aria-label="Upcoming closures">
+        <section class="closure-banners" aria-label="{{ trans(key='upcoming_closures', lang=lang) }}">
           {% for c in upcoming_closures %}
             <div class="closure-banner">
               <span class="closure-banner-date">
                 {% if c.start == c.end %}
-                  {{ self::format_iso_date(iso=c.start, with_year=false) }}{% if c.start_time and c.end_time %} {{ c.start_time }}–{{ c.end_time }}{% endif %}
+                  {{ self::format_iso_date(iso=c.start, active_lang=lang, with_year=false) }}{% if c.start_time and c.end_time %} {{ c.start_time }}–{{ c.end_time }}{% endif %}
                 {% else %}
-                  {{ self::format_iso_date(iso=c.start, with_year=false) }} – {{ self::format_iso_date(iso=c.end, with_year=false) }}
+                  {{ self::format_iso_date(iso=c.start, active_lang=lang, with_year=false) }} – {{ self::format_iso_date(iso=c.end, active_lang=lang, with_year=false) }}
                 {% endif %}
               </span>
               {% if c.pool %}<span class="closure-banner-zone">{{ c.pool | upper }}</span>{% endif %}
-              <span class="closure-banner-reason">{{ c.reason }}</span>
+              <span class="closure-banner-reason">{{ self::closure_reason(reason=c.reason, active_lang=lang) }}</span>
             </div>
           {% endfor %}
         </section>
@@ -443,12 +505,12 @@
       {% endfor %}
 
       {% if upcoming_access_exceptions | length > 0 %}
-        <section class="closure-banners" aria-label="Upcoming access hour changes">
+        <section class="closure-banners" aria-label="{{ trans(key='upcoming_access_changes', lang=lang) }}">
           {% for e in upcoming_access_exceptions %}
             <div class="closure-banner">
-              <span class="closure-banner-date">{{ self::format_iso_date(iso=e.date, with_year=false) }} {{ e.start }}–{{ e.end }}</span>
-              <span class="closure-banner-zone">{{ e.label | upper }}</span>
-              <span class="closure-banner-reason">{{ e.reason }}</span>
+              <span class="closure-banner-date">{{ self::format_iso_date(iso=e.date, active_lang=lang, with_year=false) }} {{ e.start }}–{{ e.end }}</span>
+              <span class="closure-banner-zone">{{ self::access_window_label(label=e.label, active_lang=lang) | upper }}</span>
+              <span class="closure-banner-reason">{{ self::closure_reason(reason=e.reason, active_lang=lang) }}</span>
             </div>
           {% endfor %}
         </section>
@@ -461,40 +523,41 @@
       {% if extra.schedule_effective %}
         <footer class="meta">
           <p class="meta-source">
-            {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">SOURCE OFFICIAL SITE</a>{% else %}SOURCE OFFICIAL SITE{% endif %}
+            {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">{{ trans(key='source_official_site', lang=lang) }}</a>{% else %}{{ trans(key='source_official_site', lang=lang) }}{% endif %}
           </p>
           <p class="meta-effective">
-            SCHEDULE EFFECTIVE FROM {{ self::format_iso_date(iso=extra.schedule_effective) }}{% if extra.schedule_effective_end %} TO {{ self::format_iso_date(iso=extra.schedule_effective_end) }}{% endif %}
+            {{ trans(key='schedule_effective_from', lang=lang) }} {{ self::format_iso_date(iso=extra.schedule_effective, active_lang=lang) }}{% if extra.schedule_effective_end %} {{ trans(key='to', lang=lang) }} {{ self::format_iso_date(iso=extra.schedule_effective_end, active_lang=lang) }}{% endif %}
           </p>
         </footer>
       {% endif %}
     </div>
 
   {% elif extra.type == "open_water" %}
-    {% if extra.description_short %}
-      <p class="description">{{ extra.description_short }}</p>
+    {% set open_water_summary = page.extra.description_short | default(value=extra.description_short | default(value="")) %}
+    {% if open_water_summary %}
+      <p class="description">{{ open_water_summary }}</p>
     {% endif %}
 
-    <section class="conditions condition-slab" data-slug="{{ page.slug }}">
-      <p class="condition-label">Water temperature · live</p>
+    <section class="conditions condition-slab" data-slug="{{ render_page.slug }}">
+      <p class="condition-label">{{ trans(key='water_temperature_live', lang=lang) }}</p>
       <p class="condition-temp"><span data-field="water_temp">—</span></p>
       <dl class="condition-grid">
         <div>
-          <dt>Next tide</dt>
+          <dt>{{ trans(key='next_tide', lang=lang) }}</dt>
           <dd data-field="tide">—</dd>
         </div>
         <div>
-          <dt>Source</dt>
+          <dt>{{ trans(key='source', lang=lang) }}</dt>
           <dd>NOAA {{ extra.noaa_tide_station | default(value='') }}</dd>
         </div>
       </dl>
     </section>
 
-    {{ self::access_panel(extra=extra) }}
+    {{ self::access_panel(extra=extra, display_extra=page.extra, active_lang=lang) }}
 
-    {{ self::item_list(title="Hazards", class="hazards", items=extra.hazards | default(value=[])) }}
-    {{ self::club_list(items=extra.clubs | default(value=[])) }}
-    {{ self::item_list(title="Common distances", class="distances", items=extra.common_distances | default(value=[])) }}
+    {{ self::item_list(title=trans(key='hazards', lang=lang), class="hazards", items=page.extra.hazards | default(value=extra.hazards | default(value=[]))) }}
+    {{ self::club_list(items=page.extra.clubs | default(value=extra.clubs | default(value=[])), active_lang=lang) }}
+    {{ self::item_list(title=trans(key='common_distances', lang=lang), class="distances", items=page.extra.common_distances | default(value=extra.common_distances | default(value=[]))) }}
 
     {% if page.content %}
       <section class="notes">
@@ -503,14 +566,15 @@
     {% endif %}
 
     <footer class="meta">
-      <p class="meta-source">SOURCE NOAA/NDBC · UPDATED HOURLY</p>
+      <p class="meta-source">{{ trans(key='source_noaa', lang=lang) }}</p>
     </footer>
   {% endif %}
 {% endblock %}
 {% block scripts %}
-  {% if page.extra.type == "open_water" %}
+  {% if page.extra.localized_from %}{% set render_page = get_page(path="spots/" ~ page.extra.localized_from ~ ".md", lang=config.default_language) %}{% else %}{% set render_page = page %}{% endif %}
+  {% if render_page.extra.type == "open_water" %}
     <script type="module" src="{{ get_url(path='js/conditions.js') }}"></script>
-  {% elif page.extra.type == "pool" %}
+  {% elif render_page.extra.type == "pool" %}
     <script type="module" src="{{ get_url(path='js/conditions.js') }}"></script>
     <script type="module" src="{{ get_url(path='js/detail.js') }}"></script>
   {% endif %}

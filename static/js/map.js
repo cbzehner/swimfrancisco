@@ -6,6 +6,7 @@
 
 import { pacificWallClockDate } from "./helpers/pacific.mjs";
 import { formatTideSummary } from "./helpers/tide.mjs";
+import { statusLabel, t } from "./helpers/i18n.mjs";
 
 const LEAFLET_JS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
 const LEAFLET_JS_INTEGRITY =
@@ -46,7 +47,9 @@ function collectVisibleSpots() {
     if (lat === null || lng === null) return;
     const slug = row.getAttribute("data-slug") || "";
     const type = row.getAttribute("data-type") || "";
-    const name = row.querySelector('[data-cell="spot"] a')?.textContent.trim() ?? "";
+    const spotLink = row.querySelector('[data-cell="spot"] a');
+    const name = spotLink?.textContent.trim() ?? "";
+    const href = spotLink?.getAttribute("href") || `/spots/${encodeURIComponent(slug)}/`;
     const typeLabel =
       row.querySelector('[data-cell="spot"] .spot-subtitle')?.textContent.trim() ||
       row.getAttribute("data-subtype") ||
@@ -59,7 +62,7 @@ function collectVisibleSpots() {
       "";
     const next = row.querySelector('[data-cell="next"]')?.textContent.trim() ?? "";
     const temp = row.querySelector('[data-cell="water"]')?.textContent.trim() ?? "";
-    spots.push({ slug, type, name, lat, lng, typeLabel, status, next, temp });
+    spots.push({ slug, type, name, href, lat, lng, typeLabel, status, next, temp });
   });
   return spots;
 }
@@ -92,19 +95,19 @@ function beachConditions(spot) {
 
 function createPopupHTML(spot) {
   const name = escapeHTML(spot.name);
-  const detailsHref = `/spots/${encodeURIComponent(spot.slug)}/`;
+  const detailsHref = spot.href || `/spots/${encodeURIComponent(spot.slug)}/`;
   const appleHref = `https://maps.apple.com/?daddr=${spot.lat},${spot.lng}`;
   const googleHref = `https://www.google.com/maps/dir/?api=1&destination=${spot.lat},${spot.lng}`;
-  const rows = [popupRow("TYPE", spot.typeLabel)];
+  const rows = [popupRow(t("type", "TYPE"), spot.typeLabel)];
 
   if (spot.type === "open_water") {
     const { temp, tide } = beachConditions(spot);
-    rows.push(popupRow("STATUS", spot.status || "OPEN"));
-    rows.push(popupRow("WATER", temp));
-    rows.push(popupRow("TIDE", tide));
+    rows.push(popupRow(t("status", "STATUS"), statusLabel(spot.status || "OPEN")));
+    rows.push(popupRow(t("water", "WATER"), temp));
+    rows.push(popupRow(t("tide", "TIDE"), tide));
   } else {
-    rows.push(popupRow("STATUS", spot.status));
-    rows.push(popupRow("NEXT", spot.next));
+    rows.push(popupRow(t("status", "STATUS"), statusLabel(spot.status)));
+    rows.push(popupRow(t("next", "NEXT"), spot.next));
   }
 
   return (
@@ -116,7 +119,7 @@ function createPopupHTML(spot) {
     rows.join("") +
     `<div class="sf-map-popup-actions">` +
     `<div class="sf-map-popup-directions">` +
-    `<span class="sf-map-popup-key">DIRECTIONS</span>` +
+    `<span class="sf-map-popup-key">${escapeHTML(t("directions", "DIRECTIONS"))}</span>` +
     `<a href="${appleHref}" target="_blank" rel="noopener">APPLE</a>` +
     `<a href="${googleHref}" target="_blank" rel="noopener">GOOGLE</a>` +
     `</div>` +
