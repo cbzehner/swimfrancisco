@@ -60,6 +60,7 @@ def _assert_hreflang_cluster(rendered_html: str, canonical_path: str) -> None:
     assert f"href=https://swimfrancisco.com/zh-Hant{canonical_path} hreflang=zh-Hant rel=alternate" in rendered_html
     assert f"href=https://swimfrancisco.com/fil{canonical_path} hreflang=fil rel=alternate" in rendered_html
     assert f"href=https://swimfrancisco.com/vi{canonical_path} hreflang=vi rel=alternate" in rendered_html
+    assert f"href=https://swimfrancisco.com/fi{canonical_path} hreflang=fi rel=alternate" in rendered_html
     assert f"href=https://swimfrancisco.com{canonical_path} hreflang=x-default rel=alternate" in rendered_html
 
 
@@ -531,6 +532,14 @@ def test_localized_pages_render_hreflang_and_open_graph_locale(built_site: Path)
     assert "<meta content=zh_TW property=og:locale:alternate>" not in chinese
     _assert_hreflang_cluster(chinese, "/")
 
+    finnish = (built_site / "fi" / "spots" / "aquatic-park" / "index.html").read_text()
+    assert "<html lang=fi>" in finnish
+    assert "<meta content=fi_FI property=og:locale>" in finnish
+    assert "<meta content=fi_FI property=og:locale:alternate>" not in finnish
+    assert "Aquatic Park avovesiuinti San Franciscossa" in finnish
+    assert "Suojaisa poukama" in finnish
+    _assert_hreflang_cluster(finnish, "/spots/aquatic-park/")
+
 
 def test_spot_pages_render_valid_place_and_breadcrumb_json_ld(built_site: Path) -> None:
     aquatic = _read(built_site, "aquatic-park")
@@ -589,8 +598,10 @@ def test_robots_and_sitemap_are_search_console_ready(built_site: Path) -> None:
     assert "<loc>https://swimfrancisco.com/map/</loc>" in sitemap
     assert "<loc>https://swimfrancisco.com/spots/aquatic-park/</loc>" in sitemap
     assert '<xhtml:link rel="alternate" hreflang="zh-Hant" href="https://swimfrancisco.com/zh-Hant/" />' in sitemap
+    assert '<xhtml:link rel="alternate" hreflang="fi" href="https://swimfrancisco.com/fi/" />' in sitemap
     assert '<xhtml:link rel="alternate" hreflang="x-default" href="https://swimfrancisco.com/" />' in sitemap
     assert '<xhtml:link rel="alternate" hreflang="es" href="https://swimfrancisco.com/es/spots/aquatic-park/" />' in sitemap
+    assert '<xhtml:link rel="alternate" hreflang="fi" href="https://swimfrancisco.com/fi/spots/aquatic-park/" />' in sitemap
     assert '<xhtml:link rel="alternate" hreflang="x-default" href="https://swimfrancisco.com/spots/aquatic-park/" />' in sitemap
     assert "https://swimfrancisco.com/field-notes/" not in sitemap
 

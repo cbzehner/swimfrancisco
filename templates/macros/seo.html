@@ -14,6 +14,7 @@
   {%- elif active_lang == "zh-Hant" -%}{% set locale = "zh_TW" %}
   {%- elif active_lang == "fil" -%}{% set locale = "fil_PH" %}
   {%- elif active_lang == "vi" -%}{% set locale = "vi_VN" %}
+  {%- elif active_lang == "fi" -%}{% set locale = "fi_FI" %}
   {%- else -%}{% set locale = "en_US" %}
   {%- endif -%}
   <meta property="og:locale" content="{{ locale }}">
@@ -22,6 +23,7 @@
   {%- if active_lang != "zh-Hant" %}<meta property="og:locale:alternate" content="zh_TW">{% endif -%}
   {%- if active_lang != "fil" %}<meta property="og:locale:alternate" content="fil_PH">{% endif -%}
   {%- if active_lang != "vi" %}<meta property="og:locale:alternate" content="vi_VN">{% endif -%}
+  {%- if active_lang != "fi" %}<meta property="og:locale:alternate" content="fi_FI">{% endif -%}
 {%- endmacro og_locale_tags %}
 
 {% macro alternate_links(content_path) -%}
@@ -30,6 +32,7 @@
   <link rel="alternate" hreflang="zh-Hant" href="{{ get_url(path=content_path, lang='zh-Hant') | safe }}">
   <link rel="alternate" hreflang="fil" href="{{ get_url(path=content_path, lang='fil') | safe }}">
   <link rel="alternate" hreflang="vi" href="{{ get_url(path=content_path, lang='vi') | safe }}">
+  <link rel="alternate" hreflang="fi" href="{{ get_url(path=content_path, lang='fi') | safe }}">
   <link rel="alternate" hreflang="x-default" href="{{ get_url(path=content_path, lang='en') | safe }}">
 {%- endmacro alternate_links %}
 
