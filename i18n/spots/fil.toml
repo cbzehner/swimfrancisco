@@ -123,7 +123,7 @@ body = "Ang Chinatown YMCA ay opsyon sa pool para sa mga miyembro malapit sa Por
 [spots.city-sports-20th-ave]
 title = "City Sports 20th Ave"
 slug = "city-sports-20th-ave"
-access_notes = [ "Ipinapakita ang oras ng club bilang oras ng pasilidad lang; hindi pa beripikado ang availability ng mga lane at mga pagsasarang partikular sa pool." ]
+access_notes = []
 access_summary = "Nakalista sa City Sports Club sa 20th Ave ang pool para sa paglangoy sa lane, Pool & Spa amenities, at oras ng club sa opisyal nitong pahina ng lokasyon."
 description_short = "Gym para sa mga miyembro sa Stonestown area na may pool para sa paglangoy sa lane."
 body = "Ang City Sports 20th Ave ay gym para sa mga miyembro sa Stonestown area na may pool para sa paglangoy sa lane."
@@ -145,7 +145,7 @@ body = "Ang Crissy Field ay nasa loob ng Golden Gate sa bay side ng Presidio, ku
 [spots.embarcadero-ymca]
 title = "Embarcadero YMCA"
 slug = "embarcadero-ymca"
-access_notes = [ "Minomodelo ang oras ng pool mula sa tuntunin ng YMCA na bumubukas ang pool 30 minuto pagkatapos at nagsasara 30 minuto bago ang oras ng pasilidad; kailangan pa ring beripikahin sa iskedyul ang availability ng lane at programa." ]
+access_notes = []
 access_summary = "Ang Embarcadero YMCA ay sangay ng YMCA para sa mga miyembro sa tabing-tubig, may mga swimming pool at programang pantubig. Inilalathala ng opisyal na pahina ang oras ng pool bilang offset mula sa oras ng pasilidad."
 description_short = "YMCA pool sa downtown tabing-tubig para sa layer ng board na pang-miyembro lang."
 body = "Ang Embarcadero YMCA ay nagdaragdag ng YMCA pool sa downtown tabing-tubig sa layer ng board na pang-miyembro lang."
@@ -153,7 +153,7 @@ body = "Ang Embarcadero YMCA ay nagdaragdag ng YMCA pool sa downtown tabing-tubi
 [spots.equinox-sports-club-sf]
 title = "Equinox Sports Club SF"
 slug = "equinox-sports-club-sf"
-access_notes = [ "Itinatala ang oras ng club bilang oras ng pasilidad lang; hindi inilalathala sa source na pina-parse namin ang availability ng mga lane." ]
+access_notes = []
 access_summary = "Nakalista sa opisyal na pahina ng lokasyon ng Equinox Sports Club San Francisco ang panloob na pool at oras ng club."
 description_short = "Club para sa mga miyembro sa Market Street na may panloob na pool."
 body = "Ang Equinox Sports Club SF ay club para sa mga miyembro sa Market Street na may panloob na pool."
@@ -161,7 +161,7 @@ body = "Ang Equinox Sports Club SF ay club para sa mga miyembro sa Market Street
 [spots.fitness-sf-fillmore]
 title = "FITNESS SF Fillmore"
 slug = "fitness-sf-fillmore"
-access_notes = [ "Kinakatawan ang oras ng pool mula sa oras ng club; kailangan pa rin ng manwal na beripikasyon sa reservation ng lane at conflict sa klase bago ito ituring bilang iskedyul ng paglangoy." ]
+access_notes = []
 access_summary = "Ang FITNESS SF Fillmore ang lokasyon ng FITNESS SF na may 25-yard na pool na may 5 lane. Sinasabi ng opisyal na help page na may paglangoy sa lane at personal na ginagawa ang reservation ng lane."
 description_short = "Opsyon sa pool para sa mga miyembro ng fitness club sa Fillmore Center."
 body = "Ang FITNESS SF Fillmore ang opsyon sa pool para sa mga miyembro ng fitness club sa Fillmore Center."
@@ -298,7 +298,7 @@ body = "Palanguyang panloob sa Parkside/Sunset district sa 19th Avenue malapit s
 [spots.sfsu-mashouf]
 title = "SFSU Mashouf Wellness Center"
 slug = "sfsu-mashouf"
-access_notes = [ "Itinatala ang oras ng natatorium bilang oras ng pool; kailangang manwal na beripikahin ang eligibility ng publiko/komunidad bago ito malawakang irekomenda." ]
+access_notes = []
 access_summary = "Naglalathala ang SFSU Mashouf Wellness Center ng oras ng natatorium at inilalarawan ang 25-meter lap pool, activity pool, hot tub, sauna, at locker rooms. Nakabatay ang pagpasok sa campus/community membership."
 description_short = "Opsyon sa pool para sa university/community membership malapit sa Lake Merced."
 body = "Ang SFSU Mashouf Wellness Center ay opsyon sa pool para sa university/community membership malapit sa Lake Merced."

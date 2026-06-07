@@ -123,7 +123,7 @@ body = "Chinatown YMCA 是 Portsmouth Square 和金融區附近的會員制泳�
 [spots.city-sports-20th-ave]
 title = "City Sports 20th Ave"
 slug = "city-sports-20th-ave"
-access_notes = [ "俱樂部開放時間只作為使用時段追蹤；泳道可用情況和泳池專屬關閉尚未驗證。" ]
+access_notes = []
 access_summary = "City Sports Club on 20th Ave 在官方地點頁面列有泳道池、Pool & Spa 設施和俱樂部開放時間。"
 description_short = "Stonestown 一帶設有泳道泳池的會員制健身房。"
 body = "City Sports 20th Ave 是 Stonestown 一帶設有泳道泳池的會員制健身房。"
@@ -145,7 +145,7 @@ body = "Crissy Field 位於 Presidio 的海灣側、金門大橋內側，East Be
 [spots.embarcadero-ymca]
 title = "Embarcadero YMCA"
 slug = "embarcadero-ymca"
-access_notes = [ "泳池時間依 YMCA 規則建模：泳池比設施晚 30 分鐘開放，並早 30 分鐘關閉；泳道／課程可用情況仍需時間表驗證。" ]
+access_notes = []
 access_summary = "Embarcadero YMCA 是位於濱水區的會員制 YMCA 分館，設有泳池和水上活動課程。官方頁面以相對於設施開放時間的方式發布泳池開放時間。"
 description_short = "市中心濱水區的 YMCA 會員制泳池。"
 body = "Embarcadero YMCA 為看板的會員制泳池層加入一個位於市中心濱水區的 YMCA 泳池。"
@@ -153,7 +153,7 @@ body = "Embarcadero YMCA 為看板的會員制泳池層加入一個位於市中�
 [spots.equinox-sports-club-sf]
 title = "Equinox Sports Club SF"
 slug = "equinox-sports-club-sf"
-access_notes = [ "俱樂部開放時間只作為使用時段追蹤；我們解析的來源未發布泳道可用情況。" ]
+access_notes = []
 access_summary = "Equinox Sports Club San Francisco 在官方地點頁面列出室內泳池和俱樂部開放時間。"
 description_short = "Market Street 上設有室內泳池的會員制俱樂部。"
 body = "Equinox Sports Club SF 是 Market Street 上設有室內泳池的會員制俱樂部。"
@@ -161,7 +161,7 @@ body = "Equinox Sports Club SF 是 Market Street 上設有室內泳池的會員�
 [spots.fitness-sf-fillmore]
 title = "FITNESS SF Fillmore"
 slug = "fitness-sf-fillmore"
-access_notes = [ "泳池時間以俱樂部開放時間表示；在把它視為游泳時間表前，仍需人工確認泳道預約和課程衝突。" ]
+access_notes = []
 access_summary = "FITNESS SF Fillmore 是 FITNESS SF 設有 25 碼、5 條泳道泳池的地點。官方說明頁表示可進行泳道游泳，泳道預約需現場辦理。"
 description_short = "Fillmore Center 內的會員制健身俱樂部泳池。"
 body = "FITNESS SF Fillmore 是 Fillmore Center 內的會員制健身俱樂部泳池選項。"
@@ -298,7 +298,7 @@ body = "位於 Parkside/Sunset、19th Avenue 近 Stern Grove 的室內泳池。�
 [spots.sfsu-mashouf]
 title = "SFSU Mashouf Wellness Center"
 slug = "sfsu-mashouf"
-access_notes = [ "Natatorium 開放時間作為泳池時間追蹤；在廣泛推薦前，應人工確認公眾／社區資格。" ]
+access_notes = []
 access_summary = "SFSU Mashouf Wellness Center 發布 natatorium 開放時間，並描述設有 25 米泳道池、活動池、熱水池、桑拿和更衣室。使用權以校園身分或社區會員資格為基礎。"
 description_short = "Lake Merced 附近的大學/社區會員制泳池選項。"
 body = "SFSU Mashouf Wellness Center 是 Lake Merced 附近的大學/社區會員制泳池選項。"

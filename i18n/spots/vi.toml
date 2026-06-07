@@ -123,7 +123,7 @@ body = "Chinatown YMCA là lựa chọn hồ bơi hội viên gần Portsmouth S
 [spots.city-sports-20th-ave]
 title = "City Sports 20th Ave"
 slug = "city-sports-20th-ave"
-access_notes = [ "Giờ mở cửa câu lạc bộ chỉ được theo dõi như giờ vào cơ sở; tình trạng làn bơi và các đợt đóng cửa riêng của hồ bơi chưa được xác minh." ]
+access_notes = []
 access_summary = "City Sports Club trên 20th Ave liệt kê hồ bơi theo làn, tiện ích Pool & Spa và giờ mở cửa câu lạc bộ trên trang địa điểm chính thức."
 description_short = "Phòng gym hội viên ở khu Stonestown có hồ bơi theo làn."
 body = "City Sports 20th Ave là phòng gym hội viên ở khu Stonestown có hồ bơi theo làn."
@@ -145,7 +145,7 @@ body = "Crissy Field nằm bên trong Golden Gate, phía vịnh của Presidio, 
 [spots.embarcadero-ymca]
 title = "Embarcadero YMCA"
 slug = "embarcadero-ymca"
-access_notes = [ "Giờ hồ bơi được mô hình hóa theo quy tắc YMCA: hồ mở sau giờ cơ sở 30 phút và đóng trước giờ cơ sở 30 phút; tình trạng làn bơi/chương trình vẫn cần được xác minh theo lịch." ]
+access_notes = []
 access_summary = "Embarcadero YMCA là chi nhánh YMCA dành cho hội viên ở khu bờ nước, có hồ bơi và các chương trình thủy sinh. Trang chính thức công bố giờ hồ bơi theo quy tắc lệch so với giờ mở cửa cơ sở."
 description_short = "Hồ bơi YMCA ở khu bờ nước trung tâm, thuộc nhóm chỉ dành cho hội viên trên bảng."
 body = "Embarcadero YMCA thêm một hồ bơi YMCA ở khu bờ nước trung tâm vào lớp chỉ dành cho hội viên của bảng."
@@ -153,7 +153,7 @@ body = "Embarcadero YMCA thêm một hồ bơi YMCA ở khu bờ nước trung t
 [spots.equinox-sports-club-sf]
 title = "Equinox Sports Club SF"
 slug = "equinox-sports-club-sf"
-access_notes = [ "Giờ mở cửa câu lạc bộ chỉ được theo dõi như giờ vào cơ sở; nguồn mà chúng tôi phân tích không công bố tình trạng làn bơi." ]
+access_notes = []
 access_summary = "Equinox Sports Club San Francisco liệt kê hồ bơi trong nhà và giờ mở cửa câu lạc bộ trên trang địa điểm chính thức."
 description_short = "Câu lạc bộ hội viên trên Market Street có hồ bơi trong nhà."
 body = "Equinox Sports Club SF là câu lạc bộ hội viên trên Market Street có hồ bơi trong nhà."
@@ -161,7 +161,7 @@ body = "Equinox Sports Club SF là câu lạc bộ hội viên trên Market Stre
 [spots.fitness-sf-fillmore]
 title = "FITNESS SF Fillmore"
 slug = "fitness-sf-fillmore"
-access_notes = [ "Giờ hồ bơi được biểu diễn từ giờ mở cửa câu lạc bộ; việc đặt làn và xung đột với lớp học vẫn cần được xác minh thủ công trước khi xem đây là lịch bơi." ]
+access_notes = []
 access_summary = "FITNESS SF Fillmore là địa điểm FITNESS SF có hồ bơi 25 yard, 5 làn. Trang trợ giúp chính thức cho biết có bơi theo làn và việc đặt làn được thực hiện trực tiếp tại cơ sở."
 description_short = "Lựa chọn hồ bơi câu lạc bộ fitness dành cho hội viên ở Fillmore Center."
 body = "FITNESS SF Fillmore là lựa chọn hồ bơi câu lạc bộ fitness dành cho hội viên ở Fillmore Center."
@@ -298,7 +298,7 @@ body = "Hồ bơi trong nhà ở khu Parkside/Sunset trên 19th Avenue gần Ste
 [spots.sfsu-mashouf]
 title = "SFSU Mashouf Wellness Center"
 slug = "sfsu-mashouf"
-access_notes = [ "Giờ natatorium được theo dõi như giờ hồ bơi; điều kiện đủ để vào theo diện công cộng/cộng đồng cần được xác minh thủ công trước khi đề xuất rộng rãi." ]
+access_notes = []
 access_summary = "SFSU Mashouf Wellness Center công bố giờ natatorium và mô tả hồ bơi theo làn 25 mét, hồ hoạt động, bồn nước nóng, sauna và phòng thay đồ. Quyền vào dựa trên liên kết với trường hoặc hội viên cộng đồng."
 description_short = "Lựa chọn hồ bơi đại học/cộng đồng theo dạng hội viên gần Lake Merced."
 body = "SFSU Mashouf Wellness Center là lựa chọn hồ bơi đại học/cộng đồng theo dạng hội viên gần Lake Merced."

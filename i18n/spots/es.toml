@@ -123,7 +123,7 @@ body = "Chinatown YMCA es una opción de piscina con membresía cerca de Portsmo
 [spots.city-sports-20th-ave]
 title = "City Sports 20th Ave"
 slug = "city-sports-20th-ave"
-access_notes = [ "El horario del club se muestra como horario de acceso solamente; la disponibilidad de carriles y cierres específicos de piscina aún no están verificados." ]
+access_notes = []
 access_summary = "City Sports Club en 20th Ave lista piscina de carriles, amenidades de piscina y spa, y horario del club en su página oficial."
 description_short = "Gimnasio con membresía y piscina de carriles en el área de Stonestown."
 body = "City Sports 20th Ave es un gimnasio con membresía en el área de Stonestown que tiene piscina de carriles."
@@ -145,7 +145,7 @@ body = "Crissy Field está dentro del Golden Gate, del lado de la bahía en el P
 [spots.embarcadero-ymca]
 title = "Embarcadero YMCA"
 slug = "embarcadero-ymca"
-access_notes = [ "El horario de piscina se modela con la regla YMCA: abre 30 minutos después y cierra 30 minutos antes que la instalación; la disponibilidad de carriles/programas todavía necesita verificación." ]
+access_notes = []
 access_summary = "Embarcadero YMCA es una sucursal YMCA con membresía en la ribera, con piscinas y programas acuáticos. La página oficial publica el horario de piscina como desplazamiento respecto al horario de la instalación."
 description_short = "Piscina YMCA de membresía en la ribera del centro."
 body = "Embarcadero YMCA suma una piscina YMCA en la ribera del centro a la capa de opciones solo para miembros del tablero."
@@ -153,7 +153,7 @@ body = "Embarcadero YMCA suma una piscina YMCA en la ribera del centro a la capa
 [spots.equinox-sports-club-sf]
 title = "Equinox Sports Club SF"
 slug = "equinox-sports-club-sf"
-access_notes = [ "El horario del club se registra como horario de acceso solamente; la disponibilidad de carriles no se publica en la fuente que analizamos." ]
+access_notes = []
 access_summary = "Equinox Sports Club San Francisco lista piscina cubierta y horario del club en la página oficial de la sede."
 description_short = "Club con membresía en Market Street y piscina cubierta."
 body = "Equinox Sports Club SF es un club con membresía en Market Street que cuenta con piscina cubierta."
@@ -161,7 +161,7 @@ body = "Equinox Sports Club SF es un club con membresía en Market Street que cu
 [spots.fitness-sf-fillmore]
 title = "FITNESS SF Fillmore"
 slug = "fitness-sf-fillmore"
-access_notes = [ "El horario de piscina se representa desde el horario del club; las reservas de carriles y conflictos con clases aún requieren verificación manual antes de tratarlo como horario de nado." ]
+access_notes = []
 access_summary = "FITNESS SF Fillmore es la sede de FITNESS SF con piscina de 25 yardas y 5 carriles. La página oficial de ayuda dice que hay natación de carriles y que las reservas se hacen en persona."
 description_short = "Opción de piscina de club de fitness con membresía en Fillmore Center."
 body = "FITNESS SF Fillmore es la opción de piscina de club de fitness con membresía en Fillmore Center."
@@ -298,7 +298,7 @@ body = "Piscina cubierta en el distrito Parkside/Sunset, sobre 19th Avenue cerca
 [spots.sfsu-mashouf]
 title = "SFSU Mashouf Wellness Center"
 slug = "sfsu-mashouf"
-access_notes = [ "El horario del natatorio se registra como horario de piscina; la elegibilidad pública/comunitaria debe verificarse manualmente antes de recomendarlo ampliamente." ]
+access_notes = []
 access_summary = "SFSU Mashouf Wellness Center publica horario del natatorio y describe una piscina de 25 metros, piscina de actividades, jacuzzi, sauna y vestuarios. El acceso se basa en afiliación universitaria o membresía comunitaria."
 description_short = "Opción de piscina universitaria/comunitaria con membresía cerca de Lake Merced."
 body = "SFSU Mashouf Wellness Center es la opción de piscina universitaria/comunitaria con membresía cerca de Lake Merced."

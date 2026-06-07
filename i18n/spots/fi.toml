@@ -127,7 +127,7 @@ body = "Chinatown YMCA on jäsenyyspohjainen allasvaihtoehto Portsmouth Squaren 
 [spots.city-sports-20th-ave]
 title = "City Sports 20th Ave"
 slug = "city-sports-20th-ave"
-access_notes = [ "Klubin aukioloajat näkyvät vain pääsyaikoina; ratatilannetta ja allaskohtaisia sulkuja ei ole vielä vahvistettu." ]
+access_notes = []
 access_summary = "City Sports Club 20th Avella listaa virallisella toimipistesivullaan rata-altaan, Pool & Spa -palvelut ja klubin aukioloajat."
 description_short = "Stonestownin alueen jäsenyyskuntosali, jossa on rata-allas."
 body = "City Sports 20th Ave on Stonestownin alueen jäsenyyskuntosali, jossa on rata-allas."
@@ -150,7 +150,7 @@ body = "Crissy Field sijaitsee Golden Gaten sisäpuolella lahden puolella Presid
 [spots.embarcadero-ymca]
 title = "Embarcadero YMCA"
 slug = "embarcadero-ymca"
-access_notes = [ "Allasajat on mallinnettu YMCA:n säännöstä, jonka mukaan allas avautuu 30 minuuttia tilojen jälkeen ja sulkeutuu 30 minuuttia ennen tiloja; rata- ja ohjelmatilanne tarvitsee vielä aikatauluvahvistuksen." ]
+access_notes = []
 access_summary = "Embarcadero YMCA on rantavyöhykkeen jäsenyyspohjainen YMCA-toimipiste, jossa on uima-altaita ja vesiliikuntaohjelmia. Virallinen sivu julkaisee altaan aukioloajat suhteessa tilojen aukioloaikoihin."
 description_short = "Keskustan rantavyöhykkeen YMCA-jäsenallas."
 body = "Embarcadero YMCA lisää taululle keskustan rantavyöhykkeen YMCA-altaan jäsenyyspohjaisena vaihtoehtona."
@@ -158,7 +158,7 @@ body = "Embarcadero YMCA lisää taululle keskustan rantavyöhykkeen YMCA-altaan
 [spots.equinox-sports-club-sf]
 title = "Equinox Sports Club SF"
 slug = "equinox-sports-club-sf"
-access_notes = [ "Klubin aukioloajat näkyvät vain pääsyaikoina; ratauintitilannetta ei julkaista lähteessä, jota tulkitsemme." ]
+access_notes = []
 access_summary = "Equinox Sports Club San Francisco listaa sisäaltaan ja klubin aukioloajat virallisella toimipistesivulla."
 description_short = "Market Streetin jäsenklubi, jossa on sisäallas."
 body = "Equinox Sports Club SF on Market Streetin jäsenklubi, jossa on sisäallas."
@@ -166,7 +166,7 @@ body = "Equinox Sports Club SF on Market Streetin jäsenklubi, jossa on sisäall
 [spots.fitness-sf-fillmore]
 title = "FITNESS SF Fillmore"
 slug = "fitness-sf-fillmore"
-access_notes = [ "Allasajat esitetään klubin aukioloaikojen perusteella; ratavaraukset ja tuntien ristiriidat pitää vielä vahvistaa käsin ennen kuin tätä pidetään varsinaisena uintiaikatauluna." ]
+access_notes = []
 access_summary = "FITNESS SF Fillmore on FITNESS SF:n toimipiste, jossa on 25 jaardin, 5 radan allas. Virallinen ohjesivu kertoo ratauintia olevan saatavilla ja ratavaraukset tehdään paikan päällä."
 description_short = "Fillmore Centerin jäsenkuntosalin allasvaihtoehto."
 body = "FITNESS SF Fillmore on Fillmore Centerin jäsenkuntosalin allasvaihtoehto."
@@ -305,7 +305,7 @@ body = "Sava Pool on sisäallas Parkside/Sunsetin alueella 19th Avenuella lähel
 [spots.sfsu-mashouf]
 title = "SFSU Mashouf Wellness Center"
 slug = "sfsu-mashouf"
-access_notes = [ "Allasosaston aukioloajat näkyvät allasaikoina; julkinen tai yhteisökelpoisuus kannattaa vahvistaa käsin ennen laajaa suosittelua." ]
+access_notes = []
 access_summary = "SFSU Mashouf Wellness Center julkaisee allasosaston aukioloajat ja kuvaa 25 metrin rata-altaan, aktiivisuusaltaan, porealtaan, saunan ja pukuhuoneet. Pääsy perustuu kampus- tai yhteisöjäsenyyteen."
 description_short = "Yliopiston ja yhteisön jäsenyspohjainen allasvaihtoehto Lake Mercedin lähellä."
 body = "SFSU Mashouf Wellness Center on yliopiston ja yhteisön jäsenyspohjainen allasvaihtoehto Lake Mercedin lähellä."

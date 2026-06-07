@@ -4,7 +4,7 @@ slug = "equinox-sports-club-sf"
 
 [extra]
 localized_from = "equinox-sports-club-sf"
-access_notes = [ "El horario del club se registra como horario de acceso solamente; la disponibilidad de carriles no se publica en la fuente que analizamos." ]
+access_notes = []
 access_summary = "Equinox Sports Club San Francisco lista piscina cubierta y horario del club en la página oficial de la sede."
 description_short = "Club con membresía en Market Street y piscina cubierta."
 +++

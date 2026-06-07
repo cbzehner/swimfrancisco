@@ -20,7 +20,7 @@ sessions = []
 closures = []
 effective_start = "2026-05-17"
 last_verified_at = "2026-05-17"
-access_notes = [ "Club hours are tracked as access hours only; lap-lane availability is not published in the source we parse." ]
+access_notes = []
 access_summary = "Equinox Sports Club San Francisco lists an indoor pool and club hours on the official location page."
 
 [[extra.access_hours]]

@@ -20,7 +20,7 @@ sessions = []
 closures = []
 effective_start = "2026-05-17"
 last_verified_at = "2026-05-17"
-access_notes = [ "Club hours are tracked as access hours only; lane availability and pool-specific closures are not yet verified." ]
+access_notes = []
 access_summary = "City Sports Club on 20th Ave lists a lap pool, Pool & Spa amenities, and club hours on its official location page."
 
 [[extra.access_hours]]
