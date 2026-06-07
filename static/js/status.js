@@ -11,6 +11,7 @@ import {
   computeWindowAvailability,
   formatHHMM,
   getHorizonOptions,
+  readScheduleAttribute,
   resolveActiveSchedule,
   resolveHorizon,
   scheduleHasAccessHours,
@@ -106,17 +107,6 @@ export function getCurrentHorizon() {
   return currentHorizon;
 }
 
-// Read and parse the data-schedule attribute; returns null on error.
-function readSchedule(row) {
-  const raw = row.getAttribute("data-schedule");
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch (_err) {
-    return null;
-  }
-}
-
 function formatWindowNext(result) {
   const session = result.bestSession;
   if (!session) return statusNextLabel(result, PLACEHOLDER);
@@ -169,7 +159,7 @@ function applyStatuses(root, now, allowedTypes = null) {
     const statusCell = cell(row, "status");
     const nextCell = cell(row, "next");
     if (!statusCell || !nextCell) return;
-    const schedule = readSchedule(row);
+    const schedule = readScheduleAttribute(row);
     const activeSchedule = resolveActiveSchedule(
       schedule,
       horizon.kind === "window" ? horizon.date : now,

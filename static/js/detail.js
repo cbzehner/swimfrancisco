@@ -9,6 +9,7 @@ import {
   computeDetailStatus,
   formatHHMM,
   parseHHMM,
+  readScheduleAttribute,
   resolveActiveSchedule,
   scheduleHasAccessHours,
   scheduleHasSessions,
@@ -25,16 +26,6 @@ import { pacificWallClockDate } from "./helpers/pacific.mjs";
 
 function parseHHMMSafe(value) {
   return parseHHMM(typeof value === "string" ? value : "");
-}
-
-function readSchedule(root) {
-  const raw = root.getAttribute("data-schedule");
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch (_err) {
-    return null;
-  }
 }
 
 function formatClosureSuffix(result) {
@@ -143,7 +134,7 @@ function decorateTodayBlock(root, now, statusResult) {
 function init() {
   const root = document.querySelector(".detail-root");
   if (!root) return;
-  const schedule = readSchedule(root);
+  const schedule = readScheduleAttribute(root);
   if (!schedule) return;
   // Every SF pool is in Pacific — reason about time in PT regardless of the
   // visitor's browser timezone, so the server-rendered today block and the

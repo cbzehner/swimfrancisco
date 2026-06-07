@@ -118,12 +118,10 @@ function scheduleWithoutUpcoming(schedule) {
 
 function scheduleInWindow(schedule, dateISO) {
   if (!schedule || typeof schedule !== "object") return false;
-  const start = typeof schedule.effective_start === "string" && schedule.effective_start
-    ? schedule.effective_start
-    : null;
-  const end = typeof schedule.effective_end === "string" && schedule.effective_end
-    ? schedule.effective_end
-    : null;
+  // The macro emits effective_start / effective_end as strings — either an
+  // ISO date or "" when missing. Truthiness alone is enough to distinguish.
+  const start = schedule.effective_start || null;
+  const end = schedule.effective_end || null;
   if (start && dateISO < start) return false;
   if (end && dateISO > end) return false;
   return true;
@@ -143,9 +141,7 @@ function resolveScheduleForDate(schedule, dateISO) {
   const upcoming = scheduleWithoutUpcoming(schedule.upcoming_schedule);
   if (!upcoming) return current;
   if (scheduleInWindow(current, dateISO)) return current;
-  const currentEnd = typeof current.effective_end === "string" && current.effective_end
-    ? current.effective_end
-    : null;
+  const currentEnd = current.effective_end || null;
   if (currentEnd && dateISO > currentEnd) return upcoming;
   return current;
 }
@@ -170,6 +166,19 @@ export function scheduleHasSessions(schedule) {
 
 export function scheduleHasAccessHours(schedule) {
   return hasNonEmptyArray(schedule, "access_hours");
+}
+
+// Parse the JSON schedule from a `data-schedule` attribute on the given DOM
+// element (a table row on the board, the detail-page root, etc.). Returns
+// null on missing attribute or malformed JSON.
+export function readScheduleAttribute(element) {
+  const raw = element?.getAttribute?.("data-schedule");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch (_err) {
+    return null;
+  }
 }
 
 // Return the active closure (if any) covering `now`.
@@ -427,14 +436,8 @@ export function findNextDropIn(schedule, now, allowedTypes = null) {
 // data-driven gaps from explicit closures still can.
 function derivedClosures(schedule) {
   const out = [];
-  const start =
-    typeof schedule.effective_start === "string" && schedule.effective_start
-      ? schedule.effective_start
-      : null;
-  const end =
-    typeof schedule.effective_end === "string" && schedule.effective_end
-      ? schedule.effective_end
-      : null;
+  const start = schedule.effective_start || null;
+  const end = schedule.effective_end || null;
   if (start) {
     const dayBefore = previousISODate(start);
     out.push({

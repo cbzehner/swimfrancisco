@@ -25,6 +25,7 @@
 import {
   computeNextOpenOffset,
   computeWindowAvailability,
+  readScheduleAttribute,
   resolveActiveSchedule,
   sortByRank,
 } from "./helpers/board.mjs";
@@ -89,17 +90,6 @@ function updateViewSwitcherHref() {
   });
 }
 
-// Parse a row's data-schedule JSON (same shape as status.js expects).
-function readSchedule(row) {
-  const raw = row.getAttribute("data-schedule");
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch (_err) {
-    return null;
-  }
-}
-
 // Parse a numeric data-* attribute; returns null if absent or non-finite.
 function readNumber(row, attr) {
   const raw = row.getAttribute(attr);
@@ -124,7 +114,7 @@ function rowMatchesType(row, type) {
   if (row.getAttribute("data-type") !== "pool") return false;
   const horizon = getCurrentHorizon();
   const schedule = resolveActiveSchedule(
-    readSchedule(row),
+    readScheduleAttribute(row),
     horizon?.kind === "window" ? horizon.date : pacificWallClockDate(),
   );
   if (!schedule || !Array.isArray(schedule.sessions)) return false;
@@ -189,13 +179,13 @@ function sortRowsByNextOpen(rows, allowedTypes, now, horizon) {
       if (isBeach(row)) {
         offset = 2;
       } else {
-        offset = computeWindowAvailability(readSchedule(row), horizon, allowedTypes).sortRank;
+        offset = computeWindowAvailability(readScheduleAttribute(row), horizon, allowedTypes).sortRank;
       }
     } else {
       offset =
         isBeach(row)
           ? 0
-          : computeNextOpenOffset(readSchedule(row), now, allowedTypes);
+          : computeNextOpenOffset(readScheduleAttribute(row), now, allowedTypes);
     }
     const baselineRank = Number(row.dataset.baselineRank);
     return {
