@@ -12,6 +12,7 @@ lng = -122.3933
 website = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
 cost = "paid"
 access = "day_pass"
+day_pass_price = "$25"
 setpoint_label = "indoor + roof"
 sessions = []
 closures = []

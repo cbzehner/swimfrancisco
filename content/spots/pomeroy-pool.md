@@ -12,6 +12,7 @@ lng = -122.5019
 website = "https://www.prrcsf.org/pool"
 cost = "paid"
 access = "day_pass"
+day_pass_price = "$11"
 setpoint_label = "92°F"
 effective_start = "2026-05-17"
 last_verified_at = "2026-05-17"

@@ -12,6 +12,7 @@ lng = -122.4588
 website = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/millberry-fitness-center-ucsf-parnassus"
 cost = "paid"
 access = "day_pass"
+day_pass_price = "$25"
 setpoint_label = "pool"
 access_mode = "limited_public"
 payment_model = "membership"
