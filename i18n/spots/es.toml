@@ -1,0 +1,352 @@
+[spots.24-hour-fitness-ocean]
+title = "24 Hour Fitness Ocean"
+slug = "24-hour-fitness-ocean"
+access_notes = [ "No lo uses para planificar nados activos hasta que la página oficial muestre que el club reabrió." ]
+access_summary = "24 Hour Fitness Ocean indica una piscina cubierta de carriles, pero la página oficial del club dice que está cerrado temporalmente por renovación hasta el 23 de mayo de 2026."
+description_short = "24 Hour Fitness Ocean es una opción de piscina de gimnasio con membresía, marcada como cerrada temporalmente hasta que termine la renovación."
+body = "24 Hour Fitness Ocean es una opción de piscina de gimnasio con membresía, marcada como cerrada temporalmente hasta que termine la renovación."
+
+[spots.24-hour-fitness-potrero]
+title = "24 Hour Fitness Potrero"
+slug = "24-hour-fitness-potrero"
+access_notes = [ "Usa la página del club para membresía, invitados y estado actual de la instalación; Swim Francisco no registra disponibilidad de carriles aquí." ]
+access_summary = "24 Hour Fitness Potrero es una piscina de gimnasio. La página oficial del club lista piscina cubierta de carriles, sauna, hidromasaje y sala de vapor entre sus amenidades."
+description_short = "Una piscina de gimnasio para nadadores que ya usan 24 Hour Fitness o buscan una opción con membresía cerca de Potrero."
+body = "Esta es una piscina de gimnasio para nadadores que ya usan 24 Hour Fitness o que quieren una opción con membresía cerca de Potrero."
+
+[[spots.24-hour-fitness-potrero.pricing]]
+label = "Miembro del gimnasio"
+price = "Membresía"
+note = "El acceso a la piscina depende de los términos de membresía de 24 Hour Fitness para este club."
+url = "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
+
+[[spots.24-hour-fitness-potrero.pricing]]
+label = "Invitado / prueba"
+price = "Consultar al club"
+note = "Las promociones y el acceso de invitados no son lo bastante estables para publicarlos como precio fijo de natación."
+url = "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
+
+[spots.aquatic-park]
+title = "Aquatic Park"
+slug = "aquatic-park"
+access_notes = [ "El acceso a los clubes es separado de nadar en la cala pública.", "Si eres nuevo en la natación en la bahía, contacta con un club o nadador local con experiencia antes de ir solo." ]
+access_summary = "La cala y la playa de Aquatic Park son públicas y gratuitas. Las casas club de South End y Dolphin son clubes voluntarios separados; usa el proceso de visitante o membresía de cada club para duchas, casilleros, sauna y actividades organizadas."
+common_distances = [ "0,25 mi hasta el rompeolas", "vuelta de 1 mi" ]
+description_short = "Cala protegida en la ribera norte, con agua tranquila y clubes de natación históricos en la playa."
+hazards = [ "tráfico de embarcaciones fuera de la cala", "agua fría todo el año" ]
+body = "Aquatic Park es una cala protegida en la ribera norte, resguardada por un muelle municipal curvo. Sus condiciones tranquilas durante todo el año la convierten en el principal lugar de entrenamiento de aguas abiertas de la ciudad. [South End Rowing Club](https://serc.com/) y [Dolphin Club](https://dolphinclub.org/) tienen sus casas club en la playa y organizan nados regulares."
+
+[[spots.aquatic-park.clubs]]
+name = "South End Rowing Club"
+url = "https://serc.com/faq"
+access = "Uso público por día"
+hours = "Mar / jue / sáb 09:00-18:00 jun-nov; 08:00-17:00 dic-may"
+fee = "$12 por día"
+note = "El uso público por día está disponible martes, jueves y sábado, con horario de temporada. Sigue los requisitos de uso público de SERC antes de usar la casa club."
+source_url = "https://serc.com/faq"
+
+[[spots.aquatic-park.clubs]]
+name = "Dolphin Swimming & Boating Club"
+url = "https://dolphinclub.org/swimming/"
+access = "Uso público por día"
+hours = "Lun / mié / vie 08:00-17:00 may-oct; 09:00-17:00 nov-abr"
+fee = "$12 en efectivo/cheque o $12,67 con tarjeta"
+note = "No hay uso público por día en feriados federales o estatales. El pase diario cubre vestuarios, ducha, sauna, terraza y sala; las embarcaciones no están disponibles para no miembros."
+source_url = "https://dolphinclub.org/swimming/"
+
+[[spots.aquatic-park.pricing]]
+label = "Cala pública"
+price = "Gratis"
+note = "No se requiere membresía de club para nadar desde la playa pública."
+url = "https://sfrecpark.org/Facilities/Facility/Details/Aquatic-Park-200"
+
+[[spots.aquatic-park.pricing]]
+label = "South End Rowing Club"
+price = "Pase diario"
+note = "Uso público por día mar / jue / sáb, 09:00-18:00 jun-nov y 08:00-17:00 dic-may."
+url = "https://serc.com/faq"
+
+[[spots.aquatic-park.pricing]]
+label = "Dolphin Club"
+price = "Pase diario"
+note = "Uso público por día lun / mié / vie, con horario de temporada y cierres por feriados."
+url = "https://dolphinclub.org/swimming/"
+
+[spots.baker-beach]
+title = "Baker Beach"
+slug = "baker-beach"
+description_short = "Playa abierta al Pacífico con vistas al Golden Gate; el oleaje, el agua fría y las corrientes exigen mucha prudencia."
+hazards = [ "corrientes de resaca", "rompiente fuerte en la orilla", "agua fría todo el año", "sin salvavidas" ]
+body = "Baker Beach mira al Pacífico abierto justo al sur del Golden Gate, con vistas dramáticas del puente y los Marin Headlands. El oleaje, el agua fría y las corrientes de resaca la convierten en un entorno serio de aguas abiertas: los trajes de neopreno y los planes conservadores son la norma."
+
+[spots.balboa-pool]
+title = "Balboa Pool"
+slug = "balboa-pool"
+description_short = "Piscina cubierta de seis carriles en Ingleside, reabierta tras una renovación importante."
+body = "Piscina cubierta de 100 x 40 pies y seis carriles en el barrio de Ingleside, recientemente reabierta tras una renovación de $9 millones que agregó nuevos sistemas mecánicos, mejoras de accesibilidad y un mural del artista local Jason Jägel. Los programas incluyen natación de carril, natación para mayores, natación recreativa, clases de ejercicio acuático y lecciones."
+
+[spots.bay-club-gateway]
+title = "Bay Club Gateway"
+slug = "bay-club-gateway"
+access_notes = [ "Consulta la página oficial del club o el calendario de clases antes de ir; Swim Francisco todavía no publica disponibilidad de carriles aquí." ]
+access_summary = "Bay Club Gateway es un club privado del campus de San Francisco con centro acuático al aire libre y dos piscinas climatizadas. El acceso depende de membresía de Bay Club, privilegios de invitado o una visita programada."
+description_short = "Opción privada de piscina en downtown, con agua al aire libre y ambiente de club cerca del Embarcadero."
+body = "Bay Club Gateway es la opción de piscina privada de downtown: agua al aire libre, instalaciones de fitness, tenis y un ambiente de club cerca del Embarcadero."
+
+[[spots.bay-club-gateway.pricing]]
+label = "Miembro"
+price = "Membresía"
+note = "Bay Club no publica un precio estable de visita individual para nadar carriles en esta página del club."
+url = "https://www.bayclubs.com/gateway/"
+
+[[spots.bay-club-gateway.pricing]]
+label = "Posible miembro"
+price = "Programar visita"
+note = "La página del club ofrece un flujo de visita/contacto."
+url = "https://www.bayclubs.com/gateway/"
+
+[spots.china-beach]
+title = "China Beach"
+slug = "china-beach"
+description_short = "Pequeña cala bajo Sea Cliff, más protegida que Ocean o Baker Beach pero aún fría y oceánica."
+hazards = [ "corrientes de resaca", "agua fría todo el año", "salvavidas solo por temporada" ]
+body = "China Beach es una pequeña cala escondida bajo el barrio de Sea Cliff, entre Baker Beach y Lands End. Protegida por promontorios a ambos lados, suele tener oleaje más suave que Ocean o Baker Beach, aunque sigue siendo agua oceánica con corrientes de resaca y temperaturas frías."
+
+[spots.chinatown-ymca]
+title = "Chinatown YMCA"
+slug = "chinatown-ymca"
+access_notes = [ "Consulta los horarios de YMCA antes de ir; Swim Francisco actualmente registra solo horario de instalación para esta piscina." ]
+access_summary = "Chinatown YMCA es una sucursal YMCA con membresía, piscina de agua salada y programas acuáticos. La página oficial publica horario de instalación, pero no un horario semanal concreto de carriles o nado abierto en contenido estático."
+description_short = "Opción de piscina con membresía cerca de Portsmouth Square y el Distrito Financiero."
+body = "Chinatown YMCA es una opción de piscina con membresía cerca de Portsmouth Square y el Distrito Financiero."
+
+[spots.city-sports-20th-ave]
+title = "City Sports 20th Ave"
+slug = "city-sports-20th-ave"
+access_notes = [ "El horario del club se muestra como horario de acceso solamente; la disponibilidad de carriles y cierres específicos de piscina aún no están verificados." ]
+access_summary = "City Sports Club en 20th Ave lista piscina de carriles, amenidades de piscina y spa, y horario del club en su página oficial."
+description_short = "Gimnasio con membresía y piscina de carriles en el área de Stonestown."
+body = "City Sports 20th Ave es un gimnasio con membresía en el área de Stonestown que tiene piscina de carriles."
+
+[spots.coffman-pool]
+title = "Coffman Pool"
+slug = "coffman-pool"
+description_short = "Piscina cubierta en Herz Playground, junto a McLaren Park, para Visitacion Valley."
+body = "Piscina cubierta de 10,000 pies cuadrados en Herz Playground, en la entrada sureste de McLaren Park, que sirve al barrio de Visitacion Valley. Los programas incluyen natación de carril, natación para mayores, natación recreativa, ejercicio acuático autoguiado y lecciones."
+
+[spots.crissy-field]
+title = "Crissy Field / East Beach"
+slug = "crissy-field"
+common_distances = [ "De East Beach al St. Francis Yacht Club", "De muelle a muelle por la costa del Presidio" ]
+description_short = "Entrada fácil desde la arena en la bahía del Presidio, con mareas fuertes cerca del Golden Gate."
+hazards = [ "corrientes de marea fuertes", "agua fría todo el año", "tráfico de barcos y buques" ]
+body = "Crissy Field está dentro del Golden Gate, del lado de la bahía en el Presidio, con East Beach ofreciendo entrada fácil desde la arena y vistas clásicas del puente. Las mareas corren fuerte por el Gate, así que las condiciones cambian hora a hora: nada con marea parada o entrante y mantente dentro de la línea de la playa."
+
+[spots.embarcadero-ymca]
+title = "Embarcadero YMCA"
+slug = "embarcadero-ymca"
+access_notes = [ "El horario de piscina se modela con la regla YMCA: abre 30 minutos después y cierra 30 minutos antes que la instalación; la disponibilidad de carriles/programas todavía necesita verificación." ]
+access_summary = "Embarcadero YMCA es una sucursal YMCA con membresía en la ribera, con piscinas y programas acuáticos. La página oficial publica el horario de piscina como desplazamiento respecto al horario de la instalación."
+description_short = "Piscina YMCA de membresía en la ribera del centro."
+body = "Embarcadero YMCA suma una piscina YMCA en la ribera del centro a la capa de opciones solo para miembros del tablero."
+
+[spots.equinox-sports-club-sf]
+title = "Equinox Sports Club SF"
+slug = "equinox-sports-club-sf"
+access_notes = [ "El horario del club se registra como horario de acceso solamente; la disponibilidad de carriles no se publica en la fuente que analizamos." ]
+access_summary = "Equinox Sports Club San Francisco lista piscina cubierta y horario del club en la página oficial de la sede."
+description_short = "Club con membresía en Market Street y piscina cubierta."
+body = "Equinox Sports Club SF es un club con membresía en Market Street que cuenta con piscina cubierta."
+
+[spots.fitness-sf-fillmore]
+title = "FITNESS SF Fillmore"
+slug = "fitness-sf-fillmore"
+access_notes = [ "El horario de piscina se representa desde el horario del club; las reservas de carriles y conflictos con clases aún requieren verificación manual antes de tratarlo como horario de nado." ]
+access_summary = "FITNESS SF Fillmore es la sede de FITNESS SF con piscina de 25 yardas y 5 carriles. La página oficial de ayuda dice que hay natación de carriles y que las reservas se hacen en persona."
+description_short = "Opción de piscina de club de fitness con membresía en Fillmore Center."
+body = "FITNESS SF Fillmore es la opción de piscina de club de fitness con membresía en Fillmore Center."
+
+[spots.garfield-pool]
+title = "Garfield Pool"
+slug = "garfield-pool"
+description_short = "Piscina cubierta en Garfield Square, en Mission District, con carriles y programas comunitarios."
+body = "Piscina cubierta en Garfield Square, en Mission District, en la esquina de 26th y Harrison. Los programas incluyen natación de carril, natación para mayores, natación recreativa, clases de fitness y ejercicio, y lecciones."
+
+[spots.hamilton-pool]
+title = "Hamilton Pool"
+slug = "hamilton-pool"
+description_short = "Piscina cubierta climatizada en Lower Pacific Heights, conocida por sus dos toboganes interiores."
+body = "Piscina cubierta climatizada en Hamilton Recreation Center, en la esquina de Geary y Steiner en Lower Pacific Heights. Es notable por tener los únicos dos toboganes acuáticos interiores en una piscina municipal de San Francisco. Los programas incluyen natación de carril, natación para mayores, natación recreativa y lecciones."
+
+[spots.jccsf]
+title = "JCCSF"
+slug = "jccsf"
+access_notes = [ "Consulta el horario actual de carriles antes de ir; la hora pico figura como 4:00–7:00 p.m. todos los días." ]
+access_summary = "El acceso al Gallanter Family Aquatics Center está vinculado a la membresía del Fitness Center de JCCSF. La página oficial de acuáticos lista acceso a piscina de carriles para miembros y precios de escuela de natación para miembros."
+description_short = "Centro acuático con piscina de 25 yardas, piscina recreativa tibia y jacuzzi; normalmente es opción de membresía."
+body = "JCCSF tiene una piscina de 25 yardas para carriles, una piscina recreativa de agua tibia y jacuzzi en el Gallanter Family Aquatics Center. Trátala como piscina de membresía salvo que hayas confirmado acceso para invitados directamente con JCCSF."
+
+[[spots.jccsf.pricing]]
+label = "Miembro del Fitness Center"
+price = "Incluido"
+note = "Piscina de carriles, jacuzzi, aqua fitness y nado recreativo/familiar figuran como beneficios para miembros."
+url = "https://www.jccsf.org/fitness/aquatics/"
+
+[[spots.jccsf.pricing]]
+label = "No miembro / invitado"
+price = "Consultar a JCCSF"
+note = "La página de acuáticos no publica precio público de nado de carriles sin cita."
+url = "https://www.jccsf.org/fitness/aquatics/"
+
+[spots.koret-center]
+title = "Koret Center"
+slug = "koret-center"
+access_notes = [ "Consulta el horario de carriles de Koret antes de ir; la página oficial advierte que el número de carriles varía por lecciones, equipos y eventos." ]
+access_summary = "Koret Center de USF tiene una piscina cubierta grande. Los carriles suelen estar disponibles durante el horario de piscina, pero el acceso y los pases dependen de membresía USF/Koret u opciones de pase elegibles."
+description_short = "Una de las instalaciones cubiertas más grandes de la ciudad, con carriles, masters, lecciones y eventos."
+body = "Koret es una de las instalaciones de piscina cubierta más grandes de la ciudad, con natación de carril, masters, lecciones, equipos juveniles y eventos compartiendo el agua."
+
+[[spots.koret-center.pricing]]
+label = "Miembro / pase elegible"
+price = "Variable"
+note = "Usa la información de membresía o pases de Koret publicada por USF."
+url = "https://www.usfca.edu/koret/aquatics"
+
+[[spots.koret-center.pricing]]
+label = "Masters"
+price = "USMS + club"
+note = "Participar en USF Masters requiere membresía anual USMS en el club de USF y requisitos del programa."
+url = "https://www.usfca.edu/koret/aquatics"
+
+[spots.martin-luther-king-jr-pool]
+title = "Martin Luther King Jr. Pool"
+slug = "martin-luther-king-jr-pool"
+description_short = "Piscina cubierta en Bayview con piscina principal y chapoteadero separado para niños pequeños."
+body = "Piscina cubierta en Bayview, con una piscina principal de 25 yardas x 25 metros y una piscina infantil separada para niños pequeños. Los programas incluyen natación de carril, natación para mayores y natación recreativa."
+
+[spots.mission-community-pool]
+title = "Mission Community Pool"
+slug = "mission-community-pool"
+description_short = "La única piscina municipal al aire libre de San Francisco, abierta por temporada en el corazón de Mission."
+body = "La única piscina municipal al aire libre de San Francisco. Construida en 1916, la piscina de 90 x 40 pies se ubica entre Linda y Valencia, en el corazón de Mission District, y opera por temporada de mayo a octubre. Los programas incluyen natación de carril, natación para mayores, natación recreativa, aeróbicos acuáticos y lecciones."
+
+[spots.north-beach-pool]
+title = "North Beach Pool"
+slug = "north-beach-pool"
+description_short = "Complejo cubierto con dos piscinas, sauna y programas desde natación familiar hasta clases para adultos."
+body = "Complejo cubierto con dos piscinas: una piscina de carriles de 25 metros y 21 pies de profundidad, y una piscina recreativa de 89 pies, además de sauna y salones comunitarios. Los programas incluyen natación de carril, natación para mayores/terapia, ejercicio autoguiado, natación familiar y clases para aprender a nadar desde niños pequeños hasta adultos."
+
+[spots.ocean-beach]
+title = "Ocean Beach"
+slug = "ocean-beach"
+description_short = "Playa oceánica extensa y peligrosa; solo para nadadores experimentados de aguas abiertas y con condiciones tranquilas."
+hazards = [ "corrientes de resaca potentes", "rompiente grande en la orilla", "olas inesperadas", "agua fría todo el año", "sin salvavidas fuera del horario designado" ]
+body = "Ocean Beach se extiende por unas tres millas a lo largo del borde occidental de la ciudad. Es una de las playas más peligrosas de la costa de California: oleaje fuerte, corrientes de resaca potentes y olas inesperadas han causado numerosos ahogamientos. Nadar aquí es solo para nadadores experimentados de aguas abiertas, e incluso entonces solo con condiciones tranquilas."
+
+[spots.pomeroy-pool]
+title = "Pomeroy Pool"
+slug = "pomeroy-pool"
+access_notes = [ "La página de nado terapéutico indica solo carriles lentos y señala que el programa es para movimiento en agua tibia, recuperación y ejercicio suave." ]
+access_summary = "La piscina terapéutica Herbst de Pomeroy es una piscina de agua tibia para terapia. Ofrece nado terapéutico, nado abierto, clases, lecciones y carriles lentos; no es una piscina de entrenamiento intenso de carriles."
+description_short = "Mejor entendida como acceso a agua tibia para terapia, movimiento suave, lecciones y carriles lentos."
+body = "Pomeroy se entiende mejor como acceso a agua tibia para terapia, movimiento suave, lecciones y natación lenta de carril, más que como una piscina estándar de carriles."
+
+[[spots.pomeroy-pool.pricing]]
+label = "Pase de nado terapéutico"
+price = "$11"
+note = "Pase de un nado listado en la página de nado terapéutico de Pomeroy."
+url = "https://www.prrcsf.org/herbst-therapeutic-pool"
+
+[[spots.pomeroy-pool.pricing]]
+label = "Pase de 10 nados"
+price = "$105"
+note = "Precio de diez pases listado en la página de nado terapéutico de Pomeroy."
+url = "https://www.prrcsf.org/herbst-therapeutic-pool"
+
+[spots.presidio-ymca-letterman]
+title = "Presidio YMCA Letterman"
+slug = "presidio-ymca-letterman"
+access_notes = [ "La ayuda financiera y las opciones de membresía de YMCA pueden cambiar el precio efectivo; verifica directamente con YMCA of Greater San Francisco." ]
+access_summary = "Letterman Pool forma parte de Presidio Community YMCA. La página oficial de YMCA lista una piscina de 25 yardas y dirige a los nadadores al horario de piscina en línea."
+description_short = "Piscina detrás del complejo Letterman en el Presidio, fuerte opción de membresía para carrileros del norte."
+body = "Letterman Pool está detrás del complejo Letterman en el Presidio y es una de las mejores opciones de piscina con membresía para nadadores de carril en el lado norte de la ciudad."
+
+[[spots.presidio-ymca-letterman.pricing]]
+label = "Miembro YMCA"
+price = "Membresía"
+note = "Usa el acceso de membresía de YMCA of Greater San Francisco."
+url = "https://www.ymcasf.org/location/presidio-community-ymca/"
+
+[[spots.presidio-ymca-letterman.pricing]]
+label = "No miembro / invitado"
+price = "Consultar a YMCA"
+note = "Las reglas de invitado o pase diario dependen de la sucursal y la política vigente."
+url = "https://www.ymcasf.org/location/presidio-community-ymca/"
+
+[spots.rossi-pool]
+title = "Rossi Pool"
+slug = "rossi-pool"
+description_short = "Piscina cubierta en Inner Richmond, en Rossi Playground, con carriles y programas comunitarios."
+body = "Piscina cubierta en Rossi Playground, en Inner Richmond, en la esquina de Arguello y Anza. Los programas incluyen natación de carril, natación para mayores, natación recreativa y lecciones."
+
+[spots.sava-pool]
+title = "Sava Pool"
+slug = "sava-pool"
+description_short = "Piscina cubierta en Parkside/Sunset, actualmente cerrada por reparaciones con reapertura prevista en verano de 2026."
+body = "Piscina cubierta en el distrito Parkside/Sunset, sobre 19th Avenue cerca de Stern Grove. Actualmente está cerrada por reparaciones, con reapertura prevista para el verano de 2026. Cuando está abierta, los programas incluyen natación de carril, natación para mayores, natación recreativa y lecciones."
+
+[spots.sfsu-mashouf]
+title = "SFSU Mashouf Wellness Center"
+slug = "sfsu-mashouf"
+access_notes = [ "El horario del natatorio se registra como horario de piscina; la elegibilidad pública/comunitaria debe verificarse manualmente antes de recomendarlo ampliamente." ]
+access_summary = "SFSU Mashouf Wellness Center publica horario del natatorio y describe una piscina de 25 metros, piscina de actividades, jacuzzi, sauna y vestuarios. El acceso se basa en afiliación universitaria o membresía comunitaria."
+description_short = "Opción de piscina universitaria/comunitaria con membresía cerca de Lake Merced."
+body = "SFSU Mashouf Wellness Center es la opción de piscina universitaria/comunitaria con membresía cerca de Lake Merced."
+
+[spots.stonestown-ymca]
+title = "Stonestown YMCA"
+slug = "stonestown-ymca"
+access_notes = [ "Confirma el horario actual de piscina con la sucursal; las páginas de YMCA distinguen natación de carriles de reservas de nado recreativo/familiar." ]
+access_summary = "Stonestown Family YMCA es una sucursal YMCA con membresía, natación de carriles y actividades de piscina."
+description_short = "Opción YMCA del suroeste, cerca de Stonestown y SF State."
+body = "Stonestown YMCA es la opción de piscina YMCA del lado suroeste, cerca de Stonestown y SF State."
+
+[[spots.stonestown-ymca.pricing]]
+label = "Miembro YMCA"
+price = "Membresía"
+note = "Usa el acceso de membresía de YMCA of Greater San Francisco."
+url = "https://www.ymcasf.org/location/stonestown-family-ymca/"
+
+[[spots.stonestown-ymca.pricing]]
+label = "No miembro / invitado"
+price = "Consultar a YMCA"
+note = "Las reglas de invitado o pase diario dependen de la sucursal y la política vigente."
+url = "https://www.ymcasf.org/location/stonestown-family-ymca/"
+
+[spots.ucsf-bakar]
+title = "UCSF Bakar"
+slug = "ucsf-bakar"
+access_notes = [ "La piscina cubierta reabrió tras renovación en junio de 2025; confirma los horarios actuales de piscina mediante UCSF Fitness and Recreation." ]
+access_summary = "Bakar Fitness Center en UCSF Mission Bay es un centro de fitness con membresía que tiene piscina cubierta y piscina exterior en la azotea."
+description_short = "Centro de fitness en Mission Bay con piscina cubierta y piscina exterior en la azotea."
+body = "Bakar es la opción de centro de fitness en Mission Bay, notable por tener tanto agua cubierta como una piscina exterior en la azotea."
+
+[[spots.ucsf-bakar.pricing]]
+label = "Miembro"
+price = "Membresía"
+note = "El acceso a piscina forma parte del acceso de membresía de UCSF Fitness and Recreation."
+url = "https://campuslifeserviceshome.ucsf.edu/fitnessrecreation"
+
+[[spots.ucsf-bakar.pricing]]
+label = "Invitado / acceso diario"
+price = "Consultar a UCSF"
+note = "El acceso de invitados o patrocinado puede cambiar según afiliación y política."
+url = "https://campuslifeserviceshome.ucsf.edu/fitnessrecreation"
+
+[spots.ucsf-millberry]
+title = "UCSF Millberry"
+slug = "ucsf-millberry"
+access_notes = [ "El horario de instalación se registra solo como horario de acceso hasta verificar una fuente específica de piscina." ]
+access_summary = "UCSF Millberry Fitness Center es la sede de fitness de UCSF en Parnassus. La página oficial publica horario de instalación, pero el horario de piscina necesita verificación separada."
+description_short = "Piscina del centro de fitness del campus Parnassus de UCSF para la capa de membresía optativa."
+body = "UCSF Millberry es la piscina del centro de fitness del campus Parnassus para la capa de membresía optativa."

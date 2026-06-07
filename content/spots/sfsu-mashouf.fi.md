@@ -4,9 +4,9 @@ slug = "sfsu-mashouf"
 
 [extra]
 localized_from = "sfsu-mashouf"
-description_short = "Yliopiston ja yhteisön jäsenyspohjainen allasvaihtoehto Lake Mercedin lähellä."
+access_notes = [ "Allasosaston aukioloajat näkyvät allasaikoina; julkinen tai yhteisökelpoisuus kannattaa vahvistaa käsin ennen laajaa suosittelua." ]
 access_summary = "SFSU Mashouf Wellness Center julkaisee allasosaston aukioloajat ja kuvaa 25 metrin rata-altaan, aktiivisuusaltaan, porealtaan, saunan ja pukuhuoneet. Pääsy perustuu kampus- tai yhteisöjäsenyyteen."
-access_notes = ["Allasosaston aukioloajat näkyvät allasaikoina; julkinen tai yhteisökelpoisuus kannattaa vahvistaa käsin ennen laajaa suosittelua."]
+description_short = "Yliopiston ja yhteisön jäsenyspohjainen allasvaihtoehto Lake Mercedin lähellä."
 +++
 
 SFSU Mashouf Wellness Center on yliopiston ja yhteisön jäsenyspohjainen allasvaihtoehto Lake Mercedin lähellä.

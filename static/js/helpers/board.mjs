@@ -140,9 +140,11 @@ export function findActiveClosure(closures, now) {
 export function closureCopy(closure) {
   // Synthetic POST_SEASON closures end in year 9999 — a "closed through"
   // line for that is nonsense. The reason field carries the fallback
-  // transition message. Everything else (explicit closures + PRE_SEASON,
-  // whose end is a real date) keeps the standard "Closed through <end>" copy.
-  if (closure.kind === "POST_SEASON" && typeof closure.reason === "string") {
+  // transition message. PRE_SEASON uses the same reason path so schedule
+  // transitions read as "Schedule starts <date>" instead of a generic closed
+  // line for the day before. Single-day closures with reasons surface the
+  // reason; multi-day closures keep the inclusive "Closed through <end>" copy.
+  if ((closure.kind === "PRE_SEASON" || closure.kind === "POST_SEASON") && typeof closure.reason === "string") {
     return closure.reason;
   }
   // Partial-day closures show their time window since "Closed through
@@ -151,6 +153,9 @@ export function closureCopy(closure) {
   const endMin = parseHHMM(closure.end_time);
   if (startMin !== null && endMin !== null) {
     return `Closed ${formatHHMM(startMin)}–${formatHHMM(endMin)}`;
+  }
+  if (closure.start === closure.end && typeof closure.reason === "string" && closure.reason) {
+    return closure.reason;
   }
   return `Closed through ${formatISODateHuman(closure.end)}`;
 }
@@ -166,6 +171,15 @@ function closureNext(closure) {
   }
   if (startMin !== null && endMin !== null) {
     return { nextKind: "closed_window", nextArgs: { start: formatHHMM(startMin), end: formatHHMM(endMin) } };
+  }
+  if (closure.start === closure.end && typeof closure.reason === "string" && closure.reason) {
+    return {
+      nextKind: "closure_reason",
+      nextArgs: {
+        reason: closure.reason,
+        reasonCode: typeof closure.reason_code === "string" ? closure.reason_code : "",
+      },
+    };
   }
   return { nextKind: "closed_through", nextArgs: { iso: closure.end } };
 }
@@ -563,7 +577,12 @@ export function computeWindowAvailability(schedule, horizon, allowedTypes = null
         ? blockingClosure.reason.toUpperCase()
         : PLACEHOLDER,
       nextKind: typeof blockingClosure.reason === "string" ? "closure_reason" : "",
-      nextArgs: typeof blockingClosure.reason === "string" ? { reason: blockingClosure.reason } : {},
+      nextArgs: typeof blockingClosure.reason === "string"
+        ? {
+          reason: blockingClosure.reason,
+          reasonCode: typeof blockingClosure.reason_code === "string" ? blockingClosure.reason_code : "",
+        }
+        : {},
       sortRank: 4,
       bestSession: null,
     };
@@ -742,6 +761,7 @@ export function computeDetailStatus(schedule, now) {
       ...EMPTY_DETAIL,
       kind: "CLOSED_TODAY",
       closureReason: typeof activeClosure.reason === "string" ? activeClosure.reason : null,
+      closureReasonCode: typeof activeClosure.reason_code === "string" ? activeClosure.reason_code : null,
       closureKind: typeof activeClosure.kind === "string" ? activeClosure.kind : null,
       closureTransitionDate: typeof activeClosure.transition_date === "string" ? activeClosure.transition_date : null,
       closureStart: typeof activeClosure.start === "string" ? activeClosure.start : null,

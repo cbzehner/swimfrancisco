@@ -1,0 +1,352 @@
+[spots.24-hour-fitness-ocean]
+title = "24 Hour Fitness Ocean"
+slug = "24-hour-fitness-ocean"
+access_notes = [ "官方頁面顯示俱樂部已重新開放前，請勿把這裡用於規劃實際游泳。" ]
+access_summary = "24 Hour Fitness Ocean 列有室內泳道池，但官方俱樂部頁面表示，俱樂部因整修暫時關閉至 2026 年 5 月 23 日。"
+description_short = "24 Hour Fitness Ocean 是會員制健身房泳池，暫列為整修期間暫停開放。"
+body = "24 Hour Fitness Ocean 是會員制健身房泳池，暫列為整修期間暫停開放。"
+
+[spots.24-hour-fitness-potrero]
+title = "24 Hour Fitness Potrero"
+slug = "24-hour-fitness-potrero"
+access_notes = [ "請以俱樂部頁面確認目前的會員、訪客和設施狀態；Swim Francisco 不追蹤這裡的泳道可用情況。" ]
+access_summary = "24 Hour Fitness Potrero 是健身房泳池。官方俱樂部頁面列出室內泳道池、桑拿、漩渦池和蒸氣室等健身房設施。"
+description_short = "適合已使用 24 Hour Fitness，或想在 Potrero 附近找會員制泳池的泳客。"
+body = "這是一個健身房泳池資料，適合已使用 24 Hour Fitness 的泳客，或想在 Potrero 附近找會員制選項的人。"
+
+[[spots.24-hour-fitness-potrero.pricing]]
+label = "健身房會員"
+price = "會員資格"
+note = "泳池使用取決於此俱樂部的 24 Hour Fitness 會員條款。"
+url = "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
+
+[[spots.24-hour-fitness-potrero.pricing]]
+label = "訪客／試用"
+price = "向俱樂部查詢"
+note = "促銷和訪客使用權不夠穩定，不適合作為固定游泳價格發布。"
+url = "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
+
+[spots.aquatic-park]
+title = "Aquatic Park"
+slug = "aquatic-park"
+access_notes = [ "泳會會所使用權與在公共海灣游泳是兩回事。", "如果你剛開始海灣游泳，請先聯絡泳會或有經驗的本地泳者，不要獨自下水。" ]
+access_summary = "Aquatic Park 的海灣和海灘屬公共空間，免費開放。South End 和 Dolphin 的會所是獨立志願泳會；如需使用淋浴、儲物櫃、桑拿或參加會所活動，請按各會的訪客或會員流程辦理。"
+common_distances = [ "到防波堤約 0.25 英里", "1 英里環線" ]
+description_short = "北岸受保護的海灣泳點，水面較平靜，海灘旁有歷史悠久的泳會。"
+hazards = [ "海灣外有船隻交通", "全年水溫偏冷" ]
+body = "Aquatic Park 是北岸一個受保護的海灣泳點，由弧形市政碼頭遮擋風浪。全年相對平靜的水況，使它成為三藩市開放水域訓練的首選地點。[South End Rowing Club](https://serc.com/) 和 [Dolphin Club](https://dolphinclub.org/) 都在海灘旁設有會所，並定期組織游泳活動。"
+
+[[spots.aquatic-park.clubs]]
+name = "South End Rowing Club"
+url = "https://serc.com/faq"
+access = "公眾日票"
+hours = "週二 / 週四 / 週六 09:00-18:00（6月至11月）；08:00-17:00（12月至5月）"
+fee = "日票 $12"
+note = "公眾日票於週二、週四、週六開放，時間按季節調整。使用會所前請先遵守 SERC 的公眾日票要求。"
+source_url = "https://serc.com/faq"
+
+[[spots.aquatic-park.clubs]]
+name = "Dolphin Swimming & Boating Club"
+url = "https://dolphinclub.org/swimming/"
+access = "公眾日票"
+hours = "週一 / 週三 / 週五 08:00-17:00（5月至10月）；09:00-17:00（11月至4月）"
+fee = "現金/支票 $12，刷卡 $12.67"
+note = "聯邦或州假日不開放公眾日票。日票包括更衣室、淋浴、桑拿、露台和休息室；非會員不可使用船隻。"
+source_url = "https://dolphinclub.org/swimming/"
+
+[[spots.aquatic-park.pricing]]
+label = "公共海灣"
+price = "免費"
+note = "從公共海灘下水游泳不需要泳會會員資格。"
+url = "https://sfrecpark.org/Facilities/Facility/Details/Aquatic-Park-200"
+
+[[spots.aquatic-park.pricing]]
+label = "South End Rowing Club"
+price = "日票"
+note = "公眾日票：週二 / 週四 / 週六，6月至11月 09:00-18:00；12月至5月 08:00-17:00。"
+url = "https://serc.com/faq"
+
+[[spots.aquatic-park.pricing]]
+label = "Dolphin Club"
+price = "日票"
+note = "公眾日票：週一 / 週三 / 週五，時間按季節調整，假日可能關閉。"
+url = "https://dolphinclub.org/swimming/"
+
+[spots.baker-beach]
+title = "Baker Beach"
+slug = "baker-beach"
+description_short = "面向太平洋、可望見金門大橋；浪大、水冷和離岸流都需要保守計劃。"
+hazards = [ "離岸流", "岸邊浪大", "全年水溫偏冷", "沒有救生員" ]
+body = "Baker Beach 位於金門大橋以南，面向開放太平洋，可看到大橋和 Marin Headlands 的壯觀景色。浪況、冷水和離岸流使這裡成為嚴肅的開放水域環境；穿防寒泳衣並採取保守游泳計劃是常態。"
+
+[spots.balboa-pool]
+title = "Balboa Pool"
+slug = "balboa-pool"
+description_short = "Ingleside 的六泳道室內泳池，完成大型翻新後重新開放。"
+body = "位於 Ingleside 社區的 100 x 40 呎、六泳道室內泳池，最近在 900 萬美元翻新後重新開放，新增機械系統、無障礙改善，以及本地藝術家 Jason Jägel 的壁畫。項目包括泳道游泳、長者游泳、休閒游泳、健身與運動課程，以及游泳課。"
+
+[spots.bay-club-gateway]
+title = "Bay Club Gateway"
+slug = "bay-club-gateway"
+access_notes = [ "前往前請查看官方俱樂部頁面或課程日曆；Swim Francisco 尚未發布這裡的泳道可用情況。" ]
+access_summary = "Bay Club Gateway 是 San Francisco Campus 的私人俱樂部，設有戶外水上中心和兩個加熱泳池。使用權取決於 Bay Club 會員資格、訪客權限或已預約的俱樂部參觀。"
+description_short = "市中心私人泳池選項，靠近 Embarcadero，設有戶外水域和會所設施。"
+body = "Bay Club Gateway 是市中心的私人泳池選項：戶外泳池、健身設施、網球，以及靠近 Embarcadero 的會所環境。"
+
+[[spots.bay-club-gateway.pricing]]
+label = "會員"
+price = "會員資格"
+note = "Bay Club 未在此俱樂部頁面發布穩定的單次泳道游泳價格。"
+url = "https://www.bayclubs.com/gateway/"
+
+[[spots.bay-club-gateway.pricing]]
+label = "潛在會員"
+price = "預約參觀"
+note = "俱樂部頁面提供參觀／聯絡流程。"
+url = "https://www.bayclubs.com/gateway/"
+
+[spots.china-beach]
+title = "China Beach"
+slug = "china-beach"
+description_short = "Sea Cliff 下方的小海灣，比 Ocean 或 Baker Beach 較受遮蔽，但仍是寒冷海水。"
+hazards = [ "離岸流", "全年水溫偏冷", "只有季節性救生員" ]
+body = "China Beach 是 Sea Cliff 社區下方的小海灣，位於 Baker Beach 和 Lands End 之間。兩側岬角提供遮蔽，浪通常比 Ocean Beach 或 Baker Beach 溫和，但仍是有離岸流和低水溫的海水環境。"
+
+[spots.chinatown-ymca]
+title = "Chinatown YMCA"
+slug = "chinatown-ymca"
+access_notes = [ "前往前請查看 YMCA 時間表；Swim Francisco 目前只追蹤這座泳池的設施開放時間。" ]
+access_summary = "Chinatown YMCA 是會員制 YMCA 分館，設有鹽水泳池和水上活動課程。官方地點頁面發布設施開放時間，但靜態頁面內容未提供具體的每週泳道游泳或開放游泳時段。"
+description_short = "Portsmouth Square 和金融區附近的會員制泳池。"
+body = "Chinatown YMCA 是 Portsmouth Square 和金融區附近的會員制泳池選項。"
+
+[spots.city-sports-20th-ave]
+title = "City Sports 20th Ave"
+slug = "city-sports-20th-ave"
+access_notes = [ "俱樂部開放時間只作為使用時段追蹤；泳道可用情況和泳池專屬關閉尚未驗證。" ]
+access_summary = "City Sports Club on 20th Ave 在官方地點頁面列有泳道池、Pool & Spa 設施和俱樂部開放時間。"
+description_short = "Stonestown 一帶設有泳道泳池的會員制健身房。"
+body = "City Sports 20th Ave 是 Stonestown 一帶設有泳道泳池的會員制健身房。"
+
+[spots.coffman-pool]
+title = "Coffman Pool"
+slug = "coffman-pool"
+description_short = "McLaren Park 東南入口 Herz Playground 內的室內泳池，服務 Visitacion Valley。"
+body = "位於 McLaren Park 東南入口 Herz Playground、面積 10,000 平方呎的室內泳池，服務 Visitacion Valley 社區。項目包括泳道游泳、長者游泳、休閒游泳、自主水中運動和游泳課。"
+
+[spots.crissy-field]
+title = "Crissy Field / East Beach"
+slug = "crissy-field"
+common_distances = [ "East Beach 到 St. Francis Yacht Club", "沿 Presidio 海岸線碼頭到碼頭" ]
+description_short = "Presidio 灣側的沙灘入水點，景色經典，但金門附近潮流變化快。"
+hazards = [ "強潮流", "全年水溫偏冷", "船隻和大型船舶交通" ]
+body = "Crissy Field 位於 Presidio 的海灣側、金門大橋內側，East Beach 提供容易的沙灘入水點和經典大橋景色。潮水會快速穿過 Golden Gate，因此水況每小時都可能變化；宜在平潮或漲潮時游，並留在海灘線內。"
+
+[spots.embarcadero-ymca]
+title = "Embarcadero YMCA"
+slug = "embarcadero-ymca"
+access_notes = [ "泳池時間依 YMCA 規則建模：泳池比設施晚 30 分鐘開放，並早 30 分鐘關閉；泳道／課程可用情況仍需時間表驗證。" ]
+access_summary = "Embarcadero YMCA 是位於濱水區的會員制 YMCA 分館，設有泳池和水上活動課程。官方頁面以相對於設施開放時間的方式發布泳池開放時間。"
+description_short = "市中心濱水區的 YMCA 會員制泳池。"
+body = "Embarcadero YMCA 為看板的會員制泳池層加入一個位於市中心濱水區的 YMCA 泳池。"
+
+[spots.equinox-sports-club-sf]
+title = "Equinox Sports Club SF"
+slug = "equinox-sports-club-sf"
+access_notes = [ "俱樂部開放時間只作為使用時段追蹤；我們解析的來源未發布泳道可用情況。" ]
+access_summary = "Equinox Sports Club San Francisco 在官方地點頁面列出室內泳池和俱樂部開放時間。"
+description_short = "Market Street 上設有室內泳池的會員制俱樂部。"
+body = "Equinox Sports Club SF 是 Market Street 上設有室內泳池的會員制俱樂部。"
+
+[spots.fitness-sf-fillmore]
+title = "FITNESS SF Fillmore"
+slug = "fitness-sf-fillmore"
+access_notes = [ "泳池時間以俱樂部開放時間表示；在把它視為游泳時間表前，仍需人工確認泳道預約和課程衝突。" ]
+access_summary = "FITNESS SF Fillmore 是 FITNESS SF 設有 25 碼、5 條泳道泳池的地點。官方說明頁表示可進行泳道游泳，泳道預約需現場辦理。"
+description_short = "Fillmore Center 內的會員制健身俱樂部泳池。"
+body = "FITNESS SF Fillmore 是 Fillmore Center 內的會員制健身俱樂部泳池選項。"
+
+[spots.garfield-pool]
+title = "Garfield Pool"
+slug = "garfield-pool"
+description_short = "Mission District Garfield Square 的室內泳池，提供泳道和社區項目。"
+body = "位於 Mission District Garfield Square、26th 和 Harrison 交界的室內泳池。項目包括泳道游泳、長者游泳、休閒游泳、健身與運動課程，以及游泳課。"
+
+[spots.hamilton-pool]
+title = "Hamilton Pool"
+slug = "hamilton-pool"
+description_short = "Lower Pacific Heights 的暖水室內泳池，以兩條室內水滑梯聞名。"
+body = "位於 Lower Pacific Heights、Geary 和 Steiner 交界 Hamilton Recreation Center 的暖水室內泳池。它以三藩市市營泳池中唯一的兩條室內水滑梯聞名。項目包括泳道游泳、長者游泳、休閒游泳和游泳課。"
+
+[spots.jccsf]
+title = "JCCSF"
+slug = "jccsf"
+access_notes = [ "前往前請查看目前泳道時間表；尖峰時段列為每天 4:00–7:00 pm。" ]
+access_summary = "Gallanter Family Aquatics Center 的使用權與 JCCSF Fitness Center 會員資格綁定。官方水上活動頁列出會員可使用泳道池，並列出游泳學校的會員價格。"
+description_short = "Gallanter Family Aquatics Center 設有 25 碼泳道池、暖水休閒池和熱水池；通常視為會員制泳池。"
+body = "JCCSF 的 Gallanter Family Aquatics Center 設有 25 碼泳道池、暖水休閒池和熱水池。除非你已直接向 JCCSF 確認訪客入場，否則應視為會員制泳池。"
+
+[[spots.jccsf.pricing]]
+label = "Fitness Center 會員"
+price = "已包含"
+note = "泳道池、熱水池、水中健身和休閒／家庭游泳列為會員福利。"
+url = "https://www.jccsf.org/fitness/aquatics/"
+
+[[spots.jccsf.pricing]]
+label = "非會員／訪客"
+price = "向 JCCSF 查詢"
+note = "水上活動頁未發布免預約公眾泳道游泳價格。"
+url = "https://www.jccsf.org/fitness/aquatics/"
+
+[spots.koret-center]
+title = "Koret Center"
+slug = "koret-center"
+access_notes = [ "前往前請查看 Koret 的泳池泳道時間表；官方頁面提醒，泳道數量會因課程、隊伍和活動而變動。" ]
+access_summary = "USF 的 Koret Center 有大型室內泳池。泳池開放時間內通常有泳道可用，但使用權和通行證取決於 USF/Koret 會員資格或符合資格的通行證選項。"
+description_short = "市內較大型的室內泳池設施之一，泳道、masters、課程和活動共用水域。"
+body = "Koret 是三藩市較大型的室內泳池設施之一，泳道游泳、masters 游泳、課程、青少年隊伍和活動都會共用水域。"
+
+[[spots.koret-center.pricing]]
+label = "會員／合資格通行證"
+price = "視情況而定"
+note = "請使用 USF 發布的 Koret 會員或通行證資訊。"
+url = "https://www.usfca.edu/koret/facilities/indoor-swimming"
+
+[[spots.koret-center.pricing]]
+label = "Masters"
+price = "USMS + 俱樂部"
+note = "參加 USF Masters 需要在 USF 俱樂部辦理年度 USMS 會員資格，並符合課程要求。"
+url = "https://www.usfca.edu/koret/facilities/indoor-swimming"
+
+[spots.martin-luther-king-jr-pool]
+title = "Martin Luther King Jr. Pool"
+slug = "martin-luther-king-jr-pool"
+description_short = "Bayview 室內泳池，設有主池和兒童淺水池。"
+body = "Bayview 的室內泳池，設有 25 碼 x 25 米主池，以及獨立的幼兒淺水池。項目包括泳道游泳、長者游泳和休閒游泳。"
+
+[spots.mission-community-pool]
+title = "Mission Community Pool"
+slug = "mission-community-pool"
+description_short = "三藩市唯一市營戶外泳池，位於 Mission 中心，五月至十月季節性開放。"
+body = "三藩市唯一的市營戶外泳池。這座建於 1916 年的 90 x 40 呎泳池位於 Mission District 中心、Linda 和 Valencia 之間，五月至十月季節性營運。項目包括泳道游泳、長者游泳、休閒游泳、水中有氧和游泳課。"
+
+[spots.north-beach-pool]
+title = "North Beach Pool"
+slug = "north-beach-pool"
+description_short = "室內雙泳池複合設施，另有桑拿和社區室，項目涵蓋家庭游泳和成人課程。"
+body = "室內複合設施有兩個泳池：25 米、21 呎深的泳道池，以及 89 呎休閒池，另有桑拿和社區室。項目包括泳道游泳、長者/治療游泳、自主運動、家庭游泳，以及從幼兒到成人的學泳課。"
+
+[spots.ocean-beach]
+title = "Ocean Beach"
+slug = "ocean-beach"
+description_short = "長約三英里的高風險海灘，只適合經驗豐富的開放水域泳者在平靜水況下游泳。"
+hazards = [ "強勁離岸流", "岸邊大浪", "突發大浪", "全年水溫偏冷", "指定時間外沒有救生員" ]
+body = "Ocean Beach 沿城市西側延伸約三英里。它是加州海岸最危險的海灘之一：強浪、強勁離岸流和突發大浪曾造成多宗溺水。這裡只適合經驗豐富的開放水域泳者，而且即使如此也只應在平靜水況下游泳。"
+
+[spots.pomeroy-pool]
+title = "Pomeroy Pool"
+slug = "pomeroy-pool"
+access_notes = [ "治療游泳頁面表示只提供慢速泳道游泳，並說明該項目用於暖水活動、復健和溫和運動。" ]
+access_summary = "Pomeroy 的 Herbst Therapeutic Pool 是暖水治療泳池。它提供治療游泳、開放游泳、課程、游泳課和慢速泳道游泳；這裡不是高強度泳道訓練泳池。"
+description_short = "更適合作為暖水治療、溫和活動、課程和慢速泳道的入場選項。"
+body = "Pomeroy 更適合作為暖水入場選項，用於治療、溫和活動、課程和慢速泳道游泳，而不是標準泳道池。"
+
+[[spots.pomeroy-pool.pricing]]
+label = "治療游泳單次通行證"
+price = "$11"
+note = "Pomeroy 治療游泳頁面列出的單次游泳通行證。"
+url = "https://www.prrcsf.org/therapeutic-swim"
+
+[[spots.pomeroy-pool.pricing]]
+label = "10 次游泳通行證"
+price = "$105"
+note = "Pomeroy 治療游泳頁面列出的十次通行證價格。"
+url = "https://www.prrcsf.org/therapeutic-swim"
+
+[spots.presidio-ymca-letterman]
+title = "Presidio YMCA Letterman"
+slug = "presidio-ymca-letterman"
+access_notes = [ "YMCA 財務補助和會員選項可能改變實際價格；請直接向 YMCA of Greater San Francisco 確認。" ]
+access_summary = "Letterman Pool 是 Presidio Community YMCA 的一部分。官方 YMCA 頁面列出 25 碼泳池，並引導泳客查看線上泳池時間表。"
+description_short = "Presidio Letterman complex 後方的泳池，是城市北側泳道泳者的強會員制選項。"
+body = "Letterman Pool 位於 Presidio 的 Letterman complex 後方，是城市北側泳道泳者較強的會員制泳池選項之一。"
+
+[[spots.presidio-ymca-letterman.pricing]]
+label = "YMCA 會員"
+price = "會員資格"
+note = "使用 YMCA of Greater San Francisco 會員使用權。"
+url = "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"
+
+[[spots.presidio-ymca-letterman.pricing]]
+label = "非會員／訪客"
+price = "向 YMCA 查詢"
+note = "訪客或日票規則取決於分館和現行政策。"
+url = "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"
+
+[spots.rossi-pool]
+title = "Rossi Pool"
+slug = "rossi-pool"
+description_short = "Inner Richmond Rossi Playground 的室內泳池，提供泳道和社區項目。"
+body = "位於 Inner Richmond Rossi Playground、Arguello 和 Anza 交界的室內泳池。項目包括泳道游泳、長者游泳、休閒游泳和游泳課。"
+
+[spots.sava-pool]
+title = "Sava Pool"
+slug = "sava-pool"
+description_short = "Parkside/Sunset 的室內泳池，目前因維修關閉，預計 2026 年夏季重開。"
+body = "位於 Parkside/Sunset、19th Avenue 近 Stern Grove 的室內泳池。目前因維修關閉，預計 2026 年夏季重開。開放時，項目包括泳道游泳、長者游泳、休閒游泳和游泳課。"
+
+[spots.sfsu-mashouf]
+title = "SFSU Mashouf Wellness Center"
+slug = "sfsu-mashouf"
+access_notes = [ "Natatorium 開放時間作為泳池時間追蹤；在廣泛推薦前，應人工確認公眾／社區資格。" ]
+access_summary = "SFSU Mashouf Wellness Center 發布 natatorium 開放時間，並描述設有 25 米泳道池、活動池、熱水池、桑拿和更衣室。使用權以校園身分或社區會員資格為基礎。"
+description_short = "Lake Merced 附近的大學/社區會員制泳池選項。"
+body = "SFSU Mashouf Wellness Center 是 Lake Merced 附近的大學/社區會員制泳池選項。"
+
+[spots.stonestown-ymca]
+title = "Stonestown YMCA"
+slug = "stonestown-ymca"
+access_notes = [ "請向分館確認目前泳池時間表；YMCA 頁面會區分泳道游泳與休閒／家庭游泳預約。" ]
+access_summary = "Stonestown Family YMCA 是會員制 YMCA 分館，設有泳道游泳和泳池活動。"
+description_short = "城市西南側 YMCA 泳池選項，靠近 Stonestown 和 SF State。"
+body = "Stonestown YMCA 是城市西南側的 YMCA 泳池選項，靠近 Stonestown 和 SF State。"
+
+[[spots.stonestown-ymca.pricing]]
+label = "YMCA 會員"
+price = "會員資格"
+note = "使用 YMCA of Greater San Francisco 會員使用權。"
+url = "https://www.ymcasf.org/location/stonestown-family-ymca/"
+
+[[spots.stonestown-ymca.pricing]]
+label = "非會員／訪客"
+price = "向 YMCA 查詢"
+note = "訪客或日票規則取決於分館和現行政策。"
+url = "https://www.ymcasf.org/location/stonestown-family-ymca/"
+
+[spots.ucsf-bakar]
+title = "UCSF Bakar"
+slug = "ucsf-bakar"
+access_notes = [ "室內泳池於 2025 年 6 月整修後重新開放；請透過 UCSF Fitness and Recreation 確認目前泳池時間表。" ]
+access_summary = "UCSF Mission Bay 的 Bakar Fitness Center 是會員制健身中心，設有室內泳池和戶外天台泳池。"
+description_short = "Mission Bay 健身中心選項，設有室內泳池和戶外天台泳池。"
+body = "Bakar 是 Mission Bay 的健身中心選項，特點是同時有室內水域和戶外天台泳池。"
+
+[[spots.ucsf-bakar.pricing]]
+label = "會員"
+price = "會員資格"
+note = "泳池使用包含在 UCSF Fitness and Recreation 會員使用權中。"
+url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
+
+[[spots.ucsf-bakar.pricing]]
+label = "訪客／單日使用"
+price = "向 UCSF 查詢"
+note = "訪客或受邀使用權可能因身分和政策而變動。"
+url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
+
+[spots.ucsf-millberry]
+title = "UCSF Millberry"
+slug = "ucsf-millberry"
+access_notes = [ "在驗證泳池專屬時間表來源前，設施開放時間只作為使用時段追蹤。" ]
+access_summary = "UCSF Millberry Fitness Center 是 UCSF Parnassus 的健身地點。官方頁面發布設施開放時間，但泳池時間表需要另行驗證。"
+description_short = "UCSF Parnassus 校園健身中心泳池，屬自選會員制層。"
+body = "UCSF Millberry 是 Parnassus 校園健身中心泳池，屬於自選會員制層。"

@@ -168,12 +168,14 @@ test("computeStatus honors closures", () => {
       { day: "friday", type: "lap_swim", start: "09:00", end: "11:00" },
     ],
     closures: [
-      { start: "2026-04-17", end: "2026-04-17", reason: "training" },
+      { start: "2026-04-17", end: "2026-04-17", reason: "training", reason_code: "staff_training" },
     ],
   };
-  const { status, next } = computeStatus(schedule, now);
+  const { status, next, nextKind, nextArgs } = computeStatus(schedule, now);
   assert.equal(status, "CLOSED");
-  assert.equal(next, "Closed through Apr 17, 2026");
+  assert.equal(next, "training");
+  assert.equal(nextKind, "closure_reason");
+  assert.deepEqual(nextArgs, { reason: "training", reasonCode: "staff_training" });
 });
 
 const DROP_IN_SCHEDULE = {
@@ -347,12 +349,13 @@ test("computeDetailStatus CLOSED_HOURS between sessions with next drop-in today"
 test("computeDetailStatus CLOSED_TODAY for facility-wide closure", () => {
   const withClosure = {
     sessions: BASIC_SCHEDULE.sessions,
-    closures: [{ start: "2026-04-14", end: "2026-04-14", reason: "In-service training" }],
+    closures: [{ start: "2026-04-14", end: "2026-04-14", reason: "In-service training", reason_code: "in_service_training" }],
   };
   const now = new Date("2026-04-14T10:00:00");
   const r = computeDetailStatus(withClosure, now);
   assert.equal(r.kind, "CLOSED_TODAY");
   assert.equal(r.closureReason, "In-service training");
+  assert.equal(r.closureReasonCode, "in_service_training");
   assert.equal(r.is_drop_in, false);
   assert.equal(r.nextDropIn.day, "wednesday");
 });
@@ -381,12 +384,13 @@ test("computeDetailStatus surfaces an active closure even when sessions are empt
   // no sessions AND no active closure.
   const closedForRepairs = {
     sessions: [],
-    closures: [{ start: "2026-04-14", end: "2026-04-14", reason: "training" }],
+    closures: [{ start: "2026-04-14", end: "2026-04-14", reason: "training", reason_code: "staff_training" }],
   };
   const now = new Date("2026-04-14T10:00:00");
   const r = computeDetailStatus(closedForRepairs, now);
   assert.equal(r.kind, "CLOSED_TODAY");
   assert.equal(r.closureReason, "training");
+  assert.equal(r.closureReasonCode, "staff_training");
 });
 
 test("computeDetailStatus NOT_VERIFIED when sessions array is empty", () => {
@@ -540,9 +544,7 @@ test("computeDetailStatus treats post-season as a synthetic closure", () => {
   assert.equal(result.nextDropIn, null);
 });
 
-test("computeStatus dashboard line for pre-season mirrors closure copy", () => {
-  // Mission's "Closed through MAY 11, 2026" should match Sava's
-  // "Closed through SEP 21, 2026" shape — both flow through closureCopy.
+test("computeStatus dashboard line for pre-season points at schedule start", () => {
   const schedule = {
     sessions: [{ day: "tuesday", type: "lap_swim", start: "07:30", end: "09:30" }],
     closures: [],
@@ -552,9 +554,22 @@ test("computeStatus dashboard line for pre-season mirrors closure copy", () => {
   const before = new Date("2026-05-05T15:00:00-07:00");
   const { status, next, nextKind, nextArgs } = computeStatus(schedule, before);
   assert.equal(status, "CLOSED");
-  assert.equal(next, "Closed through May 11, 2026");
+  assert.equal(next, "Schedule starts May 12, 2026");
   assert.equal(nextKind, "schedule_starts");
   assert.deepEqual(nextArgs, { iso: "2026-05-12" });
+});
+
+test("computeStatus dashboard line for same-day closure surfaces the reason", () => {
+  const schedule = {
+    sessions: [{ day: "saturday", type: "lap_swim", start: "09:00", end: "10:30" }],
+    closures: [{ start: "2026-06-06", end: "2026-06-06", reason: "Inservice Training", reason_code: "in_service_training" }],
+  };
+  const during = new Date("2026-06-06T13:25:00-07:00");
+  const { status, next, nextKind, nextArgs } = computeStatus(schedule, during);
+  assert.equal(status, "CLOSED");
+  assert.equal(next, "Inservice Training");
+  assert.equal(nextKind, "closure_reason");
+  assert.deepEqual(nextArgs, { reason: "Inservice Training", reasonCode: "in_service_training" });
 });
 
 test("computeStatus dashboard line for post-season uses 'Schedule ended'", () => {

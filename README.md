@@ -10,6 +10,8 @@ A [Zola](https://www.getzola.org/) static site served by a single Cloudflare Wor
 
 ```
 content/spots/   one .md per spot (TOML frontmatter)
+i18n/            source translation catalogs and locale registry
+data/i18n/       generated runtime/Zola localization artifacts
 templates/       Zola/Tera templates (base, index, spots/page)
 static/          plain JS (conditions, filters, map, status, expand), main.css, _redirects
 worker/          Cloudflare Worker source (TypeScript)
@@ -23,6 +25,7 @@ docs/            spec.md, plan.md, deploy.md, design-concepts.md
 devenv shell          # enter the Nix-managed dev environment
 just serve            # run the site with live reload at http://127.0.0.1:1111
 just build            # refresh bulletin fingerprint/count and produce public/
+just test-i18n        # verify translation catalogs and generated artifacts
 zola check            # validate links and content
 ```
 
@@ -62,6 +65,31 @@ Create a new file at `content/spots/<slug>.md` with TOML frontmatter. See `docs/
 For new **open-water** spots, the Worker's station mapping is regenerated from the markdown frontmatter automatically — `wrangler dev` and `wrangler deploy` invoke `scripts/generate-worker-spots.mjs` via the `[build]` hook. Pools do not need worker changes.
 
 For pool schedule refreshes, use the local extractor in `docs/schedules.md`. It lives in `schedule-tools/`, is `uv`-managed, reads provider credentials from a gitignored root `.env` loaded by `devenv`'s built-in dotenv integration, has a `schedules debug bakeoff` subcommand that runs two providers and saves raw review artifacts alongside the PDF under `data/<slug>/<date>-<sha12>/`, and locks manually reviewed payloads via a committed `reviewed.json` in the same directory. `npm run build` and `just build` refresh `data/bulletin.json`; when the reviewed schedule fingerprint changes, the visible bulletin number bumps automatically.
+
+## Adding or updating translations
+
+Localization is catalog-driven. Edit the source catalogs under `i18n/`, then regenerate artifacts:
+
+```sh
+npm run generate-i18n
+npm run check-i18n
+```
+
+Source of truth:
+
+- `i18n/locales.toml` defines supported locales, labels, OG locale codes, titles, and descriptions.
+- `i18n/ui/<locale>.toml` defines UI, status, SEO, and runtime JS strings.
+- `i18n/spots/<locale>.toml` defines translated spot metadata and body copy.
+- `i18n/sections/<locale>.toml` defines translated section page frontmatter.
+- `i18n/dynamic-labels.toml` maps stable display codes and canonical labels to UI translation keys.
+
+Generated artifacts:
+
+- `config.toml` Zola language and translation blocks.
+- `data/locales.toml` and `data/i18n/*` runtime/Zola lookup data.
+- localized section pages and spot pages under `content/`.
+
+Do not hand-edit generated localized pages for translation changes. Run `npm run generate-i18n` after catalog edits, and keep `npm run check-i18n` green so locale lists, keys, placeholders, dynamic labels, and generated files do not drift.
 
 ## Tech stack
 

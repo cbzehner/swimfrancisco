@@ -4,9 +4,9 @@ slug = "24-hour-fitness-potrero"
 
 [extra]
 localized_from = "24-hour-fitness-potrero"
-description_short = "Kuntosalin allas uimareille, jotka käyttävät jo 24 Hour Fitnessiä tai etsivät jäsenyyspohjaista vaihtoehtoa Potreron lähellä."
+access_notes = [ "Tarkista nykyinen jäsenyys-, vieras- ja tilanneinfo klubisivulta; Swim Francisco ei seuraa ratatilannetta täällä." ]
 access_summary = "24 Hour Fitness Potrero on kuntosalin allas. Virallinen klubisivu listaa sisäisen rata-altaan, saunan, porealtaan ja höyryhuoneen kuntosalin mukavuuksiin."
-access_notes = ["Tarkista nykyinen jäsenyys-, vieras- ja tilanneinfo klubisivulta; Swim Francisco ei seuraa ratatilannetta täällä."]
+description_short = "Kuntosalin allas uimareille, jotka käyttävät jo 24 Hour Fitnessiä tai etsivät jäsenyyspohjaista vaihtoehtoa Potreron lähellä."
 
 [[extra.pricing]]
 label = "Kuntosalin jäsen"

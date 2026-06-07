@@ -4,9 +4,9 @@ slug = "jccsf"
 
 [extra]
 localized_from = "jccsf"
-description_short = "Trung tâm thủy sinh có hồ bơi 25 yard, hồ nước ấm và bồn nước nóng; thường nên xem là hồ hội viên."
+access_notes = [ "Kiểm tra lịch làn bơi hiện tại trước khi đi; giờ cao điểm được ghi là 4:00–7:00 pm hằng ngày." ]
 access_summary = "Quyền vào Gallanter Family Aquatics Center gắn với hội viên Fitness Center của JCCSF. Trang thủy sinh chính thức liệt kê quyền dùng hồ bơi theo làn cho hội viên và giá trường dạy bơi dành cho hội viên."
-access_notes = ["Kiểm tra lịch làn bơi hiện tại trước khi đi; giờ cao điểm được ghi là 4:00–7:00 pm hằng ngày."]
+description_short = "Trung tâm thủy sinh có hồ bơi 25 yard, hồ nước ấm và bồn nước nóng; thường nên xem là hồ hội viên."
 
 [[extra.pricing]]
 label = "Hội viên Fitness Center"

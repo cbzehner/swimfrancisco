@@ -4,9 +4,9 @@ slug = "koret-center"
 
 [extra]
 localized_from = "koret-center"
-description_short = "Una de las instalaciones cubiertas más grandes de la ciudad, con carriles, masters, lecciones y eventos."
+access_notes = [ "Consulta el horario de carriles de Koret antes de ir; la página oficial advierte que el número de carriles varía por lecciones, equipos y eventos." ]
 access_summary = "Koret Center de USF tiene una piscina cubierta grande. Los carriles suelen estar disponibles durante el horario de piscina, pero el acceso y los pases dependen de membresía USF/Koret u opciones de pase elegibles."
-access_notes = ["Consulta el horario de carriles de Koret antes de ir; la página oficial advierte que el número de carriles varía por lecciones, equipos y eventos."]
+description_short = "Una de las instalaciones cubiertas más grandes de la ciudad, con carriles, masters, lecciones y eventos."
 
 [[extra.pricing]]
 label = "Miembro / pase elegible"

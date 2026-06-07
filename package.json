@@ -5,9 +5,14 @@
   "description": "Root package.json declaring the Worker as an npm workspace so Cloudflare Workers Builds' auto `npm install` at the repo root succeeds. The Worker itself lives in `worker/`.",
   "scripts": {
     "generate-bulletin": "node scripts/generate-bulletin.mjs",
-    "build": "node scripts/generate-bulletin.mjs && zola build"
+    "generate-i18n": "node scripts/generate-i18n.mjs generate",
+    "check-i18n": "node scripts/generate-i18n.mjs check",
+    "build": "node scripts/generate-i18n.mjs generate && node scripts/generate-bulletin.mjs && zola build"
   },
   "workspaces": [
     "worker"
-  ]
+  ],
+  "dependencies": {
+    "smol-toml": "^1.6.1"
+  }
 }

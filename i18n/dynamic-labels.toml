@@ -1,0 +1,239 @@
+[[labels]]
+kind = "access_window"
+source = "Facility hours"
+code = "facility_hours"
+translation_key = "access_label_facility_hours"
+
+[[labels]]
+kind = "access_window"
+source = "Pool hours"
+code = "pool_hours"
+translation_key = "access_label_pool_hours"
+
+[[labels]]
+kind = "access_window"
+source = "Gym hours"
+code = "gym_hours"
+translation_key = "access_label_gym_hours"
+
+[[labels]]
+kind = "access_window"
+source = "Club hours"
+code = "club_hours"
+translation_key = "access_label_club_hours"
+
+[[labels]]
+kind = "access_window"
+source = "Natatorium hours"
+code = "natatorium_hours"
+translation_key = "access_label_natatorium_hours"
+
+[[labels]]
+kind = "access_window"
+source = "Holiday facility hours"
+code = "holiday_facility_hours"
+translation_key = "access_label_holiday_facility_hours"
+
+[[labels]]
+kind = "access_window"
+source = "Holiday pool hours"
+code = "holiday_pool_hours"
+translation_key = "access_label_holiday_pool_hours"
+
+[[labels]]
+kind = "closure_reason"
+source = "Memorial Day"
+code = "memorial_day"
+translation_key = "reason_memorial_day"
+
+[[labels]]
+kind = "closure_reason"
+source = "Juneteenth"
+code = "juneteenth"
+translation_key = "reason_juneteenth"
+
+[[labels]]
+kind = "closure_reason"
+source = "Independence Day"
+code = "independence_day"
+translation_key = "reason_independence_day"
+
+[[labels]]
+kind = "closure_reason"
+source = "Holiday Closure"
+code = "holiday_closure"
+translation_key = "reason_holiday_closure"
+
+[[labels]]
+kind = "closure_reason"
+source = "In Service Training"
+code = "in_service_training"
+translation_key = "reason_in_service_training"
+
+[[labels]]
+kind = "closure_reason"
+source = "Inservice Training"
+code = "in_service_training"
+translation_key = "reason_in_service_training"
+
+[[labels]]
+kind = "closure_reason"
+source = "In-Service (9am–1pm)"
+code = "in_service_9_1"
+translation_key = "reason_in_service_9_1"
+
+[[labels]]
+kind = "closure_reason"
+source = "Department Training"
+code = "department_training"
+translation_key = "reason_department_training"
+
+[[labels]]
+kind = "closure_reason"
+source = "Aquatics In Service Training"
+code = "aquatics_training"
+translation_key = "reason_aquatics_training"
+
+[[labels]]
+kind = "closure_reason"
+source = "Staff training"
+code = "staff_training"
+translation_key = "reason_staff_training"
+
+[[labels]]
+kind = "closure_reason"
+source = "Inservice Training Closure"
+code = "in_service_training"
+translation_key = "reason_in_service_training"
+
+[[labels]]
+kind = "closure_reason"
+source = "In- Service Training: Pool Closed 9:00-1:00pm"
+code = "in_service_pool_closed_9_1"
+translation_key = "reason_in_service_pool_closed_9_1"
+
+[[labels]]
+kind = "closure_reason"
+source = "Temporarily closed for renovation"
+code = "temporarily_closed_for_renovation"
+translation_key = "reason_temporarily_closed_for_renovation"
+
+[[labels]]
+kind = "closure_reason"
+source = "Closed for repairs; anticipated reopening summer 2026"
+code = "closed_for_repairs_summer_2026"
+translation_key = "reason_closed_for_repairs_summer_2026"
+
+[[labels]]
+kind = "closure_reason"
+source = "Pool closed Thursday 5/21 11:30am–1pm"
+code = "pool_closed_5_21"
+translation_key = "reason_pool_closed_5_21"
+
+[[labels]]
+kind = "closure_reason"
+source = "Every 3rd Thursday of the Month Closed for Aquatic Division Training 11:00am-2:00pm"
+code = "monthly_aquatic_training"
+translation_key = "reason_monthly_aquatic_training"
+
+[[labels]]
+kind = "spot_label"
+source = "Members"
+code = "members"
+translation_key = "access_badge_members"
+
+[[labels]]
+kind = "spot_label"
+source = "Limited"
+code = "limited"
+translation_key = "access_badge_limited"
+
+[[labels]]
+kind = "spot_label"
+source = "Therapy"
+code = "therapy"
+translation_key = "access_badge_therapy"
+
+[[labels]]
+kind = "spot_label"
+source = "lap"
+code = "lap"
+translation_key = "setpoint_lap"
+
+[[labels]]
+kind = "spot_label"
+source = "heated"
+code = "heated"
+translation_key = "setpoint_heated"
+
+[[labels]]
+kind = "spot_label"
+source = "pool"
+code = "pool"
+translation_key = "setpoint_pool"
+
+[[labels]]
+kind = "spot_label"
+source = "indoor"
+code = "indoor"
+translation_key = "setpoint_indoor"
+
+[[labels]]
+kind = "spot_label"
+source = "saltwater"
+code = "saltwater"
+translation_key = "setpoint_saltwater"
+
+[[labels]]
+kind = "spot_label"
+source = "indoor + roof"
+code = "indoor_roof"
+translation_key = "setpoint_indoor_roof"
+
+[[labels]]
+kind = "spot_label"
+source = "gym indoor"
+code = "gym_indoor"
+translation_key = "subtype_gym_indoor"
+
+[[labels]]
+kind = "spot_label"
+source = "membership indoor"
+code = "membership_indoor"
+translation_key = "subtype_membership_indoor"
+
+[[labels]]
+kind = "spot_label"
+source = "campus indoor"
+code = "campus_indoor"
+translation_key = "subtype_campus_indoor"
+
+[[labels]]
+kind = "spot_label"
+source = "private indoor"
+code = "private_indoor"
+translation_key = "subtype_private_indoor"
+
+[[labels]]
+kind = "spot_label"
+source = "private indoor/outdoor"
+code = "private_indoor_outdoor"
+translation_key = "subtype_private_indoor_outdoor"
+
+[[labels]]
+kind = "spot_label"
+source = "private outdoor"
+code = "private_outdoor"
+translation_key = "subtype_private_outdoor"
+
+[[labels]]
+kind = "spot_label"
+source = "therapeutic indoor"
+code = "therapeutic_indoor"
+translation_key = "subtype_therapeutic_indoor"
+
+[[labels]]
+kind = "spot_label"
+source = "outdoor"
+code = "outdoor"
+translation_key = "subtype_outdoor"

@@ -4,9 +4,9 @@ slug = "koret-center"
 
 [extra]
 localized_from = "koret-center"
-description_short = "Yksi kaupungin suuremmista sisäallastiloista, jossa ratauinti, masters, tunnit, joukkueet ja tapahtumat jakavat veden."
+access_notes = [ "Tarkista Koretin allasrata-aikataulu ennen lähtöä; virallinen sivu varoittaa ratamäärien vaihtelevan tuntien, joukkueiden ja tapahtumien mukaan." ]
 access_summary = "USF:n Koret Centerissä on suuri sisäallas. Ratoja on yleensä käytettävissä allasaikoina, mutta pääsy ja passit riippuvat USF/Koret-jäsenyydestä tai kelvollisista passivaihtoehdoista."
-access_notes = ["Tarkista Koretin allasrata-aikataulu ennen lähtöä; virallinen sivu varoittaa ratamäärien vaihtelevan tuntien, joukkueiden ja tapahtumien mukaan."]
+description_short = "Yksi kaupungin suuremmista sisäallastiloista, jossa ratauinti, masters, tunnit, joukkueet ja tapahtumat jakavat veden."
 
 [[extra.pricing]]
 label = "Jäsen / kelvollinen passi"

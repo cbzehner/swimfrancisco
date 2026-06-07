@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { formatLocalizedISODate } from "../../static/js/helpers/i18n.mjs";
+import { closureReasonLabel, formatLocalizedISODate } from "../../static/js/helpers/i18n.mjs";
 
 test("formatLocalizedISODate uses active page language date order", () => {
   const previousWindow = globalThis.window;
@@ -23,6 +23,35 @@ test("formatLocalizedISODate uses active page language date order", () => {
 
     globalThis.window = { SWIMFRANCISCO_LANG: "fi", SWIMFRANCISCO_I18N: { month_jun: "KESÄ" } };
     assert.equal(formatLocalizedISODate("2026-06-07"), "7.6.2026");
+  } finally {
+    if (previousWindow === undefined) {
+      delete globalThis.window;
+    } else {
+      globalThis.window = previousWindow;
+    }
+  }
+});
+
+test("closureReasonLabel resolves cataloged dynamic labels before falling back", () => {
+  const previousWindow = globalThis.window;
+  try {
+    globalThis.window = {
+      SWIMFRANCISCO_I18N: { reason_juneteenth: "Juneteenth translated" },
+      SWIMFRANCISCO_DYNAMIC_LABELS: {
+        closure_reason: {
+          by_code: {
+            juneteenth: { translation_key: "reason_juneteenth", sources: ["Juneteenth"] },
+          },
+          by_source: {
+            Juneteenth: { code: "juneteenth", translation_key: "reason_juneteenth" },
+          },
+        },
+      },
+    };
+    assert.equal(closureReasonLabel("", "Juneteenth"), "Juneteenth translated");
+    assert.equal(closureReasonLabel("juneteenth", "Juneteenth"), "Juneteenth translated");
+    assert.equal(closureReasonLabel("juneteenth", ""), "Juneteenth translated");
+    assert.equal(closureReasonLabel("", "Unmapped reason"), "Unmapped reason");
   } finally {
     if (previousWindow === undefined) {
       delete globalThis.window;

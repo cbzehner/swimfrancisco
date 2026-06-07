@@ -4,9 +4,9 @@ slug = "24-hour-fitness-potrero"
 
 [extra]
 localized_from = "24-hour-fitness-potrero"
-description_short = "Una piscina de gimnasio para nadadores que ya usan 24 Hour Fitness o buscan una opción con membresía cerca de Potrero."
+access_notes = [ "Usa la página del club para membresía, invitados y estado actual de la instalación; Swim Francisco no registra disponibilidad de carriles aquí." ]
 access_summary = "24 Hour Fitness Potrero es una piscina de gimnasio. La página oficial del club lista piscina cubierta de carriles, sauna, hidromasaje y sala de vapor entre sus amenidades."
-access_notes = ["Usa la página del club para membresía, invitados y estado actual de la instalación; Swim Francisco no registra disponibilidad de carriles aquí."]
+description_short = "Una piscina de gimnasio para nadadores que ya usan 24 Hour Fitness o buscan una opción con membresía cerca de Potrero."
 
 [[extra.pricing]]
 label = "Miembro del gimnasio"

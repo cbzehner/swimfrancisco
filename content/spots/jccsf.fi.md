@@ -4,9 +4,9 @@ slug = "jccsf"
 
 [extra]
 localized_from = "jccsf"
-description_short = "Gallanter Family Aquatics Centerissä on 25 jaardin rata-allas, lämmin virkistysallas ja poreallas; käsittele tätä yleensä jäsenaltaana."
+access_notes = [ "Tarkista nykyinen ratavuoroaikataulu ennen lähtöä; ruuhka-ajaksi on merkitty päivittäin 4:00–7:00 pm." ]
 access_summary = "Gallanter Family Aquatics Centerin käyttö on sidottu JCCSF Fitness Center -jäsenyyteen. Virallinen uintisivu listaa jäsenten rata-allaskäytön ja jäsenten uimakouluhinnat."
-access_notes = ["Tarkista nykyinen ratavuoroaikataulu ennen lähtöä; ruuhka-ajaksi on merkitty päivittäin 4:00–7:00 pm."]
+description_short = "Gallanter Family Aquatics Centerissä on 25 jaardin rata-allas, lämmin virkistysallas ja poreallas; käsittele tätä yleensä jäsenaltaana."
 
 [[extra.pricing]]
 label = "Fitness Center -jäsen"

@@ -87,26 +87,19 @@ export function formatLocalizedISODate(isoDate) {
   return `${day} ${label} ${year}`;
 }
 
-export function closureReasonLabel(reason) {
-  const key = {
-    "Memorial Day": "reason_memorial_day",
-    Juneteenth: "reason_juneteenth",
-    "Independence Day": "reason_independence_day",
-    "Holiday Closure": "reason_holiday_closure",
-    "In Service Training": "reason_in_service_training",
-    "Inservice Training": "reason_in_service_training",
-    "In-Service (9am–1pm)": "reason_in_service_9_1",
-    "Department Training": "reason_department_training",
-    "Aquatics In Service Training": "reason_aquatics_training",
-    "Staff training": "reason_staff_training",
-    "Inservice Training Closure": "reason_in_service_training",
-    "In- Service Training: Pool Closed 9:00-1:00pm": "reason_in_service_pool_closed_9_1",
-    "Temporarily closed for renovation": "reason_temporarily_closed_for_renovation",
-    "Closed for repairs; anticipated reopening summer 2026": "reason_closed_for_repairs_summer_2026",
-    "Pool closed Thursday 5/21 11:30am–1pm": "reason_pool_closed_5_21",
-    "Every 3rd Thursday of the Month Closed for Aquatic Division Training 11:00am-2:00pm": "reason_monthly_aquatic_training",
-  }[reason];
-  return key ? t(key, reason) : reason;
+export function closureReasonLabel(reasonCode, fallback = "") {
+  let code = typeof reasonCode === "string" && reasonCode ? reasonCode : "";
+  let key = "";
+  const labels = globalThis.window?.SWIMFRANCISCO_DYNAMIC_LABELS?.closure_reason || {};
+  if (code) {
+    const entry = labels.by_code?.[code] || {};
+    key = typeof entry.translation_key === "string" ? entry.translation_key : "";
+  }
+  if (!key && typeof fallback === "string" && fallback) {
+    const entry = labels.by_source?.[fallback] || {};
+    key = typeof entry.translation_key === "string" ? entry.translation_key : "";
+  }
+  return key ? t(key, fallback || reasonCode) : fallback;
 }
 
 export function statusNextLabel(result, placeholder = "—") {
@@ -138,7 +131,7 @@ export function statusNextLabel(result, placeholder = "—") {
     case "access_day":
       return `${t("status_access_at", "Access")} ${dayShortLabel(args.day)} ${args.time}`;
     case "closure_reason":
-      return closureReasonLabel(args.reason);
+      return closureReasonLabel(args.reasonCode, args.reason);
     default:
       return result.next || placeholder;
   }

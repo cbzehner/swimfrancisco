@@ -4,9 +4,9 @@ slug = "jccsf"
 
 [extra]
 localized_from = "jccsf"
-description_short = "Gallanter Family Aquatics Center 設有 25 碼泳道池、暖水休閒池和熱水池；通常視為會員制泳池。"
+access_notes = [ "前往前請查看目前泳道時間表；尖峰時段列為每天 4:00–7:00 pm。" ]
 access_summary = "Gallanter Family Aquatics Center 的使用權與 JCCSF Fitness Center 會員資格綁定。官方水上活動頁列出會員可使用泳道池，並列出游泳學校的會員價格。"
-access_notes = ["前往前請查看目前泳道時間表；尖峰時段列為每天 4:00–7:00 pm。"]
+description_short = "Gallanter Family Aquatics Center 設有 25 碼泳道池、暖水休閒池和熱水池；通常視為會員制泳池。"
 
 [[extra.pricing]]
 label = "Fitness Center 會員"

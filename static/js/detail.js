@@ -44,7 +44,7 @@ function formatClosureSuffix(result) {
   if (result.closureStartTime && result.closureEndTime) {
     return `${t("status_closed_window", "Closed")} ${result.closureStartTime}\u2013${result.closureEndTime}`.toUpperCase();
   }
-  return result.closureReason ? closureReasonLabel(result.closureReason).toUpperCase() : "";
+  return result.closureReason ? closureReasonLabel(result.closureReasonCode, result.closureReason).toUpperCase() : "";
 }
 
 function formatStatusLine(result) {

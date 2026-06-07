@@ -10,30 +10,29 @@
 {%- endmacro spot_meta_description %}
 
 {% macro og_locale_tags(active_lang) -%}
-  {%- if active_lang == "es" -%}{% set locale = "es_US" %}
-  {%- elif active_lang == "zh-Hant" -%}{% set locale = "zh_HK" %}
-  {%- elif active_lang == "fil" -%}{% set locale = "fil_PH" %}
-  {%- elif active_lang == "vi" -%}{% set locale = "vi_VN" %}
-  {%- elif active_lang == "fi" -%}{% set locale = "fi_FI" %}
-  {%- else -%}{% set locale = "en_US" %}
-  {%- endif -%}
-  <meta property="og:locale" content="{{ locale }}">
-  {%- if active_lang != "en" %}<meta property="og:locale:alternate" content="en_US">{% endif -%}
-  {%- if active_lang != "es" %}<meta property="og:locale:alternate" content="es_US">{% endif -%}
-  {%- if active_lang != "zh-Hant" %}<meta property="og:locale:alternate" content="zh_HK">{% endif -%}
-  {%- if active_lang != "fil" %}<meta property="og:locale:alternate" content="fil_PH">{% endif -%}
-  {%- if active_lang != "vi" %}<meta property="og:locale:alternate" content="vi_VN">{% endif -%}
-  {%- if active_lang != "fi" %}<meta property="og:locale:alternate" content="fi_FI">{% endif -%}
+  {%- set locale_data = load_data(path="data/locales.toml") -%}
+  {%- for locale in locale_data.locales -%}
+    {%- if locale.code == active_lang -%}
+      <meta property="og:locale" content="{{ locale.og_locale }}">
+    {%- endif -%}
+  {%- endfor -%}
+  {%- for locale in locale_data.locales -%}
+    {%- if locale.code != active_lang -%}
+      <meta property="og:locale:alternate" content="{{ locale.og_locale }}">
+    {%- endif -%}
+  {%- endfor -%}
 {%- endmacro og_locale_tags %}
 
 {% macro alternate_links(content_path) -%}
-  <link rel="alternate" hreflang="en" href="{{ get_url(path=content_path, lang='en') | safe }}">
-  <link rel="alternate" hreflang="es" href="{{ get_url(path=content_path, lang='es') | safe }}">
-  <link rel="alternate" hreflang="zh-Hant" href="{{ get_url(path=content_path, lang='zh-Hant') | safe }}">
-  <link rel="alternate" hreflang="fil" href="{{ get_url(path=content_path, lang='fil') | safe }}">
-  <link rel="alternate" hreflang="vi" href="{{ get_url(path=content_path, lang='vi') | safe }}">
-  <link rel="alternate" hreflang="fi" href="{{ get_url(path=content_path, lang='fi') | safe }}">
-  <link rel="alternate" hreflang="x-default" href="{{ get_url(path=content_path, lang='en') | safe }}">
+  {%- set locale_data = load_data(path="data/locales.toml") -%}
+  {%- for locale in locale_data.locales %}
+  <link rel="alternate" hreflang="{{ locale.code }}" href="{{ get_url(path=content_path, lang=locale.code) | safe }}">
+  {%- endfor %}
+  {%- for locale in locale_data.locales %}
+    {%- if locale.is_default %}
+  <link rel="alternate" hreflang="x-default" href="{{ get_url(path=content_path, lang=locale.code) | safe }}">
+    {%- endif %}
+  {%- endfor %}
 {%- endmacro alternate_links %}
 
 {% macro spot_json_ld(page, config, url="", description="", lang="en") -%}

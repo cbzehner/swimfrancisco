@@ -2,26 +2,24 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 {%- set site_url = "https://swimfrancisco.com" %}
+{%- set locale_data = load_data(path="data/locales.toml") %}
 {%- for entry in entries %}
-  {%- set canonical_url = entry.permalink
-    | replace(from=site_url ~ "/es/", to=site_url ~ "/")
-    | replace(from=site_url ~ "/zh-Hant/", to=site_url ~ "/")
-    | replace(from=site_url ~ "/fil/", to=site_url ~ "/")
-    | replace(from=site_url ~ "/vi/", to=site_url ~ "/")
-    | replace(from=site_url ~ "/fi/", to=site_url ~ "/") %}
-  {%- set es_url = canonical_url | replace(from=site_url ~ "/", to=site_url ~ "/es/") %}
-  {%- set zh_url = canonical_url | replace(from=site_url ~ "/", to=site_url ~ "/zh-Hant/") %}
-  {%- set fil_url = canonical_url | replace(from=site_url ~ "/", to=site_url ~ "/fil/") %}
-  {%- set vi_url = canonical_url | replace(from=site_url ~ "/", to=site_url ~ "/vi/") %}
-  {%- set fi_url = canonical_url | replace(from=site_url ~ "/", to=site_url ~ "/fi/") %}
+  {%- set_global canonical_url = entry.permalink %}
+  {%- for locale in locale_data.locales %}
+    {%- if not locale.is_default %}
+      {%- set_global canonical_url = canonical_url | replace(from=site_url ~ "/" ~ locale.code ~ "/", to=site_url ~ "/") %}
+    {%- endif %}
+  {%- endfor %}
   <url>
     <loc>{{ entry.permalink | safe }}</loc>
-    <xhtml:link rel="alternate" hreflang="en" href="{{ canonical_url | safe }}" />
-    <xhtml:link rel="alternate" hreflang="es" href="{{ es_url | safe }}" />
-    <xhtml:link rel="alternate" hreflang="zh-Hant" href="{{ zh_url | safe }}" />
-    <xhtml:link rel="alternate" hreflang="fil" href="{{ fil_url | safe }}" />
-    <xhtml:link rel="alternate" hreflang="vi" href="{{ vi_url | safe }}" />
-    <xhtml:link rel="alternate" hreflang="fi" href="{{ fi_url | safe }}" />
+    {%- for locale in locale_data.locales %}
+      {%- if locale.is_default %}
+        {%- set locale_url = canonical_url %}
+      {%- else %}
+        {%- set locale_url = canonical_url | replace(from=site_url ~ "/", to=site_url ~ "/" ~ locale.code ~ "/") %}
+      {%- endif %}
+    <xhtml:link rel="alternate" hreflang="{{ locale.code }}" href="{{ locale_url | safe }}" />
+    {%- endfor %}
     <xhtml:link rel="alternate" hreflang="x-default" href="{{ canonical_url | safe }}" />
     {%- if entry.updated %}
     <lastmod>{{ entry.updated }}</lastmod>

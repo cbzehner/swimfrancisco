@@ -4,10 +4,12 @@ default:
     @just --list
 
 build:
+    node scripts/generate-i18n.mjs generate
     node scripts/generate-bulletin.mjs
     zola build
 
 release:
+    node scripts/generate-i18n.mjs generate
     node scripts/generate-bulletin.mjs
     just check
 
@@ -18,6 +20,7 @@ dev:
     devenv up
 
 serve:
+    node scripts/generate-i18n.mjs generate
     node scripts/generate-bulletin.mjs
     zola serve --interface 127.0.0.1 --port 1111
 
@@ -30,7 +33,10 @@ test-js:
 typecheck-worker:
     npm --prefix worker run typecheck
 
-test: test-python test-js typecheck-worker
+test-i18n:
+    node scripts/generate-i18n.mjs check
+
+test: test-i18n test-python test-js typecheck-worker
 
 check: test build
 

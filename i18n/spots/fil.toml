@@ -1,0 +1,352 @@
+[spots.24-hour-fitness-ocean]
+title = "24 Hour Fitness Ocean"
+slug = "24-hour-fitness-ocean"
+access_notes = [ "Huwag muna itong gamitin sa aktibong pagpaplano ng paglangoy hanggang ipakita ng opisyal na pahina na muling bukas na ang club." ]
+access_summary = "Nakalista sa 24 Hour Fitness Ocean ang panloob na pool para sa paglangoy sa lane, pero sinasabi ng opisyal na pahina ng club na pansamantala itong sarado para sa pagkukumpuni hanggang Mayo 23, 2026."
+description_short = "Ang 24 Hour Fitness Ocean ay gym pool para sa mga miyembro na pansamantalang sarado hanggang matapos ang pagkukumpuni."
+body = "Ang 24 Hour Fitness Ocean ay gym pool para sa mga miyembro na nakalagay sa pansamantalang saradong estado hanggang matapos ang pagkukumpuni."
+
+[spots.24-hour-fitness-potrero]
+title = "24 Hour Fitness Potrero"
+slug = "24-hour-fitness-potrero"
+access_notes = [ "Gamitin ang pahina ng club para sa kasalukuyang membership, pagpasok ng bisita, at status ng pasilidad; hindi sinusubaybayan ng Swim Francisco ang availability ng mga lane dito." ]
+access_summary = "Ang 24 Hour Fitness Potrero ay gym pool. Nakalista sa opisyal na pahina ng club ang panloob na pool para sa paglangoy sa lane, sauna, whirlpool, at steam room bilang bahagi ng amenities ng gym."
+description_short = "Listahan ng gym pool para sa mga manlalangoy na gumagamit na ng 24 Hour Fitness o naghahanap ng opsyon sa membership malapit sa Potrero."
+body = "Ito ay listahan ng gym pool para sa mga manlalangoy na gumagamit na ng 24 Hour Fitness o gustong magkaroon ng opsyon batay sa membership malapit sa Potrero."
+
+[[spots.24-hour-fitness-potrero.pricing]]
+label = "Miyembro ng gym"
+price = "Kasama sa membership"
+note = "Nakadepende ang paggamit ng pool sa mga tuntunin ng membership ng 24 Hour Fitness para sa club na ito."
+url = "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
+
+[[spots.24-hour-fitness-potrero.pricing]]
+label = "Bisita / trial"
+price = "Magtanong sa club"
+note = "Hindi sapat ang katatagan ng promosyon at pagpasok ng bisita para ilathala bilang nakapirming presyo ng paglangoy."
+url = "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
+
+[spots.aquatic-park]
+title = "Aquatic Park"
+slug = "aquatic-park"
+access_notes = [ "Hiwalay ang paggamit ng club sa paglangoy sa pampublikong look.", "Kung bago ka sa paglangoy sa bay, makipag-ugnayan sa club o sa bihasang lokal na manlalangoy bago lumangoy nang mag-isa." ]
+access_summary = "Publiko at libre ang look at dalampasigan ng Aquatic Park. Hiwalay na boluntaryong samahan ang mga clubhouse ng South End at Dolphin; gamitin ang proseso ng bawat samahan para sa bisita o pagiging miyembro kung kailangan mo ng shower, locker, sauna, at organisadong aktibidad ng club."
+common_distances = [ "0.25mi papunta sa breakwater", "1mi loop" ]
+description_short = "Protektadong look sa hilagang tabing-tubig, kalmado ang tubig at may makasaysayang mga samahan ng manlalangoy sa dalampasigan."
+hazards = [ "trapiko ng bangka sa labas ng cove", "malamig ang tubig buong taon" ]
+body = "Ang Aquatic Park ay protektadong look sa hilagang tabing-tubig, sinasalag ng kurbadong pier ng lungsod. Dahil kalmado ang kondisyon buong taon, ito ang pangunahing lugar sa lungsod para magsanay sa bukas na tubig. Parehong may clubhouse sa dalampasigan ang [South End Rowing Club](https://serc.com/) at [Dolphin Club](https://dolphinclub.org/), at regular silang nag-oorganisa ng paglangoy."
+
+[[spots.aquatic-park.clubs]]
+name = "South End Rowing Club"
+url = "https://serc.com/faq"
+access = "Pampublikong arawang gamit"
+hours = "Martes / Huwebes / Sabado 09:00-18:00 Hunyo-Nobyembre; 08:00-17:00 Disyembre-Mayo"
+fee = "$12 arawang gamit"
+note = "May pampublikong arawang gamit tuwing Martes, Huwebes, at Sabado, na may oras na nagbabago ayon sa panahon. Sundin ang mga kailangan ng SERC para sa pampublikong arawang gamit bago gamitin ang clubhouse."
+source_url = "https://serc.com/faq"
+
+[[spots.aquatic-park.clubs]]
+name = "Dolphin Swimming & Boating Club"
+url = "https://dolphinclub.org/swimming/"
+access = "Pampublikong arawang gamit"
+hours = "Lunes / Miyerkules / Biyernes 08:00-17:00 Mayo-Oktubre; 09:00-17:00 Nobyembre-Abril"
+fee = "$12 cash/tseke o $12.67 card"
+note = "Walang pampublikong arawang gamit sa mga federal o state holiday. Kasama sa arawang gamit ang mga locker room, shower, sauna, deck, at lounge; hindi magagamit ng hindi miyembro ang mga bangka."
+source_url = "https://dolphinclub.org/swimming/"
+
+[[spots.aquatic-park.pricing]]
+label = "Pampublikong look"
+price = "Libre"
+note = "Hindi kailangan ng membership sa club para lumangoy mula sa pampublikong dalampasigan."
+url = "https://sfrecpark.org/Facilities/Facility/Details/Aquatic-Park-200"
+
+[[spots.aquatic-park.pricing]]
+label = "South End Rowing Club"
+price = "Pass sa arawang gamit"
+note = "Pampublikong arawang gamit Martes / Huwebes / Sabado, 09:00-18:00 Hunyo-Nobyembre at 08:00-17:00 Disyembre-Mayo."
+url = "https://serc.com/faq"
+
+[[spots.aquatic-park.pricing]]
+label = "Dolphin Club"
+price = "Pass sa arawang gamit"
+note = "Pampublikong arawang gamit Lunes / Miyerkules / Biyernes, may oras na nagbabago ayon sa panahon at may pagsasara kapag holiday."
+url = "https://dolphinclub.org/swimming/"
+
+[spots.baker-beach]
+title = "Baker Beach"
+slug = "baker-beach"
+description_short = "Dalampasigang nakaharap sa bukas na Pacific na may tanaw sa Golden Gate; seryoso ang alon, lamig, at malakas na agos pabalik sa dagat."
+hazards = [ "malakas na agos pabalik sa dagat", "malaking bagsak ng alon sa baybayin", "malamig ang tubig buong taon", "walang tagapagligtas" ]
+body = "Nakaharap ang Baker Beach sa bukas na Pacific sa timog lang ng Golden Gate, na may dramatikong tanaw sa tulay at Marin Headlands. Dahil sa alon, malamig na tubig, at malakas na agos pabalik sa dagat, seryosong kapaligiran ito para sa paglangoy sa bukas na tubig: karaniwan ang wetsuit at maingat na plano sa paglangoy."
+
+[spots.balboa-pool]
+title = "Balboa Pool"
+slug = "balboa-pool"
+description_short = "Palanguyang panloob na may anim na lane sa Ingleside, muling binuksan pagkatapos ng malaking pagkukumpuni."
+body = "Isang 100 x 40 talampakang palanguyang panloob na may anim na lane sa Ingleside, kamakailang muling binuksan pagkatapos ng $9M na pagkukumpuni na nagdagdag ng bagong mekanikal na sistema, mga pagpapahusay sa accessibility, at mural ng lokal na artist na si Jason Jägel. Kasama sa mga programa ang paglangoy sa lane, paglangoy para sa nakatatanda, pampamilyang paglangoy, fitness at ehersisyo, at mga aralin."
+
+[spots.bay-club-gateway]
+title = "Bay Club Gateway"
+slug = "bay-club-gateway"
+access_notes = [ "Tingnan muna ang opisyal na pahina ng club o kalendaryo ng klase bago pumunta; hindi pa inilalathala ng Swim Francisco ang availability ng mga lane dito." ]
+access_summary = "Ang Bay Club Gateway ay pribadong club sa San Francisco Campus na may panlabas na aquatic center at dalawang pinainit na pool. Nakadepende ang pagpasok sa pagiging miyembro ng Bay Club, pribilehiyo ng bisita, o naka-schedule na pagbisita sa club."
+description_short = "Pribadong opsyon sa downtown, may panlabas na tubig at kapaligirang pang-club malapit sa Embarcadero."
+body = "Ang Bay Club Gateway ang pribadong opsyon sa downtown: panlabas na tubig, pasilidad para sa fitness, tennis, at kapaligirang pang-club malapit sa Embarcadero."
+
+[[spots.bay-club-gateway.pricing]]
+label = "Miyembro"
+price = "Para sa miyembro"
+note = "Hindi naglalathala ang Bay Club ng matatag na presyo para sa isang pagbisita para lumangoy sa lane sa pahinang ito ng club."
+url = "https://www.bayclubs.com/gateway/"
+
+[[spots.bay-club-gateway.pricing]]
+label = "Nagbabalak maging miyembro"
+price = "Mag-schedule ng pagbisita"
+note = "May proseso sa pahina ng club para sa pagbisita o pakikipag-ugnayan."
+url = "https://www.bayclubs.com/gateway/"
+
+[spots.china-beach]
+title = "China Beach"
+slug = "china-beach"
+description_short = "Maliit na cove sa ilalim ng Sea Cliff, mas protektado kaysa Ocean o Baker Beach pero malamig pa rin ang tubig-dagat."
+hazards = [ "malakas na agos pabalik sa dagat", "malamig ang tubig buong taon", "may tagapagligtas lang sa panahon ng season" ]
+body = "Ang China Beach ay maliit na pocket cove sa ilalim ng Sea Cliff neighborhood, sa pagitan ng Baker Beach at Lands End. Dahil may headlands sa magkabilang gilid, mas banayad ang surf dito kaysa Ocean o Baker Beach, pero ocean water pa rin ito na may malakas na agos pabalik sa dagat at malamig na temperatura."
+
+[spots.chinatown-ymca]
+title = "Chinatown YMCA"
+slug = "chinatown-ymca"
+access_notes = [ "Tingnan muna ang mga iskedyul ng YMCA bago pumunta; kasalukuyang oras ng pasilidad lang ang sinusubaybayan ng Swim Francisco para sa pool na ito." ]
+access_summary = "Ang Chinatown YMCA ay sangay ng YMCA para sa mga miyembro, may saltwater pool at mga programang pantubig. Naglalathala ang opisyal na pahina ng lokasyon ng oras ng pasilidad, pero hindi ng konkretong lingguhang iskedyul para sa paglangoy sa lane o bukas na paglangoy sa static na nilalaman ng pahina."
+description_short = "Opsyon sa pool para sa mga miyembro malapit sa Portsmouth Square at Financial District."
+body = "Ang Chinatown YMCA ay opsyon sa pool para sa mga miyembro malapit sa Portsmouth Square at Financial District."
+
+[spots.city-sports-20th-ave]
+title = "City Sports 20th Ave"
+slug = "city-sports-20th-ave"
+access_notes = [ "Ipinapakita ang oras ng club bilang oras ng pasilidad lang; hindi pa beripikado ang availability ng mga lane at mga pagsasarang partikular sa pool." ]
+access_summary = "Nakalista sa City Sports Club sa 20th Ave ang pool para sa paglangoy sa lane, Pool & Spa amenities, at oras ng club sa opisyal nitong pahina ng lokasyon."
+description_short = "Gym para sa mga miyembro sa Stonestown area na may pool para sa paglangoy sa lane."
+body = "Ang City Sports 20th Ave ay gym para sa mga miyembro sa Stonestown area na may pool para sa paglangoy sa lane."
+
+[spots.coffman-pool]
+title = "Coffman Pool"
+slug = "coffman-pool"
+description_short = "Palanguyang panloob sa Herz Playground sa pasukan ng McLaren Park, para sa Visitacion Valley."
+body = "Isang 10,000-square-foot na palanguyang panloob sa Herz Playground sa timog-silangang pasukan ng McLaren Park, na nagsisilbi sa Visitacion Valley. Kasama sa mga programa ang paglangoy sa lane, paglangoy para sa nakatatanda, pampamilyang paglangoy, self-guided na ehersisyo sa tubig, at mga aralin."
+
+[spots.crissy-field]
+title = "Crissy Field / East Beach"
+slug = "crissy-field"
+common_distances = [ "East Beach hanggang St. Francis Yacht Club", "Pier-to-pier sa kahabaan ng Presidio shoreline" ]
+description_short = "Madaling sand entry sa bay side ng Presidio, may malakas na tide malapit sa Golden Gate."
+hazards = [ "malalakas na tidal currents", "malamig ang tubig buong taon", "trapiko ng bangka at barko" ]
+body = "Ang Crissy Field ay nasa loob ng Golden Gate sa bay side ng Presidio, kung saan ang East Beach ay may madaling sand entry at klasikong tanaw sa tulay. Malakas ang daloy ng tide sa Gate, kaya nagbabago ang kondisyon oras-oras: lumangoy sa slack o flood tide at manatili sa loob ng linya ng beach."
+
+[spots.embarcadero-ymca]
+title = "Embarcadero YMCA"
+slug = "embarcadero-ymca"
+access_notes = [ "Minomodelo ang oras ng pool mula sa tuntunin ng YMCA na bumubukas ang pool 30 minuto pagkatapos at nagsasara 30 minuto bago ang oras ng pasilidad; kailangan pa ring beripikahin sa iskedyul ang availability ng lane at programa." ]
+access_summary = "Ang Embarcadero YMCA ay sangay ng YMCA para sa mga miyembro sa tabing-tubig, may mga swimming pool at programang pantubig. Inilalathala ng opisyal na pahina ang oras ng pool bilang offset mula sa oras ng pasilidad."
+description_short = "YMCA pool sa downtown tabing-tubig para sa layer ng board na pang-miyembro lang."
+body = "Ang Embarcadero YMCA ay nagdaragdag ng YMCA pool sa downtown tabing-tubig sa layer ng board na pang-miyembro lang."
+
+[spots.equinox-sports-club-sf]
+title = "Equinox Sports Club SF"
+slug = "equinox-sports-club-sf"
+access_notes = [ "Itinatala ang oras ng club bilang oras ng pasilidad lang; hindi inilalathala sa source na pina-parse namin ang availability ng mga lane." ]
+access_summary = "Nakalista sa opisyal na pahina ng lokasyon ng Equinox Sports Club San Francisco ang panloob na pool at oras ng club."
+description_short = "Club para sa mga miyembro sa Market Street na may panloob na pool."
+body = "Ang Equinox Sports Club SF ay club para sa mga miyembro sa Market Street na may panloob na pool."
+
+[spots.fitness-sf-fillmore]
+title = "FITNESS SF Fillmore"
+slug = "fitness-sf-fillmore"
+access_notes = [ "Kinakatawan ang oras ng pool mula sa oras ng club; kailangan pa rin ng manwal na beripikasyon sa reservation ng lane at conflict sa klase bago ito ituring bilang iskedyul ng paglangoy." ]
+access_summary = "Ang FITNESS SF Fillmore ang lokasyon ng FITNESS SF na may 25-yard na pool na may 5 lane. Sinasabi ng opisyal na help page na may paglangoy sa lane at personal na ginagawa ang reservation ng lane."
+description_short = "Opsyon sa pool para sa mga miyembro ng fitness club sa Fillmore Center."
+body = "Ang FITNESS SF Fillmore ang opsyon sa pool para sa mga miyembro ng fitness club sa Fillmore Center."
+
+[spots.garfield-pool]
+title = "Garfield Pool"
+slug = "garfield-pool"
+description_short = "Palanguyang panloob sa Garfield Square sa Mission District, may paglangoy sa lane at mga programa para sa komunidad."
+body = "Palanguyang panloob sa Garfield Square sa Mission District, sa kanto ng 26th at Harrison. Kasama sa mga programa ang paglangoy sa lane, paglangoy para sa nakatatanda, pampamilyang paglangoy, fitness at ehersisyo, at mga aralin."
+
+[spots.hamilton-pool]
+title = "Hamilton Pool"
+slug = "hamilton-pool"
+description_short = "Pinainit na palanguyang panloob sa Lower Pacific Heights, kilala sa dalawang water slide sa loob."
+body = "Pinainit na palanguyang panloob sa Hamilton Recreation Center sa kanto ng Geary at Steiner sa Lower Pacific Heights. Kapansin-pansin ito dahil mayroon itong tanging dalawang water slide sa loob sa mga city pool ng San Francisco. Kasama sa mga programa ang paglangoy sa lane, paglangoy para sa nakatatanda, pampamilyang paglangoy, at mga aralin."
+
+[spots.jccsf]
+title = "JCCSF"
+slug = "jccsf"
+access_notes = [ "Tingnan ang kasalukuyang iskedyul ng lane bago pumunta; nakalista ang pinakamaraming gumagamit bilang 4:00-7:00 pm araw-araw." ]
+access_summary = "Nakaugnay sa membership sa JCCSF Fitness Center ang pagpasok sa Gallanter Family Aquatics Center. Nakalista sa opisyal na aquatics page ang paggamit ng lap pool para sa mga miyembro at presyo ng swim school para sa miyembro."
+description_short = "Aquatics center na may 25-yard na pool para sa paglangoy sa lane, warm-water recreation pool, at hot tub; karaniwang pool para sa mga miyembro."
+body = "May 25-yard na lap pool, warm-water recreation pool, at hot tub ang JCCSF sa Gallanter Family Aquatics Center. Ituring ito bilang pool para sa mga miyembro maliban kung direktang nakumpirma mo ang pagpasok bilang bisita sa JCCSF."
+
+[[spots.jccsf.pricing]]
+label = "Miyembro ng Fitness Center"
+price = "Kasama"
+note = "Nakalista ang lap pool, hot tub, aqua fitness, at pampamilya o libangang paglangoy bilang benepisyo ng miyembro."
+url = "https://www.jccsf.org/fitness/aquatics/"
+
+[[spots.jccsf.pricing]]
+label = "Hindi miyembro / bisita"
+price = "Magtanong sa JCCSF"
+note = "Hindi inilalathala sa aquatics page ang presyo para sa pampublikong drop-in na paglangoy sa lane."
+url = "https://www.jccsf.org/fitness/aquatics/"
+
+[spots.koret-center]
+title = "Koret Center"
+slug = "koret-center"
+access_notes = [ "Tingnan ang iskedyul ng pool lane ng Koret bago pumunta; nagbabala ang opisyal na pahina na nag-iiba ang bilang ng lane dahil sa mga aralin, team, at event." ]
+access_summary = "May malaking panloob na pool ang Koret Center ng USF. Karaniwang may mga lane para sa paglangoy sa oras ng pool, pero nakadepende ang pagpasok at pass sa membership sa USF/Koret o sa mga eligible na opsyon sa pass."
+description_short = "Isa sa mas malalaking pasilidad ng lungsod para sa panloob na pool, pinagsasaluhan ng paglangoy sa lane, masters, mga aralin, team, at event."
+body = "Ang Koret ay isa sa mas malalaking pasilidad ng lungsod para sa panloob na pool, kung saan pinagsasaluhan ng paglangoy sa lane, masters swimming, mga aralin, youth team, at event ang tubig."
+
+[[spots.koret-center.pricing]]
+label = "Miyembro / eligible na pass"
+price = "Nag-iiba"
+note = "Gamitin ang impormasyon ng Koret mula sa USF tungkol sa membership o pass."
+url = "https://www.usfca.edu/koret/facilities/indoor-swimming"
+
+[[spots.koret-center.pricing]]
+label = "Masters"
+price = "USMS + membership sa club"
+note = "Kailangan sa pagsali sa USF Masters ang taunang USMS membership sa USF club at mga kinakailangan ng programa."
+url = "https://www.usfca.edu/koret/facilities/indoor-swimming"
+
+[spots.martin-luther-king-jr-pool]
+title = "Martin Luther King Jr. Pool"
+slug = "martin-luther-king-jr-pool"
+description_short = "Palanguyang panloob sa Bayview na may pangunahing pool at hiwalay na mababaw na pool para sa maliliit na bata."
+body = "Palanguyang panloob sa Bayview, may 25-yard x 25-meter na pangunahing pool at hiwalay na mababaw na pool para sa maliliit na bata. Kasama sa mga programa ang paglangoy sa lane, paglangoy para sa nakatatanda, at pampamilyang paglangoy."
+
+[spots.mission-community-pool]
+title = "Mission Community Pool"
+slug = "mission-community-pool"
+description_short = "Tanging panlabas na pool na pinatatakbo ng lungsod sa San Francisco, bukas ayon sa panahon sa puso ng Mission."
+body = "Ang tanging panlabas na pool na pinatatakbo ng lungsod sa San Francisco. Itinayo noong 1916, ang 90 x 40 talampakang pool ay nasa pagitan ng Linda at Valencia streets sa puso ng Mission District at bukas ayon sa panahon mula Mayo hanggang Oktubre. Kasama sa mga programa ang paglangoy sa lane, paglangoy para sa nakatatanda, pampamilyang paglangoy, aerobics sa tubig, at mga aralin."
+
+[spots.north-beach-pool]
+title = "North Beach Pool"
+slug = "north-beach-pool"
+description_short = "Panloob na complex na may dalawang pool, sauna, silid para sa komunidad, at mga programa mula pampamilyang paglangoy hanggang aralin para sa adults."
+body = "Panloob na complex na may dalawang pool: 25-meter na pool para sa paglangoy sa lane na 21 talampakan ang lalim, at 89-foot na pool para sa libangang paglangoy, kasama ang sauna at mga silid para sa komunidad. Kasama sa mga programa ang paglangoy sa lane, paglangoy para sa nakatatanda o terapiya, self-guided na ehersisyo, pampamilyang paglangoy, at mga aralin sa paglangoy para sa maliliit na bata hanggang adults."
+
+[spots.ocean-beach]
+title = "Ocean Beach"
+slug = "ocean-beach"
+description_short = "Mahaba at mapanganib na dalampasigan sa karagatan; para lang sa bihasang manlalangoy sa bukas na tubig kapag kalmado ang kondisyon."
+hazards = [ "malalakas na agos pabalik sa dagat", "malaking bagsak ng alon sa baybayin", "biglaang malalaking alon", "malamig ang tubig buong taon", "walang tagapagligtas sa labas ng itinakdang oras" ]
+body = "Umaabot nang halos tatlong milya ang Ocean Beach sa kanlurang gilid ng lungsod. Isa ito sa pinakamapanganib na dalampasigan sa baybayin ng California: malalakas na alon, makapangyarihang agos pabalik sa dagat, at biglaang malalaking alon ang naging sanhi ng maraming pagkalunod. Ang paglangoy dito ay para lamang sa bihasang manlalangoy sa bukas na tubig, at kahit ganoon ay kapag kalmado lang ang kondisyon."
+
+[spots.pomeroy-pool]
+title = "Pomeroy Pool"
+slug = "pomeroy-pool"
+access_notes = [ "Sinasabi ng pahina ng paglangoy pang-terapiya na mabagal na paglangoy sa lane lamang, at binabanggit na ang programa ay para sa galaw sa mainit-init na tubig, pag-recover, at banayad na ehersisyo." ]
+access_summary = "Ang Herbst Therapeutic Pool ng Pomeroy ay terapewtikong pool na may mainit-init na tubig. Nag-aalok ito ng paglangoy para sa terapiya, bukas na paglangoy, mga klase, mga aralin, at mabagal na paglangoy sa lane; hindi ito pool para sa matinding pagsasanay sa paglangoy sa lane."
+description_short = "Mas angkop na mainit-init na tubig para sa terapiya, banayad na galaw, mga aralin, at mabagal na paglangoy sa lane."
+body = "Mas mainam ituring ang Pomeroy bilang mainit-init na tubig para sa terapiya, banayad na galaw, mga aralin, at mabagal na paglangoy sa lane kaysa bilang karaniwang lap pool."
+
+[[spots.pomeroy-pool.pricing]]
+label = "Pass para sa paglangoy pang-terapiya"
+price = "$11"
+note = "Isang pass sa paglangoy na nakalista sa pahina ng paglangoy pang-terapiya ng Pomeroy."
+url = "https://www.prrcsf.org/therapeutic-swim"
+
+[[spots.pomeroy-pool.pricing]]
+label = "Pass para sa 10 paglangoy"
+price = "$105"
+note = "Presyo ng pass para sa sampung paglangoy na nakalista sa pahina ng paglangoy pang-terapiya ng Pomeroy."
+url = "https://www.prrcsf.org/therapeutic-swim"
+
+[spots.presidio-ymca-letterman]
+title = "Presidio YMCA Letterman"
+slug = "presidio-ymca-letterman"
+access_notes = [ "Maaaring baguhin ng financial assistance at mga opsyon sa membership ng YMCA ang aktwal na presyo; direktang beripikahin sa YMCA of Greater San Francisco." ]
+access_summary = "Bahagi ng Presidio Community YMCA ang Letterman Pool. Nakalista sa opisyal na pahina ng YMCA ang 25-yard na pool at idinidirekta ang mga manlalangoy sa online na iskedyul ng pool."
+description_short = "Pool sa likod ng Letterman complex sa Presidio, magandang opsyon sa membership para sa mga manlalangoy sa lane sa hilagang bahagi."
+body = "Nasa likod ng Letterman complex sa Presidio ang Letterman Pool at isa ito sa mas magandang opsyon sa membership para sa mga manlalangoy sa lane sa hilagang bahagi ng lungsod."
+
+[[spots.presidio-ymca-letterman.pricing]]
+label = "Miyembro ng YMCA"
+price = "Kasama sa membership"
+note = "Gamitin ang membership sa YMCA of Greater San Francisco."
+url = "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"
+
+[[spots.presidio-ymca-letterman.pricing]]
+label = "Hindi miyembro / bisita"
+price = "Magtanong sa YMCA"
+note = "Nakadepende sa branch at kasalukuyang policy ang mga tuntunin para sa bisita/day pass."
+url = "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"
+
+[spots.rossi-pool]
+title = "Rossi Pool"
+slug = "rossi-pool"
+description_short = "Palanguyang panloob sa Rossi Playground sa Inner Richmond, may paglangoy sa lane at mga programa para sa komunidad."
+body = "Palanguyang panloob sa Rossi Playground sa Inner Richmond, sa kanto ng Arguello at Anza. Kasama sa mga programa ang paglangoy sa lane, paglangoy para sa nakatatanda, pampamilyang paglangoy, at mga aralin."
+
+[spots.sava-pool]
+title = "Sava Pool"
+slug = "sava-pool"
+description_short = "Palanguyang panloob sa Parkside/Sunset, kasalukuyang sarado para sa pagkukumpuni at inaasahang magbubukas sa summer 2026."
+body = "Palanguyang panloob sa Parkside/Sunset district sa 19th Avenue malapit sa Stern Grove. Kasalukuyan itong sarado para sa pagkukumpuni, at inaasahang muling magbubukas sa summer 2026. Kapag bukas, kasama sa mga programa ang paglangoy sa lane, paglangoy para sa nakatatanda, pampamilyang paglangoy, at mga aralin."
+
+[spots.sfsu-mashouf]
+title = "SFSU Mashouf Wellness Center"
+slug = "sfsu-mashouf"
+access_notes = [ "Itinatala ang oras ng natatorium bilang oras ng pool; kailangang manwal na beripikahin ang eligibility ng publiko/komunidad bago ito malawakang irekomenda." ]
+access_summary = "Naglalathala ang SFSU Mashouf Wellness Center ng oras ng natatorium at inilalarawan ang 25-meter lap pool, activity pool, hot tub, sauna, at locker rooms. Nakabatay ang pagpasok sa campus/community membership."
+description_short = "Opsyon sa pool para sa university/community membership malapit sa Lake Merced."
+body = "Ang SFSU Mashouf Wellness Center ay opsyon sa pool para sa university/community membership malapit sa Lake Merced."
+
+[spots.stonestown-ymca]
+title = "Stonestown YMCA"
+slug = "stonestown-ymca"
+access_notes = [ "Kumpirmahin sa branch ang kasalukuyang iskedyul ng pool; pinag-iiba ng mga pahina ng YMCA ang paglangoy sa lane at mga reservation para sa recreation/household swim." ]
+access_summary = "Ang Stonestown Family YMCA ay sangay ng YMCA para sa mga miyembro, may paglangoy sa lane at mga aktibidad sa pool."
+description_short = "Opsyon sa YMCA pool sa southwest side, malapit sa Stonestown at SF State."
+body = "Ang Stonestown YMCA ay opsyon sa YMCA pool sa southwest side, malapit sa Stonestown at SF State."
+
+[[spots.stonestown-ymca.pricing]]
+label = "Miyembro ng YMCA"
+price = "Kasama sa membership"
+note = "Gamitin ang membership sa YMCA of Greater San Francisco."
+url = "https://www.ymcasf.org/location/stonestown-family-ymca/"
+
+[[spots.stonestown-ymca.pricing]]
+label = "Hindi miyembro / bisita"
+price = "Magtanong sa YMCA"
+note = "Nakadepende sa branch at kasalukuyang policy ang mga tuntunin para sa bisita/day pass."
+url = "https://www.ymcasf.org/location/stonestown-family-ymca/"
+
+[spots.ucsf-bakar]
+title = "UCSF Bakar"
+slug = "ucsf-bakar"
+access_notes = [ "Muling nagbukas ang panloob na pool pagkatapos ng pagkukumpuni noong June 2025; kumpirmahin ang kasalukuyang iskedyul ng pool sa UCSF Fitness and Recreation." ]
+access_summary = "Ang Bakar Fitness Center sa UCSF Mission Bay ay fitness center para sa mga miyembro na may panloob na swimming pool at panlabas na rooftop pool."
+description_short = "Opsyon sa fitness center sa Mission Bay na may panloob na tubig at panlabas na rooftop pool."
+body = "Ang Bakar ay opsyon sa fitness center sa Mission Bay, kapansin-pansin dahil mayroon itong parehong panloob na tubig at panlabas na rooftop pool."
+
+[[spots.ucsf-bakar.pricing]]
+label = "Miyembro"
+price = "Kasama sa membership"
+note = "Bahagi ng membership sa UCSF Fitness and Recreation ang paggamit ng pool."
+url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
+
+[[spots.ucsf-bakar.pricing]]
+label = "Bisita / day pass"
+price = "Magtanong sa UCSF"
+note = "Maaaring magbago ang pagpasok ng bisita o sponsored pass batay sa affiliation at policy."
+url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
+
+[spots.ucsf-millberry]
+title = "UCSF Millberry"
+slug = "ucsf-millberry"
+access_notes = [ "Itinatala ang oras ng pasilidad bilang oras ng pagpasok lang hanggang ma-verify ang source ng iskedyul na partikular sa pool." ]
+access_summary = "Ang UCSF Millberry Fitness Center ang lokasyon ng fitness sa Parnassus UCSF. Naglalathala ang opisyal na pahina ng oras ng pasilidad, pero kailangan ng hiwalay na beripikasyon ang iskedyul ng pool."
+description_short = "Pool sa fitness center ng Parnassus campus para sa opt-in na layer ng membership."
+body = "Ang UCSF Millberry ay entry ng pool sa fitness center ng Parnassus campus para sa opt-in na layer ng membership."

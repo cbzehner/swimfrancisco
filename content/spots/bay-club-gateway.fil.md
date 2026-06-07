@@ -4,9 +4,9 @@ slug = "bay-club-gateway"
 
 [extra]
 localized_from = "bay-club-gateway"
-description_short = "Pribadong opsyon sa downtown, may panlabas na tubig at kapaligirang pang-club malapit sa Embarcadero."
+access_notes = [ "Tingnan muna ang opisyal na pahina ng club o kalendaryo ng klase bago pumunta; hindi pa inilalathala ng Swim Francisco ang availability ng mga lane dito." ]
 access_summary = "Ang Bay Club Gateway ay pribadong club sa San Francisco Campus na may panlabas na aquatic center at dalawang pinainit na pool. Nakadepende ang pagpasok sa pagiging miyembro ng Bay Club, pribilehiyo ng bisita, o naka-schedule na pagbisita sa club."
-access_notes = ["Tingnan muna ang opisyal na pahina ng club o kalendaryo ng klase bago pumunta; hindi pa inilalathala ng Swim Francisco ang availability ng mga lane dito."]
+description_short = "Pribadong opsyon sa downtown, may panlabas na tubig at kapaligirang pang-club malapit sa Embarcadero."
 
 [[extra.pricing]]
 label = "Miyembro"

@@ -163,33 +163,26 @@
   {%- endif -%}
 {%- endmacro day_full %}
 
-{% macro closure_reason(reason, active_lang) -%}
-  {%- if reason == "Memorial Day" -%}{{- trans(key='reason_memorial_day', lang=active_lang) -}}
-  {%- elif reason == "Juneteenth" -%}{{- trans(key='reason_juneteenth', lang=active_lang) -}}
-  {%- elif reason == "Independence Day" -%}{{- trans(key='reason_independence_day', lang=active_lang) -}}
-  {%- elif reason == "Holiday Closure" -%}{{- trans(key='reason_holiday_closure', lang=active_lang) -}}
-  {%- elif reason == "In Service Training" or reason == "Inservice Training" or reason == "Inservice Training Closure" -%}{{- trans(key='reason_in_service_training', lang=active_lang) -}}
-  {%- elif reason == "In-Service (9am–1pm)" -%}{{- trans(key='reason_in_service_9_1', lang=active_lang) -}}
-  {%- elif reason == "Department Training" -%}{{- trans(key='reason_department_training', lang=active_lang) -}}
-  {%- elif reason == "Aquatics In Service Training" -%}{{- trans(key='reason_aquatics_training', lang=active_lang) -}}
-  {%- elif reason == "Staff training" -%}{{- trans(key='reason_staff_training', lang=active_lang) -}}
-  {%- elif reason == "In- Service Training: Pool Closed 9:00-1:00pm" -%}{{- trans(key='reason_in_service_pool_closed_9_1', lang=active_lang) -}}
-  {%- elif reason == "Temporarily closed for renovation" -%}{{- trans(key='reason_temporarily_closed_for_renovation', lang=active_lang) -}}
-  {%- elif reason == "Closed for repairs; anticipated reopening summer 2026" -%}{{- trans(key='reason_closed_for_repairs_summer_2026', lang=active_lang) -}}
-  {%- elif reason == "Pool closed Thursday 5/21 11:30am–1pm" -%}{{- trans(key='reason_pool_closed_5_21', lang=active_lang) -}}
-  {%- elif reason == "Every 3rd Thursday of the Month Closed for Aquatic Division Training 11:00am-2:00pm" -%}{{- trans(key='reason_monthly_aquatic_training', lang=active_lang) -}}
+{% macro closure_reason(reason, reason_code, active_lang) -%}
+  {%- set dynamic_labels = load_data(path="data/i18n/dynamic-labels.toml") -%}
+  {%- set dynamic_label = false -%}
+  {%- if reason_code -%}
+    {%- set dynamic_label = dynamic_labels.closure_reason.by_code[reason_code] | default(value=false) -%}
+  {%- endif -%}
+  {%- if not dynamic_label -%}
+    {%- set dynamic_label = dynamic_labels.closure_reason.by_source[reason] | default(value=false) -%}
+  {%- endif -%}
+  {%- set dynamic_translation_key = dynamic_label.translation_key | default(value="") -%}
+  {%- if dynamic_translation_key -%}{{- trans(key=dynamic_translation_key, lang=active_lang) -}}
   {%- else -%}{{- reason -}}
   {%- endif -%}
 {%- endmacro closure_reason %}
 
 {% macro access_window_label(label, active_lang) -%}
-  {%- if label == "Facility hours" -%}{{- trans(key='access_label_facility_hours', lang=active_lang) -}}
-  {%- elif label == "Pool hours" -%}{{- trans(key='access_label_pool_hours', lang=active_lang) -}}
-  {%- elif label == "Gym hours" -%}{{- trans(key='access_label_gym_hours', lang=active_lang) -}}
-  {%- elif label == "Club hours" -%}{{- trans(key='access_label_club_hours', lang=active_lang) -}}
-  {%- elif label == "Natatorium hours" -%}{{- trans(key='access_label_natatorium_hours', lang=active_lang) -}}
-  {%- elif label == "Holiday facility hours" -%}{{- trans(key='access_label_holiday_facility_hours', lang=active_lang) -}}
-  {%- elif label == "Holiday pool hours" -%}{{- trans(key='access_label_holiday_pool_hours', lang=active_lang) -}}
+  {%- set dynamic_labels = load_data(path="data/i18n/dynamic-labels.toml") -%}
+  {%- set dynamic_label = dynamic_labels.access_window.by_source[label] | default(value=false) -%}
+  {%- set dynamic_translation_key = dynamic_label.translation_key | default(value="") -%}
+  {%- if dynamic_translation_key -%}{{- trans(key=dynamic_translation_key, lang=active_lang) -}}
   {%- else -%}{{- label -}}
   {%- endif -%}
 {%- endmacro access_window_label %}
@@ -498,7 +491,7 @@
                 {% endif %}
               </span>
               {% if c.pool %}<span class="closure-banner-zone">{{ c.pool | upper }}</span>{% endif %}
-              <span class="closure-banner-reason">{{ self::closure_reason(reason=c.reason, active_lang=lang) }}</span>
+              <span class="closure-banner-reason">{{ self::closure_reason(reason=c.reason, reason_code=c.reason_code | default(value=""), active_lang=lang) }}</span>
             </div>
           {% endfor %}
         </section>
@@ -517,7 +510,7 @@
             <div class="closure-banner">
               <span class="closure-banner-date">{{ self::format_iso_date(iso=e.date, active_lang=lang, with_year=false) }} {{ e.start }}–{{ e.end }}</span>
               <span class="closure-banner-zone">{{ self::access_window_label(label=e.label, active_lang=lang) | upper }}</span>
-              <span class="closure-banner-reason">{{ self::closure_reason(reason=e.reason, active_lang=lang) }}</span>
+              <span class="closure-banner-reason">{{ self::closure_reason(reason=e.reason, reason_code=e.reason_code | default(value=""), active_lang=lang) }}</span>
             </div>
           {% endfor %}
         </section>

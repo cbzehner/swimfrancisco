@@ -1,0 +1,17 @@
+[sections.home]
+title = "Swim Francisco"
+template = "index.html"
+
+[sections.map]
+title = "Mapa"
+template = "index.html"
+transparent = true
+
+[sections.map.extra]
+view = "map"
+
+[sections.spots]
+title = "Spots"
+sort_by = "title"
+render = false
+page_template = "spots/page.html"

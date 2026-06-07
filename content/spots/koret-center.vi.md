@@ -4,9 +4,9 @@ slug = "koret-center"
 
 [extra]
 localized_from = "koret-center"
-description_short = "Một trong những cơ sở hồ bơi trong nhà lớn hơn của thành phố, dùng chung cho bơi làn, masters, lớp học và sự kiện."
+access_notes = [ "Kiểm tra lịch làn bơi của Koret trước khi đi; trang chính thức cảnh báo số làn thay đổi theo lớp học, đội bơi và sự kiện." ]
 access_summary = "Koret Center của USF có hồ bơi trong nhà lớn. Các làn bơi thường có trong giờ hồ bơi, nhưng quyền vào và thẻ lượt phụ thuộc vào hội viên USF/Koret hoặc các lựa chọn thẻ đủ điều kiện."
-access_notes = ["Kiểm tra lịch làn bơi của Koret trước khi đi; trang chính thức cảnh báo số làn thay đổi theo lớp học, đội bơi và sự kiện."]
+description_short = "Một trong những cơ sở hồ bơi trong nhà lớn hơn của thành phố, dùng chung cho bơi làn, masters, lớp học và sự kiện."
 
 [[extra.pricing]]
 label = "Hội viên / thẻ đủ điều kiện"

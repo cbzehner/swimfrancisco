@@ -4,9 +4,9 @@ slug = "bay-club-gateway"
 
 [extra]
 localized_from = "bay-club-gateway"
-description_short = "Opción privada de piscina en downtown, con agua al aire libre y ambiente de club cerca del Embarcadero."
+access_notes = [ "Consulta la página oficial del club o el calendario de clases antes de ir; Swim Francisco todavía no publica disponibilidad de carriles aquí." ]
 access_summary = "Bay Club Gateway es un club privado del campus de San Francisco con centro acuático al aire libre y dos piscinas climatizadas. El acceso depende de membresía de Bay Club, privilegios de invitado o una visita programada."
-access_notes = ["Consulta la página oficial del club o el calendario de clases antes de ir; Swim Francisco todavía no publica disponibilidad de carriles aquí."]
+description_short = "Opción privada de piscina en downtown, con agua al aire libre y ambiente de club cerca del Embarcadero."
 
 [[extra.pricing]]
 label = "Miembro"

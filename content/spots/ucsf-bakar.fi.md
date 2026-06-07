@@ -4,9 +4,9 @@ slug = "ucsf-bakar"
 
 [extra]
 localized_from = "ucsf-bakar"
-description_short = "Mission Bayn fitnesskeskusvaihtoehto, jossa on sekä sisäallas että ulkona sijaitseva kattoallas."
+access_notes = [ "Sisäallas avattiin remontin jälkeen kesäkuussa 2025; vahvista nykyiset allasaikataulut UCSF Fitness and Recreationilta." ]
 access_summary = "Bakar Fitness Center UCSF Mission Bayssä on jäsenyyspohjainen fitnesskeskus, jossa on sisäuima-allas ja ulkona sijaitseva kattoallas."
-access_notes = ["Sisäallas avattiin remontin jälkeen kesäkuussa 2025; vahvista nykyiset allasaikataulut UCSF Fitness and Recreationilta."]
+description_short = "Mission Bayn fitnesskeskusvaihtoehto, jossa on sekä sisäallas että ulkona sijaitseva kattoallas."
 
 [[extra.pricing]]
 label = "Jäsen"

@@ -4,9 +4,9 @@ slug = "presidio-ymca-letterman"
 
 [extra]
 localized_from = "presidio-ymca-letterman"
-description_short = "Pool sa likod ng Letterman complex sa Presidio, magandang opsyon sa membership para sa mga manlalangoy sa lane sa hilagang bahagi."
+access_notes = [ "Maaaring baguhin ng financial assistance at mga opsyon sa membership ng YMCA ang aktwal na presyo; direktang beripikahin sa YMCA of Greater San Francisco." ]
 access_summary = "Bahagi ng Presidio Community YMCA ang Letterman Pool. Nakalista sa opisyal na pahina ng YMCA ang 25-yard na pool at idinidirekta ang mga manlalangoy sa online na iskedyul ng pool."
-access_notes = ["Maaaring baguhin ng financial assistance at mga opsyon sa membership ng YMCA ang aktwal na presyo; direktang beripikahin sa YMCA of Greater San Francisco."]
+description_short = "Pool sa likod ng Letterman complex sa Presidio, magandang opsyon sa membership para sa mga manlalangoy sa lane sa hilagang bahagi."
 
 [[extra.pricing]]
 label = "Miyembro ng YMCA"

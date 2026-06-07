@@ -4,9 +4,9 @@ slug = "bay-club-gateway"
 
 [extra]
 localized_from = "bay-club-gateway"
-description_short = "市中心私人泳池選項，靠近 Embarcadero，設有戶外水域和會所設施。"
+access_notes = [ "前往前請查看官方俱樂部頁面或課程日曆；Swim Francisco 尚未發布這裡的泳道可用情況。" ]
 access_summary = "Bay Club Gateway 是 San Francisco Campus 的私人俱樂部，設有戶外水上中心和兩個加熱泳池。使用權取決於 Bay Club 會員資格、訪客權限或已預約的俱樂部參觀。"
-access_notes = ["前往前請查看官方俱樂部頁面或課程日曆；Swim Francisco 尚未發布這裡的泳道可用情況。"]
+description_short = "市中心私人泳池選項，靠近 Embarcadero，設有戶外水域和會所設施。"
 
 [[extra.pricing]]
 label = "會員"

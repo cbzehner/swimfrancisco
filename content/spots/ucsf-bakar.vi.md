@@ -4,9 +4,9 @@ slug = "ucsf-bakar"
 
 [extra]
 localized_from = "ucsf-bakar"
-description_short = "Lựa chọn trung tâm fitness ở Mission Bay, có cả hồ trong nhà và hồ ngoài trời trên mái."
+access_notes = [ "Hồ bơi trong nhà đã mở lại sau cải tạo vào tháng 6 năm 2025; hãy xác nhận lịch hồ bơi hiện tại qua UCSF Fitness and Recreation." ]
 access_summary = "Bakar Fitness Center tại UCSF Mission Bay là trung tâm fitness dành cho hội viên, có cả hồ bơi trong nhà và hồ bơi ngoài trời trên mái."
-access_notes = ["Hồ bơi trong nhà đã mở lại sau cải tạo vào tháng 6 năm 2025; hãy xác nhận lịch hồ bơi hiện tại qua UCSF Fitness and Recreation."]
+description_short = "Lựa chọn trung tâm fitness ở Mission Bay, có cả hồ trong nhà và hồ ngoài trời trên mái."
 
 [[extra.pricing]]
 label = "Hội viên"

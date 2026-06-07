@@ -4,9 +4,9 @@ slug = "ucsf-bakar"
 
 [extra]
 localized_from = "ucsf-bakar"
-description_short = "Centro de fitness en Mission Bay con piscina cubierta y piscina exterior en la azotea."
+access_notes = [ "La piscina cubierta reabrió tras renovación en junio de 2025; confirma los horarios actuales de piscina mediante UCSF Fitness and Recreation." ]
 access_summary = "Bakar Fitness Center en UCSF Mission Bay es un centro de fitness con membresía que tiene piscina cubierta y piscina exterior en la azotea."
-access_notes = ["La piscina cubierta reabrió tras renovación en junio de 2025; confirma los horarios actuales de piscina mediante UCSF Fitness and Recreation."]
+description_short = "Centro de fitness en Mission Bay con piscina cubierta y piscina exterior en la azotea."
 
 [[extra.pricing]]
 label = "Miembro"

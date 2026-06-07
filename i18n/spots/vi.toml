@@ -1,0 +1,352 @@
+[spots.24-hour-fitness-ocean]
+title = "24 Hour Fitness Ocean"
+slug = "24-hour-fitness-ocean"
+access_notes = [ "Không dùng địa điểm này để lập kế hoạch bơi đang hoạt động cho đến khi trang chính thức cho thấy câu lạc bộ đã mở lại." ]
+access_summary = "24 Hour Fitness Ocean có ghi hồ bơi trong nhà theo làn, nhưng trang chính thức của câu lạc bộ cho biết cơ sở đang tạm đóng để cải tạo đến ngày 23 tháng 5 năm 2026."
+description_short = "24 Hour Fitness Ocean là hồ bơi phòng gym dành cho hội viên, đang được đánh dấu tạm đóng cho đến khi cải tạo xong."
+body = "24 Hour Fitness Ocean là hồ bơi phòng gym dành cho hội viên, đang được giữ ở trạng thái tạm đóng cho đến khi việc cải tạo kết thúc."
+
+[spots.24-hour-fitness-potrero]
+title = "24 Hour Fitness Potrero"
+slug = "24-hour-fitness-potrero"
+access_notes = [ "Dùng trang của câu lạc bộ để kiểm tra hội viên, khách mời và tình trạng cơ sở hiện tại; Swim Francisco không theo dõi tình trạng làn bơi tại đây." ]
+access_summary = "24 Hour Fitness Potrero là hồ bơi trong phòng gym. Trang chính thức của câu lạc bộ liệt kê hồ bơi trong nhà theo làn, sauna, bồn xoáy và phòng xông hơi trong các tiện ích của gym."
+description_short = "Hồ bơi phòng gym cho người đã dùng 24 Hour Fitness hoặc muốn lựa chọn hội viên gần Potrero."
+body = "Đây là hồ bơi phòng gym dành cho người bơi đã dùng 24 Hour Fitness hoặc muốn một lựa chọn theo dạng hội viên gần Potrero."
+
+[[spots.24-hour-fitness-potrero.pricing]]
+label = "Hội viên phòng gym"
+price = "Hội viên"
+note = "Quyền vào hồ bơi phụ thuộc vào điều khoản hội viên 24 Hour Fitness của câu lạc bộ này."
+url = "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
+
+[[spots.24-hour-fitness-potrero.pricing]]
+label = "Khách / dùng thử"
+price = "Hỏi câu lạc bộ"
+note = "Khuyến mãi và quyền vào cho khách không đủ ổn định để công bố như một giá bơi cố định."
+url = "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
+
+[spots.aquatic-park]
+title = "Aquatic Park"
+slug = "aquatic-park"
+access_notes = [ "Quyền vào câu lạc bộ tách biệt với việc bơi trong vịnh công cộng.", "Nếu bạn mới bơi trong vịnh, hãy liên hệ một câu lạc bộ hoặc người bơi địa phương có kinh nghiệm trước khi đi một mình." ]
+access_summary = "Vịnh nhỏ và bãi biển Aquatic Park là không gian công cộng và miễn phí. Nhà câu lạc bộ South End và Dolphin là các câu lạc bộ tình nguyện riêng; hãy dùng quy trình khách hoặc hội viên của từng câu lạc bộ để sử dụng vòi sen, tủ đồ, sauna và hoạt động do câu lạc bộ tổ chức."
+common_distances = [ "0,25 dặm đến đê chắn sóng", "vòng 1 dặm" ]
+description_short = "Vịnh nhỏ được che chắn ở khu bờ nước phía bắc, nước tương đối êm và có các câu lạc bộ bơi lâu đời trên bãi."
+hazards = [ "tàu thuyền ngoài vịnh nhỏ", "nước lạnh quanh năm" ]
+body = "Aquatic Park là một vịnh nhỏ được che chắn ở khu bờ nước phía bắc, được bảo vệ bởi cầu tàu thành phố dạng cong. Điều kiện nước êm quanh năm khiến nơi này trở thành điểm tập bơi ngoài trời quen thuộc của thành phố. [South End Rowing Club](https://serc.com/) và [Dolphin Club](https://dolphinclub.org/) đều có nhà câu lạc bộ trên bãi và tổ chức các buổi bơi thường xuyên."
+
+[[spots.aquatic-park.clubs]]
+name = "South End Rowing Club"
+url = "https://serc.com/faq"
+access = "Vé ngày cho công chúng"
+hours = "Thứ Ba / Năm / Bảy 09:00-18:00 tháng 6-tháng 11; 08:00-17:00 tháng 12-tháng 5"
+fee = "$12 vé ngày"
+note = "Vé ngày cho công chúng có vào thứ Ba, thứ Năm và thứ Bảy, với giờ theo mùa. Hãy làm theo yêu cầu dùng ngày công cộng của SERC trước khi sử dụng nhà câu lạc bộ."
+source_url = "https://serc.com/faq"
+
+[[spots.aquatic-park.clubs]]
+name = "Dolphin Swimming & Boating Club"
+url = "https://dolphinclub.org/swimming/"
+access = "Vé ngày cho công chúng"
+hours = "Thứ Hai / Tư / Sáu 08:00-17:00 tháng 5-tháng 10; 09:00-17:00 tháng 11-tháng 4"
+fee = "$12 tiền mặt/séc hoặc $12,67 bằng thẻ"
+note = "Không có vé ngày cho công chúng vào ngày lễ liên bang hoặc tiểu bang. Vé ngày gồm phòng thay đồ, vòi sen, sauna, sân hiên và phòng sinh hoạt; thuyền không dành cho người không phải hội viên."
+source_url = "https://dolphinclub.org/swimming/"
+
+[[spots.aquatic-park.pricing]]
+label = "Vịnh công cộng"
+price = "Miễn phí"
+note = "Không cần hội viên câu lạc bộ để bơi từ bãi biển công cộng."
+url = "https://sfrecpark.org/Facilities/Facility/Details/Aquatic-Park-200"
+
+[[spots.aquatic-park.pricing]]
+label = "South End Rowing Club"
+price = "Vé ngày"
+note = "Vé ngày cho công chúng Thứ Ba / Năm / Bảy, 09:00-18:00 tháng 6-tháng 11 và 08:00-17:00 tháng 12-tháng 5."
+url = "https://serc.com/faq"
+
+[[spots.aquatic-park.pricing]]
+label = "Dolphin Club"
+price = "Vé ngày"
+note = "Vé ngày cho công chúng Thứ Hai / Tư / Sáu, với giờ theo mùa và đóng cửa ngày lễ."
+url = "https://dolphinclub.org/swimming/"
+
+[spots.baker-beach]
+title = "Baker Beach"
+slug = "baker-beach"
+description_short = "Bãi biển hướng ra Thái Bình Dương với cảnh Golden Gate; sóng, nước lạnh và dòng chảy xa bờ cần kế hoạch thận trọng."
+hazards = [ "dòng chảy xa bờ", "sóng vỡ lớn sát bờ", "nước lạnh quanh năm", "không có cứu hộ" ]
+body = "Baker Beach hướng ra Thái Bình Dương ngay phía nam Golden Gate, với cảnh nhìn ấn tượng ra cây cầu và Marin Headlands. Sóng, nước lạnh và dòng chảy xa bờ khiến đây là môi trường bơi ngoài trời nghiêm túc: đồ bơi giữ nhiệt và kế hoạch bơi thận trọng là điều nên có."
+
+[spots.balboa-pool]
+title = "Balboa Pool"
+slug = "balboa-pool"
+description_short = "Hồ bơi trong nhà sáu làn ở Ingleside, vừa mở lại sau một đợt cải tạo lớn."
+body = "Hồ bơi trong nhà 100 x 40 foot, sáu làn ở khu Ingleside, vừa mở lại sau dự án cải tạo 9 triệu đô la với hệ thống cơ khí mới, nâng cấp tiếp cận và tranh tường của nghệ sĩ địa phương Jason Jägel. Chương trình gồm bơi theo làn, bơi cao niên, bơi giải trí, lớp thể dục và vận động, và lớp học bơi."
+
+[spots.bay-club-gateway]
+title = "Bay Club Gateway"
+slug = "bay-club-gateway"
+access_notes = [ "Kiểm tra trang chính thức của câu lạc bộ hoặc lịch lớp trước khi đi; Swim Francisco chưa công bố tình trạng làn bơi tại đây." ]
+access_summary = "Bay Club Gateway là câu lạc bộ tư nhân trong khu San Francisco Campus, có trung tâm thủy sinh ngoài trời và hai hồ bơi nước ấm. Quyền vào phụ thuộc vào hội viên Bay Club, đặc quyền khách mời hoặc một buổi tham quan đã lên lịch."
+description_short = "Lựa chọn hồ bơi tư nhân ở downtown, có nước ngoài trời và không gian câu lạc bộ gần Embarcadero."
+body = "Bay Club Gateway là lựa chọn hồ bơi tư nhân ở downtown: hồ ngoài trời, cơ sở fitness, tennis và không gian câu lạc bộ gần Embarcadero."
+
+[[spots.bay-club-gateway.pricing]]
+label = "Hội viên"
+price = "Hội viên"
+note = "Bay Club không công bố một giá ổn định cho lượt bơi làn một lần trên trang câu lạc bộ này."
+url = "https://www.bayclubs.com/gateway/"
+
+[[spots.bay-club-gateway.pricing]]
+label = "Người quan tâm hội viên"
+price = "Đặt lịch tham quan"
+note = "Trang câu lạc bộ có luồng đặt lịch tham quan/liên hệ."
+url = "https://www.bayclubs.com/gateway/"
+
+[spots.china-beach]
+title = "China Beach"
+slug = "china-beach"
+description_short = "Vịnh nhỏ dưới Sea Cliff, kín gió hơn Ocean hoặc Baker Beach nhưng vẫn là nước biển lạnh."
+hazards = [ "dòng chảy xa bờ", "nước lạnh quanh năm", "chỉ có cứu hộ theo mùa" ]
+body = "China Beach là một vịnh nhỏ nằm dưới khu Sea Cliff, giữa Baker Beach và Lands End. Được mũi đất che ở hai bên, nơi này thường có sóng nhẹ hơn Ocean hoặc Baker Beach, dù vẫn là nước biển với dòng chảy xa bờ và nhiệt độ lạnh."
+
+[spots.chinatown-ymca]
+title = "Chinatown YMCA"
+slug = "chinatown-ymca"
+access_notes = [ "Kiểm tra lịch YMCA trước khi đi; Swim Francisco hiện chỉ theo dõi giờ mở cửa cơ sở cho hồ bơi này." ]
+access_summary = "Chinatown YMCA là chi nhánh YMCA dành cho hội viên, có hồ bơi nước mặn và các chương trình thủy sinh. Trang địa điểm chính thức công bố giờ mở cửa cơ sở, nhưng không có lịch bơi làn hoặc bơi mở cửa hằng tuần cụ thể trong nội dung tĩnh của trang."
+description_short = "Lựa chọn hồ bơi hội viên gần Portsmouth Square và Financial District."
+body = "Chinatown YMCA là lựa chọn hồ bơi hội viên gần Portsmouth Square và Financial District."
+
+[spots.city-sports-20th-ave]
+title = "City Sports 20th Ave"
+slug = "city-sports-20th-ave"
+access_notes = [ "Giờ mở cửa câu lạc bộ chỉ được theo dõi như giờ vào cơ sở; tình trạng làn bơi và các đợt đóng cửa riêng của hồ bơi chưa được xác minh." ]
+access_summary = "City Sports Club trên 20th Ave liệt kê hồ bơi theo làn, tiện ích Pool & Spa và giờ mở cửa câu lạc bộ trên trang địa điểm chính thức."
+description_short = "Phòng gym hội viên ở khu Stonestown có hồ bơi theo làn."
+body = "City Sports 20th Ave là phòng gym hội viên ở khu Stonestown có hồ bơi theo làn."
+
+[spots.coffman-pool]
+title = "Coffman Pool"
+slug = "coffman-pool"
+description_short = "Hồ bơi trong nhà ở Herz Playground, lối vào đông nam McLaren Park, phục vụ Visitacion Valley."
+body = "Hồ bơi trong nhà rộng 10,000 foot vuông ở Herz Playground tại lối vào đông nam của McLaren Park, phục vụ khu Visitacion Valley. Chương trình gồm bơi theo làn, bơi cao niên, bơi giải trí, tự tập dưới nước và lớp học bơi."
+
+[spots.crissy-field]
+title = "Crissy Field / East Beach"
+slug = "crissy-field"
+common_distances = [ "East Beach đến St. Francis Yacht Club", "Từ cầu tàu này đến cầu tàu kia dọc bờ Presidio" ]
+description_short = "Điểm vào nước từ cát ở phía vịnh của Presidio, có cảnh cầu đẹp nhưng thủy triều gần Golden Gate đổi nhanh."
+hazards = [ "dòng thủy triều mạnh", "nước lạnh quanh năm", "tàu thuyền và tàu lớn qua lại" ]
+body = "Crissy Field nằm bên trong Golden Gate, phía vịnh của Presidio, với East Beach có lối xuống cát dễ dàng và cảnh cầu kinh điển. Thủy triều chảy mạnh qua Gate, nên điều kiện thay đổi theo từng giờ: hãy bơi khi nước đứng hoặc triều lên và ở trong phạm vi bãi biển."
+
+[spots.embarcadero-ymca]
+title = "Embarcadero YMCA"
+slug = "embarcadero-ymca"
+access_notes = [ "Giờ hồ bơi được mô hình hóa theo quy tắc YMCA: hồ mở sau giờ cơ sở 30 phút và đóng trước giờ cơ sở 30 phút; tình trạng làn bơi/chương trình vẫn cần được xác minh theo lịch." ]
+access_summary = "Embarcadero YMCA là chi nhánh YMCA dành cho hội viên ở khu bờ nước, có hồ bơi và các chương trình thủy sinh. Trang chính thức công bố giờ hồ bơi theo quy tắc lệch so với giờ mở cửa cơ sở."
+description_short = "Hồ bơi YMCA ở khu bờ nước trung tâm, thuộc nhóm chỉ dành cho hội viên trên bảng."
+body = "Embarcadero YMCA thêm một hồ bơi YMCA ở khu bờ nước trung tâm vào lớp chỉ dành cho hội viên của bảng."
+
+[spots.equinox-sports-club-sf]
+title = "Equinox Sports Club SF"
+slug = "equinox-sports-club-sf"
+access_notes = [ "Giờ mở cửa câu lạc bộ chỉ được theo dõi như giờ vào cơ sở; nguồn mà chúng tôi phân tích không công bố tình trạng làn bơi." ]
+access_summary = "Equinox Sports Club San Francisco liệt kê hồ bơi trong nhà và giờ mở cửa câu lạc bộ trên trang địa điểm chính thức."
+description_short = "Câu lạc bộ hội viên trên Market Street có hồ bơi trong nhà."
+body = "Equinox Sports Club SF là câu lạc bộ hội viên trên Market Street có hồ bơi trong nhà."
+
+[spots.fitness-sf-fillmore]
+title = "FITNESS SF Fillmore"
+slug = "fitness-sf-fillmore"
+access_notes = [ "Giờ hồ bơi được biểu diễn từ giờ mở cửa câu lạc bộ; việc đặt làn và xung đột với lớp học vẫn cần được xác minh thủ công trước khi xem đây là lịch bơi." ]
+access_summary = "FITNESS SF Fillmore là địa điểm FITNESS SF có hồ bơi 25 yard, 5 làn. Trang trợ giúp chính thức cho biết có bơi theo làn và việc đặt làn được thực hiện trực tiếp tại cơ sở."
+description_short = "Lựa chọn hồ bơi câu lạc bộ fitness dành cho hội viên ở Fillmore Center."
+body = "FITNESS SF Fillmore là lựa chọn hồ bơi câu lạc bộ fitness dành cho hội viên ở Fillmore Center."
+
+[spots.garfield-pool]
+title = "Garfield Pool"
+slug = "garfield-pool"
+description_short = "Hồ bơi trong nhà tại Garfield Square ở Mission District, có bơi theo làn và chương trình cộng đồng."
+body = "Hồ bơi trong nhà tại Garfield Square ở Mission District, góc đường 26th và Harrison. Chương trình gồm bơi theo làn, bơi cao niên, bơi giải trí, lớp fitness và vận động, và lớp học bơi."
+
+[spots.hamilton-pool]
+title = "Hamilton Pool"
+slug = "hamilton-pool"
+description_short = "Hồ bơi trong nhà nước ấm ở Lower Pacific Heights, nổi bật với hai máng trượt nước trong nhà."
+body = "Hồ bơi trong nhà có nước ấm tại Hamilton Recreation Center, góc Geary và Steiner ở Lower Pacific Heights. Nơi này nổi bật vì có hai máng trượt nước trong nhà duy nhất trong hệ thống hồ bơi thành phố San Francisco. Chương trình gồm bơi theo làn, bơi cao niên, bơi giải trí và lớp học bơi."
+
+[spots.jccsf]
+title = "JCCSF"
+slug = "jccsf"
+access_notes = [ "Kiểm tra lịch làn bơi hiện tại trước khi đi; giờ cao điểm được ghi là 4:00–7:00 pm hằng ngày." ]
+access_summary = "Quyền vào Gallanter Family Aquatics Center gắn với hội viên Fitness Center của JCCSF. Trang thủy sinh chính thức liệt kê quyền dùng hồ bơi theo làn cho hội viên và giá trường dạy bơi dành cho hội viên."
+description_short = "Trung tâm thủy sinh có hồ bơi 25 yard, hồ nước ấm và bồn nước nóng; thường nên xem là hồ hội viên."
+body = "JCCSF có hồ bơi 25 yard, hồ giải trí nước ấm và bồn nước nóng tại Gallanter Family Aquatics Center. Hãy xem đây là hồ bơi hội viên trừ khi bạn đã xác nhận trực tiếp với JCCSF về quyền vào của khách."
+
+[[spots.jccsf.pricing]]
+label = "Hội viên Fitness Center"
+price = "Đã bao gồm"
+note = "Hồ bơi theo làn, bồn nước nóng, aqua fitness và bơi giải trí/gia đình được liệt kê là quyền lợi hội viên."
+url = "https://www.jccsf.org/fitness/aquatics/"
+
+[[spots.jccsf.pricing]]
+label = "Không phải hội viên / khách"
+price = "Hỏi JCCSF"
+note = "Trang thủy sinh không công bố giá bơi làn công cộng trả theo lượt."
+url = "https://www.jccsf.org/fitness/aquatics/"
+
+[spots.koret-center]
+title = "Koret Center"
+slug = "koret-center"
+access_notes = [ "Kiểm tra lịch làn bơi của Koret trước khi đi; trang chính thức cảnh báo số làn thay đổi theo lớp học, đội bơi và sự kiện." ]
+access_summary = "Koret Center của USF có hồ bơi trong nhà lớn. Các làn bơi thường có trong giờ hồ bơi, nhưng quyền vào và thẻ lượt phụ thuộc vào hội viên USF/Koret hoặc các lựa chọn thẻ đủ điều kiện."
+description_short = "Một trong những cơ sở hồ bơi trong nhà lớn hơn của thành phố, dùng chung cho bơi làn, masters, lớp học và sự kiện."
+body = "Koret là một trong những cơ sở hồ bơi trong nhà lớn hơn của thành phố, nơi bơi theo làn, masters swimming, lớp học, đội trẻ và sự kiện cùng chia sẻ mặt nước."
+
+[[spots.koret-center.pricing]]
+label = "Hội viên / thẻ đủ điều kiện"
+price = "Tùy trường hợp"
+note = "Dùng thông tin hội viên hoặc thẻ của Koret từ USF."
+url = "https://www.usfca.edu/koret/facilities/indoor-swimming"
+
+[[spots.koret-center.pricing]]
+label = "Masters"
+price = "USMS + câu lạc bộ"
+note = "Tham gia USF Masters cần hội viên USMS hằng năm với câu lạc bộ USF cùng các yêu cầu của chương trình."
+url = "https://www.usfca.edu/koret/facilities/indoor-swimming"
+
+[spots.martin-luther-king-jr-pool]
+title = "Martin Luther King Jr. Pool"
+slug = "martin-luther-king-jr-pool"
+description_short = "Hồ bơi trong nhà ở Bayview với hồ chính và hồ cạn riêng cho trẻ nhỏ."
+body = "Hồ bơi trong nhà ở Bayview, có hồ chính 25 yard x 25 mét và hồ cạn riêng cho trẻ nhỏ. Chương trình gồm bơi theo làn, bơi cao niên và bơi giải trí."
+
+[spots.mission-community-pool]
+title = "Mission Community Pool"
+slug = "mission-community-pool"
+description_short = "Hồ bơi ngoài trời duy nhất do thành phố vận hành ở San Francisco, mở theo mùa trong trung tâm Mission."
+body = "Hồ bơi ngoài trời duy nhất do thành phố vận hành ở San Francisco. Xây năm 1916, hồ 90 x 40 foot nằm giữa Linda và Valencia trong trung tâm Mission District và hoạt động theo mùa từ tháng 5 đến tháng 10. Chương trình gồm bơi theo làn, bơi cao niên, bơi giải trí, thể dục nhịp điệu dưới nước và lớp học bơi."
+
+[spots.north-beach-pool]
+title = "North Beach Pool"
+slug = "north-beach-pool"
+description_short = "Khu hồ trong nhà có hai hồ bơi, sauna và phòng cộng đồng, với chương trình từ bơi gia đình đến lớp người lớn."
+body = "Khu trong nhà có hai hồ bơi: hồ bơi theo làn 25 mét, sâu 21 foot và hồ giải trí 89 foot, cùng sauna và phòng cộng đồng. Chương trình gồm bơi theo làn, bơi cao niên/trị liệu, tự tập, bơi gia đình và lớp học bơi cho trẻ nhỏ đến người lớn."
+
+[spots.ocean-beach]
+title = "Ocean Beach"
+slug = "ocean-beach"
+description_short = "Bãi biển dài và nguy hiểm; chỉ dành cho người bơi ngoài trời có kinh nghiệm khi điều kiện thật êm."
+hazards = [ "dòng chảy xa bờ mạnh", "sóng vỡ lớn sát bờ", "sóng bất ngờ", "nước lạnh quanh năm", "không có cứu hộ ngoài giờ được chỉ định" ]
+body = "Ocean Beach kéo dài khoảng ba dặm dọc rìa phía tây thành phố. Đây là một trong những bãi biển nguy hiểm nhất bờ biển California: sóng lớn, dòng chảy xa bờ mạnh và sóng bất ngờ đã gây nhiều vụ đuối nước. Bơi ở đây chỉ dành cho người bơi ngoài trời có kinh nghiệm, và ngay cả vậy cũng chỉ nên bơi khi điều kiện êm."
+
+[spots.pomeroy-pool]
+title = "Pomeroy Pool"
+slug = "pomeroy-pool"
+access_notes = [ "Trang bơi trị liệu ghi chỉ bơi làn chậm và cho biết chương trình dành cho vận động trong nước ấm, phục hồi và tập nhẹ." ]
+access_summary = "Hồ trị liệu Herbst của Pomeroy là hồ nước ấm dành cho trị liệu. Hồ có bơi trị liệu, bơi mở cửa, lớp học, bài học và bơi làn chậm; đây không phải là hồ để tập luyện bơi làn cường độ cao."
+description_short = "Phù hợp hơn như nước ấm cho trị liệu, vận động nhẹ, lớp học và bơi làn chậm."
+body = "Pomeroy nên được xem là nơi tiếp cận nước ấm cho trị liệu, vận động nhẹ, lớp học và bơi làn chậm hơn là một hồ bơi làn tiêu chuẩn."
+
+[[spots.pomeroy-pool.pricing]]
+label = "Thẻ bơi trị liệu"
+price = "$11"
+note = "Thẻ một lượt bơi được liệt kê trên trang bơi trị liệu của Pomeroy."
+url = "https://www.prrcsf.org/therapeutic-swim"
+
+[[spots.pomeroy-pool.pricing]]
+label = "Thẻ 10 lượt bơi"
+price = "$105"
+note = "Giá thẻ mười lượt được liệt kê trên trang bơi trị liệu của Pomeroy."
+url = "https://www.prrcsf.org/therapeutic-swim"
+
+[spots.presidio-ymca-letterman]
+title = "Presidio YMCA Letterman"
+slug = "presidio-ymca-letterman"
+access_notes = [ "Hỗ trợ tài chính và các lựa chọn hội viên YMCA có thể làm thay đổi giá thực tế; hãy xác minh trực tiếp với YMCA of Greater San Francisco." ]
+access_summary = "Letterman Pool thuộc Presidio Community YMCA. Trang YMCA chính thức liệt kê hồ bơi 25 yard và dẫn người bơi đến lịch hồ bơi trực tuyến."
+description_short = "Hồ bơi phía sau khu Letterman trong Presidio, là lựa chọn hội viên tốt cho người bơi làn phía bắc thành phố."
+body = "Letterman Pool nằm phía sau khu Letterman trong Presidio và là một trong những lựa chọn hồ bơi hội viên tốt hơn cho người bơi theo làn ở phía bắc thành phố."
+
+[[spots.presidio-ymca-letterman.pricing]]
+label = "Hội viên YMCA"
+price = "Hội viên"
+note = "Dùng quyền vào theo hội viên YMCA of Greater San Francisco."
+url = "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"
+
+[[spots.presidio-ymca-letterman.pricing]]
+label = "Không phải hội viên / khách"
+price = "Hỏi YMCA"
+note = "Quy định khách hoặc thẻ ngày phụ thuộc vào chi nhánh và chính sách hiện hành."
+url = "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"
+
+[spots.rossi-pool]
+title = "Rossi Pool"
+slug = "rossi-pool"
+description_short = "Hồ bơi trong nhà tại Rossi Playground ở Inner Richmond, có bơi theo làn và chương trình cộng đồng."
+body = "Hồ bơi trong nhà tại Rossi Playground ở Inner Richmond, góc Arguello và Anza. Chương trình gồm bơi theo làn, bơi cao niên, bơi giải trí và lớp học bơi."
+
+[spots.sava-pool]
+title = "Sava Pool"
+slug = "sava-pool"
+description_short = "Hồ bơi trong nhà ở Parkside/Sunset, hiện đóng để sửa chữa và dự kiến mở lại mùa hè 2026."
+body = "Hồ bơi trong nhà ở khu Parkside/Sunset trên 19th Avenue gần Stern Grove. Hiện hồ đang đóng để sửa chữa, dự kiến mở lại vào mùa hè 2026. Khi mở, chương trình gồm bơi theo làn, bơi cao niên, bơi giải trí và lớp học bơi."
+
+[spots.sfsu-mashouf]
+title = "SFSU Mashouf Wellness Center"
+slug = "sfsu-mashouf"
+access_notes = [ "Giờ natatorium được theo dõi như giờ hồ bơi; điều kiện đủ để vào theo diện công cộng/cộng đồng cần được xác minh thủ công trước khi đề xuất rộng rãi." ]
+access_summary = "SFSU Mashouf Wellness Center công bố giờ natatorium và mô tả hồ bơi theo làn 25 mét, hồ hoạt động, bồn nước nóng, sauna và phòng thay đồ. Quyền vào dựa trên liên kết với trường hoặc hội viên cộng đồng."
+description_short = "Lựa chọn hồ bơi đại học/cộng đồng theo dạng hội viên gần Lake Merced."
+body = "SFSU Mashouf Wellness Center là lựa chọn hồ bơi đại học/cộng đồng theo dạng hội viên gần Lake Merced."
+
+[spots.stonestown-ymca]
+title = "Stonestown YMCA"
+slug = "stonestown-ymca"
+access_notes = [ "Xác nhận lịch hồ bơi hiện tại với chi nhánh; các trang YMCA phân biệt bơi theo làn với đặt chỗ bơi giải trí/gia đình." ]
+access_summary = "Stonestown Family YMCA là chi nhánh YMCA dành cho hội viên, có bơi theo làn và các hoạt động hồ bơi."
+description_short = "Lựa chọn hồ bơi YMCA phía tây nam, gần Stonestown và SF State."
+body = "Stonestown YMCA là lựa chọn hồ bơi YMCA phía tây nam, gần Stonestown và SF State."
+
+[[spots.stonestown-ymca.pricing]]
+label = "Hội viên YMCA"
+price = "Hội viên"
+note = "Dùng quyền vào theo hội viên YMCA of Greater San Francisco."
+url = "https://www.ymcasf.org/location/stonestown-family-ymca/"
+
+[[spots.stonestown-ymca.pricing]]
+label = "Không phải hội viên / khách"
+price = "Hỏi YMCA"
+note = "Quy định khách hoặc thẻ ngày phụ thuộc vào chi nhánh và chính sách hiện hành."
+url = "https://www.ymcasf.org/location/stonestown-family-ymca/"
+
+[spots.ucsf-bakar]
+title = "UCSF Bakar"
+slug = "ucsf-bakar"
+access_notes = [ "Hồ bơi trong nhà đã mở lại sau cải tạo vào tháng 6 năm 2025; hãy xác nhận lịch hồ bơi hiện tại qua UCSF Fitness and Recreation." ]
+access_summary = "Bakar Fitness Center tại UCSF Mission Bay là trung tâm fitness dành cho hội viên, có cả hồ bơi trong nhà và hồ bơi ngoài trời trên mái."
+description_short = "Lựa chọn trung tâm fitness ở Mission Bay, có cả hồ trong nhà và hồ ngoài trời trên mái."
+body = "Bakar là lựa chọn trung tâm fitness ở Mission Bay, nổi bật vì có cả hồ trong nhà và hồ ngoài trời trên mái."
+
+[[spots.ucsf-bakar.pricing]]
+label = "Hội viên"
+price = "Hội viên"
+note = "Quyền vào hồ bơi là một phần của quyền vào theo hội viên UCSF Fitness and Recreation."
+url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
+
+[[spots.ucsf-bakar.pricing]]
+label = "Khách / vào trong ngày"
+price = "Hỏi UCSF"
+note = "Quyền vào cho khách hoặc người được bảo trợ có thể thay đổi theo liên kết và chính sách."
+url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
+
+[spots.ucsf-millberry]
+title = "UCSF Millberry"
+slug = "ucsf-millberry"
+access_notes = [ "Giờ mở cửa cơ sở chỉ được theo dõi như giờ vào cơ sở cho đến khi xác minh được nguồn lịch riêng cho hồ bơi." ]
+access_summary = "UCSF Millberry Fitness Center là địa điểm fitness của UCSF ở Parnassus. Trang chính thức công bố giờ mở cửa cơ sở, nhưng lịch hồ bơi cần được xác minh riêng."
+description_short = "Hồ bơi trung tâm fitness ở campus Parnassus của UCSF cho lớp hội viên tùy chọn."
+body = "UCSF Millberry là hồ bơi trung tâm fitness ở campus Parnassus cho lớp hội viên tùy chọn."

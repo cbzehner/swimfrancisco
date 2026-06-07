@@ -54,13 +54,20 @@ def _json_ld_objects(rendered_html: str) -> list[dict[str, object]]:
     return [json.loads(html.unescape(script)) for script in scripts]
 
 
+def _locales() -> list[dict[str, object]]:
+    return tomllib.loads((ROOT / "i18n" / "locales.toml").read_text())["locales"]
+
+
+def _localized_url_path(locale: dict[str, object], canonical_path: str) -> str:
+    code = str(locale["code"])
+    return canonical_path if locale.get("is_default") else f"/{code}{canonical_path}"
+
+
 def _assert_hreflang_cluster(rendered_html: str, canonical_path: str) -> None:
-    assert f"href=https://swimfrancisco.com{canonical_path} hreflang=en rel=alternate" in rendered_html
-    assert f"href=https://swimfrancisco.com/es{canonical_path} hreflang=es rel=alternate" in rendered_html
-    assert f"href=https://swimfrancisco.com/zh-Hant{canonical_path} hreflang=zh-Hant rel=alternate" in rendered_html
-    assert f"href=https://swimfrancisco.com/fil{canonical_path} hreflang=fil rel=alternate" in rendered_html
-    assert f"href=https://swimfrancisco.com/vi{canonical_path} hreflang=vi rel=alternate" in rendered_html
-    assert f"href=https://swimfrancisco.com/fi{canonical_path} hreflang=fi rel=alternate" in rendered_html
+    for locale in _locales():
+        code = str(locale["code"])
+        path = _localized_url_path(locale, canonical_path)
+        assert f"href=https://swimfrancisco.com{path} hreflang={code} rel=alternate" in rendered_html
     assert f"href=https://swimfrancisco.com{canonical_path} hreflang=x-default rel=alternate" in rendered_html
 
 
@@ -103,20 +110,22 @@ def test_all_spots_have_access_classification() -> None:
 
 def test_canonical_labels_have_i18n_mappings() -> None:
     extras_by_slug = _canonical_spot_extras()
-    chrome = (ROOT / "templates" / "macros" / "chrome.html").read_text()
-    spot_page = (ROOT / "templates" / "spots" / "page.html").read_text()
-    runtime_i18n = (ROOT / "static" / "js" / "helpers" / "i18n.mjs").read_text()
-
-    chrome_label_mappings = set(re.findall(r'label == "([^"]+)"', chrome))
-    access_window_mappings = set(re.findall(r'label == "([^"]+)"', spot_page))
-    template_reason_mappings = set(re.findall(r'reason == "([^"]+)"', spot_page))
-    js_reason_mappings = set(re.findall(r'"([^"]+)":\s*"reason_', runtime_i18n))
-    js_reason_mappings.update(re.findall(r"\n\s*([A-Za-z][A-Za-z0-9_]*)\s*:\s*\"reason_", runtime_i18n))
+    translation_keys = set(tomllib.loads((ROOT / "i18n" / "ui" / "en.toml").read_text()))
+    dynamic_labels = tomllib.loads((ROOT / "i18n" / "dynamic-labels.toml").read_text())["labels"]
+    dynamic_label_source_index = {
+        (str(label["kind"]), str(label["source"])): str(label["translation_key"])
+        for label in dynamic_labels
+    }
+    dynamic_label_code_index = {
+        (str(label["kind"]), str(label["code"])): str(label["translation_key"])
+        for label in dynamic_labels
+    }
 
     visible_spot_labels: set[str] = set()
     access_badges: set[str] = set()
     access_window_labels: set[str] = set()
     closure_reasons: set[str] = set()
+    closure_reason_codes: set[str] = set()
 
     for extra in extras_by_slug.values():
         if subtype := extra.get("subtype"):
@@ -131,28 +140,35 @@ def test_canonical_labels_have_i18n_mappings() -> None:
             for window in extra.get(key, []):
                 if label := window.get("label"):
                     access_window_labels.add(str(label))
+                if reason := window.get("reason"):
+                    closure_reasons.add(str(reason))
+                if window.get("reason_code"):
+                    closure_reason_codes.add(str(window["reason_code"]))
         for closure in extra.get("closures", []):
             if reason := closure.get("reason"):
                 closure_reasons.add(str(reason))
+            if closure.get("reason_code"):
+                closure_reason_codes.add(str(closure["reason_code"]))
 
-    assert visible_spot_labels <= chrome_label_mappings
-    assert access_badges <= chrome_label_mappings
-    assert access_window_labels <= access_window_mappings
-    assert closure_reasons <= template_reason_mappings
-    assert closure_reasons <= js_reason_mappings
+    for label in visible_spot_labels | access_badges:
+        assert ("spot_label", label) in dynamic_label_source_index
+    for label in access_window_labels:
+        assert ("access_window", label) in dynamic_label_source_index
+    for reason in closure_reasons:
+        assert ("closure_reason", reason) in dynamic_label_source_index
+    for code in closure_reason_codes:
+        assert ("closure_reason", code) in dynamic_label_code_index
+
+    assert set(dynamic_label_source_index.values()) <= translation_keys
+    assert set(dynamic_label_code_index.values()) <= translation_keys
 
 
 def test_js_translation_keys_are_exported_to_runtime_payload() -> None:
-    config = tomllib.loads((ROOT / "config.toml").read_text())
-    translation_keys = set(config["translations"])
+    translation_keys = set(tomllib.loads((ROOT / "i18n" / "ui" / "en.toml").read_text()))
     base = (ROOT / "templates" / "base.html").read_text()
-    exported_keys = {
-        key
-        for prop, key in re.findall(
-            r"([a-z][a-z0-9_]*):\s*{{\s*trans\(key='([^']+)'",
-            base,
-        )
-    }
+    assert 'load_data(path="data/i18n/" ~ lang ~ ".json")' in base
+    assert 'load_data(path="data/i18n/dynamic-labels.json")' in base
+    exported_keys = set(json.loads((ROOT / "data" / "i18n" / "en.json").read_text()))
     assert exported_keys <= translation_keys
 
     js_sources = "\n".join(
@@ -173,15 +189,33 @@ def test_js_translation_keys_are_exported_to_runtime_payload() -> None:
     assert used_translation_keys <= exported_keys
 
 
+def test_localized_section_files_match_i18n_catalogs() -> None:
+    targets = {
+        "home": ROOT / "content" / "_index",
+        "map": ROOT / "content" / "map" / "_index",
+        "spots": ROOT / "content" / "spots" / "_index",
+    }
+    locale_data = tomllib.loads((ROOT / "i18n" / "locales.toml").read_text())["locales"]
+    for locale in locale_data:
+        code = locale["code"]
+        if locale.get("is_default"):
+            continue
+        sections = tomllib.loads((ROOT / "i18n" / "sections" / f"{code}.toml").read_text())["sections"]
+        assert set(sections) == set(targets)
+        for key, path in targets.items():
+            frontmatter = Path(f"{path}.{code}.md").read_text().split("+++", 2)[1]
+            assert tomllib.loads(frontmatter) == sections[key]
+
+
 def test_pool_detail_never_renders_object_literal_for_closures(built_site: Path) -> None:
-    # Balboa has five closures in TOML; template used to render each as `{{ c }}`
+    # Balboa has closures in TOML; template used to render each as `{{ c }}`
     # which Tera prints as `[object]`. The reader must see the actual dates and
     # reasons.
     html = _read(built_site, "balboa-pool")
     assert "[object]" not in html
     assert "[object Object]" not in html
-    assert "In Service Training" in html
-    assert "Memorial Day" in html
+    assert "Juneteenth" in html
+    assert "Independence Day" in html
 
 
 def test_schedule_table_uses_current_schema_fields(built_site: Path) -> None:
@@ -310,15 +344,15 @@ def test_localized_domain_terms_are_not_left_literal() -> None:
             return out
         return []
 
-    config = tomllib.loads((ROOT / "config.toml").read_text())
     glossary = tomllib.loads((ROOT / "docs" / "localization-glossary.toml").read_text())["locales"]
-    translation_text_by_lang = {"en": "\n".join(str(value) for value in config["translations"].values())}
-    translation_text_by_lang.update({
-        lang: "\n".join(str(value) for value in language["translations"].values())
-        for lang, language in config["languages"].items()
-    })
+    translation_text_by_lang = {
+        locale["code"]: "\n".join(
+            str(value) for value in tomllib.loads((ROOT / "i18n" / "ui" / f"{locale['code']}.toml").read_text()).values()
+        )
+        for locale in _locales()
+    }
     content_text_by_lang: dict[str, str] = {}
-    localized_suffixes = tuple(f".{lang}.md" for lang in config["languages"])
+    localized_suffixes = tuple(f".{locale['code']}.md" for locale in _locales() if not locale.get("is_default"))
     for lang in glossary:
         localized_strings: list[str] = []
         if lang == "en":
@@ -381,14 +415,13 @@ def test_closures_render_without_object_literal_across_all_pools(built_site: Pat
 
 def test_pool_meta_dates_render_in_human_format(built_site: Path) -> None:
     html = _read(built_site, "balboa-pool")
-    assert "SCHEDULE EFFECTIVE FROM MAR 17, 2026 TO JUN 6, 2026" in html
+    effective_copy = "SCHEDULE EFFECTIVE FROM JUN 9, 2026 TO AUG 15, 2026"
+    assert effective_copy in html
     assert "SOURCE OFFICIAL SITE" in html
     assert "REVIEWED" not in html
     assert "PDF REVIEWED" not in html
     assert "LAST VERIFIED" not in html
-    assert html.index("recently reopened after a $9M renovation") < html.index(
-        "SCHEDULE EFFECTIVE FROM MAR 17, 2026 TO JUN 6, 2026"
-    )
+    assert html.index("recently reopened after a $9M renovation") < html.index(effective_copy)
 
 
 def test_homepage_omits_trust_column(built_site: Path) -> None:
@@ -650,12 +683,18 @@ def test_robots_and_sitemap_are_search_console_ready(built_site: Path) -> None:
     assert "<loc>https://swimfrancisco.com/</loc>" in sitemap
     assert "<loc>https://swimfrancisco.com/map/</loc>" in sitemap
     assert "<loc>https://swimfrancisco.com/spots/aquatic-park/</loc>" in sitemap
-    assert '<xhtml:link rel="alternate" hreflang="zh-Hant" href="https://swimfrancisco.com/zh-Hant/" />' in sitemap
-    assert '<xhtml:link rel="alternate" hreflang="fi" href="https://swimfrancisco.com/fi/" />' in sitemap
-    assert '<xhtml:link rel="alternate" hreflang="x-default" href="https://swimfrancisco.com/" />' in sitemap
-    assert '<xhtml:link rel="alternate" hreflang="es" href="https://swimfrancisco.com/es/spots/aquatic-park/" />' in sitemap
-    assert '<xhtml:link rel="alternate" hreflang="fi" href="https://swimfrancisco.com/fi/spots/aquatic-park/" />' in sitemap
-    assert '<xhtml:link rel="alternate" hreflang="x-default" href="https://swimfrancisco.com/spots/aquatic-park/" />' in sitemap
+    for canonical_path in ("/", "/spots/aquatic-park/"):
+        for locale in _locales():
+            code = str(locale["code"])
+            path = _localized_url_path(locale, canonical_path)
+            assert (
+                f'<xhtml:link rel="alternate" hreflang="{code}" href="https://swimfrancisco.com{path}" />'
+                in sitemap
+            )
+        assert (
+            f'<xhtml:link rel="alternate" hreflang="x-default" href="https://swimfrancisco.com{canonical_path}" />'
+            in sitemap
+        )
     assert "https://swimfrancisco.com/field-notes/" not in sitemap
 
 

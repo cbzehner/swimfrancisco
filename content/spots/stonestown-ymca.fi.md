@@ -4,9 +4,9 @@ slug = "stonestown-ymca"
 
 [extra]
 localized_from = "stonestown-ymca"
-description_short = "Lounaispuolen YMCA-allasvaihtoehto lähellä Stonestownia ja SF Statea."
+access_notes = [ "Vahvista nykyinen allasaikataulu toimipisteestä; YMCA-sivut erottavat ratauinnin virkistys- ja perheuintivarauksista." ]
 access_summary = "Stonestown Family YMCA on jäsenyyspohjainen YMCA-toimipiste, jossa on ratauintia ja allastoimintaa."
-access_notes = ["Vahvista nykyinen allasaikataulu toimipisteestä; YMCA-sivut erottavat ratauinnin virkistys- ja perheuintivarauksista."]
+description_short = "Lounaispuolen YMCA-allasvaihtoehto lähellä Stonestownia ja SF Statea."
 
 [[extra.pricing]]
 label = "YMCA-jäsen"

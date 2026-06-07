@@ -4,9 +4,9 @@ slug = "presidio-ymca-letterman"
 
 [extra]
 localized_from = "presidio-ymca-letterman"
-description_short = "Piscina detrás del complejo Letterman en el Presidio, fuerte opción de membresía para carrileros del norte."
+access_notes = [ "La ayuda financiera y las opciones de membresía de YMCA pueden cambiar el precio efectivo; verifica directamente con YMCA of Greater San Francisco." ]
 access_summary = "Letterman Pool forma parte de Presidio Community YMCA. La página oficial de YMCA lista una piscina de 25 yardas y dirige a los nadadores al horario de piscina en línea."
-access_notes = ["La ayuda financiera y las opciones de membresía de YMCA pueden cambiar el precio efectivo; verifica directamente con YMCA of Greater San Francisco."]
+description_short = "Piscina detrás del complejo Letterman en el Presidio, fuerte opción de membresía para carrileros del norte."
 
 [[extra.pricing]]
 label = "Miembro YMCA"

@@ -4,9 +4,9 @@ slug = "presidio-ymca-letterman"
 
 [extra]
 localized_from = "presidio-ymca-letterman"
-description_short = "Letterman-kompleksin takana Presidiossa sijaitseva allas, vahva jäsenyysvaihtoehto kaupungin pohjoispuolen ratauintiin."
+access_notes = [ "YMCA:n taloudellinen tuki ja jäsenyysvaihtoehdot voivat muuttaa todellista hintaa; varmista suoraan YMCA of Greater San Franciscolta." ]
 access_summary = "Letterman Pool on osa Presidio Community YMCA:ta. Virallinen YMCA-sivu listaa 25 jaardin altaan ja ohjaa uimareita verkossa olevaan allasaikatauluun."
-access_notes = ["YMCA:n taloudellinen tuki ja jäsenyysvaihtoehdot voivat muuttaa todellista hintaa; varmista suoraan YMCA of Greater San Franciscolta."]
+description_short = "Letterman-kompleksin takana Presidiossa sijaitseva allas, vahva jäsenyysvaihtoehto kaupungin pohjoispuolen ratauintiin."
 
 [[extra.pricing]]
 label = "YMCA-jäsen"

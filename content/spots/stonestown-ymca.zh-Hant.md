@@ -4,9 +4,9 @@ slug = "stonestown-ymca"
 
 [extra]
 localized_from = "stonestown-ymca"
-description_short = "城市西南側 YMCA 泳池選項，靠近 Stonestown 和 SF State。"
+access_notes = [ "請向分館確認目前泳池時間表；YMCA 頁面會區分泳道游泳與休閒／家庭游泳預約。" ]
 access_summary = "Stonestown Family YMCA 是會員制 YMCA 分館，設有泳道游泳和泳池活動。"
-access_notes = ["請向分館確認目前泳池時間表；YMCA 頁面會區分泳道游泳與休閒／家庭游泳預約。"]
+description_short = "城市西南側 YMCA 泳池選項，靠近 Stonestown 和 SF State。"
 
 [[extra.pricing]]
 label = "YMCA 會員"
