@@ -19,10 +19,10 @@
   --ink:     #1a1812;
   --ink-2:   #36322a;
   --muted:   #5a5446;
-  --rule:    #c8b88e;
+  --rule:    #8a7a52; /* 3.40:1 on paper — meets WCAG 1.4.11 (AA 3:1) for structural borders */
 
   /* riso inks */
-  --red:     #b73624;
+  --red:     #a8311f; /* 5.43:1 on paper, 5.14:1 on paper-2 — AA headroom over the 4.5:1 floor */
   --red-soft:#f0c6b9;
   --teal:    #0e4452;
   --teal-soft:#c2d6db;
@@ -260,6 +260,9 @@ h1, h2, h3 {
 }
 .bulletin-hero .deck .em {
   background: var(--ochre);
+  /* Ink underline so the "dynamic value" cue survives forced-colors mode
+     and grayscale print, where the ochre fill (2.00:1 on paper) is lost. */
+  box-shadow: inset 0 -2px 0 var(--ink);
   padding: 0 4px;
   color: var(--ink);
 }
@@ -595,7 +598,7 @@ table.board th:nth-child(4) { width: 12%; }
 table.board th:nth-child(5) { width: 21%; }
 table.board th:not(:last-child),
 table.board td:not(:last-child) {
-  border-right: 1px solid rgba(26, 24, 18, 0.22);
+  border-right: 1px solid rgba(26, 24, 18, 0.55); /* 3.70:1 on paper — meets 1.4.11 */
 }
 table.board th {
   text-align: left;
