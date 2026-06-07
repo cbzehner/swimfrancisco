@@ -106,15 +106,15 @@ def validate(payload: dict, *, prior_sessions_count: int | None = None) -> Valid
                 message=f"closure #{index} cannot have start_time/end_time on a multi-day range; expand to one entry per day",
             ))
 
-    schedule_effective = payload.get("schedule_effective")
+    effective_start = payload.get("effective_start")
     try:
-        if not isinstance(schedule_effective, str):
-            raise ValueError("schedule_effective must be a string")
-        date.fromisoformat(schedule_effective)
+        if not isinstance(effective_start, str):
+            raise ValueError("effective_start must be a string")
+        date.fromisoformat(effective_start)
     except ValueError:
         violations.append(Violation(
             code="invalid_schedule_effective_date",
-            message="schedule_effective is not a valid ISO date",
+            message="effective_start is not a valid ISO date",
         ))
 
     return ValidationResult(

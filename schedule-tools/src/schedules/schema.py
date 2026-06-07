@@ -1,7 +1,7 @@
 EXTRACTION_SCHEMA = {
     "type": "object",
     "additionalProperties": False,
-    "required": ["sessions", "closures", "schedule_effective", "schedule_basis"],
+    "required": ["sessions", "closures", "effective_start", "schedule_basis"],
     "properties": {
         "sessions": {
             "type": "array",
@@ -150,11 +150,11 @@ EXTRACTION_SCHEMA = {
                 },
             },
         },
-        "schedule_effective": {
+        "effective_start": {
             "type": "string",
             "pattern": r"^\d{4}-\d{2}-\d{2}$",
         },
-        "schedule_effective_end": {
+        "effective_end": {
             "anyOf": [
                 {"type": "string", "pattern": r"^\d{4}-\d{2}-\d{2}$"},
                 {"type": "null"},

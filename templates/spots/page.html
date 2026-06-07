@@ -254,7 +254,7 @@
        (merge.py's `_promote_upcoming_schedule` is a different concept: it
        writes upcoming over current in the frontmatter, and uses a stricter
        predicate — only after the upcoming window has actually begun.) #}
-    {% set current_end = extra.schedule_effective_end | default(value="") %}
+    {% set current_end = extra.effective_end | default(value="") %}
     {% set active_extra = extra %}
     {% if extra.upcoming_schedule and current_end %}
       {% set current_end_i = current_end | replace(from="-", to="") | int %}
@@ -264,8 +264,8 @@
     {% set access_hours = active_extra.access_hours | default(value=[]) %}
     {% set access_exceptions = active_extra.access_exceptions | default(value=[]) %}
     {% set closures = active_extra.closures | default(value=[]) %}
-    {% set effective_start = active_extra.schedule_effective | default(value="") %}
-    {% set effective_end = active_extra.schedule_effective_end | default(value="") %}
+    {% set effective_start = active_extra.effective_start | default(value="") %}
+    {% set effective_end = active_extra.effective_end | default(value="") %}
     {% set schedule_basis = active_extra.schedule_basis | default(value="") %}
     {% set effective_start_i = 0 %}
     {% set effective_end_i = 99991231 %}
@@ -530,13 +530,13 @@
           {{ page.content | safe }}
         </section>
       {% endif %}
-      {% if extra.schedule_effective %}
+      {% if extra.effective_start %}
         <footer class="meta">
           <p class="meta-source">
             {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">{{ trans(key='source_official_site', lang=lang) }}</a>{% else %}{{ trans(key='source_official_site', lang=lang) }}{% endif %}
           </p>
           <p class="meta-effective">
-            {{ trans(key='schedule_effective_from', lang=lang) }} {{ self::format_iso_date(iso=active_extra.schedule_effective, active_lang=lang) }}{% if active_extra.schedule_effective_end %} {{ trans(key='to', lang=lang) }} {{ self::format_iso_date(iso=active_extra.schedule_effective_end, active_lang=lang) }}{% endif %}
+            {{ trans(key='schedule_effective_from', lang=lang) }} {{ self::format_iso_date(iso=active_extra.effective_start, active_lang=lang) }}{% if active_extra.effective_end %} {{ trans(key='to', lang=lang) }} {{ self::format_iso_date(iso=active_extra.effective_end, active_lang=lang) }}{% endif %}
           </p>
         </footer>
       {% endif %}

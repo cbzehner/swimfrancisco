@@ -430,7 +430,7 @@ export function findNextDropIn(schedule, now, allowedTypes = null) {
 // uniformly with explicit closures like Memorial Day or a repair shutdown.
 //
 // PRE_SEASON range:  far past → schedule_effective_start - 1
-// POST_SEASON range: schedule_effective_end + 1 → far future
+// POST_SEASON range: effective_end + 1 → far future
 //
 // Synthetic closures carry a `kind` so callers that want to distinguish
 // data-driven gaps from explicit closures still can.

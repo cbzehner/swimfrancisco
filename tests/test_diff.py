@@ -9,14 +9,14 @@ def test_compare_payloads_flags_pool_only_session_disagreement():
             {"day": "tuesday", "type": "lap_swim", "start": "07:30", "end": "08:30", "pool": "shallow"},
         ],
         "closures": [],
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
     }
     secondary = {
         "sessions": [
             {"day": "tuesday", "type": "lap_swim", "start": "07:30", "end": "08:30", "pool": "deep"},
         ],
         "closures": [],
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
     }
     flags = compare_payloads("gemini", primary, "anthropic", secondary)
     kinds = {flag.kind for flag in flags}
@@ -33,14 +33,14 @@ def test_compare_payloads_flags_notes_only_session_disagreement():
             {"day": "friday", "type": "family_swim", "start": "15:30", "end": "17:00", "notes": "closed 3rd thursday"},
         ],
         "closures": [],
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
     }
     secondary = {
         "sessions": [
             {"day": "friday", "type": "family_swim", "start": "15:30", "end": "17:00"},
         ],
         "closures": [],
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
     }
     flags = compare_payloads("gemini", primary, "anthropic", secondary)
     kinds = {flag.kind for flag in flags}
@@ -51,7 +51,7 @@ def test_compare_payloads_flags_provider_differences():
     primary = {
         "sessions": [{"day": "tuesday", "type": "lap_swim", "start": "07:30", "end": "08:30"}],
         "closures": [],
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
     }
     secondary = {
         "sessions": [
@@ -59,7 +59,7 @@ def test_compare_payloads_flags_provider_differences():
             {"day": "thursday", "type": "senior_swim", "start": "15:30", "end": "18:00"},
         ],
         "closures": [{"start": "2026-06-06", "end": "2026-06-06", "reason": "training"}],
-        "schedule_effective": "2026-03-18",
+        "effective_start": "2026-03-18",
     }
     flags = compare_payloads("gemini", primary, "anthropic", secondary)
     kinds = {flag.kind for flag in flags}
@@ -81,7 +81,7 @@ def test_compare_payloads_flags_timed_closure_disagreement():
                 "end_time": "15:00",
             }
         ],
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
     }
     secondary = {
         "sessions": [],
@@ -92,7 +92,7 @@ def test_compare_payloads_flags_timed_closure_disagreement():
                 "reason": "Staff training",
             }
         ],
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
     }
 
     flags = compare_payloads("gemini", primary, "anthropic", secondary)

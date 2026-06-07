@@ -126,7 +126,7 @@ def _build_unchanged(entry: PoolEntry, fetch_result: FetchResult, reviewed_file:
         page_count=fetch_result.page_count,
         sessions_count=len(payload.get("sessions") or []),
         closures_count=len(payload.get("closures") or []),
-        schedule_effective=str(payload.get("schedule_effective") or ""),
+        effective_start=str(payload.get("effective_start") or ""),
         schedule_basis=payload.get("schedule_basis"),
         review_notes=[],
         artifact_paths={"reviewed-snapshot": str(reviewed_file)},
@@ -275,7 +275,7 @@ def _process_entry(
             sessions_count=validation.stats["sessions"],
             prior_sessions_count=len(prior_snapshot["sessions"]),
             closures_count=validation.stats["closures"],
-            schedule_effective=payload.get("schedule_effective"),
+            effective_start=payload.get("effective_start"),
             schedule_basis=payload.get("schedule_basis"),
             cost_estimate=cost_estimate,
             catastrophic=validation.catastrophic,
@@ -289,7 +289,7 @@ def _process_entry(
             error=str(exc),
             prior_sessions_count=len(prior_snapshot["sessions"]),
             prior_closures_count=len(prior_snapshot["closures"]),
-            prior_schedule_effective=prior_snapshot["schedule_effective"],
+            prior_schedule_effective=prior_snapshot["effective_start"],
         )
 
 
@@ -349,7 +349,7 @@ def _process_direct_entry(entry: PoolEntry) -> PoolResult:
             sessions_count=validation.stats["sessions"],
             prior_sessions_count=len(prior_snapshot["sessions"]),
             closures_count=validation.stats["closures"],
-            schedule_effective=payload.get("schedule_effective"),
+            effective_start=payload.get("effective_start"),
             schedule_basis=payload.get("schedule_basis"),
             cost_estimate="deterministic",
             catastrophic=validation.catastrophic,
@@ -363,7 +363,7 @@ def _process_direct_entry(entry: PoolEntry) -> PoolResult:
             error=str(exc),
             prior_sessions_count=len(prior_snapshot["sessions"]),
             prior_closures_count=len(prior_snapshot["closures"]),
-            prior_schedule_effective=prior_snapshot["schedule_effective"],
+            prior_schedule_effective=prior_snapshot["effective_start"],
         )
 
 

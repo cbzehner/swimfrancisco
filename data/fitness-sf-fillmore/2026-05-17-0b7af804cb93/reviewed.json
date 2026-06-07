@@ -57,7 +57,7 @@
     ],
     "closures": [],
     "schedule_basis": "pool_hours",
-    "schedule_effective": "2026-05-17",
+    "effective_start": "2026-05-17",
     "sessions": []
   }
 }

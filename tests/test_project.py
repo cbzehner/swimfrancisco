@@ -13,7 +13,7 @@ def _valid_envelope(slug: str, pdf_sha256: str) -> dict:
         "reviewed_at": "2026-04-18",
         "source_pdf_url": "https://example.com/schedule.pdf",
         "payload": {
-            "schedule_effective": "2026-03-17",
+            "effective_start": "2026-03-17",
             "sessions": [
                 {"day": d, "type": "lap_swim", "start": "07:00", "end": "08:00"}
                 for d in ("monday", "tuesday", "wednesday", "thursday", "friday")
@@ -47,7 +47,7 @@ def test_project_writes_sessions_to_content_md(tmp_path):
     project(slug="hamilton-pool", reviewed_json_path=reviewed, content_spots_dir=content)
 
     rendered = (content / "hamilton-pool.md").read_text()
-    assert "schedule_effective = \"2026-03-17\"" in rendered
+    assert "effective_start = \"2026-03-17\"" in rendered
     assert "last_verified_at = \"2026-04-18\"" in rendered
     assert rendered.count("[[extra.sessions]]") == 5
 
@@ -56,22 +56,22 @@ def test_project_queues_future_schedule_when_current_schedule_has_not_ended(tmp_
     data = tmp_path / "data"
     content = tmp_path / "content" / "spots"
     current = _valid_envelope("hamilton-pool", "a" * 64)
-    current["payload"]["schedule_effective_end"] = "2026-06-06"
+    current["payload"]["effective_end"] = "2026-06-06"
     reviewed_current = _write_reviewed_json(data, "hamilton-pool", "a" * 64, current)
     _seed_content_md(content, "hamilton-pool")
     project(slug="hamilton-pool", reviewed_json_path=reviewed_current, content_spots_dir=content, as_of_date="2026-06-06")
 
     future = _valid_envelope("hamilton-pool", "b" * 64)
     future["reviewed_at"] = "2026-06-06"
-    future["payload"]["schedule_effective"] = "2026-06-09"
-    future["payload"]["schedule_effective_end"] = "2026-08-15"
+    future["payload"]["effective_start"] = "2026-06-09"
+    future["payload"]["effective_end"] = "2026-08-15"
     future["payload"]["sessions"][0]["start"] = "06:30"
     reviewed_future = _write_reviewed_json(data, "hamilton-pool", "b" * 64, future)
     project(slug="hamilton-pool", reviewed_json_path=reviewed_future, content_spots_dir=content, as_of_date="2026-06-06")
 
     rendered = (content / "hamilton-pool.md").read_text()
-    assert "schedule_effective = \"2026-03-17\"" in rendered
-    assert "schedule_effective_end = \"2026-06-06\"" in rendered
+    assert "effective_start = \"2026-03-17\"" in rendered
+    assert "effective_end = \"2026-06-06\"" in rendered
     assert "[extra.upcoming_schedule]" in rendered
     assert "last_verified_at = \"2026-06-06\"" in rendered
     assert "[[extra.upcoming_schedule.sessions]]" in rendered
@@ -82,23 +82,23 @@ def test_project_promotes_queued_schedule_on_its_start_date(tmp_path):
     data = tmp_path / "data"
     content = tmp_path / "content" / "spots"
     current = _valid_envelope("hamilton-pool", "a" * 64)
-    current["payload"]["schedule_effective_end"] = "2026-06-06"
+    current["payload"]["effective_end"] = "2026-06-06"
     reviewed_current = _write_reviewed_json(data, "hamilton-pool", "a" * 64, current)
     _seed_content_md(content, "hamilton-pool")
     project(slug="hamilton-pool", reviewed_json_path=reviewed_current, content_spots_dir=content, as_of_date="2026-06-06")
 
     future = _valid_envelope("hamilton-pool", "b" * 64)
     future["reviewed_at"] = "2026-06-06"
-    future["payload"]["schedule_effective"] = "2026-06-09"
-    future["payload"]["schedule_effective_end"] = "2026-08-15"
+    future["payload"]["effective_start"] = "2026-06-09"
+    future["payload"]["effective_end"] = "2026-08-15"
     future["payload"]["sessions"][0]["start"] = "06:30"
     reviewed_future = _write_reviewed_json(data, "hamilton-pool", "b" * 64, future)
     project(slug="hamilton-pool", reviewed_json_path=reviewed_future, content_spots_dir=content, as_of_date="2026-06-06")
     project(slug="hamilton-pool", reviewed_json_path=reviewed_future, content_spots_dir=content, as_of_date="2026-06-09")
 
     rendered = (content / "hamilton-pool.md").read_text()
-    assert "schedule_effective = \"2026-06-09\"" in rendered
-    assert "schedule_effective_end = \"2026-08-15\"" in rendered
+    assert "effective_start = \"2026-06-09\"" in rendered
+    assert "effective_end = \"2026-08-15\"" in rendered
     assert "[extra.upcoming_schedule]" not in rendered
     assert "start = \"06:30\"" in rendered
 
@@ -107,32 +107,32 @@ def test_project_preserves_next_queued_schedule_when_later_schedule_arrives_earl
     data = tmp_path / "data"
     content = tmp_path / "content" / "spots"
     current = _valid_envelope("hamilton-pool", "a" * 64)
-    current["payload"]["schedule_effective_end"] = "2026-06-06"
+    current["payload"]["effective_end"] = "2026-06-06"
     reviewed_current = _write_reviewed_json(data, "hamilton-pool", "a" * 64, current)
     _seed_content_md(content, "hamilton-pool")
     project(slug="hamilton-pool", reviewed_json_path=reviewed_current, content_spots_dir=content, as_of_date="2026-06-06")
 
     summer = _valid_envelope("hamilton-pool", "b" * 64)
     summer["reviewed_at"] = "2026-06-06"
-    summer["payload"]["schedule_effective"] = "2026-06-09"
-    summer["payload"]["schedule_effective_end"] = "2026-08-15"
+    summer["payload"]["effective_start"] = "2026-06-09"
+    summer["payload"]["effective_end"] = "2026-08-15"
     summer["payload"]["sessions"][0]["start"] = "06:30"
     reviewed_summer = _write_reviewed_json(data, "hamilton-pool", "b" * 64, summer)
     project(slug="hamilton-pool", reviewed_json_path=reviewed_summer, content_spots_dir=content, as_of_date="2026-06-06")
 
     fall = _valid_envelope("hamilton-pool", "c" * 64)
     fall["reviewed_at"] = "2026-06-07"
-    fall["payload"]["schedule_effective"] = "2026-08-18"
-    fall["payload"]["schedule_effective_end"] = "2026-11-15"
+    fall["payload"]["effective_start"] = "2026-08-18"
+    fall["payload"]["effective_end"] = "2026-11-15"
     fall["payload"]["sessions"][0]["start"] = "07:30"
     reviewed_fall = _write_reviewed_json(data, "hamilton-pool", "c" * 64, fall)
     project(slug="hamilton-pool", reviewed_json_path=reviewed_fall, content_spots_dir=content, as_of_date="2026-06-07")
 
     rendered = (content / "hamilton-pool.md").read_text()
-    assert "schedule_effective = \"2026-03-17\"" in rendered
+    assert "effective_start = \"2026-03-17\"" in rendered
     assert "[extra.upcoming_schedule]" in rendered
-    assert "schedule_effective = \"2026-06-09\"" in rendered
-    assert "schedule_effective_end = \"2026-08-15\"" in rendered
+    assert "effective_start = \"2026-06-09\"" in rendered
+    assert "effective_end = \"2026-08-15\"" in rendered
     assert "start = \"06:30\"" in rendered
     assert "2026-08-18" not in rendered
     assert "2026-11-15" not in rendered
@@ -143,33 +143,33 @@ def test_project_promotes_active_queued_schedule_before_queueing_later_schedule(
     data = tmp_path / "data"
     content = tmp_path / "content" / "spots"
     current = _valid_envelope("hamilton-pool", "a" * 64)
-    current["payload"]["schedule_effective_end"] = "2026-06-06"
+    current["payload"]["effective_end"] = "2026-06-06"
     reviewed_current = _write_reviewed_json(data, "hamilton-pool", "a" * 64, current)
     _seed_content_md(content, "hamilton-pool")
     project(slug="hamilton-pool", reviewed_json_path=reviewed_current, content_spots_dir=content, as_of_date="2026-06-06")
 
     summer = _valid_envelope("hamilton-pool", "b" * 64)
     summer["reviewed_at"] = "2026-06-06"
-    summer["payload"]["schedule_effective"] = "2026-06-09"
-    summer["payload"]["schedule_effective_end"] = "2026-08-15"
+    summer["payload"]["effective_start"] = "2026-06-09"
+    summer["payload"]["effective_end"] = "2026-08-15"
     summer["payload"]["sessions"][0]["start"] = "06:30"
     reviewed_summer = _write_reviewed_json(data, "hamilton-pool", "b" * 64, summer)
     project(slug="hamilton-pool", reviewed_json_path=reviewed_summer, content_spots_dir=content, as_of_date="2026-06-06")
 
     fall = _valid_envelope("hamilton-pool", "c" * 64)
     fall["reviewed_at"] = "2026-08-01"
-    fall["payload"]["schedule_effective"] = "2026-08-18"
-    fall["payload"]["schedule_effective_end"] = "2026-11-15"
+    fall["payload"]["effective_start"] = "2026-08-18"
+    fall["payload"]["effective_end"] = "2026-11-15"
     fall["payload"]["sessions"][0]["start"] = "07:30"
     reviewed_fall = _write_reviewed_json(data, "hamilton-pool", "c" * 64, fall)
     project(slug="hamilton-pool", reviewed_json_path=reviewed_fall, content_spots_dir=content, as_of_date="2026-08-01")
 
     rendered = (content / "hamilton-pool.md").read_text()
-    assert "schedule_effective = \"2026-06-09\"" in rendered
-    assert "schedule_effective_end = \"2026-08-15\"" in rendered
+    assert "effective_start = \"2026-06-09\"" in rendered
+    assert "effective_end = \"2026-08-15\"" in rendered
     assert "[extra.upcoming_schedule]" in rendered
-    assert "schedule_effective = \"2026-08-18\"" in rendered
-    assert "schedule_effective_end = \"2026-11-15\"" in rendered
+    assert "effective_start = \"2026-08-18\"" in rendered
+    assert "effective_end = \"2026-11-15\"" in rendered
 
 
 def test_project_preserves_timed_closures(tmp_path):

@@ -44,7 +44,7 @@ def _seed_legacy_tree(data_root: Path) -> None:
         "pdf_text_sha256": "deadbeef",
         "extracted_at": "2026-04-18T00:00:00+00:00",
         "payload": {
-            "schedule_effective": "2026-03-17",
+            "effective_start": "2026-03-17",
             "sessions": [{"day": "monday", "type": "lap_swim", "start": "07:00", "end": "08:00"}],
             "closures": [],
         },
@@ -55,7 +55,7 @@ def _seed_legacy_tree(data_root: Path) -> None:
         "model": "claude",
         "pdf_url": "https://example.com/x.pdf",
         "pdf_sha256": PDF_SHA,
-        "payload": {"schedule_effective": "2026-03-17", "sessions": [], "closures": []},
+        "payload": {"effective_start": "2026-03-17", "sessions": [], "closures": []},
     }))
 
     # Reviewed snapshot (with legacy fields)
@@ -70,7 +70,7 @@ def _seed_legacy_tree(data_root: Path) -> None:
         "reviewed_by": "Chris <c@example.com>",
         "reviewed_against": {"gemini": "sha"},
         "payload": {
-            "schedule_effective": "2026-03-17",
+            "effective_start": "2026-03-17",
             "sessions": [{"day": "monday", "type": "lap_swim", "start": "07:00", "end": "08:00"}],
             "closures": [],
         },

@@ -12,12 +12,12 @@ lng = -122.4757
 website = "https://sfrecpark.org/facilities/facility/details/Sava-Pool-220"
 cost = "paid"
 setpoint_label = "80–82°F"
-schedule_effective = "2026-01-06"
+effective_start = "2026-01-06"
 last_verified_at = "2026-06-06"
 access_mode = "public"
 payment_model = "session"
 schedule_basis = "temporarily_closed"
-schedule_effective_end = "2026-06-08"
+effective_end = "2026-06-08"
 sessions = []
 
 [[extra.closures]]
@@ -26,9 +26,9 @@ end = "2026-06-08"
 reason = "Closed for repairs; anticipated reopening summer 2026"
 
 [extra.upcoming_schedule]
-schedule_effective = "2026-06-09"
+effective_start = "2026-06-09"
 schedule_basis = "swim_schedule"
-schedule_effective_end = "2026-06-27"
+effective_end = "2026-06-27"
 last_verified_at = "2026-06-06"
 
 [[extra.upcoming_schedule.sessions]]

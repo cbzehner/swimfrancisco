@@ -26,7 +26,7 @@ def _valid_envelope() -> dict:
         "reviewed_at": "2026-04-18",
         "source_pdf_url": "https://example.com/schedule.pdf",
         "payload": {
-            "schedule_effective": "2026-03-17",
+            "effective_start": "2026-03-17",
             "schedule_basis": "swim_schedule",
             "sessions": [
                 {"day": d, "type": "lap_swim", "start": "07:00", "end": "08:00"}

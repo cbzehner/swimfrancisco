@@ -27,7 +27,7 @@ def _seed_provider_json(review_dir: Path) -> None:
         "model": "model",
         "source_pdf_url": "https://example.com/x.pdf",
         "pdf_sha256": PDF_SHA,
-        "payload": {"schedule_effective": "2026-03-17", "sessions": [], "closures": []},
+        "payload": {"effective_start": "2026-03-17", "sessions": [], "closures": []},
     }))
 
 

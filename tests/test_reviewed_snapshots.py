@@ -20,7 +20,7 @@ def _valid_envelope(slug, pdf_sha256):
         "reviewed_at": "2026-04-18",
         "source_pdf_url": "https://example.com/schedule.pdf",
         "payload": {
-            "schedule_effective": "2026-03-17",
+            "effective_start": "2026-03-17",
             "sessions": [
                 {"day": "monday", "type": "lap_swim", "start": "07:00", "end": "08:00"}
             ],
@@ -54,7 +54,7 @@ from schedules.reviewed_snapshots import canonicalize_payload
 
 def test_canonicalize_payload_sorts_sessions():
     payload = {
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
         "sessions": [
             {"day": "tuesday", "type": "lap_swim", "start": "12:30", "end": "15:00"},
             {"day": "monday", "type": "lap_swim", "start": "07:30", "end": "08:30"},
@@ -67,7 +67,7 @@ def test_canonicalize_payload_sorts_sessions():
 
 def test_canonicalize_payload_strips_session_evidence_and_notes():
     payload = {
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
         "sessions": [
             {
                 "day": "monday",
@@ -87,7 +87,7 @@ def test_canonicalize_payload_strips_session_evidence_and_notes():
 
 def test_canonicalize_payload_preserves_pool_field():
     payload = {
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
         "sessions": [
             {"day": "monday", "type": "lap_swim", "start": "07:30", "end": "08:30", "pool": "deep"}
         ],
@@ -99,7 +99,7 @@ def test_canonicalize_payload_preserves_pool_field():
 
 def test_canonicalize_payload_preserves_timed_closure_fields():
     payload = {
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
         "sessions": [],
         "closures": [
             {
@@ -123,8 +123,8 @@ def test_canonicalize_payload_preserves_timed_closure_fields():
 
 def test_canonicalize_payload_identical_on_equivalent_inputs():
     a = {
-        "schedule_effective": "2026-03-17",
-        "schedule_effective_end": None,
+        "effective_start": "2026-03-17",
+        "effective_end": None,
         "sessions": [
             {"day": "monday", "type": "lap_swim", "start": "07:30", "end": "08:30",
              "evidence": "LAP 7:30-8:30"},
@@ -143,14 +143,14 @@ def test_canonicalize_payload_identical_on_equivalent_inputs():
         "closures": [
             {"start": "2026-05-25", "end": "2026-05-25", "reason": "Holiday Closure"},
         ],
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
     }
     assert canonicalize_payload(a) == canonicalize_payload(b)
 
 
 def test_reviewed_snapshot_payload_passes_validate():
     payload = {
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
         "sessions": [
             {"day": "monday", "type": "lap_swim", "start": "07:30", "end": "08:30"},
             {"day": "tuesday", "type": "lap_swim", "start": "07:30", "end": "08:30"},

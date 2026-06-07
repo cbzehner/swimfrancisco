@@ -15,8 +15,8 @@
   {%- set access_exceptions_json = s.access_exceptions | default(value=[]) | json_encode -%}
   {%- set closures_json = s.closures | default(value=[]) | json_encode -%}
   {%- set schedule_basis_json = s.schedule_basis | default(value="unknown") | json_encode -%}
-  {%- set effective_start_json = s.schedule_effective | default(value="") | json_encode -%}
-  {%- set effective_end_json = s.schedule_effective_end | default(value="") | json_encode -%}
+  {%- set effective_start_json = s.effective_start | default(value="") | json_encode -%}
+  {%- set effective_end_json = s.effective_end | default(value="") | json_encode -%}
   {{- '"sessions":' ~ sessions_json ~ ',"access_hours":' ~ access_hours_json ~ ',"access_exceptions":' ~ access_exceptions_json ~ ',"closures":' ~ closures_json ~ ',"schedule_basis":' ~ schedule_basis_json ~ ',"effective_start":' ~ effective_start_json ~ ',"effective_end":' ~ effective_end_json -}}
 {%- endmacro schedule_fields %}
 

@@ -33,7 +33,7 @@ def _unchanged(slug: str) -> Unchanged:
         page_count=1,
         sessions_count=0,
         closures_count=0,
-        schedule_effective="2026-01-01",
+        effective_start="2026-01-01",
     )
 
 
@@ -50,7 +50,7 @@ def _proposed(slug: str) -> Extracted:
         sessions_count=5,
         prior_sessions_count=5,
         closures_count=0,
-        schedule_effective="2026-01-01",
+        effective_start="2026-01-01",
         cost_estimate="$0.01",
     )
 

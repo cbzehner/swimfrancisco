@@ -12,9 +12,9 @@ lng = -122.434
 website = "https://sfrecpark.org/facilities/facility/details/Hamilton-Pool-215"
 cost = "paid"
 setpoint_label = "80–82°F"
-schedule_effective = "2026-03-17"
+effective_start = "2026-03-17"
 last_verified_at = "2026-04-19"
-schedule_effective_end = "2026-06-06"
+effective_end = "2026-06-06"
 access_mode = "public"
 payment_model = "session"
 schedule_basis = "swim_schedule"
@@ -181,9 +181,9 @@ start_time = "08:30"
 end_time = "12:30"
 
 [extra.upcoming_schedule]
-schedule_effective = "2026-06-09"
+effective_start = "2026-06-09"
 schedule_basis = "swim_schedule"
-schedule_effective_end = "2026-08-15"
+effective_end = "2026-08-15"
 last_verified_at = "2026-06-06"
 
 [[extra.upcoming_schedule.sessions]]

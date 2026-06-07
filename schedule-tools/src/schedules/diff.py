@@ -62,14 +62,14 @@ def compare_payloads(
             )
         )
 
-    primary_effective = primary_payload.get("schedule_effective")
-    secondary_effective = secondary_payload.get("schedule_effective")
+    primary_effective = primary_payload.get("effective_start")
+    secondary_effective = secondary_payload.get("effective_start")
     if primary_effective != secondary_effective:
         notes.append(
             ReviewNote(
                 kind="provider_schedule_effective_diff",
                 message=(
-                    f"{primary_provider} and {secondary_provider} disagree on schedule_effective "
+                    f"{primary_provider} and {secondary_provider} disagree on effective_start "
                     f"({primary_effective} vs {secondary_effective})"
                 ),
                 evidence={

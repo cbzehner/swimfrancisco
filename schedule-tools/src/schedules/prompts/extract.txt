@@ -28,8 +28,8 @@ Rules:
 - A closure that the PDF qualifies with a time range (e.g. "Closed 11:00 AM – 2:00 PM for staff training", "Pool closed every 3rd Thursday of the month from 11:00 AM – 3:00 PM", "In-Service Training: Pool Closed 9:00–1:00pm") is a PARTIAL-DAY closure. Encode it with `start_time` and `end_time` in 24-hour HH:MM, on a single-day entry (start == end). Do NOT collapse partial-day windows into all-day closures.
 - For a recurring partial-day closure ("every 3rd Thursday of the month"), expand to one closure entry per occurrence within the schedule's effective window. For example, if the schedule covers May 12 – Jun 30 and the cancellation recurs on the 3rd Thursday, emit closures for 2026-05-21 and 2026-06-18, each with the partial-day time range.
 - A closure that has no qualifying time language (e.g. "Memorial Day", "Closed for repairs through Sep 21") is all-day; omit start_time/end_time.
-- schedule_effective is the schedule start date.
-- If the PDF explicitly lists an end date for the schedule period, set schedule_effective_end to that ISO date. Otherwise return null.
+- effective_start is the schedule start date.
+- If the PDF explicitly lists an end date for the schedule period, set effective_end to that ISO date. Otherwise return null.
 - Set schedule_basis to `swim_schedule`. SF Recreation and Parks PDFs publish specific drop-in swim sessions, not merely facility hours.
 - closures.start and closures.end must be ISO dates (YYYY-MM-DD).
 - Preserve distinct sessions even if they share the same day or type.

@@ -23,8 +23,8 @@
         "end_time": "14:00"
       }
     ],
-    "schedule_effective": "2026-05-12",
-    "schedule_effective_end": "2026-06-06",
+    "effective_start": "2026-05-12",
+    "effective_end": "2026-06-06",
     "sessions": [
       {
         "day": "tuesday",

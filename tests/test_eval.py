@@ -23,7 +23,7 @@ def _write_review(
                 "reviewed_at": "2026-04-19",
                 "source_pdf_url": "https://example.com/x.pdf",
                 "payload": {
-                    "schedule_effective": "2026-04-21",
+                    "effective_start": "2026-04-21",
                     "sessions": truth_sessions,
                     "closures": [],
                 },

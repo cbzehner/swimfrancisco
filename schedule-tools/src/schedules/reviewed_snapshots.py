@@ -68,13 +68,13 @@ def canonicalize_payload(payload: dict) -> dict:
     access_exceptions.sort(key=lambda a: tuple(a.get(key, "") for key in _ACCESS_EXCEPTION_COMPARE_KEYS))
 
     canonical: dict = {
-        "schedule_effective": payload.get("schedule_effective"),
+        "effective_start": payload.get("effective_start"),
         "schedule_basis": payload.get("schedule_basis"),
         "sessions": sessions,
         "access_hours": access_hours,
         "access_exceptions": access_exceptions,
         "closures": closures,
     }
-    if "schedule_effective_end" in payload and payload["schedule_effective_end"] is not None:
-        canonical["schedule_effective_end"] = payload["schedule_effective_end"]
+    if "effective_end" in payload and payload["effective_end"] is not None:
+        canonical["effective_end"] = payload["effective_end"]
     return canonical

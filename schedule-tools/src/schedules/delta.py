@@ -46,13 +46,13 @@ def check_delta(extracted: dict, prior_snapshot: dict[str, Any]) -> list[ReviewN
             )
         )
 
-    prior_effective = prior_snapshot.get("schedule_effective")
-    new_effective = extracted.get("schedule_effective")
+    prior_effective = prior_snapshot.get("effective_start")
+    new_effective = extracted.get("effective_start")
     if isinstance(prior_effective, str) and isinstance(new_effective, str) and new_effective < prior_effective:
         notes.append(
             ReviewNote(
                 kind="delta_schedule_effective_regressed",
-                message=f"schedule_effective regressed ({prior_effective} -> {new_effective})",
+                message=f"effective_start regressed ({prior_effective} -> {new_effective})",
             )
         )
 

@@ -12,9 +12,9 @@ lng = -122.4132
 website = "https://sfrecpark.org/facilities/facility/details/North-Beach-Pool-218"
 cost = "paid"
 setpoint_label = "86°F warm / 76°F cool"
-schedule_effective = "2026-03-17"
+effective_start = "2026-03-17"
 last_verified_at = "2026-04-20"
-schedule_effective_end = "2026-06-06"
+effective_end = "2026-06-06"
 access_mode = "public"
 payment_model = "session"
 schedule_basis = "swim_schedule"
@@ -302,9 +302,9 @@ end = "2026-06-19"
 reason = "Holiday Closure"
 
 [extra.upcoming_schedule]
-schedule_effective = "2026-06-09"
+effective_start = "2026-06-09"
 schedule_basis = "swim_schedule"
-schedule_effective_end = "2026-08-15"
+effective_end = "2026-08-15"
 last_verified_at = "2026-06-06"
 
 [[extra.upcoming_schedule.sessions]]

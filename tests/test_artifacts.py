@@ -14,7 +14,7 @@ def _call_save(tmp_path, **overrides):
         pdf_sha256="a" * 64,
         prompt="extract schedule",
         schema={"type": "object"},
-        payload={"sessions": [], "closures": [], "schedule_effective": "2026-03-17"},
+        payload={"sessions": [], "closures": [], "effective_start": "2026-03-17"},
         usage={"total_token_count": 42},
         cost_estimate="total_tokens=42",
         root=tmp_path,

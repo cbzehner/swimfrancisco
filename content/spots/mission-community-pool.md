@@ -12,9 +12,9 @@ lng = -122.4222
 website = "https://sfrecpark.org/facilities/facility/details/Mission-Community-Pool-217"
 cost = "paid"
 setpoint_label = "80–82°F"
-schedule_effective = "2026-05-12"
+effective_start = "2026-05-12"
 last_verified_at = "2026-05-05"
-schedule_effective_end = "2026-06-06"
+effective_end = "2026-06-06"
 access_mode = "public"
 payment_model = "session"
 schedule_basis = "swim_schedule"
@@ -151,9 +151,9 @@ start = "15:30"
 end = "17:00"
 
 [extra.upcoming_schedule]
-schedule_effective = "2026-06-09"
+effective_start = "2026-06-09"
 schedule_basis = "swim_schedule"
-schedule_effective_end = "2026-06-20"
+effective_end = "2026-06-20"
 last_verified_at = "2026-06-06"
 
 [[extra.upcoming_schedule.sessions]]

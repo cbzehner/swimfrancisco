@@ -13,7 +13,7 @@
       }
     ],
     "schedule_basis": "temporarily_closed",
-    "schedule_effective": "2026-05-17",
+    "effective_start": "2026-05-17",
     "sessions": []
   },
   "pdf_sha256": "bfc2cfde93404878a4e0d7a570c3ebf8b1c90520069d972b9e2a360aaed6d9c2",

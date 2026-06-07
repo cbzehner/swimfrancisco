@@ -20,7 +20,7 @@ def _write_provider(review_dir: Path, provider: str, model: str, pdf_sha256: str
         "pdf_sha256": pdf_sha256,
         "extracted_at": "2026-04-10T12:00:00+00:00",
         "payload": {
-            "schedule_effective": "2026-03-17",
+            "effective_start": "2026-03-17",
             "sessions": [
                 {"day": d, "type": "lap_swim", "start": "07:00", "end": "08:00"}
                 for d in ("monday", "tuesday", "wednesday", "thursday", "friday")[:sessions_count]
@@ -59,7 +59,7 @@ def test_seed_draft_envelope_fields(tmp_path):
     assert envelope["pdf_sha256"] == "a" * 64
     assert envelope["reviewed_at"] == "2026-04-19"
     assert envelope["source_pdf_url"] == "https://example.com/hamilton.pdf"
-    assert envelope["payload"]["schedule_effective"] == "2026-03-17"
+    assert envelope["payload"]["effective_start"] == "2026-03-17"
 
 
 def test_seed_draft_is_idempotent(tmp_path):

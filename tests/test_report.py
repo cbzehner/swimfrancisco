@@ -27,7 +27,7 @@ def _proposed(**overrides: object) -> Extracted:
         "sessions_count": 5,
         "prior_sessions_count": 5,
         "closures_count": 0,
-        "schedule_effective": "2026-04-01",
+        "effective_start": "2026-04-01",
         "cost_estimate": "$0.01",
     }
     defaults.update(overrides)
@@ -46,7 +46,7 @@ def _unchanged(**overrides: object) -> Unchanged:
         "page_count": 1,
         "sessions_count": 5,
         "closures_count": 0,
-        "schedule_effective": "2026-04-01",
+        "effective_start": "2026-04-01",
     }
     defaults.update(overrides)
     return Unchanged(**defaults)  # type: ignore[arg-type]
@@ -92,7 +92,7 @@ def _rejected(**overrides: object) -> Extracted:
         "sessions_count": 0,
         "prior_sessions_count": 8,
         "closures_count": 0,
-        "schedule_effective": None,
+        "effective_start": None,
         "cost_estimate": "$0.01",
         "catastrophic": True,
         "violations": [],

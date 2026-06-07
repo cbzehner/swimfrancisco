@@ -57,7 +57,7 @@
     ],
     "closures": [],
     "schedule_basis": "facility_hours",
-    "schedule_effective": "2026-05-17",
+    "effective_start": "2026-05-17",
     "sessions": []
   },
   "pdf_sha256": "9949213c6e05240307e5bf1ddb8f5d14e266d6e89d31cacaad78c35d81c7f698",

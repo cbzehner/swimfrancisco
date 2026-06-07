@@ -202,8 +202,8 @@
       }
     ],
     "schedule_basis": "swim_schedule",
-    "schedule_effective": "2026-06-09",
-    "schedule_effective_end": "2026-06-20",
+    "effective_start": "2026-06-09",
+    "effective_end": "2026-06-20",
     "sessions": [
       {
         "day": "tuesday",

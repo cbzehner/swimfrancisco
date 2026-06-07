@@ -11,7 +11,7 @@ def test_validate_accepts_reasonable_payload():
             {"day": "friday", "type": "lap_swim", "start": "06:00", "end": "07:00"},
         ],
         "closures": [],
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
     }
     result = validate(payload)
     assert result.ok is True
@@ -25,7 +25,7 @@ def test_validate_accepts_access_hours_without_sessions():
             {"day": "monday", "start": "05:30", "end": "20:30", "label": "Facility hours"}
         ],
         "closures": [],
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
     }
     result = validate(payload)
     assert result.ok is True
@@ -49,7 +49,7 @@ def test_validate_accepts_access_exceptions():
             }
         ],
         "closures": [],
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
     }
 
     result = validate(payload)
@@ -60,7 +60,7 @@ def test_validate_accepts_access_exceptions():
 
 def test_validate_accepts_temporarily_closed_without_sessions_or_access_hours():
     result = validate({
-        "schedule_effective": "2026-05-17",
+        "effective_start": "2026-05-17",
         "schedule_basis": "temporarily_closed",
         "sessions": [],
         "access_hours": [],
@@ -74,7 +74,7 @@ def test_validate_accepts_temporarily_closed_without_sessions_or_access_hours():
 
 def test_validate_rejects_unknown_schedule_basis_value():
     result = validate({
-        "schedule_effective": "2026-05-17",
+        "effective_start": "2026-05-17",
         "schedule_basis": "made_up",
         "sessions": [],
         "closures": [],
@@ -87,7 +87,7 @@ def test_validate_flags_bad_ranges():
     payload = {
         "sessions": [{"day": "monday", "type": "lap_swim", "start": "07:00", "end": "07:00"}],
         "closures": [{"start": "2026-04-18", "end": "2026-04-17", "reason": "maintenance"}],
-        "schedule_effective": "not-a-date",
+        "effective_start": "not-a-date",
     }
     result = validate(payload)
     assert result.ok is False
@@ -111,7 +111,7 @@ def test_validate_accepts_partial_day_closure():
             "end_time": "14:00",
             "reason": "Aquatics training",
         }],
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
     }
     result = validate(payload)
     assert result.ok is True
@@ -126,7 +126,7 @@ def test_validate_rejects_partial_day_closure_with_only_one_time():
             "start_time": "11:00",
             "reason": "Aquatics training",
         }],
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
     }
     result = validate(payload)
     assert result.ok is False
@@ -143,7 +143,7 @@ def test_validate_rejects_partial_day_closure_with_inverted_times():
             "end_time": "11:00",
             "reason": "Aquatics training",
         }],
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
     }
     result = validate(payload)
     assert result.ok is False
@@ -160,7 +160,7 @@ def test_validate_rejects_partial_day_closure_on_multi_day_range():
             "end_time": "14:00",
             "reason": "Aquatics training",
         }],
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
     }
     result = validate(payload)
     assert result.ok is False

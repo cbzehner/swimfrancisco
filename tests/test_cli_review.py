@@ -19,7 +19,7 @@ def _seed_review_dir(data_root: Path, slug: str, date: str, pdf_sha256: str) -> 
         "source_pdf_url": "https://example.com/x.pdf",
         "pdf_sha256": pdf_sha256,
         "payload": {
-            "schedule_effective": "2026-03-17",
+            "effective_start": "2026-03-17",
             "sessions": [
                 {"day": d, "type": "lap_swim", "start": "07:00", "end": "08:00"}
                 for d in ("monday", "tuesday", "wednesday", "thursday", "friday")

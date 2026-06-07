@@ -35,8 +35,8 @@ def test_merge_updates_only_schedule_fields(tmp_path):
                 {"day": "friday", "type": "lap_swim", "start": "06:00", "end": "08:00"},
             ],
             "closures": [{"start": "2026-05-25", "end": "2026-05-25", "reason": "Memorial Day"}],
-            "schedule_effective": "2026-03-17",
-            "schedule_effective_end": "2026-06-06",
+            "effective_start": "2026-03-17",
+            "effective_end": "2026-06-06",
         },
     )
 
@@ -66,8 +66,8 @@ def test_merge_preserves_partial_day_closure_fields(tmp_path):
                     "end_time": "15:00",
                 }
             ],
-            "schedule_effective": "2026-03-17",
-            "schedule_effective_end": "2026-06-06",
+            "effective_start": "2026-03-17",
+            "effective_end": "2026-06-06",
         },
     )
 

@@ -198,7 +198,7 @@ class Unchanged(PoolResultBase):
     page_count: int
     sessions_count: int
     closures_count: int
-    schedule_effective: str
+    effective_start: str
     schedule_basis: str | None = None
     review_notes: list[ReviewNote] = field(default_factory=list)
     cost_estimate: str = "unchanged"
@@ -225,7 +225,7 @@ class Extracted(PoolResultBase):
     sessions_count: int
     prior_sessions_count: int
     closures_count: int
-    schedule_effective: str | None
+    effective_start: str | None
     cost_estimate: str
     schedule_basis: str | None = None
     catastrophic: bool = False

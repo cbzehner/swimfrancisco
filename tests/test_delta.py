@@ -5,7 +5,7 @@ from schedules.validate import validate
 def test_delta_notes_large_changes_and_missing_types():
     extracted = {
         "sessions": [{"day": "monday", "type": "family_swim", "start": "10:00", "end": "11:00"}],
-        "schedule_effective": "2026-03-01",
+        "effective_start": "2026-03-01",
     }
     prior_snapshot = {
         "sessions": [
@@ -21,7 +21,7 @@ def test_delta_notes_large_changes_and_missing_types():
             {"day": "sunday", "type": "family_swim", "start": "10:00", "end": "11:00"},
         ],
         "closures": [],
-        "schedule_effective": "2026-03-17",
+        "effective_start": "2026-03-17",
     }
     notes = check_delta(extracted, prior_snapshot)
     messages = [note.message for note in notes]
@@ -31,8 +31,8 @@ def test_delta_notes_large_changes_and_missing_types():
 
 
 def test_delta_returns_no_notes_for_empty_prior():
-    extracted = {"sessions": [{"type": "lap_swim"}], "schedule_effective": "2026-03-01"}
-    notes = check_delta(extracted, {"sessions": [], "closures": [], "schedule_effective": None})
+    extracted = {"sessions": [{"type": "lap_swim"}], "effective_start": "2026-03-01"}
+    notes = check_delta(extracted, {"sessions": [], "closures": [], "effective_start": None})
     assert notes == []
 
 

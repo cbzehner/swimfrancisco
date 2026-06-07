@@ -288,7 +288,7 @@ def _cache_text(slug_dir: Path, sha256: str, extension: str, text: str) -> tuple
 def _payload_fingerprint(extractor: Callable[[str], dict]) -> Callable[[str], str]:
     def fingerprint(text: str) -> str:
         payload = dict(extractor(text))
-        payload.pop("schedule_effective", None)
+        payload.pop("effective_start", None)
         return json.dumps(payload, sort_keys=True, separators=(",", ":"))
 
     return fingerprint
@@ -589,7 +589,7 @@ def _payload(
 ) -> dict:
     return {
         "schedule_basis": schedule_basis,
-        "schedule_effective": date.today().isoformat(),
+        "effective_start": date.today().isoformat(),
         "sessions": sorted(sessions, key=lambda s: (DAY_ORDER.index(s["day"]), s["start"], s["end"], s["type"])),
         "access_hours": sorted(
             access_hours or [],

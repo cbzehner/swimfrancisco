@@ -36,10 +36,10 @@
     },
     "payload": {
       "type": "object",
-      "required": ["schedule_effective", "sessions", "closures"],
+      "required": ["effective_start", "sessions", "closures"],
       "additionalProperties": false,
       "properties": {
-        "schedule_effective": {
+        "effective_start": {
           "type": "string",
           "format": "date",
           "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
@@ -50,7 +50,7 @@
           "enum": ["swim_schedule", "pool_hours", "facility_hours", "amenity_only", "temporarily_closed", "unknown"],
           "description": "What the source proves: a true swim schedule, pool hours, facility hours, amenity existence, temporary closure, or unknown."
         },
-        "schedule_effective_end": {
+        "effective_end": {
           "type": ["string", "null"],
           "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
           "description": "Optional end date of the schedule window. Null or omitted if open-ended."

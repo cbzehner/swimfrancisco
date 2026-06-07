@@ -119,9 +119,9 @@ def _normalized_schedule_payload(extracted: dict[str, Any]) -> dict[str, Any]:
         "access_hours": _normalize_access_hours(extracted.get("access_hours", [])),
         "access_exceptions": _normalize_access_exceptions(extracted.get("access_exceptions", [])),
         "closures": _normalize_closures(extracted.get("closures", [])),
-        "schedule_effective": extracted.get("schedule_effective"),
+        "effective_start": extracted.get("effective_start"),
         "schedule_basis": extracted.get("schedule_basis"),
-        "schedule_effective_end": extracted.get("schedule_effective_end"),
+        "effective_end": extracted.get("effective_end"),
     }
 
 
@@ -131,15 +131,15 @@ def _schedule_from_table(table: Any) -> dict[str, Any]:
         "access_hours": _normalize_access_hours(list(table.get("access_hours", []))),
         "access_exceptions": _normalize_access_exceptions(list(table.get("access_exceptions", []))),
         "closures": _normalize_closures(list(table.get("closures", []))),
-        "schedule_effective": table.get("schedule_effective"),
+        "effective_start": table.get("effective_start"),
         "schedule_basis": table.get("schedule_basis"),
-        "schedule_effective_end": table.get("schedule_effective_end"),
+        "effective_end": table.get("effective_end"),
     }
 
 
 def _should_queue_upcoming(current: dict[str, Any], incoming: dict[str, Any]) -> bool:
-    current_end = current.get("schedule_effective_end")
-    incoming_start = incoming.get("schedule_effective")
+    current_end = current.get("effective_end")
+    incoming_start = incoming.get("effective_start")
     return (
         isinstance(current_end, str)
         and isinstance(incoming_start, str)
@@ -150,8 +150,8 @@ def _should_queue_upcoming(current: dict[str, Any], incoming: dict[str, Any]) ->
 def _should_preserve_existing_upcoming(upcoming: Any, incoming: dict[str, Any]) -> bool:
     if not upcoming:
         return False
-    upcoming_start = upcoming.get("schedule_effective")
-    incoming_start = incoming.get("schedule_effective")
+    upcoming_start = upcoming.get("effective_start")
+    incoming_start = incoming.get("effective_start")
     return (
         isinstance(upcoming_start, str)
         and isinstance(incoming_start, str)
@@ -170,7 +170,7 @@ def _promote_upcoming_schedule(extra: Any, as_of_date: str) -> bool:
     upcoming = extra.get("upcoming_schedule")
     if not upcoming:
         return False
-    upcoming_start = upcoming.get("schedule_effective")
+    upcoming_start = upcoming.get("effective_start")
     if not isinstance(upcoming_start, str) or as_of_date < upcoming_start:
         return False
     schedule = _schedule_from_table(upcoming)
@@ -200,15 +200,15 @@ def _write_schedule_fields(
     elif "access_exceptions" in target:
         del target["access_exceptions"]
     target["closures"] = _build_closures_value(schedule["closures"])
-    target["schedule_effective"] = schedule["schedule_effective"]
+    target["effective_start"] = schedule["effective_start"]
     if schedule["schedule_basis"] is not None:
         target["schedule_basis"] = schedule["schedule_basis"]
     elif "schedule_basis" in target:
         del target["schedule_basis"]
-    if schedule["schedule_effective_end"] is not None:
-        target["schedule_effective_end"] = schedule["schedule_effective_end"]
-    elif "schedule_effective_end" in target:
-        del target["schedule_effective_end"]
+    if schedule["effective_end"] is not None:
+        target["effective_end"] = schedule["effective_end"]
+    elif "effective_end" in target:
+        del target["effective_end"]
     if last_verified_at is not None:
         target["last_verified_at"] = last_verified_at
 
@@ -227,8 +227,8 @@ def _drop_stale_upcoming(target: Any, current: dict[str, Any]) -> None:
     upcoming = target.get("upcoming_schedule")
     if not upcoming:
         return
-    upcoming_start = upcoming.get("schedule_effective")
-    current_start = current.get("schedule_effective")
+    upcoming_start = upcoming.get("effective_start")
+    current_start = current.get("effective_start")
     if isinstance(upcoming_start, str) and isinstance(current_start, str) and upcoming_start <= current_start:
         del target["upcoming_schedule"]
 

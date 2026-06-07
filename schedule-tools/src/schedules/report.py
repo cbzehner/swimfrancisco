@@ -80,7 +80,7 @@ def _render_pool_block(result: PoolResult) -> list[str]:
         lines.append(f"- sessions: {result.prior_sessions_count} (prior, no extraction)")
         lines.append(f"- closures: {result.prior_closures_count} (prior)")
         if result.prior_schedule_effective:
-            lines.append(f"- schedule_effective: {result.prior_schedule_effective} (prior)")
+            lines.append(f"- effective_start: {result.prior_schedule_effective} (prior)")
         lines.append("- review_notes: none")
         lines.append(f"- error: {result.error}")
         lines.append("")
@@ -96,8 +96,8 @@ def _render_pool_block(result: PoolResult) -> list[str]:
     delta_text = f" ({result.sessions_count - prior:+d} vs last run)" if prior is not None else ""
     lines.append(f"- sessions: {result.sessions_count}{delta_text}")
     lines.append(f"- closures: {result.closures_count}")
-    if result.schedule_effective:
-        lines.append(f"- schedule_effective: {result.schedule_effective}")
+    if result.effective_start:
+        lines.append(f"- effective_start: {result.effective_start}")
     if result.schedule_basis:
         lines.append(f"- schedule_basis: {result.schedule_basis}")
 
