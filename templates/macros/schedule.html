@@ -1,7 +1,14 @@
 {# Serialize the schedule fields of `s` as the inside of a JSON object
    (no surrounding braces). Field list is defined once; the data_schedule
    macro splices this output for both the current schedule and the queued
-   upcoming sub-schedule. #}
+   upcoming sub-schedule.
+
+   ALIAS CONTRACT: callers must import this file as `schedule_macros`,
+   e.g. `{% import "macros/schedule.html" as schedule_macros %}`. Tera's
+   `self::` doesn't resolve to a macro's defining file when the outer
+   macro is called from another template — it binds to the caller's
+   scope — so data_schedule below calls the helper via the namespace
+   alias the caller uses. Hard-coding the alias is the trade-off. #}
 {% macro schedule_fields(s) -%}
   {%- set sessions_json = s.sessions | default(value=[]) | json_encode -%}
   {%- set access_hours_json = s.access_hours | default(value=[]) | json_encode -%}
