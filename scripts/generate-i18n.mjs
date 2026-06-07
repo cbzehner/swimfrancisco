@@ -199,6 +199,26 @@ async function staticTranslationCallsiteKeys() {
   return keys;
 }
 
+async function runtimeTranslationKeys(defaultUi, dynamicLabels) {
+  const files = await filesIn(path.join(ROOT, "static", "js"), [".js", ".mjs"]);
+  const defaultKeys = new Set(Object.keys(defaultUi || {}));
+  const runtimeKeys = new Set();
+  const stringPattern = /["']([a-z][a-z0-9_]+)["']/g;
+
+  for (const file of files) {
+    const text = await readFile(file, "utf8");
+    for (const match of text.matchAll(stringPattern)) {
+      if (defaultKeys.has(match[1])) runtimeKeys.add(match[1]);
+    }
+  }
+
+  for (const label of dynamicLabels.labels || []) {
+    if (defaultKeys.has(label.translation_key)) runtimeKeys.add(label.translation_key);
+  }
+
+  return Array.from(runtimeKeys).sort();
+}
+
 function dynamicLabelRequirements(extrasByFile) {
   const requirements = [];
   for (const { file, extra } of extrasByFile) {
@@ -597,11 +617,14 @@ async function generateRuntimeData({ dryRun = false, changed = [] } = {}) {
   const { locales, ui } = await loadSources();
   const dynamicLabels = await loadDynamicLabels();
   const dynamicLabelPayload = dynamicLabelData(dynamicLabels);
+  const defaultLocale = locales.locales.find((locale) => locale.is_default);
+  const runtimeKeys = await runtimeTranslationKeys(ui[defaultLocale.code], dynamicLabels);
   await writeIfChanged(DATA_LOCALES_PATH, tomlText(locales), { dryRun, changed });
   if (!dryRun) await mkdir(DATA_I18N_DIR, { recursive: true });
   for (const code of sourceLocaleCodes(locales)) {
+    const runtimeUi = Object.fromEntries(runtimeKeys.map((key) => [key, ui[code][key]]));
     const file = path.join(DATA_I18N_DIR, `${code}.json`);
-    await writeIfChanged(file, `${JSON.stringify(ui[code], null, 2)}\n`, { dryRun, changed });
+    await writeIfChanged(file, `${JSON.stringify(runtimeUi, null, 2)}\n`, { dryRun, changed });
   }
   await writeIfChanged(DATA_DYNAMIC_LABELS_TOML_PATH, tomlText(dynamicLabelPayload), { dryRun, changed });
   await writeIfChanged(

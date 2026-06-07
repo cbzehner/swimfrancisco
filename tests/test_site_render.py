@@ -187,6 +187,8 @@ def test_js_translation_keys_are_exported_to_runtime_payload() -> None:
         if key.startswith("horizon_") or key == "now"
     )
     assert used_translation_keys <= exported_keys
+    assert "status_open" in exported_keys
+    assert "footer_credit" not in exported_keys
 
 
 def test_localized_section_files_match_i18n_catalogs() -> None:
