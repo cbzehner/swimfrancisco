@@ -173,12 +173,13 @@ function applyStatuses(root, now, allowedTypes = null) {
       return;
     }
 
-    const accessLabel = row.getAttribute("data-access-label") || "";
+    const access = row.getAttribute("data-access") || "public";
+    const showsCheck = access === "day_pass" || access === "members";
     const result = hasSessions
       ? computeStatus(schedule, now, allowedTypes)
       : hasAccessHours
         ? computeAccessStatus(schedule, now)
-      : accessLabel
+      : showsCheck
         ? { status: "CHECK", next: "OFFICIAL SITE", nextKind: "official_site", nextArgs: {} }
         : { status: PLACEHOLDER, next: PLACEHOLDER };
     setStatus(statusCell, result.status, "pool");

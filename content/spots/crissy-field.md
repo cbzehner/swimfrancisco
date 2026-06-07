@@ -10,6 +10,7 @@ lat = 37.8042
 lng = -122.466
 website = "https://presidio.gov/explore/attractions/crissy-field"
 cost = "free"
+access = "beach"
 noaa_tide_station = "9414290"
 temp_station_id = "9414290"
 temp_station_type = "noaa"

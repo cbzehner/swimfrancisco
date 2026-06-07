@@ -11,6 +11,7 @@ lat = 37.7809
 lng = -122.458
 website = "https://sfrecpark.org/495/Rossi-Pool"
 cost = "paid"
+access = "public"
 setpoint_label = "80–82°F"
 effective_start = "2026-06-07"
 last_verified_at = "2026-06-05"

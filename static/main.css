@@ -582,10 +582,10 @@ h1, h2, h3 {
   font-size: 10px;
   line-height: 1;
 }
-.cost-badge.is-free { background: var(--teal);  color: var(--paper); }
-.cost-badge.is-paid { background: var(--ochre); color: var(--ink); }
-.cost-badge.is-member { background: var(--ink); color: var(--paper); }
-.cost-badge.is-limited { background: var(--paper); color: var(--ink); border: 1.5px solid var(--ink); }
+.cost-badge.is-beach    { background: var(--teal);  color: var(--paper); }
+.cost-badge.is-public   { background: var(--ochre); color: var(--ink); }
+.cost-badge.is-members  { background: var(--ink);   color: var(--paper); }
+.cost-badge.is-day-pass { background: var(--paper); color: var(--ink); border: 1.5px solid var(--ink); }
 
 /* ── Board table (existing markup) ─────────────────────────────────────── */
 table.board {

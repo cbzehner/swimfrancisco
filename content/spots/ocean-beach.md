@@ -10,6 +10,7 @@ lat = 37.7594
 lng = -122.5107
 website = "https://www.nps.gov/goga/planyourvisit/oceanbeach.htm"
 cost = "free"
+access = "beach"
 noaa_tide_station = "9414275"
 temp_station_id = "46237"
 temp_station_type = "ndbc"

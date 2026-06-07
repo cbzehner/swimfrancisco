@@ -228,12 +228,15 @@
       {% if extra.address %}<span class="key"><a href="{{ place_href }}" target="_blank" rel="noopener">{{ extra.address | upper }}</a></span>{% endif %}
       {% if extra.subtype %}<span class="subtype">{{ chrome::spot_label(label=extra.subtype, active_lang=lang) | upper }}</span>{% endif %}
       {% if extra.setpoint_label %}<span class="setpoint">{{ trans(key='water', lang=lang) }} {{ chrome::spot_label(label=extra.setpoint_label, active_lang=lang) | upper }}</span>{% endif %}
-      {% if extra.access_label %}
-        <span class="cost-badge {{ extra.access_badge_class | default(value='is-paid') }}">{{ chrome::spot_label(label=extra.access_label, active_lang=lang) }}</span>
-      {% elif extra.cost == "paid" %}
-        <span class="cost-badge is-paid">{{ trans(key='paid', lang=lang) }}</span>
-      {% elif extra.cost == "free" %}
-        <span class="cost-badge is-free">{{ trans(key='free', lang=lang) }}</span>
+      {% set access = extra.access | default(value='public') %}
+      {% if access == 'day_pass' %}
+        <span class="cost-badge is-day-pass">{{ trans(key='chip_day_pass', lang=lang) }}{% if extra.day_pass_price %} · {{ extra.day_pass_price }}{% endif %}</span>
+      {% elif access == 'members' %}
+        <span class="cost-badge is-members">{{ trans(key='chip_members', lang=lang) }}</span>
+      {% elif access == 'beach' %}
+        <span class="cost-badge is-beach">{{ trans(key='chip_beach', lang=lang) }}</span>
+      {% else %}
+        <span class="cost-badge is-public">{{ trans(key='chip_public', lang=lang) }}</span>
       {% endif %}
       {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">{{ trans(key='official_page', lang=lang) }}</a>{% endif %}
       {% if extra.address %}

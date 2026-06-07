@@ -11,6 +11,7 @@ lat = 37.8028
 lng = -122.4132
 website = "https://sfrecpark.org/facilities/facility/details/North-Beach-Pool-218"
 cost = "paid"
+access = "public"
 setpoint_label = "86°F warm / 76°F cool"
 effective_start = "2026-03-17"
 last_verified_at = "2026-04-20"

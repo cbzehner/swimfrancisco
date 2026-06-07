@@ -11,6 +11,7 @@ lat = 37.7105
 lng = -122.4105
 website = "https://sfrecpark.org/facilities/facility/details/Coffman-Pool-213"
 cost = "paid"
+access = "public"
 setpoint_label = "80–82°F"
 effective_start = "2026-04-21"
 last_verified_at = "2026-04-20"

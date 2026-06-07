@@ -129,8 +129,8 @@ function rowMatchesType(row, type) {
 function rowPassesFilters(row, state) {
   const type = activeType(state);
   if (type && type !== TYPE_NONE && !rowMatchesType(row, type)) return false;
-  const accessMode = row.getAttribute("data-access-mode") || "public";
-  if (!state.includeMemberships && (accessMode === "membership" || accessMode === "private")) {
+  const access = row.getAttribute("data-access") || "public";
+  if (!state.includeMemberships && access === "members") {
     return false;
   }
   return true;

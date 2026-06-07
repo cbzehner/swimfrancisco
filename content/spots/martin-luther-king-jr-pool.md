@@ -11,6 +11,7 @@ lat = 37.721
 lng = -122.3896
 website = "https://sfrecpark.org/facilities/facility/details/Martin-Luther-King-Jr-Pool-216"
 cost = "paid"
+access = "public"
 setpoint_label = "80–82°F"
 effective_start = "2026-04-07"
 last_verified_at = "2026-04-20"

@@ -11,6 +11,7 @@ lat = 37.7847
 lng = -122.434
 website = "https://sfrecpark.org/facilities/facility/details/Hamilton-Pool-215"
 cost = "paid"
+access = "public"
 setpoint_label = "80–82°F"
 effective_start = "2026-03-17"
 last_verified_at = "2026-04-19"

@@ -10,6 +10,7 @@ lat = 37.7937
 lng = -122.4836
 website = "https://www.nps.gov/places/000/baker-beach.htm"
 cost = "free"
+access = "beach"
 noaa_tide_station = "9414275"
 temp_station_id = "46237"
 temp_station_type = "ndbc"

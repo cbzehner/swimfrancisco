@@ -10,6 +10,7 @@ lat = 37.8063
 lng = -122.4223
 website = "https://sfrecpark.org/Facilities/Facility/Details/Aquatic-Park-200"
 cost = "free"
+access = "beach"
 noaa_tide_station = "9414290"
 temp_station_id = "9414290"
 temp_station_type = "noaa"
