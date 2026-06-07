@@ -353,7 +353,7 @@ url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitn
 [spots.ucsf-millberry]
 title = "UCSF Millberry"
 slug = "ucsf-millberry"
-access_notes = [ "Tilojen aukioloajat näkyvät vain pääsyaikoina, kunnes allaskohtainen aikataululähde on vahvistettu." ]
+access_notes = []
 access_summary = "UCSF Millberry Fitness Center on UCSF:n Parnassuksen fitness-toimipiste. Virallinen sivu julkaisee tilojen aukioloajat, mutta allasaikataulu tarvitsee erillisen vahvistuksen."
 description_short = "Parnassuksen UCSF-kampuksen fitnesskeskuksen allasvaihtoehto jäsenyspohjaiseen kerrokseen."
 body = "UCSF Millberry on Parnassuksen kampuksen fitnesskeskuksen allasvaihtoehto jäsenyspohjaiseen kerrokseen."

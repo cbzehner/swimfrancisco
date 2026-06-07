@@ -853,7 +853,7 @@ table.board tbody tr.flap td {
 
 /* ── Spot detail page (existing selectors) ─────────────────────────────── */
 .back {
-  margin: 8px 28px;
+  margin: 8px 14px;
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.14em;
@@ -870,7 +870,7 @@ table.board tbody tr.flap td {
 /* Schedule-not-verified copy on spot detail pages — surfaces when a pool
    has no sessions, no access_hours, and no temporarily_closed signal. */
 .fallback {
-  margin: 24px 28px;
+  margin: 24px 14px;
   font-family: var(--body);
   font-size: 14px;
   color: var(--muted);
@@ -879,7 +879,7 @@ table.board tbody tr.flap td {
 
 .spot-detail-head {
   position: relative;
-  padding: 24px 28px 20px;
+  padding: 24px 14px 20px;
   border-bottom: 3px solid var(--ink);
   background-image:
     radial-gradient(circle at 12% 28%, rgba(26,24,18,0.04) 0%, transparent 14%);
@@ -976,7 +976,7 @@ table.board tbody tr.flap td {
   row-gap: 6px;
   column-gap: 18px;
   border: 2px solid var(--ink);
-  margin: 16px 28px;
+  margin: 16px 14px;
   padding: 14px 18px;
   background: var(--foam);
 }
@@ -996,7 +996,7 @@ table.board tbody tr.flap td {
 }
 
 .today-block {
-  margin: 8px 28px 0;
+  margin: 8px 14px 0;
   padding-top: 12px;
   border-top: 1px solid var(--rule);
 }
@@ -1028,10 +1028,10 @@ table.board tbody tr.flap td {
 .weekly-grid-title {
   font-family: var(--display);
   font-size: 24px;
-  margin: 24px 28px 0;
+  margin: 24px 14px 0;
 }
 .weekly-grid-meta {
-  margin: 6px 28px 12px;
+  margin: 6px 14px 12px;
   font-family: var(--mono);
   font-size: 10.5px;
   letter-spacing: 0.14em;
@@ -1047,7 +1047,7 @@ table.board tbody tr.flap td {
 table.weekly-grid {
   display: grid;
   grid-template-columns: 9rem repeat(var(--weekday-count, 7), minmax(7ch, 1fr));
-  margin: 0 28px;
+  margin: 0 14px;
   border: 2px solid var(--ink);
   background: var(--foam);
   font-family: var(--mono);
@@ -1132,7 +1132,7 @@ table.weekly-grid tr { display: contents; }
 }
 
 /* ── Closure banners ───────────────────────────────────────────────────── */
-.closure-banners { margin: 16px 28px 0; }
+.closure-banners { margin: 16px 14px 0; }
 .closure-banner {
   display: flex;
   flex-wrap: wrap;
@@ -1152,7 +1152,7 @@ table.weekly-grid tr { display: contents; }
 
 /* ── Access / pricing ──────────────────────────────────────────────────── */
 .access-panel {
-  margin: 16px 28px 0;
+  margin: 16px 14px 0;
   border: 2px solid var(--ink);
   background: var(--paper-2);
   padding: 14px 18px;
@@ -1209,12 +1209,14 @@ table.weekly-grid tr { display: contents; }
 }
 .access-notes {
   margin: 12px 0 0;
-  padding-left: 18px;
+  padding-left: 0;
+  list-style: none;
   color: var(--muted);
 }
+.access-notes li + li { margin-top: 6px; }
 
 /* ── Hazards / clubs / distances ───────────────────────────────────────── */
-.hazards, .clubs, .distances { margin: 16px 28px 0; }
+.hazards, .clubs, .distances { margin: 16px 14px 0; }
 .hazards h2, .clubs h2, .distances h2 {
   font-family: var(--display);
   font-size: 20px;
@@ -1303,7 +1305,7 @@ table.weekly-grid tr { display: contents; }
 }
 
 .conditions {
-  margin: 16px 28px 0;
+  margin: 16px 14px 0;
   border: 2px solid var(--ink);
   background: var(--foam);
   padding: 14px 18px;
@@ -1385,7 +1387,7 @@ table.weekly-grid tr { display: contents; }
 
 /* ── Description prose ─────────────────────────────────────────────────── */
 .description {
-  margin: 24px 28px;
+  margin: 24px 14px;
   font-size: 15px;
   line-height: 1.65;
   color: var(--ink-2);
@@ -1399,7 +1401,7 @@ table.weekly-grid tr { display: contents; }
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--muted);
-  margin: 16px 28px 0;
+  margin: 16px 14px 0;
 }
 
 /* ── Map view (existing #map-view + Leaflet popups, reskinned) ─────────── */
@@ -1528,7 +1530,7 @@ body.map-page .site-footer {
 
 /* ── No-JS notice ──────────────────────────────────────────────────────── */
 .noscript-notice {
-  margin: 16px 28px;
+  margin: 16px 14px;
   border: 2px solid var(--ink);
   background: var(--ochre);
   color: var(--ink);

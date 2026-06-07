@@ -329,6 +329,6 @@ url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitn
 [spots.ucsf-millberry]
 title = "UCSF Millberry"
 slug = "ucsf-millberry"
-access_notes = [ "Facility hours are tracked as access hours only until a pool-specific schedule source is verified." ]
+access_notes = []
 access_summary = "UCSF Millberry Fitness Center is the Parnassus UCSF fitness location. The official page publishes facility hours, but the pool schedule needs separate verification."
 body = "UCSF Millberry is the Parnassus campus fitness-center pool entry for the opt-in membership layer."
