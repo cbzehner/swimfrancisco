@@ -303,6 +303,11 @@ h1, h2, h3 {
 }
 
 /* ── Meta strip (NEW — bay / ocean / tide / updated) ───────────────────── */
+/* CONTRACT: this strip is exactly six <div> children in this order
+   (today / time / bay / ocean / tide / updated). The mobile responsive
+   block at @media (max-width: 720px) uses :nth-child(3n) and
+   :nth-child(n+4) to compute row-break borders; adding, removing, or
+   reordering children silently breaks the grid. */
 .bulletin-strip {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -674,7 +679,10 @@ table.board [data-cell="spot"] a::after {
   color: var(--ink-2);
   line-height: 1.35;
 }
-.cost-badge { margin-right: 8px; vertical-align: 0.1em; }
+/* Cost-badge spacing only applies inside the board table. Scoped here to
+   avoid leaking the 8px right margin onto the spot-detail meta strip
+   (spots/page.html:229), which uses the same .cost-badge class. */
+table.board .cost-badge { margin-right: 8px; vertical-align: 0.1em; }
 table.board [data-cell="spot"] a:hover { color: var(--red); }
 table.board td:nth-child(n+2) {
   font-family: var(--mono);
@@ -734,6 +742,10 @@ table.board tbody tr.is-closed td:nth-child(3) {
 }
 
 /* Hide table columns the existing CSS hid on phones, but keep desktop. */
+/* NOTE: there is a second @media (max-width: 640px) block much further down
+   (search for "Phone tweaks"). This one owns the table reflow; the other
+   owns chrome, hero, and global phone polish. Add phone rules to whichever
+   block matches the concern. */
 @media (max-width: 640px) {
   table.board,
   table.board thead,
@@ -854,6 +866,16 @@ table.board tbody tr.flap td {
   color: var(--ink);
   border-bottom: 2px solid var(--red);
   padding-bottom: 2px;
+}
+
+/* Schedule-not-verified copy on spot detail pages — surfaces when a pool
+   has no sessions, no access_hours, and no temporarily_closed signal. */
+.fallback {
+  margin: 24px 28px;
+  font-family: var(--body);
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .spot-detail-head {
@@ -1539,6 +1561,8 @@ body.map-page .site-footer {
 .site-footer-sources, .site-footer-credit { margin: 0; }
 
 /* ── Phone tweaks ──────────────────────────────────────────────────────── */
+/* See also the earlier @media (max-width: 640px) block that owns the
+   table.board reflow. This one covers chrome, hero, controls, and footer. */
 @media (max-width: 640px) {
   body { padding-bottom: calc(58px + env(safe-area-inset-bottom)); }
   body.map-page {
