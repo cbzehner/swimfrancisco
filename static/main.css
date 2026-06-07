@@ -79,7 +79,7 @@ main {
 }
 
 a { color: inherit; text-decoration: none; }
-a:hover, a:focus { text-decoration: underline; text-decoration-color: var(--red); text-underline-offset: 3px; }
+a:hover, a:focus-visible { text-decoration: underline; text-decoration-color: var(--red); text-underline-offset: 3px; }
 a:focus-visible,
 button:focus-visible {
   outline: 3px solid var(--red);
@@ -367,9 +367,9 @@ h1, h2, h3 {
   transform: rotate(-135deg) translateY(-0.1rem);
 }
 .horizon-button:hover,
-.horizon-button:focus,
+.horizon-button:focus-visible,
 .horizon-menu button:hover,
-.horizon-menu button:focus {
+.horizon-menu button:focus-visible {
   background: var(--ink);
   color: var(--paper);
 }
@@ -495,6 +495,11 @@ h1, h2, h3 {
   color: var(--paper);
   border-color: var(--red);
 }
+/* Pressed filter buttons are red-on-cream; the global red focus ring would
+   merge into the red border. Swap to ink so the ring stays visible. */
+.filters button[aria-pressed="true"]:focus-visible {
+  outline-color: var(--ink);
+}
 .sort-group button[aria-pressed="true"] {
   background: var(--ink);
   color: var(--paper);
@@ -554,7 +559,7 @@ h1, h2, h3 {
   cursor: pointer;
 }
 .time-banner button:hover,
-.time-banner button:focus {
+.time-banner button:focus-visible {
   background: var(--ink);
   color: var(--paper);
 }
@@ -910,7 +915,7 @@ table.board tbody tr.flap td {
   font-family: var(--display);
   line-height: 1;
 }
-.address-actions a:hover, .address-actions a:focus {
+.address-actions a:hover, .address-actions a:focus-visible {
   background: var(--ink);
   color: var(--paper);
 }
@@ -1460,7 +1465,7 @@ body.map-page .site-footer {
   box-shadow: 3px 3px 0 0 var(--ink);
   font-family: var(--display);
 }
-.leaflet-bar a:hover, .leaflet-bar a:focus { background: var(--ink); color: var(--paper); }
+.leaflet-bar a:hover, .leaflet-bar a:focus-visible { background: var(--ink); color: var(--paper); }
 .leaflet-control-attribution {
   background: rgba(241,230,207,0.95) !important;
   color: var(--muted);
