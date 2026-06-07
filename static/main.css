@@ -305,9 +305,9 @@ h1, h2, h3 {
 /* ── Meta strip (NEW — bay / ocean / tide / updated) ───────────────────── */
 /* CONTRACT: this strip is exactly six <div> children in this order
    (today / time / bay / ocean / tide / updated). The mobile responsive
-   block at @media (max-width: 720px) uses :nth-child(3n) and
-   :nth-child(n+4) to compute row-break borders; adding, removing, or
-   reordering children silently breaks the grid. */
+   block at @media (max-width: 720px) uses :nth-child(n+4) to paint the
+   row-wrap separator on cells 4–6; adding, removing, or reordering
+   children silently breaks that separator. */
 .bulletin-strip {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -316,7 +316,6 @@ h1, h2, h3 {
 }
 .bulletin-strip > div {
   padding: 10px 14px;
-  border-right: 1px solid var(--rule);
   display: flex;
   gap: 10px;
   align-items: baseline;
@@ -325,14 +324,14 @@ h1, h2, h3 {
   text-transform: uppercase;
   letter-spacing: 0.14em;
 }
-.bulletin-strip > div:last-child { border-right: 0; }
 .bulletin-strip .k { color: var(--muted); }
 .bulletin-strip .v { color: var(--ink); font-weight: 700; }
 .bulletin-strip .v.red  { color: var(--red); }
 .bulletin-strip .v.teal { color: var(--teal); }
 @media (max-width: 720px) {
   .bulletin-strip { grid-template-columns: repeat(3, 1fr); }
-  .bulletin-strip > div:nth-child(3n) { border-right: 0; }
+  /* Row-wrap separator — distinguishes the second row of cells (4–6) from
+     the first when the strip reflows to two rows of three on phones. */
   .bulletin-strip > div:nth-child(n+4) { border-top: 1px solid var(--rule); }
 }
 
