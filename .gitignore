@@ -29,6 +29,7 @@ tmp/
 
 # Brainstorming / scratch
 .superpowers/
+.agent/
 .browser-artifacts/
 test-results/
 

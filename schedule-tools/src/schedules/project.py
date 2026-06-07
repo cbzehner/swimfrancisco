@@ -20,6 +20,7 @@ def project(
     slug: str,
     reviewed_json_path: Path,
     content_spots_dir: Path = CONTENT_SPOTS_DIR,
+    as_of_date: str | None = None,
 ) -> Path:
     """Project `reviewed_json_path` into content/spots/<slug>.md.
 
@@ -37,5 +38,5 @@ def project(
     if not md_path.exists():
         raise ProjectError(f"content file missing: {md_path}")
 
-    merge(md_path, canonical, last_verified_at=envelope["reviewed_at"])
+    merge(md_path, canonical, last_verified_at=envelope["reviewed_at"], as_of_date=as_of_date)
     return md_path

@@ -110,6 +110,52 @@ function statusResult(status, next, nextKind = "", nextArgs = {}) {
   return { status, next, nextKind, nextArgs };
 }
 
+function scheduleWithoutUpcoming(schedule) {
+  if (!schedule || typeof schedule !== "object") return schedule;
+  const { upcoming_schedule: _upcoming, ...current } = schedule;
+  return current;
+}
+
+function normalizedQueuedSchedule(schedule) {
+  if (!schedule || typeof schedule !== "object") return null;
+  return scheduleWithoutUpcoming({
+    ...schedule,
+    effective_start: schedule.effective_start || schedule.schedule_effective || "",
+    effective_end: schedule.effective_end || schedule.schedule_effective_end || "",
+  });
+}
+
+function scheduleInWindow(schedule, dateISO) {
+  if (!schedule || typeof schedule !== "object") return false;
+  const start = typeof schedule.effective_start === "string" && schedule.effective_start
+    ? schedule.effective_start
+    : null;
+  const end = typeof schedule.effective_end === "string" && schedule.effective_end
+    ? schedule.effective_end
+    : null;
+  if (start && dateISO < start) return false;
+  if (end && dateISO > end) return false;
+  return true;
+}
+
+function resolveScheduleForDate(schedule, dateISO) {
+  if (!schedule || typeof schedule !== "object") return schedule;
+  const current = scheduleWithoutUpcoming(schedule);
+  const upcoming = normalizedQueuedSchedule(schedule.upcoming_schedule);
+  if (!upcoming) return current;
+  if (scheduleInWindow(current, dateISO)) return current;
+  const currentEnd = typeof current.effective_end === "string" && current.effective_end
+    ? current.effective_end
+    : null;
+  if (currentEnd && dateISO > currentEnd) return upcoming;
+  return current;
+}
+
+export function resolveActiveSchedule(schedule, now = pacificWallClockDate()) {
+  const dateISO = typeof now === "string" ? now : formatISODate(now);
+  return resolveScheduleForDate(schedule, dateISO);
+}
+
 // Return the active closure (if any) covering `now`.
 export function findActiveClosure(closures, now) {
   if (!Array.isArray(closures) || closures.length === 0) return null;
@@ -206,28 +252,14 @@ function findNextSession(normalized, closures, now) {
     const dayKey = DAY_KEYS[date.getDay()];
     const dateISO = formatISODate(date);
 
-    // All-day closures cover the whole day. Partial-day closures only block
-    // sessions whose start lands inside the partial window.
-    const dayClosures = closures.filter((c) => {
-      if (!c || typeof c !== "object") return false;
-      const start = typeof c.start === "string" ? c.start : null;
-      const end = typeof c.end === "string" ? c.end : null;
-      return Boolean(start && end && dateISO >= start && dateISO <= end);
-    });
-    const allDay = dayClosures.find(
-      (c) => typeof c.start_time !== "string" || typeof c.end_time !== "string",
-    );
-    if (allDay) continue;
-    const partialWindows = dayClosures
-      .map((c) => ({ start: parseHHMM(c.start_time), end: parseHHMM(c.end_time) }))
-      .filter((w) => w.start !== null && w.end !== null);
-
     const candidates = normalized
       .filter((session) => session.day === dayKey)
+      .flatMap((session) => {
+        const end = typeof session.end === "number" ? session.end : session.start + 1;
+        return availableSegmentsAfterClosures(session.start, end, closures, dateISO)
+          .map((segment) => ({ ...session, start: segment.start, end: segment.end }));
+      })
       .filter((session) => offset > 0 || session.start > nowMinutes)
-      .filter((session) => !partialWindows.some(
-        (w) => session.start >= w.start && session.start < w.end,
-      ))
       .sort((a, b) => a.start - b.start);
     if (candidates.length > 0) {
       return { offset, session: candidates[0] };
@@ -280,22 +312,11 @@ function findNextAccessWindow(schedule, closures, now) {
     const date = new Date(now);
     date.setDate(date.getDate() + offset);
     const dateISO = formatISODate(date);
-    const dayClosures = closures.filter((c) => (
-      c && typeof c === "object" &&
-      typeof c.start === "string" &&
-      typeof c.end === "string" &&
-      dateISO >= c.start &&
-      dateISO <= c.end
-    ));
-    if (dayClosures.some((c) => parseHHMM(c.start_time) === null || parseHHMM(c.end_time) === null)) {
-      continue;
-    }
-    const partialWindows = dayClosures
-      .map((c) => ({ start: parseHHMM(c.start_time), end: parseHHMM(c.end_time) }))
-      .filter((w) => w.start !== null && w.end !== null);
     const candidates = accessWindowsForDate(schedule, date)
+      .flatMap((access) => availableSegmentsAfterClosures(access.start, access.end, closures, dateISO)
+        .map((segment) => ({ ...access, start: segment.start, end: segment.end })))
       .filter((access) => offset > 0 || access.start > nowMinutes)
-      .filter((access) => !partialWindows.some((w) => access.start >= w.start && access.start < w.end));
+      .sort((a, b) => a.start - b.start);
     if (candidates.length > 0) {
       return { offset, access: candidates[0] };
     }
@@ -316,14 +337,28 @@ function closureOverlapsWindow(closure, dateISO, windowStart, windowEnd) {
   return closureEnd > windowStart && closureStart < windowEnd;
 }
 
-function sessionOverlapsClosure(session, closures, dateISO) {
-  return closures.some((closure) => {
-    if (!closureOverlapsWindow(closure, dateISO, session.start, session.end)) return false;
+function availableSegmentsAfterClosures(start, end, closures, dateISO) {
+  if (end <= start) return [];
+  let segments = [{ start, end }];
+  for (const closure of closures) {
+    if (!closureOverlapsWindow(closure, dateISO, start, end)) continue;
     const closureStart = parseHHMM(closure.start_time);
     const closureEnd = parseHHMM(closure.end_time);
-    if (closureStart === null || closureEnd === null) return true;
-    return closureEnd > session.start && closureStart < session.end;
-  });
+    if (closureStart === null || closureEnd === null) return [];
+    segments = segments.flatMap((segment) => {
+      if (closureEnd <= segment.start || closureStart >= segment.end) return [segment];
+      const next = [];
+      if (segment.start < closureStart) {
+        next.push({ start: segment.start, end: Math.min(closureStart, segment.end) });
+      }
+      if (closureEnd < segment.end) {
+        next.push({ start: Math.max(closureEnd, segment.start), end: segment.end });
+      }
+      return next.filter((candidate) => candidate.end > candidate.start);
+    });
+    if (segments.length === 0) return [];
+  }
+  return segments;
 }
 
 // Return the next drop-in session (lap / family / senior) that starts strictly
@@ -331,6 +366,7 @@ function sessionOverlapsClosure(session, closures, dateISO) {
 // Returns `{ program, day, start }` (start in minutes-of-day) or null if none
 // found within the window.
 export function findNextDropIn(schedule, now, allowedTypes = null) {
+  schedule = resolveActiveSchedule(schedule, now);
   if (!schedule || typeof schedule !== "object") return null;
   const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
   // Pull in derived closures so pre-season pools skip days that fall
@@ -348,13 +384,19 @@ export function findNextDropIn(schedule, now, allowedTypes = null) {
     if (allowed && !allowed.has(session.type)) continue;
     const day = typeof session.day === "string" ? session.day.toLowerCase() : null;
     const start = parseHHMM(session.start);
-    if (!day || !DAY_KEYS.includes(day) || start === null) continue;
-    normalized.push({ program: session.type, day, start });
+    const end = parseHHMM(session.end);
+    if (!day || !DAY_KEYS.includes(day) || start === null || end === null || end <= start) continue;
+    normalized.push({ program: session.type, day, start, end });
   }
   if (normalized.length === 0) return null;
 
   const best = findNextSession(normalized, closures, now);
-  return best ? best.session : null;
+  if (!best) return null;
+  return {
+    program: best.session.program,
+    day: best.session.day,
+    start: best.session.start,
+  };
 }
 
 // A schedule's effective window is itself a closure. Pre-season and
@@ -429,6 +471,7 @@ function allClosures(schedule) {
 }
 
 export function computeStatus(schedule, now, allowedTypes = null) {
+  schedule = resolveActiveSchedule(schedule, now);
   const empty = statusResult(PLACEHOLDER, PLACEHOLDER);
   if (!schedule || typeof schedule !== "object") return empty;
 
@@ -480,6 +523,7 @@ export function computeStatus(schedule, now, allowedTypes = null) {
 }
 
 export function computeAccessStatus(schedule, now) {
+  schedule = resolveActiveSchedule(schedule, now);
   const empty = statusResult(PLACEHOLDER, PLACEHOLDER);
   if (!schedule || typeof schedule !== "object") return empty;
 
@@ -517,6 +561,7 @@ export function computeAccessStatus(schedule, now) {
 }
 
 export function computeNextOpenOffset(schedule, now, allowedTypes = null) {
+  schedule = resolveActiveSchedule(schedule, now);
   if (!schedule || typeof schedule !== "object") return Number.POSITIVE_INFINITY;
 
   const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
@@ -543,6 +588,7 @@ export function computeNextOpenOffset(schedule, now, allowedTypes = null) {
 }
 
 export function computeWindowAvailability(schedule, horizon, allowedTypes = null) {
+  if (horizon?.date) schedule = resolveActiveSchedule(schedule, horizon.date);
   if (!horizon || horizon.kind !== "window") {
     return {
       kind: "INVALID",
@@ -604,11 +650,17 @@ export function computeWindowAvailability(schedule, horizon, allowedTypes = null
     .filter((session) => isDropInType(session.type))
     .filter((session) => session.day === horizon.day)
     .filter((session) => session.end > horizon.start && session.start < horizon.end)
-    .filter((session) => !sessionOverlapsClosure(session, closures, horizon.date))
-    .map((session) => ({
+    .flatMap((session) => availableSegmentsAfterClosures(
+      session.start,
+      session.end,
+      closures,
+      horizon.date,
+    ).map((segment) => ({
       ...session,
-      overlap: Math.min(session.end, horizon.end) - Math.max(session.start, horizon.start),
-    }))
+      start: segment.start,
+      end: segment.end,
+      overlap: Math.min(segment.end, horizon.end) - Math.max(segment.start, horizon.start),
+    })))
     .filter((session) => session.overlap > 0)
     .sort((a, b) => {
       if (a.start !== b.start) return a.start - b.start;
@@ -637,6 +689,7 @@ export function computeWindowAvailability(schedule, horizon, allowedTypes = null
 }
 
 export function computeAccessWindowAvailability(schedule, horizon) {
+  if (horizon?.date) schedule = resolveActiveSchedule(schedule, horizon.date);
   if (!horizon || horizon.kind !== "window" || !schedule || typeof schedule !== "object") {
     return { status: PLACEHOLDER, next: PLACEHOLDER, sortRank: 3 };
   }
@@ -657,7 +710,13 @@ export function computeAccessWindowAvailability(schedule, horizon) {
   const horizonDate = new Date(`${horizon.date}T00:00:00`);
   const overlaps = accessWindowsForDate(schedule, horizonDate)
     .filter((access) => access.end > horizon.start && access.start < horizon.end)
-    .filter((access) => !closures.some((closure) => closureOverlapsWindow(closure, horizon.date, access.start, access.end)))
+    .flatMap((access) => availableSegmentsAfterClosures(
+      access.start,
+      access.end,
+      closures,
+      horizon.date,
+    ).map((segment) => ({ ...access, start: segment.start, end: segment.end })))
+    .filter((access) => access.end > horizon.start && access.start < horizon.end)
     .sort((a, b) => a.start - b.start);
   if (overlaps.length === 0) {
     return { status: "CHECK", next: PLACEHOLDER, sortRank: 3 };
@@ -747,6 +806,7 @@ function normalizeAccessHours(accessHours) {
 }
 
 export function computeDetailStatus(schedule, now) {
+  schedule = resolveActiveSchedule(schedule, now);
   if (!schedule || typeof schedule !== "object") return { ...EMPTY_DETAIL };
 
   const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];

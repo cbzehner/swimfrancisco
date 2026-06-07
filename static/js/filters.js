@@ -25,6 +25,7 @@
 import {
   computeNextOpenOffset,
   computeWindowAvailability,
+  resolveActiveSchedule,
   sortByRank,
 } from "./helpers/board.mjs";
 import { pacificWallClockDate } from "./helpers/pacific.mjs";
@@ -121,7 +122,11 @@ function rowMatchesType(row, type) {
   }
   if (!isDropInType(type)) return false;
   if (row.getAttribute("data-type") !== "pool") return false;
-  const schedule = readSchedule(row);
+  const horizon = getCurrentHorizon();
+  const schedule = resolveActiveSchedule(
+    readSchedule(row),
+    horizon?.kind === "window" ? horizon.date : pacificWallClockDate(),
+  );
   if (!schedule || !Array.isArray(schedule.sessions)) return false;
   return schedule.sessions.some(
     (session) => session && typeof session === "object" && session.type === type,

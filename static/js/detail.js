@@ -9,6 +9,7 @@ import {
   computeDetailStatus,
   formatHHMM,
   parseHHMM,
+  resolveActiveSchedule,
 } from "./helpers/board.mjs";
 import {
   closureReasonLabel,
@@ -80,8 +81,9 @@ function formatNextLine(result) {
 }
 
 function applyStatusSlab(root, schedule, now) {
-  const hasSessions = schedule && Array.isArray(schedule.sessions) && schedule.sessions.length > 0;
-  const hasAccessHours = schedule && Array.isArray(schedule.access_hours) && schedule.access_hours.length > 0;
+  const activeSchedule = resolveActiveSchedule(schedule, now);
+  const hasSessions = activeSchedule && Array.isArray(activeSchedule.sessions) && activeSchedule.sessions.length > 0;
+  const hasAccessHours = activeSchedule && Array.isArray(activeSchedule.access_hours) && activeSchedule.access_hours.length > 0;
   const result = hasSessions || !hasAccessHours
     ? computeDetailStatus(schedule, now)
     : computeAccessStatus(schedule, now);

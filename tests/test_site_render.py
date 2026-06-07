@@ -288,7 +288,10 @@ def test_localized_spot_pages_store_translated_markdown(built_site: Path) -> Non
 
     garfield = (built_site / "es" / "spots" / "garfield-pool" / "index.html").read_text()
     assert "<title>Garfield Pool horario de natación y acceso — Swim Francisco</title>" in garfield
-    assert "El horario empieza 7/6/2026" in garfield
+    assert (
+        "El horario empieza 7/6/2026" in garfield
+        or "HORARIO VIGENTE DESDE 7/6/2026 HASTA 13/8/2026" in garfield
+    )
     assert "SIN HORARIO SIN CITA VIERNES Y SÁBADO" in garfield
 
     mission = (built_site / "es" / "spots" / "mission-community-pool" / "index.html").read_text()
@@ -417,13 +420,30 @@ def test_closures_render_without_object_literal_across_all_pools(built_site: Pat
 
 def test_pool_meta_dates_render_in_human_format(built_site: Path) -> None:
     html = _read(built_site, "balboa-pool")
-    effective_copy = "SCHEDULE EFFECTIVE FROM JUN 9, 2026 TO AUG 15, 2026"
-    assert effective_copy in html
+    effective_copies = [
+        "SCHEDULE EFFECTIVE FROM MAR 17, 2026 TO JUN 6, 2026",
+        "SCHEDULE EFFECTIVE FROM JUN 9, 2026 TO AUG 15, 2026",
+    ]
+    effective_copy = next((copy for copy in effective_copies if copy in html), None)
+    assert effective_copy is not None
+    assert '"upcoming_schedule":' in html
     assert "SOURCE OFFICIAL SITE" in html
     assert "REVIEWED" not in html
     assert "PDF REVIEWED" not in html
     assert "LAST VERIFIED" not in html
     assert html.index("recently reopened after a $9M renovation") < html.index(effective_copy)
+
+
+def test_transition_closure_banners_stay_inside_active_schedule_window(built_site: Path) -> None:
+    html = _read(built_site, "north-beach-pool")
+    assert "JUN 6 09:00–13:00" in html or "JUN 19 </span><span class=closure-banner-reason>Juneteenth" in html
+    assert "JUN 19 </span><span class=closure-banner-reason>Holiday Closure" not in html
+
+
+def test_temporary_closure_page_does_not_render_not_verified_fallback(built_site: Path) -> None:
+    html = _read(built_site, "sava-pool")
+    assert "Closed for repairs; anticipated reopening summer 2026" in html
+    assert "<p class=fallback>Schedule not yet verified." not in html
 
 
 def test_homepage_omits_trust_column(built_site: Path) -> None:

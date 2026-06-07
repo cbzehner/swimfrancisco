@@ -13,7 +13,7 @@ website = "https://sfrecpark.org/facilities/facility/details/Balboa-Pool-212"
 cost = "paid"
 setpoint_label = "80–82°F"
 schedule_effective = "2026-03-17"
-last_verified_at = "2026-04-17"
+last_verified_at = "2026-04-20"
 
 # Manually reviewed against the Spring 2026 Balboa Pool schedule PDF.
 # SFUSD-only rows are omitted; Tuesday parent/child intro and Friday masters swim are represented in the public schedule.
@@ -170,6 +170,125 @@ reason = "Memorial Day"
 start = "2026-06-06"
 end = "2026-06-06"
 reason = "Inservice Training"
+start_time = "09:00"
+end_time = "13:00"
+[extra.upcoming_schedule]
+schedule_effective = "2026-06-09"
+schedule_basis = "swim_schedule"
+schedule_effective_end = "2026-08-15"
+last_verified_at = "2026-06-06"
+[[extra.upcoming_schedule.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "07:00"
+end = "08:00"
+
+[[extra.upcoming_schedule.sessions]]
+day = "tuesday"
+type = "senior_swim"
+start = "10:30"
+end = "12:00"
+
+[[extra.upcoming_schedule.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "12:30"
+end = "13:30"
+
+[[extra.upcoming_schedule.sessions]]
+day = "tuesday"
+type = "family_swim"
+start = "14:00"
+end = "15:30"
+
+[[extra.upcoming_schedule.sessions]]
+day = "wednesday"
+type = "senior_swim"
+start = "10:30"
+end = "12:00"
+
+[[extra.upcoming_schedule.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "12:30"
+end = "13:30"
+
+[[extra.upcoming_schedule.sessions]]
+day = "wednesday"
+type = "family_swim"
+start = "14:00"
+end = "15:30"
+
+[[extra.upcoming_schedule.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "07:00"
+end = "08:00"
+
+[[extra.upcoming_schedule.sessions]]
+day = "thursday"
+type = "senior_swim"
+start = "10:30"
+end = "12:00"
+
+[[extra.upcoming_schedule.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "14:30"
+end = "15:30"
+
+[[extra.upcoming_schedule.sessions]]
+day = "thursday"
+type = "family_swim"
+start = "18:00"
+end = "19:30"
+
+[[extra.upcoming_schedule.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "10:30"
+end = "12:30"
+
+[[extra.upcoming_schedule.sessions]]
+day = "friday"
+type = "family_swim"
+start = "14:00"
+end = "15:30"
+
+[[extra.upcoming_schedule.sessions]]
+day = "saturday"
+type = "lap_swim"
+start = "09:00"
+end = "10:30"
+pool = "deep"
+
+[[extra.upcoming_schedule.sessions]]
+day = "saturday"
+type = "family_swim"
+start = "12:30"
+end = "14:00"
+
+[[extra.upcoming_schedule.sessions]]
+day = "saturday"
+type = "family_swim"
+start = "14:30"
+end = "15:30"
+
+[[extra.upcoming_schedule.sessions]]
+day = "saturday"
+type = "lap_swim"
+start = "16:00"
+end = "17:00"
+
+[[extra.upcoming_schedule.closures]]
+start = "2026-06-19"
+end = "2026-06-19"
+reason = "Juneteenth"
+
+[[extra.upcoming_schedule.closures]]
+start = "2026-07-04"
+end = "2026-07-04"
+reason = "Independence Day"
 +++
 
 A 100' x 40', six-lane indoor pool in the Ingleside neighborhood, recently reopened after a $9M renovation that added new mechanical systems, accessibility upgrades, and a mural by local artist Jason Jägel. Programs include lap swim, senior swim, recreation swim, fitness and exercise classes, and lessons.

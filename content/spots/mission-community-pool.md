@@ -13,7 +13,7 @@ website = "https://sfrecpark.org/facilities/facility/details/Mission-Community-P
 cost = "paid"
 setpoint_label = "80–82°F"
 schedule_effective = "2026-05-12"
-last_verified_at = "2026-05-03"
+last_verified_at = "2026-05-05"
 
 # Seasonal outdoor pool; Spring 2026 schedule runs 2026-05-12 through 2026-06-06.
 schedule_effective_end = "2026-06-06"
@@ -35,6 +35,8 @@ reason = "Memorial Day"
 start = "2026-06-06"
 end = "2026-06-06"
 reason = "Staff training"
+start_time = "09:00"
+end_time = "14:00"
 [[extra.sessions]]
 day = "tuesday"
 type = "lap_swim"
@@ -148,6 +150,159 @@ day = "saturday"
 type = "lap_swim"
 start = "15:30"
 end = "17:00"
+[extra.upcoming_schedule]
+schedule_effective = "2026-06-09"
+schedule_basis = "swim_schedule"
+schedule_effective_end = "2026-06-20"
+last_verified_at = "2026-06-06"
+[[extra.upcoming_schedule.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "07:00"
+end = "08:30"
+
+[[extra.upcoming_schedule.sessions]]
+day = "tuesday"
+type = "family_swim"
+start = "09:00"
+end = "10:30"
+pool = "1 lane"
+
+[[extra.upcoming_schedule.sessions]]
+day = "tuesday"
+type = "senior_swim"
+start = "09:00"
+end = "10:30"
+pool = "3 lanes"
+
+[[extra.upcoming_schedule.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "10:45"
+end = "12:30"
+
+[[extra.upcoming_schedule.sessions]]
+day = "tuesday"
+type = "family_swim"
+start = "14:00"
+end = "15:00"
+
+[[extra.upcoming_schedule.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "17:45"
+end = "19:00"
+
+[[extra.upcoming_schedule.sessions]]
+day = "wednesday"
+type = "senior_swim"
+start = "09:00"
+end = "10:30"
+pool = "4 lanes"
+
+[[extra.upcoming_schedule.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "10:45"
+end = "12:30"
+
+[[extra.upcoming_schedule.sessions]]
+day = "wednesday"
+type = "family_swim"
+start = "14:00"
+end = "16:00"
+
+[[extra.upcoming_schedule.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "16:30"
+end = "19:00"
+
+[[extra.upcoming_schedule.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "07:00"
+end = "08:30"
+
+[[extra.upcoming_schedule.sessions]]
+day = "thursday"
+type = "family_swim"
+start = "09:00"
+end = "10:30"
+pool = "1 lane"
+
+[[extra.upcoming_schedule.sessions]]
+day = "thursday"
+type = "senior_swim"
+start = "09:00"
+end = "10:30"
+pool = "3 lanes"
+
+[[extra.upcoming_schedule.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "10:45"
+end = "12:30"
+
+[[extra.upcoming_schedule.sessions]]
+day = "thursday"
+type = "family_swim"
+start = "14:00"
+end = "15:00"
+
+[[extra.upcoming_schedule.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "17:45"
+end = "19:00"
+
+[[extra.upcoming_schedule.sessions]]
+day = "friday"
+type = "senior_swim"
+start = "09:00"
+end = "10:30"
+pool = "4 lanes"
+
+[[extra.upcoming_schedule.sessions]]
+day = "friday"
+type = "family_swim"
+start = "11:00"
+end = "12:30"
+
+[[extra.upcoming_schedule.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "14:00"
+end = "16:00"
+
+[[extra.upcoming_schedule.sessions]]
+day = "friday"
+type = "family_swim"
+start = "16:30"
+end = "19:00"
+
+[[extra.upcoming_schedule.sessions]]
+day = "saturday"
+type = "family_swim"
+start = "10:45"
+end = "12:30"
+
+[[extra.upcoming_schedule.sessions]]
+day = "saturday"
+type = "family_swim"
+start = "14:00"
+end = "15:15"
+
+[[extra.upcoming_schedule.sessions]]
+day = "saturday"
+type = "lap_swim"
+start = "15:30"
+end = "17:00"
+
+[[extra.upcoming_schedule.closures]]
+start = "2026-06-19"
+end = "2026-06-19"
+reason = "Juneteenth"
 +++
 
 The only city-operated outdoor pool in San Francisco. Built in 1916, the 90' x 40' pool sits between Linda and Valencia streets in the heart of the Mission District and operates seasonally from May through October. Programs include lap swim, senior swim, recreation swim, water aerobics, and lessons.

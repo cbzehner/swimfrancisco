@@ -1,0 +1,162 @@
+{
+  "slug": "sava-pool",
+  "pdf_sha256": "3022f4da5f57a3907bd1177401b644aa2e5f36374341a7b9571a76c44a97e1bd",
+  "reviewed_at": "2026-06-06",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29336",
+  "payload": {
+    "closures": [
+      {
+        "end": "2026-06-19",
+        "reason": "Juneteenth",
+        "start": "2026-06-19"
+      }
+    ],
+    "schedule_basis": "swim_schedule",
+    "schedule_effective": "2026-06-09",
+    "schedule_effective_end": "2026-06-27",
+    "sessions": [
+      {
+        "day": "tuesday",
+        "end": "10:30",
+        "evidence": "Lap Swim 6:30 \u2013 10:30 AM",
+        "start": "06:30",
+        "type": "lap_swim",
+        "notes": "Reviewer checked against Sava reopening Summer 2026 PDF, June 9-June 27."
+      },
+      {
+        "day": "wednesday",
+        "end": "10:30",
+        "evidence": "Lap Swim 8:30 \u2013 10:30 AM",
+        "start": "08:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "17:00",
+        "evidence": "Lap Swim 3:30 \u2013 5:00 PM",
+        "start": "15:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "20:30",
+        "evidence": "Lap Swim 7:00 \u2013 8:30 PM",
+        "start": "19:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "10:30",
+        "evidence": "Lap Swim 6:30 \u2013 10:30 AM",
+        "start": "06:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "10:30",
+        "evidence": "Lap Swim 8:30 \u2013 10:30 AM",
+        "start": "08:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "17:00",
+        "evidence": "Lap Swim 3:30 \u2013 5:00 PM",
+        "start": "15:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "11:00",
+        "evidence": "Lap Swim 9:00 \u2013 11:00 AM (4 Lanes)",
+        "pool": "4 lanes",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "17:30",
+        "evidence": "Lap Swim 3:30 \u2013 5:30 PM",
+        "start": "15:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim 1:00 \u2013 3:30 PM",
+        "start": "13:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:00",
+        "evidence": "Rec/Family Swim 1:00 \u2013 3:00 PM",
+        "start": "13:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim 1:00 \u2013 3:30 PM",
+        "start": "13:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "15:00",
+        "evidence": "Rec/Family Swim 1:00 \u2013 3:00 PM",
+        "start": "13:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "19:30",
+        "evidence": "Rec/Family Swim 5:30 \u2013 7:30 PM",
+        "start": "17:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "13:00",
+        "evidence": "Rec/Family Swim 11:30 \u2013 1:00 PM",
+        "start": "11:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "15:00",
+        "evidence": "Rec/Family Swim 1:30 \u2013 3:00 PM",
+        "start": "13:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "12:30",
+        "evidence": "Senior/Therapy Swim 11:00 AM \u2013 12:30 PM",
+        "start": "11:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "12:30",
+        "evidence": "Senior/Therapy Swim 11:00 AM \u2013 12:30 PM",
+        "start": "11:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "12:30",
+        "evidence": "Senior/Therapy Swim 11:00 AM \u2013 12:30 PM",
+        "start": "11:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "friday",
+        "end": "12:30",
+        "evidence": "Senior/Therapy Swim 11:00 AM \u2013 12:30 PM",
+        "start": "11:00",
+        "type": "senior_swim"
+      }
+    ]
+  }
+}

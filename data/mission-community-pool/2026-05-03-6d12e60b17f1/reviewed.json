@@ -18,7 +18,9 @@
       {
         "end": "2026-06-06",
         "reason": "Staff training",
-        "start": "2026-06-06"
+        "start": "2026-06-06",
+        "start_time": "09:00",
+        "end_time": "14:00"
       }
     ],
     "schedule_effective": "2026-05-12",

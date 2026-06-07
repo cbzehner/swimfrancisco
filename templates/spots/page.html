@@ -244,23 +244,34 @@
   </section>
 
   {% if extra.type == "pool" %}
-    {% set sessions = extra.sessions | default(value=[]) %}
-    {% set access_hours = extra.access_hours | default(value=[]) %}
-    {% set access_exceptions = extra.access_exceptions | default(value=[]) %}
-    {% set closures = extra.closures | default(value=[]) %}
     {% set today_ts_tb = now(timestamp=true) %}
     {% set today_iso_tb = today_ts_tb | date(format="%Y-%m-%d", timezone="America/Los_Angeles") %}
     {% set today_i_tb = today_iso_tb | replace(from="-", to="") | int %}
-    {% set effective_start = extra.schedule_effective | default(value="") %}
-    {% set effective_end = extra.schedule_effective_end | default(value="") %}
+    {% set active_extra = extra %}
+    {% set current_effective_end = extra.schedule_effective_end | default(value="") %}
+    {% if extra.upcoming_schedule and current_effective_end %}
+      {% set current_effective_end_i = current_effective_end | replace(from="-", to="") | int %}
+      {% if today_i_tb > current_effective_end_i %}
+        {% set_global active_extra = extra.upcoming_schedule %}
+      {% endif %}
+    {% endif %}
+    {% set sessions = active_extra.sessions | default(value=[]) %}
+    {% set access_hours = active_extra.access_hours | default(value=[]) %}
+    {% set access_exceptions = active_extra.access_exceptions | default(value=[]) %}
+    {% set closures = active_extra.closures | default(value=[]) %}
+    {% set effective_start = active_extra.schedule_effective | default(value="") %}
+    {% set effective_end = active_extra.schedule_effective_end | default(value="") %}
+    {% set schedule_basis = active_extra.schedule_basis | default(value="") %}
+    {% set effective_start_i = 0 %}
+    {% set effective_end_i = 99991231 %}
     {% set pre_effective = false %}
     {% set post_effective = false %}
     {% if effective_start %}
-      {% set effective_start_i = effective_start | replace(from="-", to="") | int %}
+      {% set_global effective_start_i = effective_start | replace(from="-", to="") | int %}
       {% if today_i_tb < effective_start_i %}{% set_global pre_effective = true %}{% endif %}
     {% endif %}
     {% if effective_end %}
-      {% set effective_end_i = effective_end | replace(from="-", to="") | int %}
+      {% set_global effective_end_i = effective_end | replace(from="-", to="") | int %}
       {% if today_i_tb > effective_end_i %}{% set_global post_effective = true %}{% endif %}
     {% endif %}
     {% set schedule_in_window = not pre_effective and not post_effective %}
@@ -457,7 +468,7 @@
             </div>
           </div>
         </section>
-      {% else %}
+      {% elif closures | length == 0 and schedule_basis != "temporarily_closed" %}
         <p class="fallback">{{ trans(key='schedule_not_verified_sentence', lang=lang) }}</p>
       {% endif %}
       {# Anchor the 14-day window in America/Los_Angeles so the build host's
@@ -474,7 +485,7 @@
       {% for c in closures %}
         {% set c_start_i = c.start | replace(from="-", to="") | int %}
         {% set c_end_i = c.end | replace(from="-", to="") | int %}
-        {% if c_start_i <= window_end_i and c_end_i >= today_i %}
+        {% if c_start_i <= window_end_i and c_end_i >= today_i and c_end_i >= effective_start_i and c_start_i <= effective_end_i %}
           {% set_global upcoming_closures = upcoming_closures | concat(with=c) %}
         {% endif %}
       {% endfor %}
@@ -499,7 +510,7 @@
       {% set upcoming_access_exceptions = [] %}
       {% for e in access_exceptions %}
         {% set e_date_i = e.date | replace(from="-", to="") | int %}
-        {% if e_date_i <= window_end_i and e_date_i >= today_i %}
+        {% if e_date_i <= window_end_i and e_date_i >= today_i and e_date_i >= effective_start_i and e_date_i <= effective_end_i %}
           {% set_global upcoming_access_exceptions = upcoming_access_exceptions | concat(with=e) %}
         {% endif %}
       {% endfor %}
@@ -526,7 +537,7 @@
             {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">{{ trans(key='source_official_site', lang=lang) }}</a>{% else %}{{ trans(key='source_official_site', lang=lang) }}{% endif %}
           </p>
           <p class="meta-effective">
-            {{ trans(key='schedule_effective_from', lang=lang) }} {{ self::format_iso_date(iso=extra.schedule_effective, active_lang=lang) }}{% if extra.schedule_effective_end %} {{ trans(key='to', lang=lang) }} {{ self::format_iso_date(iso=extra.schedule_effective_end, active_lang=lang) }}{% endif %}
+            {{ trans(key='schedule_effective_from', lang=lang) }} {{ self::format_iso_date(iso=active_extra.schedule_effective, active_lang=lang) }}{% if active_extra.schedule_effective_end %} {{ trans(key='to', lang=lang) }} {{ self::format_iso_date(iso=active_extra.schedule_effective_end, active_lang=lang) }}{% endif %}
           </p>
         </footer>
       {% endif %}

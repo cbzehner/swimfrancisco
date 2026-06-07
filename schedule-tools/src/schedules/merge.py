@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import tomlkit
 from tomlkit.items import AoT
@@ -24,17 +26,35 @@ def merge(
     extracted: dict[str, Any],
     *,
     last_verified_at: str | None = None,
+    as_of_date: str | None = None,
 ) -> MergeResult:
     original_text = pool_md_path.read_text()
     frontmatter_text, body = _split_frontmatter(original_text)
     document = tomlkit.parse(frontmatter_text)
     extra = document.setdefault("extra", tomlkit.table())
 
-    before = read_schedule_snapshot(pool_md_path)
     after = _normalized_schedule_payload(extracted)
-    changed = before != after
+    if as_of_date is None:
+        as_of_date = _today_pacific()
+    promoted = _promote_upcoming_schedule(extra, as_of_date)
+    before = _schedule_from_table(extra)
+    queue_upcoming = _should_queue_upcoming(before, after)
+    if queue_upcoming and _should_preserve_existing_upcoming(extra.get("upcoming_schedule"), after):
+        return MergeResult(
+            prior_sessions_count=len(before["sessions"]),
+            new_sessions_count=len(after["sessions"]),
+            prior_closures_count=len(before["closures"]),
+            new_closures_count=len(after["closures"]),
+            written=False,
+        )
+    target = _schedule_from_table(extra["upcoming_schedule"]) if queue_upcoming and extra.get("upcoming_schedule") else before
+    changed = promoted or target != after
     if last_verified_at is not None:
-        changed = changed or extra.get("last_verified_at") != last_verified_at
+        if queue_upcoming:
+            upcoming = extra.get("upcoming_schedule", {})
+            changed = changed or upcoming.get("last_verified_at") != last_verified_at
+        else:
+            changed = changed or extra.get("last_verified_at") != last_verified_at
 
     if not changed:
         return MergeResult(
@@ -45,27 +65,11 @@ def merge(
             written=False,
         )
 
-    extra["sessions"] = _build_sessions_value(after["sessions"])
-    if after["access_hours"]:
-        extra["access_hours"] = _build_access_hours_value(after["access_hours"])
-    elif "access_hours" in extra:
-        del extra["access_hours"]
-    if after["access_exceptions"]:
-        extra["access_exceptions"] = _build_access_exceptions_value(after["access_exceptions"])
-    elif "access_exceptions" in extra:
-        del extra["access_exceptions"]
-    extra["closures"] = _build_closures_value(after["closures"])
-    extra["schedule_effective"] = after["schedule_effective"]
-    if after["schedule_basis"] is not None:
-        extra["schedule_basis"] = after["schedule_basis"]
-    elif "schedule_basis" in extra:
-        del extra["schedule_basis"]
-    if after["schedule_effective_end"] is not None:
-        extra["schedule_effective_end"] = after["schedule_effective_end"]
-    elif "schedule_effective_end" in extra:
-        del extra["schedule_effective_end"]
-    if last_verified_at is not None:
-        extra["last_verified_at"] = last_verified_at
+    if queue_upcoming:
+        extra["upcoming_schedule"] = _build_schedule_table(after, last_verified_at=last_verified_at)
+    else:
+        _write_schedule_fields(extra, after, last_verified_at=last_verified_at)
+        _drop_stale_upcoming(extra, after)
 
     updated = tomlkit.dumps(document).rstrip("\n")
     pool_md_path.write_text(f"+++\n{updated}\n+++\n{body}")
@@ -82,15 +86,17 @@ def read_schedule_snapshot(pool_md_path: Path) -> dict[str, Any]:
     frontmatter_text, _ = _split_frontmatter(pool_md_path.read_text())
     document = tomlkit.parse(frontmatter_text)
     extra = document.get("extra", {})
-    return {
-        "sessions": _normalize_sessions(list(extra.get("sessions", []))),
-        "access_hours": _normalize_access_hours(list(extra.get("access_hours", []))),
-        "access_exceptions": _normalize_access_exceptions(list(extra.get("access_exceptions", []))),
-        "closures": _normalize_closures(list(extra.get("closures", []))),
-        "schedule_effective": extra.get("schedule_effective"),
-        "schedule_basis": extra.get("schedule_basis"),
-        "schedule_effective_end": extra.get("schedule_effective_end"),
-    }
+    return _schedule_from_table(extra)
+
+
+def read_upcoming_schedule_snapshot(pool_md_path: Path) -> dict[str, Any] | None:
+    frontmatter_text, _ = _split_frontmatter(pool_md_path.read_text())
+    document = tomlkit.parse(frontmatter_text)
+    extra = document.get("extra", {})
+    upcoming = extra.get("upcoming_schedule")
+    if not upcoming:
+        return None
+    return _schedule_from_table(upcoming)
 
 
 def _normalized_schedule_payload(extracted: dict[str, Any]) -> dict[str, Any]:
@@ -103,6 +109,111 @@ def _normalized_schedule_payload(extracted: dict[str, Any]) -> dict[str, Any]:
         "schedule_basis": extracted.get("schedule_basis"),
         "schedule_effective_end": extracted.get("schedule_effective_end"),
     }
+
+
+def _today_pacific() -> str:
+    return datetime.now(ZoneInfo("America/Los_Angeles")).date().isoformat()
+
+
+def _schedule_from_table(table: Any) -> dict[str, Any]:
+    return {
+        "sessions": _normalize_sessions(list(table.get("sessions", []))),
+        "access_hours": _normalize_access_hours(list(table.get("access_hours", []))),
+        "access_exceptions": _normalize_access_exceptions(list(table.get("access_exceptions", []))),
+        "closures": _normalize_closures(list(table.get("closures", []))),
+        "schedule_effective": table.get("schedule_effective"),
+        "schedule_basis": table.get("schedule_basis"),
+        "schedule_effective_end": table.get("schedule_effective_end"),
+    }
+
+
+def _should_queue_upcoming(current: dict[str, Any], incoming: dict[str, Any]) -> bool:
+    current_end = current.get("schedule_effective_end")
+    incoming_start = incoming.get("schedule_effective")
+    return (
+        isinstance(current_end, str)
+        and isinstance(incoming_start, str)
+        and incoming_start > current_end
+    )
+
+
+def _should_preserve_existing_upcoming(upcoming: Any, incoming: dict[str, Any]) -> bool:
+    if not upcoming:
+        return False
+    upcoming_start = upcoming.get("schedule_effective")
+    incoming_start = incoming.get("schedule_effective")
+    return (
+        isinstance(upcoming_start, str)
+        and isinstance(incoming_start, str)
+        and incoming_start > upcoming_start
+    )
+
+
+def _promote_upcoming_schedule(extra: Any, as_of_date: str) -> bool:
+    upcoming = extra.get("upcoming_schedule")
+    if not upcoming:
+        return False
+    upcoming_start = upcoming.get("schedule_effective")
+    if not isinstance(upcoming_start, str) or as_of_date < upcoming_start:
+        return False
+    schedule = _schedule_from_table(upcoming)
+    last_verified_at = upcoming.get("last_verified_at")
+    del extra["upcoming_schedule"]
+    _write_schedule_fields(
+        extra,
+        schedule,
+        last_verified_at=last_verified_at if isinstance(last_verified_at, str) else None,
+    )
+    return True
+
+
+def _write_schedule_fields(
+    target: Any,
+    schedule: dict[str, Any],
+    *,
+    last_verified_at: str | None = None,
+) -> None:
+    target["sessions"] = _build_sessions_value(schedule["sessions"])
+    if schedule["access_hours"]:
+        target["access_hours"] = _build_access_hours_value(schedule["access_hours"])
+    elif "access_hours" in target:
+        del target["access_hours"]
+    if schedule["access_exceptions"]:
+        target["access_exceptions"] = _build_access_exceptions_value(schedule["access_exceptions"])
+    elif "access_exceptions" in target:
+        del target["access_exceptions"]
+    target["closures"] = _build_closures_value(schedule["closures"])
+    target["schedule_effective"] = schedule["schedule_effective"]
+    if schedule["schedule_basis"] is not None:
+        target["schedule_basis"] = schedule["schedule_basis"]
+    elif "schedule_basis" in target:
+        del target["schedule_basis"]
+    if schedule["schedule_effective_end"] is not None:
+        target["schedule_effective_end"] = schedule["schedule_effective_end"]
+    elif "schedule_effective_end" in target:
+        del target["schedule_effective_end"]
+    if last_verified_at is not None:
+        target["last_verified_at"] = last_verified_at
+
+
+def _build_schedule_table(
+    schedule: dict[str, Any],
+    *,
+    last_verified_at: str | None = None,
+):
+    table = tomlkit.table()
+    _write_schedule_fields(table, schedule, last_verified_at=last_verified_at)
+    return table
+
+
+def _drop_stale_upcoming(target: Any, current: dict[str, Any]) -> None:
+    upcoming = target.get("upcoming_schedule")
+    if not upcoming:
+        return
+    upcoming_start = upcoming.get("schedule_effective")
+    current_start = current.get("schedule_effective")
+    if isinstance(upcoming_start, str) and isinstance(current_start, str) and upcoming_start <= current_start:
+        del target["upcoming_schedule"]
 
 
 def _normalize_sessions(raw_sessions: list[dict]) -> list[dict[str, str]]:

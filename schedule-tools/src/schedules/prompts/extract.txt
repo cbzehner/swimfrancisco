@@ -12,7 +12,7 @@ Programs to ignore (do NOT emit as sessions when they appear ALONE in a cell):
 - WATER EXERCISE, DEEP WATER EXERCISE, EXERCISE, DEEP WATER H2O AEROBICS, AEROBICS — instructor-led aerobics classes.
 - SELF GUIDED EXERCISE — access-controlled exercise programs.
 - MASTERS SWIMMING, MASTERS SWIM TEAM, YOUTH SYNCHRO, ADULT SYNCHRO, ADULT HOCKEY, ADULT WATER POLO, PIRANHAS SWIM, JUNIOR PIRANHAS SWIM — private team/club bookings.
-- SFUSD CLASS, SFUSD — school-only bookings (when alone). Do not encode timed school-only bookings in closures[]; omit them entirely. Closures in this schema are always facility-wide, all-day, and date-only.
+- SFUSD CLASS, SFUSD — school-only bookings (when alone). Do not encode timed school-only bookings in closures[]; omit them entirely. Closures in this schema are always facility-wide; they may be all-day or partial-day when the PDF explicitly gives a closure time window.
 
 **Shared-slot rule (important):** when a single cell shows an allowed program SHARING a slot with an ignore-list program — e.g. `SENIOR/SELF GUIDED EXERCISE`, `SENIOR/SFUSD`, `LAP SWIM (4) SELF GUIDED EXERCISE (2)`, `WATER EXERCISE (shallow) LAP SWIM (8)`, `REC/FAMILY /LAP SWIM (Shared Pool)`, `SENIOR SWIM/ AEROBICS** ` — the allowed program's drop-in slot IS real (just shared). EMIT a session for the allowed type. The slash or co-listing means "shared", not "renamed". Use the time range the cell shows for the slot.
 

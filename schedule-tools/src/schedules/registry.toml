@@ -1,11 +1,11 @@
 [[pool]]
 slug = "balboa-pool"
-pdf_url = "https://sfrecpark.org/DocumentCenter/View/28547"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/29319"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Balboa-Pool-212"
 
 [[pool]]
 slug = "coffman-pool"
-pdf_url = "https://sfrecpark.org/DocumentCenter/View/28927"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/29320"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Coffman-Pool-213"
 
 [[pool]]
@@ -15,22 +15,22 @@ official_page_url = "https://sfrecpark.org/facilities/facility/details/Garfield-
 
 [[pool]]
 slug = "hamilton-pool"
-pdf_url = "https://sfrecpark.org/DocumentCenter/View/28496"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/29322"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Hamilton-Pool-215"
 
 [[pool]]
 slug = "martin-luther-king-jr-pool"
-pdf_url = "https://sfrecpark.org/DocumentCenter/View/28771"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/29328"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Martin-Luther-King-Jr-Pool-216"
 
 [[pool]]
 slug = "mission-community-pool"
-pdf_url = "https://sfrecpark.org/DocumentCenter/View/28959"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/29323"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Mission-Community-Pool-217"
 
 [[pool]]
 slug = "north-beach-pool"
-pdf_url = "https://sfrecpark.org/DocumentCenter/View/28503"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/29330"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/North-Beach-Pool-218"
 
 [[pool]]
@@ -40,10 +40,8 @@ official_page_url = "https://sfrecpark.org/Facilities/Facility/Details/Rossi-Poo
 
 [[pool]]
 slug = "sava-pool"
-pdf_url = "https://sfrecpark.org/DocumentCenter/View/27654"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/29336"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Sava-Pool-220"
-source_status = "closed_without_current_schedule"
-notes = "As of 2026-04-17 Sava Pool remained closed for repairs and the facility page only exposed an old Fall 2025 PDF; keep this entry skipped until the pool reopens with a current schedule."
 
 [[pool]]
 slug = "jccsf"

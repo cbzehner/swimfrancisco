@@ -1,0 +1,146 @@
+{
+  "slug": "balboa-pool",
+  "pdf_sha256": "97e8a3557d28a0a3fd3b8e495b533497081dc7bf2246b58c9ec180ba094f6372",
+  "reviewed_at": "2026-06-06",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29319",
+  "payload": {
+    "closures": [
+      {
+        "end": "2026-06-19",
+        "reason": "Juneteenth",
+        "start": "2026-06-19"
+      },
+      {
+        "end": "2026-07-04",
+        "reason": "Independence Day",
+        "start": "2026-07-04"
+      }
+    ],
+    "schedule_basis": "swim_schedule",
+    "schedule_effective": "2026-06-09",
+    "schedule_effective_end": "2026-08-15",
+    "sessions": [
+      {
+        "day": "tuesday",
+        "end": "08:00",
+        "evidence": "Lap Swim 7:00-8:00 AM",
+        "start": "07:00",
+        "type": "lap_swim",
+        "notes": "Reviewer checked against Balboa Summer 2026 PDF, June 9-August 15."
+      },
+      {
+        "day": "tuesday",
+        "end": "13:30",
+        "evidence": "Lap Swim 12:30-1:30 PM",
+        "start": "12:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "13:30",
+        "evidence": "Lap Swim 12:30-1:30 PM",
+        "start": "12:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "08:00",
+        "evidence": "Lap Swim 7:00-8:00 AM",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "15:30",
+        "evidence": "Lap Swim 2:30-3:30 PM",
+        "start": "14:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "12:30",
+        "evidence": "Lap Swim 10:30 AM- 12:30 PM",
+        "start": "10:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "10:30",
+        "evidence": "Lap Swim 9-10:30 AM (Deep)",
+        "pool": "deep",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "17:00",
+        "evidence": "Lap Swim 4:00-5:00 PM",
+        "start": "16:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim 2:00-3:30 PM",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim 2:00-3:30 PM",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "19:30",
+        "evidence": "Rec/Family Swim 6:00-7:30 PM",
+        "start": "18:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim 2:00- 3:30 PM",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "14:00",
+        "evidence": "Rec/Family Swim 12:30-2:00 PM",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim 2:30-3:30 PM",
+        "start": "14:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "12:00",
+        "evidence": "Senior/Therapy Swim 10:30 AM-NOON",
+        "start": "10:30",
+        "type": "senior_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "12:00",
+        "evidence": "Senior/Therapy Swim 10:30 AM-NOON",
+        "start": "10:30",
+        "type": "senior_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "12:00",
+        "evidence": "Senior/Therapy Swim 10:30 AM- NOON",
+        "start": "10:30",
+        "type": "senior_swim"
+      }
+    ]
+  }
+}
