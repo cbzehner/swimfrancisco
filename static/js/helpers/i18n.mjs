@@ -25,15 +25,6 @@ export function programLabel(type) {
   return key ? t(key, type.toUpperCase()) : type.toUpperCase();
 }
 
-export function programLongLabel(type) {
-  const key = {
-    lap_swim: "lap_swim",
-    family_swim: "family_swim",
-    senior_swim: "senior_swim",
-  }[type];
-  return key ? t(key, programLabel(type)) : programLabel(type);
-}
-
 export function dayShortLabel(day) {
   const key = {
     monday: "day_monday_short",

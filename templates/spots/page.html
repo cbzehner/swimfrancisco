@@ -226,7 +226,7 @@
       {% if extra.subtype %}<span class="subtype">{{ chrome::spot_label(label=extra.subtype, active_lang=lang) | upper }}</span>{% endif %}
       {% if extra.setpoint_label %}<span class="setpoint">{{ trans(key='water', lang=lang) }} {{ chrome::spot_label(label=extra.setpoint_label, active_lang=lang) | upper }}</span>{% endif %}
       {% if extra.access_label %}
-        <span class="cost-badge {{ extra.access_badge_class | default(value='is-paid') }}">{{ chrome::access_badge_label(label=extra.access_label, active_lang=lang) }}</span>
+        <span class="cost-badge {{ extra.access_badge_class | default(value='is-paid') }}">{{ chrome::spot_label(label=extra.access_label, active_lang=lang) }}</span>
       {% elif extra.cost == "paid" %}
         <span class="cost-badge is-paid">{{ trans(key='paid', lang=lang) }}</span>
       {% elif extra.cost == "free" %}

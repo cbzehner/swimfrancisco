@@ -1,23 +1,5 @@
 {% import "macros/bulletin.html" as bulletin_macros %}
 
-{% macro language_switcher(content_path, active_lang) %}
-  {% set locale_data = load_data(path="data/locales.toml") %}
-  <nav class="language-switcher" aria-label="{{ trans(key='language', lang=active_lang) }}">
-    {% for locale in locale_data.locales %}
-      <a href="{{ get_url(path=content_path, lang=locale.code) }}"{% if active_lang == locale.code %} aria-current="page"{% endif %}>{{ locale.label }}</a>
-    {% endfor %}
-  </nav>
-{% endmacro language_switcher %}
-
-{% macro access_badge_label(label, active_lang) -%}
-  {%- set dynamic_labels = load_data(path="data/i18n/dynamic-labels.toml") -%}
-  {%- set dynamic_label = dynamic_labels.spot_label.by_source[label] | default(value=false) -%}
-  {%- set dynamic_translation_key = dynamic_label.translation_key | default(value="") -%}
-  {%- if dynamic_translation_key -%}{{- trans(key=dynamic_translation_key, lang=active_lang) -}}
-  {%- elif active_lang == config.default_language -%}{{- label -}}
-  {%- endif -%}
-{%- endmacro access_badge_label %}
-
 {% macro spot_label(label, active_lang) -%}
   {%- set dynamic_labels = load_data(path="data/i18n/dynamic-labels.toml") -%}
   {%- set dynamic_label = dynamic_labels.spot_label.by_source[label] | default(value=false) -%}

@@ -103,16 +103,6 @@ def read_schedule_snapshot(pool_md_path: Path) -> dict[str, Any]:
     return _schedule_from_table(extra)
 
 
-def read_upcoming_schedule_snapshot(pool_md_path: Path) -> dict[str, Any] | None:
-    frontmatter_text, _ = _split_frontmatter(pool_md_path.read_text())
-    document = tomlkit.parse(frontmatter_text)
-    extra = document.get("extra", {})
-    upcoming = extra.get("upcoming_schedule")
-    if not upcoming:
-        return None
-    return _schedule_from_table(upcoming)
-
-
 def pick_active_schedule(extra: Any, today_iso: str) -> dict[str, Any]:
     """Display-time predicate: return the schedule that should be rendered
     for `today_iso`. Mirrors `resolveScheduleForDate` in static/js/helpers/

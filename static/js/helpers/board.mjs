@@ -782,7 +782,7 @@ function normalizeRank(rank) {
   return rank;
 }
 
-export { PLACEHOLDER, DAY_KEYS };
+export { PLACEHOLDER };
 
 const EMPTY_DETAIL = Object.freeze({
   kind: "NOT_VERIFIED",

@@ -23,10 +23,6 @@ import {
 } from "./helpers/i18n.mjs";
 import { pacificWallClockDate } from "./helpers/pacific.mjs";
 
-function parseHHMMSafe(value) {
-  return parseHHMM(typeof value === "string" ? value : "");
-}
-
 function formatClosureSuffix(result) {
   if (result.closureKind === "PRE_SEASON" && result.closureTransitionDate) {
     return `${t("status_schedule_starts", "Schedule starts")} ${formatLocalizedISODate(result.closureTransitionDate)}`.toUpperCase();
@@ -103,8 +99,8 @@ function decorateTodayBlock(root, now, statusResult) {
 
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const parsedRows = Array.from(rows, (row) => {
-    const start = parseHHMMSafe(row.getAttribute("data-start"));
-    const end = parseHHMMSafe(row.getAttribute("data-end"));
+    const start = parseHHMM(row.getAttribute("data-start"));
+    const end = parseHHMM(row.getAttribute("data-end"));
     return { row, start, end };
   });
 

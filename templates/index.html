@@ -158,7 +158,7 @@
           <td data-cell="water">{% if page.extra.type == 'pool' and page.extra.setpoint_label %}{{ chrome::spot_label(label=page.extra.setpoint_label, active_lang=lang) | upper }}{% else %}—{% endif %}</td>
           <td data-cell="locale">
             {% if page.extra.access_label %}
-              <span class="cost-badge {{ page.extra.access_badge_class | default(value='is-paid') }}">{{ chrome::access_badge_label(label=page.extra.access_label, active_lang=lang) }}</span>
+              <span class="cost-badge {{ page.extra.access_badge_class | default(value='is-paid') }}">{{ chrome::spot_label(label=page.extra.access_label, active_lang=lang) }}</span>
             {% elif page.extra.cost == "free" %}
               <span class="cost-badge is-free">{{ trans(key='free', lang=lang) }}</span>
             {% elif page.extra.cost == "paid" %}
