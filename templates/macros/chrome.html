@@ -12,7 +12,7 @@
 {% macro site_header(active_view, content_path, active_lang) %}
   <header class="site-header">
     <div class="site-header-row">
-      <h1><a href="{{ get_url(path='@/_index.md', lang=active_lang) }}" class="site-title"><span class="brand-swim">SWIM</span><span class="brand-dot">·</span><span class="brand-city">FRANCISCO</span></a></h1>
+      <a href="{{ get_url(path='@/_index.md', lang=active_lang) }}" class="site-title"><span class="brand-swim">SWIM</span><span class="brand-dot">·</span><span class="brand-city">FRANCISCO</span></a>
       {{ bulletin_macros::badge() }}
       <div class="site-header-actions">
         <a href="{{ get_url(path='@/_index.md', lang=active_lang) }}" data-target-path="{{ get_url(path='@/_index.md', lang=active_lang) }}" class="site-nav-link{% if active_view == 'board' %} is-active{% endif %}" aria-label="{{ trans(key='view_board', lang=active_lang) }}">{{ trans(key='nav_board', lang=active_lang) }}</a>

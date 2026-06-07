@@ -27,7 +27,7 @@
   --teal:    #0e4452;
   --teal-soft:#c2d6db;
   --ochre:   #d39b2a;
-  --senior:  #4a6b7a;
+  --senior:  #3d5868;
 
   /* legacy aliases — keep old JS happy if anything reads --fg / --bg */
   --bg:      var(--paper);
@@ -120,6 +120,18 @@ h1, h2, h3 {
 .site-header-row h1 a { color: var(--ink); }
 .site-title { display: inline-block; }
 .site-title { text-transform: uppercase; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 .brand-dot { color: var(--red); margin: 0 1px; }
 .brand-swim,
 .brand-city { color: var(--ink); }
@@ -1320,12 +1332,14 @@ body.map-page .site-footer {
   display: none;
 }
 
-/* Branded marker — red/teal/ochre dot with ink ring */
+/* Branded marker — red/teal/ochre dot with ink ring. Visible dot stays
+   14px; surrounding margin expands the icon to a 28px WCAG-AA touch
+   target (AA 2.5.8 requires 24px min) without enlarging the visual. */
 .sf-marker .sf-marker-dot {
   display: block;
   width: 14px;
   height: 14px;
-  margin: 2px;
+  margin: 7px;
   border-radius: 50%;
   background: var(--muted);
   border: 2px solid var(--ink);

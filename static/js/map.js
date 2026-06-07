@@ -137,9 +137,9 @@ function createMarkerIcon(L, spot) {
   return L.divIcon({
     className: cls,
     html: '<span class="sf-marker-dot"></span>',
-    iconSize: [18, 18],
-    iconAnchor: [9, 9],
-    popupAnchor: [0, -10],
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -14],
   });
 }
 

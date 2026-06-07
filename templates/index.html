@@ -33,6 +33,7 @@
   {% set bulletin = load_data(path="data/bulletin.json") %}
   {% if is_map_view %}
     {{ chrome::site_header(active_view='map', content_path='@/map/_index.md', active_lang=lang) }}
+    <h1 class="sr-only">{{ trans(key='map_title', lang=lang) }}</h1>
   {% else %}
     {{ chrome::site_header(active_view='board', content_path='@/_index.md', active_lang=lang) }}
   {% endif %}
@@ -49,12 +50,12 @@
 
     <section class="bulletin-hero">
       <div class="eyebrow">{{ trans(key='hero_eyebrow', lang=lang) | replace(from='%{label}', to=bulletin.label) }}</div>
-      <h2>
+      <h1>
         <span class="red">SWIM</span>
         <span>SAN</span> <span class="teal">FRANCISCO.</span>
-      </h2>
+      </h1>
       <p class="hero-line" data-horizon-title>·BEFORE BREAKFAST·</p>
-      <p class="deck">
+      <p class="deck" aria-live="polite">
         <span class="em" data-open-count>—</span>
         <span data-open-count-label>{{ trans(key='places_open_now', lang=lang) }}</span>.
         {{ trans(key='bay', lang=lang) }} <span class="em" data-bay-temp>—</span>, {{ trans(key='ocean', lang=lang) }} <span class="em" data-ocean-temp>—</span>.
@@ -93,7 +94,7 @@
         <button type="button" data-filter="type" data-type="open_water">{{ trans(key='beach', lang=lang) }}</button>
       </div>
       <div class="filter-group access-filter" role="group" aria-label="{{ trans(key='access_filter', lang=lang) }}">
-        <button type="button" data-filter="access" data-access="memberships">{{ trans(key='memberships', lang=lang) }}</button>
+        <button type="button" data-filter="access" data-access="memberships" aria-label="{{ trans(key='memberships_aria', lang=lang) }}">{{ trans(key='memberships', lang=lang) }}</button>
       </div>
     </div>
     {% if not is_map_view %}
@@ -127,7 +128,7 @@
         <th>{{ trans(key='locale', lang=lang) }}</th>
       </tr>
     </thead>
-    <tbody>
+    <tbody aria-live="polite" aria-atomic="false">
       {% for page in spots.pages %}
         {% set target_page = get_page(path="spots/" ~ page.slug ~ ".md", lang=lang) %}
         <tr
