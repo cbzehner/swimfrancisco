@@ -52,6 +52,16 @@ html, body {
   color: var(--ink);
 }
 
+/* Generous scroll padding so the sticky site header, sticky board-controls,
+   and fixed mobile bottom-nav don't obscure programmatically-scrolled focus
+   targets (skip-link, in-page anchors, Tab-driven row navigation). */
+html {
+  scroll-padding-top: 140px;
+  scroll-padding-bottom: 80px;
+}
+
+main:focus { outline: none; }
+
 body {
   font-family: var(--body);
   font-feature-settings: "ss01";
@@ -130,6 +140,27 @@ h1, h2, h3 {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* Skip-link: hidden off-screen until focused. First focusable element on
+   every page so keyboard users can bypass the site header + chrome and
+   land on <main id="main" tabindex="-1">. */
+.skip-link {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  padding: 12px 16px;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--display);
+  font-size: 14px;
+  text-decoration: none;
+  transform: translateY(-200%);
+  transition: transform 120ms ease;
+}
+.skip-link:focus {
+  transform: translateY(0);
 }
 .brand-dot { color: var(--red); margin: 0 1px; }
 .brand-swim,

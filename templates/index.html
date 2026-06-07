@@ -29,13 +29,18 @@
   {% endif %}
 {% endblock %}
 
+{% block site_chrome %}
+  {% if is_map_view %}
+    {{ chrome::site_header(active_view='map', content_path='@/map/_index.md', active_lang=lang) }}
+  {% else %}
+    {{ chrome::site_header(active_view='board', content_path='@/_index.md', active_lang=lang) }}
+  {% endif %}
+{% endblock %}
+
 {% block content %}
   {% set bulletin = load_data(path="data/bulletin.json") %}
   {% if is_map_view %}
-    {{ chrome::site_header(active_view='map', content_path='@/map/_index.md', active_lang=lang) }}
     <h1 class="sr-only">{{ trans(key='map_title', lang=lang) }}</h1>
-  {% else %}
-    {{ chrome::site_header(active_view='board', content_path='@/_index.md', active_lang=lang) }}
   {% endif %}
 
   {% if not is_map_view %}

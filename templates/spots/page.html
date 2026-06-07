@@ -187,18 +187,21 @@
   {%- endif -%}
 {%- endmacro access_window_label %}
 
+{% block site_chrome %}
+  {% if page.extra.localized_from %}{% set render_page = get_page(path="spots/" ~ page.extra.localized_from ~ ".md", lang=config.default_language) %}{% else %}{% set render_page = page %}{% endif %}
+  {% set spot_content_path = "@/spots/" ~ render_page.slug ~ ".md" %}
+  {{ chrome::site_header(active_view='board', content_path=spot_content_path, active_lang=lang) }}
+{% endblock %}
+
 {% block content %}
   {% if page.extra.localized_from %}{% set render_page = get_page(path="spots/" ~ page.extra.localized_from ~ ".md", lang=config.default_language) %}{% else %}{% set render_page = page %}{% endif %}
   {% set extra = render_page.extra %}
-  {% set spot_content_path = "@/spots/" ~ render_page.slug ~ ".md" %}
   {% set destination = extra.address | default(value="") %}
   {% if destination == "" %}{% set destination = extra.lat ~ "," ~ extra.lng %}{% endif %}
   {% set destination_enc = destination | urlencode %}
   {% set place_href = "https://www.google.com/maps/search/?api=1&query=" ~ destination_enc %}
   {% set google_dir = "https://www.google.com/maps/dir/?api=1&destination=" ~ destination_enc %}
   {% set apple_dir = "https://maps.apple.com/?daddr=" ~ destination_enc %}
-
-  {{ chrome::site_header(active_view='board', content_path=spot_content_path, active_lang=lang) }}
 
   <section class="bulletin-strip" aria-label="{{ trans(key='current_conditions', lang=lang) }}">
     <div><span class="k">{{ trans(key='today', lang=lang) }}</span><span class="v" data-today-date>—</span></div>
