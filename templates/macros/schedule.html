@@ -1,30 +1,27 @@
+{# Serialize the schedule fields of `s` as the inside of a JSON object
+   (no surrounding braces). Field list is defined once; the data_schedule
+   macro splices this output for both the current schedule and the queued
+   upcoming sub-schedule. #}
+{% macro schedule_fields(s) -%}
+  {%- set sessions_json = s.sessions | default(value=[]) | json_encode -%}
+  {%- set access_hours_json = s.access_hours | default(value=[]) | json_encode -%}
+  {%- set access_exceptions_json = s.access_exceptions | default(value=[]) | json_encode -%}
+  {%- set closures_json = s.closures | default(value=[]) | json_encode -%}
+  {%- set schedule_basis_json = s.schedule_basis | default(value="unknown") | json_encode -%}
+  {%- set effective_start_json = s.schedule_effective | default(value="") | json_encode -%}
+  {%- set effective_end_json = s.schedule_effective_end | default(value="") | json_encode -%}
+  {{- '"sessions":' ~ sessions_json ~ ',"access_hours":' ~ access_hours_json ~ ',"access_exceptions":' ~ access_exceptions_json ~ ',"closures":' ~ closures_json ~ ',"schedule_basis":' ~ schedule_basis_json ~ ',"effective_start":' ~ effective_start_json ~ ',"effective_end":' ~ effective_end_json -}}
+{%- endmacro schedule_fields %}
+
 {% macro data_schedule(extra) -%}
-  {%- set sessions = extra.sessions | default(value=[]) -%}
-  {%- set access_hours = extra.access_hours | default(value=[]) -%}
-  {%- set access_exceptions = extra.access_exceptions | default(value=[]) -%}
-  {%- set closures = extra.closures | default(value=[]) -%}
-  {%- set schedule_basis = extra.schedule_basis | default(value="unknown") -%}
-  {%- set effective_start = extra.schedule_effective | default(value="") -%}
-  {%- set effective_end = extra.schedule_effective_end | default(value="") -%}
-  {%- set sessions_json = sessions | json_encode -%}
-  {%- set access_hours_json = access_hours | json_encode -%}
-  {%- set access_exceptions_json = access_exceptions | json_encode -%}
-  {%- set closures_json = closures | json_encode -%}
-  {%- set schedule_basis_json = schedule_basis | json_encode -%}
-  {%- set effective_start_json = effective_start | json_encode -%}
-  {%- set effective_end_json = effective_end | json_encode -%}
+  {%- set body = schedule_macros::schedule_fields(s=extra) -%}
   {%- set upcoming = extra.upcoming_schedule | default(value=false) -%}
   {%- if upcoming -%}
-    {%- set upcoming_sessions_json = upcoming.sessions | default(value=[]) | json_encode -%}
-    {%- set upcoming_access_hours_json = upcoming.access_hours | default(value=[]) | json_encode -%}
-    {%- set upcoming_access_exceptions_json = upcoming.access_exceptions | default(value=[]) | json_encode -%}
-    {%- set upcoming_closures_json = upcoming.closures | default(value=[]) | json_encode -%}
-    {%- set upcoming_schedule_basis_json = upcoming.schedule_basis | default(value="unknown") | json_encode -%}
-    {%- set upcoming_effective_start_json = upcoming.schedule_effective | default(value="") | json_encode -%}
-    {%- set upcoming_effective_end_json = upcoming.schedule_effective_end | default(value="") | json_encode -%}
-    {%- set upcoming_json = '{"sessions":' ~ upcoming_sessions_json ~ ',"access_hours":' ~ upcoming_access_hours_json ~ ',"access_exceptions":' ~ upcoming_access_exceptions_json ~ ',"closures":' ~ upcoming_closures_json ~ ',"schedule_basis":' ~ upcoming_schedule_basis_json ~ ',"effective_start":' ~ upcoming_effective_start_json ~ ',"effective_end":' ~ upcoming_effective_end_json ~ '}' -%}
-    {{- '{"sessions":' ~ sessions_json ~ ',"access_hours":' ~ access_hours_json ~ ',"access_exceptions":' ~ access_exceptions_json ~ ',"closures":' ~ closures_json ~ ',"schedule_basis":' ~ schedule_basis_json ~ ',"effective_start":' ~ effective_start_json ~ ',"effective_end":' ~ effective_end_json ~ ',"upcoming_schedule":' ~ upcoming_json ~ '}' | safe -}}
+    {%- set upcoming_body = schedule_macros::schedule_fields(s=upcoming) -%}
+    {%- set rendered = '{' ~ body ~ ',"upcoming_schedule":{' ~ upcoming_body ~ '}' ~ '}' -%}
+    {{- rendered | safe -}}
   {%- else -%}
-    {{- '{"sessions":' ~ sessions_json ~ ',"access_hours":' ~ access_hours_json ~ ',"access_exceptions":' ~ access_exceptions_json ~ ',"closures":' ~ closures_json ~ ',"schedule_basis":' ~ schedule_basis_json ~ ',"effective_start":' ~ effective_start_json ~ ',"effective_end":' ~ effective_end_json ~ '}' | safe -}}
+    {%- set rendered = '{' ~ body ~ '}' -%}
+    {{- rendered | safe -}}
   {%- endif -%}
 {%- endmacro data_schedule %}

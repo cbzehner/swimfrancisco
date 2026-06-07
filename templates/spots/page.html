@@ -247,13 +247,18 @@
     {% set today_ts_tb = now(timestamp=true) %}
     {% set today_iso_tb = today_ts_tb | date(format="%Y-%m-%d", timezone="America/Los_Angeles") %}
     {% set today_i_tb = today_iso_tb | replace(from="-", to="") | int %}
+    {# Render-time selection of the active schedule. Once today is past the
+       current schedule's end date, switch to the queued upcoming schedule so
+       gap days surface "Schedule starts <date>" from the queued entry.
+       Must stay in sync with static/js/helpers/board.mjs `resolveScheduleForDate`.
+       (merge.py's `_promote_upcoming_schedule` is a different concept: it
+       writes upcoming over current in the frontmatter, and uses a stricter
+       predicate — only after the upcoming window has actually begun.) #}
+    {% set current_end = extra.schedule_effective_end | default(value="") %}
     {% set active_extra = extra %}
-    {% set current_effective_end = extra.schedule_effective_end | default(value="") %}
-    {% if extra.upcoming_schedule and current_effective_end %}
-      {% set current_effective_end_i = current_effective_end | replace(from="-", to="") | int %}
-      {% if today_i_tb > current_effective_end_i %}
-        {% set_global active_extra = extra.upcoming_schedule %}
-      {% endif %}
+    {% if extra.upcoming_schedule and current_end %}
+      {% set current_end_i = current_end | replace(from="-", to="") | int %}
+      {% if today_i_tb > current_end_i %}{% set_global active_extra = extra.upcoming_schedule %}{% endif %}
     {% endif %}
     {% set sessions = active_extra.sessions | default(value=[]) %}
     {% set access_hours = active_extra.access_hours | default(value=[]) %}
@@ -264,16 +269,10 @@
     {% set schedule_basis = active_extra.schedule_basis | default(value="") %}
     {% set effective_start_i = 0 %}
     {% set effective_end_i = 99991231 %}
-    {% set pre_effective = false %}
-    {% set post_effective = false %}
-    {% if effective_start %}
-      {% set_global effective_start_i = effective_start | replace(from="-", to="") | int %}
-      {% if today_i_tb < effective_start_i %}{% set_global pre_effective = true %}{% endif %}
-    {% endif %}
-    {% if effective_end %}
-      {% set_global effective_end_i = effective_end | replace(from="-", to="") | int %}
-      {% if today_i_tb > effective_end_i %}{% set_global post_effective = true %}{% endif %}
-    {% endif %}
+    {% if effective_start %}{% set_global effective_start_i = effective_start | replace(from="-", to="") | int %}{% endif %}
+    {% if effective_end %}{% set_global effective_end_i = effective_end | replace(from="-", to="") | int %}{% endif %}
+    {% set pre_effective = effective_start and today_i_tb < effective_start_i %}
+    {% set post_effective = effective_end and today_i_tb > effective_end_i %}
     {% set schedule_in_window = not pre_effective and not post_effective %}
     <div class="detail-root"
          data-schedule='{{ schedule_macros::data_schedule(extra=extra) }}'>

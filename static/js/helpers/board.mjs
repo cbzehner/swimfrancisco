@@ -116,15 +116,6 @@ function scheduleWithoutUpcoming(schedule) {
   return current;
 }
 
-function normalizedQueuedSchedule(schedule) {
-  if (!schedule || typeof schedule !== "object") return null;
-  return scheduleWithoutUpcoming({
-    ...schedule,
-    effective_start: schedule.effective_start || schedule.schedule_effective || "",
-    effective_end: schedule.effective_end || schedule.schedule_effective_end || "",
-  });
-}
-
 function scheduleInWindow(schedule, dateISO) {
   if (!schedule || typeof schedule !== "object") return false;
   const start = typeof schedule.effective_start === "string" && schedule.effective_start
@@ -138,10 +129,18 @@ function scheduleInWindow(schedule, dateISO) {
   return true;
 }
 
+// Display-time predicate: pick which embedded schedule (current vs. queued
+// upcoming) the page should render for `dateISO`. Switches to upcoming as
+// soon as current has ended, so gap days surface "Schedule starts <date>"
+// from the queued entry via the synthetic PRE_SEASON closure.
+//
+// Must stay in sync with templates/spots/page.html's `active_extra` block.
+// merge.py's _promote_upcoming_schedule is a DIFFERENT concept (writing
+// upcoming over current in the frontmatter) and uses a stricter predicate.
 function resolveScheduleForDate(schedule, dateISO) {
   if (!schedule || typeof schedule !== "object") return schedule;
   const current = scheduleWithoutUpcoming(schedule);
-  const upcoming = normalizedQueuedSchedule(schedule.upcoming_schedule);
+  const upcoming = scheduleWithoutUpcoming(schedule.upcoming_schedule);
   if (!upcoming) return current;
   if (scheduleInWindow(current, dateISO)) return current;
   const currentEnd = typeof current.effective_end === "string" && current.effective_end
@@ -154,6 +153,23 @@ function resolveScheduleForDate(schedule, dateISO) {
 export function resolveActiveSchedule(schedule, now = pacificWallClockDate()) {
   const dateISO = typeof now === "string" ? now : formatISODate(now);
   return resolveScheduleForDate(schedule, dateISO);
+}
+
+function hasNonEmptyArray(schedule, key) {
+  return Boolean(
+    schedule
+    && typeof schedule === "object"
+    && Array.isArray(schedule[key])
+    && schedule[key].length > 0,
+  );
+}
+
+export function scheduleHasSessions(schedule) {
+  return hasNonEmptyArray(schedule, "sessions");
+}
+
+export function scheduleHasAccessHours(schedule) {
+  return hasNonEmptyArray(schedule, "access_hours");
 }
 
 // Return the active closure (if any) covering `now`.

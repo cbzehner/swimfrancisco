@@ -13,6 +13,8 @@ import {
   getHorizonOptions,
   resolveActiveSchedule,
   resolveHorizon,
+  scheduleHasAccessHours,
+  scheduleHasSessions,
 } from "./helpers/board.mjs";
 import { pacificWallClockDate } from "./helpers/pacific.mjs";
 import {
@@ -172,8 +174,8 @@ function applyStatuses(root, now, allowedTypes = null) {
       schedule,
       horizon.kind === "window" ? horizon.date : now,
     );
-    const hasSessions = activeSchedule && Array.isArray(activeSchedule.sessions) && activeSchedule.sessions.length > 0;
-    const hasAccessHours = activeSchedule && Array.isArray(activeSchedule.access_hours) && activeSchedule.access_hours.length > 0;
+    const hasSessions = scheduleHasSessions(activeSchedule);
+    const hasAccessHours = scheduleHasAccessHours(activeSchedule);
     if (horizon.kind === "window") {
       const result = hasSessions
         ? computeWindowAvailability(schedule, horizon, allowedTypes)
