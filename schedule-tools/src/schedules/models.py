@@ -34,7 +34,7 @@ ReviewNoteKind = Literal[
     "delta_schedule_effective_regressed",
     "grounding_coverage_low",
     "compare_provider_failed",
-    "legacy_note",
+    "direct_extractor_note",
 ]
 
 

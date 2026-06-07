@@ -82,44 +82,6 @@ def compare_payloads(
     return notes
 
 
-def serialize_note(note: ReviewNote) -> dict:
-    return {
-        "kind": note.kind,
-        "message": note.message,
-        "severity": note.severity,
-        "evidence": note.evidence,
-    }
-
-
-def deserialize_notes(raw_note_details: list | None, raw_messages: list | None = None) -> list[ReviewNote]:
-    notes: list[ReviewNote] = []
-    if isinstance(raw_note_details, list):
-        for raw in raw_note_details:
-            if not isinstance(raw, dict):
-                continue
-            message = raw.get("message")
-            kind = raw.get("kind")
-            if not isinstance(message, str) or not isinstance(kind, str):
-                continue
-            severity = raw.get("severity", "warning")
-            evidence = raw.get("evidence", {})
-            if not isinstance(evidence, dict):
-                evidence = {}
-            notes.append(
-                ReviewNote(
-                    kind=kind,
-                    message=message,
-                    severity=str(severity),
-                    evidence=evidence,
-                )
-            )
-    elif isinstance(raw_messages, list):
-        for message in raw_messages:
-            if isinstance(message, str):
-                notes.append(ReviewNote(kind="legacy_note", message=message))
-    return notes
-
-
 def _session_key(session: dict) -> tuple[str, str, str, str, str, str]:
     return (
         str(session.get("day")),

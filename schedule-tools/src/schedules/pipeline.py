@@ -318,7 +318,7 @@ def _process_direct_entry(entry: PoolEntry) -> PoolResult:
         payload = extracted.payload
         review_notes = [
             ReviewNote(
-                kind="legacy_note",
+                kind="direct_extractor_note",
                 message=note,
                 severity="info",
             )

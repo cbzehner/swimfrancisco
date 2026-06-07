@@ -49,7 +49,7 @@ function collectVisibleSpots() {
     const type = row.getAttribute("data-type") || "";
     const spotLink = row.querySelector('[data-cell="spot"] a');
     const name = spotLink?.textContent.trim() ?? "";
-    const href = spotLink?.getAttribute("href") || `/spots/${encodeURIComponent(slug)}/`;
+    const href = spotLink?.getAttribute("href") ?? "";
     const typeLabel =
       row.querySelector('[data-cell="spot"] .spot-subtitle')?.textContent.trim() ||
       row.getAttribute("data-subtype") ||
@@ -95,7 +95,7 @@ function beachConditions(spot) {
 
 function createPopupHTML(spot) {
   const name = escapeHTML(spot.name);
-  const detailsHref = spot.href || `/spots/${encodeURIComponent(spot.slug)}/`;
+  const detailsHref = spot.href;
   const appleHref = `https://maps.apple.com/?daddr=${spot.lat},${spot.lng}`;
   const googleHref = `https://www.google.com/maps/dir/?api=1&destination=${spot.lat},${spot.lng}`;
   const rows = [popupRow(t("type", "TYPE"), spot.typeLabel)];
