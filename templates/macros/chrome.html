@@ -12,7 +12,7 @@
 {% macro site_header(active_view, content_path, active_lang) %}
   <header class="site-header">
     <div class="site-header-row">
-      <a href="{{ get_url(path='@/_index.md', lang=active_lang) }}" class="site-title"><span class="brand-swim">SWIM</span><span class="brand-dot">·</span><span class="brand-city">FRANCISCO</span></a>
+      <a href="{{ get_url(path='@/_index.md', lang=active_lang) }}" class="site-title"><span class="brand-swim">SWIM</span><span class="brand-dot" aria-hidden="true">·</span><span class="brand-city">FRANCISCO</span></a>
       {{ bulletin_macros::badge() }}
       <div class="site-header-actions">
         <a href="{{ get_url(path='@/_index.md', lang=active_lang) }}" data-target-path="{{ get_url(path='@/_index.md', lang=active_lang) }}" class="site-nav-link{% if active_view == 'board' %} is-active{% endif %}" aria-label="{{ trans(key='view_board', lang=active_lang) }}">{{ trans(key='nav_board', lang=active_lang) }}</a>
@@ -20,7 +20,11 @@
         {% set locale_data = load_data(path="data/locales.toml") %}
         <nav class="language-switcher" aria-label="{{ trans(key='language', lang=active_lang) }}">
           {% for locale in locale_data.locales %}
-            <a href="{{ get_url(path=content_path, lang=locale.code) }}"{% if active_lang == locale.code %} aria-current="page"{% endif %}>{{ locale.label }}</a>
+            <a href="{{ get_url(path=content_path, lang=locale.code) }}"
+               lang="{{ locale.code }}"
+               hreflang="{{ locale.code }}"
+               aria-label="{{ locale.name }}"
+               {% if active_lang == locale.code %}aria-current="page"{% endif %}>{{ locale.label }}</a>
           {% endfor %}
         </nav>
       </div>

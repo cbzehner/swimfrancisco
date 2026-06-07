@@ -1,8 +1,8 @@
 {% macro badge() %}
   {% set bulletin = load_data(path="data/bulletin.json") %}
-  <div class="site-badge" aria-hidden="true">
-    <span>SF</span>
-    <strong>SWIM</strong>
+  <div class="site-badge">
+    <span aria-hidden="true">SF</span>
+    <strong aria-hidden="true">SWIM</strong>
     <span>BULLETIN {{ bulletin.label }}</span>
   </div>
 {% endmacro badge %}

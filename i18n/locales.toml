@@ -1,6 +1,7 @@
 [[locales]]
 code = "en"
 label = "EN"
+name = "English"
 og_locale = "en_US"
 is_default = true
 title = "Swim Francisco"
@@ -9,6 +10,7 @@ description = "Where to swim right now in San Francisco"
 [[locales]]
 code = "es"
 label = "ES"
+name = "Español"
 og_locale = "es_US"
 is_default = false
 title = "Swim Francisco"
@@ -17,6 +19,7 @@ description = "Dónde nadar ahora mismo en San Francisco"
 [[locales]]
 code = "zh-Hant"
 label = "中文"
+name = "繁體中文"
 og_locale = "zh_HK"
 is_default = false
 title = "Swim Francisco"
@@ -25,6 +28,7 @@ description = "現在可以在三藩市哪裡游泳"
 [[locales]]
 code = "fil"
 label = "FIL"
+name = "Filipino"
 og_locale = "fil_PH"
 is_default = false
 title = "Swim Francisco"
@@ -33,6 +37,7 @@ description = "Kung saan puwedeng lumangoy ngayon sa San Francisco"
 [[locales]]
 code = "vi"
 label = "VI"
+name = "Tiếng Việt"
 og_locale = "vi_VN"
 is_default = false
 title = "Swim Francisco"
@@ -41,6 +46,7 @@ description = "Nơi có thể bơi ngay bây giờ ở San Francisco"
 [[locales]]
 code = "fi"
 label = "FI"
+name = "Suomi"
 og_locale = "fi_FI"
 is_default = false
 title = "Swim Francisco"
