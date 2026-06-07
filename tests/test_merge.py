@@ -143,3 +143,158 @@ def test_pick_active_schedule_keeps_current_before_its_start():
     extra = _extra_with("2026-03-17", "2026-06-06", "2026-06-09")
     active = pick_active_schedule(extra, "2026-02-01")
     assert active["effective_start"] == "2026-03-17"
+
+
+# ---- merge() queued-upcoming write paths ------------------------------------
+#
+# Earlier refactor split merge() into _apply_queued_upcoming /
+# _apply_current_schedule / _promote_upcoming_schedule / _drop_stale_upcoming /
+# _should_preserve_existing_upcoming. These integration tests exercise each
+# branch through the public `merge()` API so regressions in the writer surface.
+
+_BASE_PAYLOAD = {
+    "sessions": [
+        {"day": d, "type": "lap_swim", "start": "07:00", "end": "08:00"}
+        for d in ("monday", "tuesday", "wednesday", "thursday", "friday")
+    ],
+    "closures": [],
+    "effective_start": "2026-03-17",
+    "effective_end": "2026-06-06",
+}
+
+
+def _seed_pool(tmp_path: Path) -> Path:
+    """Copy a real pool's frontmatter so merge() has a real file to round-trip."""
+    source = ROOT / "content" / "spots" / "hamilton-pool.md"
+    target = tmp_path / source.name
+    target.write_text(source.read_text())
+    merge(target, _BASE_PAYLOAD)
+    return target
+
+
+def test_merge_queues_upcoming_when_incoming_starts_after_current_ends(tmp_path):
+    target = _seed_pool(tmp_path)
+    incoming = {
+        "sessions": [{"day": "monday", "type": "lap_swim", "start": "06:30", "end": "08:30"}],
+        "closures": [],
+        "effective_start": "2026-06-09",
+        "effective_end": "2026-08-15",
+    }
+    result = merge(target, incoming, as_of_date="2026-04-15")
+
+    assert result.written is True
+    updated = target.read_text()
+    assert "[extra.upcoming_schedule]" in updated
+    assert 'effective_start = "2026-06-09"' in updated
+    # Current schedule's effective_start must be preserved unchanged.
+    assert 'effective_start = "2026-03-17"' in updated
+
+
+def test_merge_preserves_closer_queued_upcoming_against_farther_one(tmp_path):
+    target = _seed_pool(tmp_path)
+    summer = {
+        "sessions": [{"day": "monday", "type": "lap_swim", "start": "06:30", "end": "08:30"}],
+        "closures": [],
+        "effective_start": "2026-06-09",
+        "effective_end": "2026-08-15",
+    }
+    merge(target, summer, as_of_date="2026-04-15")
+
+    # A farther-out schedule (fall) arrives next. The closer queued summer
+    # must win — replacing it with fall would skip the summer transition
+    # the user is about to live through.
+    fall = {**summer, "effective_start": "2026-09-01", "effective_end": "2026-12-15"}
+    result = merge(target, fall, as_of_date="2026-04-16")
+    assert result.written is False
+    assert 'effective_start = "2026-06-09"' in target.read_text()
+
+
+def test_merge_promotes_upcoming_on_or_after_its_start_date(tmp_path):
+    target = _seed_pool(tmp_path)
+    summer = {
+        "sessions": [{"day": "monday", "type": "lap_swim", "start": "06:30", "end": "08:30"}],
+        "closures": [],
+        "effective_start": "2026-06-09",
+        "effective_end": "2026-08-15",
+    }
+    merge(target, summer, as_of_date="2026-04-15")
+    assert "[extra.upcoming_schedule]" in target.read_text()
+
+    # The next merge sees as_of_date inside the upcoming window. Promotion
+    # must overwrite current and delete the upcoming_schedule key entirely
+    # (re-merging the same payload, since the source we'd normally re-fetch
+    # produces the same data).
+    result = merge(target, summer, as_of_date="2026-06-10")
+    assert result.written is True
+    updated = target.read_text()
+    assert "[extra.upcoming_schedule]" not in updated
+    assert 'effective_start = "2026-06-09"' in updated
+    assert 'effective_end = "2026-08-15"' in updated
+
+
+def test_merge_drops_stale_upcoming_when_current_overtakes_it(tmp_path):
+    # Three-step setup so the final merge() hits _apply_current_schedule
+    # (not the queuing branch) with an incoming start that overtakes the
+    # queued upcoming — the narrow window where _drop_stale_upcoming fires.
+    target = _seed_pool(tmp_path)
+
+    # Step 1: queue summer (2026-06-09 → 2026-08-15).
+    merge(target, {
+        "sessions": [{"day": "monday", "type": "lap_swim", "start": "06:30", "end": "08:30"}],
+        "closures": [],
+        "effective_start": "2026-06-09",
+        "effective_end": "2026-08-15",
+    }, as_of_date="2026-04-15")
+    assert "[extra.upcoming_schedule]" in target.read_text()
+
+    # Step 2: extend current's effective_end to year-end so the next merge
+    # doesn't trigger queuing. (`_should_queue_upcoming` only fires when
+    # incoming.start > current.end.)
+    merge(target, {
+        **_BASE_PAYLOAD,
+        "effective_end": "2026-12-31",
+    }, as_of_date="2026-04-16")
+
+    # Step 3: incoming current with effective_start past upcoming.start but
+    # within current.end window. _drop_stale_upcoming must remove the
+    # now-superseded upcoming so the next promote doesn't write obsolete data.
+    merge(target, {
+        "sessions": [{"day": "monday", "type": "lap_swim", "start": "07:30", "end": "09:00"}],
+        "closures": [],
+        "effective_start": "2026-07-01",
+        "effective_end": "2026-12-31",
+    }, as_of_date="2026-05-15")
+
+    updated = target.read_text()
+    assert "[extra.upcoming_schedule]" not in updated
+    assert 'effective_start = "2026-07-01"' in updated
+
+
+# ---- direct_sources year roll-forward ---------------------------------------
+
+
+def test_resolve_yearless_date_keeps_same_year_for_near_future():
+    from datetime import date
+    from schedules.direct_sources import _resolve_yearless_date
+
+    today = date(2026, 4, 1)
+    # April 30 is in the future from April 1, same year.
+    assert _resolve_yearless_date(4, 30, today=today) == date(2026, 4, 30)
+
+
+def test_resolve_yearless_date_keeps_same_year_for_recent_past():
+    from datetime import date
+    from schedules.direct_sources import _resolve_yearless_date
+
+    today = date(2026, 4, 20)
+    # April 1 is 19 days in the past — within the 30-day grace window.
+    assert _resolve_yearless_date(4, 1, today=today) == date(2026, 4, 1)
+
+
+def test_resolve_yearless_date_rolls_forward_for_distant_past():
+    from datetime import date
+    from schedules.direct_sources import _resolve_yearless_date
+
+    today = date(2026, 12, 20)
+    # January 15 is 11 months in the past; assume the source meant next year.
+    assert _resolve_yearless_date(1, 15, today=today) == date(2027, 1, 15)
