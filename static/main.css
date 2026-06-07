@@ -440,8 +440,7 @@ h1, h2, h3 {
 }
 .sort-group button { justify-content: center; }
 .filters button,
-.sort-group button,
-.view-switcher .view-switcher-link {
+.sort-group button {
   background: var(--paper);
   color: var(--ink);
   border: 2px solid var(--ink);
@@ -456,8 +455,7 @@ h1, h2, h3 {
   transition: background-color 120ms ease, color 120ms ease;
 }
 .filters button:hover,
-.sort-group button:hover,
-.view-switcher .view-switcher-link:hover {
+.sort-group button:hover {
   background: var(--ink);
   color: var(--paper);
 }
@@ -582,7 +580,7 @@ table.board td {
 table.board tbody tr:nth-child(odd) td { background: rgba(183,54,36,0.035); }
 table.board tbody tr:hover td,
 table.board tbody tr:focus-within td { background: rgba(183,54,36,0.11); }
-table.board tbody tr { cursor: pointer; }
+table.board tbody tr { position: relative; }
 table.board [data-cell="spot"] {
   font-family: var(--display);
   font-size: 20px;
@@ -592,6 +590,15 @@ table.board [data-cell="spot"] a {
   display: block;
   color: var(--ink);
   text-decoration: none;
+}
+/* Whole-row hit target — the SPOT-cell anchor stretches to cover the row via
+   an absolutely-positioned ::after, so clicks anywhere on the row navigate.
+   Tradeoff: text in other cells is not selectable. The anchor remains the
+   sole accessible name + focus stop. */
+table.board [data-cell="spot"] a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
 }
 .spot-subtitle {
   display: block;
@@ -770,7 +777,7 @@ table.board tbody tr.flap td {
 }
 
 /* ── Spot detail page (existing selectors) ─────────────────────────────── */
-.back, .address, .official {
+.back {
   margin: 8px 28px;
   font-family: var(--mono);
   font-size: 11px;
@@ -1588,7 +1595,6 @@ body.map-page .site-footer {
     margin-left: 0;
     margin-right: 0;
   }
-  .weekly-grid-table,
   .weekly-grid-title,
   .weekly-grid-meta { margin-left: 16px; margin-right: 16px; }
   .board-controls {
@@ -1631,8 +1637,7 @@ body.map-page .site-footer {
   .horizon-button,
   .horizon-menu button,
   .filters button,
-  .sort-group button,
-  .view-switcher .view-switcher-link {
+  .sort-group button {
     min-height: 44px;
     display: inline-flex;
     align-items: center;

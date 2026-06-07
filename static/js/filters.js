@@ -38,7 +38,7 @@ const TYPE_NONE = "none";
 
 // Hash routing: short tokens in window.location.hash, joined by "+".
 // Filters own the hash. The `/map/` vs `/` switch is a real navigation
-// (plain <a href>), not a hash token — see view-switcher in the template.
+// (plain <a href> in chrome.html), not a hash token.
 // Hash tokens this module owns — stripped and rewritten on every state sync.
 // Includes the sort token even though sort isn't a filter, because the same
 // hash-round-trip logic applies. `next-open` and `open-now` are legacy
@@ -269,17 +269,6 @@ function applyFilters(tbody, state) {
   // Move visible rows to the top in their new order; hidden rows retain
   // their DOM position at the tail (visually irrelevant since hidden).
   ordered.forEach((row) => tbody.appendChild(row));
-
-  // TEMP column only carries data for beaches and NEXT only for pools.
-  // Hide either when its rows aren't visible so pool-only or beach-only
-  // views aren't padded with "—" placeholders.
-  const hasBeach = ordered.some((row) => isBeach(row));
-  const hasPool = ordered.some((row) => row.getAttribute("data-type") === "pool");
-  const table = tbody.closest("table.board");
-  if (table) {
-    table.classList.toggle("no-beaches", !hasBeach);
-    table.classList.toggle("no-pools", !hasPool);
-  }
 
   triggerFlap(ordered);
 
