@@ -14,8 +14,6 @@ cost = "paid"
 setpoint_label = "80–82°F"
 schedule_effective = "2026-01-06"
 last_verified_at = "2026-06-06"
-
-# Sava Pool is closed for repairs through June 8, with the Summer 2026 reopening schedule queued.
 access_mode = "public"
 payment_model = "session"
 schedule_basis = "temporarily_closed"
@@ -26,11 +24,13 @@ sessions = []
 start = "2026-04-16"
 end = "2026-06-08"
 reason = "Closed for repairs; anticipated reopening summer 2026"
+
 [extra.upcoming_schedule]
 schedule_effective = "2026-06-09"
 schedule_basis = "swim_schedule"
 schedule_effective_end = "2026-06-27"
 last_verified_at = "2026-06-06"
+
 [[extra.upcoming_schedule.sessions]]
 day = "tuesday"
 type = "lap_swim"

@@ -14,11 +14,11 @@ cost = "paid"
 access_label = "Members"
 access_badge_class = "is-member"
 setpoint_label = "heated"
-access_summary = "Bay Club Gateway is a private club in the San Francisco Campus with an outdoor aquatic center and two heated pools. Access depends on Bay Club membership, guest privileges, or a scheduled club visit."
-access_notes = ["Use the official club page or class calendar before going; lane availability is not published in Swim Francisco yet."]
 access_mode = "private"
 payment_model = "membership"
 schedule_basis = "unknown"
+access_notes = [ "Use the official club page or class calendar before going; lane availability is not published in Swim Francisco yet." ]
+access_summary = "Bay Club Gateway is a private club in the San Francisco Campus with an outdoor aquatic center and two heated pools. Access depends on Bay Club membership, guest privileges, or a scheduled club visit."
 
 [[extra.pricing]]
 label = "Member"

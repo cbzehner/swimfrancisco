@@ -34,6 +34,7 @@
   {% set dynamic_labels = load_data(path="data/i18n/dynamic-labels.json") %}
   <script>
     window.SWIMFRANCISCO_LANG = {{ lang | json_encode | safe }};
+    window.SWIMFRANCISCO_DEFAULT_LANG = {{ config.default_language | json_encode | safe }};
     window.SWIMFRANCISCO_I18N = {{ runtime_i18n | json_encode | safe }};
     window.SWIMFRANCISCO_DYNAMIC_LABELS = {{ dynamic_labels | json_encode | safe }};
   </script>

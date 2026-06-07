@@ -14,8 +14,6 @@ cost = "paid"
 access_label = "Members"
 access_badge_class = "is-member"
 setpoint_label = "indoor + roof"
-access_summary = "Bakar Fitness Center at UCSF Mission Bay is a membership fitness center with both an indoor swimming pool and an outdoor rooftop pool."
-access_notes = ["The indoor pool reopened after renovation in June 2025; confirm current pool schedules through UCSF Fitness and Recreation."]
 sessions = []
 closures = []
 schedule_effective = "2026-05-17"
@@ -23,22 +21,8 @@ last_verified_at = "2026-05-17"
 access_mode = "limited_public"
 payment_model = "membership"
 schedule_basis = "facility_hours"
-
-[[extra.pricing]]
-label = "Member"
-price = "Membership"
-note = "Pool access is part of UCSF Fitness and Recreation membership access."
-url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
-access_mode = "limited_public"
-payment_model = "membership"
-
-[[extra.pricing]]
-label = "Guest / day access"
-price = "Ask UCSF"
-note = "Guest or sponsored access can change by affiliation and policy."
-url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
-access_mode = "limited_public"
-payment_model = "unknown"
+access_notes = [ "The indoor pool reopened after renovation in June 2025; confirm current pool schedules through UCSF Fitness and Recreation." ]
+access_summary = "Bakar Fitness Center at UCSF Mission Bay is a membership fitness center with both an indoor swimming pool and an outdoor rooftop pool."
 
 [[extra.access_hours]]
 day = "monday"
@@ -81,6 +65,22 @@ day = "sunday"
 start = "08:00"
 end = "18:00"
 label = "Facility hours"
+
+[[extra.pricing]]
+label = "Member"
+price = "Membership"
+note = "Pool access is part of UCSF Fitness and Recreation membership access."
+url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
+access_mode = "limited_public"
+payment_model = "membership"
+
+[[extra.pricing]]
+label = "Guest / day access"
+price = "Ask UCSF"
+note = "Guest or sponsored access can change by affiliation and policy."
+url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
+access_mode = "limited_public"
+payment_model = "unknown"
 +++
 
 Bakar is the Mission Bay fitness-center option, notable for having both indoor water and an outdoor rooftop pool.

@@ -17,11 +17,11 @@ setpoint_label = "lap"
 access_mode = "membership"
 payment_model = "membership"
 schedule_basis = "temporarily_closed"
-access_summary = "24 Hour Fitness Ocean lists an indoor lap pool, but the official club page says the club is temporarily closed for renovation until May 23, 2026."
-access_notes = ["Keep this out of active swim planning until the official page shows the club has reopened."]
 sessions = []
 schedule_effective = "2026-05-17"
 last_verified_at = "2026-05-17"
+access_notes = [ "Keep this out of active swim planning until the official page shows the club has reopened." ]
+access_summary = "24 Hour Fitness Ocean lists an indoor lap pool, but the official club page says the club is temporarily closed for renovation until May 23, 2026."
 
 [[extra.closures]]
 start = "2026-05-17"

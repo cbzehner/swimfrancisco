@@ -8,15 +8,12 @@ subtype = "indoor"
 address = "600 Arguello Blvd, San Francisco, CA 94118"
 locale_label = "Richmond"
 lat = 37.7809
-lng = -122.4580
+lng = -122.458
 website = "https://sfrecpark.org/495/Rossi-Pool"
 cost = "paid"
 setpoint_label = "80–82°F"
 schedule_effective = "2026-06-07"
 last_verified_at = "2026-06-05"
-
-# Manually reviewed against the Summer 2026 Rossi Pool schedule PDF.
-# Evening shared family/lap blocks are represented as both family and lap sessions in the flat site schema.
 schedule_effective_end = "2026-08-13"
 access_mode = "public"
 payment_model = "session"
@@ -153,6 +150,7 @@ day = "sunday"
 type = "family_swim"
 start = "14:30"
 end = "15:30"
+
 [[extra.closures]]
 start = "2026-06-19"
 end = "2026-06-19"

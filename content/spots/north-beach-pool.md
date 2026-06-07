@@ -14,9 +14,6 @@ cost = "paid"
 setpoint_label = "86°F warm / 76°F cool"
 schedule_effective = "2026-03-17"
 last_verified_at = "2026-04-20"
-
-# Manually reviewed against the Spring 2026 North Beach Pool schedule PDF.
-# The queued Summer 2026 schedule uses the PDF legend: C = cool, W = warm, T = therapy lane.
 schedule_effective_end = "2026-06-06"
 access_mode = "public"
 payment_model = "session"
@@ -265,6 +262,7 @@ type = "family_swim"
 start = "15:30"
 end = "17:00"
 pool = "warm"
+
 [[extra.closures]]
 start = "2026-03-19"
 end = "2026-03-19"
@@ -302,11 +300,13 @@ end_time = "13:00"
 start = "2026-06-19"
 end = "2026-06-19"
 reason = "Holiday Closure"
+
 [extra.upcoming_schedule]
 schedule_effective = "2026-06-09"
 schedule_basis = "swim_schedule"
 schedule_effective_end = "2026-08-15"
 last_verified_at = "2026-06-06"
+
 [[extra.upcoming_schedule.sessions]]
 day = "tuesday"
 type = "lap_swim"

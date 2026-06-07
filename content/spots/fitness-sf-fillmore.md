@@ -17,12 +17,12 @@ setpoint_label = "25yd"
 access_mode = "membership"
 payment_model = "membership"
 schedule_basis = "pool_hours"
-access_summary = "FITNESS SF Fillmore is the FITNESS SF location with a 25-yard, 5-lane pool. The official help page says lap swimming is available and lane reservations are made in person."
-access_notes = ["Pool hours are represented from club hours; lane reservations and class conflicts still need manual verification before treating this as a swim schedule."]
 sessions = []
 closures = []
 schedule_effective = "2026-05-17"
 last_verified_at = "2026-05-17"
+access_notes = [ "Pool hours are represented from club hours; lane reservations and class conflicts still need manual verification before treating this as a swim schedule." ]
+access_summary = "FITNESS SF Fillmore is the FITNESS SF location with a 25-yard, 5-lane pool. The official help page says lap swimming is available and lane reservations are made in person."
 
 [[extra.access_hours]]
 day = "monday"

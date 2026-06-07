@@ -14,7 +14,7 @@
   {%- set dynamic_label = dynamic_labels.spot_label.by_source[label] | default(value=false) -%}
   {%- set dynamic_translation_key = dynamic_label.translation_key | default(value="") -%}
   {%- if dynamic_translation_key -%}{{- trans(key=dynamic_translation_key, lang=active_lang) -}}
-  {%- else -%}{{- label -}}
+  {%- elif active_lang == config.default_language -%}{{- label -}}
   {%- endif -%}
 {%- endmacro access_badge_label %}
 
@@ -23,7 +23,7 @@
   {%- set dynamic_label = dynamic_labels.spot_label.by_source[label] | default(value=false) -%}
   {%- set dynamic_translation_key = dynamic_label.translation_key | default(value="") -%}
   {%- if dynamic_translation_key -%}{{- trans(key=dynamic_translation_key, lang=active_lang) -}}
-  {%- else -%}{{- label -}}
+  {%- elif active_lang == config.default_language -%}{{- label -}}
   {%- endif -%}
 {%- endmacro spot_label %}
 

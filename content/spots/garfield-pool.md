@@ -7,16 +7,13 @@ type = "pool"
 subtype = "indoor"
 address = "1271 Treat Ave, San Francisco, CA 94110"
 locale_label = "Mission"
-lat = 37.7500
+lat = 37.75
 lng = -122.4121
 website = "https://sfrecpark.org/facilities/facility/details/Garfield-Pool-214"
 cost = "paid"
 setpoint_label = "80–82°F"
 schedule_effective = "2026-06-07"
 last_verified_at = "2026-06-05"
-
-# Manually reviewed against the Garfield Summer 2026 schedule PDF.
-# School-only and misaligned small-pool lesson rows are intentionally omitted from the public schedule.
 schedule_effective_end = "2026-08-13"
 access_mode = "public"
 payment_model = "session"
@@ -184,6 +181,7 @@ day = "sunday"
 type = "family_swim"
 start = "14:30"
 end = "16:30"
+
 [[extra.closures]]
 start = "2026-06-19"
 end = "2026-06-19"

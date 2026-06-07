@@ -14,8 +14,6 @@ cost = "paid"
 setpoint_label = "80–82°F"
 schedule_effective = "2026-05-12"
 last_verified_at = "2026-05-05"
-
-# Seasonal outdoor pool; Spring 2026 schedule runs 2026-05-12 through 2026-06-06.
 schedule_effective_end = "2026-06-06"
 access_mode = "public"
 payment_model = "session"
@@ -37,6 +35,7 @@ end = "2026-06-06"
 reason = "Staff training"
 start_time = "09:00"
 end_time = "14:00"
+
 [[extra.sessions]]
 day = "tuesday"
 type = "lap_swim"
@@ -150,11 +149,13 @@ day = "saturday"
 type = "lap_swim"
 start = "15:30"
 end = "17:00"
+
 [extra.upcoming_schedule]
 schedule_effective = "2026-06-09"
 schedule_basis = "swim_schedule"
 schedule_effective_end = "2026-06-20"
 last_verified_at = "2026-06-06"
+
 [[extra.upcoming_schedule.sessions]]
 day = "tuesday"
 type = "lap_swim"

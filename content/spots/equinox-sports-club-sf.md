@@ -17,12 +17,12 @@ setpoint_label = "indoor"
 access_mode = "membership"
 payment_model = "membership"
 schedule_basis = "facility_hours"
-access_summary = "Equinox Sports Club San Francisco lists an indoor pool and club hours on the official location page."
-access_notes = ["Club hours are tracked as access hours only; lap-lane availability is not published in the source we parse."]
 sessions = []
 closures = []
 schedule_effective = "2026-05-17"
 last_verified_at = "2026-05-17"
+access_notes = [ "Club hours are tracked as access hours only; lap-lane availability is not published in the source we parse." ]
+access_summary = "Equinox Sports Club San Francisco lists an indoor pool and club hours on the official location page."
 
 [[extra.access_hours]]
 day = "monday"

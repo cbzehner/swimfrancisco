@@ -17,12 +17,12 @@ setpoint_label = "25m"
 access_mode = "membership"
 payment_model = "membership"
 schedule_basis = "pool_hours"
-access_summary = "Embarcadero YMCA is a membership YMCA branch on the waterfront with swimming pools and aquatics programs. The official page publishes pool hours as offset from facility hours."
-access_notes = ["Pool hours are modeled from the YMCA rule that the pool opens 30 minutes after and closes 30 minutes before facility hours; lane/program availability still needs schedule verification."]
 sessions = []
 closures = []
 schedule_effective = "2026-05-17"
 last_verified_at = "2026-05-17"
+access_notes = [ "Pool hours are modeled from the YMCA rule that the pool opens 30 minutes after and closes 30 minutes before facility hours; lane/program availability still needs schedule verification." ]
+access_summary = "Embarcadero YMCA is a membership YMCA branch on the waterfront with swimming pools and aquatics programs. The official page publishes pool hours as offset from facility hours."
 
 [[extra.access_hours]]
 day = "monday"

@@ -17,12 +17,12 @@ setpoint_label = "pool"
 access_mode = "limited_public"
 payment_model = "membership"
 schedule_basis = "facility_hours"
-access_summary = "UCSF Millberry Fitness Center is the Parnassus UCSF fitness location. The official page publishes facility hours, but the pool schedule needs separate verification."
-access_notes = ["Facility hours are tracked as access hours only until a pool-specific schedule source is verified."]
 sessions = []
 closures = []
 schedule_effective = "2026-05-17"
 last_verified_at = "2026-05-17"
+access_notes = [ "Facility hours are tracked as access hours only until a pool-specific schedule source is verified." ]
+access_summary = "UCSF Millberry Fitness Center is the Parnassus UCSF fitness location. The official page publishes facility hours, but the pool schedule needs separate verification."
 
 [[extra.access_hours]]
 day = "monday"

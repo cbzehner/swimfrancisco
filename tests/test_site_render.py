@@ -24,6 +24,16 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
+TRANSLATABLE_SPOT_EXTRA_FIELDS = {
+    "access_notes",
+    "access_summary",
+    "clubs",
+    "common_distances",
+    "description_short",
+    "hazards",
+    "pricing",
+}
+TRANSLATABLE_PRICING_FIELDS = {"label", "price", "note", "url"}
 
 
 @pytest.fixture(scope="session")
@@ -58,9 +68,24 @@ def _locales() -> list[dict[str, object]]:
     return tomllib.loads((ROOT / "i18n" / "locales.toml").read_text())["locales"]
 
 
+def _markdown_frontmatter_and_body(path: Path) -> tuple[dict[str, object], str]:
+    frontmatter, _, body = path.read_text().removeprefix("+++").partition("+++")
+    return tomllib.loads(frontmatter), body.strip()
+
+
 def _localized_url_path(locale: dict[str, object], canonical_path: str) -> str:
     code = str(locale["code"])
     return canonical_path if locale.get("is_default") else f"/{code}{canonical_path}"
+
+
+def _present_catalog_value(value: object) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return value.strip() != ""
+    if isinstance(value, (list, dict)):
+        return len(value) > 0
+    return True
 
 
 def _assert_hreflang_cluster(rendered_html: str, canonical_path: str) -> None:
@@ -163,11 +188,26 @@ def test_canonical_labels_have_i18n_mappings() -> None:
     assert set(dynamic_label_code_index.values()) <= translation_keys
 
 
+def test_translated_spot_catalogs_cover_visible_english_fields() -> None:
+    default_catalog = tomllib.loads((ROOT / "i18n" / "spots" / "en.toml").read_text())["spots"]
+    for locale in _locales():
+        if locale.get("is_default"):
+            continue
+        code = str(locale["code"])
+        catalog = tomllib.loads((ROOT / "i18n" / "spots" / f"{code}.toml").read_text())["spots"]
+        for slug, default_spot in default_catalog.items():
+            translated_spot = catalog[slug]
+            for field, value in default_spot.items():
+                if _present_catalog_value(value):
+                    assert _present_catalog_value(translated_spot.get(field)), f"{code}:{slug}.{field}"
+
+
 def test_js_translation_keys_are_exported_to_runtime_payload() -> None:
     translation_keys = set(tomllib.loads((ROOT / "i18n" / "ui" / "en.toml").read_text()))
     base = (ROOT / "templates" / "base.html").read_text()
     assert 'load_data(path="data/i18n/" ~ lang ~ ".json")' in base
     assert 'load_data(path="data/i18n/dynamic-labels.json")' in base
+    assert "window.SWIMFRANCISCO_DEFAULT_LANG" in base
     exported_keys = set(json.loads((ROOT / "data" / "i18n" / "en.json").read_text()))
     assert exported_keys <= translation_keys
 
@@ -197,16 +237,62 @@ def test_localized_section_files_match_i18n_catalogs() -> None:
         "map": ROOT / "content" / "map" / "_index",
         "spots": ROOT / "content" / "spots" / "_index",
     }
-    locale_data = tomllib.loads((ROOT / "i18n" / "locales.toml").read_text())["locales"]
-    for locale in locale_data:
+    for locale in _locales():
         code = locale["code"]
-        if locale.get("is_default"):
-            continue
         sections = tomllib.loads((ROOT / "i18n" / "sections" / f"{code}.toml").read_text())["sections"]
         assert set(sections) == set(targets)
+        suffix = "" if locale.get("is_default") else f".{code}"
         for key, path in targets.items():
-            frontmatter = Path(f"{path}.{code}.md").read_text().split("+++", 2)[1]
+            frontmatter = Path(f"{path}{suffix}.md").read_text().split("+++", 2)[1]
             assert tomllib.loads(frontmatter) == sections[key]
+
+
+def test_english_spot_files_match_i18n_catalog() -> None:
+    catalog = tomllib.loads((ROOT / "i18n" / "spots" / "en.toml").read_text())["spots"]
+    localized_suffixes = tuple(f".{locale['code']}.md" for locale in _locales() if not locale.get("is_default"))
+    spot_paths = [
+        path
+        for path in sorted((ROOT / "content" / "spots").glob("*.md"))
+        if not path.name.startswith("_index") and not path.name.endswith(localized_suffixes)
+    ]
+    assert set(catalog) == {path.stem for path in spot_paths}
+
+    for path in spot_paths:
+        frontmatter, body = _markdown_frontmatter_and_body(path)
+        extra = frontmatter.get("extra", {})
+        expected = {
+            "title": frontmatter["title"],
+            "slug": frontmatter.get("slug", path.stem),
+        }
+        for field in TRANSLATABLE_SPOT_EXTRA_FIELDS:
+            if field not in extra:
+                continue
+            if field == "pricing":
+                expected[field] = [
+                    {key: item[key] for key in TRANSLATABLE_PRICING_FIELDS if key in item}
+                    for item in extra[field]
+                ]
+            else:
+                expected[field] = extra[field]
+        if body:
+            expected["body"] = body
+
+        assert catalog[path.stem] == expected
+        for item in catalog[path.stem].get("pricing", []):
+            assert set(item) <= TRANSLATABLE_PRICING_FIELDS
+
+
+def test_spot_pricing_metadata_stays_out_of_catalogs() -> None:
+    catalog = tomllib.loads((ROOT / "i18n" / "spots" / "en.toml").read_text())["spots"]
+    for spot in catalog.values():
+        for item in spot.get("pricing", []):
+            assert "access_mode" not in item
+            assert "payment_model" not in item
+
+    for slug in ("aquatic-park", "jccsf", "ucsf-bakar"):
+        frontmatter, _body = _markdown_frontmatter_and_body(ROOT / "content" / "spots" / f"{slug}.md")
+        pricing = frontmatter["extra"]["pricing"]
+        assert any("access_mode" in item and "payment_model" in item for item in pricing)
 
 
 def test_pool_detail_never_renders_object_literal_for_closures(built_site: Path) -> None:

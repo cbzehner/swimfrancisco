@@ -14,9 +14,6 @@ cost = "paid"
 setpoint_label = "80–82°F"
 schedule_effective = "2026-04-21"
 last_verified_at = "2026-04-20"
-
-# Manually reviewed against the Spring 2026 Coffman Pool schedule PDF.
-# Youth synchro team rows are omitted; shared public rec/family-lap blocks are represented in the flat site schema.
 schedule_effective_end = "2026-06-06"
 access_mode = "public"
 payment_model = "session"
@@ -163,6 +160,7 @@ day = "saturday"
 type = "lap_swim"
 start = "16:00"
 end = "17:00"
+
 [[extra.closures]]
 start = "2026-05-21"
 end = "2026-05-21"
@@ -174,11 +172,13 @@ end = "2026-06-06"
 reason = "In-Service (9am–1pm)"
 start_time = "09:00"
 end_time = "13:00"
+
 [extra.upcoming_schedule]
 schedule_effective = "2026-06-09"
 schedule_basis = "swim_schedule"
 schedule_effective_end = "2026-08-15"
 last_verified_at = "2026-06-06"
+
 [[extra.upcoming_schedule.sessions]]
 day = "tuesday"
 type = "lap_swim"

@@ -17,12 +17,12 @@ setpoint_label = "saltwater"
 access_mode = "membership"
 payment_model = "membership"
 schedule_basis = "facility_hours"
-access_summary = "Chinatown YMCA is a membership YMCA branch with a saltwater pool and aquatics programs. The official location page publishes facility hours, but not a concrete weekly lap/open swim schedule in static page content."
-access_notes = ["Use YMCA schedules before going; Swim Francisco currently tracks facility hours only for this pool."]
 sessions = []
 closures = []
 schedule_effective = "2026-05-17"
 last_verified_at = "2026-05-17"
+access_notes = [ "Use YMCA schedules before going; Swim Francisco currently tracks facility hours only for this pool." ]
+access_summary = "Chinatown YMCA is a membership YMCA branch with a saltwater pool and aquatics programs. The official location page publishes facility hours, but not a concrete weekly lap/open swim schedule in static page content."
 
 [[extra.access_hours]]
 day = "monday"

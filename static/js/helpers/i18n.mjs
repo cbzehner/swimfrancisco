@@ -51,6 +51,11 @@ function activeLanguage() {
   return globalThis.window?.SWIMFRANCISCO_LANG || "en";
 }
 
+function sourceStringFallback(value = "") {
+  const defaultLanguage = globalThis.window?.SWIMFRANCISCO_DEFAULT_LANG || "en";
+  return activeLanguage() === defaultLanguage ? value : "";
+}
+
 function monthLabel(month) {
   const key = [
     "month_jan",
@@ -99,7 +104,7 @@ export function closureReasonLabel(reasonCode, fallback = "") {
     const entry = labels.by_source?.[fallback] || {};
     key = typeof entry.translation_key === "string" ? entry.translation_key : "";
   }
-  return key ? t(key, fallback || reasonCode) : fallback;
+  return key ? t(key, sourceStringFallback(fallback || reasonCode)) : sourceStringFallback(fallback);
 }
 
 export function statusNextLabel(result, placeholder = "—") {

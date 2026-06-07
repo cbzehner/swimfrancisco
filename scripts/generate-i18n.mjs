@@ -27,6 +27,16 @@ const SECTION_TARGETS = {
   spots: "spots/_index",
 };
 const REQUIRED_DYNAMIC_LABEL_KINDS = ["access_window", "closure_reason", "spot_label"];
+const SPOT_TRANSLATABLE_EXTRA_FIELDS = [
+  "access_notes",
+  "access_summary",
+  "clubs",
+  "common_distances",
+  "description_short",
+  "hazards",
+  "pricing",
+];
+const SPOT_PRICING_TRANSLATABLE_FIELDS = ["label", "price", "note", "url"];
 
 function usage() {
   console.error("Usage: node scripts/generate-i18n.mjs <extract|generate|check>");
@@ -81,11 +91,11 @@ async function tomlCatalogCodes(dir) {
     .sort();
 }
 
-async function validateCatalogFiles({ allCodes, translatedCodes }) {
+async function validateCatalogFiles({ allCodes }) {
   const catalogSets = [
     { dir: UI_DIR, label: "i18n/ui", expected: allCodes },
-    { dir: SPOTS_DIR, label: "i18n/spots", expected: translatedCodes },
-    { dir: SECTIONS_DIR, label: "i18n/sections", expected: translatedCodes },
+    { dir: SPOTS_DIR, label: "i18n/spots", expected: allCodes },
+    { dir: SECTIONS_DIR, label: "i18n/sections", expected: allCodes },
   ];
 
   for (const { dir, label, expected } of catalogSets) {
@@ -98,6 +108,40 @@ async function validateCatalogFiles({ allCodes, translatedCodes }) {
       );
     }
   }
+}
+
+function extractSpotCatalogEntry(front, body, fallbackSlug) {
+  const spot = {
+    title: front.title,
+    slug: front.slug || fallbackSlug,
+  };
+  for (const field of SPOT_TRANSLATABLE_EXTRA_FIELDS) {
+    if (!Object.hasOwn(front.extra || {}, field)) continue;
+    spot[field] = field === "pricing"
+      ? front.extra[field].map((item) => Object.fromEntries(
+        SPOT_PRICING_TRANSLATABLE_FIELDS
+          .filter((key) => Object.hasOwn(item, key))
+          .map((key) => [key, item[key]]),
+      ))
+      : front.extra[field];
+  }
+  if (body) spot.body = body;
+  return spot;
+}
+
+function mergePricingRows(currentPricing = [], catalogPricing = []) {
+  return catalogPricing.map((item, index) => ({
+    ...(currentPricing[index] || {}),
+    ...item,
+  }));
+}
+
+function isPresentCatalogValue(value) {
+  if (value === undefined || value === null) return false;
+  if (typeof value === "string") return value.trim() !== "";
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "object") return Object.keys(value).length > 0;
+  return true;
 }
 
 async function loadDynamicLabels() {
@@ -318,26 +362,26 @@ async function extractCatalogs() {
     await writeFile(path.join(UI_DIR, `${code}.toml`), tomlText(sortedObject(language.translations || {})));
   }
 
-  const localeCodes = locales.filter((locale) => !locale.is_default).map((locale) => locale.code);
+  const localeCodes = locales.map((locale) => locale.code);
+  const translatedLocaleCodes = locales.filter((locale) => !locale.is_default).map((locale) => locale.code);
+  const defaultCode = locales.find((locale) => locale.is_default)?.code;
   const spotCatalogs = Object.fromEntries(localeCodes.map((code) => [code, { spots: {} }]));
   const files = await readdir(CONTENT_SPOTS_DIR);
 
   for (const file of files) {
-    for (const code of localeCodes) {
+    if (file.endsWith(".md") && !file.startsWith("_index.") && !isLocalizedSpotFile(file, translatedLocaleCodes)) {
+      const slug = file.replace(/\.md$/, "");
+      const fullPath = path.join(CONTENT_SPOTS_DIR, file);
+      const { front, body } = parseFrontMatter(await readFile(fullPath, "utf8"), fullPath);
+      spotCatalogs[defaultCode].spots[slug] = extractSpotCatalogEntry(front, body, slug);
+    }
+    for (const code of translatedLocaleCodes) {
       if (!file.endsWith(`.${code}.md`) || file.startsWith("_index.")) continue;
       const fullPath = path.join(CONTENT_SPOTS_DIR, file);
       const { front, body } = parseFrontMatter(await readFile(fullPath, "utf8"), fullPath);
       const localizedFrom = front.extra?.localized_from;
       if (!localizedFrom) throw new Error(`${file} is missing extra.localized_from`);
-      const spot = {
-        title: front.title,
-        slug: front.slug || localizedFrom,
-        ...sortedObject(Object.fromEntries(
-          Object.entries(front.extra || {}).filter(([key]) => key !== "localized_from"),
-        )),
-      };
-      if (body) spot.body = body;
-      spotCatalogs[code].spots[localizedFrom] = spot;
+      spotCatalogs[code].spots[localizedFrom] = extractSpotCatalogEntry(front, body, localizedFrom);
     }
   }
 
@@ -349,7 +393,8 @@ async function extractCatalogs() {
   for (const code of localeCodes) {
     const sections = {};
     for (const [sectionKey, target] of Object.entries(SECTION_TARGETS)) {
-      const sectionPath = path.join(CONTENT_DIR, `${target}.${code}.md`);
+      const suffix = code === defaultCode ? "" : `.${code}`;
+      const sectionPath = path.join(CONTENT_DIR, `${target}${suffix}.md`);
       if (!existsSync(sectionPath)) throw new Error(`${path.relative(ROOT, sectionPath)} does not exist`);
       sections[sectionKey] = parseFrontMatter(await readFile(sectionPath, "utf8"), sectionPath).front;
     }
@@ -387,7 +432,7 @@ async function validateSources() {
   await validateLocaleRegistryConsumers(codes);
 
   const nonDefaultCodes = nonDefaultLocaleCodes(locales);
-  await validateCatalogFiles({ allCodes: codes, translatedCodes: nonDefaultCodes });
+  await validateCatalogFiles({ allCodes: codes });
 
   const defaultKeys = Object.keys(ui[defaults[0].code] || {}).sort();
   for (const code of codes) {
@@ -478,7 +523,7 @@ async function validateSources() {
   }
 
   const requiredSections = Object.keys(SECTION_TARGETS).sort();
-  for (const code of nonDefaultCodes) {
+  for (const code of codes) {
     const catalogPath = path.join(SECTIONS_DIR, `${code}.toml`);
     if (!existsSync(catalogPath)) throw new Error(`i18n/sections/${code}.toml is missing`);
     const catalog = await readToml(catalogPath);
@@ -493,7 +538,8 @@ async function validateSources() {
   }
 
   const expectedSpotSlugs = await canonicalSpotSlugs(codes);
-  for (const code of nonDefaultCodes) {
+  const defaultSpotCatalog = await readToml(path.join(SPOTS_DIR, `${defaults[0].code}.toml`));
+  for (const code of codes) {
     const catalog = await readToml(path.join(SPOTS_DIR, `${code}.toml`));
     const slugs = unique(Object.keys(catalog.spots || {})).sort();
     const missing = expectedSpotSlugs.filter((slug) => !slugs.includes(slug));
@@ -502,6 +548,20 @@ async function validateSources() {
       throw new Error(
         `i18n/spots/${code}.toml slug mismatch; missing: ${missing.join(", ") || "none"}; extra: ${extra.join(", ") || "none"}`,
       );
+    }
+    if (code === defaults[0].code) continue;
+    const missingFields = [];
+    for (const slug of expectedSpotSlugs) {
+      const defaultSpot = defaultSpotCatalog.spots?.[slug] || {};
+      const translatedSpot = catalog.spots?.[slug] || {};
+      for (const [field, value] of Object.entries(defaultSpot)) {
+        if (isPresentCatalogValue(value) && !isPresentCatalogValue(translatedSpot[field])) {
+          missingFields.push(`${slug}.${field}`);
+        }
+      }
+    }
+    if (missingFields.length > 0) {
+      throw new Error(`i18n/spots/${code}.toml missing translated spot field(s): ${missingFields.join(", ")}`);
     }
   }
 }
@@ -647,20 +707,37 @@ function spotMarkdown(slug, spot) {
   return `+++\n${tomlText(front)}+++\n\n${body ? `${body.trim()}\n` : ""}`;
 }
 
+function canonicalSpotMarkdown(currentText, slug, spot) {
+  const { front } = parseFrontMatter(currentText, slug);
+  const { body = "", title, slug: localizedSlug = slug, ...extra } = spot;
+  const nextExtra = { ...(front.extra || {}) };
+  for (const field of SPOT_TRANSLATABLE_EXTRA_FIELDS) delete nextExtra[field];
+  Object.assign(nextExtra, extra);
+  if (extra.pricing) nextExtra.pricing = mergePricingRows(front.extra?.pricing, extra.pricing);
+  const nextFront = {
+    ...front,
+    title,
+    slug: localizedSlug,
+    extra: nextExtra,
+  };
+  return `+++\n${tomlText(nextFront)}+++\n\n${body ? `${body.trim()}\n` : ""}`;
+}
+
 function sectionMarkdown(section) {
   return `+++\n${tomlText(section)}+++\n`;
 }
 
 async function generateSectionPages({ dryRun = false, changed = [] } = {}) {
   const { locales } = await loadSources();
-  const localeCodes = nonDefaultLocaleCodes(locales);
+  const defaultLocale = locales.locales.find((locale) => locale.is_default);
 
-  for (const code of localeCodes) {
+  for (const code of sourceLocaleCodes(locales)) {
     const catalog = await readToml(path.join(SECTIONS_DIR, `${code}.toml`));
     for (const [sectionKey, target] of Object.entries(SECTION_TARGETS)) {
       const section = catalog.sections?.[sectionKey];
       if (!section) throw new Error(`i18n/sections/${code}.toml is missing ${sectionKey}`);
-      const file = path.join(CONTENT_DIR, `${target}.${code}.md`);
+      const suffix = code === defaultLocale.code ? "" : `.${code}`;
+      const file = path.join(CONTENT_DIR, `${target}${suffix}.md`);
       await writeIfChanged(file, sectionMarkdown(section), { dryRun, changed });
     }
   }
@@ -668,15 +745,21 @@ async function generateSectionPages({ dryRun = false, changed = [] } = {}) {
 
 async function generateSpotPages({ dryRun = false, changed = [] } = {}) {
   const { locales } = await loadSources();
-  const localeCodes = nonDefaultLocaleCodes(locales);
+  const defaultLocale = locales.locales.find((locale) => locale.is_default);
 
-  for (const code of localeCodes) {
+  for (const code of sourceLocaleCodes(locales)) {
     const catalogPath = path.join(SPOTS_DIR, `${code}.toml`);
     if (!existsSync(catalogPath)) continue;
     const catalog = await readToml(catalogPath);
     for (const [slug, spot] of Object.entries(catalog.spots || {})) {
-      const file = path.join(CONTENT_SPOTS_DIR, `${slug}.${code}.md`);
-      await writeIfChanged(file, spotMarkdown(slug, spot), { dryRun, changed });
+      if (code === defaultLocale.code) {
+        const file = path.join(CONTENT_SPOTS_DIR, `${slug}.md`);
+        const currentText = existsSync(file) ? await readFile(file, "utf8") : "";
+        await writeIfChanged(file, canonicalSpotMarkdown(currentText, slug, spot), { dryRun, changed });
+      } else {
+        const file = path.join(CONTENT_SPOTS_DIR, `${slug}.${code}.md`);
+        await writeIfChanged(file, spotMarkdown(slug, spot), { dryRun, changed });
+      }
     }
   }
 }

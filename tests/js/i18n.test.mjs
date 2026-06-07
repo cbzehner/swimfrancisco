@@ -36,6 +36,8 @@ test("closureReasonLabel resolves cataloged dynamic labels before falling back",
   const previousWindow = globalThis.window;
   try {
     globalThis.window = {
+      SWIMFRANCISCO_LANG: "en",
+      SWIMFRANCISCO_DEFAULT_LANG: "en",
       SWIMFRANCISCO_I18N: { reason_juneteenth: "Juneteenth translated" },
       SWIMFRANCISCO_DYNAMIC_LABELS: {
         closure_reason: {
@@ -52,6 +54,26 @@ test("closureReasonLabel resolves cataloged dynamic labels before falling back",
     assert.equal(closureReasonLabel("juneteenth", "Juneteenth"), "Juneteenth translated");
     assert.equal(closureReasonLabel("juneteenth", ""), "Juneteenth translated");
     assert.equal(closureReasonLabel("", "Unmapped reason"), "Unmapped reason");
+
+    globalThis.window = {
+      SWIMFRANCISCO_LANG: "es",
+      SWIMFRANCISCO_DEFAULT_LANG: "en",
+      SWIMFRANCISCO_I18N: { reason_juneteenth: "Juneteenth traducido" },
+      SWIMFRANCISCO_DYNAMIC_LABELS: {
+        closure_reason: {
+          by_code: {
+            juneteenth: { translation_key: "reason_juneteenth", sources: ["Juneteenth"] },
+            memorial_day: { translation_key: "reason_memorial_day", sources: ["Memorial Day"] },
+          },
+          by_source: {
+            Juneteenth: { code: "juneteenth", translation_key: "reason_juneteenth" },
+          },
+        },
+      },
+    };
+    assert.equal(closureReasonLabel("juneteenth", "Juneteenth"), "Juneteenth traducido");
+    assert.equal(closureReasonLabel("memorial_day", "Memorial Day"), "");
+    assert.equal(closureReasonLabel("", "Unmapped reason"), "");
   } finally {
     if (previousWindow === undefined) {
       delete globalThis.window;

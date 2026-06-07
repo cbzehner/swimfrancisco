@@ -1,0 +1,334 @@
+[spots.24-hour-fitness-ocean]
+title = "24 Hour Fitness Ocean"
+slug = "24-hour-fitness-ocean"
+access_notes = [ "Keep this out of active swim planning until the official page shows the club has reopened." ]
+access_summary = "24 Hour Fitness Ocean lists an indoor lap pool, but the official club page says the club is temporarily closed for renovation until May 23, 2026."
+body = "24 Hour Fitness Ocean is a membership gym pool entry held in a temporary-closure state until renovation ends."
+
+[spots.24-hour-fitness-potrero]
+title = "24 Hour Fitness Potrero"
+slug = "24-hour-fitness-potrero"
+access_notes = [ "Use the club page for current membership, guest, and facility status; Swim Francisco does not track lane availability here." ]
+access_summary = "24 Hour Fitness Potrero is a gym pool. The official club page lists an indoor lap pool, sauna, whirlpool, and steam room among the gym amenities."
+body = "This is a gym-pool listing for swimmers who already use 24 Hour Fitness or want a membership-based option near Potrero."
+
+[[spots.24-hour-fitness-potrero.pricing]]
+label = "Gym member"
+price = "Membership"
+note = "Pool access depends on 24 Hour Fitness membership terms for this club."
+url = "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
+
+[[spots.24-hour-fitness-potrero.pricing]]
+label = "Guest / trial"
+price = "Ask club"
+note = "Promotions and guest access are not stable enough to publish as a fixed swim price."
+url = "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
+
+[spots.aquatic-park]
+title = "Aquatic Park"
+slug = "aquatic-park"
+access_notes = [ "Club access is separate from swimming in the public cove.", "If you are new to bay swimming, connect with a club or experienced local swimmer before going alone." ]
+access_summary = "The Aquatic Park cove and beach are public and free. The South End and Dolphin clubhouses are separate volunteer clubs; use each club's visitor or membership process for showers, lockers, sauna, and organized club activities."
+common_distances = [ "0.25mi to breakwater", "1mi loop" ]
+description_short = "Protected cove, calm water, popular with swim clubs"
+hazards = [ "boat traffic outside cove", "cold water year-round" ]
+body = "Aquatic Park is a protected cove on the northern waterfront, sheltered by a curved municipal pier. Calm conditions year-round make it the go-to open water training ground in the city. The [South End Rowing Club](https://serc.com/) and [Dolphin Club](https://dolphinclub.org/) both occupy clubhouses on the beach and run regular swims."
+
+[[spots.aquatic-park.clubs]]
+name = "South End Rowing Club"
+url = "https://serc.com/faq"
+access = "Public day-use"
+hours = "Tue / Thu / Sat 09:00-18:00 Jun-Nov; 08:00-17:00 Dec-May"
+fee = "$12 day-use"
+note = "Public day-use is available Tuesday, Thursday, and Saturday with seasonal hours. Follow SERC's public day-use requirements before using the clubhouse."
+source_url = "https://serc.com/faq"
+
+[[spots.aquatic-park.clubs]]
+name = "Dolphin Swimming & Boating Club"
+url = "https://dolphinclub.org/swimming/"
+access = "Public day-use"
+hours = "Mon / Wed / Fri 08:00-17:00 May-Oct; 09:00-17:00 Nov-Apr"
+fee = "$12 cash/check or $12.67 card"
+note = "No public day-use on federal or state holidays. Day-use covers locker rooms, shower, sauna, deck, and lounge; boats are not available to non-members."
+source_url = "https://dolphinclub.org/swimming/"
+
+[[spots.aquatic-park.pricing]]
+label = "Public cove"
+price = "Free"
+note = "No club membership required to swim from the public beach."
+url = "https://sfrecpark.org/Facilities/Facility/Details/Aquatic-Park-200"
+
+[[spots.aquatic-park.pricing]]
+label = "South End Rowing Club"
+price = "Day pass"
+note = "Public day-use Tue / Thu / Sat, 09:00-18:00 Jun-Nov and 08:00-17:00 Dec-May."
+url = "https://serc.com/faq"
+
+[[spots.aquatic-park.pricing]]
+label = "Dolphin Club"
+price = "Day pass"
+note = "Public day-use Mon / Wed / Fri, with seasonal hours and holiday closures."
+url = "https://dolphinclub.org/swimming/"
+
+[spots.baker-beach]
+title = "Baker Beach"
+slug = "baker-beach"
+clubs = []
+common_distances = []
+description_short = "Ocean-side beach just outside the Gate with strong surf and rip currents"
+hazards = [ "rip currents", "large shore break", "cold water year-round", "no lifeguards" ]
+body = "Baker Beach faces the open Pacific just south of the Golden Gate, with dramatic views of the bridge and the Marin Headlands. The surf, cold water, and rip currents make it a serious open water environment — wetsuits and conservative swim plans are the norm."
+
+[spots.balboa-pool]
+title = "Balboa Pool"
+slug = "balboa-pool"
+body = "A 100' x 40', six-lane indoor pool in the Ingleside neighborhood, recently reopened after a $9M renovation that added new mechanical systems, accessibility upgrades, and a mural by local artist Jason Jägel. Programs include lap swim, senior swim, recreation swim, fitness and exercise classes, and lessons."
+
+[spots.bay-club-gateway]
+title = "Bay Club Gateway"
+slug = "bay-club-gateway"
+access_notes = [ "Use the official club page or class calendar before going; lane availability is not published in Swim Francisco yet." ]
+access_summary = "Bay Club Gateway is a private club in the San Francisco Campus with an outdoor aquatic center and two heated pools. Access depends on Bay Club membership, guest privileges, or a scheduled club visit."
+body = "Bay Club Gateway is the downtown private-pool option: outdoor water, fitness facilities, tennis, and a club environment near the Embarcadero."
+
+[[spots.bay-club-gateway.pricing]]
+label = "Member"
+price = "Membership"
+note = "Bay Club does not publish a stable single-visit lap-swim price on this club page."
+url = "https://www.bayclubs.com/gateway/"
+
+[[spots.bay-club-gateway.pricing]]
+label = "Prospective member"
+price = "Schedule visit"
+note = "The club page offers a visit/contact flow."
+url = "https://www.bayclubs.com/gateway/"
+
+[spots.china-beach]
+title = "China Beach"
+slug = "china-beach"
+clubs = []
+common_distances = []
+description_short = "Small sheltered ocean cove below Sea Cliff, calmer than neighboring beaches"
+hazards = [ "rip currents", "cold water year-round", "seasonal lifeguards only" ]
+body = "China Beach is a small pocket cove tucked below the Sea Cliff neighborhood between Baker Beach and Lands End. Sheltered by headlands on both sides, it sees gentler surf than Ocean or Baker Beach, though it is still ocean water with rip currents and cold temperatures."
+
+[spots.chinatown-ymca]
+title = "Chinatown YMCA"
+slug = "chinatown-ymca"
+access_notes = [ "Use YMCA schedules before going; Swim Francisco currently tracks facility hours only for this pool." ]
+access_summary = "Chinatown YMCA is a membership YMCA branch with a saltwater pool and aquatics programs. The official location page publishes facility hours, but not a concrete weekly lap/open swim schedule in static page content."
+body = "Chinatown YMCA is a membership pool option near Portsmouth Square and the Financial District."
+
+[spots.city-sports-20th-ave]
+title = "City Sports 20th Ave"
+slug = "city-sports-20th-ave"
+access_notes = [ "Club hours are tracked as access hours only; lane availability and pool-specific closures are not yet verified." ]
+access_summary = "City Sports Club on 20th Ave lists a lap pool, Pool & Spa amenities, and club hours on its official location page."
+body = "City Sports 20th Ave is a Stonestown-area membership gym with a lap pool."
+
+[spots.coffman-pool]
+title = "Coffman Pool"
+slug = "coffman-pool"
+body = "A 10,000-square-foot indoor pool in Herz Playground at the southeastern entrance of McLaren Park, serving the Visitacion Valley neighborhood. Programs include lap swim, senior swim, recreation swim, self-guided water exercise, and lessons."
+
+[spots.crissy-field]
+title = "Crissy Field / East Beach"
+slug = "crissy-field"
+clubs = []
+common_distances = [ "East Beach to St. Francis Yacht Club", "Pier-to-pier along the Presidio shoreline" ]
+description_short = "Bay beach inside the Golden Gate with strong tidal currents"
+hazards = [ "strong tidal currents", "cold water year-round", "boat and ship traffic" ]
+body = "Crissy Field sits inside the Golden Gate on the bay side of the Presidio, with East Beach offering easy sand entry and classic views of the bridge. Tides rip through the Gate, so conditions vary hour to hour — swim on a slack or flood and stay inside the line of the beach."
+
+[spots.embarcadero-ymca]
+title = "Embarcadero YMCA"
+slug = "embarcadero-ymca"
+access_notes = [ "Pool hours are modeled from the YMCA rule that the pool opens 30 minutes after and closes 30 minutes before facility hours; lane/program availability still needs schedule verification." ]
+access_summary = "Embarcadero YMCA is a membership YMCA branch on the waterfront with swimming pools and aquatics programs. The official page publishes pool hours as offset from facility hours."
+body = "Embarcadero YMCA adds a downtown waterfront YMCA pool to the membership-only layer of the board."
+
+[spots.equinox-sports-club-sf]
+title = "Equinox Sports Club SF"
+slug = "equinox-sports-club-sf"
+access_notes = [ "Club hours are tracked as access hours only; lap-lane availability is not published in the source we parse." ]
+access_summary = "Equinox Sports Club San Francisco lists an indoor pool and club hours on the official location page."
+body = "Equinox Sports Club SF is a Market Street membership club with an indoor pool."
+
+[spots.fitness-sf-fillmore]
+title = "FITNESS SF Fillmore"
+slug = "fitness-sf-fillmore"
+access_notes = [ "Pool hours are represented from club hours; lane reservations and class conflicts still need manual verification before treating this as a swim schedule." ]
+access_summary = "FITNESS SF Fillmore is the FITNESS SF location with a 25-yard, 5-lane pool. The official help page says lap swimming is available and lane reservations are made in person."
+body = "FITNESS SF Fillmore is the membership fitness-club pool option in the Fillmore Center."
+
+[spots.garfield-pool]
+title = "Garfield Pool"
+slug = "garfield-pool"
+body = "An indoor pool at Garfield Square in the Mission District, at the corner of 26th and Harrison. Programs include lap swim, senior swim, recreation swim, fitness and exercise classes, and lessons."
+
+[spots.hamilton-pool]
+title = "Hamilton Pool"
+slug = "hamilton-pool"
+body = "A heated indoor pool at Hamilton Recreation Center on the corner of Geary and Steiner in Lower Pacific Heights. Notable for the only two indoor water slides in a San Francisco city pool. Programs include lap swim, senior swim, recreation swim, and lessons."
+
+[spots.jccsf]
+title = "JCCSF"
+slug = "jccsf"
+access_notes = [ "Check the current lap-lane schedule before going; peak time is listed as 4:00–7:00 pm daily." ]
+access_summary = "Gallanter Family Aquatics Center access is tied to JCCSF Fitness Center membership. The official aquatics page lists lap-pool access for members and member pricing for swim school."
+body = "JCCSF has a 25-yard lap pool, warm-water recreation pool, and hot tub at the Gallanter Family Aquatics Center. Treat it as a membership pool unless you have confirmed guest access directly with JCCSF."
+
+[[spots.jccsf.pricing]]
+label = "Fitness Center member"
+price = "Included"
+note = "Lap pool, hot tub, aqua fitness, and recreation/family swim are listed as member benefits."
+url = "https://www.jccsf.org/fitness/aquatics/"
+
+[[spots.jccsf.pricing]]
+label = "Non-member / guest"
+price = "Ask JCCSF"
+note = "Public drop-in lap-swim pricing is not published on the aquatics page."
+url = "https://www.jccsf.org/fitness/aquatics/"
+
+[spots.koret-center]
+title = "Koret Center"
+slug = "koret-center"
+access_notes = [ "Check Koret's pool lane schedule before going; the official page warns lane counts vary with lessons, teams, and events." ]
+access_summary = "USF's Koret Center has a large indoor pool. Lap lanes are generally available during pool hours, but access and passes depend on USF/Koret membership or eligible pass options."
+body = "Koret is one of the city's larger indoor pool facilities, with lap swim, masters swimming, lessons, youth teams, and events sharing the water."
+
+[[spots.koret-center.pricing]]
+label = "Member / eligible pass"
+price = "Varies"
+note = "Use Koret membership or pass information from USF."
+url = "https://www.usfca.edu/koret/facilities/indoor-swimming"
+
+[[spots.koret-center.pricing]]
+label = "Masters"
+price = "USMS + club"
+note = "USF Masters participation requires annual USMS membership on the USF club plus program requirements."
+url = "https://www.usfca.edu/koret/facilities/indoor-swimming"
+
+[spots.martin-luther-king-jr-pool]
+title = "Martin Luther King Jr. Pool"
+slug = "martin-luther-king-jr-pool"
+body = "An indoor pool in the Bayview, featuring a 25-yard x 25-meter main pool and a separate wading pool for tots. Programs include lap swim, senior swim, and recreation swim."
+
+[spots.mission-community-pool]
+title = "Mission Community Pool"
+slug = "mission-community-pool"
+body = "The only city-operated outdoor pool in San Francisco. Built in 1916, the 90' x 40' pool sits between Linda and Valencia streets in the heart of the Mission District and operates seasonally from May through October. Programs include lap swim, senior swim, recreation swim, water aerobics, and lessons."
+
+[spots.north-beach-pool]
+title = "North Beach Pool"
+slug = "north-beach-pool"
+body = "An indoor complex with two pools: a 25-meter, 21-foot-deep lap pool and an 89-foot recreation pool, plus sauna and community rooms. Programs include lap swim, senior/therapy swim, self-guided exercise, family swim, and learn-to-swim lessons for tiny tots through adults."
+
+[spots.ocean-beach]
+title = "Ocean Beach"
+slug = "ocean-beach"
+clubs = []
+common_distances = []
+description_short = "Three-mile open Pacific beach with powerful surf and dangerous rips"
+hazards = [ "powerful rip currents", "large shore break", "sneaker waves", "cold water year-round", "no lifeguards outside designated hours" ]
+body = "Ocean Beach stretches for roughly three miles along the western edge of the city. It is one of the most hazardous beaches on the California coast — heavy surf, powerful rip currents, and sneaker waves have caused numerous drownings. Swimming here is for experienced open water swimmers only, and even then only under calm conditions."
+
+[spots.pomeroy-pool]
+title = "Pomeroy Pool"
+slug = "pomeroy-pool"
+access_notes = [ "The therapeutic swim page says slow lap swimming only and notes the program is for warm-water movement, recovery, and gentle exercise." ]
+access_summary = "Pomeroy's Herbst Therapeutic Pool is a warm-water therapeutic pool. It offers therapeutic swim, open swim, classes, lessons, and slow lap swimming; it is not a vigorous lap-training pool."
+body = "Pomeroy is best modeled as warm-water access for therapy, gentle movement, lessons, and slow lap swimming rather than as a standard lap pool."
+
+[[spots.pomeroy-pool.pricing]]
+label = "Therapeutic swim pass"
+price = "$11"
+note = "One swim pass listed on Pomeroy's therapeutic swim page."
+url = "https://www.prrcsf.org/therapeutic-swim"
+
+[[spots.pomeroy-pool.pricing]]
+label = "10 swim pass"
+price = "$105"
+note = "Ten-pass price listed on Pomeroy's therapeutic swim page."
+url = "https://www.prrcsf.org/therapeutic-swim"
+
+[spots.presidio-ymca-letterman]
+title = "Presidio YMCA Letterman"
+slug = "presidio-ymca-letterman"
+access_notes = [ "YMCA financial assistance and membership options may change the effective price; verify directly with YMCA of Greater San Francisco." ]
+access_summary = "Letterman Pool is part of the Presidio Community YMCA. The official YMCA page lists a 25-yard pool and points swimmers to the online pool schedule."
+body = "The Letterman Pool sits behind the Letterman complex in the Presidio and is one of the stronger membership-pool options for lap swimmers on the north side of the city."
+
+[[spots.presidio-ymca-letterman.pricing]]
+label = "YMCA member"
+price = "Membership"
+note = "Use YMCA of Greater San Francisco membership access."
+url = "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"
+
+[[spots.presidio-ymca-letterman.pricing]]
+label = "Non-member / guest"
+price = "Ask YMCA"
+note = "Guest/day-pass rules are branch and policy dependent."
+url = "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"
+
+[spots.rossi-pool]
+title = "Rossi Pool"
+slug = "rossi-pool"
+body = "An indoor pool at Rossi Playground in the Inner Richmond, at the corner of Arguello and Anza. Programs include lap swim, senior swim, recreation swim, and lessons."
+
+[spots.sava-pool]
+title = "Sava Pool"
+slug = "sava-pool"
+body = "An indoor pool in the Parkside/Sunset district on 19th Avenue near Stern Grove. Programs include lap swim, senior swim, recreation swim, and lessons."
+
+[spots.sfsu-mashouf]
+title = "SFSU Mashouf Wellness Center"
+slug = "sfsu-mashouf"
+access_notes = [ "Natatorium hours are tracked as pool hours; public/community eligibility should be manually verified before recommending it broadly." ]
+access_summary = "SFSU Mashouf Wellness Center publishes natatorium hours and describes a 25-meter lap pool, activity pool, hot tub, sauna, and locker rooms. Access is campus/community-membership based."
+body = "SFSU Mashouf Wellness Center is the university/community membership pool option near Lake Merced."
+
+[spots.stonestown-ymca]
+title = "Stonestown YMCA"
+slug = "stonestown-ymca"
+access_notes = [ "Confirm the current pool schedule with the branch; YMCA pages distinguish lap swimming from recreation/household swim reservations." ]
+access_summary = "Stonestown Family YMCA is a membership YMCA branch with lap swimming and pool activities."
+body = "Stonestown YMCA is the southwest-side YMCA pool option, close to Stonestown and SF State."
+
+[[spots.stonestown-ymca.pricing]]
+label = "YMCA member"
+price = "Membership"
+note = "Use YMCA of Greater San Francisco membership access."
+url = "https://www.ymcasf.org/location/stonestown-family-ymca/"
+
+[[spots.stonestown-ymca.pricing]]
+label = "Non-member / guest"
+price = "Ask YMCA"
+note = "Guest/day-pass rules are branch and policy dependent."
+url = "https://www.ymcasf.org/location/stonestown-family-ymca/"
+
+[spots.ucsf-bakar]
+title = "UCSF Bakar"
+slug = "ucsf-bakar"
+access_notes = [ "The indoor pool reopened after renovation in June 2025; confirm current pool schedules through UCSF Fitness and Recreation." ]
+access_summary = "Bakar Fitness Center at UCSF Mission Bay is a membership fitness center with both an indoor swimming pool and an outdoor rooftop pool."
+body = "Bakar is the Mission Bay fitness-center option, notable for having both indoor water and an outdoor rooftop pool."
+
+[[spots.ucsf-bakar.pricing]]
+label = "Member"
+price = "Membership"
+note = "Pool access is part of UCSF Fitness and Recreation membership access."
+url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
+
+[[spots.ucsf-bakar.pricing]]
+label = "Guest / day access"
+price = "Ask UCSF"
+note = "Guest or sponsored access can change by affiliation and policy."
+url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
+
+[spots.ucsf-millberry]
+title = "UCSF Millberry"
+slug = "ucsf-millberry"
+access_notes = [ "Facility hours are tracked as access hours only until a pool-specific schedule source is verified." ]
+access_summary = "UCSF Millberry Fitness Center is the Parnassus UCSF fitness location. The official page publishes facility hours, but the pool schedule needs separate verification."
+body = "UCSF Millberry is the Parnassus campus fitness-center pool entry for the opt-in membership layer."

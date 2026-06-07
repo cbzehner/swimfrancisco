@@ -14,30 +14,14 @@ cost = "paid"
 access_label = "Members"
 access_badge_class = "is-member"
 setpoint_label = "80°F"
-access_summary = "Gallanter Family Aquatics Center access is tied to JCCSF Fitness Center membership. The official aquatics page lists lap-pool access for members and member pricing for swim school."
-access_notes = ["Check the current lap-lane schedule before going; peak time is listed as 4:00–7:00 pm daily."]
 closures = []
 schedule_effective = "2026-05-17"
 last_verified_at = "2026-05-17"
 access_mode = "membership"
 payment_model = "membership"
 schedule_basis = "swim_schedule"
-
-[[extra.pricing]]
-label = "Fitness Center member"
-price = "Included"
-note = "Lap pool, hot tub, aqua fitness, and recreation/family swim are listed as member benefits."
-url = "https://www.jccsf.org/fitness/aquatics/"
-access_mode = "membership"
-payment_model = "membership"
-
-[[extra.pricing]]
-label = "Non-member / guest"
-price = "Ask JCCSF"
-note = "Public drop-in lap-swim pricing is not published on the aquatics page."
-url = "https://www.jccsf.org/fitness/aquatics/"
-access_mode = "membership"
-payment_model = "unknown"
+access_notes = [ "Check the current lap-lane schedule before going; peak time is listed as 4:00–7:00 pm daily." ]
+access_summary = "Gallanter Family Aquatics Center access is tied to JCCSF Fitness Center membership. The official aquatics page lists lap-pool access for members and member pricing for swim school."
 
 [[extra.sessions]]
 day = "monday"
@@ -164,6 +148,22 @@ day = "sunday"
 type = "family_swim"
 start = "14:00"
 end = "18:45"
+
+[[extra.pricing]]
+label = "Fitness Center member"
+price = "Included"
+note = "Lap pool, hot tub, aqua fitness, and recreation/family swim are listed as member benefits."
+url = "https://www.jccsf.org/fitness/aquatics/"
+access_mode = "membership"
+payment_model = "membership"
+
+[[extra.pricing]]
+label = "Non-member / guest"
+price = "Ask JCCSF"
+note = "Public drop-in lap-swim pricing is not published on the aquatics page."
+url = "https://www.jccsf.org/fitness/aquatics/"
+access_mode = "membership"
+payment_model = "unknown"
 +++
 
 JCCSF has a 25-yard lap pool, warm-water recreation pool, and hot tub at the Gallanter Family Aquatics Center. Treat it as a membership pool unless you have confirmed guest access directly with JCCSF.

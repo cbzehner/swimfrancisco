@@ -17,12 +17,12 @@ setpoint_label = "25m"
 access_mode = "limited_public"
 payment_model = "membership"
 schedule_basis = "pool_hours"
-access_summary = "SFSU Mashouf Wellness Center publishes natatorium hours and describes a 25-meter lap pool, activity pool, hot tub, sauna, and locker rooms. Access is campus/community-membership based."
-access_notes = ["Natatorium hours are tracked as pool hours; public/community eligibility should be manually verified before recommending it broadly."]
 sessions = []
 closures = []
 schedule_effective = "2026-05-17"
 last_verified_at = "2026-05-17"
+access_notes = [ "Natatorium hours are tracked as pool hours; public/community eligibility should be manually verified before recommending it broadly." ]
+access_summary = "SFSU Mashouf Wellness Center publishes natatorium hours and describes a 25-meter lap pool, activity pool, hot tub, sauna, and locker rooms. Access is campus/community-membership based."
 
 [[extra.access_hours]]
 day = "monday"
