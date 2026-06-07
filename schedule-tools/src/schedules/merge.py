@@ -199,6 +199,12 @@ def _promote_upcoming_schedule(extra: Any, as_of_date: str) -> bool:
         return False
     schedule = _schedule_from_table(upcoming)
     last_verified_at = upcoming.get("last_verified_at")
+    current_end = extra.get("effective_end")
+    print(
+        f"[merge] promoting upcoming_schedule: "
+        f"as_of={as_of_date} current_end={current_end} "
+        f"upcoming_start={upcoming_start} upcoming_end={upcoming.get('effective_end')}"
+    )
     del extra["upcoming_schedule"]
     _write_schedule_fields(
         extra,

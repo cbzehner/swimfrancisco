@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import traceback
 from pathlib import Path
 
 from .artifacts import save_artifact_bundle, skip_if_fresh
@@ -286,7 +287,7 @@ def _process_entry(
     except Exception as exc:  # noqa: BLE001
         return Aborted(
             **_identity_kwargs(entry),
-            error=str(exc),
+            error=f"{type(exc).__name__}: {exc}\n{traceback.format_exc()}",
             prior_sessions_count=len(prior_snapshot["sessions"]),
             prior_closures_count=len(prior_snapshot["closures"]),
             prior_schedule_effective=prior_snapshot["effective_start"],
@@ -360,7 +361,7 @@ def _process_direct_entry(entry: PoolEntry) -> PoolResult:
     except Exception as exc:  # noqa: BLE001
         return Aborted(
             **_identity_kwargs(entry),
-            error=str(exc),
+            error=f"{type(exc).__name__}: {exc}\n{traceback.format_exc()}",
             prior_sessions_count=len(prior_snapshot["sessions"]),
             prior_closures_count=len(prior_snapshot["closures"]),
             prior_schedule_effective=prior_snapshot["effective_start"],

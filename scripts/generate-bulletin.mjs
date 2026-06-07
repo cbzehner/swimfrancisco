@@ -35,8 +35,12 @@ const scheduleFingerprint = hash.digest("hex");
 let existing = {};
 try {
   existing = JSON.parse(await readFile(outPath, "utf8"));
-} catch (_err) {
-  // First run starts the launch bulletin at 00.
+} catch (err) {
+  // ENOENT (first run) is expected and starts the launch bulletin at 00.
+  // Any other error — parse failure, permission, etc. — would silently
+  // reset the bulletin counter and re-broadcast a fresh launch label,
+  // which is bad. Re-throw so the generator fails loudly instead.
+  if (err.code !== "ENOENT") throw err;
 }
 
 const existingNumber = Number.isInteger(existing.number) ? existing.number : 0;

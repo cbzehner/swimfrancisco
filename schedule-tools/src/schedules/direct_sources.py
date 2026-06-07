@@ -709,7 +709,6 @@ def _extract_ymca_holiday_access_exceptions(html: str, *, basis: str) -> list[di
     ]
     if not blocks:
         return []
-    year = date.today().year
     month_numbers = {
         "january": 1,
         "february": 2,
@@ -754,7 +753,7 @@ def _extract_ymca_holiday_access_exceptions(html: str, *, basis: str) -> list[di
                 if not pool_hours:
                     start = _shift_hhmm(start, minutes=30)
                     end = _parse_clock_time(pool_closes) if pool_closes else _shift_hhmm(end, minutes=-30)
-            date_iso = date(year, month_numbers[month.lower()], int(day)).isoformat()
+            date_iso = _resolve_yearless_date(month_numbers[month.lower()], int(day)).isoformat()
             key = (date_iso, start, end, label, reason)
             if key in seen:
                 continue
@@ -834,9 +833,20 @@ def _shift_hhmm(value: str, *, minutes: int) -> str:
     return shifted.strftime("%H:%M")
 
 
+def _resolve_yearless_date(month: int, day: int, today: date | None = None) -> date:
+    """Resolve a month/day to an absolute date, rolling to next year when the
+    naive same-year resolution would land more than 30 days in the past. Web
+    pages frequently list closures by month/day only — a December scrape that
+    sees 'January 15' means next January, not last January."""
+    today = today or date.today()
+    resolved = date(today.year, month, day)
+    if (today - resolved).days > 30:
+        resolved = date(today.year + 1, month, day)
+    return resolved
+
+
 def _closure_dates_from_text(text: str) -> list[dict]:
     closures: list[dict] = []
-    year = date.today().year
     month_numbers = {
         "january": 1,
         "february": 2,
@@ -859,7 +869,7 @@ def _closure_dates_from_text(text: str) -> list[dict]:
         flags=re.IGNORECASE,
     ):
         month, day, reason = match.groups()
-        iso = date(year, month_numbers[month.lower()], int(day)).isoformat()
+        iso = _resolve_yearless_date(month_numbers[month.lower()], int(day)).isoformat()
         closures.append({"start": iso, "end": iso, "reason": _squash(reason)})
     return closures
 
