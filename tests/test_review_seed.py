@@ -93,7 +93,7 @@ def test_seed_draft_uses_pacific_time_for_today(tmp_path, monkeypatch):
         def now(cls, tz=None):
             return fixed_utc.astimezone(tz) if tz else fixed_utc.replace(tzinfo=None)
 
-    monkeypatch.setattr("schedules.review._datetime", _FixedDatetime)
+    monkeypatch.setattr("schedules._time.datetime", _FixedDatetime)
 
     path = seed_draft(
         candidate=_make_candidate(artifact_dir, "a" * 64),

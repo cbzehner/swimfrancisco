@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import date as _date, datetime as _datetime
+from datetime import date as _date
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
+from ._time import pacific_today
 from .envelope import EnvelopeValidationError, validate_envelope
 from .paths import CONTENT_SPOTS_DIR, DATA_DIR, all_review_dirs, reviewed_path
 from .project import ProjectError, project
@@ -86,11 +86,6 @@ def find_review_candidates(
 
 
 _PROVIDER_PREFERENCE = ("gemini", "anthropic")
-_PACIFIC_TZ = ZoneInfo("America/Los_Angeles")
-
-
-def _pacific_today() -> _date:
-    return _datetime.now(_PACIFIC_TZ).date()
 
 
 def _pick_provider_artifact(review_dir: Path) -> Path:
@@ -122,7 +117,7 @@ def seed_draft(
     who want to discard WIP use `git restore`; to start over from raw
     extraction, remove the file and re-run `schedules review`.
     """
-    today = today or _pacific_today()
+    today = today or pacific_today()
     target = reviewed_path(candidate.slug, candidate.fetch_date, candidate.pdf_sha256, root=data_root)
     if target.exists():
         return target

@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime
 from pathlib import Path
 from typing import Any
-from zoneinfo import ZoneInfo
 
 import tomlkit
 from tomlkit.items import AoT
 
+from ._time import pacific_today
 from .models import MergeResult
 
 DAY_ORDER = {
@@ -35,51 +34,66 @@ def merge(
 
     after = _normalized_schedule_payload(extracted)
     if as_of_date is None:
-        as_of_date = _today_pacific()
+        as_of_date = pacific_today().isoformat()
     promoted = _promote_upcoming_schedule(extra, as_of_date)
     before = _schedule_from_table(extra)
-    queue_upcoming = _should_queue_upcoming(before, after)
-    if queue_upcoming and _should_preserve_existing_upcoming(extra.get("upcoming_schedule"), after):
-        return MergeResult(
-            prior_sessions_count=len(before["sessions"]),
-            new_sessions_count=len(after["sessions"]),
-            prior_closures_count=len(before["closures"]),
-            new_closures_count=len(after["closures"]),
-            written=False,
-        )
-    target = _schedule_from_table(extra["upcoming_schedule"]) if queue_upcoming and extra.get("upcoming_schedule") else before
-    changed = promoted or target != after
-    if last_verified_at is not None:
-        if queue_upcoming:
-            upcoming = extra.get("upcoming_schedule", {})
-            changed = changed or upcoming.get("last_verified_at") != last_verified_at
-        else:
-            changed = changed or extra.get("last_verified_at") != last_verified_at
+
+    if _should_queue_upcoming(before, after):
+        changed = _apply_queued_upcoming(extra, after, last_verified_at=last_verified_at, promoted=promoted)
+    else:
+        changed = _apply_current_schedule(extra, before, after, last_verified_at=last_verified_at, promoted=promoted)
 
     if not changed:
-        return MergeResult(
-            prior_sessions_count=len(before["sessions"]),
-            new_sessions_count=len(after["sessions"]),
-            prior_closures_count=len(before["closures"]),
-            new_closures_count=len(after["closures"]),
-            written=False,
-        )
-
-    if queue_upcoming:
-        extra["upcoming_schedule"] = _build_schedule_table(after, last_verified_at=last_verified_at)
-    else:
-        _write_schedule_fields(extra, after, last_verified_at=last_verified_at)
-        _drop_stale_upcoming(extra, after)
+        return _merge_result(before, after, written=False)
 
     updated = tomlkit.dumps(document).rstrip("\n")
     pool_md_path.write_text(f"+++\n{updated}\n+++\n{body}")
+    return _merge_result(before, after, written=True)
+
+
+def _merge_result(before: dict[str, Any], after: dict[str, Any], *, written: bool) -> MergeResult:
     return MergeResult(
         prior_sessions_count=len(before["sessions"]),
         new_sessions_count=len(after["sessions"]),
         prior_closures_count=len(before["closures"]),
         new_closures_count=len(after["closures"]),
-        written=True,
+        written=written,
     )
+
+
+def _apply_queued_upcoming(
+    extra: Any,
+    after: dict[str, Any],
+    *,
+    last_verified_at: str | None,
+    promoted: bool,
+) -> bool:
+    existing = extra.get("upcoming_schedule")
+    if _should_preserve_existing_upcoming(existing, after):
+        return False
+    existing_schedule = _schedule_from_table(existing) if existing else None
+    existing_verified = existing.get("last_verified_at") if existing else None
+    if not promoted and existing_schedule == after:
+        if last_verified_at is None or existing_verified == last_verified_at:
+            return False
+    extra["upcoming_schedule"] = _build_schedule_table(after, last_verified_at=last_verified_at)
+    return True
+
+
+def _apply_current_schedule(
+    extra: Any,
+    before: dict[str, Any],
+    after: dict[str, Any],
+    *,
+    last_verified_at: str | None,
+    promoted: bool,
+) -> bool:
+    if not promoted and before == after:
+        if last_verified_at is None or extra.get("last_verified_at") == last_verified_at:
+            return False
+    _write_schedule_fields(extra, after, last_verified_at=last_verified_at)
+    _drop_stale_upcoming(extra, after)
+    return True
 
 
 def read_schedule_snapshot(pool_md_path: Path) -> dict[str, Any]:
@@ -109,10 +123,6 @@ def _normalized_schedule_payload(extracted: dict[str, Any]) -> dict[str, Any]:
         "schedule_basis": extracted.get("schedule_basis"),
         "schedule_effective_end": extracted.get("schedule_effective_end"),
     }
-
-
-def _today_pacific() -> str:
-    return datetime.now(ZoneInfo("America/Los_Angeles")).date().isoformat()
 
 
 def _schedule_from_table(table: Any) -> dict[str, Any]:
@@ -150,6 +160,13 @@ def _should_preserve_existing_upcoming(upcoming: Any, incoming: dict[str, Any]) 
 
 
 def _promote_upcoming_schedule(extra: Any, as_of_date: str) -> bool:
+    # Promotion (writing upcoming over current in the frontmatter) is a
+    # different concept from render-time selection. Promote only once we're
+    # definitely INSIDE the upcoming window — i.e. as_of_date >= upcoming.start.
+    # Render-time selection (templates/spots/page.html + static/js/helpers/board.mjs
+    # resolveScheduleForDate) switches as soon as the current schedule has
+    # ENDED, so during a gap day visitors see "Schedule starts <date>" sourced
+    # from the still-queued upcoming entry.
     upcoming = extra.get("upcoming_schedule")
     if not upcoming:
         return False
