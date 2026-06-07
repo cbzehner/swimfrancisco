@@ -77,9 +77,13 @@ export function formatLocalizedISODate(isoDate) {
   const year = Number(match[1]);
   const month = Number(match[2]);
   const day = Number(match[3]);
-  if (activeLanguage().startsWith("zh")) return `${year}年${month}月${day}日`;
+  const lang = activeLanguage();
+  if (lang.startsWith("zh")) return `${year}年${month}月${day}日`;
+  if (lang.startsWith("fil")) return `${monthLabel(month)} ${day}, ${year}`;
+  if (lang.startsWith("fi")) return `${day}.${month}.${year}`;
+  if (lang.startsWith("vi") || lang.startsWith("es")) return `${day}/${month}/${year}`;
   const label = monthLabel(month);
-  if (activeLanguage().startsWith("en")) return `${label} ${day}, ${year}`;
+  if (lang.startsWith("en")) return `${label} ${day}, ${year}`;
   return `${day} ${label} ${year}`;
 }
 

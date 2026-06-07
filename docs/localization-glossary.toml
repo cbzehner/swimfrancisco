@@ -1,0 +1,54 @@
+[locales.en]
+required = [
+  'Limited access',
+]
+
+[locales.es]
+required = [
+  'Acceso limitado',
+]
+
+[locales.zh-Hant]
+required = [
+  '限制入場',
+]
+banned = [
+  '有限',
+]
+
+[locales.fil]
+required = [
+  'pagpasok',
+  'Limitadong pagpasok',
+  'agos pabalik sa dagat',
+  'biglaang malalaking alon',
+]
+banned = [
+  '\brip currents\b',
+  '\bsneaker waves\b',
+  '\baccess\b',
+  '\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b',
+  '\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-',
+  '\bday-use\b',
+  '\bavailable\b',
+]
+
+[locales.vi]
+required = [
+  'Vào cửa có giới hạn',
+]
+banned = [
+  '\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-',
+]
+
+[locales.fi]
+required = [
+  'Pääsy',
+  'Rajoitettu pääsy',
+  'ristiaallokko',
+]
+banned = [
+  'repeämä',
+  '\bKulku\b',
+  'kulkuaiko',
+]

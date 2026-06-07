@@ -234,7 +234,7 @@ def test_localized_spot_pages_store_translated_markdown(built_site: Path) -> Non
     assert "La cala y la playa de Aquatic Park son públicas y gratuitas" in aquatic
     assert "Cala pública" in aquatic
     assert "tráfico de embarcaciones fuera de la cala" in aquatic
-    assert "0.25 mi hasta el rompeolas" in aquatic
+    assert "0,25 mi hasta el rompeolas" in aquatic
     assert "Aquatic Park es una cala protegida" in aquatic
     assert "principal lugar de entrenamiento de aguas abiertas" in aquatic
     assert "The Aquatic Park cove and beach are public and free" not in aquatic
@@ -252,7 +252,7 @@ def test_localized_spot_pages_store_translated_markdown(built_site: Path) -> Non
 
     garfield = (built_site / "es" / "spots" / "garfield-pool" / "index.html").read_text()
     assert "<title>Garfield Pool horario de natación y acceso — Swim Francisco</title>" in garfield
-    assert "El horario empieza 7 JUN 2026" in garfield
+    assert "El horario empieza 7/6/2026" in garfield
     assert "SIN HORARIO SIN CITA VIERNES Y SÁBADO" in garfield
 
     mission = (built_site / "es" / "spots" / "mission-community-pool" / "index.html").read_text()
@@ -285,13 +285,66 @@ def test_localized_spot_pages_store_translated_markdown(built_site: Path) -> Non
 
     filipino_bakar = html.unescape((built_site / "fil" / "spots" / "ucsf-bakar" / "index.html").read_text())
     assert "PRIBADONG PANLOOB/PANLABAS" in filipino_bakar
-    assert "Access ng miyembro" in filipino_bakar
+    assert "Kasama sa membership" in filipino_bakar
     assert "PRIVATE INDOOR/OUTDOOR" not in filipino_bakar
 
     vietnamese_potrero = (built_site / "vi" / "spots" / "24-hour-fitness-potrero" / "index.html").read_text()
     assert "Hội viên phòng gym" in vietnamese_potrero
     assert "Hỏi câu lạc bộ" in vietnamese_potrero
     assert "Gym member" not in vietnamese_potrero
+
+
+def test_localized_domain_terms_are_not_left_literal() -> None:
+    def collect_strings(value: object) -> list[str]:
+        if isinstance(value, str):
+            return [value]
+        if isinstance(value, dict):
+            out: list[str] = []
+            for item in value.values():
+                out.extend(collect_strings(item))
+            return out
+        if isinstance(value, list):
+            out: list[str] = []
+            for item in value:
+                out.extend(collect_strings(item))
+            return out
+        return []
+
+    config = tomllib.loads((ROOT / "config.toml").read_text())
+    glossary = tomllib.loads((ROOT / "docs" / "localization-glossary.toml").read_text())["locales"]
+    translation_text_by_lang = {"en": "\n".join(str(value) for value in config["translations"].values())}
+    translation_text_by_lang.update({
+        lang: "\n".join(str(value) for value in language["translations"].values())
+        for lang, language in config["languages"].items()
+    })
+    content_text_by_lang: dict[str, str] = {}
+    localized_suffixes = tuple(f".{lang}.md" for lang in config["languages"])
+    for lang in glossary:
+        localized_strings: list[str] = []
+        if lang == "en":
+            paths = [
+                path
+                for path in sorted((ROOT / "content").rglob("*.md"))
+                if not path.name.endswith(localized_suffixes)
+            ]
+        else:
+            paths = sorted((ROOT / "content").rglob(f"*.{lang}.md"))
+        for path in paths:
+            text = path.read_text()
+            if text.startswith("+++"):
+                frontmatter, _, body = text[3:].partition("+++")
+                localized_strings.extend(collect_strings(tomllib.loads(frontmatter)))
+                localized_strings.append(body)
+            else:
+                localized_strings.append(text)
+        content_text_by_lang[lang] = "\n".join(localized_strings)
+
+    for lang, rules in glossary.items():
+        haystack = f"{translation_text_by_lang[lang]}\n{content_text_by_lang[lang]}"
+        for pattern in rules.get("banned", []):
+            assert re.search(pattern, haystack, flags=re.I) is None, f"{lang} still contains {pattern}"
+        for pattern in rules.get("required", []):
+            assert re.search(pattern, haystack, flags=re.I), f"{lang} is missing {pattern}"
 
 
 def test_access_panel_renders_pricing_options(built_site: Path) -> None:
@@ -522,14 +575,14 @@ def test_localized_pages_render_hreflang_and_open_graph_locale(built_site: Path)
     spanish = (built_site / "es" / "spots" / "aquatic-park" / "index.html").read_text()
     assert "<html lang=es>" in spanish
     assert "<meta content=es_US property=og:locale>" in spanish
-    assert "<meta content=zh_TW property=og:locale:alternate>" in spanish
+    assert "<meta content=zh_HK property=og:locale:alternate>" in spanish
     assert "<meta content=es_US property=og:locale:alternate>" not in spanish
     _assert_hreflang_cluster(spanish, "/spots/aquatic-park/")
 
     chinese = (built_site / "zh-Hant" / "index.html").read_text()
     assert "<html lang=zh-Hant>" in chinese
-    assert "<meta content=zh_TW property=og:locale>" in chinese
-    assert "<meta content=zh_TW property=og:locale:alternate>" not in chinese
+    assert "<meta content=zh_HK property=og:locale>" in chinese
+    assert "<meta content=zh_HK property=og:locale:alternate>" not in chinese
     _assert_hreflang_cluster(chinese, "/")
 
     finnish = (built_site / "fi" / "spots" / "aquatic-park" / "index.html").read_text()

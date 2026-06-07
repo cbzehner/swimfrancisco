@@ -11,7 +11,7 @@
 
 {% macro og_locale_tags(active_lang) -%}
   {%- if active_lang == "es" -%}{% set locale = "es_US" %}
-  {%- elif active_lang == "zh-Hant" -%}{% set locale = "zh_TW" %}
+  {%- elif active_lang == "zh-Hant" -%}{% set locale = "zh_HK" %}
   {%- elif active_lang == "fil" -%}{% set locale = "fil_PH" %}
   {%- elif active_lang == "vi" -%}{% set locale = "vi_VN" %}
   {%- elif active_lang == "fi" -%}{% set locale = "fi_FI" %}
@@ -20,7 +20,7 @@
   <meta property="og:locale" content="{{ locale }}">
   {%- if active_lang != "en" %}<meta property="og:locale:alternate" content="en_US">{% endif -%}
   {%- if active_lang != "es" %}<meta property="og:locale:alternate" content="es_US">{% endif -%}
-  {%- if active_lang != "zh-Hant" %}<meta property="og:locale:alternate" content="zh_TW">{% endif -%}
+  {%- if active_lang != "zh-Hant" %}<meta property="og:locale:alternate" content="zh_HK">{% endif -%}
   {%- if active_lang != "fil" %}<meta property="og:locale:alternate" content="fil_PH">{% endif -%}
   {%- if active_lang != "vi" %}<meta property="og:locale:alternate" content="vi_VN">{% endif -%}
   {%- if active_lang != "fi" %}<meta property="og:locale:alternate" content="fi_FI">{% endif -%}

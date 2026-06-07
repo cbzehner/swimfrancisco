@@ -10,8 +10,8 @@ access_notes = ["Hiwalay ang paggamit ng club sa paglangoy sa pampublikong look.
 hazards = ["trapiko ng bangka sa labas ng cove", "malamig ang tubig buong taon"]
 common_distances = ["0.25mi papunta sa breakwater", "1mi loop"]
 clubs = [
-  { name = "South End Rowing Club", url = "https://serc.com/faq", access = "Pampublikong day-use", hours = "Tue / Thu / Sat 09:00-18:00 Jun-Nov; 08:00-17:00 Dec-May", fee = "$12 day-use", note = "May pampublikong day-use tuwing Martes, Huwebes, at Sabado, na may oras na nagbabago ayon sa panahon. Sundin ang mga kailangan ng SERC para sa pampublikong day-use bago gamitin ang clubhouse.", source_url = "https://serc.com/faq" },
-  { name = "Dolphin Swimming & Boating Club", url = "https://dolphinclub.org/swimming/", access = "Pampublikong day-use", hours = "Mon / Wed / Fri 08:00-17:00 May-Oct; 09:00-17:00 Nov-Apr", fee = "$12 cash/check o $12.67 card", note = "Walang pampublikong day-use sa mga federal o state holiday. Kasama sa day-use ang mga locker room, shower, sauna, deck, at lounge; hindi available sa hindi miyembro ang mga bangka.", source_url = "https://dolphinclub.org/swimming/" },
+  { name = "South End Rowing Club", url = "https://serc.com/faq", access = "Pampublikong arawang gamit", hours = "Martes / Huwebes / Sabado 09:00-18:00 Hunyo-Nobyembre; 08:00-17:00 Disyembre-Mayo", fee = "$12 arawang gamit", note = "May pampublikong arawang gamit tuwing Martes, Huwebes, at Sabado, na may oras na nagbabago ayon sa panahon. Sundin ang mga kailangan ng SERC para sa pampublikong arawang gamit bago gamitin ang clubhouse.", source_url = "https://serc.com/faq" },
+  { name = "Dolphin Swimming & Boating Club", url = "https://dolphinclub.org/swimming/", access = "Pampublikong arawang gamit", hours = "Lunes / Miyerkules / Biyernes 08:00-17:00 Mayo-Oktubre; 09:00-17:00 Nobyembre-Abril", fee = "$12 cash/tseke o $12.67 card", note = "Walang pampublikong arawang gamit sa mga federal o state holiday. Kasama sa arawang gamit ang mga locker room, shower, sauna, deck, at lounge; hindi magagamit ng hindi miyembro ang mga bangka.", source_url = "https://dolphinclub.org/swimming/" },
 ]
 
 [[extra.pricing]]
@@ -22,14 +22,14 @@ url = "https://sfrecpark.org/Facilities/Facility/Details/Aquatic-Park-200"
 
 [[extra.pricing]]
 label = "South End Rowing Club"
-price = "Day-use pass"
-note = "Pampublikong day-use Tue / Thu / Sat, 09:00-18:00 Jun-Nov at 08:00-17:00 Dec-May."
+price = "Pass sa arawang gamit"
+note = "Pampublikong arawang gamit Martes / Huwebes / Sabado, 09:00-18:00 Hunyo-Nobyembre at 08:00-17:00 Disyembre-Mayo."
 url = "https://serc.com/faq"
 
 [[extra.pricing]]
 label = "Dolphin Club"
-price = "Day-use pass"
-note = "Pampublikong day-use Mon / Wed / Fri, may oras na nagbabago ayon sa panahon at may pagsasara kapag holiday."
+price = "Pass sa arawang gamit"
+note = "Pampublikong arawang gamit Lunes / Miyerkules / Biyernes, may oras na nagbabago ayon sa panahon at may pagsasara kapag holiday."
 url = "https://dolphinclub.org/swimming/"
 +++
 

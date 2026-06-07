@@ -8,10 +8,10 @@ description_short = "Suojaisa poukama pohjoisella rantavyöhykkeellä, rauhallin
 access_summary = "Aquatic Parkin poukama ja ranta ovat julkisia ja maksuttomia. South Endin ja Dolphinin klubitalot ovat erillisiä vapaaehtoisseuroja; käytä kunkin seuran vieras- tai jäsenprosessia suihkuihin, kaappeihin, saunaan ja järjestettyihin seuratoimintoihin."
 access_notes = ["Seurojen käyttöoikeus on erillinen julkisessa poukamassa uimisesta.", "Jos olet uusi lahtiuinnissa, mene mukaan seuran tai kokeneen paikallisen uimarin kanssa ennen kuin uit yksin."]
 hazards = ["veneliikenne poukaman ulkopuolella", "kylmä vesi ympäri vuoden"]
-common_distances = ["0.25 mi aallonmurtajalle", "1 mi kierros"]
+common_distances = ["0,25 mailia aallonmurtajalle", "1 mailin kierros"]
 clubs = [
   { name = "South End Rowing Club", url = "https://serc.com/faq", access = "Julkinen päiväkäyttö", hours = "Ti / to / la 09:00-18:00 kesä-marras; 08:00-17:00 joulu-touko", fee = "$12 päiväkäyttö", note = "Julkinen päiväkäyttö on saatavilla tiistaisin, torstaisin ja lauantaisin kausittaisin aukioloajoin. Noudata SERCin päiväkäytön vaatimuksia ennen klubitalon käyttöä.", source_url = "https://serc.com/faq" },
-  { name = "Dolphin Swimming & Boating Club", url = "https://dolphinclub.org/swimming/", access = "Julkinen päiväkäyttö", hours = "Ma / ke / pe 08:00-17:00 touko-loka; 09:00-17:00 marras-huhti", fee = "$12 käteinen/sekki tai $12.67 kortilla", note = "Ei julkista päiväkäyttöä liittovaltion tai osavaltion pyhäpäivinä. Päiväkäyttö kattaa pukuhuoneet, suihkun, saunan, kannen ja oleskelutilan; veneet eivät ole muiden kuin jäsenten käytössä.", source_url = "https://dolphinclub.org/swimming/" },
+  { name = "Dolphin Swimming & Boating Club", url = "https://dolphinclub.org/swimming/", access = "Julkinen päiväkäyttö", hours = "Ma / ke / pe 08:00-17:00 touko-loka; 09:00-17:00 marras-huhti", fee = "12 $ käteinen/sekki tai 12,67 $ kortilla", note = "Ei julkista päiväkäyttöä liittovaltion tai osavaltion pyhäpäivinä. Päiväkäyttö kattaa pukuhuoneet, suihkun, saunan, kannen ja oleskelutilan; veneet eivät ole muiden kuin jäsenten käytössä.", source_url = "https://dolphinclub.org/swimming/" },
 ]
 
 [[extra.pricing]]

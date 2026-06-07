@@ -10,8 +10,8 @@ access_notes = ["Quyền vào câu lạc bộ tách biệt với việc bơi tro
 hazards = ["tàu thuyền ngoài vịnh nhỏ", "nước lạnh quanh năm"]
 common_distances = ["0,25 dặm đến đê chắn sóng", "vòng 1 dặm"]
 clubs = [
-  { name = "South End Rowing Club", url = "https://serc.com/faq", access = "Vé ngày cho công chúng", hours = "Thứ Ba / Năm / Bảy 09:00-18:00 Jun-Nov; 08:00-17:00 Dec-May", fee = "$12 vé ngày", note = "Vé ngày cho công chúng có vào thứ Ba, thứ Năm và thứ Bảy, với giờ theo mùa. Hãy làm theo yêu cầu dùng ngày công cộng của SERC trước khi sử dụng nhà câu lạc bộ.", source_url = "https://serc.com/faq" },
-  { name = "Dolphin Swimming & Boating Club", url = "https://dolphinclub.org/swimming/", access = "Vé ngày cho công chúng", hours = "Thứ Hai / Tư / Sáu 08:00-17:00 May-Oct; 09:00-17:00 Nov-Apr", fee = "$12 tiền mặt/séc hoặc $12,67 bằng thẻ", note = "Không có vé ngày cho công chúng vào ngày lễ liên bang hoặc tiểu bang. Vé ngày gồm phòng thay đồ, vòi sen, sauna, sân hiên và phòng sinh hoạt; thuyền không dành cho người không phải hội viên.", source_url = "https://dolphinclub.org/swimming/" },
+  { name = "South End Rowing Club", url = "https://serc.com/faq", access = "Vé ngày cho công chúng", hours = "Thứ Ba / Năm / Bảy 09:00-18:00 tháng 6-tháng 11; 08:00-17:00 tháng 12-tháng 5", fee = "$12 vé ngày", note = "Vé ngày cho công chúng có vào thứ Ba, thứ Năm và thứ Bảy, với giờ theo mùa. Hãy làm theo yêu cầu dùng ngày công cộng của SERC trước khi sử dụng nhà câu lạc bộ.", source_url = "https://serc.com/faq" },
+  { name = "Dolphin Swimming & Boating Club", url = "https://dolphinclub.org/swimming/", access = "Vé ngày cho công chúng", hours = "Thứ Hai / Tư / Sáu 08:00-17:00 tháng 5-tháng 10; 09:00-17:00 tháng 11-tháng 4", fee = "$12 tiền mặt/séc hoặc $12,67 bằng thẻ", note = "Không có vé ngày cho công chúng vào ngày lễ liên bang hoặc tiểu bang. Vé ngày gồm phòng thay đồ, vòi sen, sauna, sân hiên và phòng sinh hoạt; thuyền không dành cho người không phải hội viên.", source_url = "https://dolphinclub.org/swimming/" },
 ]
 
 [[extra.pricing]]
@@ -23,7 +23,7 @@ url = "https://sfrecpark.org/Facilities/Facility/Details/Aquatic-Park-200"
 [[extra.pricing]]
 label = "South End Rowing Club"
 price = "Vé ngày"
-note = "Vé ngày cho công chúng Thứ Ba / Năm / Bảy, 09:00-18:00 Jun-Nov và 08:00-17:00 Dec-May."
+note = "Vé ngày cho công chúng Thứ Ba / Năm / Bảy, 09:00-18:00 tháng 6-tháng 11 và 08:00-17:00 tháng 12-tháng 5."
 url = "https://serc.com/faq"
 
 [[extra.pricing]]

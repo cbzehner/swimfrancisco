@@ -10,8 +10,8 @@ access_notes = ["Maaaring baguhin ng financial assistance at mga opsyon sa membe
 
 [[extra.pricing]]
 label = "Miyembro ng YMCA"
-price = "Access ng miyembro"
-note = "Gamitin ang access ng membership sa YMCA of Greater San Francisco."
+price = "Kasama sa membership"
+note = "Gamitin ang membership sa YMCA of Greater San Francisco."
 url = "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"
 
 [[extra.pricing]]

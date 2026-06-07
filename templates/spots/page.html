@@ -130,10 +130,17 @@
       {%- else -%}{%- set month_label = trans(key='month_dec', lang=active_lang) -%}
       {%- endif -%}
       {%- set day = parts[2] | int -%}
+      {%- set month = parts[1] | int -%}
       {%- set year = parts[0] | int -%}
       {%- if active_lang == "zh-Hant" -%}
         {%- if with_year -%}{{- year }}年{%- endif -%}{{- month_label }}{{ day }}日
       {%- elif active_lang == "en" -%}
+        {{- month_label }} {{ day }}{%- if with_year -%}, {{ year }}{%- endif -%}
+      {%- elif active_lang == "fi" -%}
+        {{- day }}.{{ month }}.{%- if with_year -%}{{ year }}{%- endif -%}
+      {%- elif active_lang == "vi" or active_lang == "es" -%}
+        {{- day }}/{{ month }}{%- if with_year -%}/{{ year }}{%- endif -%}
+      {%- elif active_lang == "fil" -%}
         {{- month_label }} {{ day }}{%- if with_year -%}, {{ year }}{%- endif -%}
       {%- else -%}
         {{- day }} {{ month_label }}{% if with_year %} {{ year }}{% endif %}

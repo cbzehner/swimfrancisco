@@ -5,7 +5,7 @@ slug = "china-beach"
 [extra]
 localized_from = "china-beach"
 description_short = "Pieni suojaisa meripoukama Sea Cliffin alapuolella, rauhallisempi kuin viereiset rannat mutta silti kylmä merivesi."
-hazards = ["repeämävirtaukset", "kylmä vesi ympäri vuoden", "hengenpelastajia vain kausittain"]
+hazards = ["voimakkaat virtaukset", "kylmä vesi ympäri vuoden", "hengenpelastajia vain kausittain"]
 common_distances = []
 clubs = []
 +++

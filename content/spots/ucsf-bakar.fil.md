@@ -10,14 +10,14 @@ access_notes = ["Muling nagbukas ang panloob na pool pagkatapos ng pagkukumpuni 
 
 [[extra.pricing]]
 label = "Miyembro"
-price = "Access ng miyembro"
-note = "Bahagi ng access sa membership ng UCSF Fitness and Recreation ang access sa pool."
+price = "Kasama sa membership"
+note = "Bahagi ng membership sa UCSF Fitness and Recreation ang paggamit ng pool."
 url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
 
 [[extra.pricing]]
-label = "Bisita / day access"
+label = "Bisita / day pass"
 price = "Magtanong sa UCSF"
-note = "Maaaring magbago ang access ng bisita o sponsored access batay sa affiliation at policy."
+note = "Maaaring magbago ang pagpasok ng bisita o sponsored pass batay sa affiliation at policy."
 url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
 +++
 
