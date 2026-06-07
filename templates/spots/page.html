@@ -280,7 +280,7 @@
     <div class="detail-root"
          data-schedule='{{ schedule_macros::data_schedule(extra=extra) }}'>
 
-      <section class="status-slab" aria-live="polite">
+      <section class="status-slab">
         <div class="status-slab-row">
           <span class="status-slab-label">{{ trans(key='status', lang=lang) }}</span>
           <span class="status-slab-value" data-field="status">{% if pre_effective or post_effective %}{{ trans(key='status_closed_today', lang=lang) }}{% else %}—{% endif %}</span>

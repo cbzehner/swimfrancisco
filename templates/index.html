@@ -133,7 +133,7 @@
         <th>{{ trans(key='locale', lang=lang) }}</th>
       </tr>
     </thead>
-    <tbody aria-live="polite" aria-atomic="false">
+    <tbody>
       {% for page in spots.pages %}
         {% set target_page = get_page(path="spots/" ~ page.slug ~ ".md", lang=lang) %}
         <tr
