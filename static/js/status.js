@@ -12,7 +12,6 @@ import {
   formatHHMM,
   getHorizonOptions,
   readScheduleAttribute,
-  resolveActiveSchedule,
   resolveHorizon,
   scheduleHasAccessHours,
   scheduleHasSessions,
@@ -160,12 +159,9 @@ function applyStatuses(root, now, allowedTypes = null) {
     const nextCell = cell(row, "next");
     if (!statusCell || !nextCell) return;
     const schedule = readScheduleAttribute(row);
-    const activeSchedule = resolveActiveSchedule(
-      schedule,
-      horizon.kind === "window" ? horizon.date : now,
-    );
-    const hasSessions = scheduleHasSessions(activeSchedule);
-    const hasAccessHours = scheduleHasAccessHours(activeSchedule);
+    const asOf = horizon.kind === "window" ? horizon.date : now;
+    const hasSessions = scheduleHasSessions(schedule, asOf);
+    const hasAccessHours = scheduleHasAccessHours(schedule, asOf);
     if (horizon.kind === "window") {
       const result = hasSessions
         ? computeWindowAvailability(schedule, horizon, allowedTypes)

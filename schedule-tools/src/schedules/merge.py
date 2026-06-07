@@ -113,6 +113,40 @@ def read_upcoming_schedule_snapshot(pool_md_path: Path) -> dict[str, Any] | None
     return _schedule_from_table(upcoming)
 
 
+def pick_active_schedule(extra: Any, today_iso: str) -> dict[str, Any]:
+    """Display-time predicate: return the schedule that should be rendered
+    for `today_iso`. Mirrors `resolveScheduleForDate` in static/js/helpers/
+    board.mjs and the `active_extra` block in templates/spots/page.html —
+    switches to the queued upcoming schedule once the current schedule has
+    ended, so gap days surface the upcoming entry's pre-season closure copy.
+
+    Distinct from `_promote_upcoming_schedule`, which writes upcoming over
+    current in the frontmatter and uses a stricter predicate (only after
+    today is inside the upcoming window).
+    """
+    current = _schedule_from_table(extra)
+    upcoming_table = extra.get("upcoming_schedule")
+    if not upcoming_table:
+        return current
+    upcoming = _schedule_from_table(upcoming_table)
+    if _date_in_window(current, today_iso):
+        return current
+    current_end = current.get("effective_end")
+    if isinstance(current_end, str) and current_end and today_iso > current_end:
+        return upcoming
+    return current
+
+
+def _date_in_window(schedule: dict[str, Any], date_iso: str) -> bool:
+    start = schedule.get("effective_start")
+    end = schedule.get("effective_end")
+    if isinstance(start, str) and start and date_iso < start:
+        return False
+    if isinstance(end, str) and end and date_iso > end:
+        return False
+    return True
+
+
 def _normalized_schedule_payload(extracted: dict[str, Any]) -> dict[str, Any]:
     return {
         "sessions": _normalize_sessions(extracted.get("sessions", [])),

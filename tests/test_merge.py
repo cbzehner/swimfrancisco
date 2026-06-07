@@ -84,3 +84,62 @@ def test_merge_preserves_partial_day_closure_fields(tmp_path):
     updated = target.read_text()
     assert 'start_time = "11:00"' in updated
     assert 'end_time = "15:00"' in updated
+
+
+def _extra_with(current_start: str, current_end: str | None = None, upcoming_start: str | None = None, upcoming_end: str | None = None) -> dict:
+    extra: dict = {
+        "sessions": [{"day": "monday", "type": "lap_swim", "start": "07:00", "end": "08:00"}],
+        "closures": [],
+        "effective_start": current_start,
+    }
+    if current_end is not None:
+        extra["effective_end"] = current_end
+    if upcoming_start is not None:
+        extra["upcoming_schedule"] = {
+            "sessions": [{"day": "tuesday", "type": "lap_swim", "start": "09:00", "end": "10:00"}],
+            "closures": [],
+            "effective_start": upcoming_start,
+        }
+        if upcoming_end is not None:
+            extra["upcoming_schedule"]["effective_end"] = upcoming_end
+    return extra
+
+
+def test_pick_active_schedule_returns_current_inside_window():
+    from schedules.merge import pick_active_schedule
+
+    extra = _extra_with("2026-03-17", "2026-06-06", "2026-06-09", "2026-08-15")
+    active = pick_active_schedule(extra, "2026-05-01")
+    assert active["effective_start"] == "2026-03-17"
+
+
+def test_pick_active_schedule_returns_upcoming_after_current_ends():
+    from schedules.merge import pick_active_schedule
+
+    extra = _extra_with("2026-03-17", "2026-06-06", "2026-06-09", "2026-08-15")
+    active = pick_active_schedule(extra, "2026-06-07")
+    assert active["effective_start"] == "2026-06-09"
+
+
+def test_pick_active_schedule_returns_upcoming_inside_upcoming_window():
+    from schedules.merge import pick_active_schedule
+
+    extra = _extra_with("2026-03-17", "2026-06-06", "2026-06-09", "2026-08-15")
+    active = pick_active_schedule(extra, "2026-07-01")
+    assert active["effective_start"] == "2026-06-09"
+
+
+def test_pick_active_schedule_keeps_current_when_no_upcoming():
+    from schedules.merge import pick_active_schedule
+
+    extra = _extra_with("2026-03-17", "2026-06-06")
+    active = pick_active_schedule(extra, "2026-07-01")
+    assert active["effective_start"] == "2026-03-17"
+
+
+def test_pick_active_schedule_keeps_current_before_its_start():
+    from schedules.merge import pick_active_schedule
+
+    extra = _extra_with("2026-03-17", "2026-06-06", "2026-06-09")
+    active = pick_active_schedule(extra, "2026-02-01")
+    assert active["effective_start"] == "2026-03-17"

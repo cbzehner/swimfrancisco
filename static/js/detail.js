@@ -10,7 +10,6 @@ import {
   formatHHMM,
   parseHHMM,
   readScheduleAttribute,
-  resolveActiveSchedule,
   scheduleHasAccessHours,
   scheduleHasSessions,
 } from "./helpers/board.mjs";
@@ -74,8 +73,7 @@ function formatNextLine(result) {
 }
 
 function applyStatusSlab(root, schedule, now) {
-  const activeSchedule = resolveActiveSchedule(schedule, now);
-  const result = scheduleHasSessions(activeSchedule) || !scheduleHasAccessHours(activeSchedule)
+  const result = scheduleHasSessions(schedule, now) || !scheduleHasAccessHours(schedule, now)
     ? computeDetailStatus(schedule, now)
     : computeAccessStatus(schedule, now);
   const statusEl = root.querySelector('[data-field="status"]');

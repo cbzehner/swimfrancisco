@@ -160,12 +160,16 @@ function hasNonEmptyArray(schedule, key) {
   );
 }
 
-export function scheduleHasSessions(schedule) {
-  return hasNonEmptyArray(schedule, "sessions");
+// Both helpers take the schedule envelope (current + optional upcoming) and
+// the date to evaluate. They resolve internally so callers don't have to —
+// passing the unresolved envelope and getting back-of-the-active-schedule's
+// answer was a known footgun on gap days.
+export function scheduleHasSessions(schedule, now = pacificWallClockDate()) {
+  return hasNonEmptyArray(resolveActiveSchedule(schedule, now), "sessions");
 }
 
-export function scheduleHasAccessHours(schedule) {
-  return hasNonEmptyArray(schedule, "access_hours");
+export function scheduleHasAccessHours(schedule, now = pacificWallClockDate()) {
+  return hasNonEmptyArray(resolveActiveSchedule(schedule, now), "access_hours");
 }
 
 // Parse the JSON schedule from a `data-schedule` attribute on the given DOM
