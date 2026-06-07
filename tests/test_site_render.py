@@ -526,6 +526,47 @@ def test_transition_closure_banners_stay_inside_active_schedule_window(built_sit
     assert "JUN 19 </span><span class=closure-banner-reason>Holiday Closure" not in html
 
 
+@pytest.mark.parametrize("slug", ["balboa-pool", "north-beach-pool"])
+def test_rendered_active_schedule_matches_python_predicate(built_site: Path, slug: str) -> None:
+    """Pin the template's `active_extra` predicate to schedules.merge.pick_active_schedule.
+
+    The template chooses between current and upcoming schedules for the
+    rendered "today" view; board.mjs makes the same choice for client-side
+    horizon queries; pick_active_schedule encodes the canonical Python
+    version. If they ever drift, the rendered effective-range footer will
+    not match what the Python predicate selects for the build's "today".
+    """
+    from schedules._time import pacific_today
+    from schedules.merge import pick_active_schedule
+
+    frontmatter, _ = _markdown_frontmatter_and_body(ROOT / "content" / "spots" / f"{slug}.md")
+    extra = frontmatter["extra"]
+    if not extra.get("upcoming_schedule"):
+        pytest.skip(f"{slug} has no upcoming_schedule queued")
+
+    active = pick_active_schedule(extra, pacific_today().isoformat())
+    rendered_html = _read(built_site, slug)
+    month_short = {
+        "01": "JAN", "02": "FEB", "03": "MAR", "04": "APR",
+        "05": "MAY", "06": "JUN", "07": "JUL", "08": "AUG",
+        "09": "SEP", "10": "OCT", "11": "NOV", "12": "DEC",
+    }
+
+    def _fmt(iso: str) -> str:
+        year, month, day = iso.split("-")
+        return f"{month_short[month]} {int(day)}, {year}"
+
+    expected_start = _fmt(active["effective_start"])
+    expected_end = _fmt(active["effective_end"]) if active.get("effective_end") else None
+    expected = f"SCHEDULE EFFECTIVE FROM {expected_start}"
+    if expected_end:
+        expected += f" TO {expected_end}"
+    assert expected in rendered_html, (
+        f"Template's active_extra and pick_active_schedule disagree for {slug}: "
+        f"expected {expected!r} in rendered HTML"
+    )
+
+
 def test_temporary_closure_page_does_not_render_not_verified_fallback(built_site: Path) -> None:
     html = _read(built_site, "sava-pool")
     assert "Closed for repairs; anticipated reopening summer 2026" in html
