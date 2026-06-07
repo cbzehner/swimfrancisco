@@ -813,6 +813,31 @@ table.board tbody tr.flap td {
 }
 @media (prefers-reduced-motion: reduce) {
   table.board tbody tr.flap td { animation: none; }
+  /* Catch-all for the remaining short transitions (horizon caret rotate,
+     filter button color, skip-link reveal). The map's flyTo pan is
+     handled in static/js/map.js. */
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Windows High Contrast Mode (forced-colors: active) drops box-shadow and
+   replaces palette tokens with system colors. The status pill, cost-badge,
+   open-row left-bar, and Leaflet marker dots otherwise lose their meaning. */
+@media (forced-colors: active) {
+  .status-pill,
+  .cost-badge {
+    forced-color-adjust: none;
+    border: 2px solid CanvasText;
+  }
+  table.board tbody tr.is-open td:first-child {
+    border-left: 4px solid Highlight;
+    box-shadow: none;
+  }
+  .sf-marker .sf-marker-dot {
+    border-color: CanvasText;
+  }
 }
 
 /* ── Spot detail page (existing selectors) ─────────────────────────────── */

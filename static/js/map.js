@@ -155,7 +155,13 @@ function renderMarkers(L, map, layer, spots) {
     marker.bindPopup(createPopupHTML(spot));
     marker.on("click", () => {
       const targetZoom = Math.max(map.getZoom(), FOCUS_ZOOM);
-      map.flyTo([spot.lat, spot.lng], targetZoom, { duration: 0.6 });
+      // Honor prefers-reduced-motion (WCAG 2.3.3) — a 600ms animated pan
+      // can trigger vestibular issues; setView is instant.
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        map.setView([spot.lat, spot.lng], targetZoom);
+      } else {
+        map.flyTo([spot.lat, spot.lng], targetZoom, { duration: 0.6 });
+      }
     });
     layer.addLayer(marker);
   });
