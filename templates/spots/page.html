@@ -388,48 +388,52 @@
               {% endfor %}
             </nav>
           </div>
-          <div class="weekly-grid-table" role="table" style="--weekday-count: {{ display_day_order | length }};">
-            <div class="weekly-grid-head" role="row">
-              <span class="weekly-grid-rowlabel" role="columnheader"></span>
-              {% for label in display_day_labels %}
-                <span class="weekly-grid-dayhead" role="columnheader"
+          <table class="weekly-grid" style="--weekday-count: {{ display_day_order | length }};">
+            <thead class="weekly-grid-head">
+              <tr>
+                <th class="weekly-grid-rowlabel" scope="col"><span class="sr-only">{{ trans(key='program', lang=lang) }}</span></th>
+                {% for label in display_day_labels %}
+                  <th class="weekly-grid-dayhead" scope="col"
                       data-day="{{ display_day_order[loop.index0] }}"
-                      {% if display_day_order[loop.index0] == today_weekday %}data-today="true"{% endif %}>{{ label }}</span>
-              {% endfor %}
-            </div>
-            {% for pkey in program_keys %}
-              {% set pi = loop.index0 %}
-              {% set plabel = program_labels[pi] %}
-              {% set pcross = program_crossnav[pi] %}
-              {% set psessions = sessions | filter(attribute="type", value=pkey) %}
-              <div class="weekly-grid-row" role="row" data-program="{{ pkey }}">
-                <span class="weekly-grid-rowlabel" role="rowheader">
-                  {{ plabel }}
-                  {% if pcross %}
-                    <a class="weekly-grid-crossnav" href="{{ get_url(path='@/_index.md', lang=lang) }}#{{ pcross }}">→ {% if pcross == "lap" %}{{ trans(key='other_lap_pools', lang=lang) }}{% elif pcross == "family" %}{{ trans(key='other_family_pools', lang=lang) }}{% endif %}</a>
-                  {% endif %}
-                </span>
-                {% for day in display_day_order %}
-                  {% set cell = psessions | filter(attribute="day", value=day) %}
-                  <span class="weekly-grid-cell" role="cell"
+                      {% if display_day_order[loop.index0] == today_weekday %}data-today="true"{% endif %}>{{ label }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for pkey in program_keys %}
+                {% set pi = loop.index0 %}
+                {% set plabel = program_labels[pi] %}
+                {% set pcross = program_crossnav[pi] %}
+                {% set psessions = sessions | filter(attribute="type", value=pkey) %}
+                <tr class="weekly-grid-row" data-program="{{ pkey }}">
+                  <th class="weekly-grid-rowlabel" scope="row">
+                    {{ plabel }}
+                    {% if pcross %}
+                      <a class="weekly-grid-crossnav" href="{{ get_url(path='@/_index.md', lang=lang) }}#{{ pcross }}">→ {% if pcross == "lap" %}{{ trans(key='other_lap_pools', lang=lang) }}{% elif pcross == "family" %}{{ trans(key='other_family_pools', lang=lang) }}{% endif %}</a>
+                    {% endif %}
+                  </th>
+                  {% for day in display_day_order %}
+                    {% set cell = psessions | filter(attribute="day", value=day) %}
+                    <td class="weekly-grid-cell"
                         data-day="{{ day }}"
                         data-day-short="{{ display_day_labels[loop.index0] }}"
                         {% if day == today_weekday %}data-today="true"{% endif %}
                         {% if cell | length == 0 %}data-empty="true"{% endif %}>
-                    {% if cell | length == 0 %}
-                      <span class="weekly-grid-empty">—</span>
-                    {% else %}
-                      {% for s in cell %}
-                        <span class="weekly-grid-session">
-                          {{ s.start }}–{{ s.end }}{% if s.pool %} <span class="zone">({{ s.pool }})</span>{% endif %}
-                        </span>
-                      {% endfor %}
-                    {% endif %}
-                  </span>
-                {% endfor %}
-              </div>
-            {% endfor %}
-          </div>
+                      {% if cell | length == 0 %}
+                        <span class="weekly-grid-empty">—</span>
+                      {% else %}
+                        {% for s in cell %}
+                          <span class="weekly-grid-session">
+                            {{ s.start }}–{{ s.end }}{% if s.pool %} <span class="zone">({{ s.pool }})</span>{% endif %}
+                          </span>
+                        {% endfor %}
+                      {% endif %}
+                    </td>
+                  {% endfor %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </section>
       {% elif access_hours | length > 0 %}
         <section class="weekly-grid">
@@ -437,35 +441,39 @@
           <div class="weekly-grid-meta">
             <p class="weekly-grid-note">{{ trans(key='access_hours_only', lang=lang) }}</p>
           </div>
-          <div class="weekly-grid-table" role="table" style="--weekday-count: 7;">
-            <div class="weekly-grid-head" role="row">
-              <span class="weekly-grid-rowlabel" role="columnheader"></span>
-              {% for label in day_labels %}
-                <span class="weekly-grid-dayhead" role="columnheader"
+          <table class="weekly-grid" style="--weekday-count: 7;">
+            <thead class="weekly-grid-head">
+              <tr>
+                <th class="weekly-grid-rowlabel" scope="col"><span class="sr-only">{{ trans(key='access', lang=lang) }}</span></th>
+                {% for label in day_labels %}
+                  <th class="weekly-grid-dayhead" scope="col"
                       data-day="{{ day_order[loop.index0] }}"
-                      {% if day_order[loop.index0] == today_weekday %}data-today="true"{% endif %}>{{ label }}</span>
-              {% endfor %}
-            </div>
-            <div class="weekly-grid-row" role="row" data-program="access_hours">
-              <span class="weekly-grid-rowlabel" role="rowheader">{{ trans(key='access', lang=lang) }}</span>
-              {% for day in day_order %}
-                {% set cell = access_hours | filter(attribute="day", value=day) %}
-                <span class="weekly-grid-cell" role="cell"
+                      {% if day_order[loop.index0] == today_weekday %}data-today="true"{% endif %}>{{ label }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="weekly-grid-row" data-program="access_hours">
+                <th class="weekly-grid-rowlabel" scope="row">{{ trans(key='access', lang=lang) }}</th>
+                {% for day in day_order %}
+                  {% set cell = access_hours | filter(attribute="day", value=day) %}
+                  <td class="weekly-grid-cell"
                       data-day="{{ day }}"
                       data-day-short="{{ day_labels[loop.index0] }}"
                       {% if day == today_weekday %}data-today="true"{% endif %}
                       {% if cell | length == 0 %}data-empty="true"{% endif %}>
-                  {% if cell | length == 0 %}
-                    <span class="weekly-grid-empty">—</span>
-                  {% else %}
-                    {% for h in cell %}
-                      <span class="weekly-grid-session">{{ h.start }}–{{ h.end }}</span>
-                    {% endfor %}
-                  {% endif %}
-                </span>
-              {% endfor %}
-            </div>
-          </div>
+                    {% if cell | length == 0 %}
+                      <span class="weekly-grid-empty">—</span>
+                    {% else %}
+                      {% for h in cell %}
+                        <span class="weekly-grid-session">{{ h.start }}–{{ h.end }}</span>
+                      {% endfor %}
+                    {% endif %}
+                  </td>
+                {% endfor %}
+              </tr>
+            </tbody>
+          </table>
         </section>
       {% elif closures | length == 0 and schedule_basis != "temporarily_closed" %}
         <p class="fallback">{{ trans(key='schedule_not_verified_sentence', lang=lang) }}</p>

@@ -949,7 +949,11 @@ table.board tbody tr.flap td {
 }
 .weekly-grid-note { color: var(--muted); }
 
-.weekly-grid-table {
+/* Native <table> markup for screen-reader semantics. Override default
+   `display: table*` to keep the original CSS-grid presentation: the table
+   becomes the grid container, thead/tbody/tr pass through via `display:
+   contents`, and th/td occupy individual grid cells. */
+table.weekly-grid {
   display: grid;
   grid-template-columns: 9rem repeat(var(--weekday-count, 7), minmax(7ch, 1fr));
   margin: 0 28px;
@@ -957,8 +961,11 @@ table.board tbody tr.flap td {
   background: var(--foam);
   font-family: var(--mono);
   font-size: 12px;
+  border-collapse: collapse;
 }
-.weekly-grid-head, .weekly-grid-row { display: contents; }
+table.weekly-grid thead,
+table.weekly-grid tbody,
+table.weekly-grid tr { display: contents; }
 .weekly-grid-rowlabel,
 .weekly-grid-dayhead,
 .weekly-grid-cell {
@@ -966,6 +973,8 @@ table.board tbody tr.flap td {
   border-bottom: 1px solid var(--rule);
   border-right: 1px solid var(--rule);
   min-height: 40px;
+  text-align: left;
+  font-weight: normal;
 }
 .weekly-grid-dayhead:last-child,
 .weekly-grid-cell:last-child { border-right: 0; }
@@ -1015,8 +1024,8 @@ table.board tbody tr.flap td {
 
 /* mobile: collapse grid */
 @media (max-width: 768px) {
-  .weekly-grid-table { grid-template-columns: 1fr; border-top: none; }
-  .weekly-grid-head { display: none; }
+  table.weekly-grid { grid-template-columns: 1fr; border-top: none; }
+  table.weekly-grid thead { display: none; }
   .weekly-grid-crossnav-strip { display: none; }
   .weekly-grid-rowlabel { border-bottom: 2px solid var(--ink); padding: 10px 12px; }
   .weekly-grid-rowlabel .weekly-grid-crossnav { display: inline; }
