@@ -385,7 +385,7 @@ def test_localized_spot_pages_store_translated_markdown(built_site: Path) -> Non
 
     potrero = (built_site / "es" / "spots" / "24-hour-fitness-potrero" / "index.html").read_text()
     assert "piscina cubierta de carriles" in potrero
-    assert "Usa la página del club para membresía" in potrero
+    assert "Consulta la página del club" in potrero
     assert "Gym pool access" not in potrero
 
     chinatown = (built_site / "es" / "spots" / "chinatown-ymca" / "index.html").read_text()
@@ -481,7 +481,7 @@ def test_access_panel_renders_pricing_options(built_site: Path) -> None:
     assert "Public day-use Mon / Wed / Fri" in html
 
     jcc = _read(built_site, "jccsf")
-    assert 'class="cost-badge is-member">Members</span>' in jcc
+    assert 'class="cost-badge is-day-pass">DAY PASS · $50</span>' in jcc
     assert "Fitness Center member" in jcc
     assert "Non-member / guest" in jcc
 
@@ -692,9 +692,9 @@ def test_field_notes_are_omitted_from_build(built_site: Path) -> None:
 
 def test_homepage_renders_cost_badges_without_hardcoded_price(built_site: Path) -> None:
     html = (built_site / "index.html").read_text()
-    assert 'class="cost-badge is-free">Free</span>' in html
-    assert 'class="cost-badge is-paid">Paid</span>' in html
-    assert 'class="cost-badge is-paid">$7</span>' not in html
+    assert 'class="cost-badge is-beach">BEACH</span>' in html
+    assert 'class="cost-badge is-public">PUBLIC</span>' in html
+    assert 'class="cost-badge is-public">$7</span>' not in html
 
 
 def test_board_uses_water_column_as_the_only_temperature_surface(built_site: Path) -> None:
@@ -717,7 +717,7 @@ def test_spot_detail_uses_print_header_and_preserves_long_titles(built_site: Pat
     assert "class=bulletin-strip" in html
     assert "OFFICIAL PAGE" in html
     assert "DIRECTIONS" in html
-    assert 'class="cost-badge is-paid">Paid</span>' in html
+    assert 'class="cost-badge is-public">PUBLIC</span>' in html
 
 
 def test_footer_renders_sources_and_credit(built_site: Path) -> None:

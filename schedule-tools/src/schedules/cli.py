@@ -109,6 +109,48 @@ def project_command(slug: str) -> None:
     click.echo(f"Wrote {path}")
 
 
+@cli.command("promote")
+@click.option("--as-of", help="Override 'today' for testing (YYYY-MM-DD).")
+@click.option("--dry-run", is_flag=True, help="Report what would change without writing.")
+def promote_command(as_of: str | None, dry_run: bool) -> None:
+    """Promote any queued upcoming_schedule whose effective_start has arrived.
+
+    Run daily in CI to flip the SF Rec summer/winter schedules from
+    `[extra.upcoming_schedule]` into the canonical `[extra]` block. Render-
+    time logic already handles the gap correctly, so this is purely data
+    hygiene — but it keeps the frontmatter honest about what's "current"
+    vs what's "queued".
+    """
+    import tomlkit
+    from ._time import pacific_today
+    from .merge import _promote_upcoming_schedule, _split_frontmatter
+
+    as_of_date = as_of or pacific_today().isoformat()
+    promoted: list[str] = []
+    for md in sorted(CONTENT_SPOTS_DIR.glob("*.md")):
+        if md.stem == "_index" or "." in md.stem:
+            continue  # skip section index and localized variants
+        original = md.read_text()
+        frontmatter_text, body = _split_frontmatter(original)
+        document = tomlkit.parse(frontmatter_text)
+        extra = document.get("extra")
+        if extra is None or extra.get("upcoming_schedule") is None:
+            continue
+        if not _promote_upcoming_schedule(extra, as_of_date):
+            continue
+        promoted.append(md.stem)
+        if dry_run:
+            continue
+        updated = tomlkit.dumps(document).rstrip("\n")
+        md.write_text(f"+++\n{updated}\n+++\n{body}")
+
+    prefix = "Would promote" if dry_run else "Promoted"
+    if promoted:
+        click.echo(f"{prefix} {len(promoted)} pool(s): {', '.join(promoted)}")
+    else:
+        click.echo("Nothing to promote.")
+
+
 @cli.command("review")
 @click.option("--slug", help="Restrict review to this pool slug.")
 def review_command(slug: str | None) -> None:
