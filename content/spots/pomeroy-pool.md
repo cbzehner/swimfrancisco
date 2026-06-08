@@ -14,116 +14,118 @@ cost = "paid"
 access = "day_pass"
 day_pass_price = "$11"
 setpoint_label = "92°F"
-effective_start = "2026-05-17"
-last_verified_at = "2026-05-17"
 access_mode = "limited_public"
 payment_model = "therapy"
-schedule_basis = "swim_schedule"
 access_notes = [ "The therapeutic swim page says slow lap swimming only and notes the program is for warm-water movement, recovery, and gentle exercise." ]
 access_summary = "Pomeroy's Herbst Therapeutic Pool is a warm-water therapeutic pool. It offers therapeutic swim, open swim, classes, lessons, and slow lap swimming; it is not a vigorous lap-training pool."
 
-[[extra.sessions]]
+[[extra.schedules]]
+effective_start = "2026-05-17"
+last_verified_at = "2026-05-17"
+schedule_basis = "swim_schedule"
+
+[[extra.schedules.sessions]]
 day = "monday"
 type = "lap_swim"
 start = "11:00"
 end = "11:55"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "monday"
 type = "family_swim"
 start = "13:00"
 end = "14:55"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "08:00"
 end = "08:55"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "tuesday"
 type = "family_swim"
 start = "09:00"
 end = "09:55"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "tuesday"
 type = "family_swim"
 start = "13:00"
 end = "14:55"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "08:00"
 end = "08:55"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "wednesday"
 type = "family_swim"
 start = "09:00"
 end = "09:55"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "wednesday"
 type = "family_swim"
 start = "14:00"
 end = "14:55"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "08:00"
 end = "08:55"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "thursday"
 type = "family_swim"
 start = "09:00"
 end = "09:55"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "18:00"
 end = "18:55"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "friday"
 type = "lap_swim"
 start = "08:00"
 end = "08:55"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "friday"
 type = "family_swim"
 start = "09:00"
 end = "09:55"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "friday"
 type = "lap_swim"
 start = "17:00"
 end = "17:55"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "saturday"
 type = "lap_swim"
 start = "08:00"
 end = "08:55"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "saturday"
 type = "family_swim"
 start = "09:00"
 end = "09:55"
 
-[[extra.closures]]
+[[extra.schedules.closures]]
 start = "2026-05-25"
 end = "2026-05-25"
 reason = "Memorial Day"
 
-[[extra.closures]]
+[[extra.schedules.closures]]
 start = "2026-06-19"
 end = "2026-06-19"
 reason = "Juneteenth"

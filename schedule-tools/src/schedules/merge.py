@@ -25,26 +25,82 @@ def merge(
     extracted: dict[str, Any],
     *,
     last_verified_at: str | None = None,
-    as_of_date: str | None = None,
+    as_of_date: str | None = None,  # accepted for API compat; no longer used
 ) -> MergeResult:
+    """Merge an extracted schedule into a spot's [[extra.schedules]] array.
+
+    Match-by-effective_start semantics:
+      - Existing entry with the same effective_start → replace it
+      - Otherwise → append a new entry
+
+    Sort by effective_start after every change. No "current vs upcoming"
+    split — the render-time predicate (`pick_active_schedule`) decides
+    which array entry is active for any given date.
+    """
+    del as_of_date  # legacy parameter, no longer needed
     original_text = pool_md_path.read_text()
     frontmatter_text, body = _split_frontmatter(original_text)
     document = tomlkit.parse(frontmatter_text)
     extra = document.setdefault("extra", tomlkit.table())
 
     after = _normalized_schedule_payload(extracted)
-    if as_of_date is None:
-        as_of_date = pacific_today().isoformat()
-    promoted = _promote_upcoming_schedule(extra, as_of_date)
-    before = _schedule_from_table(extra)
 
-    if _should_queue_upcoming(before, after):
-        changed = _apply_queued_upcoming(extra, after, last_verified_at=last_verified_at, promoted=promoted)
-    else:
-        changed = _apply_current_schedule(extra, before, after, last_verified_at=last_verified_at, promoted=promoted)
+    # Snapshot existing entries as dicts so we can mutate freely.
+    existing_aot = extra.get("schedules")
+    existing_entries: list[dict[str, Any]] = []
+    if existing_aot is not None:
+        for table in existing_aot:
+            entry = _schedule_from_table(table)
+            lva = table.get("last_verified_at")
+            if isinstance(lva, str):
+                entry["_last_verified_at"] = lva
+            existing_entries.append(entry)
 
-    if not changed:
+    target_start = after.get("effective_start")
+    matching_index: int | None = None
+    for i, entry in enumerate(existing_entries):
+        if entry.get("effective_start") == target_start:
+            matching_index = i
+            break
+
+    before = (
+        {k: v for k, v in existing_entries[matching_index].items() if k != "_last_verified_at"}
+        if matching_index is not None
+        else _empty_schedule()
+    )
+
+    # Nothing to add and nothing to update.
+    if matching_index is None and not target_start:
         return _merge_result(before, after, written=False)
+
+    if matching_index is not None:
+        existing_entry = existing_entries[matching_index]
+        existing_verified = existing_entry.get("_last_verified_at")
+        existing_payload = {k: v for k, v in existing_entry.items() if k != "_last_verified_at"}
+        if existing_payload == after and (
+            last_verified_at is None or existing_verified == last_verified_at
+        ):
+            return _merge_result(before, after, written=False)
+        existing_entries[matching_index] = {
+            **after,
+            "_last_verified_at": last_verified_at if last_verified_at is not None else existing_verified,
+        }
+    else:
+        existing_entries.append({
+            **after,
+            "_last_verified_at": last_verified_at,
+        })
+
+    existing_entries.sort(key=lambda s: s.get("effective_start") or "0000-00-00")
+
+    new_aot = tomlkit.aot()
+    for entry in existing_entries:
+        verified = entry.get("_last_verified_at")
+        payload = {k: v for k, v in entry.items() if k != "_last_verified_at"}
+        new_aot.append(_build_schedule_table(payload, last_verified_at=verified))
+    if "schedules" in extra:
+        del extra["schedules"]
+    extra["schedules"] = new_aot
 
     updated = tomlkit.dumps(document).rstrip("\n")
     pool_md_path.write_text(f"+++\n{updated}\n+++\n{body}")
@@ -53,78 +109,65 @@ def merge(
 
 def _merge_result(before: dict[str, Any], after: dict[str, Any], *, written: bool) -> MergeResult:
     return MergeResult(
-        prior_sessions_count=len(before["sessions"]),
-        new_sessions_count=len(after["sessions"]),
-        prior_closures_count=len(before["closures"]),
-        new_closures_count=len(after["closures"]),
+        prior_sessions_count=len(before.get("sessions") or []),
+        new_sessions_count=len(after.get("sessions") or []),
+        prior_closures_count=len(before.get("closures") or []),
+        new_closures_count=len(after.get("closures") or []),
         written=written,
     )
 
 
-def _apply_queued_upcoming(
-    extra: Any,
-    after: dict[str, Any],
-    *,
-    last_verified_at: str | None,
-    promoted: bool,
-) -> bool:
-    existing = extra.get("upcoming_schedule")
-    if _should_preserve_existing_upcoming(existing, after):
-        return False
-    existing_schedule = _schedule_from_table(existing) if existing else None
-    existing_verified = existing.get("last_verified_at") if existing else None
-    if not promoted and existing_schedule == after:
-        if last_verified_at is None or existing_verified == last_verified_at:
-            return False
-    extra["upcoming_schedule"] = _build_schedule_table(after, last_verified_at=last_verified_at)
-    return True
-
-
-def _apply_current_schedule(
-    extra: Any,
-    before: dict[str, Any],
-    after: dict[str, Any],
-    *,
-    last_verified_at: str | None,
-    promoted: bool,
-) -> bool:
-    if not promoted and before == after:
-        if last_verified_at is None or extra.get("last_verified_at") == last_verified_at:
-            return False
-    _write_schedule_fields(extra, after, last_verified_at=last_verified_at)
-    _drop_stale_upcoming(extra, after)
-    return True
-
-
 def read_schedule_snapshot(pool_md_path: Path) -> dict[str, Any]:
+    """Return the currently-active schedule for a spot, for diff baselines."""
     frontmatter_text, _ = _split_frontmatter(pool_md_path.read_text())
     document = tomlkit.parse(frontmatter_text)
     extra = document.get("extra", {})
-    return _schedule_from_table(extra)
+    schedules = _schedules_list(extra)
+    today_iso = pacific_today().isoformat()
+    active = pick_active_schedule(schedules, today_iso)
+    return active if active is not None else _empty_schedule()
 
 
-def pick_active_schedule(extra: Any, today_iso: str) -> dict[str, Any]:
-    """Display-time predicate: return the schedule that should be rendered
-    for `today_iso`. Mirrors `resolveScheduleForDate` in static/js/helpers/
-    board.mjs and the `active_extra` block in templates/spots/page.html —
-    switches to the queued upcoming schedule once the current schedule has
-    ended, so gap days surface the upcoming entry's pre-season closure copy.
+def pick_active_schedule(schedules: list[Any], today_iso: str) -> dict[str, Any] | None:
+    """Display-time predicate: pick the schedule to render for `today_iso`
+    from a list of schedule entries.
 
-    Distinct from `_promote_upcoming_schedule`, which writes upcoming over
-    current in the frontmatter and uses a stricter predicate (only after
-    today is inside the upcoming window).
+    Selection order:
+      1. In-window: effective_start <= today AND (no effective_end OR today
+         <= effective_end). If multiple match (defensive — shouldn't happen
+         with non-overlapping windows), prefer the latest effective_start.
+      2. Upcoming: earliest entry with effective_start > today.
+      3. Past: most recent entry with effective_end < today.
+      4. None: no schedules at all.
+
+    Both effective_start and effective_end are INCLUSIVE.
+
+    Mirrors `resolveScheduleForDate` in static/js/helpers/board.mjs and the
+    `active_schedule` block in templates/spots/page.html. The three impls
+    must stay in sync — there's a golden table test in test_merge.py.
     """
-    current = _schedule_from_table(extra)
-    upcoming_table = extra.get("upcoming_schedule")
-    if not upcoming_table:
-        return current
-    upcoming = _schedule_from_table(upcoming_table)
-    if _date_in_window(current, today_iso):
-        return current
-    current_end = current.get("effective_end")
-    if isinstance(current_end, str) and current_end and today_iso > current_end:
-        return upcoming
-    return current
+    if not schedules:
+        return None
+    normalized = [_schedule_from_table(s) for s in schedules]
+    in_window = [s for s in normalized if _date_in_window(s, today_iso)]
+    if in_window:
+        in_window.sort(key=lambda s: s.get("effective_start") or "", reverse=True)
+        return in_window[0]
+    upcoming = [
+        s for s in normalized
+        if isinstance(s.get("effective_start"), str) and s["effective_start"] > today_iso
+    ]
+    if upcoming:
+        upcoming.sort(key=lambda s: s.get("effective_start") or "")
+        return upcoming[0]
+    past = [
+        s for s in normalized
+        if isinstance(s.get("effective_end"), str) and s["effective_end"] < today_iso
+    ]
+    if past:
+        past.sort(key=lambda s: s.get("effective_end") or "", reverse=True)
+        return past[0]
+    return None
 
 
 def _date_in_window(schedule: dict[str, Any], date_iso: str) -> bool:
@@ -135,6 +178,26 @@ def _date_in_window(schedule: dict[str, Any], date_iso: str) -> bool:
     if isinstance(end, str) and end and date_iso > end:
         return False
     return True
+
+
+def _schedules_list(extra: Any) -> list[Any]:
+    """Return the schedules array on an extra table, defaulting to []."""
+    schedules = extra.get("schedules")
+    if schedules is None:
+        return []
+    return list(schedules)
+
+
+def _empty_schedule() -> dict[str, Any]:
+    return {
+        "sessions": [],
+        "access_hours": [],
+        "access_exceptions": [],
+        "closures": [],
+        "effective_start": None,
+        "schedule_basis": None,
+        "effective_end": None,
+    }
 
 
 def _normalized_schedule_payload(extracted: dict[str, Any]) -> dict[str, Any]:
@@ -159,87 +222,6 @@ def _schedule_from_table(table: Any) -> dict[str, Any]:
         "schedule_basis": table.get("schedule_basis"),
         "effective_end": table.get("effective_end"),
     }
-
-
-def _should_queue_upcoming(current: dict[str, Any], incoming: dict[str, Any]) -> bool:
-    current_end = current.get("effective_end")
-    incoming_start = incoming.get("effective_start")
-    return (
-        isinstance(current_end, str)
-        and isinstance(incoming_start, str)
-        and incoming_start > current_end
-    )
-
-
-def _should_preserve_existing_upcoming(upcoming: Any, incoming: dict[str, Any]) -> bool:
-    if not upcoming:
-        return False
-    upcoming_start = upcoming.get("effective_start")
-    incoming_start = incoming.get("effective_start")
-    return (
-        isinstance(upcoming_start, str)
-        and isinstance(incoming_start, str)
-        and incoming_start > upcoming_start
-    )
-
-
-def _promote_upcoming_schedule(extra: Any, as_of_date: str) -> bool:
-    # Promotion (writing upcoming over current in the frontmatter) is a
-    # different concept from render-time selection. Promote only once we're
-    # definitely INSIDE the upcoming window — i.e. as_of_date >= upcoming.start.
-    # Render-time selection (templates/spots/page.html + static/js/helpers/board.mjs
-    # resolveScheduleForDate) switches as soon as the current schedule has
-    # ENDED, so during a gap day visitors see "Schedule starts <date>" sourced
-    # from the still-queued upcoming entry.
-    upcoming = extra.get("upcoming_schedule")
-    if not upcoming:
-        return False
-    upcoming_start = upcoming.get("effective_start")
-    if not isinstance(upcoming_start, str) or as_of_date < upcoming_start:
-        return False
-    schedule = _schedule_from_table(upcoming)
-    last_verified_at = upcoming.get("last_verified_at")
-    del extra["upcoming_schedule"]
-    _write_schedule_fields(
-        extra,
-        schedule,
-        last_verified_at=last_verified_at if isinstance(last_verified_at, str) else None,
-    )
-    return True
-
-
-def promote_spot_file(
-    pool_md_path: Path,
-    as_of_date: str | None = None,
-    *,
-    dry_run: bool = False,
-) -> bool:
-    """Promote a spot's queued upcoming_schedule into its canonical [extra]
-    block if today (or `as_of_date`) is on or past upcoming.effective_start.
-
-    Returns True if a promotion happened (or, with `dry_run=True`, would
-    happen). Returns False if there was no upcoming_schedule, the upcoming
-    window hasn't started, or the spot file has no [extra] table.
-
-    Public wrapper around `_promote_upcoming_schedule` so callers (CLI,
-    tests, scripts) don't have to reach across the merge module boundary
-    or replicate the read/parse/write dance.
-    """
-    if as_of_date is None:
-        as_of_date = pacific_today().isoformat()
-    original_text = pool_md_path.read_text()
-    frontmatter_text, body = _split_frontmatter(original_text)
-    document = tomlkit.parse(frontmatter_text)
-    extra = document.get("extra")
-    if extra is None or extra.get("upcoming_schedule") is None:
-        return False
-    if not _promote_upcoming_schedule(extra, as_of_date):
-        return False
-    if dry_run:
-        return True
-    updated = tomlkit.dumps(document).rstrip("\n")
-    pool_md_path.write_text(f"+++\n{updated}\n+++\n{body}")
-    return True
 
 
 def _write_schedule_fields(
@@ -279,16 +261,6 @@ def _build_schedule_table(
     table = tomlkit.table()
     _write_schedule_fields(table, schedule, last_verified_at=last_verified_at)
     return table
-
-
-def _drop_stale_upcoming(target: Any, current: dict[str, Any]) -> None:
-    upcoming = target.get("upcoming_schedule")
-    if not upcoming:
-        return
-    upcoming_start = upcoming.get("effective_start")
-    current_start = current.get("effective_start")
-    if isinstance(upcoming_start, str) and isinstance(current_start, str) and upcoming_start <= current_start:
-        del target["upcoming_schedule"]
 
 
 def _normalize_sessions(raw_sessions: list[dict]) -> list[dict[str, str]]:

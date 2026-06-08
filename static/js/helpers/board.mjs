@@ -110,12 +110,6 @@ function statusResult(status, next, nextKind = "", nextArgs = {}) {
   return { status, next, nextKind, nextArgs };
 }
 
-function scheduleWithoutUpcoming(schedule) {
-  if (!schedule || typeof schedule !== "object") return schedule;
-  const { upcoming_schedule: _upcoming, ...current } = schedule;
-  return current;
-}
-
 function scheduleInWindow(schedule, dateISO) {
   if (!schedule || typeof schedule !== "object") return false;
   // The macro emits effective_start / effective_end as strings — either an
@@ -127,23 +121,42 @@ function scheduleInWindow(schedule, dateISO) {
   return true;
 }
 
-// Display-time predicate: pick which embedded schedule (current vs. queued
-// upcoming) the page should render for `dateISO`. Switches to upcoming as
-// soon as current has ended, so gap days surface "Schedule starts <date>"
-// from the queued entry via the synthetic PRE_SEASON closure.
+// Display-time predicate: pick the active schedule from an envelope of the
+// shape `{schedules: [...]}` for `dateISO`. Selection order:
+//   1. in-window — if multiple match, the latest effective_start.
+//   2. earliest upcoming (start > dateISO).
+//   3. most recent past (end < dateISO).
+//   4. null if no schedules at all.
 //
-// Must stay in sync with templates/spots/page.html's `active_extra` block.
-// merge.py's _promote_upcoming_schedule is a DIFFERENT concept (writing
-// upcoming over current in the frontmatter) and uses a stricter predicate.
+// Must stay in sync with `pick_active_schedule` in
+// schedule-tools/src/schedules/merge.py and the `active_schedule` block in
+// templates/spots/page.html. All three impls share the same predicate.
 function resolveScheduleForDate(schedule, dateISO) {
-  if (!schedule || typeof schedule !== "object") return schedule;
-  const current = scheduleWithoutUpcoming(schedule);
-  const upcoming = scheduleWithoutUpcoming(schedule.upcoming_schedule);
-  if (!upcoming) return current;
-  if (scheduleInWindow(current, dateISO)) return current;
-  const currentEnd = current.effective_end || null;
-  if (currentEnd && dateISO > currentEnd) return upcoming;
-  return current;
+  if (!schedule || typeof schedule !== "object") return null;
+  // Accept either an envelope (`{schedules: [...]}`) or a flat schedule
+  // (sessions/closures/effective_start at root). The latter is what tests
+  // and callers that already hold a resolved schedule pass.
+  if (!Array.isArray(schedule.schedules)) {
+    return schedule;
+  }
+  const schedules = schedule.schedules;
+  if (schedules.length === 0) return null;
+  const inWindow = schedules.filter((s) => scheduleInWindow(s, dateISO));
+  if (inWindow.length > 0) {
+    inWindow.sort((a, b) => (b.effective_start || "").localeCompare(a.effective_start || ""));
+    return inWindow[0];
+  }
+  const upcoming = schedules.filter((s) => s.effective_start && s.effective_start > dateISO);
+  if (upcoming.length > 0) {
+    upcoming.sort((a, b) => (a.effective_start || "").localeCompare(b.effective_start || ""));
+    return upcoming[0];
+  }
+  const past = schedules.filter((s) => s.effective_end && s.effective_end < dateISO);
+  if (past.length > 0) {
+    past.sort((a, b) => (b.effective_end || "").localeCompare(a.effective_end || ""));
+    return past[0];
+  }
+  return null;
 }
 
 export function resolveActiveSchedule(schedule, now = pacificWallClockDate()) {

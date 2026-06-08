@@ -13,53 +13,55 @@ website = "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
 cost = "paid"
 access = "day_pass"
 setpoint_label = "lap"
-sessions = []
-closures = []
-effective_start = "2026-05-17"
-last_verified_at = "2026-05-17"
 access_mode = "membership"
 payment_model = "membership"
-schedule_basis = "facility_hours"
 access_notes = [ "Check the club page for current membership, guest access, and facility status." ]
 access_summary = "24 Hour Fitness Potrero is a gym pool. The official club page lists an indoor lap pool, sauna, whirlpool, and steam room among the gym amenities."
 
-[[extra.access_hours]]
+[[extra.schedules]]
+effective_start = "2026-05-17"
+last_verified_at = "2026-05-17"
+schedule_basis = "facility_hours"
+sessions = []
+closures = []
+
+[[extra.schedules.access_hours]]
 day = "monday"
 start = "05:00"
 end = "22:00"
 label = "Gym hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "tuesday"
 start = "05:00"
 end = "22:00"
 label = "Gym hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "wednesday"
 start = "05:00"
 end = "22:00"
 label = "Gym hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "thursday"
 start = "05:00"
 end = "22:00"
 label = "Gym hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "friday"
 start = "05:00"
 end = "21:00"
 label = "Gym hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "saturday"
 start = "06:00"
 end = "20:00"
 label = "Gym hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "sunday"
 start = "06:00"
 end = "20:00"

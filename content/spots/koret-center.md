@@ -14,52 +14,54 @@ cost = "paid"
 access = "day_pass"
 day_pass_price = "$30"
 setpoint_label = "80–82°F"
-closures = []
-effective_start = "2026-05-16"
-last_verified_at = "2026-05-16"
 access_mode = "limited_public"
 payment_model = "session"
-schedule_basis = "pool_hours"
 access_notes = [ "Check Koret's pool lane schedule before going; the official page warns lane counts vary with lessons, teams, and events." ]
 access_summary = "USF's Koret Center has a large indoor pool. Lap lanes are generally available during pool hours, but access and passes depend on USF/Koret membership or eligible pass options."
 
-[[extra.sessions]]
+[[extra.schedules]]
+effective_start = "2026-05-16"
+last_verified_at = "2026-05-16"
+schedule_basis = "pool_hours"
+closures = []
+
+[[extra.schedules.sessions]]
 day = "monday"
 type = "lap_swim"
 start = "06:00"
 end = "21:00"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "06:00"
 end = "21:00"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "06:00"
 end = "21:00"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "06:00"
 end = "21:00"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "friday"
 type = "lap_swim"
 start = "06:00"
 end = "21:00"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "saturday"
 type = "lap_swim"
 start = "08:00"
 end = "18:00"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "sunday"
 type = "lap_swim"
 start = "08:00"

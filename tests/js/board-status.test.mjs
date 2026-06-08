@@ -727,27 +727,31 @@ test("computeDetailStatus ignores effective_start when missing", () => {
 });
 
 const NORTH_BEACH_TRANSITION_SCHEDULE = {
-  sessions: [
-    { day: "saturday", type: "lap_swim", start: "12:00", end: "14:00", pool: "cool" },
-    { day: "saturday", type: "family_swim", start: "13:45", end: "15:00", pool: "warm" },
+  schedules: [
+    {
+      sessions: [
+        { day: "saturday", type: "lap_swim", start: "12:00", end: "14:00", pool: "cool" },
+        { day: "saturday", type: "family_swim", start: "13:45", end: "15:00", pool: "warm" },
+      ],
+      closures: [{
+        start: "2026-06-06",
+        end: "2026-06-06",
+        start_time: "09:00",
+        end_time: "13:00",
+        reason: "In- Service Training: Pool Closed 9:00-1:00pm",
+      }],
+      effective_start: "2026-03-17",
+      effective_end: "2026-06-06",
+    },
+    {
+      sessions: [
+        { day: "tuesday", type: "lap_swim", start: "07:00", end: "08:00", pool: "c/w/t" },
+      ],
+      closures: [],
+      effective_start: "2026-06-09",
+      effective_end: "2026-08-15",
+    },
   ],
-  closures: [{
-    start: "2026-06-06",
-    end: "2026-06-06",
-    start_time: "09:00",
-    end_time: "13:00",
-    reason: "In- Service Training: Pool Closed 9:00-1:00pm",
-  }],
-  effective_start: "2026-03-17",
-  effective_end: "2026-06-06",
-  upcoming_schedule: {
-    sessions: [
-      { day: "tuesday", type: "lap_swim", start: "07:00", end: "08:00", pool: "c/w/t" },
-    ],
-    closures: [],
-    effective_start: "2026-06-09",
-    effective_end: "2026-08-15",
-  },
 };
 
 test("queued schedule keeps North Beach current schedule active on June 6", () => {
@@ -783,20 +787,24 @@ test("queued schedule becomes active on its effective date", () => {
 
 test("queued reopening schedule handles Sava repair closure through June 8", () => {
   const schedule = {
-    sessions: [],
-    closures: [{
-      start: "2026-04-16",
-      end: "2026-06-08",
-      reason: "Closed for repairs; reopening June 9, 2026",
-    }],
-    effective_start: "2026-01-06",
-    effective_end: "2026-06-08",
-    upcoming_schedule: {
-      sessions: [{ day: "tuesday", type: "lap_swim", start: "06:30", end: "10:30" }],
-      closures: [],
-      effective_start: "2026-06-09",
-      effective_end: "2026-06-27",
-    },
+    schedules: [
+      {
+        sessions: [],
+        closures: [{
+          start: "2026-04-16",
+          end: "2026-06-08",
+          reason: "Closed for repairs; reopening June 9, 2026",
+        }],
+        effective_start: "2026-01-06",
+        effective_end: "2026-06-08",
+      },
+      {
+        sessions: [{ day: "tuesday", type: "lap_swim", start: "06:30", end: "10:30" }],
+        closures: [],
+        effective_start: "2026-06-09",
+        effective_end: "2026-06-27",
+      },
+    ],
   };
   const before = computeStatus(schedule, new Date("2026-06-08T12:00:00-07:00"));
   assert.equal(before.status, "CLOSED");

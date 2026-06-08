@@ -13,53 +13,55 @@ website = "https://www.ymcasf.org/location/presidio-community-ymca/letterman-poo
 cost = "paid"
 access = "members"
 setpoint_label = "25YD"
-sessions = []
-closures = []
-effective_start = "2026-05-17"
-last_verified_at = "2026-05-17"
 access_mode = "membership"
 payment_model = "membership"
-schedule_basis = "facility_hours"
 access_notes = [ "YMCA financial assistance and membership options may change the effective price; verify directly with YMCA of Greater San Francisco." ]
 access_summary = "Letterman Pool is part of the Presidio Community YMCA. The official YMCA page lists a 25-yard pool and points swimmers to the online pool schedule."
 
-[[extra.access_hours]]
+[[extra.schedules]]
+effective_start = "2026-05-17"
+last_verified_at = "2026-05-17"
+schedule_basis = "facility_hours"
+sessions = []
+closures = []
+
+[[extra.schedules.access_hours]]
 day = "monday"
 start = "05:30"
 end = "20:30"
 label = "Facility hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "tuesday"
 start = "05:30"
 end = "20:30"
 label = "Facility hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "wednesday"
 start = "05:30"
 end = "20:30"
 label = "Facility hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "thursday"
 start = "05:30"
 end = "20:30"
 label = "Facility hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "friday"
 start = "05:30"
 end = "20:30"
 label = "Facility hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "saturday"
 start = "07:00"
 end = "16:30"
 label = "Facility hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "sunday"
 start = "07:00"
 end = "16:30"

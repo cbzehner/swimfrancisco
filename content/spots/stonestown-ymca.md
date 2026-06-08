@@ -13,53 +13,55 @@ website = "https://www.ymcasf.org/location/stonestown-family-ymca/"
 cost = "paid"
 access = "members"
 setpoint_label = "pool"
-sessions = []
-closures = []
-effective_start = "2026-05-17"
-last_verified_at = "2026-05-17"
 access_mode = "membership"
 payment_model = "membership"
-schedule_basis = "facility_hours"
 access_notes = [ "Confirm the current pool schedule with the branch; YMCA pages distinguish lap swimming from recreation/household swim reservations." ]
 access_summary = "Stonestown Family YMCA is a membership YMCA branch with lap swimming and pool activities."
 
-[[extra.access_hours]]
+[[extra.schedules]]
+effective_start = "2026-05-17"
+last_verified_at = "2026-05-17"
+schedule_basis = "facility_hours"
+sessions = []
+closures = []
+
+[[extra.schedules.access_hours]]
 day = "monday"
 start = "05:30"
 end = "21:00"
 label = "Facility hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "tuesday"
 start = "05:30"
 end = "21:00"
 label = "Facility hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "wednesday"
 start = "05:30"
 end = "21:00"
 label = "Facility hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "thursday"
 start = "05:30"
 end = "21:00"
 label = "Facility hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "friday"
 start = "05:30"
 end = "21:00"
 label = "Facility hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "saturday"
 start = "07:00"
 end = "17:00"
 label = "Facility hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "sunday"
 start = "07:00"
 end = "17:00"

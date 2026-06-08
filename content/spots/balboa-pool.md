@@ -13,280 +13,282 @@ website = "https://sfrecpark.org/facilities/facility/details/Balboa-Pool-212"
 cost = "paid"
 access = "public"
 setpoint_label = "80–82°F"
-effective_start = "2026-03-17"
-last_verified_at = "2026-04-20"
-effective_end = "2026-06-06"
 access_mode = "public"
 payment_model = "session"
+
+[[extra.schedules]]
+effective_start = "2026-03-17"
+effective_end = "2026-06-06"
+last_verified_at = "2026-04-20"
 schedule_basis = "swim_schedule"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "07:00"
 end = "08:00"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "tuesday"
 type = "senior_swim"
 start = "10:30"
 end = "12:00"
 pool = "deep"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "12:30"
 end = "14:00"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "tuesday"
 type = "family_swim"
 start = "14:30"
 end = "15:30"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "14:30"
 end = "16:00"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "09:00"
 end = "10:15"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "wednesday"
 type = "senior_swim"
 start = "10:30"
 end = "12:00"
 pool = "deep"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "12:30"
 end = "15:00"
 pool = "deep"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "wednesday"
 type = "family_swim"
 start = "14:00"
 end = "15:00"
 pool = "shallow"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "07:00"
 end = "08:00"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "thursday"
 type = "senior_swim"
 start = "10:00"
 end = "11:00"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "11:30"
 end = "14:00"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "14:30"
 end = "16:00"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "thursday"
 type = "family_swim"
 start = "18:00"
 end = "19:30"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "friday"
 type = "senior_swim"
 start = "10:30"
 end = "12:00"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "friday"
 type = "lap_swim"
 start = "13:30"
 end = "15:00"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "saturday"
 type = "lap_swim"
 start = "09:00"
 end = "10:30"
 pool = "deep"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "saturday"
 type = "family_swim"
 start = "12:30"
 end = "14:00"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "saturday"
 type = "family_swim"
 start = "14:30"
 end = "15:30"
 
-[[extra.sessions]]
+[[extra.schedules.sessions]]
 day = "saturday"
 type = "lap_swim"
 start = "16:00"
 end = "17:00"
 
-[[extra.closures]]
+[[extra.schedules.closures]]
 start = "2026-03-19"
 end = "2026-03-19"
 reason = "In Service Training"
 
-[[extra.closures]]
+[[extra.schedules.closures]]
 start = "2026-04-16"
 end = "2026-04-16"
 reason = "In Service Training"
 
-[[extra.closures]]
+[[extra.schedules.closures]]
 start = "2026-05-21"
 end = "2026-05-21"
 reason = "In Service Training"
 
-[[extra.closures]]
+[[extra.schedules.closures]]
 start = "2026-05-25"
 end = "2026-05-25"
 reason = "Memorial Day"
 
-[[extra.closures]]
+[[extra.schedules.closures]]
 start = "2026-06-06"
 end = "2026-06-06"
 reason = "Inservice Training"
 start_time = "09:00"
 end_time = "13:00"
 
-[extra.upcoming_schedule]
+[[extra.schedules]]
 effective_start = "2026-06-09"
-schedule_basis = "swim_schedule"
 effective_end = "2026-08-15"
 last_verified_at = "2026-06-06"
+schedule_basis = "swim_schedule"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "07:00"
 end = "08:00"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "tuesday"
 type = "senior_swim"
 start = "10:30"
 end = "12:00"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "12:30"
 end = "13:30"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "tuesday"
 type = "family_swim"
 start = "14:00"
 end = "15:30"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "wednesday"
 type = "senior_swim"
 start = "10:30"
 end = "12:00"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "12:30"
 end = "13:30"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "wednesday"
 type = "family_swim"
 start = "14:00"
 end = "15:30"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "07:00"
 end = "08:00"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "thursday"
 type = "senior_swim"
 start = "10:30"
 end = "12:00"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "14:30"
 end = "15:30"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "thursday"
 type = "family_swim"
 start = "18:00"
 end = "19:30"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "friday"
 type = "lap_swim"
 start = "10:30"
 end = "12:30"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "friday"
 type = "family_swim"
 start = "14:00"
 end = "15:30"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "saturday"
 type = "lap_swim"
 start = "09:00"
 end = "10:30"
 pool = "deep"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "saturday"
 type = "family_swim"
 start = "12:30"
 end = "14:00"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "saturday"
 type = "family_swim"
 start = "14:30"
 end = "15:30"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "saturday"
 type = "lap_swim"
 start = "16:00"
 end = "17:00"
 
-[[extra.upcoming_schedule.closures]]
+[[extra.schedules.closures]]
 start = "2026-06-19"
 end = "2026-06-19"
 reason = "Juneteenth"
 
-[[extra.upcoming_schedule.closures]]
+[[extra.schedules.closures]]
 start = "2026-07-04"
 end = "2026-07-04"
 reason = "Independence Day"

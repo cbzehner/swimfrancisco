@@ -13,295 +13,297 @@ website = "https://sfrecpark.org/facilities/facility/details/Mission-Community-P
 cost = "paid"
 access = "public"
 setpoint_label = "80–82°F"
-effective_start = "2026-05-12"
-last_verified_at = "2026-05-05"
-effective_end = "2026-06-06"
 access_mode = "public"
 payment_model = "session"
+
+[[extra.schedules]]
+effective_start = "2026-05-12"
+effective_end = "2026-06-06"
+last_verified_at = "2026-05-05"
 schedule_basis = "swim_schedule"
 
-[[extra.closures]]
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "07:30"
+end = "09:30"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "11:00"
+end = "13:00"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "14:30"
+end = "15:45"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "family_swim"
+start = "16:00"
+end = "17:00"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "senior_swim"
+start = "09:00"
+end = "10:45"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "11:00"
+end = "13:00"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "family_swim"
+start = "14:30"
+end = "15:45"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "16:00"
+end = "18:00"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "07:30"
+end = "09:30"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "11:30"
+end = "13:30"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "family_swim"
+start = "15:00"
+end = "17:00"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "senior_swim"
+start = "09:00"
+end = "10:45"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "11:00"
+end = "13:00"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "family_swim"
+start = "14:30"
+end = "15:45"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "16:00"
+end = "18:00"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "lap_swim"
+start = "09:00"
+end = "10:30"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "family_swim"
+start = "10:45"
+end = "12:00"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "family_swim"
+start = "13:30"
+end = "15:00"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "lap_swim"
+start = "15:30"
+end = "17:00"
+
+[[extra.schedules.closures]]
 start = "2026-05-21"
 end = "2026-05-21"
 reason = "Staff training"
 
-[[extra.closures]]
+[[extra.schedules.closures]]
 start = "2026-05-25"
 end = "2026-05-25"
 reason = "Memorial Day"
 
-[[extra.closures]]
+[[extra.schedules.closures]]
 start = "2026-06-06"
 end = "2026-06-06"
 reason = "Staff training"
 start_time = "09:00"
 end_time = "14:00"
 
-[[extra.sessions]]
-day = "tuesday"
-type = "lap_swim"
-start = "07:30"
-end = "09:30"
-
-[[extra.sessions]]
-day = "tuesday"
-type = "lap_swim"
-start = "11:00"
-end = "13:00"
-
-[[extra.sessions]]
-day = "tuesday"
-type = "lap_swim"
-start = "14:30"
-end = "15:45"
-
-[[extra.sessions]]
-day = "tuesday"
-type = "family_swim"
-start = "16:00"
-end = "17:00"
-
-[[extra.sessions]]
-day = "wednesday"
-type = "senior_swim"
-start = "09:00"
-end = "10:45"
-
-[[extra.sessions]]
-day = "wednesday"
-type = "lap_swim"
-start = "11:00"
-end = "13:00"
-
-[[extra.sessions]]
-day = "wednesday"
-type = "family_swim"
-start = "14:30"
-end = "15:45"
-
-[[extra.sessions]]
-day = "wednesday"
-type = "lap_swim"
-start = "16:00"
-end = "18:00"
-
-[[extra.sessions]]
-day = "thursday"
-type = "lap_swim"
-start = "07:30"
-end = "09:30"
-
-[[extra.sessions]]
-day = "thursday"
-type = "lap_swim"
-start = "11:30"
-end = "13:30"
-
-[[extra.sessions]]
-day = "thursday"
-type = "family_swim"
-start = "15:00"
-end = "17:00"
-
-[[extra.sessions]]
-day = "friday"
-type = "senior_swim"
-start = "09:00"
-end = "10:45"
-
-[[extra.sessions]]
-day = "friday"
-type = "lap_swim"
-start = "11:00"
-end = "13:00"
-
-[[extra.sessions]]
-day = "friday"
-type = "family_swim"
-start = "14:30"
-end = "15:45"
-
-[[extra.sessions]]
-day = "friday"
-type = "lap_swim"
-start = "16:00"
-end = "18:00"
-
-[[extra.sessions]]
-day = "saturday"
-type = "lap_swim"
-start = "09:00"
-end = "10:30"
-
-[[extra.sessions]]
-day = "saturday"
-type = "family_swim"
-start = "10:45"
-end = "12:00"
-
-[[extra.sessions]]
-day = "saturday"
-type = "family_swim"
-start = "13:30"
-end = "15:00"
-
-[[extra.sessions]]
-day = "saturday"
-type = "lap_swim"
-start = "15:30"
-end = "17:00"
-
-[extra.upcoming_schedule]
+[[extra.schedules]]
 effective_start = "2026-06-09"
-schedule_basis = "swim_schedule"
 effective_end = "2026-06-20"
 last_verified_at = "2026-06-06"
+schedule_basis = "swim_schedule"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "07:00"
 end = "08:30"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "tuesday"
 type = "family_swim"
 start = "09:00"
 end = "10:30"
 pool = "1 lane"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "tuesday"
 type = "senior_swim"
 start = "09:00"
 end = "10:30"
 pool = "3 lanes"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "10:45"
 end = "12:30"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "tuesday"
 type = "family_swim"
 start = "14:00"
 end = "15:00"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "17:45"
 end = "19:00"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "wednesday"
 type = "senior_swim"
 start = "09:00"
 end = "10:30"
 pool = "4 lanes"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "10:45"
 end = "12:30"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "wednesday"
 type = "family_swim"
 start = "14:00"
 end = "16:00"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "16:30"
 end = "19:00"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "07:00"
 end = "08:30"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "thursday"
 type = "family_swim"
 start = "09:00"
 end = "10:30"
 pool = "1 lane"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "thursday"
 type = "senior_swim"
 start = "09:00"
 end = "10:30"
 pool = "3 lanes"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "10:45"
 end = "12:30"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "thursday"
 type = "family_swim"
 start = "14:00"
 end = "15:00"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "17:45"
 end = "19:00"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "friday"
 type = "senior_swim"
 start = "09:00"
 end = "10:30"
 pool = "4 lanes"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "friday"
 type = "family_swim"
 start = "11:00"
 end = "12:30"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "friday"
 type = "lap_swim"
 start = "14:00"
 end = "16:00"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "friday"
 type = "family_swim"
 start = "16:30"
 end = "19:00"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "saturday"
 type = "family_swim"
 start = "10:45"
 end = "12:30"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "saturday"
 type = "family_swim"
 start = "14:00"
 end = "15:15"
 
-[[extra.upcoming_schedule.sessions]]
+[[extra.schedules.sessions]]
 day = "saturday"
 type = "lap_swim"
 start = "15:30"
 end = "17:00"
 
-[[extra.upcoming_schedule.closures]]
+[[extra.schedules.closures]]
 start = "2026-06-19"
 end = "2026-06-19"
 reason = "Juneteenth"

@@ -49,7 +49,8 @@ def test_project_writes_sessions_to_content_md(tmp_path):
     rendered = (content / "hamilton-pool.md").read_text()
     assert "effective_start = \"2026-03-17\"" in rendered
     assert "last_verified_at = \"2026-04-18\"" in rendered
-    assert rendered.count("[[extra.sessions]]") == 5
+    assert rendered.count("[[extra.schedules.sessions]]") == 5
+    assert "[[extra.schedules]]" in rendered
 
 
 def test_project_queues_future_schedule_when_current_schedule_has_not_ended(tmp_path):
@@ -70,12 +71,15 @@ def test_project_queues_future_schedule_when_current_schedule_has_not_ended(tmp_
     project(slug="hamilton-pool", reviewed_json_path=reviewed_future, content_spots_dir=content, as_of_date="2026-06-06")
 
     rendered = (content / "hamilton-pool.md").read_text()
+    # Both schedules now coexist in the [[extra.schedules]] array.
     assert "effective_start = \"2026-03-17\"" in rendered
     assert "effective_end = \"2026-06-06\"" in rendered
-    assert "[extra.upcoming_schedule]" in rendered
+    assert "effective_start = \"2026-06-09\"" in rendered
+    assert "effective_end = \"2026-08-15\"" in rendered
     assert "last_verified_at = \"2026-06-06\"" in rendered
-    assert "[[extra.upcoming_schedule.sessions]]" in rendered
+    assert rendered.count("[[extra.schedules]]") == 2
     assert "start = \"06:30\"" in rendered
+    assert "[extra.upcoming_schedule]" not in rendered  # obsolete shape gone
 
 
 def test_project_promotes_queued_schedule_on_its_start_date(tmp_path):
@@ -97,6 +101,9 @@ def test_project_promotes_queued_schedule_on_its_start_date(tmp_path):
     project(slug="hamilton-pool", reviewed_json_path=reviewed_future, content_spots_dir=content, as_of_date="2026-06-09")
 
     rendered = (content / "hamilton-pool.md").read_text()
+    # After three merges the array has both the original spring schedule and
+    # the summer one. The "promote" concept is gone — schedules just coexist.
+    assert "effective_start = \"2026-03-17\"" in rendered
     assert "effective_start = \"2026-06-09\"" in rendered
     assert "effective_end = \"2026-08-15\"" in rendered
     assert "[extra.upcoming_schedule]" not in rendered
@@ -129,14 +136,15 @@ def test_project_preserves_next_queued_schedule_when_later_schedule_arrives_earl
     project(slug="hamilton-pool", reviewed_json_path=reviewed_fall, content_spots_dir=content, as_of_date="2026-06-07")
 
     rendered = (content / "hamilton-pool.md").read_text()
+    # All three schedules now coexist in the array — no longer a "queued vs
+    # current" distinction. The fall schedule appends naturally without
+    # displacing the closer summer schedule.
     assert "effective_start = \"2026-03-17\"" in rendered
-    assert "[extra.upcoming_schedule]" in rendered
     assert "effective_start = \"2026-06-09\"" in rendered
     assert "effective_end = \"2026-08-15\"" in rendered
+    assert "effective_start = \"2026-08-18\"" in rendered
     assert "start = \"06:30\"" in rendered
-    assert "2026-08-18" not in rendered
-    assert "2026-11-15" not in rendered
-    assert "start = \"07:30\"" not in rendered
+    assert "[extra.upcoming_schedule]" not in rendered
 
 
 def test_project_promotes_active_queued_schedule_before_queueing_later_schedule(tmp_path):
@@ -165,11 +173,13 @@ def test_project_promotes_active_queued_schedule_before_queueing_later_schedule(
     project(slug="hamilton-pool", reviewed_json_path=reviewed_fall, content_spots_dir=content, as_of_date="2026-08-01")
 
     rendered = (content / "hamilton-pool.md").read_text()
+    # All three schedules coexist in the array; no separate "queued" block.
+    assert "effective_start = \"2026-03-17\"" in rendered
     assert "effective_start = \"2026-06-09\"" in rendered
     assert "effective_end = \"2026-08-15\"" in rendered
-    assert "[extra.upcoming_schedule]" in rendered
     assert "effective_start = \"2026-08-18\"" in rendered
     assert "effective_end = \"2026-11-15\"" in rendered
+    assert "[extra.upcoming_schedule]" not in rendered
 
 
 def test_project_preserves_timed_closures(tmp_path):

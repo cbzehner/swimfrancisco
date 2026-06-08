@@ -15,51 +15,53 @@ access = "members"
 setpoint_label = "indoor"
 access_mode = "membership"
 payment_model = "membership"
-schedule_basis = "facility_hours"
-sessions = []
-closures = []
-effective_start = "2026-05-17"
-last_verified_at = "2026-05-17"
 access_notes = []
 access_summary = "Equinox Sports Club San Francisco lists an indoor pool and club hours on the official location page."
 
-[[extra.access_hours]]
+[[extra.schedules]]
+effective_start = "2026-05-17"
+last_verified_at = "2026-05-17"
+schedule_basis = "facility_hours"
+sessions = []
+closures = []
+
+[[extra.schedules.access_hours]]
 day = "monday"
 start = "05:00"
 end = "22:00"
 label = "Club hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "tuesday"
 start = "05:00"
 end = "22:00"
 label = "Club hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "wednesday"
 start = "05:00"
 end = "22:00"
 label = "Club hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "thursday"
 start = "05:00"
 end = "22:00"
 label = "Club hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "friday"
 start = "05:00"
 end = "20:00"
 label = "Club hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "saturday"
 start = "07:00"
 end = "18:00"
 label = "Club hours"
 
-[[extra.access_hours]]
+[[extra.schedules.access_hours]]
 day = "sunday"
 start = "07:00"
 end = "18:00"

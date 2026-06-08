@@ -15,14 +15,16 @@ access = "day_pass"
 setpoint_label = "lap"
 access_mode = "membership"
 payment_model = "membership"
-schedule_basis = "temporarily_closed"
-sessions = []
-effective_start = "2026-05-17"
-last_verified_at = "2026-05-17"
 access_notes = [ "Keep this out of active swim planning until the official page shows the club has reopened." ]
 access_summary = "24 Hour Fitness Ocean lists an indoor lap pool, but the official club page says the club is temporarily closed for renovation until May 23, 2026."
 
-[[extra.closures]]
+[[extra.schedules]]
+effective_start = "2026-05-17"
+last_verified_at = "2026-05-17"
+schedule_basis = "temporarily_closed"
+sessions = []
+
+[[extra.schedules.closures]]
 start = "2026-05-17"
 end = "2026-05-22"
 reason = "Temporarily closed for renovation"

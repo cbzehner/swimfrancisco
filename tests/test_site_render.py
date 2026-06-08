@@ -130,7 +130,10 @@ def test_all_spots_have_access_classification() -> None:
         assert extra.get("access_mode") in valid_access_modes, path.name
         assert extra.get("payment_model") in valid_payment_models, path.name
         if extra.get("type") == "pool":
-            assert extra.get("schedule_basis") in valid_schedule_bases, path.name
+            schedules = extra.get("schedules") or []
+            assert schedules, f"{path.name}: pool has no schedules"
+            for sched in schedules:
+                assert sched.get("schedule_basis") in valid_schedule_bases, path.name
 
 
 def test_canonical_labels_have_i18n_mappings() -> None:
@@ -512,7 +515,7 @@ def test_pool_meta_dates_render_in_human_format(built_site: Path) -> None:
     ]
     effective_copy = next((copy for copy in effective_copies if copy in html), None)
     assert effective_copy is not None
-    assert '"upcoming_schedule":' in html
+    assert '"schedules":[' in html
     assert "SOURCE OFFICIAL SITE" in html
     assert "REVIEWED" not in html
     assert "PDF REVIEWED" not in html
@@ -541,10 +544,12 @@ def test_rendered_active_schedule_matches_python_predicate(built_site: Path, slu
 
     frontmatter, _ = _markdown_frontmatter_and_body(ROOT / "content" / "spots" / f"{slug}.md")
     extra = frontmatter["extra"]
-    if not extra.get("upcoming_schedule"):
-        pytest.skip(f"{slug} has no upcoming_schedule queued")
+    schedules = extra.get("schedules") or []
+    if len(schedules) < 2:
+        pytest.skip(f"{slug} has only one schedule entry; no current/upcoming distinction to test")
 
-    active = pick_active_schedule(extra, pacific_today().isoformat())
+    active = pick_active_schedule(schedules, pacific_today().isoformat())
+    assert active is not None
     rendered_html = _read(built_site, slug)
     month_short = {
         "01": "JAN", "02": "FEB", "03": "MAR", "04": "APR",

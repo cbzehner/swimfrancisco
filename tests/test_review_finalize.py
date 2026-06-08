@@ -52,7 +52,7 @@ def test_finalize_happy_path(tmp_path):
     assert result == reviewed
     assert reviewed.exists()
     rendered = (content / "hamilton-pool.md").read_text()
-    assert "[[extra.sessions]]" in rendered
+    assert "[[extra.schedules.sessions]]" in rendered
     assert "last_verified_at = \"2026-04-19\"" in rendered
 
 

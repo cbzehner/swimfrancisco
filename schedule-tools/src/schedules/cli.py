@@ -109,48 +109,6 @@ def project_command(slug: str) -> None:
     click.echo(f"Wrote {path}")
 
 
-def _validate_as_of(ctx: click.Context, param: click.Parameter, value: str | None) -> str | None:
-    if value is None:
-        return None
-    try:
-        from datetime import date
-        date.fromisoformat(value)
-    except ValueError as exc:
-        raise click.BadParameter("must be YYYY-MM-DD") from exc
-    return value
-
-
-@cli.command("promote")
-@click.option("--as-of", callback=_validate_as_of, help="Override 'today' for testing (YYYY-MM-DD).")
-@click.option("--dry-run", is_flag=True, help="Report what would change without writing.")
-def promote_command(as_of: str | None, dry_run: bool) -> None:
-    """Promote any queued upcoming_schedule whose effective_start has arrived.
-
-    Run from CI to flip the SF Rec seasonal schedules from
-    `[extra.upcoming_schedule]` into the canonical `[extra]` block once
-    today is inside the upcoming window. Render-time logic already handles
-    the gap correctly, so this is purely data hygiene — but it keeps the
-    frontmatter honest about what's "current" vs what's "queued", and
-    `pipeline.read_schedule_snapshot` reads root [extra] for diff baselines.
-    """
-    from ._time import pacific_today
-    from .merge import promote_spot_file
-
-    as_of_date = as_of or pacific_today().isoformat()
-    promoted: list[str] = []
-    for md in sorted(CONTENT_SPOTS_DIR.glob("*.md")):
-        if md.stem == "_index" or "." in md.stem:
-            continue  # skip section index and localized variants
-        if promote_spot_file(md, as_of_date, dry_run=dry_run):
-            promoted.append(md.stem)
-
-    prefix = "Would promote" if dry_run else "Promoted"
-    if promoted:
-        click.echo(f"{prefix} {len(promoted)} pool(s): {', '.join(promoted)}")
-    else:
-        click.echo("Nothing to promote.")
-
-
 @cli.command("review")
 @click.option("--slug", help="Restrict review to this pool slug.")
 def review_command(slug: str | None) -> None:
