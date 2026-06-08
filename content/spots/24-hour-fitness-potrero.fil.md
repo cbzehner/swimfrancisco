@@ -4,7 +4,7 @@ slug = "24-hour-fitness-potrero"
 
 [extra]
 localized_from = "24-hour-fitness-potrero"
-access_notes = [ "Gamitin ang pahina ng club para sa kasalukuyang membership, pagpasok ng bisita, at status ng pasilidad; hindi sinusubaybayan ng Swim Francisco ang availability ng mga lane dito." ]
+access_notes = [ "Tingnan ang pahina ng club para sa kasalukuyang membership, pagpasok ng bisita, at status ng pasilidad." ]
 access_summary = "Ang 24 Hour Fitness Potrero ay gym pool. Nakalista sa opisyal na pahina ng club ang panloob na pool para sa paglangoy sa lane, sauna, whirlpool, at steam room bilang bahagi ng amenities ng gym."
 description_short = "Listahan ng gym pool para sa mga manlalangoy na gumagamit na ng 24 Hour Fitness o naghahanap ng opsyon sa membership malapit sa Potrero."
 

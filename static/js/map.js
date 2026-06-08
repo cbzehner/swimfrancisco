@@ -163,6 +163,11 @@ function renderMarkers(L, map, layer, spots) {
         map.flyTo([spot.lat, spot.lng], targetZoom, { duration: 0.6 });
       }
     });
+    // WCAG 2.4.3 — return focus to the marker on popup close so Tab order
+    // resumes from where the user opened it. Leaflet defaults to <body>.
+    marker.on("popupclose", () => {
+      marker.getElement()?.focus();
+    });
     layer.addLayer(marker);
   });
 }

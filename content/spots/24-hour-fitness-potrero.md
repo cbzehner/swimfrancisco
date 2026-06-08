@@ -20,7 +20,7 @@ last_verified_at = "2026-05-17"
 access_mode = "membership"
 payment_model = "membership"
 schedule_basis = "facility_hours"
-access_notes = [ "Use the club page for current membership, guest, and facility status; Swim Francisco does not track lane availability here." ]
+access_notes = [ "Check the club page for current membership, guest access, and facility status." ]
 access_summary = "24 Hour Fitness Potrero is a gym pool. The official club page lists an indoor lap pool, sauna, whirlpool, and steam room among the gym amenities."
 
 [[extra.access_hours]]

@@ -9,7 +9,7 @@ body = "24 Hour Fitness Ocean 是會員制健身房泳池，暫列為整修期�
 [spots.24-hour-fitness-potrero]
 title = "24 Hour Fitness Potrero"
 slug = "24-hour-fitness-potrero"
-access_notes = [ "請以俱樂部頁面確認目前的會員、訪客和設施狀態；Swim Francisco 不追蹤這裡的泳道可用情況。" ]
+access_notes = [ "請查看俱樂部頁面，了解目前的會員、訪客和設施狀態。" ]
 access_summary = "24 Hour Fitness Potrero 是健身房泳池。官方俱樂部頁面列出室內泳道池、桑拿、漩渦池和蒸氣室等健身房設施。"
 description_short = "適合已使用 24 Hour Fitness，或想在 Potrero 附近找會員制泳池的泳客。"
 body = "這是一個健身房泳池資料，適合已使用 24 Hour Fitness 的泳客，或想在 Potrero 附近找會員制選項的人。"
@@ -115,7 +115,7 @@ body = "China Beach 是 Sea Cliff 社區下方的小海灣，位於 Baker Beach 
 [spots.chinatown-ymca]
 title = "Chinatown YMCA"
 slug = "chinatown-ymca"
-access_notes = [ "前往前請查看 YMCA 時間表；Swim Francisco 目前只追蹤這座泳池的設施開放時間。" ]
+access_notes = [ "前往前請查看 YMCA 時間表 — 該頁面只列出設施開放時間。" ]
 access_summary = "Chinatown YMCA 是會員制 YMCA 分館，設有鹽水泳池和水上活動課程。官方地點頁面發布設施開放時間，但靜態頁面內容未提供具體的每週泳道游泳或開放游泳時段。"
 description_short = "Portsmouth Square 和金融區附近的會員制泳池。"
 body = "Chinatown YMCA 是 Portsmouth Square 和金融區附近的會員制泳池選項。"

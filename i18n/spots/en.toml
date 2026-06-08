@@ -8,7 +8,7 @@ body = "24 Hour Fitness Ocean is a membership gym pool entry held in a temporary
 [spots.24-hour-fitness-potrero]
 title = "24 Hour Fitness Potrero"
 slug = "24-hour-fitness-potrero"
-access_notes = [ "Use the club page for current membership, guest, and facility status; Swim Francisco does not track lane availability here." ]
+access_notes = [ "Check the club page for current membership, guest access, and facility status." ]
 access_summary = "24 Hour Fitness Potrero is a gym pool. The official club page lists an indoor lap pool, sauna, whirlpool, and steam room among the gym amenities."
 body = "This is a gym-pool listing for swimmers who already use 24 Hour Fitness or want a membership-based option near Potrero."
 
@@ -115,7 +115,7 @@ body = "China Beach is a small pocket cove tucked below the Sea Cliff neighborho
 [spots.chinatown-ymca]
 title = "Chinatown YMCA"
 slug = "chinatown-ymca"
-access_notes = [ "Use YMCA schedules before going; Swim Francisco currently tracks facility hours only for this pool." ]
+access_notes = [ "Check YMCA schedules before going — only facility hours are listed on the location page." ]
 access_summary = "Chinatown YMCA is a membership YMCA branch with a saltwater pool and aquatics programs. The official location page publishes facility hours, but not a concrete weekly lap/open swim schedule in static page content."
 body = "Chinatown YMCA is a membership pool option near Portsmouth Square and the Financial District."
 

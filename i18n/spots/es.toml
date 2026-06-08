@@ -9,7 +9,7 @@ body = "24 Hour Fitness Ocean es una opción de piscina de gimnasio con membres�
 [spots.24-hour-fitness-potrero]
 title = "24 Hour Fitness Potrero"
 slug = "24-hour-fitness-potrero"
-access_notes = [ "Usa la página del club para membresía, invitados y estado actual de la instalación; Swim Francisco no registra disponibilidad de carriles aquí." ]
+access_notes = [ "Consulta la página del club para conocer la membresía, el acceso de invitados y el estado de la instalación actuales." ]
 access_summary = "24 Hour Fitness Potrero es una piscina de gimnasio. La página oficial del club lista piscina cubierta de carriles, sauna, hidromasaje y sala de vapor entre sus amenidades."
 description_short = "Una piscina de gimnasio para nadadores que ya usan 24 Hour Fitness o buscan una opción con membresía cerca de Potrero."
 body = "Esta es una piscina de gimnasio para nadadores que ya usan 24 Hour Fitness o que quieren una opción con membresía cerca de Potrero."
@@ -115,7 +115,7 @@ body = "China Beach es una pequeña cala escondida bajo el barrio de Sea Cliff, 
 [spots.chinatown-ymca]
 title = "Chinatown YMCA"
 slug = "chinatown-ymca"
-access_notes = [ "Consulta los horarios de YMCA antes de ir; Swim Francisco actualmente registra solo horario de instalación para esta piscina." ]
+access_notes = [ "Consulta los horarios de YMCA antes de ir — la página del local solo enumera el horario de la instalación." ]
 access_summary = "Chinatown YMCA es una sucursal YMCA con membresía, piscina de agua salada y programas acuáticos. La página oficial publica horario de instalación, pero no un horario semanal concreto de carriles o nado abierto en contenido estático."
 description_short = "Opción de piscina con membresía cerca de Portsmouth Square y el Distrito Financiero."
 body = "Chinatown YMCA es una opción de piscina con membresía cerca de Portsmouth Square y el Distrito Financiero."

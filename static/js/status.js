@@ -409,6 +409,17 @@ function initHorizonControl(now) {
     closeHorizonMenu(control);
   });
 
+  // Close on Tab-out so an open menu doesn't strand the user with focus
+  // somewhere unrelated on the page. focusout fires when any element inside
+  // the button or menu loses focus; relatedTarget is who's gaining it.
+  document.addEventListener("focusout", (event) => {
+    const menu = findHorizonMenu();
+    if (!menu || menu.hidden) return;
+    const next = event.relatedTarget;
+    if (next && (control.contains(next) || menu.contains(next))) return;
+    closeHorizonMenu(control);
+  });
+
   document.addEventListener("keydown", (event) => {
     const menu = findHorizonMenu();
     if (!menu || menu.hidden) return;

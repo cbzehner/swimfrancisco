@@ -9,7 +9,7 @@ body = "24 Hour Fitness Ocean on jäsenyyteen perustuva kuntosalin allas, jota p
 [spots.24-hour-fitness-potrero]
 title = "24 Hour Fitness Potrero"
 slug = "24-hour-fitness-potrero"
-access_notes = [ "Tarkista nykyinen jäsenyys-, vieras- ja tilanneinfo klubisivulta; Swim Francisco ei seuraa ratatilannetta täällä." ]
+access_notes = [ "Tarkista klubin sivulta nykyinen jäsenyys, vieraskäynti ja tilojen tila." ]
 access_summary = "24 Hour Fitness Potrero on kuntosalin allas. Virallinen klubisivu listaa sisäisen rata-altaan, saunan, porealtaan ja höyryhuoneen kuntosalin mukavuuksiin."
 description_short = "Kuntosalin allas uimareille, jotka käyttävät jo 24 Hour Fitnessiä tai etsivät jäsenyyspohjaista vaihtoehtoa Potreron lähellä."
 body = "Tämä on kuntosalin allas uimareille, jotka käyttävät jo 24 Hour Fitnessiä tai haluavat jäsenyyspohjaisen vaihtoehdon Potreron lähellä."
@@ -119,7 +119,7 @@ body = "China Beach on pieni poukamaranta Sea Cliffin alapuolella Baker Beachin 
 [spots.chinatown-ymca]
 title = "Chinatown YMCA"
 slug = "chinatown-ymca"
-access_notes = [ "Tarkista YMCA:n aikataulut ennen lähtöä; Swim Francisco seuraa tälle altaalle tällä hetkellä vain tilojen aukioloaikoja." ]
+access_notes = [ "Tarkista YMCA:n aikataulut ennen menoa — sivustolla on vain tilojen aukioloajat." ]
 access_summary = "Chinatown YMCA on jäsenyyteen perustuva YMCA-toimipiste, jossa on suolavesiallas ja uintiohjelmia. Virallinen toimipistesivu julkaisee tilojen aukioloajat, mutta ei staattisessa sisällössä tarkkaa viikoittaista rata- tai avointa uintiaikataulua."
 description_short = "Jäsenyyspohjainen allasvaihtoehto Portsmouth Squaren ja Financial Districtin lähellä."
 body = "Chinatown YMCA on jäsenyyspohjainen allasvaihtoehto Portsmouth Squaren ja Financial Districtin lähellä."

@@ -4,7 +4,7 @@ slug = "24-hour-fitness-potrero"
 
 [extra]
 localized_from = "24-hour-fitness-potrero"
-access_notes = [ "請以俱樂部頁面確認目前的會員、訪客和設施狀態；Swim Francisco 不追蹤這裡的泳道可用情況。" ]
+access_notes = [ "請查看俱樂部頁面，了解目前的會員、訪客和設施狀態。" ]
 access_summary = "24 Hour Fitness Potrero 是健身房泳池。官方俱樂部頁面列出室內泳道池、桑拿、漩渦池和蒸氣室等健身房設施。"
 description_short = "適合已使用 24 Hour Fitness，或想在 Potrero 附近找會員制泳池的泳客。"
 
