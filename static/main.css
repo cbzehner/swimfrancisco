@@ -1025,10 +1025,16 @@ table.board tbody tr.flap td {
 .today-block-list .row-label { color: var(--red); }
 
 /* ── Weekly grid (spot detail · pools) ─────────────────────────────────── */
+/* <caption> instead of preceding <h2> — gives the table a programmatic
+   accessible name (WCAG H39) so it surfaces in screen-reader table rotors
+   with its title instead of "untitled". Override the browser default
+   text-align: center to match the rest of the section. */
 .weekly-grid-title {
+  caption-side: top;
+  text-align: left;
   font-family: var(--display);
   font-size: 24px;
-  margin: 24px 14px 0;
+  padding: 24px 14px 0;
 }
 .weekly-grid-meta {
   margin: 6px 14px 12px;

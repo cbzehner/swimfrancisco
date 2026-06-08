@@ -371,7 +371,6 @@
         {% endif %}
 
         <section class="weekly-grid">
-          <h2 class="weekly-grid-title">{{ trans(key='weekly_by_program', lang=lang) }}</h2>
           <div class="weekly-grid-meta">
             {% if omitted_day_order | length > 0 %}
               <p class="weekly-grid-note">
@@ -395,6 +394,7 @@
             </nav>
           </div>
           <table class="weekly-grid" style="--weekday-count: {{ display_day_order | length }};">
+            <caption class="weekly-grid-title">{{ trans(key='weekly_by_program', lang=lang) }}</caption>
             <thead class="weekly-grid-head">
               <tr>
                 <th class="weekly-grid-rowlabel" scope="col"><span class="sr-only">{{ trans(key='program', lang=lang) }}</span></th>
@@ -443,11 +443,11 @@
         </section>
       {% elif access_hours | length > 0 %}
         <section class="weekly-grid">
-          <h2 class="weekly-grid-title">{{ trans(key='weekly_access_hours', lang=lang) }}</h2>
           <div class="weekly-grid-meta">
             <p class="weekly-grid-note">{{ trans(key='access_hours_only', lang=lang) }}</p>
           </div>
           <table class="weekly-grid">
+            <caption class="weekly-grid-title">{{ trans(key='weekly_access_hours', lang=lang) }}</caption>
             <thead class="weekly-grid-head">
               <tr>
                 <th class="weekly-grid-rowlabel" scope="col"><span class="sr-only">{{ trans(key='access', lang=lang) }}</span></th>
