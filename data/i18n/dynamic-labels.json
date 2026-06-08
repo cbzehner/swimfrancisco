@@ -140,24 +140,6 @@
     },
     {
       "kind": "spot_label",
-      "source": "Members",
-      "code": "members",
-      "translation_key": "access_badge_members"
-    },
-    {
-      "kind": "spot_label",
-      "source": "Limited",
-      "code": "limited",
-      "translation_key": "access_badge_limited"
-    },
-    {
-      "kind": "spot_label",
-      "source": "Therapy",
-      "code": "therapy",
-      "translation_key": "access_badge_therapy"
-    },
-    {
-      "kind": "spot_label",
       "source": "lap",
       "code": "lap",
       "translation_key": "setpoint_lap"
@@ -475,24 +457,6 @@
   },
   "spot_label": {
     "by_code": {
-      "members": {
-        "translation_key": "access_badge_members",
-        "sources": [
-          "Members"
-        ]
-      },
-      "limited": {
-        "translation_key": "access_badge_limited",
-        "sources": [
-          "Limited"
-        ]
-      },
-      "therapy": {
-        "translation_key": "access_badge_therapy",
-        "sources": [
-          "Therapy"
-        ]
-      },
       "lap": {
         "translation_key": "setpoint_lap",
         "sources": [
@@ -579,18 +543,6 @@
       }
     },
     "by_source": {
-      "Members": {
-        "code": "members",
-        "translation_key": "access_badge_members"
-      },
-      "Limited": {
-        "code": "limited",
-        "translation_key": "access_badge_limited"
-      },
-      "Therapy": {
-        "code": "therapy",
-        "translation_key": "access_badge_therapy"
-      },
       "lap": {
         "code": "lap",
         "translation_key": "setpoint_lap"

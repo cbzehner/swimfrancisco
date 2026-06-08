@@ -138,24 +138,6 @@ translation_key = "reason_monthly_aquatic_training"
 
 [[labels]]
 kind = "spot_label"
-source = "Members"
-code = "members"
-translation_key = "access_badge_members"
-
-[[labels]]
-kind = "spot_label"
-source = "Limited"
-code = "limited"
-translation_key = "access_badge_limited"
-
-[[labels]]
-kind = "spot_label"
-source = "Therapy"
-code = "therapy"
-translation_key = "access_badge_therapy"
-
-[[labels]]
-kind = "spot_label"
 source = "lap"
 code = "lap"
 translation_key = "setpoint_lap"

@@ -12,13 +12,13 @@ description_short = "市中心私人泳池選項，靠近 Embarcadero，設有�
 label = "會員"
 price = "會員資格"
 note = "Bay Club 未在此俱樂部頁面發布穩定的單次泳道游泳價格。"
-url = "https://www.bayclubs.com/gateway/"
+url = "https://www.bayclubs.com/clubs/thegateway"
 
 [[extra.pricing]]
 label = "潛在會員"
 price = "預約參觀"
 note = "俱樂部頁面提供參觀／聯絡流程。"
-url = "https://www.bayclubs.com/gateway/"
+url = "https://www.bayclubs.com/clubs/thegateway"
 +++
 
 Bay Club Gateway 是市中心的私人泳池選項：戶外泳池、健身設施、網球，以及靠近 Embarcadero 的會所環境。

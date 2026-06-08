@@ -12,13 +12,13 @@ description_short = "Lựa chọn hồ bơi tư nhân ở downtown, có nước 
 label = "Hội viên"
 price = "Hội viên"
 note = "Bay Club không công bố một giá ổn định cho lượt bơi làn một lần trên trang câu lạc bộ này."
-url = "https://www.bayclubs.com/gateway/"
+url = "https://www.bayclubs.com/clubs/thegateway"
 
 [[extra.pricing]]
 label = "Người quan tâm hội viên"
 price = "Đặt lịch tham quan"
 note = "Trang câu lạc bộ có luồng đặt lịch tham quan/liên hệ."
-url = "https://www.bayclubs.com/gateway/"
+url = "https://www.bayclubs.com/clubs/thegateway"
 +++
 
 Bay Club Gateway là lựa chọn hồ bơi tư nhân ở downtown: hồ ngoài trời, cơ sở fitness, tennis và không gian câu lạc bộ gần Embarcadero.

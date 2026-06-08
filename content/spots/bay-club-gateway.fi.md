@@ -12,13 +12,13 @@ description_short = "Yksityinen allasvaihtoehto keskustassa, ulkoaltaat ja klubi
 label = "Jäsen"
 price = "Jäsenyys"
 note = "Bay Club ei julkaise tällä klubisivulla pysyvää yksittäisen ratauintikäynnin hintaa."
-url = "https://www.bayclubs.com/gateway/"
+url = "https://www.bayclubs.com/clubs/thegateway"
 
 [[extra.pricing]]
 label = "Mahdollinen jäsen"
 price = "Varaa vierailu"
 note = "Klubisivu tarjoaa vierailu- ja yhteydenottopolun."
-url = "https://www.bayclubs.com/gateway/"
+url = "https://www.bayclubs.com/clubs/thegateway"
 +++
 
 Bay Club Gateway on keskustan yksityinen allasvaihtoehto: ulkoaltaat, kuntoilutilat, tennis ja klubimainen ympäristö lähellä Embarcaderoa.

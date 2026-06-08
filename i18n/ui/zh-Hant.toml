@@ -1,7 +1,4 @@
 access = "入場"
-access_badge_limited = "限制入場"
-access_badge_members = "會員"
-access_badge_therapy = "治療"
 access_filter = "入場篩選"
 access_hours_only = "僅設施入場時間 · 泳道可用情況請查看官方網站"
 access_label_club_hours = "會所開放時間"

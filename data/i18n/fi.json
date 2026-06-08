@@ -1,8 +1,5 @@
 {
   "access": "Pääsy",
-  "access_badge_limited": "Rajoitettu pääsy",
-  "access_badge_members": "Jäsenet",
-  "access_badge_therapy": "Terapia",
   "access_label_club_hours": "Seuran aukioloajat",
   "access_label_facility_hours": "Tilojen aukioloajat",
   "access_label_gym_hours": "Kuntosalin aukioloajat",

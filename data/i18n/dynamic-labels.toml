@@ -138,24 +138,6 @@ translation_key = "reason_monthly_aquatic_training"
 
 [[labels]]
 kind = "spot_label"
-source = "Members"
-code = "members"
-translation_key = "access_badge_members"
-
-[[labels]]
-kind = "spot_label"
-source = "Limited"
-code = "limited"
-translation_key = "access_badge_limited"
-
-[[labels]]
-kind = "spot_label"
-source = "Therapy"
-code = "therapy"
-translation_key = "access_badge_therapy"
-
-[[labels]]
-kind = "spot_label"
 source = "lap"
 code = "lap"
 translation_key = "setpoint_lap"
@@ -414,18 +396,6 @@ translation_key = "reason_pool_closed_5_21"
 code = "monthly_aquatic_training"
 translation_key = "reason_monthly_aquatic_training"
 
-[spot_label.by_code.members]
-translation_key = "access_badge_members"
-sources = [ "Members" ]
-
-[spot_label.by_code.limited]
-translation_key = "access_badge_limited"
-sources = [ "Limited" ]
-
-[spot_label.by_code.therapy]
-translation_key = "access_badge_therapy"
-sources = [ "Therapy" ]
-
 [spot_label.by_code.lap]
 translation_key = "setpoint_lap"
 sources = [ "lap" ]
@@ -481,18 +451,6 @@ sources = [ "therapeutic indoor" ]
 [spot_label.by_code.outdoor]
 translation_key = "subtype_outdoor"
 sources = [ "outdoor" ]
-
-[spot_label.by_source.Members]
-code = "members"
-translation_key = "access_badge_members"
-
-[spot_label.by_source.Limited]
-code = "limited"
-translation_key = "access_badge_limited"
-
-[spot_label.by_source.Therapy]
-code = "therapy"
-translation_key = "access_badge_therapy"
 
 [spot_label.by_source.lap]
 code = "lap"

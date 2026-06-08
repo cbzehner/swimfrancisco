@@ -9,7 +9,7 @@ address = "370 Drumm St, San Francisco, CA 94111"
 locale_label = "Embarcadero"
 lat = 37.8033
 lng = -122.4019
-website = "https://www.bayclubs.com/gateway/"
+website = "https://www.bayclubs.com/clubs/thegateway"
 cost = "paid"
 access = "members"
 setpoint_label = "heated"
@@ -23,7 +23,7 @@ access_summary = "Bay Club Gateway is a private club in the San Francisco Campus
 label = "Member"
 price = "Membership"
 note = "Bay Club does not publish a stable single-visit lap-swim price on this club page."
-url = "https://www.bayclubs.com/gateway/"
+url = "https://www.bayclubs.com/clubs/thegateway"
 access_mode = "private"
 payment_model = "membership"
 
@@ -31,7 +31,7 @@ payment_model = "membership"
 label = "Prospective member"
 price = "Schedule visit"
 note = "The club page offers a visit/contact flow."
-url = "https://www.bayclubs.com/gateway/"
+url = "https://www.bayclubs.com/clubs/thegateway"
 access_mode = "private"
 payment_model = "unknown"
 +++

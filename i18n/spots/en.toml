@@ -95,13 +95,13 @@ body = "Bay Club Gateway is the downtown private-pool option: outdoor water, fit
 label = "Member"
 price = "Membership"
 note = "Bay Club does not publish a stable single-visit lap-swim price on this club page."
-url = "https://www.bayclubs.com/gateway/"
+url = "https://www.bayclubs.com/clubs/thegateway"
 
 [[spots.bay-club-gateway.pricing]]
 label = "Prospective member"
 price = "Schedule visit"
 note = "The club page offers a visit/contact flow."
-url = "https://www.bayclubs.com/gateway/"
+url = "https://www.bayclubs.com/clubs/thegateway"
 
 [spots.china-beach]
 title = "China Beach"

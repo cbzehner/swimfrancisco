@@ -1,7 +1,4 @@
 access = "Vào cửa"
-access_badge_limited = "Vào cửa có giới hạn"
-access_badge_members = "Hội viên"
-access_badge_therapy = "Trị liệu"
 access_filter = "Lọc theo cách vào"
 access_hours_only = "CHỈ LÀ GIỜ VÀO CƠ SỞ · XEM TRANG CHÍNH THỨC ĐỂ BIẾT LÀN BƠI CÒN TRỐNG"
 access_label_club_hours = "Giờ câu lạc bộ"

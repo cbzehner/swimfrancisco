@@ -1,7 +1,4 @@
 access = "Acceso"
-access_badge_limited = "Acceso limitado"
-access_badge_members = "Miembros"
-access_badge_therapy = "Terapia"
 access_filter = "Filtro de acceso"
 access_hours_only = "SOLO HORARIO DE ACCESO · CONSULTA EL SITIO OFICIAL PARA DISPONIBILIDAD DE CARRILES"
 access_label_club_hours = "Horario del club"

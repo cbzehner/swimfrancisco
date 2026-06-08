@@ -12,13 +12,13 @@ description_short = "Opción privada de piscina en downtown, con agua al aire li
 label = "Miembro"
 price = "Membresía"
 note = "Bay Club no publica un precio estable de visita individual para nadar carriles en esta página del club."
-url = "https://www.bayclubs.com/gateway/"
+url = "https://www.bayclubs.com/clubs/thegateway"
 
 [[extra.pricing]]
 label = "Posible miembro"
 price = "Programar visita"
 note = "La página del club ofrece un flujo de visita/contacto."
-url = "https://www.bayclubs.com/gateway/"
+url = "https://www.bayclubs.com/clubs/thegateway"
 +++
 
 Bay Club Gateway es la opción de piscina privada de downtown: agua al aire libre, instalaciones de fitness, tenis y un ambiente de club cerca del Embarcadero.

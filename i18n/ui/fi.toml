@@ -1,7 +1,4 @@
 access = "Pääsy"
-access_badge_limited = "Rajoitettu pääsy"
-access_badge_members = "Jäsenet"
-access_badge_therapy = "Terapia"
 access_filter = "Pääsysuodatin"
 access_hours_only = "VAIN TILOJEN AUKIOLOAJAT · TARKISTA RATAUINTI VIRALLISELTA SIVULTA"
 access_label_club_hours = "Seuran aukioloajat"

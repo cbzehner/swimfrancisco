@@ -99,13 +99,13 @@ body = "Bay Club Gateway on keskustan yksityinen allasvaihtoehto: ulkoaltaat, ku
 label = "Jäsen"
 price = "Jäsenyys"
 note = "Bay Club ei julkaise tällä klubisivulla pysyvää yksittäisen ratauintikäynnin hintaa."
-url = "https://www.bayclubs.com/gateway/"
+url = "https://www.bayclubs.com/clubs/thegateway"
 
 [[spots.bay-club-gateway.pricing]]
 label = "Mahdollinen jäsen"
 price = "Varaa vierailu"
 note = "Klubisivu tarjoaa vierailu- ja yhteydenottopolun."
-url = "https://www.bayclubs.com/gateway/"
+url = "https://www.bayclubs.com/clubs/thegateway"
 
 [spots.china-beach]
 title = "China Beach"

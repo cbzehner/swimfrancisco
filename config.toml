@@ -8,9 +8,6 @@ minify_html = true
 
 [translations]
 access = "Access"
-access_badge_limited = "Limited access"
-access_badge_members = "Members"
-access_badge_therapy = "Therapy"
 access_filter = "Access filter"
 access_hours_only = "FACILITY ACCESS HOURS ONLY · CHECK THE OFFICIAL SITE FOR POOL-LANE AVAILABILITY"
 access_label_club_hours = "Club hours"
@@ -219,9 +216,6 @@ description = "Dónde nadar ahora mismo en San Francisco"
 
 [languages.es.translations]
 access = "Acceso"
-access_badge_limited = "Acceso limitado"
-access_badge_members = "Miembros"
-access_badge_therapy = "Terapia"
 access_filter = "Filtro de acceso"
 access_hours_only = "SOLO HORARIO DE ACCESO · CONSULTA EL SITIO OFICIAL PARA DISPONIBILIDAD DE CARRILES"
 access_label_club_hours = "Horario del club"
@@ -430,9 +424,6 @@ description = "現在可以在三藩市哪裡游泳"
 
 [languages.zh-Hant.translations]
 access = "入場"
-access_badge_limited = "限制入場"
-access_badge_members = "會員"
-access_badge_therapy = "治療"
 access_filter = "入場篩選"
 access_hours_only = "僅設施入場時間 · 泳道可用情況請查看官方網站"
 access_label_club_hours = "會所開放時間"
@@ -641,9 +632,6 @@ description = "Kung saan puwedeng lumangoy ngayon sa San Francisco"
 
 [languages.fil.translations]
 access = "Pagpasok"
-access_badge_limited = "Limitadong pagpasok"
-access_badge_members = "Miyembro"
-access_badge_therapy = "Terapiya"
 access_filter = "Filter ng pagpasok"
 access_hours_only = "ORAS NG PASILIDAD LANG · TINGNAN ANG OPISYAL NA SITE PARA SA AVAILABILITY NG LANE"
 access_label_club_hours = "Oras ng club"
@@ -852,9 +840,6 @@ description = "Nơi có thể bơi ngay bây giờ ở San Francisco"
 
 [languages.vi.translations]
 access = "Vào cửa"
-access_badge_limited = "Vào cửa có giới hạn"
-access_badge_members = "Hội viên"
-access_badge_therapy = "Trị liệu"
 access_filter = "Lọc theo cách vào"
 access_hours_only = "CHỈ LÀ GIỜ VÀO CƠ SỞ · XEM TRANG CHÍNH THỨC ĐỂ BIẾT LÀN BƠI CÒN TRỐNG"
 access_label_club_hours = "Giờ câu lạc bộ"
@@ -1063,9 +1048,6 @@ description = "Missä voi uida juuri nyt San Franciscossa"
 
 [languages.fi.translations]
 access = "Pääsy"
-access_badge_limited = "Rajoitettu pääsy"
-access_badge_members = "Jäsenet"
-access_badge_therapy = "Terapia"
 access_filter = "Pääsysuodatin"
 access_hours_only = "VAIN TILOJEN AUKIOLOAJAT · TARKISTA RATAUINTI VIRALLISELTA SIVULTA"
 access_label_club_hours = "Seuran aukioloajat"
