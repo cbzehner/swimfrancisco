@@ -199,18 +199,46 @@ def _promote_upcoming_schedule(extra: Any, as_of_date: str) -> bool:
         return False
     schedule = _schedule_from_table(upcoming)
     last_verified_at = upcoming.get("last_verified_at")
-    current_end = extra.get("effective_end")
-    print(
-        f"[merge] promoting upcoming_schedule: "
-        f"as_of={as_of_date} current_end={current_end} "
-        f"upcoming_start={upcoming_start} upcoming_end={upcoming.get('effective_end')}"
-    )
     del extra["upcoming_schedule"]
     _write_schedule_fields(
         extra,
         schedule,
         last_verified_at=last_verified_at if isinstance(last_verified_at, str) else None,
     )
+    return True
+
+
+def promote_spot_file(
+    pool_md_path: Path,
+    as_of_date: str | None = None,
+    *,
+    dry_run: bool = False,
+) -> bool:
+    """Promote a spot's queued upcoming_schedule into its canonical [extra]
+    block if today (or `as_of_date`) is on or past upcoming.effective_start.
+
+    Returns True if a promotion happened (or, with `dry_run=True`, would
+    happen). Returns False if there was no upcoming_schedule, the upcoming
+    window hasn't started, or the spot file has no [extra] table.
+
+    Public wrapper around `_promote_upcoming_schedule` so callers (CLI,
+    tests, scripts) don't have to reach across the merge module boundary
+    or replicate the read/parse/write dance.
+    """
+    if as_of_date is None:
+        as_of_date = pacific_today().isoformat()
+    original_text = pool_md_path.read_text()
+    frontmatter_text, body = _split_frontmatter(original_text)
+    document = tomlkit.parse(frontmatter_text)
+    extra = document.get("extra")
+    if extra is None or extra.get("upcoming_schedule") is None:
+        return False
+    if not _promote_upcoming_schedule(extra, as_of_date):
+        return False
+    if dry_run:
+        return True
+    updated = tomlkit.dumps(document).rstrip("\n")
+    pool_md_path.write_text(f"+++\n{updated}\n+++\n{body}")
     return True
 
 

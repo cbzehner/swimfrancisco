@@ -17,10 +17,14 @@ name: schedules-promote
 
 on:
   schedule:
-    # 14:00 UTC = 07:00 PT (PDT) / 06:00 PT (PST). Runs well after PT
-    # midnight so today-in-PT is unambiguous, and well before the next
-    # daily site rebuild (00:00 PT next day) so merged promotions ship.
-    - cron: '0 14 * * *'
+    # Monthly on the 1st at 14:00 UTC (07:00 PT PDT / 06:00 PT PST).
+    # Daily was over-cadence — SF Rec pools change seasonally (~4 events/
+    # year per pool) and render-time logic already handles the gap.
+    # Monthly catches season transitions within ~30 days, which is fine
+    # because pipeline.read_schedule_snapshot is only read during weekly
+    # `schedules extract` runs — and extract usually picks up the new
+    # schedule before promote needs to fire anyway.
+    - cron: '0 14 1 * *'
   workflow_dispatch:
 
 permissions:
