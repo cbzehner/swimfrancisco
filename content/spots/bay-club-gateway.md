@@ -20,6 +20,7 @@ access_summary = "Bay Club Gateway is a private club in the San Francisco Campus
 
 [[extra.schedules]]
 schedule_basis = "unknown"
+effective_start = "2026-05-17"
 
 [[extra.pricing]]
 label = "Member"

@@ -461,6 +461,28 @@ function initHorizonControl(now) {
   });
 }
 
+const REFRESH_INTERVAL_MS = 60_000;
+
+// Intra-day refresh. Day tick-over is server-rendered by the 00:05 PT
+// rebuild; client JS owns the minute-level updates within the day, so a tab
+// left open doesn't keep asserting "OPEN" hours after closing. filters.js
+// listens for sf:board-refreshed and re-applies filter/sort state on top of
+// the fresh statuses; conditions.js refreshes the bulletin clock and count.
+function refreshBoard() {
+  const now = pacificWallClockDate();
+  currentHorizon = resolveHorizon(currentHorizon.id, now);
+  applyHorizonChrome(currentHorizon);
+  renderBoard(document, null, now);
+  document.dispatchEvent(new CustomEvent("sf:board-refreshed"));
+}
+
+function startIntraDayRefresh() {
+  setInterval(refreshBoard, REFRESH_INTERVAL_MS);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) refreshBoard();
+  });
+}
+
 function init() {
   // All SF pools are in Pacific; reason about "now" in PT regardless of the
   // visitor's browser timezone.
@@ -470,6 +492,7 @@ function init() {
   // Signal to filters.js that status cells are populated and rows are in
   // their baseline (open-first, alphabetical) order.
   document.dispatchEvent(new CustomEvent("sf:status-applied"));
+  if (document.querySelector("table.board")) startIntraDayRefresh();
 }
 
 if (document.readyState === "loading") {

@@ -4,6 +4,7 @@ slug = "baker-beach"
 
 [extra]
 type = "open_water"
+water_body = "ocean"
 address = "1504 Pershing Dr, San Francisco, CA 94129"
 locale_label = "Presidio"
 lat = 37.7937

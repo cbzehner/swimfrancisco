@@ -44,14 +44,7 @@
   {% endif %}
 
   {% if not is_map_view %}
-    <section class="bulletin-strip" aria-label="{{ trans(key='current_conditions', lang=lang) }}">
-      <div><span class="k">{{ trans(key='today', lang=lang) }}</span><span class="v" data-today-date>—</span></div>
-      <div><span class="k">{{ trans(key='time', lang=lang) }}</span><span class="v num" data-pt-time>—</span></div>
-      <div><span class="k">{{ trans(key='bay', lang=lang) }}</span><span class="v red num" data-bay-temp-strip>—</span></div>
-      <div><span class="k">{{ trans(key='ocean', lang=lang) }}</span><span class="v teal num" data-ocean-temp-strip>—</span></div>
-      <div><span class="k">{{ trans(key='tide', lang=lang) }}</span><span class="v num" data-next-tide>—</span></div>
-      <div><span class="k">{{ trans(key='updated', lang=lang) }}</span><span class="v num" data-conditions-updated>—</span></div>
-    </section>
+    {{ bulletin_macros::strip(lang=lang) }}
 
     <section class="bulletin-hero">
       <div class="eyebrow">{{ trans(key='hero_eyebrow', lang=lang) | replace(from='%{label}', to=bulletin.label) }}</div>

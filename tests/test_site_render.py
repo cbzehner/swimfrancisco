@@ -134,6 +134,14 @@ def test_all_spots_have_access_classification() -> None:
             assert schedules, f"{path.name}: pool has no schedules"
             for sched in schedules:
                 assert sched.get("schedule_basis") in valid_schedule_bases, path.name
+                # effective_start is required: the three active-schedule
+                # predicates (merge.py, board.mjs, page.html) only agree when
+                # every entry has one — the Tera impl skips start-less entries
+                # while the JS impl treats them as in-window.
+                effective_start = sched.get("effective_start")
+                assert isinstance(effective_start, str) and re.fullmatch(
+                    r"\d{4}-\d{2}-\d{2}", effective_start
+                ), f"{path.name}: schedule entry missing or non-ISO effective_start"
 
 
 def test_canonical_labels_have_i18n_mappings() -> None:
@@ -599,6 +607,19 @@ def test_homepage_renders_bulletin_redesign_shell(built_site: Path) -> None:
     assert "data-open-count" in html
     assert "data-conditions-updated" in html
     assert "data-sun-range" not in html
+
+
+def test_bulletin_strip_emits_water_body_slug_lists(built_site: Path) -> None:
+    # conditions.js derives the bay/ocean grouping from these attributes;
+    # they come from open-water frontmatter (water_body) via the bulletin
+    # macro, so a new open-water spot joins the strip without a JS change.
+    for html_path in (built_site / "index.html", built_site / "spots" / "aquatic-park" / "index.html"):
+        rendered = html_path.read_text()
+        bay = re.search(r'data-bay-slugs="([^"]*)"', rendered)
+        ocean = re.search(r'data-ocean-slugs="([^"]*)"', rendered)
+        assert bay and ocean, f"{html_path}: bulletin strip missing slug attributes"
+        assert set(bay.group(1).split()) == {"aquatic-park", "crissy-field"}
+        assert set(ocean.group(1).split()) == {"ocean-beach", "baker-beach", "china-beach"}
 
 
 def test_bulletin_number_matches_reviewed_schedule_snapshots() -> None:

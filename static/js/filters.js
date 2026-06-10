@@ -247,7 +247,7 @@ function triggerFlap(rows) {
 // Apply current filter state to the board: toggle row.hidden, sort visible
 // rows (by distance if Distance sort is on, otherwise leave in the baseline
 // order that status.js produced), move them to the top of tbody, and flap them.
-function applyFilters(tbody, state) {
+function applyFilters(tbody, state, { flap = true } = {}) {
   const poolTypes = allowedPoolTypes(state);
   renderBoard(document, poolTypes);
   const horizon = getCurrentHorizon();
@@ -270,7 +270,7 @@ function applyFilters(tbody, state) {
   // their DOM position at the tail (visually irrelevant since hidden).
   ordered.forEach((row) => tbody.appendChild(row));
 
-  triggerFlap(ordered);
+  if (flap) triggerFlap(ordered);
 
   // Broadcast so other modules (map.js) can react to the new visible set.
   document.dispatchEvent(new CustomEvent("sf:filters-applied"));
@@ -335,8 +335,13 @@ function attachHandlers(tbody, filtersRoot) {
   });
 
   if (distanceButton) {
+    // Ignore clicks while a geolocation prompt is pending: a second click
+    // would fire a second getCurrentPosition, and a slow first callback
+    // could re-enable distance sort after the user toggled it off.
+    let pendingGeolocation = false;
     distanceButton.setAttribute("aria-pressed", "false");
     distanceButton.addEventListener("click", () => {
+      if (pendingGeolocation) return;
       // Toggle off if already on.
       if (state.sortByDistance) {
         state.sortByDistance = false;
@@ -350,9 +355,11 @@ function attachHandlers(tbody, filtersRoot) {
         distanceButton.setAttribute("aria-pressed", "false");
         return;
       }
+      pendingGeolocation = true;
       distanceButton.setAttribute("aria-pressed", "true");
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          pendingGeolocation = false;
           state.sortByDistance = true;
           state.userCoords = {
             latitude: position.coords.latitude,
@@ -367,6 +374,7 @@ function attachHandlers(tbody, filtersRoot) {
           syncStateToHash(state);
         },
         () => {
+          pendingGeolocation = false;
           state.sortByDistance = false;
           state.userCoords = null;
           distanceButton.setAttribute("aria-pressed", "false");
@@ -462,6 +470,11 @@ function init() {
   document.addEventListener("sf:horizon-changed", () => {
     applyFilters(tbody, controls.state);
     updateViewSwitcherHref();
+  });
+  // Minute tick from status.js: re-apply filter/sort state on top of the
+  // fresh statuses without retriggering the split-flap animation.
+  document.addEventListener("sf:board-refreshed", () => {
+    applyFilters(tbody, controls.state, { flap: false });
   });
 }
 

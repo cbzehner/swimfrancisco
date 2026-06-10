@@ -114,15 +114,28 @@ function decorateTodayBlock(root, now, statusResult) {
     const labelEl = row.querySelector(".row-label");
     if (!timeEl || !labelEl) continue;
 
-    if (start <= nowMinutes && nowMinutes < end) {
-      labelEl.textContent = t("status_now", "NOW");
-      continue;
+    // Stash the server-rendered label once so re-running on the minute tick
+    // can clear a NOW/NEXT marker that no longer applies.
+    if (labelEl.dataset.baseLabel === undefined) {
+      labelEl.dataset.baseLabel = labelEl.textContent;
     }
 
-    if (row === nextRow) {
+    if (start <= nowMinutes && nowMinutes < end) {
+      labelEl.textContent = t("status_now", "NOW");
+    } else if (row === nextRow) {
       labelEl.textContent = t("next", "NEXT");
+    } else {
+      labelEl.textContent = labelEl.dataset.baseLabel;
     }
   }
+}
+
+const REFRESH_INTERVAL_MS = 60_000;
+
+function refresh(root, schedule) {
+  const now = pacificWallClockDate();
+  const result = applyStatusSlab(root, schedule, now);
+  decorateTodayBlock(root, now, result);
 }
 
 function init() {
@@ -133,9 +146,14 @@ function init() {
   // Every SF pool is in Pacific — reason about time in PT regardless of the
   // visitor's browser timezone, so the server-rendered today block and the
   // client-side "NOW" marker agree for non-PT visitors.
-  const now = pacificWallClockDate();
-  const result = applyStatusSlab(root, schedule, now);
-  decorateTodayBlock(root, now, result);
+  refresh(root, schedule);
+  // Intra-day refresh: keep the status slab and NOW/NEXT markers honest in
+  // a long-lived tab. Day tick-over is server-rendered by the 00:05 PT
+  // rebuild; the client owns only minute-level updates within the day.
+  setInterval(() => refresh(root, schedule), REFRESH_INTERVAL_MS);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) refresh(root, schedule);
+  });
 }
 
 if (document.readyState === "loading") {

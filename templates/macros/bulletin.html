@@ -6,3 +6,30 @@
     <span>BULLETIN {{ bulletin.label }}</span>
   </div>
 {% endmacro badge %}
+
+{# Conditions strip shared by the board and spot detail pages. Emits the
+   bay/ocean slug lists from open-water frontmatter (water_body) so
+   static/js/conditions.js derives them from the DOM instead of hardcoding
+   slugs that would silently miss newly added spots. #}
+{% macro strip(lang) %}
+  {% set spots_section = get_section(path="spots/_index.md") %}
+  {% set_global bay_slugs = [] %}
+  {% set_global ocean_slugs = [] %}
+  {% for p in spots_section.pages %}
+    {% if p.extra.type == "open_water" %}
+      {% set body = p.extra.water_body | default(value="") %}
+      {% if body == "bay" %}{% set_global bay_slugs = bay_slugs | concat(with=p.slug) %}{% endif %}
+      {% if body == "ocean" %}{% set_global ocean_slugs = ocean_slugs | concat(with=p.slug) %}{% endif %}
+    {% endif %}
+  {% endfor %}
+  <section class="bulletin-strip" aria-label="{{ trans(key='current_conditions', lang=lang) }}"
+           data-bay-slugs="{{ bay_slugs | join(sep=' ') }}"
+           data-ocean-slugs="{{ ocean_slugs | join(sep=' ') }}">
+    <div><span class="k">{{ trans(key='today', lang=lang) }}</span><span class="v" data-today-date>—</span></div>
+    <div><span class="k">{{ trans(key='time', lang=lang) }}</span><span class="v num" data-pt-time>—</span></div>
+    <div><span class="k">{{ trans(key='bay', lang=lang) }}</span><span class="v red num" data-bay-temp-strip>—</span></div>
+    <div><span class="k">{{ trans(key='ocean', lang=lang) }}</span><span class="v teal num" data-ocean-temp-strip>—</span></div>
+    <div><span class="k">{{ trans(key='tide', lang=lang) }}</span><span class="v num" data-next-tide>—</span></div>
+    <div><span class="k">{{ trans(key='updated', lang=lang) }}</span><span class="v num" data-conditions-updated>—</span></div>
+  </section>
+{% endmacro strip %}

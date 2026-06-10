@@ -4,6 +4,7 @@ slug = "aquatic-park"
 
 [extra]
 type = "open_water"
+water_body = "bay"
 address = "499 Jefferson St, San Francisco, CA 94109"
 locale_label = "Aquatic Park"
 lat = 37.8063

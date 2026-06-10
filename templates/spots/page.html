@@ -203,14 +203,7 @@
   {% set google_dir = "https://www.google.com/maps/dir/?api=1&destination=" ~ destination_enc %}
   {% set apple_dir = "https://maps.apple.com/?daddr=" ~ destination_enc %}
 
-  <section class="bulletin-strip" aria-label="{{ trans(key='current_conditions', lang=lang) }}">
-    <div><span class="k">{{ trans(key='today', lang=lang) }}</span><span class="v" data-today-date>—</span></div>
-    <div><span class="k">{{ trans(key='time', lang=lang) }}</span><span class="v num" data-pt-time>—</span></div>
-    <div><span class="k">{{ trans(key='bay', lang=lang) }}</span><span class="v red num" data-bay-temp-strip>—</span></div>
-    <div><span class="k">{{ trans(key='ocean', lang=lang) }}</span><span class="v teal num" data-ocean-temp-strip>—</span></div>
-    <div><span class="k">{{ trans(key='tide', lang=lang) }}</span><span class="v num" data-next-tide>—</span></div>
-    <div><span class="k">{{ trans(key='updated', lang=lang) }}</span><span class="v num" data-conditions-updated>—</span></div>
-  </section>
+  {{ bulletin_macros::strip(lang=lang) }}
 
   <section class="spot-detail-head">
     <p class="back"><a href="{{ get_url(path='@/_index.md', lang=lang) }}">&larr; {{ trans(key='board', lang=lang) }}</a></p>

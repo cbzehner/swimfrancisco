@@ -8,9 +8,17 @@ import { formatTideSummary } from "./helpers/tide.mjs";
 import { t } from "./helpers/i18n.mjs";
 
 const DEFAULT_ENDPOINT = "/api/conditions";
-const BAY_SLUGS = ["aquatic-park", "crissy-field"];
-const OCEAN_SLUGS = ["ocean-beach", "baker-beach", "china-beach"];
 const AVAILABLE_STATUSES = new Set(["OPEN", "AVAILABLE", "LIMITED", "OCEAN"]);
+
+// The bulletin-strip macro (templates/macros/bulletin.html) emits the bay
+// and ocean slug lists from open-water frontmatter (water_body), so adding
+// a spot updates this module without touching JS.
+function stripSlugs(attr) {
+  const raw = document.querySelector(".bulletin-strip")?.getAttribute(attr) || "";
+  return raw.split(/\s+/).filter(Boolean);
+}
+const BAY_SLUGS = stripSlugs("data-bay-slugs");
+const OCEAN_SLUGS = stripSlugs("data-ocean-slugs");
 
 // Format a Fahrenheit temperature from a conditions record.
 // Accepts `water_temp_f` directly, or converts from `water_temp_c`.
@@ -74,11 +82,15 @@ function formatUpdatedAt(conditions) {
 }
 
 function openCountLabel(count) {
-  const nowLabel = t("now", "Now");
-  const horizonLabel = document.querySelector("[data-horizon-button]")?.textContent.trim() || nowLabel;
+  // status.js mirrors the active horizon into the `?when=` URL param
+  // (writeHorizonParam); reading it avoids inferring state by comparing
+  // translated button text, which breaks across locales.
+  const horizonId = new URLSearchParams(window.location.search).get("when") || "now";
   const unit = count === 1 ? t("place_singular", "place") : t("place_plural", "places");
-  const normalized = horizonLabel.toLowerCase();
-  if (normalized !== nowLabel.toLowerCase()) return `${unit} ${t("available", "available")} ${normalized}`;
+  if (horizonId !== "now") {
+    const horizonLabel = document.querySelector("[data-horizon-button]")?.textContent.trim().toLowerCase() || "";
+    return `${unit} ${t("available", "available")} ${horizonLabel}`;
+  }
   return `${unit} ${t("open_now_lower", "open now")}`;
 }
 
@@ -166,10 +178,24 @@ function applyConditions(root, conditions) {
   });
 }
 
+const REFETCH_INTERVAL_MS = 15 * 60 * 1000;
+let lastFetchedAt = 0;
+
+async function refetchIfDue() {
+  if (Date.now() - lastFetchedAt < REFETCH_INTERVAL_MS) return;
+  lastFetchedAt = Date.now(); // set before the await so ticks can't overlap
+  const endpoint = (typeof window !== "undefined" && window.SWIMFRANCISCO_API) || DEFAULT_ENDPOINT;
+  const conditions = await fetchConditions(endpoint);
+  if (!conditions) return;
+  window.SWIMFRANCISCO_CONDITIONS = conditions;
+  applyConditions(document, conditions);
+}
+
 async function init() {
   applyBoardSummary(document);
   applyBulletinStrip(document, null);
   const endpoint = (typeof window !== "undefined" && window.SWIMFRANCISCO_API) || DEFAULT_ENDPOINT;
+  lastFetchedAt = Date.now();
   const conditions = await fetchConditions(endpoint);
   if (conditions) applyConditions(document, conditions);
   // Expose for other modules (e.g. map popups) and signal availability.
@@ -180,6 +206,14 @@ async function init() {
 document.addEventListener("sf:status-applied", () => applyBoardSummary(document));
 document.addEventListener("sf:horizon-changed", () => applyBoardSummary(document));
 document.addEventListener("sf:filters-applied", () => applyBoardSummary(document));
+// Minute tick from status.js: refresh the bulletin clock/date, recount the
+// open pools, and re-fetch conditions when the data is older than the
+// Worker's cache window.
+document.addEventListener("sf:board-refreshed", () => {
+  applyBulletinStrip(document, window.SWIMFRANCISCO_CONDITIONS || null);
+  applyBoardSummary(document);
+  refetchIfDue();
+});
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {

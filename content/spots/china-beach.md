@@ -4,6 +4,7 @@ slug = "china-beach"
 
 [extra]
 type = "open_water"
+water_body = "ocean"
 address = "390 Sea Cliff Ave, San Francisco, CA 94121"
 locale_label = "Sea Cliff"
 lat = 37.7886

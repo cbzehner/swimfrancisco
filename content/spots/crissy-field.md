@@ -4,6 +4,7 @@ slug = "crissy-field"
 
 [extra]
 type = "open_water"
+water_body = "bay"
 address = "603 Mason St, San Francisco, CA 94129"
 locale_label = "Presidio"
 lat = 37.8042
