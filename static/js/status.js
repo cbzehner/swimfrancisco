@@ -412,11 +412,19 @@ function initHorizonControl(now) {
   // Close on Tab-out so an open menu doesn't strand the user with focus
   // somewhere unrelated on the page. focusout fires when any element inside
   // the button or menu loses focus; relatedTarget is who's gaining it.
+  // Only close when focus lands on a keyboard-reachable element
+  // (tabIndex >= 0): WebKit doesn't focus <button>s on tap — it moves focus
+  // to the nearest tabindex ancestor instead, which here is the skip-link
+  // target <main tabindex="-1"> — so an iOS tap on a menu item looked like
+  // Tab-out and closed the menu before the tap's click could land on the
+  // item. A real Tab always stops on tabIndex >= 0. Outside-tap closing is
+  // owned by the document click listener above.
   document.addEventListener("focusout", (event) => {
     const menu = findHorizonMenu();
     if (!menu || menu.hidden) return;
     const next = event.relatedTarget;
-    if (next && (control.contains(next) || menu.contains(next))) return;
+    if (!next || next.tabIndex < 0) return;
+    if (control.contains(next) || menu.contains(next)) return;
     closeHorizonMenu(control);
   });
 
