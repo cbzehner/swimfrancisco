@@ -82,9 +82,6 @@ class Violation:
     code: ViolationCode
     message: str
 
-    def __str__(self) -> str:
-        return self.message
-
 
 @dataclass(frozen=True)
 class PoolEntry:
@@ -103,7 +100,6 @@ class FetchResult:
     bytes: bytes
     from_cache: bool
     page_count: int
-    response_url: str
 
 
 @dataclass(frozen=True)
@@ -136,14 +132,6 @@ class ReviewNote:
     kind: ReviewNoteKind
     message: str
     severity: Severity = "warning"
-    evidence: dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass(frozen=True)
-class PdfSignals:
-    page_count: int
-    text_sha256: str
-    grid_header_pages: list[int]
 
 
 @dataclass(frozen=True)

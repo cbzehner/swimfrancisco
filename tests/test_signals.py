@@ -8,8 +8,7 @@ def test_analyze_page_texts_detects_multi_grid():
             "TUESDAY WEDNESDAY THURSDAY FRIDAY SATURDAY\nFAMILY SWIM\n9:00 AM - 10:30 AM",
         ]
     )
-    assert signals.page_count == 2
-    assert signals.grid_header_pages == [1, 2]
+    assert signals == [1, 2]
 
     notes = source_notes_for_signals(signals)
     messages = [note.message for note in notes]

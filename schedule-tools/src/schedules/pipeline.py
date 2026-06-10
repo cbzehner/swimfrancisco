@@ -8,8 +8,7 @@ from pathlib import Path
 from .artifacts import save_artifact_bundle, skip_if_fresh
 from .delta import check_delta
 from .direct_sources import extract_direct
-from .envelope import EnvelopeValidationError, validate_envelope
-from .fetch import FetchResult, fetch_pdf
+from .fetch import fetch_pdf
 from .grounding import grounding_from_text, normalize_pdf_text
 from .merge import read_schedule_snapshot
 from .models import Aborted, Extracted, GroundingResult, PoolEntry, PoolResult, ReviewNote, Skipped, Unchanged
@@ -18,6 +17,7 @@ from .providers import extract as extract_with_provider
 from .providers.anthropic_provider import DEFAULT_MODEL as ANTHROPIC_DEFAULT_MODEL
 from .providers.gemini_provider import DEFAULT_MODEL as GEMINI_DEFAULT_MODEL
 from .registry import load_registry
+from .reviewed_snapshots import load_reviewed_snapshot_from_path
 from .diff import compare_payloads
 from .report import write_report
 from .schema import EXTRACTION_SCHEMA
@@ -25,7 +25,6 @@ from .signals import analyze_page_texts, extract_page_texts, source_notes_for_si
 from .validate import validate
 
 _GROUNDING_MIN_RATIO = 0.9
-_GROUNDING_EVIDENCE_SAMPLE = 5
 
 
 def compute_exit_code(results: list[PoolResult]) -> int:
@@ -63,24 +62,6 @@ def _grounding_notes(provider: str, grounding: GroundingResult) -> list[ReviewNo
     if grounding.total == 0 or grounding.ratio >= _GROUNDING_MIN_RATIO:
         return []
 
-    sample = []
-    for entry in grounding.ungrounded[:_GROUNDING_EVIDENCE_SAMPLE]:
-        session = entry.session
-        sample.append(
-            {
-                "index": entry.index,
-                "day": session.get("day"),
-                "type": session.get("type"),
-                "start": session.get("start"),
-                "end": session.get("end"),
-                "missing_evidence": entry.missing_evidence,
-                "evidence_in_pdf": entry.evidence_in_pdf,
-                "start_in_evidence": entry.start_in_evidence,
-                "type_in_evidence": entry.type_in_evidence,
-                "evidence": session.get("evidence"),
-            }
-        )
-
     ungrounded_total = grounding.total - grounding.grounded_count
     return [
         ReviewNote(
@@ -90,41 +71,21 @@ def _grounding_notes(provider: str, grounding: GroundingResult) -> list[ReviewNo
                 f"({grounding.grounded_count}/{grounding.total} sessions grounded; "
                 f"{ungrounded_total} ungrounded)"
             ),
-            evidence={
-                "provider": provider,
-                "ratio": round(grounding.ratio, 4),
-                "grounded_count": grounding.grounded_count,
-                "total": grounding.total,
-                "sample_ungrounded": sample,
-            },
         )
     ]
 
 
-def _load_reviewed_envelope(path: Path, expected_slug: str, expected_sha: str) -> dict:
-    raw = json.loads(path.read_text())
-    if not isinstance(raw, dict):
-        raise ValueError(f"{path} must contain a JSON object.")
-    try:
-        validate_envelope(raw)
-    except EnvelopeValidationError as exc:
-        raise ValueError(f"{path}: {exc}") from exc
-    if raw["slug"] != expected_slug:
-        raise ValueError(f"{path} envelope slug does not match {expected_slug!r}")
-    if raw["pdf_sha256"] != expected_sha:
-        raise ValueError(f"{path} envelope pdf_sha256 does not match current PDF")
-    return raw
-
-
-def _build_unchanged(entry: PoolEntry, fetch_result: FetchResult, reviewed_file: Path) -> Unchanged:
-    envelope = _load_reviewed_envelope(reviewed_file, entry.slug, fetch_result.sha256)
+def _build_unchanged(entry: PoolEntry, *, pdf_sha256: str, page_count: int, reviewed_file: Path) -> Unchanged:
+    envelope = load_reviewed_snapshot_from_path(
+        reviewed_file, expected_slug=entry.slug, expected_sha=pdf_sha256
+    )
     payload = envelope["payload"]
     return Unchanged(
         **_identity_kwargs(entry),
         provider="reviewed-snapshot",
         model="manual-review",
-        pdf_sha256=fetch_result.sha256,
-        page_count=fetch_result.page_count,
+        pdf_sha256=pdf_sha256,
+        page_count=page_count,
         sessions_count=len(payload.get("sessions") or []),
         closures_count=len(payload.get("closures") or []),
         effective_start=str(payload.get("effective_start") or ""),
@@ -163,7 +124,12 @@ def _process_entry(
 
         # Reviewed-snapshot fast path: SHA matches a hand-approved snapshot.
         if not force and not compare_with and reviewed_file.exists():
-            return _build_unchanged(entry, fetch_result, reviewed_file)
+            return _build_unchanged(
+                entry,
+                pdf_sha256=fetch_result.sha256,
+                page_count=fetch_result.page_count,
+                reviewed_file=reviewed_file,
+            )
 
         # PDF text + signals (reused for grounding both providers if bakeoff).
         page_texts = extract_page_texts(fetch_result.bytes)
@@ -305,15 +271,9 @@ def _process_direct_entry(entry: PoolEntry, prior_snapshot: dict) -> PoolResult:
     if reviewed_file.exists():
         return _build_unchanged(
             entry,
-            FetchResult(
-                path=fetch_result.path,
-                sha256=fetch_result.sha256,
-                bytes=fetch_result.text.encode("utf-8"),
-                from_cache=fetch_result.from_cache,
-                page_count=0,
-                response_url=fetch_result.response_url,
-            ),
-            reviewed_file,
+            pdf_sha256=fetch_result.sha256,
+            page_count=0,
+            reviewed_file=reviewed_file,
         )
 
     payload = extracted.payload

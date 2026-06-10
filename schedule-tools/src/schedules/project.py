@@ -26,7 +26,7 @@ def project(
     Raises ProjectError with a reviewer-facing message on any failure.
     Returns the path to the written MD. Idempotent.
     """
-    envelope, _, _ = load_reviewed_snapshot_from_path(reviewed_json_path, expected_slug=slug)
+    envelope = load_reviewed_snapshot_from_path(reviewed_json_path, expected_slug=slug)
     canonical = canonicalize_payload(envelope["payload"])
 
     result = validate(canonical)

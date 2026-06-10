@@ -1,20 +1,18 @@
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
 
 from .envelope import EnvelopeValidationError, validate_envelope
-from .paths import relative_to_repo
 
 
 def load_reviewed_snapshot_from_path(
-    path: Path, *, expected_slug: str,
-) -> tuple[dict, str, str]:
-    """Load a snapshot when the on-disk path is already known.
+    path: Path, *, expected_slug: str, expected_sha: str | None = None,
+) -> dict:
+    """Load and validate a reviewed-snapshot envelope from a known path.
 
-    Does not require the caller to know the envelope's ``pdf_sha256`` in
-    advance — it extracts it from the file and validates.
+    Pass ``expected_sha`` to additionally require the envelope's
+    ``pdf_sha256`` to match the source currently being processed.
     """
     raw = json.loads(path.read_text())
     if not isinstance(raw, dict):
@@ -27,8 +25,9 @@ def load_reviewed_snapshot_from_path(
         raise ValueError(
             f"{path} envelope slug={raw['slug']!r} does not match directory slug={expected_slug!r}"
         )
-    fingerprint = hashlib.sha256(json.dumps(raw, sort_keys=True).encode("utf-8")).hexdigest()
-    return raw, fingerprint, relative_to_repo(path)
+    if expected_sha is not None and raw["pdf_sha256"] != expected_sha:
+        raise ValueError(f"{path} envelope pdf_sha256 does not match current source")
+    return raw
 
 
 _SESSION_COMPARE_KEYS = ("day", "type", "start", "end", "pool")

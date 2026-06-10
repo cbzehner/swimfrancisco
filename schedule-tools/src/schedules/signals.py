@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import hashlib
 import re
 from io import BytesIO
 
 from pypdf import PdfReader
 
-from .models import PdfSignals, ReviewNote
+from .models import ReviewNote
 
 DAY_TOKEN_RE = re.compile(
     r"\b(mon(?:day)?|tue(?:s|sday)?|wed(?:nesday)?|thu(?:rs|rsday)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)\b",
@@ -19,7 +18,8 @@ def extract_page_texts(pdf_bytes: bytes) -> list[str]:
     return [(page.extract_text() or "") for page in reader.pages]
 
 
-def analyze_page_texts(page_texts: list[str]) -> PdfSignals:
+def analyze_page_texts(page_texts: list[str]) -> list[int]:
+    """Return the 1-based page numbers that carry a day-grid header."""
     grid_header_pages: list[int] = []
 
     for page_index, text in enumerate(page_texts, start=1):
@@ -27,24 +27,19 @@ def analyze_page_texts(page_texts: list[str]) -> PdfSignals:
         if _has_grid_header(lines):
             grid_header_pages.append(page_index)
 
-    return PdfSignals(
-        page_count=len(page_texts),
-        text_sha256=hashlib.sha256("\n\n".join(page_texts).encode("utf-8")).hexdigest(),
-        grid_header_pages=grid_header_pages,
-    )
+    return grid_header_pages
 
 
-def source_notes_for_signals(signals: PdfSignals) -> list[ReviewNote]:
+def source_notes_for_signals(grid_header_pages: list[int]) -> list[ReviewNote]:
     notes: list[ReviewNote] = []
 
-    if len(signals.grid_header_pages) >= 2:
+    if len(grid_header_pages) >= 2:
         notes.append(
             ReviewNote(
                 kind="multi_grid_suspected",
                 message=(
-                    f"PDF appears to contain repeated day-grid pages ({len(signals.grid_header_pages)} pages with day headers)"
+                    f"PDF appears to contain repeated day-grid pages ({len(grid_header_pages)} pages with day headers)"
                 ),
-                evidence={"grid_header_pages": signals.grid_header_pages},
             )
         )
 

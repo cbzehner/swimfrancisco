@@ -6,24 +6,31 @@ from .models import Aborted, Extracted, PoolResult, ReviewNote, Skipped, Unchang
 from .paths import REPORT_PATH
 
 
+def result_counts(results: list[PoolResult]) -> dict[str, int]:
+    return {
+        "succeeded": sum(isinstance(result, Extracted) and not result.catastrophic for result in results),
+        "unchanged": sum(isinstance(result, Unchanged) for result in results),
+        "skipped": sum(isinstance(result, Skipped) for result in results),
+        "failed": sum(
+            isinstance(result, Aborted) or (isinstance(result, Extracted) and result.catastrophic)
+            for result in results
+        ),
+    }
+
+
 def write_report(results: list[PoolResult], path: Path = REPORT_PATH) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    succeeded = sum(isinstance(result, Extracted) and not result.catastrophic for result in results)
-    unchanged = sum(isinstance(result, Unchanged) for result in results)
-    skipped = sum(isinstance(result, Skipped) for result in results)
-    failed = sum(
-        isinstance(result, Aborted) or (isinstance(result, Extracted) and result.catastrophic)
-        for result in results
-    )
+    counts = result_counts(results)
     flagged = sum(needs_review(result) for result in results)
 
     lines = [
         "# Extraction Report",
         "",
         (
-            f"{len(results)} pools processed, {succeeded} succeeded, {unchanged} unchanged, "
-            f"{skipped} skipped, {failed} failed, {flagged} flagged for manual review"
+            f"{len(results)} pools processed, {counts['succeeded']} succeeded, "
+            f"{counts['unchanged']} unchanged, {counts['skipped']} skipped, "
+            f"{counts['failed']} failed, {flagged} flagged for manual review"
         ),
         "",
     ]
@@ -102,9 +109,7 @@ def _render_pool_block(result: PoolResult) -> list[str]:
         lines.append(f"- schedule_basis: {result.schedule_basis}")
 
     violations = _violations(result)
-    if isinstance(result, Unchanged):
-        lines.append("- invariants: ok")
-    elif violations:
+    if violations:
         lines.append(f"- invariants: {', '.join(v.message for v in violations)}")
     else:
         lines.append("- invariants: ok")

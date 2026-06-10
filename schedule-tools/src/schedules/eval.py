@@ -74,14 +74,6 @@ class PoolEval:
         return prf1(self.true_positives, self.false_positives, self.false_negatives)[2]
 
 
-def _provider_stem_to_provider(stem: str) -> str:
-    if stem.startswith("gemini"):
-        return "gemini"
-    if stem.startswith("anthropic"):
-        return "anthropic"
-    return stem.split("-", 1)[0]
-
-
 def _diff_payloads(truth: dict, extracted: dict, sample_n: int = 3) -> tuple[set[RowKey], set[RowKey], int, list[dict], list[dict]]:
     truth_keys = {RowKey.from_session(s) for s in truth.get("sessions", [])}
     extracted_sessions = extracted.get("sessions", [])
@@ -156,7 +148,7 @@ def collect_pool_evals(*, data_root: Path = DATA_DIR, all_dirs: bool = False) ->
                         pool=pool_dir.name,
                         review_dir=review_dir,
                         provider_artifact=art_path.name,
-                        provider=_provider_stem_to_provider(art_path.stem),
+                        provider=art_path.stem.split("-", 1)[0],
                         truth_count=truth_count,
                         extracted_count=extracted_count,
                         true_positives=tp,

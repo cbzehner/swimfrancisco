@@ -41,7 +41,7 @@ def fetch_pdf(
 
                 # Glob by prefix under per-review dirs to detect cache hit or collision.
                 # A matching sha always reuses the existing review dir, even under `force`:
-                # `--force` re-triggers provider extraction (see extract.py), not a fresh
+                # `--force` re-triggers provider extraction (see pipeline.py), not a fresh
                 # dated directory for byte-identical PDFs.
                 matches = sorted(slug_dir.glob(f"*-{prefix}/source.pdf"))
                 if matches:
@@ -55,7 +55,6 @@ def fetch_pdf(
                                 bytes=existing_bytes,
                                 from_cache=True,
                                 page_count=_count_pdf_pages(existing_bytes),
-                                response_url=str(response.url),
                             )
                         # Same 12-char prefix, different full hash — collision.
                         raise FetchError(
@@ -73,7 +72,6 @@ def fetch_pdf(
                     bytes=payload,
                     from_cache=False,
                     page_count=_count_pdf_pages(payload),
-                    response_url=str(response.url),
                 )
             except FetchError:
                 raise  # don't retry prefix collisions

@@ -29,15 +29,16 @@ def _valid_envelope(slug, pdf_sha256):
     }
 
 
-def test_load_reviewed_snapshot_from_path_extracts_sha_from_envelope(tmp_path):
-    # Filename stem is <reviewed_at>-<prefix>, not a sha; loader must extract
+def test_load_reviewed_snapshot_from_path_checks_envelope_sha(tmp_path):
+    # Filename stem is <reviewed_at>-<prefix>, not a sha; loader must read
     # the real pdf_sha256 from the envelope contents, not the filename.
     root = tmp_path / "reviewed-snapshots"
     pdf_sha256 = "a" * 64
     path = _write_snapshot(root, "hamilton-pool", pdf_sha256, _valid_envelope("hamilton-pool", pdf_sha256))
-    env, fingerprint, _ = load_reviewed_snapshot_from_path(path, expected_slug="hamilton-pool")
+    env = load_reviewed_snapshot_from_path(path, expected_slug="hamilton-pool", expected_sha=pdf_sha256)
     assert env["pdf_sha256"] == pdf_sha256
-    assert len(fingerprint) == 64
+    with pytest.raises(ValueError):
+        load_reviewed_snapshot_from_path(path, expected_slug="hamilton-pool", expected_sha="b" * 64)
 
 
 def test_load_reviewed_snapshot_from_path_rejects_invalid_envelope(tmp_path):

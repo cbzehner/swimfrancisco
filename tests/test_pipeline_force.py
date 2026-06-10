@@ -87,11 +87,11 @@ def _setup(tmp_path: Path, monkeypatch) -> None:
         lambda results: write_report(results, path=report_path),
     )
 
-    from schedules.models import GroundingResult, PdfSignals
+    from schedules.models import GroundingResult
     monkeypatch.setattr("schedules.pipeline.extract_page_texts", lambda _bytes: [""])
     monkeypatch.setattr(
         "schedules.pipeline.analyze_page_texts",
-        lambda _pages: PdfSignals(page_count=1, text_sha256="x", grid_header_pages=[]),
+        lambda _pages: [],
     )
     monkeypatch.setattr("schedules.pipeline.normalize_pdf_text", lambda _pages: "")
     monkeypatch.setattr(
@@ -110,7 +110,6 @@ def _setup(tmp_path: Path, monkeypatch) -> None:
             bytes=source_pdf.read_bytes(),
             from_cache=True,
             page_count=1,
-            response_url=url_,
         )
 
     monkeypatch.setattr("schedules.pipeline.fetch_pdf", fake_fetch)

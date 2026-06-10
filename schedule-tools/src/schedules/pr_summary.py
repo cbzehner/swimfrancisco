@@ -64,10 +64,6 @@ def _change_word(change: str) -> str:
 
 
 def _provider_word(filename: str) -> str:
-    if filename.startswith("anthropic"):
-        return "Anthropic"
-    if filename.startswith("gemini"):
-        return "Gemini"
     return filename.split("-", 1)[0].capitalize()
 
 

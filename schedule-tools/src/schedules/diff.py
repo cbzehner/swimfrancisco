@@ -26,10 +26,6 @@ def compare_payloads(
                     f"{primary_provider} and {secondary_provider} disagree on session count "
                     f"({sum(primary_sessions.values())} vs {sum(secondary_sessions.values())})"
                 ),
-                evidence={
-                    primary_provider: sum(primary_sessions.values()),
-                    secondary_provider: sum(secondary_sessions.values()),
-                },
             )
         )
 
@@ -43,10 +39,6 @@ def compare_payloads(
                     f"{primary_provider} and {secondary_provider} produced different session sets "
                     f"({len(only_primary)} only in {primary_provider}, {len(only_secondary)} only in {secondary_provider})"
                 ),
-                evidence={
-                    f"only_{primary_provider}": [list(item) for item in only_primary[:10]],
-                    f"only_{secondary_provider}": [list(item) for item in only_secondary[:10]],
-                },
             )
         )
 
@@ -55,10 +47,6 @@ def compare_payloads(
             ReviewNote(
                 kind="provider_closure_diff",
                 message=f"{primary_provider} and {secondary_provider} produced different closure sets",
-                evidence={
-                    primary_provider: [list(item) for item in sorted(primary_closures.elements())],
-                    secondary_provider: [list(item) for item in sorted(secondary_closures.elements())],
-                },
             )
         )
 
@@ -72,10 +60,6 @@ def compare_payloads(
                     f"{primary_provider} and {secondary_provider} disagree on effective_start "
                     f"({primary_effective} vs {secondary_effective})"
                 ),
-                evidence={
-                    primary_provider: primary_effective,
-                    secondary_provider: secondary_effective,
-                },
             )
         )
 

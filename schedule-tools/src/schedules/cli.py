@@ -15,6 +15,7 @@ from .paths import (
 from .eval import collect_pool_evals, render_report, write_report
 from .pipeline import run_pipeline
 from .pr_summary import render_pr_body
+from .report import result_counts
 from .project import ProjectError, project as _project
 from .review import (
     FinalizeError,
@@ -43,17 +44,13 @@ def _parse_slugs(only: str | None) -> list[str] | None:
 
 
 def _summary_line(results: list[PoolResult]) -> str:
-    succeeded = sum(isinstance(result, Extracted) and not result.catastrophic for result in results)
-    failed = sum(
-        isinstance(result, Aborted) or (isinstance(result, Extracted) and result.catastrophic)
-        for result in results
-    )
+    counts = result_counts(results)
     return (
         f"{len(results)} pools processed; "
-        f"{succeeded} succeeded, "
-        f"{sum(isinstance(result, Unchanged) for result in results)} unchanged, "
-        f"{sum(isinstance(result, Skipped) for result in results)} skipped, "
-        f"{failed} failed."
+        f"{counts['succeeded']} succeeded, "
+        f"{counts['unchanged']} unchanged, "
+        f"{counts['skipped']} skipped, "
+        f"{counts['failed']} failed."
     )
 
 
@@ -218,7 +215,9 @@ def debug_bakeoff(
     compare_with: str,
     force: bool,
 ) -> None:
-    """Run two providers on the same PDFs and surface disagreements. Never writes."""
+    """Run two providers on the same PDFs and surface disagreements.
+
+    Writes provider artifact bundles under data/, never content/spots."""
 
     if compare_with == provider:
         raise click.ClickException("--compare-with must differ from --provider.")
