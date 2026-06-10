@@ -458,7 +458,7 @@ test("resolveHorizon falls back to Now when a URL horizon is no longer available
 test("computeWindowAvailability marks a useful overlapping session available", () => {
   const horizon = resolveHorizon("this-afternoon", new Date("2026-04-14T11:00:00"));
   const result = computeWindowAvailability(BASIC_SCHEDULE, horizon, ["lap_swim"]);
-  assert.equal(result.kind, "AVAILABLE");
+  assert.equal(result.status, "AVAILABLE");
   assert.equal(result.status, "AVAILABLE");
   assert.equal(result.bestSession.type, "lap_swim");
   assert.equal(result.bestSession.start, 12 * 60 + 30);
@@ -471,14 +471,14 @@ test("computeWindowAvailability marks short overlaps limited", () => {
   };
   const horizon = resolveHorizon("this-afternoon", new Date("2026-04-14T11:00:00"));
   const result = computeWindowAvailability(schedule, horizon, ["lap_swim"]);
-  assert.equal(result.kind, "LIMITED");
+  assert.equal(result.status, "LIMITED");
   assert.equal(result.status, "LIMITED");
 });
 
 test("computeWindowAvailability returns no session when filters exclude the overlap", () => {
   const horizon = resolveHorizon("this-afternoon", new Date("2026-04-14T11:00:00"));
   const result = computeWindowAvailability(BASIC_SCHEDULE, horizon, ["senior_swim"]);
-  assert.equal(result.kind, "NO_SESSION");
+  assert.equal(result.status, "NO SESSION");
   assert.equal(result.status, "NO SESSION");
 });
 
@@ -489,7 +489,7 @@ test("computeWindowAvailability treats all-day closures as closed", () => {
   };
   const horizon = resolveHorizon("this-afternoon", new Date("2026-04-14T11:00:00"));
   const result = computeWindowAvailability(schedule, horizon);
-  assert.equal(result.kind, "CLOSED");
+  assert.equal(result.status, "CLOSED");
   assert.equal(result.status, "CLOSED");
 });
 
@@ -509,7 +509,7 @@ test("computeWindowAvailability skips sessions blocked by partial closures", () 
   };
   const horizon = resolveHorizon("this-afternoon", new Date("2026-04-14T11:00:00"));
   const result = computeWindowAvailability(schedule, horizon);
-  assert.equal(result.kind, "AVAILABLE");
+  assert.equal(result.status, "AVAILABLE");
   assert.equal(result.bestSession.start, 15 * 60);
 });
 
@@ -528,7 +528,7 @@ test("computeWindowAvailability trims sessions around partial closures", () => {
   };
   const horizon = resolveHorizon("this-afternoon", new Date("2026-06-06T11:00:00-07:00"));
   const result = computeWindowAvailability(schedule, horizon, ["lap_swim"]);
-  assert.equal(result.kind, "AVAILABLE");
+  assert.equal(result.status, "AVAILABLE");
   assert.equal(result.bestSession.start, 13 * 60);
   assert.equal(result.bestSession.end, 14 * 60);
 });

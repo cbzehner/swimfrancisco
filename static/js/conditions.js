@@ -6,9 +6,12 @@
 import { formatPacificDate, formatPacificTime, pacificWallClockDate } from "./helpers/pacific.mjs";
 import { formatTideSummary } from "./helpers/tide.mjs";
 import { t } from "./helpers/i18n.mjs";
+import { OPEN_STATUSES } from "./helpers/board.mjs";
 
 const DEFAULT_ENDPOINT = "/api/conditions";
-const AVAILABLE_STATUSES = new Set(["OPEN", "AVAILABLE", "LIMITED", "OCEAN"]);
+// The hero count excludes ACCESS: access hours mean the building is open,
+// not that a swim session is verified.
+const AVAILABLE_STATUSES = new Set([...OPEN_STATUSES].filter((status) => status !== "ACCESS"));
 
 // The bulletin-strip macro (templates/macros/bulletin.html) emits the bay
 // and ocean slug lists from open-water frontmatter (water_body), so adding

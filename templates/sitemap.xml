@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 {%- set site_url = "https://swimfrancisco.com" %}
-{%- set locale_data = load_data(path="data/locales.toml") %}
+{%- set locale_data = load_data(path="i18n/locales.toml") %}
 {%- for entry in entries %}
   {%- set_global canonical_url = entry.permalink %}
   {%- for locale in locale_data.locales %}

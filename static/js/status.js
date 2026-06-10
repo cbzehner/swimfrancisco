@@ -3,6 +3,7 @@
 // this file handles the DOM glue.
 
 import {
+  OPEN_STATUSES,
   PLACEHOLDER,
   captureBaselineRanks,
   computeAccessStatus,
@@ -119,7 +120,7 @@ function cell(row, name) {
 
 function statusClass(status, type) {
   if (type === "open_water" || status === "OCEAN") return "is-ocean";
-  if (status === "OPEN" || status === "AVAILABLE" || status === "LIMITED" || status === "ACCESS") return "is-open";
+  if (OPEN_STATUSES.has(status)) return "is-open";
   if (status === "CHECK") return "is-info";
   return "is-closed";
 }
@@ -169,7 +170,7 @@ function applyStatuses(root, now, allowedTypes = null) {
       setStatus(statusCell, result.status, "pool");
       nextCell.textContent = hasSessions ? formatWindowNext(result) : statusNextLabel(result, PLACEHOLDER);
       row.dataset.windowRank = String(result.sortRank);
-      row.classList.toggle("is-open", result.status === "AVAILABLE" || result.status === "LIMITED" || result.status === "ACCESS");
+      row.classList.toggle("is-open", OPEN_STATUSES.has(result.status));
       return;
     }
 
@@ -185,7 +186,7 @@ function applyStatuses(root, now, allowedTypes = null) {
     setStatus(statusCell, result.status, "pool");
     nextCell.textContent = statusNextLabel(result, PLACEHOLDER);
     row.dataset.windowRank = result.status === "OPEN" || result.status === "ACCESS" ? "0" : "3";
-    row.classList.toggle("is-open", result.status === "OPEN" || result.status === "ACCESS");
+    row.classList.toggle("is-open", OPEN_STATUSES.has(result.status));
   });
 
   const beachRows = root.querySelectorAll('table.board tbody tr[data-type="open_water"]');

@@ -162,7 +162,7 @@
 {%- endmacro day_full %}
 
 {% macro closure_reason(reason, reason_code, active_lang) -%}
-  {%- set dynamic_labels = load_data(path="data/i18n/dynamic-labels.toml") -%}
+  {%- set dynamic_labels = load_data(path="data/i18n/dynamic-labels.json") -%}
   {%- set dynamic_label = false -%}
   {%- if reason_code -%}
     {%- set dynamic_label = dynamic_labels.closure_reason.by_code[reason_code] | default(value=false) -%}
@@ -177,7 +177,7 @@
 {%- endmacro closure_reason %}
 
 {% macro access_window_label(label, active_lang) -%}
-  {%- set dynamic_labels = load_data(path="data/i18n/dynamic-labels.toml") -%}
+  {%- set dynamic_labels = load_data(path="data/i18n/dynamic-labels.json") -%}
   {%- set dynamic_label = dynamic_labels.access_window.by_source[label] | default(value=false) -%}
   {%- set dynamic_translation_key = dynamic_label.translation_key | default(value="") -%}
   {%- if dynamic_translation_key -%}{{- trans(key=dynamic_translation_key, lang=active_lang) -}}

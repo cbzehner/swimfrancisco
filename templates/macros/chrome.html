@@ -1,7 +1,7 @@
 {% import "macros/bulletin.html" as bulletin_macros %}
 
 {% macro spot_label(label, active_lang) -%}
-  {%- set dynamic_labels = load_data(path="data/i18n/dynamic-labels.toml") -%}
+  {%- set dynamic_labels = load_data(path="data/i18n/dynamic-labels.json") -%}
   {%- set dynamic_label = dynamic_labels.spot_label.by_source[label] | default(value=false) -%}
   {%- set dynamic_translation_key = dynamic_label.translation_key | default(value="") -%}
   {%- if dynamic_translation_key -%}{{- trans(key=dynamic_translation_key, lang=active_lang) -}}
@@ -30,7 +30,7 @@
       <div class="site-header-actions">
         <a href="{{ get_url(path='@/_index.md', lang=active_lang) }}" data-target-path="{{ get_url(path='@/_index.md', lang=active_lang) }}" class="site-nav-link{% if active_view == 'board' %} is-active{% endif %}" aria-label="{{ trans(key='view_board', lang=active_lang) }}">{{ trans(key='nav_board', lang=active_lang) }}</a>
         <a href="{{ get_url(path='@/map/_index.md', lang=active_lang) }}" data-target-path="{{ get_url(path='@/map/_index.md', lang=active_lang) }}" class="site-nav-link{% if active_view == 'map' %} is-active{% endif %}" aria-label="{{ trans(key='view_map', lang=active_lang) }}">{{ trans(key='nav_map', lang=active_lang) }}</a>
-        {% set locale_data = load_data(path="data/locales.toml") %}
+        {% set locale_data = load_data(path="i18n/locales.toml") %}
         <nav class="language-switcher" aria-label="{{ trans(key='language', lang=active_lang) }}">
           {% for locale in locale_data.locales %}
             <a href="{{ get_url(path=content_path, lang=locale.code) }}"

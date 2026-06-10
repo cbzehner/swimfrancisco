@@ -174,7 +174,7 @@ class TestPoolBlock:
                         ReviewNote(
                             kind="compare_provider_failed",
                             message="gemini failed",
-                            severity="error",
+                            severity="warning",
                         ),
                     ],
                 )
@@ -182,7 +182,7 @@ class TestPoolBlock:
             tmp_path,
         )
         assert "- review_note[warning::grounding_coverage_low]: 70% grounded" in text
-        assert "- review_note[error::compare_provider_failed]: gemini failed" in text
+        assert "- review_note[warning::compare_provider_failed]: gemini failed" in text
 
     def test_no_notes_renders_none_marker(self, tmp_path: Path) -> None:
         text = _render([_proposed()], tmp_path)

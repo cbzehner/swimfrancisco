@@ -6,6 +6,7 @@
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { parse } from "smol-toml";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, "..");
@@ -14,29 +15,23 @@ const outputPath = join(repoRoot, "worker/src/spots.ts");
 
 const FRONTMATTER_RE = /^\+\+\+\n([\s\S]*?)\n\+\+\+/;
 
-function extractString(frontmatter, key) {
-  const re = new RegExp(`^\\s*${key}\\s*=\\s*"([^"]*)"\\s*$`, "m");
-  const match = frontmatter.match(re);
-  return match ? match[1] : undefined;
-}
-
 async function readSpot(path) {
   const text = await readFile(path, "utf8");
   const match = text.match(FRONTMATTER_RE);
   if (!match) throw new Error(`${path}: missing TOML frontmatter`);
-  const fm = match[1];
-  if (extractString(fm, "type") !== "open_water") return null;
+  const front = parse(match[1]);
+  const extra = front.extra || {};
+  if (extra.type !== "open_water") return null;
 
   const spot = {
-    slug: extractString(fm, "slug"),
-    title: extractString(fm, "title"),
-    tempStationId: extractString(fm, "temp_station_id"),
-    tempStationType: extractString(fm, "temp_station_type"),
-    tempFallbackStationId: extractString(fm, "temp_fallback_station_id"),
-    tideStationId: extractString(fm, "noaa_tide_station"),
+    slug: front.slug,
+    tempStationId: extra.temp_station_id,
+    tempStationType: extra.temp_station_type,
+    tempFallbackStationId: extra.temp_fallback_station_id,
+    tideStationId: extra.noaa_tide_station,
   };
 
-  for (const key of ["slug", "title", "tempStationId", "tempStationType", "tideStationId"]) {
+  for (const key of ["slug", "tempStationId", "tempStationType", "tideStationId"]) {
     if (!spot[key]) throw new Error(`${path}: missing required field ${key}`);
   }
   if (spot.tempStationType !== "noaa" && spot.tempStationType !== "ndbc") {
@@ -48,7 +43,6 @@ async function readSpot(path) {
 function renderSpot(spot) {
   const lines = ["  {"];
   lines.push(`    slug: ${JSON.stringify(spot.slug)},`);
-  lines.push(`    title: ${JSON.stringify(spot.title)},`);
   lines.push(`    tempStationId: ${JSON.stringify(spot.tempStationId)},`);
   lines.push(`    tempStationType: ${JSON.stringify(spot.tempStationType)},`);
   if (spot.tempFallbackStationId) {
@@ -82,7 +76,6 @@ async function main() {
     "",
     "export interface SpotConfig {",
     "  slug: string;",
-    "  title: string;",
     "  tempStationId: string;",
     "  tempStationType: TempStationType;",
     "  tempFallbackStationId?: string;",

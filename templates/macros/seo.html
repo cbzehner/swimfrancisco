@@ -1,5 +1,5 @@
 {% macro og_locale_tags(active_lang) -%}
-  {%- set locale_data = load_data(path="data/locales.toml") -%}
+  {%- set locale_data = load_data(path="i18n/locales.toml") -%}
   {%- for locale in locale_data.locales -%}
     {%- if locale.code == active_lang -%}
       <meta property="og:locale" content="{{ locale.og_locale }}">
@@ -13,7 +13,7 @@
 {%- endmacro og_locale_tags %}
 
 {% macro alternate_links(content_path) -%}
-  {%- set locale_data = load_data(path="data/locales.toml") -%}
+  {%- set locale_data = load_data(path="i18n/locales.toml") -%}
   {%- for locale in locale_data.locales %}
   <link rel="alternate" hreflang="{{ locale.code }}" href="{{ get_url(path=content_path, lang=locale.code) | safe }}">
   {%- endfor %}

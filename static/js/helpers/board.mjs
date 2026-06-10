@@ -46,7 +46,7 @@ export function formatHHMM(totalMinutes) {
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
-export function formatISODate(date) {
+function formatISODate(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
@@ -92,7 +92,7 @@ export function resolveHorizon(id, now = pacificWallClockDate()) {
   return options.find((option) => option.id === id) ?? options[0];
 }
 
-export function formatISODateHuman(isoDate) {
+function formatISODateHuman(isoDate) {
   if (typeof isoDate !== "string") return "";
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate.trim());
   if (!match) return isoDate;
@@ -225,7 +225,7 @@ export function findActiveClosure(closures, now) {
 // Human-readable copy for an active closure. The end date is inclusive, so
 // the pool is closed THROUGH that date (not "until" it — that reads as an
 // exclusive upper bound).
-export function closureCopy(closure) {
+function closureCopy(closure) {
   // Synthetic POST_SEASON closures end in year 9999 — a "closed through"
   // line for that is nonsense. The reason field carries the fallback
   // transition message. PRE_SEASON uses the same reason path so schedule
@@ -627,7 +627,6 @@ export function computeWindowAvailability(schedule, horizon, allowedTypes = null
   if (horizon?.date) schedule = resolveActiveSchedule(schedule, horizon.date);
   if (!horizon || horizon.kind !== "window") {
     return {
-      kind: "INVALID",
       status: PLACEHOLDER,
       next: PLACEHOLDER,
       sortRank: Number.POSITIVE_INFINITY,
@@ -636,7 +635,6 @@ export function computeWindowAvailability(schedule, horizon, allowedTypes = null
   }
   if (!schedule || typeof schedule !== "object") {
     return {
-      kind: "NO_SESSION",
       status: "NO SESSION",
       next: PLACEHOLDER,
       sortRank: 3,
@@ -653,7 +651,6 @@ export function computeWindowAvailability(schedule, horizon, allowedTypes = null
 
   if (blockingClosure) {
     return {
-      kind: "CLOSED",
       status: "CLOSED",
       next: typeof blockingClosure.reason === "string"
         ? blockingClosure.reason.toUpperCase()
@@ -672,7 +669,6 @@ export function computeWindowAvailability(schedule, horizon, allowedTypes = null
 
   if (sessions.length === 0) {
     return {
-      kind: "NO_SESSION",
       status: "NO SESSION",
       next: "Schedule not verified",
       nextKind: "not_verified",
@@ -705,7 +701,6 @@ export function computeWindowAvailability(schedule, horizon, allowedTypes = null
 
   if (normalized.length === 0) {
     return {
-      kind: "NO_SESSION",
       status: "NO SESSION",
       next: PLACEHOLDER,
       sortRank: 3,
@@ -716,7 +711,6 @@ export function computeWindowAvailability(schedule, horizon, allowedTypes = null
   const bestSession = normalized[0];
   const limited = bestSession.overlap < MIN_USEFUL_WINDOW_OVERLAP_MINUTES;
   return {
-    kind: limited ? "LIMITED" : "AVAILABLE",
     status: limited ? "LIMITED" : "AVAILABLE",
     next: PLACEHOLDER,
     sortRank: limited ? 1 : 0,
@@ -796,6 +790,13 @@ function normalizeRank(rank) {
 }
 
 export { PLACEHOLDER };
+
+// Statuses that render as "open-ish" (green pill / is-open row class).
+// "now" mode produces OPEN/ACCESS; window mode AVAILABLE/LIMITED/ACCESS;
+// open-water rows are OCEAN. Consumers that need a narrower set (the hero
+// open-count excludes ACCESS: access hours are not a verified swim session)
+// derive from this one.
+export const OPEN_STATUSES = new Set(["OPEN", "AVAILABLE", "LIMITED", "ACCESS", "OCEAN"]);
 
 const EMPTY_DETAIL = Object.freeze({
   kind: "NOT_VERIFIED",

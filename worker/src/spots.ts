@@ -6,7 +6,6 @@ export type TempStationType = "noaa" | "ndbc";
 
 export interface SpotConfig {
   slug: string;
-  title: string;
   tempStationId: string;
   tempStationType: TempStationType;
   tempFallbackStationId?: string;
@@ -16,7 +15,6 @@ export interface SpotConfig {
 export const SPOTS: SpotConfig[] = [
   {
     slug: "aquatic-park",
-    title: "Aquatic Park",
     tempStationId: "9414290",
     tempStationType: "noaa",
     tempFallbackStationId: "9414750",
@@ -24,21 +22,18 @@ export const SPOTS: SpotConfig[] = [
   },
   {
     slug: "baker-beach",
-    title: "Baker Beach",
     tempStationId: "46237",
     tempStationType: "ndbc",
     tideStationId: "9414275",
   },
   {
     slug: "china-beach",
-    title: "China Beach",
     tempStationId: "46237",
     tempStationType: "ndbc",
     tideStationId: "9414275",
   },
   {
     slug: "crissy-field",
-    title: "Crissy Field / East Beach",
     tempStationId: "9414290",
     tempStationType: "noaa",
     tempFallbackStationId: "9414750",
@@ -46,7 +41,6 @@ export const SPOTS: SpotConfig[] = [
   },
   {
     slug: "ocean-beach",
-    title: "Ocean Beach",
     tempStationId: "46237",
     tempStationType: "ndbc",
     tideStationId: "9414275",

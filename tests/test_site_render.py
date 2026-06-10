@@ -675,8 +675,6 @@ def test_homepage_preserves_redesign_dom_contract(built_site: Path) -> None:
     html = (built_site / "index.html").read_text()
     assert "OPEN NEXT" in html
     assert "MEMBERSHIPS" in html
-    assert 'data-access-mode=membership' in html
-    assert 'data-payment-model=membership' in html
     assert "OPEN FIRST" not in html
     controls_start = html.index("class=board-controls")
     menu_start = html.index("class=horizon-menu", controls_start)

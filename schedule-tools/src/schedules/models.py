@@ -40,13 +40,12 @@ ReviewNoteKind = Literal[
 ]
 
 
-Severity = Literal["info", "warning", "error"]
+Severity = Literal["info", "warning"]
 
 
 SourceStatus = Literal[
     "published",
     "access_hours_only",
-    "closed_without_current_schedule",
     "missing_current_schedule",
 ]
 

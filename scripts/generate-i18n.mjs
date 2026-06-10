@@ -11,9 +11,7 @@ const SPOTS_DIR = path.join(SOURCE_DIR, "spots");
 const SECTIONS_DIR = path.join(SOURCE_DIR, "sections");
 const SOURCE_LOCALES_PATH = path.join(SOURCE_DIR, "locales.toml");
 const SOURCE_DYNAMIC_LABELS_PATH = path.join(SOURCE_DIR, "dynamic-labels.toml");
-const DATA_LOCALES_PATH = path.join(ROOT, "data", "locales.toml");
 const DATA_I18N_DIR = path.join(ROOT, "data", "i18n");
-const DATA_DYNAMIC_LABELS_TOML_PATH = path.join(DATA_I18N_DIR, "dynamic-labels.toml");
 const DATA_DYNAMIC_LABELS_JSON_PATH = path.join(DATA_I18N_DIR, "dynamic-labels.json");
 const CONTENT_DIR = path.join(ROOT, "content");
 const CONTENT_SPOTS_DIR = path.join(ROOT, "content", "spots");
@@ -284,8 +282,8 @@ async function validateLocaleRegistryConsumers(codes) {
   ];
   for (const file of requiredConsumers) {
     const text = await readFile(file, "utf8");
-    if (!text.includes('load_data(path="data/locales.toml")')) {
-      throw new Error(`${path.relative(ROOT, file)} must load data/locales.toml for locale metadata`);
+    if (!text.includes('load_data(path="i18n/locales.toml")')) {
+      throw new Error(`${path.relative(ROOT, file)} must load i18n/locales.toml for locale metadata`);
     }
   }
 
@@ -295,7 +293,7 @@ async function validateLocaleRegistryConsumers(codes) {
   for (const file of requiredConsumers) {
     const text = await readFile(file, "utf8");
     if (hardcodedLocalePattern.test(text)) {
-      throw new Error(`${path.relative(ROOT, file)} appears to hardcode a locale instead of using data/locales.toml`);
+      throw new Error(`${path.relative(ROOT, file)} appears to hardcode a locale instead of using i18n/locales.toml`);
     }
   }
 }
@@ -461,8 +459,6 @@ async function expectedGeneratedArtifacts() {
   const { locales } = await loadSources();
   const localeCodes = nonDefaultLocaleCodes(locales);
   const expected = new Set([
-    path.relative(ROOT, DATA_LOCALES_PATH),
-    path.relative(ROOT, DATA_DYNAMIC_LABELS_TOML_PATH),
     path.relative(ROOT, DATA_DYNAMIC_LABELS_JSON_PATH),
   ]);
 
@@ -512,7 +508,6 @@ async function generatedSpotArtifactsOnDisk() {
 
 async function generatedRuntimeArtifactsOnDisk() {
   const artifacts = [];
-  if (existsSync(DATA_LOCALES_PATH)) artifacts.push(path.relative(ROOT, DATA_LOCALES_PATH));
   if (!existsSync(DATA_I18N_DIR)) return artifacts;
   for (const file of await readdir(DATA_I18N_DIR)) {
     if (file.endsWith(".json") || file.endsWith(".toml")) {
@@ -570,14 +565,12 @@ async function generateRuntimeData({ dryRun = false, changed = [] } = {}) {
   const dynamicLabelPayload = dynamicLabelData(dynamicLabels);
   const defaultLocale = locales.locales.find((locale) => locale.is_default);
   const runtimeKeys = await runtimeTranslationKeys(ui[defaultLocale.code], dynamicLabels);
-  await writeIfChanged(DATA_LOCALES_PATH, tomlText(locales), { dryRun, changed });
   if (!dryRun) await mkdir(DATA_I18N_DIR, { recursive: true });
   for (const code of sourceLocaleCodes(locales)) {
     const runtimeUi = Object.fromEntries(runtimeKeys.map((key) => [key, ui[code][key]]));
     const file = path.join(DATA_I18N_DIR, `${code}.json`);
     await writeIfChanged(file, `${JSON.stringify(runtimeUi, null, 2)}\n`, { dryRun, changed });
   }
-  await writeIfChanged(DATA_DYNAMIC_LABELS_TOML_PATH, tomlText(dynamicLabelPayload), { dryRun, changed });
   await writeIfChanged(
     DATA_DYNAMIC_LABELS_JSON_PATH,
     `${JSON.stringify(dynamicLabelPayload, null, 2)}\n`,

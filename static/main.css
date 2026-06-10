@@ -94,7 +94,6 @@ h1, h2, h3 {
   line-height: 0.95;
   margin: 0;
 }
-.mono { font-family: var(--mono); font-feature-settings: "zero"; }
 .num  { font-variant-numeric: tabular-nums; }
 .label,
 .eyebrow {
@@ -715,7 +714,6 @@ table.board tr[data-type="open_water"] [data-cell="status"] {
   border: 1.5px solid var(--rule);
 }
 .status-pill.is-open { background: var(--red); border-color: var(--red); color: var(--paper); }
-.status-pill.is-soon { background: var(--ochre); border-color: var(--ochre); color: var(--ink); }
 .status-pill.is-ocean { background: var(--teal); border-color: var(--teal); color: var(--paper); }
 .status-pill.is-closed { background: var(--paper-2); color: var(--muted); }
 .status-pill.is-info { background: var(--ink); border-color: var(--ink); color: var(--paper); }
@@ -1104,8 +1102,7 @@ table.weekly-grid tr { display: contents; }
 .weekly-grid-row[data-program="senior_swim"] .weekly-grid-rowlabel { background: var(--senior); color: var(--paper); }
 .weekly-grid-cell { display: flex; flex-direction: column; gap: 3px; }
 .weekly-grid-empty { color: var(--muted); }
-.weekly-grid-cell[data-today="true"],
-.weekly-grid-dayhead[data-today="true"] {
+.weekly-grid-cell[data-today="true"] {
   background: var(--red-soft);
   color: var(--ink);
 }
@@ -1458,7 +1455,6 @@ body.map-page .site-footer {
   border: 2px solid var(--ink);
 }
 .sf-marker-open .sf-marker-dot       { background: var(--red); }
-.sf-marker-soon .sf-marker-dot       { background: var(--ochre); }
 .sf-marker-open-water .sf-marker-dot { background: var(--teal); }
 
 /* Leaflet popup — print bulletin */
@@ -1570,7 +1566,7 @@ body.map-page .site-footer {
   gap: 8px 24px;
 }
 .site-footer a { color: var(--paper); text-decoration: underline; text-decoration-color: var(--red); }
-.site-footer-sources, .site-footer-credit { margin: 0; }
+.site-footer-credit { margin: 0; }
 
 /* ── Phone tweaks ──────────────────────────────────────────────────────── */
 /* See also the earlier @media (max-width: 640px) block that owns the
