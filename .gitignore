@@ -35,3 +35,6 @@ test-results/
 
 # Git worktrees
 .worktrees/
+
+# Lavish Editor review artifacts (local design-review surfaces)
+.lavish/

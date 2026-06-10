@@ -24,6 +24,17 @@
   dotenv.enable = true;
   dotenv.filename = [ ".env" ];
 
+  # Pre-push gate: fast suite (~7s) plus the real-browser integration tests
+  # (~20s, WebKit + Chromium — the engine-behavior regressions nothing else
+  # catches; see docs/testing-webkit.md). One-time per machine: `just
+  # browsers`. Bypass deliberately with `git push --no-verify`.
+  git-hooks.hooks.integration-tests = {
+    enable = true;
+    entry = "just test test-browser";
+    pass_filenames = false;
+    stages = [ "pre-push" ];
+  };
+
   processes.zola.exec = ''
     watchexec --no-vcs-ignore \
       --watch content --watch templates --watch static --watch config.toml \

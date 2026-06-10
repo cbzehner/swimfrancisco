@@ -36,9 +36,18 @@ typecheck-worker:
 test-i18n:
     node scripts/generate-i18n.mjs check
 
+# Real-browser integration tests (WebKit + Chromium). Builds the site on an
+# ephemeral port and drives the regressions that node:test can't see.
+# One-time setup per machine: `just browsers`.
+test-browser:
+    node --test tests/browser/*.test.mjs
+
+browsers:
+    node node_modules/playwright-core/cli.js install webkit chromium
+
 test: test-i18n test-python test-js typecheck-worker
 
-check: test build
+check: test test-browser build
 
 refresh-conditions:
     curl -fsS "http://localhost:8787/__scheduled" && echo

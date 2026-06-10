@@ -14,5 +14,8 @@
   ],
   "dependencies": {
     "smol-toml": "^1.6.1"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.60.0"
   }
 }

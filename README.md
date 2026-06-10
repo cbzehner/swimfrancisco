@@ -51,8 +51,15 @@ npm run typecheck     # tsc --noEmit
 just test-python      # Python pipeline + site-render tests
 just test-js          # pure JS helpers (node:test)
 just typecheck-worker # Worker TypeScript
-just check            # full local verification: tests + zola build
+just test-browser     # WebKit + Chromium integration smoke tests (~20s)
+just check            # full local verification: tests + browser smoke + build
 ```
+
+`just test-browser` drives a freshly built site in real browser engines —
+the WebKit-only regressions nothing else can catch (see
+`docs/testing-webkit.md`). One-time setup per machine: `just browsers`.
+A devenv-managed pre-push hook runs `just test test-browser`; bypass
+deliberately with `git push --no-verify`.
 
 ## Deploy
 
@@ -86,7 +93,7 @@ Source of truth:
 Generated artifacts:
 
 - `config.toml` Zola language and translation blocks.
-- `data/locales.toml` and `data/i18n/*` runtime/Zola lookup data.
+- `data/i18n/*` runtime/Zola lookup data.
 - localized section pages and spot pages under `content/`.
 
 Do not hand-edit generated localized pages for translation changes. Run `npm run generate-i18n` after catalog edits, and keep `npm run check-i18n` green so locale lists, keys, placeholders, dynamic labels, and generated files do not drift.
