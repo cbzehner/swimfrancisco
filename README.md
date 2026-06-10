@@ -16,7 +16,7 @@ templates/       Zola/Tera templates (base, index, spots/page)
 static/          plain JS (conditions, detail, filters, map, status), main.css, _redirects
 worker/          Cloudflare Worker source (TypeScript)
 schedule-tools/  uv-managed Python pool schedule extractor
-docs/            spec.md, plan.md, deploy.md, design-concepts.md
+docs/            spec.md, deploy.md, design-concepts.md, testing-webkit.md, …
 ```
 
 ## Local development
