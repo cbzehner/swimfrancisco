@@ -22,12 +22,16 @@
   --rule:    #8a7a52; /* 3.40:1 on paper — meets WCAG 1.4.11 (AA 3:1) for structural borders */
 
   /* riso inks */
-  --red:     #a8311f; /* 5.43:1 on paper, 5.14:1 on paper-2 — AA headroom over the 4.5:1 floor */
-  --red-soft:#f0c6b9;
-  --teal:    #0e4452;
+  /* SF referents: red = Golden Gate International Orange (darkened — the pure
+     paint #c0362c fails AA at 4.46:1), teal = bay/Pacific seawater, ochre =
+     sourdough gold, paper/foam = fog. One job per hue: red = now/go (open,
+     today, brand), teal = water (frames, ocean, brand), ochre = live
+     readings & notices, ink = structure + selected controls. */
+  --red:     #b03222; /* 5.10:1 on paper, 4.83:1 on paper-2 — AA over the 4.5:1 floor */
+  --red-soft:#f3c9b8;
+  --teal:    #14535f; /* 6.97:1 on paper, 7.66:1 on foam */
   --teal-soft:#c2d6db;
   --ochre:   #d39b2a;
-  --senior:  #3d5868;
 
   /* legacy aliases — keep old JS happy if anything reads --fg / --bg */
   --bg:      var(--paper);
@@ -408,7 +412,7 @@ h1, h2, h3 {
 }
 .horizon-menu button:last-child { border-bottom: 0; }
 .horizon-menu button[aria-checked="true"] {
-  background: var(--red);
+  background: var(--ink);
   color: var(--paper);
   border-bottom-color: rgba(241, 230, 207, 0.35);
 }
@@ -497,14 +501,14 @@ h1, h2, h3 {
   color: var(--paper);
 }
 .filters button[aria-pressed="true"] {
-  background: var(--red);
+  background: var(--ink);
   color: var(--paper);
-  border-color: var(--red);
+  border-color: var(--ink);
 }
-/* Pressed filter buttons are red-on-cream; the global red focus ring would
-   merge into the red border. Swap to ink so the ring stays visible. */
+/* Pressed filter buttons are ink-on-cream; the global red focus ring stays
+   visible against the ink border. */
 .filters button[aria-pressed="true"]:focus-visible {
-  outline-color: var(--ink);
+  outline-color: var(--red);
 }
 .sort-group button[aria-pressed="true"] {
   background: var(--ink);
@@ -582,7 +586,7 @@ h1, h2, h3 {
   line-height: 1;
 }
 .cost-badge.is-beach    { background: var(--teal);  color: var(--paper); }
-.cost-badge.is-public   { background: var(--ochre); color: var(--ink); }
+.cost-badge.is-public   { background: transparent; color: var(--ink); border: 1.5px solid var(--ink); }
 .cost-badge.is-members  { background: var(--ink);   color: var(--paper); }
 .cost-badge.is-day-pass { background: var(--paper); color: var(--ink); border: 1.5px solid var(--ink); }
 
@@ -1057,7 +1061,7 @@ table.weekly-grid {
   display: grid;
   grid-template-columns: 9rem repeat(var(--weekday-count, 7), minmax(7ch, 1fr));
   margin: 0 14px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--teal);
   background: var(--foam);
   font-family: var(--mono);
   font-size: 12px;
@@ -1082,7 +1086,7 @@ table.weekly-grid tr { display: contents; }
   font-family: var(--display);
   font-size: 11px;
   text-transform: uppercase;
-  background: var(--ink);
+  background: var(--teal);
   color: var(--paper);
   letter-spacing: 0.04em;
 }
@@ -1090,16 +1094,15 @@ table.weekly-grid tr { display: contents; }
   font-family: var(--display);
   font-size: 11px;
   text-transform: uppercase;
-  background: var(--teal);
-  color: var(--paper);
+  background: var(--foam);
+  color: var(--teal);
+  box-shadow: inset 3px 0 0 var(--teal);
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
 }
 .weekly-grid-rowlabel .weekly-grid-crossnav { display: none; }
-.weekly-grid-row[data-program="family_swim"] .weekly-grid-rowlabel { background: var(--ochre); color: var(--ink); }
-.weekly-grid-row[data-program="senior_swim"] .weekly-grid-rowlabel { background: var(--senior); color: var(--paper); }
 .weekly-grid-cell { display: flex; flex-direction: column; gap: 3px; }
 .weekly-grid-empty { color: var(--muted); }
 .weekly-grid-cell[data-today="true"] {
@@ -1126,7 +1129,7 @@ table.weekly-grid tr { display: contents; }
   table.weekly-grid { grid-template-columns: 1fr; border-top: none; }
   table.weekly-grid thead { display: none; }
   .weekly-grid-crossnav-strip { display: none; }
-  .weekly-grid-rowlabel { border-bottom: 2px solid var(--ink); padding: 10px 12px; }
+  .weekly-grid-rowlabel { border-bottom: 2px solid var(--teal); padding: 10px 12px; }
   .weekly-grid-rowlabel .weekly-grid-crossnav { display: inline; }
   .weekly-grid-cell { flex-direction: row; flex-wrap: wrap; gap: 8px; padding-left: 12px; }
   .weekly-grid-cell::before {
