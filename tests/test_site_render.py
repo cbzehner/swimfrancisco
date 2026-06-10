@@ -674,8 +674,12 @@ def test_bulletin_generator_bumps_number_when_reviewed_schedules_change(tmp_path
 def test_homepage_preserves_redesign_dom_contract(built_site: Path) -> None:
     html = (built_site / "index.html").read_text()
     assert "OPEN NEXT" in html
-    assert "MEMBERSHIPS" in html
+    assert ">PRIVATE</button>" in html
     assert "OPEN FIRST" not in html
+    # filters.js hides every row whose access_mode isn't "public" until the
+    # PRIVATE toggle opts in; the rows must carry the attribute it reads.
+    assert "data-access-mode=membership" in html
+    assert "data-access-mode=public" in html
     controls_start = html.index("class=board-controls")
     menu_start = html.index("class=horizon-menu", controls_start)
     assert "data-horizon-menu" not in html[controls_start:menu_start]

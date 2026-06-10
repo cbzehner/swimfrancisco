@@ -134,6 +134,7 @@
           data-type="{{ page.extra.type }}"
           data-subtype="{{ page.extra.subtype | default(value='') }}"
           data-access="{{ page.extra.access | default(value='public') }}"
+          data-access-mode="{{ page.extra.access_mode | default(value='public') }}"
           data-lat="{{ page.extra.lat }}"
           data-lng="{{ page.extra.lng }}"
           data-schedule='{{ schedule_macros::data_schedule(extra=page.extra) }}'

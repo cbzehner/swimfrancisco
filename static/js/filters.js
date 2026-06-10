@@ -129,8 +129,11 @@ function rowMatchesType(row, type) {
 function rowPassesFilters(row, state) {
   const type = activeType(state);
   if (type && type !== TYPE_NONE && !rowMatchesType(row, type)) return false;
-  const access = row.getAttribute("data-access") || "public";
-  if (!state.includeMemberships && access === "members") {
+  // Default board = truly walk-in-able places (access_mode "public": city
+  // pools + beaches). The toggle opts into the broader set — membership
+  // clubs, private facilities, day-pass and campus pools.
+  const accessMode = row.getAttribute("data-access-mode") || "public";
+  if (!state.includeMemberships && accessMode !== "public") {
     return false;
   }
   return true;
