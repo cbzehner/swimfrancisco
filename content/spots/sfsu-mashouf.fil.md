@@ -6,7 +6,6 @@ slug = "sfsu-mashouf"
 localized_from = "sfsu-mashouf"
 access_notes = []
 access_summary = "Naglalathala ang SFSU Mashouf Wellness Center ng oras ng natatorium at inilalarawan ang 25-meter lap pool, activity pool, hot tub, sauna, at locker rooms. Nakabatay ang pagpasok sa campus/community membership."
-description_short = "Opsyon sa pool para sa university/community membership malapit sa Lake Merced."
 +++
 
 Ang SFSU Mashouf Wellness Center ay opsyon sa pool para sa university/community membership malapit sa Lake Merced.

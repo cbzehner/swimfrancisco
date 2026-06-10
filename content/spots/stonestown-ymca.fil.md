@@ -6,7 +6,6 @@ slug = "stonestown-ymca"
 localized_from = "stonestown-ymca"
 access_notes = [ "Kumpirmahin sa branch ang kasalukuyang iskedyul ng pool; pinag-iiba ng mga pahina ng YMCA ang paglangoy sa lane at mga reservation para sa recreation/household swim." ]
 access_summary = "Ang Stonestown Family YMCA ay sangay ng YMCA para sa mga miyembro, may paglangoy sa lane at mga aktibidad sa pool."
-description_short = "Opsyon sa YMCA pool sa southwest side, malapit sa Stonestown at SF State."
 
 [[extra.pricing]]
 label = "Miyembro ng YMCA"

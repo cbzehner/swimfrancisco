@@ -88,13 +88,18 @@ function openCountLabel(count) {
   // status.js mirrors the active horizon into the `?when=` URL param
   // (writeHorizonParam); reading it avoids inferring state by comparing
   // translated button text, which breaks across locales.
+  // The label is a per-locale pattern, not concatenation: word order
+  // differs by language (zh-Hant puts the time before the verb, fil needs
+  // the linker "na"), so each catalog owns the full phrase shape.
   const horizonId = new URLSearchParams(window.location.search).get("when") || "now";
   const unit = count === 1 ? t("place_singular", "place") : t("place_plural", "places");
   if (horizonId !== "now") {
-    const horizonLabel = document.querySelector("[data-horizon-button]")?.textContent.trim().toLowerCase() || "";
-    return `${unit} ${t("available", "available")} ${horizonLabel}`;
+    const horizon = document.querySelector("[data-horizon-button]")?.textContent.trim().toLowerCase() || "";
+    return t("open_count_horizon", "%{unit} available %{horizon}")
+      .replace("%{unit}", unit)
+      .replace("%{horizon}", horizon);
   }
-  return `${unit} ${t("open_now_lower", "open now")}`;
+  return t("open_count_now", "%{unit} open now").replace("%{unit}", unit);
 }
 
 function applyBoardSummary(root) {

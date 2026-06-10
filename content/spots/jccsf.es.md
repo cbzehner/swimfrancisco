@@ -6,7 +6,6 @@ slug = "jccsf"
 localized_from = "jccsf"
 access_notes = [ "Consulta el horario actual de carriles antes de ir; la hora pico figura como 4:00–7:00 p.m. todos los días." ]
 access_summary = "El acceso al Gallanter Family Aquatics Center está vinculado a la membresía del Fitness Center de JCCSF. La página oficial de acuáticos lista acceso a piscina de carriles para miembros y precios de escuela de natación para miembros."
-description_short = "Centro acuático con piscina de 25 yardas, piscina recreativa tibia y jacuzzi; normalmente es opción de membresía."
 
 [[extra.pricing]]
 label = "Miembro del Fitness Center"

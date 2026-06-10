@@ -6,7 +6,6 @@ slug = "koret-center"
 localized_from = "koret-center"
 access_notes = [ "Tingnan ang iskedyul ng pool lane ng Koret bago pumunta; nagbabala ang opisyal na pahina na nag-iiba ang bilang ng lane dahil sa mga aralin, team, at event." ]
 access_summary = "May malaking panloob na pool ang Koret Center ng USF. Karaniwang may mga lane para sa paglangoy sa oras ng pool, pero nakadepende ang pagpasok at pass sa membership sa USF/Koret o sa mga eligible na opsyon sa pass."
-description_short = "Isa sa mas malalaking pasilidad ng lungsod para sa panloob na pool, pinagsasaluhan ng paglangoy sa lane, masters, mga aralin, team, at event."
 
 [[extra.pricing]]
 label = "Miyembro / eligible na pass"

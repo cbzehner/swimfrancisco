@@ -6,7 +6,6 @@ slug = "pomeroy-pool"
 localized_from = "pomeroy-pool"
 access_notes = [ "治療游泳頁面表示只提供慢速泳道游泳，並說明該項目用於暖水活動、復健和溫和運動。" ]
 access_summary = "Pomeroy 的 Herbst Therapeutic Pool 是暖水治療泳池。它提供治療游泳、開放游泳、課程、游泳課和慢速泳道游泳；這裡不是高強度泳道訓練泳池。"
-description_short = "更適合作為暖水治療、溫和活動、課程和慢速泳道的入場選項。"
 
 [[extra.pricing]]
 label = "治療游泳單次通行證"

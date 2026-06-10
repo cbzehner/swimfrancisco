@@ -3,7 +3,6 @@ title = "24 Hour Fitness Ocean"
 slug = "24-hour-fitness-ocean"
 access_notes = [ "Älä käytä tätä aktiiviseen uintisuunnitteluun ennen kuin virallinen sivu kertoo klubin avautuneen uudelleen." ]
 access_summary = "24 Hour Fitness Ocean listaa sisätilojen rata-altaan, mutta virallinen klubisivu kertoo paikan olevan tilapäisesti suljettu remontin vuoksi 23. toukokuuta 2026 asti."
-description_short = "24 Hour Fitness Ocean on jäsenyyteen perustuva kuntosalin allas, mutta se on merkitty tilapäisesti suljetuksi remontin ajaksi."
 body = "24 Hour Fitness Ocean on jäsenyyteen perustuva kuntosalin allas, jota pidetään tilapäisesti suljettuna remontin päättymiseen asti."
 
 [spots.24-hour-fitness-potrero]
@@ -11,7 +10,6 @@ title = "24 Hour Fitness Potrero"
 slug = "24-hour-fitness-potrero"
 access_notes = [ "Tarkista klubin sivulta nykyinen jäsenyys, vieraskäynti ja tilojen tila." ]
 access_summary = "24 Hour Fitness Potrero on kuntosalin allas. Virallinen klubisivu listaa sisätilojen rata-altaan, saunan, porealtaan ja höyryhuoneen kuntosalin mukavuuksiin."
-description_short = "Kuntosalin allas uimareille, jotka käyttävät jo 24 Hour Fitnessiä tai etsivät jäsenyyspohjaista vaihtoehtoa Potreron lähellä."
 body = "Tämä on kuntosalin allas uimareille, jotka käyttävät jo 24 Hour Fitnessiä tai haluavat jäsenyyspohjaisen vaihtoehdon Potreron lähellä."
 
 [[spots.24-hour-fitness-potrero.pricing]]
@@ -84,7 +82,6 @@ body = "Baker Beach avautuu suoraan Tyynellemerelle Golden Gaten eteläpuolella,
 [spots.balboa-pool]
 title = "Balboa Pool"
 slug = "balboa-pool"
-description_short = "Kuusiratainen sisäallas Inglesidessa, avattu uudelleen suuren remontin jälkeen."
 body = "Balboa Pool on 100 x 40 jalan kuusiratainen sisäallas Inglesiden kaupunginosassa. Se avattiin hiljattain uudelleen 9 miljoonan dollarin remontin jälkeen, jossa uusittiin teknisiä järjestelmiä, parannettiin esteettömyyttä ja lisättiin paikallistaiteilija Jason Jägelin seinämaalaus. Ohjelmiin kuuluu ratauintia, senioriuintia, virkistysuintia ja uintitunteja."
 
 [spots.bay-club-gateway]
@@ -92,7 +89,6 @@ title = "Bay Club Gateway"
 slug = "bay-club-gateway"
 access_notes = [ "Tarkista virallinen klubisivu tai tuntikalenteri ennen lähtöä; ratatilannetta ei vielä julkaista Swim Franciscossa." ]
 access_summary = "Bay Club Gateway on yksityinen klubi San Francisco Campus -kokonaisuudessa, jossa on ulkovesikeskus ja kaksi lämmitettyä allasta. Pääsy riippuu Bay Club -jäsenyydestä, vierasoikeuksista tai sovitusta klubivierailusta."
-description_short = "Yksityinen allasvaihtoehto keskustassa, ulkoaltaat ja klubipalvelut Embarcaderon lähellä."
 body = "Bay Club Gateway on keskustan yksityinen allasvaihtoehto: ulkoaltaat, kuntoilutilat, tennis ja klubimainen ympäristö lähellä Embarcaderoa."
 
 [[spots.bay-club-gateway.pricing]]
@@ -121,7 +117,6 @@ title = "Chinatown YMCA"
 slug = "chinatown-ymca"
 access_notes = [ "Tarkista YMCA:n aikataulut ennen menoa — sivustolla on vain tilojen aukioloajat." ]
 access_summary = "Chinatown YMCA on jäsenyyteen perustuva YMCA-toimipiste, jossa on suolavesiallas ja uintiohjelmia. Virallinen toimipistesivu julkaisee tilojen aukioloajat, mutta ei staattisessa sisällössä tarkkaa viikoittaista rata- tai avointa uintiaikataulua."
-description_short = "Jäsenyyspohjainen allasvaihtoehto Portsmouth Squaren ja Financial Districtin lähellä."
 body = "Chinatown YMCA on jäsenyyspohjainen allasvaihtoehto Portsmouth Squaren ja Financial Districtin lähellä."
 
 [spots.city-sports-20th-ave]
@@ -129,13 +124,11 @@ title = "City Sports 20th Ave"
 slug = "city-sports-20th-ave"
 access_notes = []
 access_summary = "City Sports Club 20th Avella listaa virallisella toimipistesivullaan rata-altaan, Pool & Spa -palvelut ja klubin aukioloajat."
-description_short = "Stonestownin alueen jäsenyyskuntosali, jossa on rata-allas."
 body = "City Sports 20th Ave on Stonestownin alueen jäsenyyskuntosali, jossa on rata-allas."
 
 [spots.coffman-pool]
 title = "Coffman Pool"
 slug = "coffman-pool"
-description_short = "Sisäallas Herz Playgroundilla McLaren Parkin kaakkoisportilla, Visitacion Valleyn käytössä."
 body = "Coffman Pool on 10 000 neliöjalan sisäallas Herz Playgroundilla McLaren Parkin kaakkoisella sisäänkäynnillä, Visitacion Valleyn kaupunginosassa. Ohjelmiin kuuluu ratauintia, senioriuintia, virkistysuintia, omatoimista vesiliikuntaa, perheuintia ja uintitunteja."
 
 [spots.crissy-field]
@@ -152,7 +145,6 @@ title = "Embarcadero YMCA"
 slug = "embarcadero-ymca"
 access_notes = []
 access_summary = "Embarcadero YMCA on rantavyöhykkeen jäsenyyspohjainen YMCA-toimipiste, jossa on uima-altaita ja vesiliikuntaohjelmia. Virallinen sivu julkaisee altaan aukioloajat suhteessa tilojen aukioloaikoihin."
-description_short = "Keskustan rantavyöhykkeen YMCA-jäsenallas."
 body = "Embarcadero YMCA lisää taululle keskustan rantavyöhykkeen YMCA-altaan jäsenyyspohjaisena vaihtoehtona."
 
 [spots.equinox-sports-club-sf]
@@ -160,7 +152,6 @@ title = "Equinox Sports Club SF"
 slug = "equinox-sports-club-sf"
 access_notes = []
 access_summary = "Equinox Sports Club San Francisco listaa sisäaltaan ja klubin aukioloajat virallisella toimipistesivulla."
-description_short = "Market Streetin jäsenklubi, jossa on sisäallas."
 body = "Equinox Sports Club SF on Market Streetin jäsenklubi, jossa on sisäallas."
 
 [spots.fitness-sf-fillmore]
@@ -168,19 +159,16 @@ title = "FITNESS SF Fillmore"
 slug = "fitness-sf-fillmore"
 access_notes = []
 access_summary = "FITNESS SF Fillmore on FITNESS SF:n toimipiste, jossa on 25 jaardin, 5 radan allas. Virallinen ohjesivu kertoo ratauintia olevan saatavilla ja ratavaraukset tehdään paikan päällä."
-description_short = "Fillmore Centerin jäsenkuntosalin allasvaihtoehto."
 body = "FITNESS SF Fillmore on Fillmore Centerin jäsenkuntosalin allasvaihtoehto."
 
 [spots.garfield-pool]
 title = "Garfield Pool"
 slug = "garfield-pool"
-description_short = "Sisäallas Garfield Squarella Mission Districtissä, mukana ratauintia ja yhteisöohjelmia."
 body = "Garfield Pool on sisäallas Garfield Squarella Mission Districtissä, 26th Streetin ja Harrisonin kulmassa. Ohjelmiin kuuluu ratauintia, senioriuintia, virkistysuintia, kunto- ja liikuntatunteja sekä uintitunteja."
 
 [spots.hamilton-pool]
 title = "Hamilton Pool"
 slug = "hamilton-pool"
-description_short = "Lämmitetty sisäallas Lower Pacific Heightsissa, tunnettu kaupungin ainoista sisäliukumäistä."
 body = "Hamilton Pool on lämmitetty sisäallas Hamilton Recreation Centerissä Gearyn ja Steinerin kulmassa Lower Pacific Heightsissa. Se tunnetaan San Franciscon kaupunginaltaiden kahdesta ainoasta sisäliukumäestä. Ohjelmiin kuuluu ratauintia, senioriuintia, virkistysuintia, perheuintia ja uintitunteja."
 
 [spots.jccsf]
@@ -188,7 +176,6 @@ title = "JCCSF"
 slug = "jccsf"
 access_notes = [ "Tarkista nykyinen ratavuoroaikataulu ennen lähtöä; ruuhka-ajaksi on merkitty päivittäin 4:00–7:00 pm." ]
 access_summary = "Gallanter Family Aquatics Centerin käyttö on sidottu JCCSF Fitness Center -jäsenyyteen. Virallinen uintisivu listaa jäsenten rata-allaskäytön ja jäsenten uimakouluhinnat."
-description_short = "Gallanter Family Aquatics Centerissä on 25 jaardin rata-allas, lämmin virkistysallas ja poreallas; käsittele tätä yleensä jäsenaltaana."
 body = "JCCSF:n Gallanter Family Aquatics Centerissä on 25 jaardin rata-allas, lämmin virkistysallas ja poreallas. Käsittele sitä jäsenaltaana, ellei JCCSF ole vahvistanut vieraskäyttöä suoraan."
 
 [[spots.jccsf.pricing]]
@@ -208,7 +195,6 @@ title = "Koret Center"
 slug = "koret-center"
 access_notes = [ "Tarkista Koretin allasrata-aikataulu ennen lähtöä; virallinen sivu varoittaa ratamäärien vaihtelevan tuntien, joukkueiden ja tapahtumien mukaan." ]
 access_summary = "USF:n Koret Centerissä on suuri sisäallas. Ratoja on yleensä käytettävissä allasaikoina, mutta pääsy ja passit riippuvat USF/Koret-jäsenyydestä tai kelvollisista passivaihtoehdoista."
-description_short = "Yksi kaupungin suuremmista sisäallastiloista, jossa ratauinti, masters, tunnit, joukkueet ja tapahtumat jakavat veden."
 body = "Koret on yksi kaupungin suuremmista sisäallastiloista, jossa ratauinti, masters-uinti, tunnit, nuorisojoukkueet ja tapahtumat jakavat veden."
 
 [[spots.koret-center.pricing]]
@@ -226,19 +212,16 @@ url = "https://www.usfca.edu/koret/facilities/indoor-swimming"
 [spots.martin-luther-king-jr-pool]
 title = "Martin Luther King Jr. Pool"
 slug = "martin-luther-king-jr-pool"
-description_short = "Bayview'n sisäallas, jossa on pääallas ja erillinen kahluuallas pienille lapsille."
 body = "Martin Luther King Jr. Pool on Bayview'n sisäallas, jossa on 25 jaardin x 25 metrin pääallas ja erillinen kahluuallas pienille lapsille. Ohjelmiin kuuluu ratauintia, senioriuintia ja virkistysuintia."
 
 [spots.mission-community-pool]
 title = "Mission Community Pool"
 slug = "mission-community-pool"
-description_short = "San Franciscon ainoa kaupungin ylläpitämä ulkoallas, kausittain avoinna Missionin sydämessä."
 body = "Mission Community Pool on San Franciscon ainoa kaupungin ylläpitämä ulkoallas. Vuonna 1916 rakennettu 90 x 40 jalan allas sijaitsee Linda- ja Valencia-katujen välissä Mission Districtin sydämessä ja toimii kausittain toukokuusta lokakuuhun. Ohjelmiin kuuluu ratauintia, senioriuintia, virkistysuintia, vesijumppaa ja uintitunteja."
 
 [spots.north-beach-pool]
 title = "North Beach Pool"
 slug = "north-beach-pool"
-description_short = "Sisäkompleksi, jossa on kaksi allasta, sauna, yhteisötiloja ja ohjelmia perheuinnista aikuisten tunteihin."
 body = "North Beach Pool on sisäkompleksi, jossa on kaksi allasta: 25 metrin, 21 jalan syvyinen rata-allas ja 89 jalan virkistysallas, lisäksi sauna ja yhteisöhuoneita. Ohjelmiin kuuluu ratauintia, seniori-/terapiauintia, omatoimista liikuntaa, perheuintia ja uintitunteja."
 
 [spots.ocean-beach]
@@ -255,7 +238,6 @@ title = "Pomeroy Pool"
 slug = "pomeroy-pool"
 access_notes = [ "Terapiauintisivun mukaan vain hidas ratauinti on sallittu, ja ohjelma on tarkoitettu lämpimän veden liikkeeseen, palautumiseen ja lempeään harjoitteluun." ]
 access_summary = "Pomeroyn Herbst Therapeutic Pool on lämminvesiterapia-allas. Se tarjoaa terapiauintia, avointa uintia, tunteja, opetusta ja hidasta ratauintia; se ei ole kovatehoinen rataharjoitteluallas."
-description_short = "Lämminvesiterapia-allas hidasta uintia, palautumista, lempeää liikettä ja tunteja varten."
 body = "Pomeroy kannattaa mieltää pääsynä lämpimään veteen terapiaa, lempeää liikettä, opetusta ja hidasta ratauintia varten ennemmin kuin tavallisena ratauintialtaana."
 
 [[spots.pomeroy-pool.pricing]]
@@ -275,7 +257,6 @@ title = "Presidio YMCA Letterman"
 slug = "presidio-ymca-letterman"
 access_notes = [ "YMCA:n taloudellinen tuki ja jäsenyysvaihtoehdot voivat muuttaa todellista hintaa; varmista suoraan YMCA of Greater San Franciscolta." ]
 access_summary = "Letterman Pool on osa Presidio Community YMCA:ta. Virallinen YMCA-sivu listaa 25 jaardin altaan ja ohjaa uimareita verkossa olevaan allasaikatauluun."
-description_short = "Letterman-kompleksin takana Presidiossa sijaitseva allas, vahva jäsenyysvaihtoehto kaupungin pohjoispuolen ratauintiin."
 body = "Letterman Pool sijaitsee Letterman-kompleksin takana Presidiossa ja on yksi vahvimmista jäsenallasvaihtoehdoista kaupungin pohjoispuolen ratauimareille."
 
 [[spots.presidio-ymca-letterman.pricing]]
@@ -293,13 +274,11 @@ url = "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gy
 [spots.rossi-pool]
 title = "Rossi Pool"
 slug = "rossi-pool"
-description_short = "Sisäallas Inner Richmondissa Rossi Playgroundilla, mukana ratauintia ja yhteisöohjelmia."
 body = "Rossi Pool on sisäallas Rossi Playgroundilla Inner Richmondissa, Arguellon ja Anzan kulmassa. Ohjelmiin kuuluu ratauintia, senioriuintia, virkistysuintia ja uintitunteja."
 
 [spots.sava-pool]
 title = "Sava Pool"
 slug = "sava-pool"
-description_short = "Parkside/Sunsetin sisäallas lähellä Stern Grovea."
 body = "Sava Pool on sisäallas Parkside/Sunsetin alueella 19th Avenuella lähellä Stern Grovea. Ohjelmiin kuuluu ratauintia, senioriuintia, virkistysuintia ja uintitunteja."
 
 [spots.sfsu-mashouf]
@@ -307,7 +286,6 @@ title = "SFSU Mashouf Wellness Center"
 slug = "sfsu-mashouf"
 access_notes = []
 access_summary = "SFSU Mashouf Wellness Center julkaisee allasosaston aukioloajat ja kuvaa 25 metrin rata-altaan, aktiivisuusaltaan, porealtaan, saunan ja pukuhuoneet. Pääsy perustuu kampus- tai yhteisöjäsenyyteen."
-description_short = "Yliopiston ja yhteisön jäsenyyspohjainen allasvaihtoehto Lake Mercedin lähellä."
 body = "SFSU Mashouf Wellness Center on yliopiston ja yhteisön jäsenyyspohjainen allasvaihtoehto Lake Mercedin lähellä."
 
 [spots.stonestown-ymca]
@@ -315,7 +293,6 @@ title = "Stonestown YMCA"
 slug = "stonestown-ymca"
 access_notes = [ "Vahvista nykyinen allasaikataulu toimipisteestä; YMCA-sivut erottavat ratauinnin virkistys- ja perheuintivarauksista." ]
 access_summary = "Stonestown Family YMCA on jäsenyyspohjainen YMCA-toimipiste, jossa on ratauintia ja allastoimintaa."
-description_short = "Lounaispuolen YMCA-allasvaihtoehto lähellä Stonestownia ja SF Statea."
 body = "Stonestown YMCA on lounaispuolen YMCA-allasvaihtoehto lähellä Stonestownia ja SF Statea."
 
 [[spots.stonestown-ymca.pricing]]
@@ -335,7 +312,6 @@ title = "UCSF Bakar"
 slug = "ucsf-bakar"
 access_notes = [ "Sisäallas avattiin remontin jälkeen kesäkuussa 2025; vahvista nykyiset allasaikataulut UCSF Fitness and Recreationilta." ]
 access_summary = "Bakar Fitness Center UCSF Mission Bayssä on jäsenyyspohjainen fitnesskeskus, jossa on sisäuima-allas ja ulkona sijaitseva kattoallas."
-description_short = "Mission Bayn fitnesskeskusvaihtoehto, jossa on sekä sisäallas että ulkona sijaitseva kattoallas."
 body = "Bakar on Mission Bayn fitnesskeskusvaihtoehto, joka erottuu sekä sisäaltaalla että ulkona sijaitsevalla kattoaltaalla."
 
 [[spots.ucsf-bakar.pricing]]
@@ -355,5 +331,4 @@ title = "UCSF Millberry"
 slug = "ucsf-millberry"
 access_notes = []
 access_summary = "UCSF Millberry Fitness Center on UCSF:n Parnassuksen fitness-toimipiste. Virallinen sivu julkaisee tilojen aukioloajat, mutta allasaikataulu tarvitsee erillisen vahvistuksen."
-description_short = "Parnassuksen UCSF-kampuksen fitnesskeskuksen allasvaihtoehto jäsenyyspohjaiseen kerrokseen."
 body = "UCSF Millberry on Parnassuksen kampuksen fitnesskeskuksen allasvaihtoehto jäsenyyspohjaiseen kerrokseen."

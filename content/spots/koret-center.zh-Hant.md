@@ -6,7 +6,6 @@ slug = "koret-center"
 localized_from = "koret-center"
 access_notes = [ "前往前請查看 Koret 的泳池泳道時間表；官方頁面提醒，泳道數量會因課程、隊伍和活動而變動。" ]
 access_summary = "USF 的 Koret Center 有大型室內泳池。泳池開放時間內通常有泳道可用，但使用權和通行證取決於 USF/Koret 會員資格或符合資格的通行證選項。"
-description_short = "市內較大型的室內泳池設施之一，泳道、masters、課程和活動共用水域。"
 
 [[extra.pricing]]
 label = "會員／合資格通行證"

@@ -6,7 +6,6 @@ slug = "equinox-sports-club-sf"
 localized_from = "equinox-sports-club-sf"
 access_notes = []
 access_summary = "Equinox Sports Club San Francisco lista piscina cubierta y horario del club en la página oficial de la sede."
-description_short = "Club con membresía en Market Street y piscina cubierta."
 +++
 
 Equinox Sports Club SF es un club con membresía en Market Street que cuenta con piscina cubierta.

@@ -6,7 +6,6 @@ slug = "pomeroy-pool"
 localized_from = "pomeroy-pool"
 access_notes = [ "Terapiauintisivun mukaan vain hidas ratauinti on sallittu, ja ohjelma on tarkoitettu lämpimän veden liikkeeseen, palautumiseen ja lempeään harjoitteluun." ]
 access_summary = "Pomeroyn Herbst Therapeutic Pool on lämminvesiterapia-allas. Se tarjoaa terapiauintia, avointa uintia, tunteja, opetusta ja hidasta ratauintia; se ei ole kovatehoinen rataharjoitteluallas."
-description_short = "Lämminvesiterapia-allas hidasta uintia, palautumista, lempeää liikettä ja tunteja varten."
 
 [[extra.pricing]]
 label = "Terapiauintipassi"

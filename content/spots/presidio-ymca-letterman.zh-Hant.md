@@ -6,7 +6,6 @@ slug = "presidio-ymca-letterman"
 localized_from = "presidio-ymca-letterman"
 access_notes = [ "YMCA 財務補助和會員選項可能改變實際價格；請直接向 YMCA of Greater San Francisco 確認。" ]
 access_summary = "Letterman Pool 是 Presidio Community YMCA 的一部分。官方 YMCA 頁面列出 25 碼泳池，並引導泳客查看線上泳池時間表。"
-description_short = "Presidio Letterman complex 後方的泳池，是城市北側泳道泳者的強會員制選項。"
 
 [[extra.pricing]]
 label = "YMCA 會員"

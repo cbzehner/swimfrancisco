@@ -6,7 +6,6 @@ slug = "24-hour-fitness-potrero"
 localized_from = "24-hour-fitness-potrero"
 access_notes = [ "Kiểm tra trang câu lạc bộ để biết hội viên, quyền khách và tình trạng cơ sở hiện tại." ]
 access_summary = "24 Hour Fitness Potrero là hồ bơi trong phòng gym. Trang chính thức của câu lạc bộ liệt kê hồ bơi trong nhà theo làn, sauna, bồn xoáy và phòng xông hơi trong các tiện ích của gym."
-description_short = "Hồ bơi phòng gym cho người đã dùng 24 Hour Fitness hoặc muốn lựa chọn hội viên gần Potrero."
 
 [[extra.pricing]]
 label = "Hội viên phòng gym"

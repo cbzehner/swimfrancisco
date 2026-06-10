@@ -6,7 +6,6 @@ slug = "pomeroy-pool"
 localized_from = "pomeroy-pool"
 access_notes = [ "Trang bơi trị liệu ghi chỉ bơi làn chậm và cho biết chương trình dành cho vận động trong nước ấm, phục hồi và tập nhẹ." ]
 access_summary = "Hồ trị liệu Herbst của Pomeroy là hồ nước ấm dành cho trị liệu. Hồ có bơi trị liệu, bơi tự do, lớp học, bài học và bơi làn chậm; đây không phải là hồ để tập luyện bơi làn cường độ cao."
-description_short = "Phù hợp hơn như nước ấm cho trị liệu, vận động nhẹ, lớp học và bơi làn chậm."
 
 [[extra.pricing]]
 label = "Thẻ bơi trị liệu"

@@ -6,7 +6,6 @@ slug = "presidio-ymca-letterman"
 localized_from = "presidio-ymca-letterman"
 access_notes = [ "Hỗ trợ tài chính và các lựa chọn hội viên YMCA có thể làm thay đổi giá thực tế; hãy xác minh trực tiếp với YMCA of Greater San Francisco." ]
 access_summary = "Letterman Pool thuộc Presidio Community YMCA. Trang YMCA chính thức liệt kê hồ bơi 25 yard và dẫn người bơi đến lịch hồ bơi trực tuyến."
-description_short = "Hồ bơi phía sau khu Letterman trong Presidio, là lựa chọn hội viên tốt cho người bơi làn phía bắc thành phố."
 
 [[extra.pricing]]
 label = "Hội viên YMCA"

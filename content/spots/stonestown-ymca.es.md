@@ -6,7 +6,6 @@ slug = "stonestown-ymca"
 localized_from = "stonestown-ymca"
 access_notes = [ "Confirma el horario actual de piscina con la sucursal; las páginas de YMCA distinguen natación de carriles de reservas de nado recreativo/familiar." ]
 access_summary = "Stonestown Family YMCA es una sucursal YMCA con membresía, natación de carriles y actividades de piscina."
-description_short = "Opción YMCA del suroeste, cerca de Stonestown y SF State."
 
 [[extra.pricing]]
 label = "Miembro YMCA"

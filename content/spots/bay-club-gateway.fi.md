@@ -6,7 +6,6 @@ slug = "bay-club-gateway"
 localized_from = "bay-club-gateway"
 access_notes = [ "Tarkista virallinen klubisivu tai tuntikalenteri ennen lähtöä; ratatilannetta ei vielä julkaista Swim Franciscossa." ]
 access_summary = "Bay Club Gateway on yksityinen klubi San Francisco Campus -kokonaisuudessa, jossa on ulkovesikeskus ja kaksi lämmitettyä allasta. Pääsy riippuu Bay Club -jäsenyydestä, vierasoikeuksista tai sovitusta klubivierailusta."
-description_short = "Yksityinen allasvaihtoehto keskustassa, ulkoaltaat ja klubipalvelut Embarcaderon lähellä."
 
 [[extra.pricing]]
 label = "Jäsen"

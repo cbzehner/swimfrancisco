@@ -4,7 +4,6 @@ slug = "martin-luther-king-jr-pool"
 
 [extra]
 localized_from = "martin-luther-king-jr-pool"
-description_short = "Piscina cubierta en Bayview con piscina principal y chapoteadero separado para niños pequeños."
 +++
 
 Piscina cubierta en Bayview, con una piscina principal de 25 yardas x 25 metros y una piscina infantil separada para niños pequeños. Los programas incluyen natación de carril, natación para mayores y natación recreativa.
