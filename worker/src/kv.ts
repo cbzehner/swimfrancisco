@@ -2,7 +2,7 @@
 // Single key holds the slug-keyed bulk record; the cron writes it, the
 // HTTP handler reads it, and the assembler reads it back as last-good.
 
-import type { Conditions } from "./assemble";
+import type { Conditions } from "./assemble.ts";
 
 const KEY = "conditions";
 

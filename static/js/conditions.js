@@ -50,6 +50,21 @@ function setText(root, selector, value) {
   });
 }
 
+// Write a temp reading into matching nodes, flagging carried-forward
+// (stale) readings so CSS can dim them instead of presenting them as live.
+function setTemp(root, selector, record) {
+  const temp = extractTemp(record);
+  if (!temp) return;
+  root.querySelectorAll(selector).forEach((node) => {
+    node.textContent = temp;
+    if (record.temp_stale) {
+      node.setAttribute("data-temp-stale", "true");
+    } else {
+      node.removeAttribute("data-temp-stale");
+    }
+  });
+}
+
 function formatUpdatedAt(conditions) {
   const timestamps = Object.values(conditions)
     .map((record) => Date.parse(record?.updated_at || ""))
@@ -94,15 +109,13 @@ function applyBulletinStrip(root, conditions) {
   const tideRecord =
     firstRecordWithTide(conditions, BAY_SLUGS, now) ||
     firstRecordWithTide(conditions, OCEAN_SLUGS, now);
-  const bayTemp = extractTemp(bayRecord);
-  const oceanTemp = extractTemp(oceanRecord);
   const tideSummary = formatTideSummary(tideRecord, now);
   const updated = formatUpdatedAt(conditions);
 
-  setText(root, "[data-bay-temp]", bayTemp);
-  setText(root, "[data-bay-temp-strip]", bayTemp);
-  setText(root, "[data-ocean-temp]", oceanTemp);
-  setText(root, "[data-ocean-temp-strip]", oceanTemp);
+  setTemp(root, "[data-bay-temp]", bayRecord);
+  setTemp(root, "[data-bay-temp-strip]", bayRecord);
+  setTemp(root, "[data-ocean-temp]", oceanRecord);
+  setTemp(root, "[data-ocean-temp-strip]", oceanRecord);
   setText(root, "[data-next-tide]", tideSummary);
   setText(root, "[data-conditions-updated]", updated);
 }
@@ -132,11 +145,7 @@ function applyConditions(root, conditions) {
   rows.forEach((row) => {
     const slug = row.getAttribute("data-slug");
     if (!slug) return;
-    const temp = extractTemp(conditions[slug]);
-    if (!temp) return;
-    const tempCell = row.querySelector('[data-cell="water"]');
-    if (!tempCell) return;
-    tempCell.textContent = temp;
+    setTemp(row, '[data-cell="water"]', conditions[slug]);
   });
 
   // Tide predictions arrive as zoneless station-local (Pacific) ISO strings.
@@ -148,11 +157,7 @@ function applyConditions(root, conditions) {
     const slug = panel.getAttribute("data-slug");
     if (!slug) return;
     const record = conditions[slug];
-    const temp = extractTemp(record);
-    if (temp) {
-      const tempField = panel.querySelector('[data-field="water_temp"]');
-      if (tempField) tempField.textContent = temp;
-    }
+    setTemp(panel, '[data-field="water_temp"]', record);
     const tideSummary = formatTideSummary(record, now);
     if (tideSummary) {
       const tideField = panel.querySelector('[data-field="tide"]');

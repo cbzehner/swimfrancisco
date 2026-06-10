@@ -3,11 +3,11 @@
 //   and NDBC 46237 (ocean temp); assemble per-spot records; write KV.
 // - HTTP: GET /api/conditions → slug-keyed bulk record from KV.
 
-import { assembleAndPersist } from "./assemble";
-import { readConditionsRaw } from "./kv";
-import { corsHeaders, preflight } from "./cors";
-import { triggerRebuild } from "./deploy";
-import { isPtMidnight } from "./schedule";
+import { assembleAndPersist } from "./assemble.ts";
+import { readConditionsRaw } from "./kv.ts";
+import { corsHeaders, preflight } from "./cors.ts";
+import { triggerRebuild } from "./deploy.ts";
+import { isPtMidnight } from "./schedule.ts";
 
 export interface Env {
   CONDITIONS: KVNamespace;
@@ -16,8 +16,9 @@ export interface Env {
 
 // Data refreshes hourly via cron. The Worker writes successful conditions
 // responses to caches.default on miss, so most fetches in a given colo are
-// served straight from the edge without re-reading KV. Vary: Origin (set in
-// corsHeaders) gives each allowed origin its own cache entry.
+// served straight from the edge without re-reading KV. The cached response is
+// header-neutral (no CORS); corsHeaders(request) is applied per-request after
+// cache.match, so correctness never depends on the Cache API honoring Vary.
 const JSON_CACHE_CONTROL = "public, max-age=900";
 const NEGATIVE_CACHE_CONTROL = "public, max-age=60";
 
@@ -25,15 +26,12 @@ const NEGATIVE_CACHE_CONTROL = "public, max-age=60";
 // incoming request's URL shape (trailing slashes, etc.).
 const CONDITIONS_CACHE_KEY_URL = "https://swimfrancisco.com/api/conditions";
 
-function jsonResponse(request: Request, body: string, status = 200): Response {
-  return new Response(body, {
-    status,
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      "cache-control": JSON_CACHE_CONTROL,
-      ...corsHeaders(request),
-    },
-  });
+function withCors(request: Request, response: Response): Response {
+  const out = new Response(response.body, response);
+  for (const [name, value] of Object.entries(corsHeaders(request))) {
+    out.headers.set(name, value);
+  }
+  return out;
 }
 
 function notFound(request: Request, message: string): Response {
@@ -64,18 +62,28 @@ async function handleConditions(
   ctx: ExecutionContext,
 ): Promise<Response> {
   const cache = caches.default;
-  // Inheriting headers from `request` preserves the Origin used for Vary keying.
-  const cacheKey = new Request(CONDITIONS_CACHE_KEY_URL, request);
+  const cacheKey = new Request(CONDITIONS_CACHE_KEY_URL);
 
   const cached = await cache.match(cacheKey);
-  if (cached) return cached;
+  if (cached) return withCors(request, cached);
 
-  const raw = await readConditionsRaw(env.CONDITIONS);
+  let raw: string | null;
+  try {
+    raw = await readConditionsRaw(env.CONDITIONS);
+  } catch (err) {
+    console.error("KV read failed:", err);
+    return serviceUnavailable(request, "conditions temporarily unavailable");
+  }
   if (!raw) return serviceUnavailable(request, "conditions not yet available");
 
-  const response = jsonResponse(request, raw);
+  const response = new Response(raw, {
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": JSON_CACHE_CONTROL,
+    },
+  });
   ctx.waitUntil(cache.put(cacheKey, response.clone()));
-  return response;
+  return withCors(request, response);
 }
 
 export default {

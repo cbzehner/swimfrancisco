@@ -693,6 +693,11 @@ table.board td:nth-child(n+2) {
 table.board [data-cell="status"] {
   color: var(--muted);
 }
+/* Carried-forward temp readings (worker temp_stale flag): dim so a reading
+   reused from the last-good KV value doesn't present as live. */
+[data-temp-stale="true"] {
+  opacity: 0.55;
+}
 table.board tr[data-type="open_water"] [data-cell="status"] {
   background: transparent;
 }

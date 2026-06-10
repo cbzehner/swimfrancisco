@@ -1,10 +1,10 @@
 // Compose per-spot conditions records from fetched NOAA / NDBC data,
 // falling back to last-good KV values when an upstream source failed.
 
-import { SPOTS, type SpotConfig } from "./spots";
-import { fetchTempWithFallback, fetchNoaaTides, type NoaaTideData } from "./noaa";
-import { fetchNdbc } from "./ndbc";
-import { readConditions, writeConditions } from "./kv";
+import { SPOTS, type SpotConfig } from "./spots.ts";
+import { fetchTempWithFallback, fetchNoaaTides, type NoaaTideData } from "./noaa.ts";
+import { fetchNdbc } from "./ndbc.ts";
+import { readConditions, writeConditions } from "./kv.ts";
 
 export interface TideSummary {
   station_id: string;
@@ -27,6 +27,8 @@ export interface SpotConditions {
   updated_at: string; // ISO 8601 UTC — when this assembly ran
   temp_stale: boolean; // true if temp_* fields were reused from last-good KV value
   tide_stale: boolean; // true if `tide` was reused from last-good KV value
+  temp_carried_since: string | null; // updated_at of the run that observed the carried temp; null when fresh
+  tide_carried_since: string | null; // updated_at of the run that observed the carried tide; null when fresh
 }
 
 interface TempFields {
@@ -49,14 +51,17 @@ export type Conditions = Record<string, SpotConditions>;
 
 const FRESHNESS_CEILING_MS = 24 * 60 * 60 * 1000;
 
-// Gate all last-good reuse on assembly age. `updated_at` is always a proper
-// UTC ISO (set by `assembleAndPersist`), safe to parse regardless of whether
-// individual upstream timestamps are zoneless (NOAA) or UTC (NDBC).
-function isFreshEnough(previous: SpotConditions | null): boolean {
-  if (!previous) return false;
-  const ts = Date.parse(previous.updated_at);
+// Gate last-good reuse on the age of the run that actually observed the
+// value (`*_carried_since`), not on the previous assembly's `updated_at`:
+// `updated_at` resets every hourly run even when fields were copied forward,
+// so gating on it alone would let a week-old reading look one hour old
+// forever. Both timestamps are proper UTC ISO (set by `assembleAndPersist`),
+// safe to parse regardless of whether individual upstream timestamps are
+// zoneless (NOAA) or UTC (NDBC).
+export function withinFreshnessCeiling(sinceIso: string, now: number = Date.now()): boolean {
+  const ts = Date.parse(sinceIso);
   if (!Number.isFinite(ts)) return false;
-  return Date.now() - ts < FRESHNESS_CEILING_MS;
+  return now - ts < FRESHNESS_CEILING_MS;
 }
 
 function tideToSummary(data: NoaaTideData | null): TideSummary | null {
@@ -124,27 +129,36 @@ function tempFromPrevious(previous: SpotConditions | null): TempFields | null {
   return { water_temp_f, water_temp_c, temp_observed_at, temp_station_id, temp_station_type };
 }
 
-function coalesceTemp(
+export function coalesceTemp(
   fresh: TempFields | null,
   previous: SpotConditions | null,
-  previousIsFresh: boolean,
-): { fields: TempFields | null; stale: boolean } {
-  if (fresh !== null) return { fields: fresh, stale: false };
-  if (previousIsFresh) {
-    const fallback = tempFromPrevious(previous);
-    if (fallback) return { fields: fallback, stale: true };
+  now: number = Date.now(),
+): { fields: TempFields | null; stale: boolean; carriedSince: string | null } {
+  if (fresh !== null) return { fields: fresh, stale: false, carriedSince: null };
+  const fallback = tempFromPrevious(previous);
+  if (fallback && previous) {
+    // Records written before carried-since tracking lack the field entirely.
+    const carriedSince = previous.temp_carried_since ?? previous.updated_at;
+    if (withinFreshnessCeiling(carriedSince, now)) {
+      return { fields: fallback, stale: true, carriedSince };
+    }
   }
-  return { fields: null, stale: false };
+  return { fields: null, stale: false, carriedSince: null };
 }
 
-function coalesceTide(
+export function coalesceTide(
   fresh: TideSummary | null,
   previous: SpotConditions | null,
-  previousIsFresh: boolean,
-): { value: TideSummary | null; stale: boolean } {
-  if (fresh !== null) return { value: fresh, stale: false };
-  if (previousIsFresh && previous?.tide) return { value: previous.tide, stale: true };
-  return { value: null, stale: false };
+  now: number = Date.now(),
+): { value: TideSummary | null; stale: boolean; carriedSince: string | null } {
+  if (fresh !== null) return { value: fresh, stale: false, carriedSince: null };
+  if (previous?.tide) {
+    const carriedSince = previous.tide_carried_since ?? previous.updated_at;
+    if (withinFreshnessCeiling(carriedSince, now)) {
+      return { value: previous.tide, stale: true, carriedSince };
+    }
+  }
+  return { value: null, stale: false, carriedSince: null };
 }
 
 // For a single spot: fetch temp (primary path based on station type) and the
@@ -159,9 +173,8 @@ async function assembleSpot(
     fetchTempForSpot(spot),
     getOrFetchTide(tideCache, spot.tideStationId),
   ]);
-  const previousIsFresh = isFreshEnough(previous);
-  const temp = coalesceTemp(tempFromReading(spot, reading), previous, previousIsFresh);
-  const tide = coalesceTide(tideFromApi, previous, previousIsFresh);
+  const temp = coalesceTemp(tempFromReading(spot, reading), previous);
+  const tide = coalesceTide(tideFromApi, previous);
 
   return {
     slug: spot.slug,
@@ -170,6 +183,8 @@ async function assembleSpot(
     updated_at: updatedAt,
     temp_stale: temp.stale,
     tide_stale: tide.stale,
+    temp_carried_since: temp.carriedSince,
+    tide_carried_since: tide.carriedSince,
   };
 }
 
