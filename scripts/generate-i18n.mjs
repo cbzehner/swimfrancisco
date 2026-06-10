@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { parse, stringify } from "smol-toml";
@@ -36,10 +36,9 @@ const SPOT_TRANSLATABLE_EXTRA_FIELDS = [
   "hazards",
   "pricing",
 ];
-const SPOT_PRICING_TRANSLATABLE_FIELDS = ["label", "price", "note", "url"];
 
 function usage() {
-  console.error("Usage: node scripts/generate-i18n.mjs <extract|generate|check>");
+  console.error("Usage: node scripts/generate-i18n.mjs <generate|check>");
 }
 
 async function readToml(file) {
@@ -108,25 +107,6 @@ async function validateCatalogFiles({ allCodes }) {
       );
     }
   }
-}
-
-function extractSpotCatalogEntry(front, body, fallbackSlug) {
-  const spot = {
-    title: front.title,
-    slug: front.slug || fallbackSlug,
-  };
-  for (const field of SPOT_TRANSLATABLE_EXTRA_FIELDS) {
-    if (!Object.hasOwn(front.extra || {}, field)) continue;
-    spot[field] = field === "pricing"
-      ? front.extra[field].map((item) => Object.fromEntries(
-        SPOT_PRICING_TRANSLATABLE_FIELDS
-          .filter((key) => Object.hasOwn(item, key))
-          .map((key) => [key, item[key]]),
-      ))
-      : front.extra[field];
-  }
-  if (body) spot.body = body;
-  return spot;
 }
 
 function mergePricingRows(currentPricing = [], catalogPricing = []) {
@@ -318,95 +298,6 @@ async function validateLocaleRegistryConsumers(codes) {
       throw new Error(`${path.relative(ROOT, file)} appears to hardcode a locale instead of using data/locales.toml`);
     }
   }
-}
-
-async function extractCatalogs() {
-  const config = await readToml(CONFIG_PATH);
-  const existingLocaleData = existsSync(DATA_LOCALES_PATH)
-    ? await readToml(DATA_LOCALES_PATH)
-    : { locales: [] };
-  const existingLocaleByCode = new Map((existingLocaleData.locales || []).map((locale) => [locale.code, locale]));
-
-  const locales = [
-    {
-      ...(existingLocaleByCode.get(config.default_language) || {}),
-      code: config.default_language,
-      label: existingLocaleByCode.get(config.default_language)?.label || config.default_language.toUpperCase(),
-      og_locale: existingLocaleByCode.get(config.default_language)?.og_locale || "en_US",
-      is_default: true,
-      title: config.title,
-      description: config.description,
-    },
-  ];
-
-  for (const [code, language] of Object.entries(config.languages || {})) {
-    const existing = existingLocaleByCode.get(code) || {};
-    locales.push({
-      ...existing,
-      code,
-      label: existing.label || code.toUpperCase(),
-      og_locale: existing.og_locale || `${code}_${code.toUpperCase()}`,
-      is_default: false,
-      title: language.title,
-      description: language.description,
-    });
-  }
-
-  await mkdir(UI_DIR, { recursive: true });
-  await mkdir(SPOTS_DIR, { recursive: true });
-  await mkdir(SECTIONS_DIR, { recursive: true });
-  await writeFile(SOURCE_LOCALES_PATH, tomlText({ locales }));
-  await writeFile(path.join(UI_DIR, `${config.default_language}.toml`), tomlText(sortedObject(config.translations || {})));
-
-  for (const [code, language] of Object.entries(config.languages || {})) {
-    await writeFile(path.join(UI_DIR, `${code}.toml`), tomlText(sortedObject(language.translations || {})));
-  }
-
-  const localeCodes = locales.map((locale) => locale.code);
-  const translatedLocaleCodes = locales.filter((locale) => !locale.is_default).map((locale) => locale.code);
-  const defaultCode = locales.find((locale) => locale.is_default)?.code;
-  const spotCatalogs = Object.fromEntries(localeCodes.map((code) => [code, { spots: {} }]));
-  const files = await readdir(CONTENT_SPOTS_DIR);
-
-  for (const file of files) {
-    if (file.endsWith(".md") && !file.startsWith("_index.") && !isLocalizedSpotFile(file, translatedLocaleCodes)) {
-      const slug = file.replace(/\.md$/, "");
-      const fullPath = path.join(CONTENT_SPOTS_DIR, file);
-      const { front, body } = parseFrontMatter(await readFile(fullPath, "utf8"), fullPath);
-      spotCatalogs[defaultCode].spots[slug] = extractSpotCatalogEntry(front, body, slug);
-    }
-    for (const code of translatedLocaleCodes) {
-      if (!file.endsWith(`.${code}.md`) || file.startsWith("_index.")) continue;
-      const fullPath = path.join(CONTENT_SPOTS_DIR, file);
-      const { front, body } = parseFrontMatter(await readFile(fullPath, "utf8"), fullPath);
-      const localizedFrom = front.extra?.localized_from;
-      if (!localizedFrom) throw new Error(`${file} is missing extra.localized_from`);
-      spotCatalogs[code].spots[localizedFrom] = extractSpotCatalogEntry(front, body, localizedFrom);
-    }
-  }
-
-  for (const [code, catalog] of Object.entries(spotCatalogs)) {
-    catalog.spots = sortedObject(catalog.spots);
-    await writeFile(path.join(SPOTS_DIR, `${code}.toml`), tomlText(catalog));
-  }
-
-  for (const code of localeCodes) {
-    const sections = {};
-    for (const [sectionKey, target] of Object.entries(SECTION_TARGETS)) {
-      const suffix = code === defaultCode ? "" : `.${code}`;
-      const sectionPath = path.join(CONTENT_DIR, `${target}${suffix}.md`);
-      if (!existsSync(sectionPath)) throw new Error(`${path.relative(ROOT, sectionPath)} does not exist`);
-      sections[sectionKey] = parseFrontMatter(await readFile(sectionPath, "utf8"), sectionPath).front;
-    }
-    await writeFile(path.join(SECTIONS_DIR, `${code}.toml`), tomlText({ sections }));
-  }
-}
-
-async function clearExtractedCatalogs() {
-  await rm(SOURCE_LOCALES_PATH, { force: true });
-  await rm(UI_DIR, { recursive: true, force: true });
-  await rm(SPOTS_DIR, { recursive: true, force: true });
-  await rm(SECTIONS_DIR, { recursive: true, force: true });
 }
 
 async function loadSources() {
@@ -780,11 +671,6 @@ async function main() {
   if (!command) {
     usage();
     process.exit(2);
-  }
-  if (command === "extract") {
-    await clearExtractedCatalogs();
-    await extractCatalogs();
-    return;
   }
   if (command === "generate") {
     const changed = await generateAll();

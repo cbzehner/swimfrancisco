@@ -16,7 +16,7 @@ def test_merge_is_noop_when_schedule_matches_existing(tmp_path):
     snapshot.pop("_last_verified_at", None)
     result = merge(target, snapshot)
 
-    assert result.written is False
+    assert result is False
     assert target.read_text() == source.read_text()
 
 
@@ -43,7 +43,7 @@ def test_merge_updates_only_schedule_fields(tmp_path):
     )
 
     updated = target.read_text()
-    assert result.written is True
+    assert result is True
     assert 'title = "Hamilton Pool"' in updated
     assert 'website = "https://sfrecpark.org/facilities/facility/details/Hamilton-Pool-215"' in updated
     assert "Memorial Day" in updated
@@ -190,7 +190,7 @@ def test_merge_appends_new_schedule_with_different_effective_start(tmp_path):
     }
     result = merge(target, incoming)
 
-    assert result.written is True
+    assert result is True
     updated = target.read_text()
     # Both the base and the new schedule must coexist in the array.
     assert 'effective_start = "2026-03-17"' in updated
@@ -215,7 +215,7 @@ def test_merge_replaces_existing_schedule_with_matching_effective_start(tmp_path
     }
     result = merge(target, updated_payload)
 
-    assert result.written is True
+    assert result is True
     schedules = _read_schedules_array(target)
     matching = next(s for s in schedules if s["effective_start"] == "2026-03-17")
     assert matching["sessions"] == [
@@ -226,7 +226,7 @@ def test_merge_replaces_existing_schedule_with_matching_effective_start(tmp_path
 def test_merge_no_op_when_appending_an_entry_already_present(tmp_path):
     target = _seed_pool(tmp_path)
     result = merge(target, _BASE_PAYLOAD)
-    assert result.written is False
+    assert result is False
 
 
 def test_merge_sorts_schedules_by_effective_start(tmp_path):

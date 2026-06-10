@@ -7,7 +7,7 @@ import tomlkit
 from tomlkit.items import AoT
 
 from ._time import pacific_today
-from .models import DAY_ORDER, MergeResult
+from .models import DAY_ORDER
 
 _DAY_INDEX = {day: index for index, day in enumerate(DAY_ORDER)}
 
@@ -17,7 +17,7 @@ def merge(
     extracted: dict[str, Any],
     *,
     last_verified_at: str | None = None,
-) -> MergeResult:
+) -> bool:
     """Merge an extracted schedule into a spot's [[extra.schedules]] array.
 
     Match-by-effective_start semantics:
@@ -27,6 +27,8 @@ def merge(
     Sort by effective_start after every change. No "current vs upcoming"
     split — the render-time predicate (`pick_active_schedule`) decides
     which array entry is active for any given date.
+
+    Returns True when the content file was rewritten.
     """
     original_text = pool_md_path.read_text()
     frontmatter_text, body = _split_frontmatter(original_text)
@@ -53,15 +55,9 @@ def merge(
             matching_index = i
             break
 
-    before = (
-        {k: v for k, v in existing_entries[matching_index].items() if k != "_last_verified_at"}
-        if matching_index is not None
-        else _empty_schedule()
-    )
-
     # Nothing to add and nothing to update.
     if matching_index is None and not target_start:
-        return _merge_result(before, after, written=False)
+        return False
 
     if matching_index is not None:
         existing_entry = existing_entries[matching_index]
@@ -70,7 +66,7 @@ def merge(
         if existing_payload == after and (
             last_verified_at is None or existing_verified == last_verified_at
         ):
-            return _merge_result(before, after, written=False)
+            return False
         existing_entries[matching_index] = {
             **after,
             "_last_verified_at": last_verified_at if last_verified_at is not None else existing_verified,
@@ -94,17 +90,7 @@ def merge(
 
     updated = tomlkit.dumps(document).rstrip("\n")
     pool_md_path.write_text(f"+++\n{updated}\n+++\n{body}")
-    return _merge_result(before, after, written=True)
-
-
-def _merge_result(before: dict[str, Any], after: dict[str, Any], *, written: bool) -> MergeResult:
-    return MergeResult(
-        prior_sessions_count=len(before.get("sessions") or []),
-        new_sessions_count=len(after.get("sessions") or []),
-        prior_closures_count=len(before.get("closures") or []),
-        new_closures_count=len(after.get("closures") or []),
-        written=written,
-    )
+    return True
 
 
 def read_schedule_snapshot(pool_md_path: Path) -> dict[str, Any]:

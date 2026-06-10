@@ -111,15 +111,6 @@ class ValidationResult:
 
 
 @dataclass(frozen=True)
-class MergeResult:
-    prior_sessions_count: int
-    new_sessions_count: int
-    prior_closures_count: int
-    new_closures_count: int
-    written: bool
-
-
-@dataclass(frozen=True)
 class ProviderResult:
     payload: ExtractedPayload
     model: str
