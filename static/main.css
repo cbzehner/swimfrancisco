@@ -218,6 +218,7 @@ h1, h2, h3 {
 .language-switcher a {
   color: var(--muted);
   text-decoration: none;
+  white-space: nowrap;
 }
 .language-switcher a[aria-current="page"] {
   color: var(--ink);
@@ -1612,7 +1613,8 @@ body.map-page .site-footer {
     bottom: 0;
     z-index: 50;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    /* The language cell holds six links; BOARD and MAP are single words. */
+    grid-template-columns: 1fr 1fr 2fr;
     gap: 0;
     background: var(--ink);
     color: var(--paper);
@@ -1643,8 +1645,10 @@ body.map-page .site-footer {
   .site-header-actions .language-switcher {
     min-height: 58px;
     justify-content: center;
-    gap: 10px;
-    padding: 17px 4px 8px;
+    flex-wrap: wrap; /* two tidy rows on very narrow screens, never squeezed */
+    align-content: center;
+    gap: 4px 9px;
+    padding: 12px 4px 8px;
     color: var(--paper);
     font-size: 12px;
   }
