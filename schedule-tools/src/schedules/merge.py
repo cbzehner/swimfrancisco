@@ -7,17 +7,9 @@ import tomlkit
 from tomlkit.items import AoT
 
 from ._time import pacific_today
-from .models import MergeResult
+from .models import DAY_ORDER, MergeResult
 
-DAY_ORDER = {
-    "monday": 0,
-    "tuesday": 1,
-    "wednesday": 2,
-    "thursday": 3,
-    "friday": 4,
-    "saturday": 5,
-    "sunday": 6,
-}
+_DAY_INDEX = {day: index for index, day in enumerate(DAY_ORDER)}
 
 
 def merge(
@@ -25,7 +17,6 @@ def merge(
     extracted: dict[str, Any],
     *,
     last_verified_at: str | None = None,
-    as_of_date: str | None = None,  # accepted for API compat; no longer used
 ) -> MergeResult:
     """Merge an extracted schedule into a spot's [[extra.schedules]] array.
 
@@ -37,7 +28,6 @@ def merge(
     split — the render-time predicate (`pick_active_schedule`) decides
     which array entry is active for any given date.
     """
-    del as_of_date  # legacy parameter, no longer needed
     original_text = pool_md_path.read_text()
     frontmatter_text, body = _split_frontmatter(original_text)
     document = tomlkit.parse(frontmatter_text)
@@ -224,42 +214,25 @@ def _schedule_from_table(table: Any) -> dict[str, Any]:
     }
 
 
-def _write_schedule_fields(
-    target: Any,
-    schedule: dict[str, Any],
-    *,
-    last_verified_at: str | None = None,
-) -> None:
-    target["sessions"] = _build_sessions_value(schedule["sessions"])
-    if schedule["access_hours"]:
-        target["access_hours"] = _build_access_hours_value(schedule["access_hours"])
-    elif "access_hours" in target:
-        del target["access_hours"]
-    if schedule["access_exceptions"]:
-        target["access_exceptions"] = _build_access_exceptions_value(schedule["access_exceptions"])
-    elif "access_exceptions" in target:
-        del target["access_exceptions"]
-    target["closures"] = _build_closures_value(schedule["closures"])
-    target["effective_start"] = schedule["effective_start"]
-    if schedule["schedule_basis"] is not None:
-        target["schedule_basis"] = schedule["schedule_basis"]
-    elif "schedule_basis" in target:
-        del target["schedule_basis"]
-    if schedule["effective_end"] is not None:
-        target["effective_end"] = schedule["effective_end"]
-    elif "effective_end" in target:
-        del target["effective_end"]
-    if last_verified_at is not None:
-        target["last_verified_at"] = last_verified_at
-
-
 def _build_schedule_table(
     schedule: dict[str, Any],
     *,
     last_verified_at: str | None = None,
 ):
     table = tomlkit.table()
-    _write_schedule_fields(table, schedule, last_verified_at=last_verified_at)
+    table["sessions"] = _build_sessions_value(schedule["sessions"])
+    if schedule["access_hours"]:
+        table["access_hours"] = _build_access_hours_value(schedule["access_hours"])
+    if schedule["access_exceptions"]:
+        table["access_exceptions"] = _build_access_exceptions_value(schedule["access_exceptions"])
+    table["closures"] = _build_closures_value(schedule["closures"])
+    table["effective_start"] = schedule["effective_start"]
+    if schedule["schedule_basis"] is not None:
+        table["schedule_basis"] = schedule["schedule_basis"]
+    if schedule["effective_end"] is not None:
+        table["effective_end"] = schedule["effective_end"]
+    if last_verified_at is not None:
+        table["last_verified_at"] = last_verified_at
     return table
 
 
@@ -282,7 +255,7 @@ def _normalize_sessions(raw_sessions: list[dict]) -> list[dict[str, str]]:
     return sorted(
         normalized,
         key=lambda item: (
-            DAY_ORDER.get(item["day"], 99),
+            _DAY_INDEX.get(item["day"], 99),
             item["start"],
             item["end"],
             item["type"],
@@ -307,7 +280,7 @@ def _normalize_access_hours(raw_access_hours: list[dict]) -> list[dict[str, str]
     return sorted(
         normalized,
         key=lambda item: (
-            DAY_ORDER.get(item["day"], 99),
+            _DAY_INDEX.get(item["day"], 99),
             item["start"],
             item["end"],
             item["label"],

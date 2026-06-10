@@ -156,16 +156,7 @@
           <td data-cell="next">—</td>
           <td data-cell="water">{% if page.extra.type == 'pool' and page.extra.setpoint_label %}{{ chrome::spot_label(label=page.extra.setpoint_label, active_lang=lang) | upper }}{% else %}—{% endif %}</td>
           <td data-cell="locale">
-            {% set access = page.extra.access | default(value='public') %}
-            {% if access == 'day_pass' %}
-              <span class="cost-badge is-day-pass">{{ trans(key='chip_day_pass', lang=lang) }}{% if page.extra.day_pass_price %} · {{ page.extra.day_pass_price }}{% endif %}</span>
-            {% elif access == 'members' %}
-              <span class="cost-badge is-members">{{ trans(key='chip_members', lang=lang) }}</span>
-            {% elif access == 'beach' %}
-              <span class="cost-badge is-beach">{{ trans(key='chip_beach', lang=lang) }}</span>
-            {% else %}
-              <span class="cost-badge is-public">{{ trans(key='chip_public', lang=lang) }}</span>
-            {% endif %}
+            {{ chrome::cost_badge(extra=page.extra, active_lang=lang) }}
             <span class="locale-text">
               {% if page.extra.locale_label %}
                 {{ page.extra.locale_label | upper }}

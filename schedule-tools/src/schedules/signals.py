@@ -19,10 +19,6 @@ def extract_page_texts(pdf_bytes: bytes) -> list[str]:
     return [(page.extract_text() or "") for page in reader.pages]
 
 
-def analyze_pdf(pdf_bytes: bytes) -> PdfSignals:
-    return analyze_page_texts(extract_page_texts(pdf_bytes))
-
-
 def analyze_page_texts(page_texts: list[str]) -> PdfSignals:
     grid_header_pages: list[int] = []
 

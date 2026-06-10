@@ -7,6 +7,8 @@ from typing import Any, Literal
 
 ExtractedPayload = dict[str, Any]
 
+DAY_ORDER = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+
 
 ViolationCode = Literal[
     "sessions_dropped_to_zero",
@@ -51,7 +53,6 @@ SourceStatus = Literal[
 
 SourceKind = Literal[
     "sfrecpark_pdf",
-    "bay_club_gateway_html",
     "twenty_four_hour_fitness_html",
     "jccsf_html",
     "koret_google_sheet",

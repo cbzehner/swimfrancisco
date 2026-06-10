@@ -16,7 +16,7 @@ from datetime import date as _date
 from pathlib import Path
 
 from ._time import pacific_today
-from .eval import PoolEval, collect_pool_evals
+from .eval import PoolEval, collect_pool_evals, prf1
 from .paths import DATA_DIR, REPO_ROOT
 from .registry import load_registry
 
@@ -204,9 +204,7 @@ def _eval_aggregate_row(provider: str, items: list[PoolEval]) -> str:
     tp = sum(i.true_positives for i in items)
     fp = sum(i.false_positives for i in items)
     fn = sum(i.false_negatives for i in items)
-    precision = tp / (tp + fp) if (tp + fp) else 1.0
-    recall = tp / (tp + fn) if (tp + fn) else 1.0
-    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
+    _, _, f1 = prf1(tp, fp, fn)
     return f"| {provider} | {f1:.2f} |"
 
 

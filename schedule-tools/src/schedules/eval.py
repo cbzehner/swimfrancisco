@@ -38,6 +38,15 @@ class RowKey:
         )
 
 
+def prf1(tp: int, fp: int, fn: int) -> tuple[float, float, float]:
+    """Precision/recall/F1 with the empty-denominator conventions used
+    throughout the eval surfaces (no predictions → perfect precision)."""
+    precision = tp / (tp + fp) if (tp + fp) else 1.0
+    recall = tp / (tp + fn) if (tp + fn) else 1.0
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
+    return precision, recall, f1
+
+
 @dataclass(frozen=True)
 class PoolEval:
     pool: str
@@ -54,18 +63,15 @@ class PoolEval:
 
     @property
     def precision(self) -> float:
-        denom = self.true_positives + self.false_positives
-        return self.true_positives / denom if denom else 1.0
+        return prf1(self.true_positives, self.false_positives, self.false_negatives)[0]
 
     @property
     def recall(self) -> float:
-        denom = self.true_positives + self.false_negatives
-        return self.true_positives / denom if denom else 1.0
+        return prf1(self.true_positives, self.false_positives, self.false_negatives)[1]
 
     @property
     def f1(self) -> float:
-        p, r = self.precision, self.recall
-        return 2 * p * r / (p + r) if (p + r) else 0.0
+        return prf1(self.true_positives, self.false_positives, self.false_negatives)[2]
 
 
 def _provider_stem_to_provider(stem: str) -> str:
@@ -76,13 +82,16 @@ def _provider_stem_to_provider(stem: str) -> str:
     return stem.split("-", 1)[0]
 
 
-def _diff_payloads(truth: dict, extracted: dict, sample_n: int = 3) -> tuple[set[RowKey], set[RowKey], list[dict], list[dict]]:
+def _diff_payloads(truth: dict, extracted: dict, sample_n: int = 3) -> tuple[set[RowKey], set[RowKey], int, list[dict], list[dict]]:
     truth_keys = {RowKey.from_session(s) for s in truth.get("sessions", [])}
     extracted_sessions = extracted.get("sessions", [])
     extracted_keys = {RowKey.from_session(s) for s in extracted_sessions}
 
     extras = extracted_keys - truth_keys
     missings = truth_keys - extracted_keys
+    # Count from key sets, not row counts: duplicate session keys in truth
+    # would otherwise inflate true positives.
+    tp = len(truth_keys & extracted_keys)
 
     extra_samples = []
     for s in extracted_sessions:
@@ -103,7 +112,7 @@ def _diff_payloads(truth: dict, extracted: dict, sample_n: int = 3) -> tuple[set
                 "evidence": s.get("evidence", "")[:120],
             })
 
-    return extras, missings, extra_samples, missing_samples
+    return extras, missings, tp, extra_samples, missing_samples
 
 
 def collect_pool_evals(*, data_root: Path = DATA_DIR, all_dirs: bool = False) -> list[PoolEval]:
@@ -139,10 +148,9 @@ def collect_pool_evals(*, data_root: Path = DATA_DIR, all_dirs: bool = False) ->
                 except (OSError, json.JSONDecodeError):
                     continue
                 extracted = art.get("payload") or {}
-                extras, missings, extra_ex, missing_ex = _diff_payloads(truth, extracted)
+                extras, missings, tp, extra_ex, missing_ex = _diff_payloads(truth, extracted)
                 truth_count = len(truth.get("sessions", []))
                 extracted_count = len(extracted.get("sessions", []))
-                tp = truth_count - len(missings)
                 results.append(
                     PoolEval(
                         pool=pool_dir.name,
@@ -190,9 +198,7 @@ def render_report(evals: Iterable[PoolEval]) -> str:
         tp = sum(i.true_positives for i in items)
         fp = sum(i.false_positives for i in items)
         fn = sum(i.false_negatives for i in items)
-        precision = tp / (tp + fp) if (tp + fp) else 1.0
-        recall = tp / (tp + fn) if (tp + fn) else 1.0
-        f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
+        precision, recall, f1 = prf1(tp, fp, fn)
         lines.append(
             f"| {provider} | {len(items)} | {truth} | {extracted} | {tp} | {fp} | {fn} | "
             f"{precision:.0%} | {recall:.0%} | {f1:.2f} |"

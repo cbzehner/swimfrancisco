@@ -2,9 +2,6 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
-from io import BytesIO
-
-from pypdf import PdfReader
 
 from .models import GroundingResult, SessionGrounding
 
@@ -39,11 +36,6 @@ IGNORE_LIST_TOKENS: tuple[str, ...] = (
 _WS_RE = re.compile(r"\s+")
 _TOKEN_RE = re.compile(r"[a-z0-9:/]+")
 _EVIDENCE_WINDOW_CHARS = 250
-
-
-def compute_grounding(pdf_bytes: bytes, payload: dict) -> GroundingResult:
-    reader = PdfReader(BytesIO(pdf_bytes))
-    return grounding_from_text(normalize_pdf_text((page.extract_text() or "") for page in reader.pages), payload)
 
 
 def normalize_pdf_text(page_texts: Iterable[str]) -> str:

@@ -16,10 +16,23 @@ from pathlib import Path
 import httpx
 
 from ._time import pacific_today
-from .models import PoolEntry
+from .models import DAY_ORDER, PoolEntry
 from .paths import DATA_DIR
 
-DAY_ORDER = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+_MONTH_NUMBERS = {
+    "january": 1,
+    "february": 2,
+    "march": 3,
+    "april": 4,
+    "may": 5,
+    "june": 6,
+    "july": 7,
+    "august": 8,
+    "september": 9,
+    "october": 10,
+    "november": 11,
+    "december": 12,
+}
 
 
 class DirectSourceError(RuntimeError):
@@ -44,40 +57,6 @@ class DirectExtraction:
 
 
 def extract_direct(entry: PoolEntry) -> DirectExtraction:
-    if entry.source_kind == "twenty_four_hour_fitness_html":
-        fetched = fetch_text(
-            entry.slug,
-            entry.pdf_url,
-            extension="html",
-            fingerprint=_payload_fingerprint(_extract_24_hour_fitness),
-        )
-        return DirectExtraction(
-            fetch_result=fetched,
-            payload=_extract_24_hour_fitness(fetched.text),
-            model="twenty-four-hour-fitness-html-v1",
-            notes=["24 Hour Fitness exposes gym hours, not pool lane availability; these are access hours only."],
-        )
-    if entry.source_kind == "bay_club_gateway_html":
-        fetched = fetch_text(entry.slug, entry.pdf_url, extension="html")
-        return DirectExtraction(
-            fetch_result=fetched,
-            payload=_extract_bay_club_gateway(fetched.text),
-            model="bay-club-gateway-html-v1",
-            notes=["Bay Club Gateway public pages do not expose lap-lane availability; these are access hours only when present."],
-        )
-    if entry.source_kind == "jccsf_html":
-        fetched = fetch_text(
-            entry.slug,
-            entry.pdf_url,
-            extension="html",
-            fingerprint=_payload_fingerprint(_extract_jccsf),
-        )
-        return DirectExtraction(
-            fetch_result=fetched,
-            payload=_extract_jccsf(fetched.text),
-            model="jccsf-html-v1",
-            notes=["JCCSF lap swim is modeled from Aquatics Center hours; lane-count breakdown remains linked on the official page."],
-        )
     if entry.source_kind == "koret_google_sheet":
         fetched = fetch_koret_workbook(entry.slug, entry.pdf_url)
         return DirectExtraction(
@@ -86,111 +65,22 @@ def extract_direct(entry: PoolEntry) -> DirectExtraction:
             model="koret-google-sheet-v1",
             notes=["Koret sessions represent official pool hours; the sheet still carries lane-level restrictions and team bookings."],
         )
-    if entry.source_kind == "pomeroy_html":
-        fetched = fetch_text(
-            entry.slug,
-            entry.pdf_url,
-            extension="html",
-            fingerprint=_payload_fingerprint(_extract_pomeroy),
-        )
-        return DirectExtraction(
-            fetch_result=fetched,
-            payload=_extract_pomeroy(fetched.text),
-            model="pomeroy-html-v1",
-            notes=["Pomeroy lap sessions are slow therapeutic lap swim, not vigorous lap training."],
-        )
-    if entry.source_kind == "city_sports_html":
-        fetched = fetch_text(
-            entry.slug,
-            entry.pdf_url,
-            extension="html",
-            fingerprint=_payload_fingerprint(_extract_city_sports),
-        )
-        return DirectExtraction(
-            fetch_result=fetched,
-            payload=_extract_city_sports(fetched.text),
-            model="city-sports-html-v1",
-            notes=["City Sports exposes club hours and lap-pool amenities, not lane availability; these are access hours only."],
-        )
-    if entry.source_kind == "equinox_html":
-        fetched = fetch_text(
-            entry.slug,
-            entry.pdf_url,
-            extension="html",
-            fingerprint=_payload_fingerprint(_extract_equinox),
-        )
-        return DirectExtraction(
-            fetch_result=fetched,
-            payload=_extract_equinox(fetched.text),
-            model="equinox-html-v1",
-            notes=["Equinox exposes club hours and an indoor-pool amenity, not lane availability; these are access hours only."],
-        )
-    if entry.source_kind == "fitness_sf_html":
-        fetched = fetch_text(
-            entry.slug,
-            entry.pdf_url,
-            extension="html",
-            fingerprint=_payload_fingerprint(_extract_fitness_sf),
-        )
-        return DirectExtraction(
-            fetch_result=fetched,
-            payload=_extract_fitness_sf(fetched.text),
-            model="fitness-sf-html-v1",
-            notes=["FITNESS SF exposes club hours and pool policies, not lane availability; these are access hours only."],
-        )
-    if entry.source_kind == "sfsu_aquatics_html":
-        fetched = fetch_text(
-            entry.slug,
-            entry.pdf_url,
-            extension="html",
-            fingerprint=_payload_fingerprint(_extract_sfsu_aquatics),
-        )
-        return DirectExtraction(
-            fetch_result=fetched,
-            payload=_extract_sfsu_aquatics(fetched.text),
-            model="sfsu-aquatics-html-v1",
-            notes=["SFSU exposes natatorium hours, not public lane availability; these are access hours only."],
-        )
-    if entry.source_kind == "ucsf_fitness_html":
-        fetched = fetch_text(
-            entry.slug,
-            entry.pdf_url,
-            extension="html",
-            fingerprint=_payload_fingerprint(_extract_ucsf_fitness),
-        )
-        return DirectExtraction(
-            fetch_result=fetched,
-            payload=_extract_ucsf_fitness(fetched.text),
-            model="ucsf-fitness-html-v1",
-            notes=["UCSF exposes facility hours and pool amenities, but not lane availability; these are access hours only."],
-        )
-    if entry.source_kind == "ucsf_bakar_html":
-        fetched = fetch_text(
-            entry.slug,
-            entry.pdf_url,
-            extension="html",
-            fingerprint=_payload_fingerprint(_extract_ucsf_bakar),
-        )
-        return DirectExtraction(
-            fetch_result=fetched,
-            payload=_extract_ucsf_bakar(fetched.text),
-            model="ucsf-bakar-html-v1",
-            notes=["UCSF Bakar exposes facility hours and pool amenities, but not pool lane availability; these are access hours only."],
-        )
-    if entry.source_kind == "ymca_location_html":
-        fetched = fetch_text(
-            entry.slug,
-            entry.pdf_url,
-            extension="html",
-            fingerprint=_payload_fingerprint(_extract_ymca_location),
-        )
-        return DirectExtraction(
-            fetch_result=fetched,
-            payload=_extract_ymca_location(fetched.text),
-            model="ymca-location-html-v1",
-            notes=["YMCA location pages expose facility hours and link to a separate pool schedule; these are access hours only."],
-        )
-    raise DirectSourceError(f"{entry.slug}: unsupported direct source kind {entry.source_kind!r}")
+    spec = _HTML_EXTRACTORS.get(entry.source_kind or "")
+    if spec is None:
+        raise DirectSourceError(f"{entry.slug}: unsupported direct source kind {entry.source_kind!r}")
+    extractor, model, note = spec
+    fetched = fetch_text(
+        entry.slug,
+        entry.pdf_url,
+        extension="html",
+        fingerprint=_payload_fingerprint(extractor),
+    )
+    return DirectExtraction(
+        fetch_result=fetched,
+        payload=extractor(fetched.text),
+        model=model,
+        notes=[note],
+    )
 
 
 def fetch_text(
@@ -404,12 +294,6 @@ def _extract_24_hour_fitness(html: str) -> dict:
     return _payload("facility_hours", [], access_hours=access_hours)
 
 
-def _extract_bay_club_gateway(html: str) -> dict:
-    text = _html_text(html)
-    _require_text(text, "Bay Club Gateway")
-    raise DirectSourceError("Bay Club Gateway public page does not expose usable club hours.")
-
-
 def _extract_koret(text: str) -> dict:
     sessions: list[dict] = []
     for sheet_name, csv_text in _split_koret_sheets(text).items():
@@ -611,6 +495,63 @@ def _extract_ymca_location(html: str) -> dict:
     )
 
 
+# HTML sources all share the fetch_text + payload-fingerprint flow; adding a
+# site is one registration here plus its extractor. Defined after the
+# extractors so the references resolve at import time.
+_HTML_EXTRACTORS: dict[str, tuple[Callable[[str], dict], str, str]] = {
+    "twenty_four_hour_fitness_html": (
+        _extract_24_hour_fitness,
+        "twenty-four-hour-fitness-html-v1",
+        "24 Hour Fitness exposes gym hours, not pool lane availability; these are access hours only.",
+    ),
+    "jccsf_html": (
+        _extract_jccsf,
+        "jccsf-html-v1",
+        "JCCSF lap swim is modeled from Aquatics Center hours; lane-count breakdown remains linked on the official page.",
+    ),
+    "pomeroy_html": (
+        _extract_pomeroy,
+        "pomeroy-html-v1",
+        "Pomeroy lap sessions are slow therapeutic lap swim, not vigorous lap training.",
+    ),
+    "city_sports_html": (
+        _extract_city_sports,
+        "city-sports-html-v1",
+        "City Sports exposes club hours and lap-pool amenities, not lane availability; these are access hours only.",
+    ),
+    "equinox_html": (
+        _extract_equinox,
+        "equinox-html-v1",
+        "Equinox exposes club hours and an indoor-pool amenity, not lane availability; these are access hours only.",
+    ),
+    "fitness_sf_html": (
+        _extract_fitness_sf,
+        "fitness-sf-html-v1",
+        "FITNESS SF exposes club hours and pool policies, not lane availability; these are access hours only.",
+    ),
+    "sfsu_aquatics_html": (
+        _extract_sfsu_aquatics,
+        "sfsu-aquatics-html-v1",
+        "SFSU exposes natatorium hours, not public lane availability; these are access hours only.",
+    ),
+    "ucsf_fitness_html": (
+        _extract_ucsf_fitness,
+        "ucsf-fitness-html-v1",
+        "UCSF exposes facility hours and pool amenities, but not lane availability; these are access hours only.",
+    ),
+    "ucsf_bakar_html": (
+        _extract_ucsf_bakar,
+        "ucsf-bakar-html-v1",
+        "UCSF Bakar exposes facility hours and pool amenities, but not pool lane availability; these are access hours only.",
+    ),
+    "ymca_location_html": (
+        _extract_ymca_location,
+        "ymca-location-html-v1",
+        "YMCA location pages expose facility hours and link to a separate pool schedule; these are access hours only.",
+    ),
+}
+
+
 def _payload(
     schedule_basis: str,
     sessions: list[dict],
@@ -670,21 +611,6 @@ def _access_exception(date_iso: str, start: str, end: str, label: str, reason: s
     }
 
 
-def _extract_day_hour_spans(html: str, *, label: str) -> list[dict]:
-    access_hours: list[dict] = []
-    for day, hours in re.findall(
-        r"<span>\s*(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s*</span>\s*<span>\s*([^<]+)\s*</span>",
-        html,
-        flags=re.IGNORECASE,
-    ):
-        clean_hours = _squash(hours)
-        if clean_hours.lower() == "closed":
-            continue
-        start, end = _parse_hours_range(clean_hours)
-        access_hours.append(_access_hour(day.lower(), start, end, label, f"{day}: {clean_hours}"))
-    return access_hours
-
-
 def _extract_first_day_hour_block(html: str, *, label: str) -> list[dict]:
     access_hours: list[dict] = []
     seen_days: set[str] = set()
@@ -741,20 +667,6 @@ def _extract_ymca_holiday_access_exceptions(html: str, *, basis: str) -> list[di
     ]
     if not blocks:
         return []
-    month_numbers = {
-        "january": 1,
-        "february": 2,
-        "march": 3,
-        "april": 4,
-        "may": 5,
-        "june": 6,
-        "july": 7,
-        "august": 8,
-        "september": 9,
-        "october": 10,
-        "november": 11,
-        "december": 12,
-    }
     pattern = (
         r"(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)?\s*,?\s*"
         r"(January|February|March|April|May|June|July|August|September|October|November|December)"
@@ -785,7 +697,7 @@ def _extract_ymca_holiday_access_exceptions(html: str, *, basis: str) -> list[di
                 if not pool_hours:
                     start = _shift_hhmm(start, minutes=30)
                     end = _parse_clock_time(pool_closes) if pool_closes else _shift_hhmm(end, minutes=-30)
-            date_iso = _resolve_yearless_date(month_numbers[month.lower()], int(day)).isoformat()
+            date_iso = _resolve_yearless_date(_MONTH_NUMBERS[month.lower()], int(day)).isoformat()
             key = (date_iso, start, end, label, reason)
             if key in seen:
                 continue
@@ -879,20 +791,6 @@ def _resolve_yearless_date(month: int, day: int, today: date | None = None) -> d
 
 def _closure_dates_from_text(text: str) -> list[dict]:
     closures: list[dict] = []
-    month_numbers = {
-        "january": 1,
-        "february": 2,
-        "march": 3,
-        "april": 4,
-        "may": 5,
-        "june": 6,
-        "july": 7,
-        "august": 8,
-        "september": 9,
-        "october": 10,
-        "november": 11,
-        "december": 12,
-    }
     for match in re.finditer(
         r"\b(?:(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\w*\s+)?"
         r"(January|February|March|April|May|June|July|August|September|October|November|December)"
@@ -901,7 +799,7 @@ def _closure_dates_from_text(text: str) -> list[dict]:
         flags=re.IGNORECASE,
     ):
         month, day, reason = match.groups()
-        iso = _resolve_yearless_date(month_numbers[month.lower()], int(day)).isoformat()
+        iso = _resolve_yearless_date(_MONTH_NUMBERS[month.lower()], int(day)).isoformat()
         closures.append({"start": iso, "end": iso, "reason": _squash(reason)})
     return closures
 

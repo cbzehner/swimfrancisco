@@ -13,9 +13,8 @@ def load_reviewed_snapshot_from_path(
 ) -> tuple[dict, str, str]:
     """Load a snapshot when the on-disk path is already known.
 
-    Unlike ``load_reviewed_snapshot``, this does not require the caller to
-    know the envelope's ``pdf_sha256`` in advance — it extracts it from
-    the file and validates.
+    Does not require the caller to know the envelope's ``pdf_sha256`` in
+    advance — it extracts it from the file and validates.
     """
     raw = json.loads(path.read_text())
     if not isinstance(raw, dict):

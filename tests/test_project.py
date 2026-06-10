@@ -60,7 +60,7 @@ def test_project_queues_future_schedule_when_current_schedule_has_not_ended(tmp_
     current["payload"]["effective_end"] = "2026-06-06"
     reviewed_current = _write_reviewed_json(data, "hamilton-pool", "a" * 64, current)
     _seed_content_md(content, "hamilton-pool")
-    project(slug="hamilton-pool", reviewed_json_path=reviewed_current, content_spots_dir=content, as_of_date="2026-06-06")
+    project(slug="hamilton-pool", reviewed_json_path=reviewed_current, content_spots_dir=content)
 
     future = _valid_envelope("hamilton-pool", "b" * 64)
     future["reviewed_at"] = "2026-06-06"
@@ -68,7 +68,7 @@ def test_project_queues_future_schedule_when_current_schedule_has_not_ended(tmp_
     future["payload"]["effective_end"] = "2026-08-15"
     future["payload"]["sessions"][0]["start"] = "06:30"
     reviewed_future = _write_reviewed_json(data, "hamilton-pool", "b" * 64, future)
-    project(slug="hamilton-pool", reviewed_json_path=reviewed_future, content_spots_dir=content, as_of_date="2026-06-06")
+    project(slug="hamilton-pool", reviewed_json_path=reviewed_future, content_spots_dir=content)
 
     rendered = (content / "hamilton-pool.md").read_text()
     # Both schedules now coexist in the [[extra.schedules]] array.
@@ -89,7 +89,7 @@ def test_project_promotes_queued_schedule_on_its_start_date(tmp_path):
     current["payload"]["effective_end"] = "2026-06-06"
     reviewed_current = _write_reviewed_json(data, "hamilton-pool", "a" * 64, current)
     _seed_content_md(content, "hamilton-pool")
-    project(slug="hamilton-pool", reviewed_json_path=reviewed_current, content_spots_dir=content, as_of_date="2026-06-06")
+    project(slug="hamilton-pool", reviewed_json_path=reviewed_current, content_spots_dir=content)
 
     future = _valid_envelope("hamilton-pool", "b" * 64)
     future["reviewed_at"] = "2026-06-06"
@@ -97,8 +97,8 @@ def test_project_promotes_queued_schedule_on_its_start_date(tmp_path):
     future["payload"]["effective_end"] = "2026-08-15"
     future["payload"]["sessions"][0]["start"] = "06:30"
     reviewed_future = _write_reviewed_json(data, "hamilton-pool", "b" * 64, future)
-    project(slug="hamilton-pool", reviewed_json_path=reviewed_future, content_spots_dir=content, as_of_date="2026-06-06")
-    project(slug="hamilton-pool", reviewed_json_path=reviewed_future, content_spots_dir=content, as_of_date="2026-06-09")
+    project(slug="hamilton-pool", reviewed_json_path=reviewed_future, content_spots_dir=content)
+    project(slug="hamilton-pool", reviewed_json_path=reviewed_future, content_spots_dir=content)
 
     rendered = (content / "hamilton-pool.md").read_text()
     # After three merges the array has both the original spring schedule and
@@ -117,7 +117,7 @@ def test_project_preserves_next_queued_schedule_when_later_schedule_arrives_earl
     current["payload"]["effective_end"] = "2026-06-06"
     reviewed_current = _write_reviewed_json(data, "hamilton-pool", "a" * 64, current)
     _seed_content_md(content, "hamilton-pool")
-    project(slug="hamilton-pool", reviewed_json_path=reviewed_current, content_spots_dir=content, as_of_date="2026-06-06")
+    project(slug="hamilton-pool", reviewed_json_path=reviewed_current, content_spots_dir=content)
 
     summer = _valid_envelope("hamilton-pool", "b" * 64)
     summer["reviewed_at"] = "2026-06-06"
@@ -125,7 +125,7 @@ def test_project_preserves_next_queued_schedule_when_later_schedule_arrives_earl
     summer["payload"]["effective_end"] = "2026-08-15"
     summer["payload"]["sessions"][0]["start"] = "06:30"
     reviewed_summer = _write_reviewed_json(data, "hamilton-pool", "b" * 64, summer)
-    project(slug="hamilton-pool", reviewed_json_path=reviewed_summer, content_spots_dir=content, as_of_date="2026-06-06")
+    project(slug="hamilton-pool", reviewed_json_path=reviewed_summer, content_spots_dir=content)
 
     fall = _valid_envelope("hamilton-pool", "c" * 64)
     fall["reviewed_at"] = "2026-06-07"
@@ -133,7 +133,7 @@ def test_project_preserves_next_queued_schedule_when_later_schedule_arrives_earl
     fall["payload"]["effective_end"] = "2026-11-15"
     fall["payload"]["sessions"][0]["start"] = "07:30"
     reviewed_fall = _write_reviewed_json(data, "hamilton-pool", "c" * 64, fall)
-    project(slug="hamilton-pool", reviewed_json_path=reviewed_fall, content_spots_dir=content, as_of_date="2026-06-07")
+    project(slug="hamilton-pool", reviewed_json_path=reviewed_fall, content_spots_dir=content)
 
     rendered = (content / "hamilton-pool.md").read_text()
     # All three schedules now coexist in the array — no longer a "queued vs
@@ -154,7 +154,7 @@ def test_project_promotes_active_queued_schedule_before_queueing_later_schedule(
     current["payload"]["effective_end"] = "2026-06-06"
     reviewed_current = _write_reviewed_json(data, "hamilton-pool", "a" * 64, current)
     _seed_content_md(content, "hamilton-pool")
-    project(slug="hamilton-pool", reviewed_json_path=reviewed_current, content_spots_dir=content, as_of_date="2026-06-06")
+    project(slug="hamilton-pool", reviewed_json_path=reviewed_current, content_spots_dir=content)
 
     summer = _valid_envelope("hamilton-pool", "b" * 64)
     summer["reviewed_at"] = "2026-06-06"
@@ -162,7 +162,7 @@ def test_project_promotes_active_queued_schedule_before_queueing_later_schedule(
     summer["payload"]["effective_end"] = "2026-08-15"
     summer["payload"]["sessions"][0]["start"] = "06:30"
     reviewed_summer = _write_reviewed_json(data, "hamilton-pool", "b" * 64, summer)
-    project(slug="hamilton-pool", reviewed_json_path=reviewed_summer, content_spots_dir=content, as_of_date="2026-06-06")
+    project(slug="hamilton-pool", reviewed_json_path=reviewed_summer, content_spots_dir=content)
 
     fall = _valid_envelope("hamilton-pool", "c" * 64)
     fall["reviewed_at"] = "2026-08-01"
@@ -170,7 +170,7 @@ def test_project_promotes_active_queued_schedule_before_queueing_later_schedule(
     fall["payload"]["effective_end"] = "2026-11-15"
     fall["payload"]["sessions"][0]["start"] = "07:30"
     reviewed_fall = _write_reviewed_json(data, "hamilton-pool", "c" * 64, fall)
-    project(slug="hamilton-pool", reviewed_json_path=reviewed_fall, content_spots_dir=content, as_of_date="2026-08-01")
+    project(slug="hamilton-pool", reviewed_json_path=reviewed_fall, content_spots_dir=content)
 
     rendered = (content / "hamilton-pool.md").read_text()
     # All three schedules coexist in the array; no separate "queued" block.

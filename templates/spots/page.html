@@ -4,22 +4,20 @@
 {% import "macros/chrome.html" as chrome %}
 {% import "macros/seo.html" as seo %}
 {% block title %}{% if page.extra.localized_from %}{% set p = get_page(path="spots/" ~ page.extra.localized_from ~ ".md", lang=config.default_language) %}{% else %}{% set p = page %}{% endif %}{% if p.extra.type == "pool" %}{{ p.title }} {{ trans(key='spot_pool_title_suffix', lang=lang) }} — Swim Francisco{% elif p.extra.type == "open_water" %}{{ p.title }} {{ trans(key='spot_open_water_title_suffix', lang=lang) }} — Swim Francisco{% else %}{{ p.title }} — Swim Francisco{% endif %}{% endblock %}
-{% block meta_description %}{% if page.extra.localized_from %}{% set p = get_page(path="spots/" ~ page.extra.localized_from ~ ".md", lang=config.default_language) %}{% else %}{% set p = page %}{% endif %}{% set summary = page.extra.description_short | default(value=p.extra.description_short | default(value="")) %}{% if p.extra.type == "pool" %}{{ trans(key='spot_pool_meta', lang=lang) | replace(from='%{title}', to=p.title) }}{% elif p.extra.type == "open_water" %}{{ trans(key='spot_open_water_meta', lang=lang) | replace(from='%{title}', to=p.title) | replace(from='%{summary}', to=summary) }}{% else %}{{ seo::spot_meta_description(page=p) | trim }}{% endif %}{% endblock %}
+{% block meta_description %}{% if page.extra.localized_from %}{% set p = get_page(path="spots/" ~ page.extra.localized_from ~ ".md", lang=config.default_language) %}{% else %}{% set p = page %}{% endif %}{% set summary = page.extra.description_short | default(value=p.extra.description_short | default(value="")) %}{% if p.extra.type == "pool" %}{{ trans(key='spot_pool_meta', lang=lang) | replace(from='%{title}', to=p.title) }}{% else %}{{ trans(key='spot_open_water_meta', lang=lang) | replace(from='%{title}', to=p.title) | replace(from='%{summary}', to=summary) }}{% endif %}{% endblock %}
 {% block canonical_url %}{{ page.permalink | safe }}{% endblock %}
 {% block alternate_links %}{% if page.extra.localized_from %}{% set alternate_slug = page.extra.localized_from %}{% else %}{% set alternate_slug = page.slug %}{% endif %}{% set alternate_path = "@/spots/" ~ alternate_slug ~ ".md" %}{{ seo::alternate_links(content_path=alternate_path) }}{% endblock %}
 {% block og_type %}place{% endblock %}
 {% block social_title %}{% if page.extra.localized_from %}{% set p = get_page(path="spots/" ~ page.extra.localized_from ~ ".md", lang=config.default_language) %}{% else %}{% set p = page %}{% endif %}{% if p.extra.type == "pool" %}{{ p.title }} {{ trans(key='spot_pool_title_suffix', lang=lang) }} — Swim Francisco{% elif p.extra.type == "open_water" %}{{ p.title }} {{ trans(key='spot_open_water_title_suffix', lang=lang) }} — Swim Francisco{% else %}{{ p.title }} — Swim Francisco{% endif %}{% endblock %}
-{% block social_description %}{% if page.extra.localized_from %}{% set p = get_page(path="spots/" ~ page.extra.localized_from ~ ".md", lang=config.default_language) %}{% else %}{% set p = page %}{% endif %}{% set summary = page.extra.description_short | default(value=p.extra.description_short | default(value="")) %}{% if p.extra.type == "pool" %}{{ trans(key='spot_pool_meta', lang=lang) | replace(from='%{title}', to=p.title) }}{% elif p.extra.type == "open_water" %}{{ trans(key='spot_open_water_meta', lang=lang) | replace(from='%{title}', to=p.title) | replace(from='%{summary}', to=summary) }}{% else %}{{ seo::spot_meta_description(page=p) | trim }}{% endif %}{% endblock %}
+{% block social_description %}{% if page.extra.localized_from %}{% set p = get_page(path="spots/" ~ page.extra.localized_from ~ ".md", lang=config.default_language) %}{% else %}{% set p = page %}{% endif %}{% set summary = page.extra.description_short | default(value=p.extra.description_short | default(value="")) %}{% if p.extra.type == "pool" %}{{ trans(key='spot_pool_meta', lang=lang) | replace(from='%{title}', to=p.title) }}{% else %}{{ trans(key='spot_open_water_meta', lang=lang) | replace(from='%{title}', to=p.title) | replace(from='%{summary}', to=summary) }}{% endif %}{% endblock %}
 {% block social_url %}{{ page.permalink | safe }}{% endblock %}
 {% block extra_head %}
   {% if page.extra.localized_from %}{% set p = get_page(path="spots/" ~ page.extra.localized_from ~ ".md", lang=config.default_language) %}{% else %}{% set p = page %}{% endif %}
   {% set summary = page.extra.description_short | default(value=p.extra.description_short | default(value="")) %}
   {% if p.extra.type == "pool" %}
     {% set schema_description = trans(key='spot_pool_meta', lang=lang) | replace(from='%{title}', to=p.title) %}
-  {% elif p.extra.type == "open_water" %}
-    {% set schema_description = trans(key='spot_open_water_meta', lang=lang) | replace(from='%{title}', to=p.title) | replace(from='%{summary}', to=summary) %}
   {% else %}
-    {% set schema_description = seo::spot_meta_description(page=p) | trim %}
+    {% set schema_description = trans(key='spot_open_water_meta', lang=lang) | replace(from='%{title}', to=p.title) | replace(from='%{summary}', to=summary) %}
   {% endif %}
   <script type="application/ld+json">
     {{ seo::spot_json_ld(page=p, config=config, url=page.permalink, description=schema_description | trim, lang=lang) | safe }}
@@ -221,16 +219,7 @@
       {% if extra.address %}<span class="key"><a href="{{ place_href }}" target="_blank" rel="noopener">{{ extra.address | upper }}</a></span>{% endif %}
       {% if extra.subtype %}<span class="subtype">{{ chrome::spot_label(label=extra.subtype, active_lang=lang) | upper }}</span>{% endif %}
       {% if extra.setpoint_label %}<span class="setpoint">{{ trans(key='water', lang=lang) }} {{ chrome::spot_label(label=extra.setpoint_label, active_lang=lang) | upper }}</span>{% endif %}
-      {% set access = extra.access | default(value='public') %}
-      {% if access == 'day_pass' %}
-        <span class="cost-badge is-day-pass">{{ trans(key='chip_day_pass', lang=lang) }}{% if extra.day_pass_price %} · {{ extra.day_pass_price }}{% endif %}</span>
-      {% elif access == 'members' %}
-        <span class="cost-badge is-members">{{ trans(key='chip_members', lang=lang) }}</span>
-      {% elif access == 'beach' %}
-        <span class="cost-badge is-beach">{{ trans(key='chip_beach', lang=lang) }}</span>
-      {% else %}
-        <span class="cost-badge is-public">{{ trans(key='chip_public', lang=lang) }}</span>
-      {% endif %}
+      {{ chrome::cost_badge(extra=extra, active_lang=lang) }}
       {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">{{ trans(key='official_page', lang=lang) }}</a>{% endif %}
       {% if extra.address %}
         <span class="address-actions" role="group" aria-label="{{ trans(key='directions', lang=lang) }}">

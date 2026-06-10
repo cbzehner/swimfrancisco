@@ -154,7 +154,7 @@ def _process_entry(
 
     try:
         if entry.source_kind != "sfrecpark_pdf":
-            return _process_direct_entry(entry)
+            return _process_direct_entry(entry, prior_snapshot)
 
         # PDF fetch + path setup
         fetch_result = fetch_pdf(entry.slug, entry.pdf_url)
@@ -294,78 +294,70 @@ def _process_entry(
         )
 
 
-def _process_direct_entry(entry: PoolEntry) -> PoolResult:
-    prior_snapshot = read_schedule_snapshot(CONTENT_SPOTS_DIR / f"{entry.slug}.md")
-    try:
-        extracted = extract_direct(entry)
-        fetch_result = extracted.fetch_result
-        date = fetch_result.path.parent.name[:10]
-        reviewed_file = reviewed_path(entry.slug, date, fetch_result.sha256)
+# Runs inside _process_entry's try/except, which wraps any failure in the
+# same Aborted result — no separate error handling needed here.
+def _process_direct_entry(entry: PoolEntry, prior_snapshot: dict) -> PoolResult:
+    extracted = extract_direct(entry)
+    fetch_result = extracted.fetch_result
+    date = fetch_result.path.parent.name[:10]
+    reviewed_file = reviewed_path(entry.slug, date, fetch_result.sha256)
 
-        if reviewed_file.exists():
-            return _build_unchanged(
-                entry,
-                FetchResult(
-                    path=fetch_result.path,
-                    sha256=fetch_result.sha256,
-                    bytes=fetch_result.text.encode("utf-8"),
-                    from_cache=fetch_result.from_cache,
-                    page_count=0,
-                    response_url=fetch_result.response_url,
-                ),
-                reviewed_file,
-            )
+    if reviewed_file.exists():
+        return _build_unchanged(
+            entry,
+            FetchResult(
+                path=fetch_result.path,
+                sha256=fetch_result.sha256,
+                bytes=fetch_result.text.encode("utf-8"),
+                from_cache=fetch_result.from_cache,
+                page_count=0,
+                response_url=fetch_result.response_url,
+            ),
+            reviewed_file,
+        )
 
-        payload = extracted.payload
-        review_notes = [
-            ReviewNote(
-                kind="direct_extractor_note",
-                message=note,
-                severity="info",
-            )
-            for note in extracted.notes
-        ]
-        review_notes.extend(check_delta(payload, prior_snapshot))
-        validation = validate(payload, prior_sessions_count=len(prior_snapshot["sessions"]))
-        artifact_paths = save_artifact_bundle(
-            slug=entry.slug,
-            date=date,
-            provider="direct",
-            model=extracted.model,
-            source_pdf_url=entry.pdf_url,
-            pdf_sha256=fetch_result.sha256,
-            prompt=f"direct:{entry.source_kind}",
-            schema=EXTRACTION_SCHEMA,
-            payload=payload,
-            usage={},
-            cost_estimate="deterministic",
-            grounding=None,
+    payload = extracted.payload
+    review_notes = [
+        ReviewNote(
+            kind="direct_extractor_note",
+            message=note,
+            severity="info",
         )
-        return Extracted(
-            **_identity_kwargs(entry),
-            provider="direct",
-            model=extracted.model,
-            pdf_sha256=fetch_result.sha256,
-            page_count=0,
-            sessions_count=validation.stats["sessions"],
-            prior_sessions_count=len(prior_snapshot["sessions"]),
-            closures_count=validation.stats["closures"],
-            effective_start=payload.get("effective_start"),
-            schedule_basis=payload.get("schedule_basis"),
-            cost_estimate="deterministic",
-            catastrophic=validation.catastrophic,
-            violations=validation.violations,
-            review_notes=review_notes,
-            artifact_paths=artifact_paths,
-        )
-    except Exception as exc:  # noqa: BLE001
-        return Aborted(
-            **_identity_kwargs(entry),
-            error=f"{type(exc).__name__}: {exc}\n{traceback.format_exc()}",
-            prior_sessions_count=len(prior_snapshot["sessions"]),
-            prior_closures_count=len(prior_snapshot["closures"]),
-            prior_schedule_effective=prior_snapshot["effective_start"],
-        )
+        for note in extracted.notes
+    ]
+    review_notes.extend(check_delta(payload, prior_snapshot))
+    validation = validate(payload, prior_sessions_count=len(prior_snapshot["sessions"]))
+    artifact_paths = save_artifact_bundle(
+        slug=entry.slug,
+        date=date,
+        provider="direct",
+        model=extracted.model,
+        source_pdf_url=entry.pdf_url,
+        pdf_sha256=fetch_result.sha256,
+        prompt=f"direct:{entry.source_kind}",
+        schema=EXTRACTION_SCHEMA,
+        payload=payload,
+        usage={},
+        cost_estimate="deterministic",
+        grounding=None,
+    )
+    return Extracted(
+        **_identity_kwargs(entry),
+        provider="direct",
+        model=extracted.model,
+        pdf_sha256=fetch_result.sha256,
+        page_count=0,
+        sessions_count=validation.stats["sessions"],
+        prior_sessions_count=len(prior_snapshot["sessions"]),
+        closures_count=validation.stats["closures"],
+        effective_start=payload.get("effective_start"),
+        schedule_basis=payload.get("schedule_basis"),
+        cost_estimate="deterministic",
+        catastrophic=validation.catastrophic,
+        violations=validation.violations,
+        review_notes=review_notes,
+        artifact_paths=artifact_paths,
+    )
 
 
 def run_pipeline(

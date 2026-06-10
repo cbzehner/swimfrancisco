@@ -1,14 +1,3 @@
-{% macro spot_meta_description(page) -%}
-  {%- set extra = page.extra -%}
-  {%- if extra.type == "pool" -%}
-    {{- page.title }} swim schedule in San Francisco: lap swim{% if extra.sessions | default(value=[]) | filter(attribute="type", value="family_swim") | length > 0 %}, family swim{% endif %}{% if extra.sessions | default(value=[]) | filter(attribute="type", value="senior_swim") | length > 0 %}, senior swim{% endif %}, access, address, water temperature, and official schedule source.
-  {%- elif extra.type == "open_water" -%}
-    {{- page.title }} open-water swimming in San Francisco: {{ extra.description_short | default(value="conditions, access, hazards, clubs, and common distances") }}.
-  {%- else -%}
-    {{- page.title }} swimming details in San Francisco from Swim Francisco.
-  {%- endif -%}
-{%- endmacro spot_meta_description %}
-
 {% macro og_locale_tags(active_lang) -%}
   {%- set locale_data = load_data(path="data/locales.toml") -%}
   {%- for locale in locale_data.locales -%}

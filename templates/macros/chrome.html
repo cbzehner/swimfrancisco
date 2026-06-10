@@ -9,6 +9,19 @@
   {%- endif -%}
 {%- endmacro spot_label %}
 
+{% macro cost_badge(extra, active_lang) %}
+  {%- set access = extra.access | default(value='public') -%}
+  {%- if access == 'day_pass' -%}
+    <span class="cost-badge is-day-pass">{{ trans(key='chip_day_pass', lang=active_lang) }}{% if extra.day_pass_price %} · {{ extra.day_pass_price }}{% endif %}</span>
+  {%- elif access == 'members' -%}
+    <span class="cost-badge is-members">{{ trans(key='chip_members', lang=active_lang) }}</span>
+  {%- elif access == 'beach' -%}
+    <span class="cost-badge is-beach">{{ trans(key='chip_beach', lang=active_lang) }}</span>
+  {%- else -%}
+    <span class="cost-badge is-public">{{ trans(key='chip_public', lang=active_lang) }}</span>
+  {%- endif -%}
+{% endmacro cost_badge %}
+
 {% macro site_header(active_view, content_path, active_lang) %}
   <header class="site-header">
     <div class="site-header-row">
