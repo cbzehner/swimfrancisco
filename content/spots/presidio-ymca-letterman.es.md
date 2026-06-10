@@ -12,13 +12,13 @@ description_short = "Piscina detrás del complejo Letterman en el Presidio, fuer
 label = "Miembro YMCA"
 price = "Membresía"
 note = "Usa el acceso de membresía de YMCA of Greater San Francisco."
-url = "https://www.ymcasf.org/location/presidio-community-ymca/"
+url = "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"
 
 [[extra.pricing]]
 label = "No miembro / invitado"
 price = "Consultar a YMCA"
 note = "Las reglas de invitado o pase diario dependen de la sucursal y la política vigente."
-url = "https://www.ymcasf.org/location/presidio-community-ymca/"
+url = "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"
 +++
 
 Letterman Pool está detrás del complejo Letterman en el Presidio y es una de las mejores opciones de piscina con membresía para nadadores de carril en el lado norte de la ciudad.

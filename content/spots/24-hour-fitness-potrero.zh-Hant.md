@@ -17,7 +17,7 @@ url = "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
 [[extra.pricing]]
 label = "訪客／試用"
 price = "向俱樂部查詢"
-note = "促銷和訪客使用權不夠穩定，不適合作為固定游泳價格發布。"
+note = "優惠和訪客使用權不夠穩定，不適合作為固定游泳價格發布。"
 url = "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
 +++
 

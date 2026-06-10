@@ -47,4 +47,4 @@ note = "Vé ngày cho công chúng Thứ Hai / Tư / Sáu, với giờ theo mùa
 url = "https://dolphinclub.org/swimming/"
 +++
 
-Aquatic Park là một vịnh nhỏ được che chắn ở khu bờ nước phía bắc, được bảo vệ bởi cầu tàu thành phố dạng cong. Điều kiện nước êm quanh năm khiến nơi này trở thành điểm tập bơi ngoài trời quen thuộc của thành phố. [South End Rowing Club](https://serc.com/) và [Dolphin Club](https://dolphinclub.org/) đều có nhà câu lạc bộ trên bãi và tổ chức các buổi bơi thường xuyên.
+Aquatic Park là một vịnh nhỏ được che chắn ở khu bờ nước phía bắc, được bảo vệ bởi cầu tàu thành phố dạng cong. Điều kiện nước êm quanh năm khiến nơi này trở thành điểm bơi vùng nước mở quen thuộc của thành phố. [South End Rowing Club](https://serc.com/) và [Dolphin Club](https://dolphinclub.org/) đều có nhà câu lạc bộ trên bãi và tổ chức các buổi bơi thường xuyên.

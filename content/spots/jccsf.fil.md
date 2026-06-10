@@ -4,7 +4,7 @@ slug = "jccsf"
 
 [extra]
 localized_from = "jccsf"
-access_notes = [ "Tingnan ang kasalukuyang iskedyul ng lane bago pumunta; nakalista ang pinakamaraming gumagamit bilang 4:00-7:00 pm araw-araw." ]
+access_notes = [ "Tingnan ang kasalukuyang iskedyul ng lane bago pumunta; nakalista ang pinakamataong oras na 4:00-7:00 pm araw-araw." ]
 access_summary = "Nakaugnay sa membership sa JCCSF Fitness Center ang pagpasok sa Gallanter Family Aquatics Center. Nakalista sa opisyal na aquatics page ang paggamit ng lap pool para sa mga miyembro at presyo ng swim school para sa miyembro."
 description_short = "Aquatics center na may 25-yard na pool para sa paglangoy sa lane, warm-water recreation pool, at hot tub; karaniwang pool para sa mga miyembro."
 

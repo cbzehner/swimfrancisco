@@ -21,4 +21,4 @@ note = "Vieras- ja päiväpassisäännöt riippuvat toimipisteestä ja käytänn
 url = "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"
 +++
 
-Letterman Pool sijaitsee Letterman-kompleksin takana Presidiossa ja on yksi vahvimmista jäsenallasvaihtoehdoista kaupungin pohjoispuolen ratauintareille.
+Letterman Pool sijaitsee Letterman-kompleksin takana Presidiossa ja on yksi vahvimmista jäsenallasvaihtoehdoista kaupungin pohjoispuolen ratauimareille.

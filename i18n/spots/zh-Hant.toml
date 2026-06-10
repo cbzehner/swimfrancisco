@@ -23,7 +23,7 @@ url = "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
 [[spots.24-hour-fitness-potrero.pricing]]
 label = "訪客／試用"
 price = "向俱樂部查詢"
-note = "促銷和訪客使用權不夠穩定，不適合作為固定游泳價格發布。"
+note = "優惠和訪客使用權不夠穩定，不適合作為固定游泳價格發布。"
 url = "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
 
 [spots.aquatic-park]
@@ -240,8 +240,8 @@ body = "室內複合設施有兩個泳池：25 米、21 呎深的泳道池，以
 title = "Ocean Beach"
 slug = "ocean-beach"
 description_short = "長約三英里的高風險海灘，只適合經驗豐富的開放水域泳者在平靜水況下游泳。"
-hazards = [ "強勁離岸流", "岸邊大浪", "突發大浪", "全年水溫偏冷", "指定時間外沒有救生員" ]
-body = "Ocean Beach 沿城市西側延伸約三英里。它是加州海岸最危險的海灘之一：強浪、強勁離岸流和突發大浪曾造成多宗溺水。這裡只適合經驗豐富的開放水域泳者，而且即使如此也只應在平靜水況下游泳。"
+hazards = [ "強勁離岸流", "岸邊大浪", "瘋狗浪（突發大浪）", "全年水溫偏冷", "指定時間外沒有救生員" ]
+body = "Ocean Beach 沿城市西側延伸約三英里。它是加州海岸最危險的海灘之一：強浪、強勁離岸流和瘋狗浪（突發大浪）曾造成多宗溺水。這裡只適合經驗豐富的開放水域泳者，而且即使如此也只應在平靜水況下游泳。"
 
 [spots.pomeroy-pool]
 title = "Pomeroy Pool"
@@ -292,8 +292,8 @@ body = "位於 Inner Richmond Rossi Playground、Arguello 和 Anza 交界的室�
 [spots.sava-pool]
 title = "Sava Pool"
 slug = "sava-pool"
-description_short = "Parkside/Sunset 的室內泳池，目前因維修關閉，預計 2026 年夏季重開。"
-body = "位於 Parkside/Sunset、19th Avenue 近 Stern Grove 的室內泳池。目前因維修關閉，預計 2026 年夏季重開。開放時，項目包括泳道游泳、長者游泳、休閒游泳和游泳課。"
+description_short = "Parkside/Sunset 的室內泳池，近 Stern Grove。"
+body = "位於 Parkside/Sunset、19th Avenue 近 Stern Grove 的室內泳池。項目包括泳道游泳、長者游泳、休閒游泳和游泳課。"
 
 [spots.sfsu-mashouf]
 title = "SFSU Mashouf Wellness Center"

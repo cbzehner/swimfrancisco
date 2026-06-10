@@ -2,7 +2,7 @@
 title = "24 Hour Fitness Ocean"
 slug = "24-hour-fitness-ocean"
 access_notes = [ "Älä käytä tätä aktiiviseen uintisuunnitteluun ennen kuin virallinen sivu kertoo klubin avautuneen uudelleen." ]
-access_summary = "24 Hour Fitness Ocean listaa sisäisen rata-altaan, mutta virallinen klubisivu kertoo paikan olevan tilapäisesti suljettu remontin vuoksi 23. toukokuuta 2026 asti."
+access_summary = "24 Hour Fitness Ocean listaa sisätilojen rata-altaan, mutta virallinen klubisivu kertoo paikan olevan tilapäisesti suljettu remontin vuoksi 23. toukokuuta 2026 asti."
 description_short = "24 Hour Fitness Ocean on jäsenyyteen perustuva kuntosalin allas, mutta se on merkitty tilapäisesti suljetuksi remontin ajaksi."
 body = "24 Hour Fitness Ocean on jäsenyyteen perustuva kuntosalin allas, jota pidetään tilapäisesti suljettuna remontin päättymiseen asti."
 
@@ -10,7 +10,7 @@ body = "24 Hour Fitness Ocean on jäsenyyteen perustuva kuntosalin allas, jota p
 title = "24 Hour Fitness Potrero"
 slug = "24-hour-fitness-potrero"
 access_notes = [ "Tarkista klubin sivulta nykyinen jäsenyys, vieraskäynti ja tilojen tila." ]
-access_summary = "24 Hour Fitness Potrero on kuntosalin allas. Virallinen klubisivu listaa sisäisen rata-altaan, saunan, porealtaan ja höyryhuoneen kuntosalin mukavuuksiin."
+access_summary = "24 Hour Fitness Potrero on kuntosalin allas. Virallinen klubisivu listaa sisätilojen rata-altaan, saunan, porealtaan ja höyryhuoneen kuntosalin mukavuuksiin."
 description_short = "Kuntosalin allas uimareille, jotka käyttävät jo 24 Hour Fitnessiä tai etsivät jäsenyyspohjaista vaihtoehtoa Potreron lähellä."
 body = "Tämä on kuntosalin allas uimareille, jotka käyttävät jo 24 Hour Fitnessiä tai haluavat jäsenyyspohjaisen vaihtoehdon Potreron lähellä."
 
@@ -78,7 +78,7 @@ slug = "baker-beach"
 clubs = []
 common_distances = []
 description_short = "Tyynenmeren puoleinen ranta aivan Golden Gaten ulkopuolella; voimakas aallokko ja virtaukset vaativat varovaisuutta."
-hazards = [ "vaaralliset virtaukset", "ristiaallokko", "suuri rantamurtuma", "kylmä vesi ympäri vuoden", "ei hengenpelastajia" ]
+hazards = [ "vaaralliset virtaukset", "ristiaallokko", "voimakas rantatyrsky", "kylmä vesi ympäri vuoden", "ei hengenpelastajia" ]
 body = "Baker Beach avautuu suoraan Tyynellemerelle Golden Gaten eteläpuolella, ja sieltä näkyvät silta ja Marin Headlands. Ristiaallokko, kylmä vesi ja vaaralliset virtaukset tekevät siitä vaativan avovesiympäristön. Märkäpuku ja paikallistuntemus ovat järkevä oletus, ei lisävaruste."
 
 [spots.balboa-pool]
@@ -113,8 +113,8 @@ slug = "china-beach"
 clubs = []
 common_distances = []
 description_short = "Pieni suojaisa meripoukama Sea Cliffin alapuolella, rauhallisempi kuin viereiset rannat mutta silti kylmä merivesi."
-hazards = [ "voimakkaat virtaukset", "kylmä vesi ympäri vuoden", "hengenpelastajia vain kausittain" ]
-body = "China Beach on pieni poukamaranta Sea Cliffin alapuolella Baker Beachin ja Lands Endin välissä. Molemmin puolin suojaavat niemet tekevät aallokosta usein lempeämpää kuin Ocean Beachillä tai Baker Beachillä, mutta tämä on silti meressä uimista kylmässä vedessä."
+hazards = [ "ristiaallokko", "voimakkaat virtaukset", "kylmä vesi ympäri vuoden", "hengenpelastajia vain kausittain" ]
+body = "China Beach on pieni poukamaranta Sea Cliffin alapuolella Baker Beachin ja Lands Endin välissä. Molemmin puolin suojaavat niemet tekevät aallokosta usein lempeämpää kuin Ocean Beachillä tai Baker Beachillä, mutta tämä on silti meressä uimista kylmässä vedessä, jossa esiintyy ristiaallokkoa ja vaarallisia virtauksia."
 
 [spots.chinatown-ymca]
 title = "Chinatown YMCA"
@@ -145,7 +145,7 @@ clubs = []
 common_distances = [ "East Beachiltä St. Francis Yacht Clubille", "Laiturilta laiturille Presidion rantaa pitkin" ]
 description_short = "Lahdenpuoleinen ranta Golden Gaten sisäpuolella, helppo hiekkasisäänmeno ja voimakkaat vuorovesivirrat."
 hazards = [ "voimakkaat vuorovesivirrat", "kylmä vesi ympäri vuoden", "vene- ja laivaliikenne" ]
-body = "Crissy Field sijaitsee Golden Gaten sisäpuolella lahden puolella Presidiota. East Beach tarjoaa helpon hiekkasisäänmenon ja klassisen näkymän sillalle. Vuorovesi virtaa voimakkaasti portin läpi, joten olosuhteet muuttuvat tunneittain. Ui rauhallisessa ikkunassa ja pysy poissa laiva- ja venereiteiltä."
+body = "Crissy Field sijaitsee Golden Gaten sisäpuolella lahden puolella Presidiota. East Beach tarjoaa helpon hiekkasisäänmenon ja klassisen näkymän sillalle. Vuorovesi virtaa voimakkaasti portin läpi, joten olosuhteet muuttuvat tunneittain. Ui suvantovaiheen tai nousuveden aikaan ja pysy rantalinjan sisäpuolella."
 
 [spots.embarcadero-ymca]
 title = "Embarcadero YMCA"
@@ -180,8 +180,8 @@ body = "Garfield Pool on sisäallas Garfield Squarella Mission Districtissä, 26
 [spots.hamilton-pool]
 title = "Hamilton Pool"
 slug = "hamilton-pool"
-description_short = "Lämmitetty sisäallas Lower Pacific Heightsissa, tunnettu kaupungin ainoista sisävesiliukumäistä."
-body = "Hamilton Pool on lämmitetty sisäallas Hamilton Recreation Centerissä Gearyn ja Steinerin kulmassa Lower Pacific Heightsissa. Se tunnetaan San Franciscon kaupunginaltaiden ainoista kahdesta sisävesiliukumäestä. Ohjelmiin kuuluu ratauintia, senioriuintia, virkistysuintia, perheuintia ja uintitunteja."
+description_short = "Lämmitetty sisäallas Lower Pacific Heightsissa, tunnettu kaupungin ainoista sisäliukumäistä."
+body = "Hamilton Pool on lämmitetty sisäallas Hamilton Recreation Centerissä Gearyn ja Steinerin kulmassa Lower Pacific Heightsissa. Se tunnetaan San Franciscon kaupunginaltaiden kahdesta ainoasta sisäliukumäestä. Ohjelmiin kuuluu ratauintia, senioriuintia, virkistysuintia, perheuintia ja uintitunteja."
 
 [spots.jccsf]
 title = "JCCSF"
@@ -233,7 +233,7 @@ body = "Martin Luther King Jr. Pool on Bayview'n sisäallas, jossa on 25 jaardin
 title = "Mission Community Pool"
 slug = "mission-community-pool"
 description_short = "San Franciscon ainoa kaupungin ylläpitämä ulkoallas, kausittain avoinna Missionin sydämessä."
-body = "Mission Community Pool on San Franciscon ainoa kaupungin ylläpitämä ulkoallas. Vuonna 1916 rakennettu 90 x 40 jalan allas sijaitsee Linda- ja Valencia-katujen välissä Mission Districtin sydämessä ja toimii kausittain toukokuusta lokakuuhun. Ohjelmiin kuuluu ratauintia, virkistysuintia, perheuintia ja uintitunteja."
+body = "Mission Community Pool on San Franciscon ainoa kaupungin ylläpitämä ulkoallas. Vuonna 1916 rakennettu 90 x 40 jalan allas sijaitsee Linda- ja Valencia-katujen välissä Mission Districtin sydämessä ja toimii kausittain toukokuusta lokakuuhun. Ohjelmiin kuuluu ratauintia, senioriuintia, virkistysuintia, vesijumppaa ja uintitunteja."
 
 [spots.north-beach-pool]
 title = "North Beach Pool"
@@ -247,16 +247,16 @@ slug = "ocean-beach"
 clubs = []
 common_distances = []
 description_short = "Kolmen mailin avoin Tyynenmeren ranta, jossa on voimakas aallokko ja vaarallisia virtauksia."
-hazards = [ "voimakkaat virtaukset", "ristiaallokko", "suuri rantamurtuma", "yllättävät suuret aallot", "kylmä vesi ympäri vuoden", "ei hengenpelastajia nimettyjen aikojen ulkopuolella" ]
+hazards = [ "voimakkaat virtaukset", "ristiaallokko", "voimakas rantatyrsky", "yllättävät suuret aallot", "kylmä vesi ympäri vuoden", "ei hengenpelastajia nimettyjen aikojen ulkopuolella" ]
 body = "Ocean Beach ulottuu noin kolme mailia kaupungin länsireunaa pitkin. Se on yksi Kalifornian rannikon vaarallisimmista rannoista: raskas aallokko, voimakkaat virtaukset, ristiaallokko ja yllättävät suuret aallot ovat aiheuttaneet lukuisia pelastuksia ja kuolemantapauksia. Tämä on vain kokeneille avovesiuimareille, ja vain silloin kun olosuhteet ovat aidosti rauhalliset."
 
 [spots.pomeroy-pool]
 title = "Pomeroy Pool"
 slug = "pomeroy-pool"
-access_notes = [ "Terapiauintisivu kertoo vain hitaasta ratauinnista ja kuvaa ohjelman lämpimän veden liikkeeseen, palautumiseen ja lempeään harjoitteluun." ]
+access_notes = [ "Terapiauintisivun mukaan vain hidas ratauinti on sallittu, ja ohjelma on tarkoitettu lämpimän veden liikkeeseen, palautumiseen ja lempeään harjoitteluun." ]
 access_summary = "Pomeroyn Herbst Therapeutic Pool on lämminvesiterapia-allas. Se tarjoaa terapiauintia, avointa uintia, tunteja, opetusta ja hidasta ratauintia; se ei ole kovatehoinen rataharjoitteluallas."
 description_short = "Lämminvesiterapia-allas hidasta uintia, palautumista, lempeää liikettä ja tunteja varten."
-body = "Pomeroy kannattaa mallintaa lämpimän veden kulkuna terapiaan, lempeään liikkeeseen, opetukseen ja hitaaseen ratauintiin ennemmin kuin tavallisena ratauintialtaana."
+body = "Pomeroy kannattaa mieltää pääsynä lämpimään veteen terapiaa, lempeää liikettä, opetusta ja hidasta ratauintia varten ennemmin kuin tavallisena ratauintialtaana."
 
 [[spots.pomeroy-pool.pricing]]
 label = "Terapiauintipassi"
@@ -276,7 +276,7 @@ slug = "presidio-ymca-letterman"
 access_notes = [ "YMCA:n taloudellinen tuki ja jäsenyysvaihtoehdot voivat muuttaa todellista hintaa; varmista suoraan YMCA of Greater San Franciscolta." ]
 access_summary = "Letterman Pool on osa Presidio Community YMCA:ta. Virallinen YMCA-sivu listaa 25 jaardin altaan ja ohjaa uimareita verkossa olevaan allasaikatauluun."
 description_short = "Letterman-kompleksin takana Presidiossa sijaitseva allas, vahva jäsenyysvaihtoehto kaupungin pohjoispuolen ratauintiin."
-body = "Letterman Pool sijaitsee Letterman-kompleksin takana Presidiossa ja on yksi vahvimmista jäsenallasvaihtoehdoista kaupungin pohjoispuolen ratauintareille."
+body = "Letterman Pool sijaitsee Letterman-kompleksin takana Presidiossa ja on yksi vahvimmista jäsenallasvaihtoehdoista kaupungin pohjoispuolen ratauimareille."
 
 [[spots.presidio-ymca-letterman.pricing]]
 label = "YMCA-jäsen"
@@ -299,16 +299,16 @@ body = "Rossi Pool on sisäallas Rossi Playgroundilla Inner Richmondissa, Arguel
 [spots.sava-pool]
 title = "Sava Pool"
 slug = "sava-pool"
-description_short = "Parkside/Sunsetin sisäallas, tällä hetkellä korjauksissa ja arvioitu avaus kesällä 2026."
-body = "Sava Pool on sisäallas Parkside/Sunsetin alueella 19th Avenuella lähellä Stern Grovea. Se on tällä hetkellä suljettu korjausten vuoksi, ja arvioitu uudelleenavaus on kesällä 2026. Avoinna ollessaan ohjelmiin kuuluu ratauintia, senioriuintia, virkistysuintia ja uintitunteja."
+description_short = "Parkside/Sunsetin sisäallas lähellä Stern Grovea."
+body = "Sava Pool on sisäallas Parkside/Sunsetin alueella 19th Avenuella lähellä Stern Grovea. Ohjelmiin kuuluu ratauintia, senioriuintia, virkistysuintia ja uintitunteja."
 
 [spots.sfsu-mashouf]
 title = "SFSU Mashouf Wellness Center"
 slug = "sfsu-mashouf"
 access_notes = []
 access_summary = "SFSU Mashouf Wellness Center julkaisee allasosaston aukioloajat ja kuvaa 25 metrin rata-altaan, aktiivisuusaltaan, porealtaan, saunan ja pukuhuoneet. Pääsy perustuu kampus- tai yhteisöjäsenyyteen."
-description_short = "Yliopiston ja yhteisön jäsenyspohjainen allasvaihtoehto Lake Mercedin lähellä."
-body = "SFSU Mashouf Wellness Center on yliopiston ja yhteisön jäsenyspohjainen allasvaihtoehto Lake Mercedin lähellä."
+description_short = "Yliopiston ja yhteisön jäsenyyspohjainen allasvaihtoehto Lake Mercedin lähellä."
+body = "SFSU Mashouf Wellness Center on yliopiston ja yhteisön jäsenyyspohjainen allasvaihtoehto Lake Mercedin lähellä."
 
 [spots.stonestown-ymca]
 title = "Stonestown YMCA"
@@ -355,5 +355,5 @@ title = "UCSF Millberry"
 slug = "ucsf-millberry"
 access_notes = []
 access_summary = "UCSF Millberry Fitness Center on UCSF:n Parnassuksen fitness-toimipiste. Virallinen sivu julkaisee tilojen aukioloajat, mutta allasaikataulu tarvitsee erillisen vahvistuksen."
-description_short = "Parnassuksen UCSF-kampuksen fitnesskeskuksen allasvaihtoehto jäsenyspohjaiseen kerrokseen."
-body = "UCSF Millberry on Parnassuksen kampuksen fitnesskeskuksen allasvaihtoehto jäsenyspohjaiseen kerrokseen."
+description_short = "Parnassuksen UCSF-kampuksen fitnesskeskuksen allasvaihtoehto jäsenyyspohjaiseen kerrokseen."
+body = "UCSF Millberry on Parnassuksen kampuksen fitnesskeskuksen allasvaihtoehto jäsenyyspohjaiseen kerrokseen."

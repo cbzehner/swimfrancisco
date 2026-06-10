@@ -12,13 +12,13 @@ description_short = "Una de las instalaciones cubiertas más grandes de la ciuda
 label = "Miembro / pase elegible"
 price = "Variable"
 note = "Usa la información de membresía o pases de Koret publicada por USF."
-url = "https://www.usfca.edu/koret/aquatics"
+url = "https://www.usfca.edu/koret/facilities/indoor-swimming"
 
 [[extra.pricing]]
 label = "Masters"
 price = "USMS + club"
 note = "Participar en USF Masters requiere membresía anual USMS en el club de USF y requisitos del programa."
-url = "https://www.usfca.edu/koret/aquatics"
+url = "https://www.usfca.edu/koret/facilities/indoor-swimming"
 +++
 
 Koret es una de las instalaciones de piscina cubierta más grandes de la ciudad, con natación de carril, masters, lecciones, equipos juveniles y eventos compartiendo el agua.

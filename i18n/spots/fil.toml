@@ -181,7 +181,7 @@ body = "Pinainit na palanguyang panloob sa Hamilton Recreation Center sa kanto n
 [spots.jccsf]
 title = "JCCSF"
 slug = "jccsf"
-access_notes = [ "Tingnan ang kasalukuyang iskedyul ng lane bago pumunta; nakalista ang pinakamaraming gumagamit bilang 4:00-7:00 pm araw-araw." ]
+access_notes = [ "Tingnan ang kasalukuyang iskedyul ng lane bago pumunta; nakalista ang pinakamataong oras na 4:00-7:00 pm araw-araw." ]
 access_summary = "Nakaugnay sa membership sa JCCSF Fitness Center ang pagpasok sa Gallanter Family Aquatics Center. Nakalista sa opisyal na aquatics page ang paggamit ng lap pool para sa mga miyembro at presyo ng swim school para sa miyembro."
 description_short = "Aquatics center na may 25-yard na pool para sa paglangoy sa lane, warm-water recreation pool, at hot tub; karaniwang pool para sa mga miyembro."
 body = "May 25-yard na lap pool, warm-water recreation pool, at hot tub ang JCCSF sa Gallanter Family Aquatics Center. Ituring ito bilang pool para sa mga miyembro maliban kung direktang nakumpirma mo ang pagpasok bilang bisita sa JCCSF."
@@ -292,8 +292,8 @@ body = "Palanguyang panloob sa Rossi Playground sa Inner Richmond, sa kanto ng A
 [spots.sava-pool]
 title = "Sava Pool"
 slug = "sava-pool"
-description_short = "Palanguyang panloob sa Parkside/Sunset, kasalukuyang sarado para sa pagkukumpuni at inaasahang magbubukas sa summer 2026."
-body = "Palanguyang panloob sa Parkside/Sunset district sa 19th Avenue malapit sa Stern Grove. Kasalukuyan itong sarado para sa pagkukumpuni, at inaasahang muling magbubukas sa summer 2026. Kapag bukas, kasama sa mga programa ang paglangoy sa lane, paglangoy para sa nakatatanda, pampamilyang paglangoy, at mga aralin."
+description_short = "Palanguyang panloob sa Parkside/Sunset, malapit sa Stern Grove."
+body = "Palanguyang panloob sa Parkside/Sunset district sa 19th Avenue malapit sa Stern Grove. Kasama sa mga programa ang paglangoy sa lane, paglangoy para sa nakatatanda, pampamilyang paglangoy, at mga aralin."
 
 [spots.sfsu-mashouf]
 title = "SFSU Mashouf Wellness Center"
@@ -326,7 +326,7 @@ url = "https://www.ymcasf.org/location/stonestown-family-ymca/"
 [spots.ucsf-bakar]
 title = "UCSF Bakar"
 slug = "ucsf-bakar"
-access_notes = [ "Muling nagbukas ang panloob na pool pagkatapos ng pagkukumpuni noong June 2025; kumpirmahin ang kasalukuyang iskedyul ng pool sa UCSF Fitness and Recreation." ]
+access_notes = [ "Muling nagbukas ang panloob na pool pagkatapos ng pagkukumpuni noong Hunyo 2025; kumpirmahin ang kasalukuyang iskedyul ng pool sa UCSF Fitness and Recreation." ]
 access_summary = "Ang Bakar Fitness Center sa UCSF Mission Bay ay fitness center para sa mga miyembro na may panloob na swimming pool at panlabas na rooftop pool."
 description_short = "Opsyon sa fitness center sa Mission Bay na may panloob na tubig at panlabas na rooftop pool."
 body = "Ang Bakar ay opsyon sa fitness center sa Mission Bay, kapansin-pansin dahil mayroon itong parehong panloob na tubig at panlabas na rooftop pool."

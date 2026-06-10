@@ -12,13 +12,13 @@ description_short = "Mejor entendida como acceso a agua tibia para terapia, movi
 label = "Pase de nado terapéutico"
 price = "$11"
 note = "Pase de un nado listado en la página de nado terapéutico de Pomeroy."
-url = "https://www.prrcsf.org/herbst-therapeutic-pool"
+url = "https://www.prrcsf.org/therapeutic-swim"
 
 [[extra.pricing]]
 label = "Pase de 10 nados"
 price = "$105"
 note = "Precio de diez pases listado en la página de nado terapéutico de Pomeroy."
-url = "https://www.prrcsf.org/herbst-therapeutic-pool"
+url = "https://www.prrcsf.org/therapeutic-swim"
 +++
 
 Pomeroy se entiende mejor como acceso a agua tibia para terapia, movimiento suave, lecciones y natación lenta de carril, más que como una piscina estándar de carriles.
