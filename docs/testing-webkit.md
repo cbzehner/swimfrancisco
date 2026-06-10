@@ -23,6 +23,14 @@ already bitten this codebase:
   keyboard-reachable element, `tabIndex >= 0`, as Tab-out).
 - **Safari's Tab key skips buttons and links** by default (text fields
   only), so keyboard-dismiss paths behave differently per engine too.
+- **`position: relative` on `<tr>` is not a containing block in WebKit.**
+  A stretched-link overlay (`a::after { position: absolute; inset: 0 }`)
+  anchored to a relative table row escapes the row and blankets the page —
+  every click in that region hits an invisible row link. This silently
+  swallowed the BACK TO NOW button (and any control above the board) in
+  WKWebView/Safari while working perfectly in Chrome. Anchor such overlays
+  to a `<td>`, never a `<tr>`; Playwright's actionability log names the
+  intercepting element, which is how this one was found.
 
 Rule of thumb: anything involving focus, `focusout`/`blur`, popover
 dismissal, or tap-vs-click ordering must be verified in WebKit before it

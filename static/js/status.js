@@ -492,12 +492,33 @@ function startIntraDayRefresh() {
   });
 }
 
+// Whole-row navigation. The spot link's CSS overlay covers only its own cell
+// (a row-wide overlay is impossible cross-engine: WebKit doesn't make
+// <tr position:relative> a containing block, so it escaped the row and
+// swallowed clicks on the controls). Clicks elsewhere on a row follow the
+// row's spot link; real links/buttons and modified clicks pass through.
+function initRowNavigation(tbody) {
+  tbody.addEventListener("click", (event) => {
+    if (event.defaultPrevented || event.button !== 0) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (event.target.closest("a, button")) return;
+    if (window.getSelection && String(window.getSelection())) return;
+    const href = event.target
+      .closest("tr")
+      ?.querySelector('[data-cell="spot"] a')
+      ?.getAttribute("href");
+    if (href) window.location.assign(href);
+  });
+}
+
 function init() {
   // All SF pools are in Pacific; reason about "now" in PT regardless of the
   // visitor's browser timezone.
   const now = pacificWallClockDate();
   initHorizonControl(now);
   renderBoard(document, null, now);
+  const tbody = document.querySelector("table.board tbody");
+  if (tbody) initRowNavigation(tbody);
   // Signal to filters.js that status cells are populated and rows are in
   // their baseline (open-first, alphabetical) order.
   document.dispatchEvent(new CustomEvent("sf:status-applied"));

@@ -626,21 +626,24 @@ table.board td {
 table.board tbody tr:nth-child(odd) td { background: rgba(183,54,36,0.035); }
 table.board tbody tr:hover td,
 table.board tbody tr:focus-within td { background: rgba(183,54,36,0.11); }
-table.board tbody tr { position: relative; }
 table.board [data-cell="spot"] {
   font-family: var(--display);
   font-size: 20px;
   letter-spacing: 0;
+  position: relative;
 }
 table.board [data-cell="spot"] a {
   display: block;
   color: var(--ink);
   text-decoration: none;
 }
-/* Whole-row hit target — the SPOT-cell anchor stretches to cover the row via
-   an absolutely-positioned ::after, so clicks anywhere on the row navigate.
-   Tradeoff: text in other cells is not selectable. The anchor remains the
-   sole accessible name + focus stop. */
+/* Spot-cell hit target — the anchor stretches over its own cell via an
+   absolutely-positioned ::after. The containing block must be the <td>:
+   WebKit does not treat <tr position:relative> as a containing block, so a
+   row-wide inset-0 overlay escaped the row and blanketed the page,
+   swallowing clicks on the controls above the table. status.js extends the
+   click target to the rest of the row; the anchor remains the sole
+   accessible name + focus stop. */
 table.board [data-cell="spot"] a::after {
   content: "";
   position: absolute;
