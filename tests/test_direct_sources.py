@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import hashlib
 
+import pytest
+
 from schedules.direct_sources import (
+    DirectSourceError,
     _cache_text,
     _extract_24_hour_fitness,
     _extract_city_sports,
@@ -44,7 +47,14 @@ def test_jccsf_html_extractor_models_lap_and_family_hours():
     payload = _extract_jccsf(
         """
         <h3>Aquatics Center Hours</h3>
-        <p>Monday - Friday: 5:30 am - 9:45 pm</p>
+        <p>Monday – Friday: 5:30 am – 9:45 pm</p>
+        <p>Saturday & Sunday: 7:00 am – 6:45 pm*</p>
+        <h3>Rec Pool Hours</h3>
+        <p>Monday, Wednesday: 5:30 am – Noon, 1:30 – 9:45 pm</p>
+        <p>Tuesday: 5:30 – 11:30 am, 12:30 – 9:45 pm</p>
+        <p>Thursday: 5:30 – Noon, 1:00 – 9:45 pm</p>
+        <p>Friday: 5:30 – Noon, 1:30 – 9:45 pm</p>
+        <p>Saturday & Sunday: 7:00 – 8:00 am, 2:00 – 6:45 pm</p>
         <p>The Lap Pool is available for lap swimming during Aquatics Center hours.</p>
         """
     )
@@ -54,6 +64,17 @@ def test_jccsf_html_extractor_models_lap_and_family_hours():
         for s in payload["sessions"]
     )
     assert any(s["type"] == "family_swim" for s in payload["sessions"])
+
+
+def test_jccsf_html_extractor_rejects_page_when_posted_hours_change():
+    with pytest.raises(DirectSourceError, match="Expected source text not found"):
+        _extract_jccsf(
+            """
+            <h3>Aquatics Center Hours</h3>
+            <p>Monday – Friday: 6:00 am – 9:00 pm</p>
+            <p>The Lap Pool is available for lap swimming during Aquatics Center hours.</p>
+            """
+        )
 
 
 def test_koret_google_sheet_extractor_reads_weekday_and_weekend_hours():

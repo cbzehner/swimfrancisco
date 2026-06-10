@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import hashlib
 import time
-from datetime import date
 from io import BytesIO
 from pathlib import Path
 
 import httpx
 from pypdf import PdfReader
 
+from ._time import pacific_today
 from .models import FetchResult
 from .paths import DATA_DIR
 
@@ -63,7 +63,7 @@ def fetch_pdf(
                         )
 
                 # Cache miss — write with today's date.
-                review_dir = slug_dir / f"{date.today().isoformat()}-{prefix}"
+                review_dir = slug_dir / f"{pacific_today().isoformat()}-{prefix}"
                 review_dir.mkdir(parents=True, exist_ok=True)
                 path = review_dir / "source.pdf"
                 path.write_bytes(payload)

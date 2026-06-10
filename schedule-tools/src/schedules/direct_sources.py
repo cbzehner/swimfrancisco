@@ -15,6 +15,7 @@ from pathlib import Path
 
 import httpx
 
+from ._time import pacific_today
 from .models import PoolEntry
 from .paths import DATA_DIR
 
@@ -277,7 +278,7 @@ def _cache_text(slug_dir: Path, sha256: str, extension: str, text: str) -> tuple
             return existing, True
         raise DirectSourceError(f"prefix collision under {slug_dir}: {prefix}")
 
-    review_dir = slug_dir / f"{date.today().isoformat()}-{prefix}"
+    review_dir = slug_dir / f"{pacific_today().isoformat()}-{prefix}"
     review_dir.mkdir(parents=True, exist_ok=True)
     path = review_dir / f"source.{extension}"
     path.write_text(text)
@@ -289,6 +290,13 @@ def _payload_fingerprint(extractor: Callable[[str], dict]) -> Callable[[str], st
     def fingerprint(text: str) -> str:
         payload = dict(extractor(text))
         payload.pop("effective_start", None)
+        # Closure starts can be anchored to the scrape date (e.g. "closed until
+        # <reopen>"), which would mint a new review dir every calendar day; the
+        # end date carries the actual signal.
+        payload["closures"] = [
+            {key: value for key, value in closure.items() if key != "start"}
+            for closure in payload.get("closures", [])
+        ]
         return json.dumps(payload, sort_keys=True, separators=(",", ":"))
 
     return fingerprint
@@ -299,6 +307,21 @@ def _extract_google_sheet_id(url: str) -> str:
     if not match:
         raise DirectSourceError("Google Sheets URL does not include /spreadsheets/d/<id>")
     return match.group(1)
+
+
+# The JCCSF rec-pool schedule is prose with multiple ranges per line, so the
+# session tables below are hand-modeled rather than parsed. Each guard is the
+# literal page text a table encodes — if JCCSF changes any posted hours, the
+# missing guard fails the extraction loudly instead of publishing stale hours.
+_JCCSF_HOUR_GUARDS = (
+    "Monday – Friday: 5:30 am – 9:45 pm",
+    "Saturday & Sunday: 7:00 am – 6:45 pm",
+    "Monday, Wednesday: 5:30 am – Noon, 1:30 – 9:45 pm",
+    "Tuesday: 5:30 – 11:30 am, 12:30 – 9:45 pm",
+    "Thursday: 5:30 – Noon, 1:00 – 9:45 pm",
+    "Friday: 5:30 – Noon, 1:30 – 9:45 pm",
+    "Saturday & Sunday: 7:00 – 8:00 am, 2:00 – 6:45 pm",
+)
 
 
 def _extract_jccsf(html: str) -> dict:
@@ -346,6 +369,8 @@ def _extract_jccsf(html: str) -> dict:
     ]
     _require_text(text, "Aquatics Center Hours")
     _require_text(text, "The Lap Pool is available for lap swimming during Aquatics Center hours")
+    for guard in _JCCSF_HOUR_GUARDS:
+        _require_text(text, guard)
     return _payload("swim_schedule", sessions, closures=_closure_dates_from_text(text))
 
 
@@ -359,7 +384,7 @@ def _extract_24_hour_fitness(html: str) -> dict:
             reopen = date(int(year), int(month), int(day))
             end = reopen - timedelta(days=1)
             closures.append({
-                "start": date.today().isoformat(),
+                "start": pacific_today().isoformat(),
                 "end": end.isoformat(),
                 "reason": "Temporarily closed for renovation",
             })
@@ -389,17 +414,16 @@ def _extract_koret(text: str) -> dict:
     sessions: list[dict] = []
     for sheet_name, csv_text in _split_koret_sheets(text).items():
         rows = list(csv.reader(StringIO(csv_text)))
+        first_row = " ".join(cell for cell in rows[0] if cell).strip() if rows else ""
+        start, end = _parse_hours_range(first_row)
         if sheet_name == "Weekend":
             sessions.extend(_weekly_hours_sessions(
                 "lap_swim",
-                {"saturday": ("08:00", "18:00"), "sunday": ("08:00", "18:00")},
-                evidence="Weekend sheet lists 8am-6pm pool hours.",
+                {"saturday": (start, end), "sunday": (start, end)},
+                evidence=first_row,
             ))
             continue
-        day = sheet_name.lower()
-        first_row = " ".join(cell for cell in rows[0] if cell).strip() if rows else ""
-        start, end = _parse_hours_range(first_row)
-        sessions.append(_session(day, "lap_swim", start, end, first_row))
+        sessions.append(_session(sheet_name.lower(), "lap_swim", start, end, first_row))
     return _payload("pool_hours", sessions)
 
 
@@ -507,15 +531,23 @@ def _extract_sfsu_aquatics(html: str) -> dict:
     text = _html_text(html)
     _require_text(text, "Natatorium Hours of Operation")
     _require_text(text, "Lap Pool")
-    weekday_start, weekday_end = _parse_hours_range("10am - 8pm")
-    weekend_start, weekend_end = _parse_hours_range("12pm - 4pm")
+    match = re.search(
+        r"Natatorium Hours of Operation\s+Monday-Thursday:\s*(.+?)\s+Friday-Saturday:\s*(.+?)\s+Sunday:\s*Closed",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if not match:
+        raise DirectSourceError("SFSU page did not expose natatorium hours in the expected format.")
+    weekday_hours, friday_saturday_hours = match.groups()
+    weekday_start, weekday_end = _parse_hours_range(weekday_hours)
+    weekend_start, weekend_end = _parse_hours_range(friday_saturday_hours)
     return _payload("pool_hours", [], access_hours=[
         *[
-            _access_hour(day, weekday_start, weekday_end, "Natatorium hours", "Monday-Thursday: 10am-8pm")
+            _access_hour(day, weekday_start, weekday_end, "Natatorium hours", f"Monday-Thursday: {weekday_hours}")
             for day in ("monday", "tuesday", "wednesday", "thursday")
         ],
-        _access_hour("friday", weekend_start, weekend_end, "Natatorium hours", "Friday-Saturday: Noon-4pm"),
-        _access_hour("saturday", weekend_start, weekend_end, "Natatorium hours", "Friday-Saturday: Noon-4pm"),
+        _access_hour("friday", weekend_start, weekend_end, "Natatorium hours", f"Friday-Saturday: {friday_saturday_hours}"),
+        _access_hour("saturday", weekend_start, weekend_end, "Natatorium hours", f"Friday-Saturday: {friday_saturday_hours}"),
     ])
 
 
@@ -589,7 +621,7 @@ def _payload(
 ) -> dict:
     return {
         "schedule_basis": schedule_basis,
-        "effective_start": date.today().isoformat(),
+        "effective_start": pacific_today().isoformat(),
         "sessions": sorted(sessions, key=lambda s: (DAY_ORDER.index(s["day"]), s["start"], s["end"], s["type"])),
         "access_hours": sorted(
             access_hours or [],
@@ -838,7 +870,7 @@ def _resolve_yearless_date(month: int, day: int, today: date | None = None) -> d
     naive same-year resolution would land more than 30 days in the past. Web
     pages frequently list closures by month/day only — a December scrape that
     sees 'January 15' means next January, not last January."""
-    today = today or date.today()
+    today = today or pacific_today()
     resolved = date(today.year, month, day)
     if (today - resolved).days > 30:
         resolved = date(today.year + 1, month, day)

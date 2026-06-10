@@ -15,6 +15,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterable
 
+from ._time import PACIFIC_TZ
 from .paths import DATA_DIR, TMP_DIR
 
 
@@ -168,7 +169,7 @@ def render_report(evals: Iterable[PoolEval]) -> str:
     lines: list[str] = []
     lines.append("# Schedule extraction eval")
     lines.append("")
-    lines.append(f"_Generated {datetime.now().isoformat(timespec='seconds')}_")
+    lines.append(f"_Generated {datetime.now(PACIFIC_TZ).isoformat(timespec='seconds')}_")
     lines.append("")
     lines.append("Diffs each provider artifact against the human-reviewed `reviewed.json`")
     lines.append("payload in the same review dir. Row identity is `(day, type, start, end, pool)`.")
@@ -231,7 +232,7 @@ def render_report(evals: Iterable[PoolEval]) -> str:
 
 def write_report(evals: Iterable[PoolEval], *, tmp_dir: Path = TMP_DIR) -> Path:
     tmp_dir.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%dT%H%M%S")
+    timestamp = datetime.now(PACIFIC_TZ).strftime("%Y%m%dT%H%M%S")
     path = tmp_dir / f"eval-{timestamp}.md"
     path.write_text(render_report(evals))
     return path

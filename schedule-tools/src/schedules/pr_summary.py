@@ -15,6 +15,7 @@ import subprocess
 from datetime import date as _date
 from pathlib import Path
 
+from ._time import pacific_today
 from .eval import PoolEval, collect_pool_evals
 from .paths import DATA_DIR, REPO_ROOT
 from .registry import load_registry
@@ -86,7 +87,7 @@ def render_pr_body(
     data_root: Path = DATA_DIR,
     today: _date | None = None,
 ) -> str:
-    today = today or _date.today()
+    today = today or pacific_today()
     rows = _staged_data_changes(repo_root)
     changed = _changed_slugs_with_runs(rows)
     registry = load_registry()
