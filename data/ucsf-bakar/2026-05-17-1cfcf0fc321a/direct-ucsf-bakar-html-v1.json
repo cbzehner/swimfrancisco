@@ -1,6 +1,6 @@
 {
   "cost_estimate": "deterministic",
-  "extracted_at": "2026-05-17T15:56:00.021382+00:00",
+  "extracted_at": "2026-06-15T17:36:41.193677+00:00",
   "model": "ucsf-bakar-html-v1",
   "payload": {
     "access_exceptions": [],
@@ -56,14 +56,14 @@
       }
     ],
     "closures": [],
+    "effective_start": "2026-06-15",
     "schedule_basis": "facility_hours",
-    "effective_start": "2026-05-17",
     "sessions": []
   },
   "pdf_sha256": "1cfcf0fc321aeb3e7c51ee5452db30b22699308f3e8d8711b7e78c04f6be8eab",
   "prompt_sha256": "7861382b4959b8bca2cd6cf50be503365dec8816adef1589323c04b6b4193fc9",
   "provider": "direct",
-  "schema_sha256": "1c0869dc8a4441cb9285092e806b9bc281171cc705f406f8596b0870d5864121",
+  "schema_sha256": "de685f22a191de60e54dea56caffce56f72a20b0ccd3f17fa5868c3f78977858",
   "source_pdf_url": "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay",
   "usage": {}
 }

@@ -1,58 +1,58 @@
 {
   "cost_estimate": "deterministic",
-  "extracted_at": "2026-06-15T17:36:33.753419+00:00",
+  "extracted_at": "2026-06-15T17:36:39.789530+00:00",
   "model": "twenty-four-hour-fitness-html-v1",
   "payload": {
     "access_exceptions": [],
     "access_hours": [
       {
         "day": "monday",
-        "end": "22:00",
-        "evidence": "Monday - Thursday: 05:00 AM - 10:00 PM",
+        "end": "23:59",
+        "evidence": "Monday: 05:00 AM - 11:59 PM",
         "label": "Gym hours",
         "start": "05:00"
       },
       {
         "day": "tuesday",
-        "end": "22:00",
-        "evidence": "Monday - Thursday: 05:00 AM - 10:00 PM",
+        "end": "23:59",
+        "evidence": "Tuesday - Thursday: 12:00 AM - 11:59 PM",
         "label": "Gym hours",
-        "start": "05:00"
+        "start": "00:00"
       },
       {
         "day": "wednesday",
-        "end": "22:00",
-        "evidence": "Monday - Thursday: 05:00 AM - 10:00 PM",
+        "end": "23:59",
+        "evidence": "Tuesday - Thursday: 12:00 AM - 11:59 PM",
         "label": "Gym hours",
-        "start": "05:00"
+        "start": "00:00"
       },
       {
         "day": "thursday",
-        "end": "22:00",
-        "evidence": "Monday - Thursday: 05:00 AM - 10:00 PM",
+        "end": "23:59",
+        "evidence": "Tuesday - Thursday: 12:00 AM - 11:59 PM",
         "label": "Gym hours",
-        "start": "05:00"
+        "start": "00:00"
       },
       {
         "day": "friday",
         "end": "21:00",
-        "evidence": "Friday: 05:00 AM - 09:00 PM",
+        "evidence": "Friday: 12:00 AM - 09:00 PM",
+        "label": "Gym hours",
+        "start": "00:00"
+      },
+      {
+        "day": "saturday",
+        "end": "21:00",
+        "evidence": "Saturday - Sunday: 05:00 AM - 09:00 PM",
         "label": "Gym hours",
         "start": "05:00"
       },
       {
-        "day": "saturday",
-        "end": "20:00",
-        "evidence": "Saturday - Sunday: 06:00 AM - 08:00 PM",
-        "label": "Gym hours",
-        "start": "06:00"
-      },
-      {
         "day": "sunday",
-        "end": "20:00",
-        "evidence": "Saturday - Sunday: 06:00 AM - 08:00 PM",
+        "end": "21:00",
+        "evidence": "Saturday - Sunday: 05:00 AM - 09:00 PM",
         "label": "Gym hours",
-        "start": "06:00"
+        "start": "05:00"
       }
     ],
     "closures": [],
@@ -60,10 +60,10 @@
     "schedule_basis": "facility_hours",
     "sessions": []
   },
-  "pdf_sha256": "c884d75c863b6d85f22a3bcb1b089f496657b57de79d920a5d910a0318581dba",
+  "pdf_sha256": "05a7be9dc1fb603d7d4c104688d05e93319fbe83e14a48c287270dc5f7df50ab",
   "prompt_sha256": "03eee14261fe48668ae6e1ae2c9bfc14ceddb86ab899274257f52ca6309b93a7",
   "provider": "direct",
   "schema_sha256": "de685f22a191de60e54dea56caffce56f72a20b0ccd3f17fa5868c3f78977858",
-  "source_pdf_url": "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport",
+  "source_pdf_url": "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport",
   "usage": {}
 }
