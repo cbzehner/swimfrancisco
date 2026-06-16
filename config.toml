@@ -6,6 +6,9 @@ compile_sass = false
 build_search_index = false
 minify_html = true
 
+[extra]
+posthog_key = "phc_mPy7u48sdBgpSYwtFYyzQpkwhW6a82tM6Wvb88kjHLmZ"
+
 [translations]
 access = "Access"
 access_filter = "Access filter"

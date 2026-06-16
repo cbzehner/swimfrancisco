@@ -22,7 +22,7 @@ crons = ["0 * * * *"]
 [assets]
 directory = "../public"
 not_found_handling = "404-page"
-run_worker_first = ["/api/*", "/__scheduled"]
+run_worker_first = ["/api/*", "/__scheduled", "/ingest/*"]
 
 # KV namespace for per-spot conditions. IDs are managed by Terraform
 # (terraform/worker.tf → cloudflare_workers_kv_namespace.conditions /
