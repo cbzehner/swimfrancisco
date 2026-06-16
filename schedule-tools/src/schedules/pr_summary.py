@@ -10,6 +10,7 @@ so the workflow's plumbing is just "git add data/" → run this command.
 
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 from datetime import date as _date
@@ -50,6 +51,89 @@ def _staged_data_changes(repo_root: Path = REPO_ROOT) -> list[tuple[str, str, st
         if m:
             rows.append((m.group(1), m.group(2), m.group(3), change))
     return rows
+
+
+def staged_data_has_meaningful_changes(repo_root: Path = REPO_ROOT) -> bool:
+    """Return true when staged data changes should open a review PR.
+
+    Provider JSON can churn when a deterministic direct extractor refreshes
+    `extracted_at` and rolls `payload.effective_start` forward even though the
+    modeled schedule did not change. Those diffs do not need a PR. Everything
+    else stays conservative: added/deleted files, source files, unparseable JSON,
+    and semantic payload changes all count as meaningful.
+    """
+    for change, path in _staged_name_status(repo_root):
+        if change != "M":
+            return True
+        if not path.endswith(".json"):
+            return True
+        if not _staged_json_change_is_metadata_only(repo_root, path):
+            return True
+    return False
+
+
+def _staged_name_status(repo_root: Path) -> list[tuple[str, str]]:
+    try:
+        out = subprocess.run(
+            ["git", "diff", "--staged", "--name-status", "--", "data/"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return []
+
+    rows: list[tuple[str, str]] = []
+    for line in out.splitlines():
+        if not line.strip():
+            continue
+        parts = line.split("\t")
+        if len(parts) < 2:
+            continue
+        rows.append((parts[0][0], parts[-1]))
+    return rows
+
+
+def _staged_json_change_is_metadata_only(repo_root: Path, path: str) -> bool:
+    before = _git_blob(repo_root, f"HEAD:{path}")
+    after = _git_blob(repo_root, f":{path}")
+    if before is None or after is None:
+        return False
+    try:
+        before_json = json.loads(before)
+        after_json = json.loads(after)
+    except json.JSONDecodeError:
+        return False
+    return _semantic_provider_json(before_json) == _semantic_provider_json(after_json)
+
+
+def _git_blob(repo_root: Path, ref: str) -> str | None:
+    try:
+        return subprocess.run(
+            ["git", "show", ref],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+
+
+def _semantic_provider_json(value: object) -> object:
+    if not isinstance(value, dict):
+        return value
+    cleaned = dict(value)
+    cleaned.pop("extracted_at", None)
+    payload = cleaned.get("payload")
+    if isinstance(payload, dict):
+        cleaned["payload"] = {
+            key: val
+            for key, val in payload.items()
+            if key != "effective_start"
+        }
+    return cleaned
 
 
 def _changed_slugs_with_runs(rows: list[tuple[str, str, str, str]]) -> dict[str, dict[str, list[tuple[str, str]]]]:

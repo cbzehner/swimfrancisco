@@ -14,7 +14,7 @@ from .paths import (
 )
 from .eval import collect_pool_evals, render_report, write_report
 from .pipeline import run_pipeline
-from .pr_summary import render_pr_body
+from .pr_summary import render_pr_body, staged_data_has_meaningful_changes
 from .report import result_counts
 from .project import ProjectError, project as _project
 from .review import (
@@ -157,6 +157,16 @@ def pr_summary_command() -> None:
     `git add data/` and before commit.
     """
     click.echo(render_pr_body())
+
+
+@cli.command("has-meaningful-staged-data-changes")
+def has_meaningful_staged_data_changes_command() -> None:
+    """Exit 0 when staged data changes should open a schedule PR."""
+    if staged_data_has_meaningful_changes():
+        click.echo("meaningful staged data changes detected")
+        raise SystemExit(0)
+    click.echo("only metadata-only staged data changes detected")
+    raise SystemExit(1)
 
 
 @cli.command("eval")

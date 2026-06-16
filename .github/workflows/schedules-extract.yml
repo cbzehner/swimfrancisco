@@ -67,6 +67,10 @@ jobs:
           if git diff --staged --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No changes detected; nothing to PR."
+          elif ! uv --project schedule-tools run schedules has-meaningful-staged-data-changes; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Only metadata-only data changes detected; nothing to PR."
+            git diff --staged --stat | head -50
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
             git diff --staged --stat | head -50

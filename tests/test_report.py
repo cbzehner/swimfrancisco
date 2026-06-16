@@ -8,9 +8,12 @@ approve bad data or reject good data.
 
 from __future__ import annotations
 
+import json
+import subprocess
 from pathlib import Path
 
 from schedules.models import Aborted, Extracted, PoolResult, ReviewNote, Skipped, Unchanged, Violation
+from schedules.pr_summary import staged_data_has_meaningful_changes
 from schedules.report import write_report
 
 
@@ -233,3 +236,92 @@ class TestFooter:
         assert "git diff content/spots/" in text
         assert "data/<slug>/<fetch-date>-<sha12>/" in text
         assert "git add content/spots data/" in text
+
+
+def _git(repo: Path, *args: str) -> None:
+    subprocess.run(["git", *args], cwd=repo, check=True, capture_output=True, text=True)
+
+
+def _write_provider_json(path: Path, *, extracted_at: str, effective_start: str, sessions: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({
+        "provider": "direct",
+        "model": "direct-test-v1",
+        "extracted_at": extracted_at,
+        "prompt_sha256": "prompt",
+        "schema_sha256": "schema",
+        "source_pdf_url": "https://example.test/source",
+        "pdf_sha256": "a" * 64,
+        "usage": {},
+        "cost_estimate": "deterministic",
+        "payload": {
+            "effective_start": effective_start,
+            "schedule_basis": "pool_hours",
+            "sessions": sessions,
+            "closures": [],
+            "access_hours": [],
+            "access_exceptions": [],
+        },
+    }, indent=2, sort_keys=True) + "\n")
+
+
+class TestMeaningfulStagedDataChanges:
+    def test_metadata_only_provider_json_change_is_not_meaningful(self, tmp_path: Path) -> None:
+        repo = tmp_path / "repo"
+        repo.mkdir()
+        _git(repo, "init")
+        _git(repo, "config", "user.email", "test@example.com")
+        _git(repo, "config", "user.name", "Test")
+        artifact = repo / "data" / "koret-center" / "2026-06-16-aaaaaaaaaaaa" / "direct-test-v1.json"
+        sessions = [{"day": "monday", "type": "lap_swim", "start": "07:00", "end": "19:00"}]
+        _write_provider_json(artifact, extracted_at="2026-06-16T00:00:00+00:00", effective_start="2026-06-16", sessions=sessions)
+        _git(repo, "add", "data")
+        _git(repo, "commit", "-m", "seed")
+
+        _write_provider_json(artifact, extracted_at="2026-06-23T00:00:00+00:00", effective_start="2026-06-23", sessions=sessions)
+        _git(repo, "add", "data")
+
+        assert staged_data_has_meaningful_changes(repo) is False
+
+    def test_payload_change_is_meaningful(self, tmp_path: Path) -> None:
+        repo = tmp_path / "repo"
+        repo.mkdir()
+        _git(repo, "init")
+        _git(repo, "config", "user.email", "test@example.com")
+        _git(repo, "config", "user.name", "Test")
+        artifact = repo / "data" / "koret-center" / "2026-06-16-aaaaaaaaaaaa" / "direct-test-v1.json"
+        _write_provider_json(
+            artifact,
+            extracted_at="2026-06-16T00:00:00+00:00",
+            effective_start="2026-06-16",
+            sessions=[{"day": "monday", "type": "lap_swim", "start": "07:00", "end": "19:00"}],
+        )
+        _git(repo, "add", "data")
+        _git(repo, "commit", "-m", "seed")
+
+        _write_provider_json(
+            artifact,
+            extracted_at="2026-06-23T00:00:00+00:00",
+            effective_start="2026-06-23",
+            sessions=[{"day": "monday", "type": "lap_swim", "start": "08:00", "end": "19:00"}],
+        )
+        _git(repo, "add", "data")
+
+        assert staged_data_has_meaningful_changes(repo) is True
+
+    def test_added_source_file_is_meaningful(self, tmp_path: Path) -> None:
+        repo = tmp_path / "repo"
+        repo.mkdir()
+        _git(repo, "init")
+        _git(repo, "config", "user.email", "test@example.com")
+        _git(repo, "config", "user.name", "Test")
+        (repo / "README.md").write_text("seed\n")
+        _git(repo, "add", "README.md")
+        _git(repo, "commit", "-m", "seed")
+
+        source = repo / "data" / "koret-center" / "2026-06-16-aaaaaaaaaaaa" / "source.csv"
+        source.parent.mkdir(parents=True)
+        source.write_text("Monday Hours: 7am-7pm\n")
+        _git(repo, "add", "data")
+
+        assert staged_data_has_meaningful_changes(repo) is True
