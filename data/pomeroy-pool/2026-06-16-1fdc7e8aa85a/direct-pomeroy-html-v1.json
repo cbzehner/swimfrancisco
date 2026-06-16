@@ -1,23 +1,23 @@
 {
   "cost_estimate": "deterministic",
-  "extracted_at": "2026-06-15T17:36:33.182339+00:00",
+  "extracted_at": "2026-06-16T19:15:54.985264+00:00",
   "model": "pomeroy-html-v1",
   "payload": {
     "access_exceptions": [],
     "access_hours": [],
     "closures": [
       {
-        "end": "2026-05-25",
-        "reason": "Memorial Day",
-        "start": "2026-05-25"
-      },
-      {
         "end": "2026-06-19",
         "reason": "Juneteenth",
         "start": "2026-06-19"
+      },
+      {
+        "end": "2026-07-04",
+        "reason": "Observing Independence Day",
+        "start": "2026-07-04"
       }
     ],
-    "effective_start": "2026-06-15",
+    "effective_start": "2026-06-16",
     "schedule_basis": "swim_schedule",
     "sessions": [
       {
@@ -134,7 +134,7 @@
       }
     ]
   },
-  "pdf_sha256": "f889657b383a68a70bae6e8ddc789783b831afd1b2008ebf0c66bb46a89223de",
+  "pdf_sha256": "1fdc7e8aa85a69a5ec06355ee1977e99dd1c864519448484973b249c1c641f4f",
   "prompt_sha256": "17455ef18b4009e05dffed688558aedf9301b6029346d3ed79f165a4fcb32ed5",
   "provider": "direct",
   "schema_sha256": "de685f22a191de60e54dea56caffce56f72a20b0ccd3f17fa5868c3f78977858",

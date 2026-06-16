@@ -1,0 +1,61 @@
+{
+  "cost_estimate": "deterministic",
+  "extracted_at": "2026-06-16T19:15:54.657388+00:00",
+  "model": "koret-google-sheet-v1",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [],
+    "closures": [
+      {
+        "end": "2026-06-19",
+        "reason": "Juneteenth",
+        "start": "2026-06-19"
+      }
+    ],
+    "effective_start": "2026-06-16",
+    "schedule_basis": "pool_hours",
+    "sessions": [
+      {
+        "day": "monday",
+        "end": "19:00",
+        "evidence": "Monday Hours: 7am-7:00pm Lane 1 Lane 2 Lane 3 Lane 4 Lane 5 Lane 6 Lane 7 Lane 8 Bulk Head",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "19:00",
+        "evidence": "Tuesday Hours: 7am-7pm (Summer Hours) Lane 1 Lane 2 Lane 3 Lane 4 Lane 5 Lane 6 Lane 7 Lane 8 Bulk Head",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:00",
+        "evidence": "Wednesday Hours: 7am-7pm Lane 1 Lane 2 Lane 3 Lane 4 Lane 5 Lane 6 Lane 7 Lane 8 Bulk Head",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "19:00",
+        "evidence": "Thursday Hours: 7:00am-7:00pm Lane 1 Lane 2 Lane 3 Lane 4 Lane 5 Lane 6 Lane 7 Lane 8 Bulk Head Lane 9 Lane 10 Lane 11 Lane 12 Lane 13 Lane 14 Lane 15 DEEP",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "16:00",
+        "evidence": "Saturday time grid",
+        "start": "06:00",
+        "type": "lap_swim"
+      }
+    ]
+  },
+  "pdf_sha256": "890a0a96a283b6a87e495501ae3ee1fbc6500ba2ca5ab10314df67ff4480e41d",
+  "prompt_sha256": "d890ba6f8d2dfd4dbae8cfba507a0e627b9100313325103fdc48ac549ca8dcc2",
+  "provider": "direct",
+  "schema_sha256": "de685f22a191de60e54dea56caffce56f72a20b0ccd3f17fa5868c3f78977858",
+  "source_pdf_url": "https://docs.google.com/spreadsheets/d/1PcFSl3ndScM2-SZnubwDvBlbhpmbFsVjEPK-yGilZU0/edit?gid=1958899859&pli=1",
+  "usage": {}
+}
