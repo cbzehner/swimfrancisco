@@ -17,7 +17,7 @@ class ReviewCandidate:
     slug: str
     pdf_sha256: str
     review_dir: Path
-    pdf_path: Path
+    source_path: Path
     fetch_date: str  # YYYY-MM-DD derived from the review-dir name prefix
 
 
@@ -77,12 +77,20 @@ def find_review_candidates(
                     slug=slug,
                     pdf_sha256=full_sha,
                     review_dir=review_dir,
-                    pdf_path=review_dir / "source.pdf",
+                    source_path=_source_path(review_dir),
                     fetch_date=fetch_date,
                 )
             )
     candidates.sort(key=lambda c: (c.fetch_date, c.slug))
     return candidates
+
+
+def _source_path(review_dir: Path) -> Path:
+    for name in ("source.pdf", "source.csv", "source.html"):
+        path = review_dir / name
+        if path.exists():
+            return path
+    return review_dir / "source.pdf"
 
 
 _PROVIDER_PREFERENCE = ("gemini", "anthropic")

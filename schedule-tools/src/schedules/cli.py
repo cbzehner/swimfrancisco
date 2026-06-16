@@ -125,13 +125,14 @@ def review_command(slug: str | None) -> None:
     candidate = candidates[0]
     draft = seed_draft(candidate=candidate, data_root=DATA_DIR)
     click.echo(f"Reviewing {candidate.slug} ({candidate.pdf_sha256[:12]})")
+    click.echo(f"Source: {candidate.source_path}")
     click.echo(f"Draft:  {draft}")
 
-    if candidate.pdf_path and candidate.pdf_path.exists():
+    if candidate.source_path and candidate.source_path.exists():
         try:
-            subprocess.run(["open", str(candidate.pdf_path)], check=False)
+            subprocess.run(["open", str(candidate.source_path)], check=False)
         except FileNotFoundError:
-            click.echo(f"(note: `open` not available; PDF at {candidate.pdf_path})")
+            click.echo(f"(note: `open` not available; source at {candidate.source_path})")
 
     editor = os.getenv("EDITOR") or "hx"
     subprocess.run([*shlex.split(editor), str(draft)], check=False)

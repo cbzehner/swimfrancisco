@@ -100,6 +100,40 @@ def test_koret_google_sheet_extractor_reads_weekday_and_weekend_hours():
     assert any(s["day"] == "sunday" and s["start"] == "08:00" and s["end"] == "18:00" for s in payload["sessions"])
 
 
+def test_koret_google_sheet_extractor_handles_closed_day_and_weekend_grid():
+    payload = _extract_koret(
+        """--- Monday ---
+"Monday Hours: 7am-7:00pm ","Lane 1"
+--- Tuesday ---
+"Tuesday Hours: 7am-7pm (Summer Hours) ","Lane 1"
+--- Wednesday ---
+"Wednesday Hours: 7am-7pm ","Lane 1"
+--- Thursday ---
+"Thursday Hours: 7:00am-7:00pm  ","Lane 1"
+--- Friday ---
+"Friday","",""
+"Closed Juneteenth","",""
+--- Weekend ---
+" ","Saturday Lane 1","Lane 2"
+"6:00 AM","fast","fast"
+"7:00 AM","fast","fast"
+"8:00 AM","fast","fast"
+"3:00 PM","",""
+"","","Sunday"
+"","Shallow & Mini Lane","Lane 1"
+"""
+    )
+
+    assert {(s["day"], s["start"], s["end"]) for s in payload["sessions"]} == {
+        ("monday", "07:00", "19:00"),
+        ("tuesday", "07:00", "19:00"),
+        ("wednesday", "07:00", "19:00"),
+        ("thursday", "07:00", "19:00"),
+        ("saturday", "06:00", "16:00"),
+    }
+    assert payload["closures"][0]["reason"] == "Juneteenth"
+
+
 def test_pomeroy_html_extractor_handles_table_rowspans():
     payload = _extract_pomeroy(
         """
