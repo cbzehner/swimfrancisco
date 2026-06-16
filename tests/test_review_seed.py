@@ -36,7 +36,7 @@ def _make_candidate(review_dir: Path, pdf_sha256: str, slug: str = "hamilton-poo
         slug=slug,
         pdf_sha256=pdf_sha256,
         review_dir=review_dir,
-        pdf_path=review_dir / "source.pdf",
+        source_path=review_dir / "source.pdf",
         fetch_date="2026-04-01",
     )
 
