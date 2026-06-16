@@ -8,6 +8,7 @@ import { readConditionsRaw } from "./kv.ts";
 import { corsHeaders, preflight } from "./cors.ts";
 import { triggerRebuild } from "./deploy.ts";
 import { isPtMidnight } from "./schedule.ts";
+import { handlePosthog, isPosthogPath } from "./posthog.ts";
 
 export interface Env {
   CONDITIONS: KVNamespace;
@@ -88,6 +89,13 @@ async function handleConditions(
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    // Analytics proxy is same-origin and forwards every method (POST for
+    // ingestion, GET for the library), so it runs before the OPTIONS/GET
+    // gate below, which only governs the JSON API.
+    if (isPosthogPath(new URL(request.url).pathname)) {
+      return handlePosthog(request, ctx);
+    }
+
     if (request.method === "OPTIONS") return preflight(request);
 
     if (request.method !== "GET") {
