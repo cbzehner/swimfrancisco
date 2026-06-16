@@ -109,6 +109,27 @@ def test_cli_review_end_to_end_with_editor_edit(tmp_path, monkeypatch):
     assert any(call[0] in {"hx", "$EDITOR"} or call[0].endswith("hx") for call in calls)
 
 
+def test_cli_review_opens_csv_source_for_direct_review(tmp_path, monkeypatch):
+    data, content = _patch_dirs(monkeypatch, tmp_path)
+    review_dir = _seed_review_dir(data, "koret-center", "2026-04-01", "a" * 64)
+    (review_dir / "source.pdf").unlink()
+    (review_dir / "source.csv").write_text("Monday Hours: 7am-7pm\n")
+    _seed_content_md(content, "koret-center")
+
+    calls: list[list[str]] = []
+    monkeypatch.setattr(
+        "schedules.cli.subprocess.run",
+        _editing_fake_run(calls, data, "koret-center", "a" * 12),
+    )
+    monkeypatch.setenv("EDITOR", "hx")
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["review", "--slug", "koret-center"])
+    assert result.exit_code == 0, result.output
+    assert ["open", str(review_dir / "source.csv")] in calls
+    assert f"Source: {review_dir / 'source.csv'}" in result.output
+
+
 def test_cli_review_rejects_unedited_payload(tmp_path, monkeypatch):
     data, content = _patch_dirs(monkeypatch, tmp_path)
     _seed_review_dir(data, "hamilton-pool", "2026-04-01", "a" * 64)

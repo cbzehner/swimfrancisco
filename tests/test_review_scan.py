@@ -56,7 +56,18 @@ def test_find_review_candidates_returns_unreviewed(tmp_path):
     assert candidates[0].pdf_sha256 == "a" * 64
     assert candidates[0].fetch_date == "2026-04-01"
     assert candidates[0].review_dir == review_dir
-    assert candidates[0].pdf_path == review_dir / "source.pdf"
+    assert candidates[0].source_path == review_dir / "source.pdf"
+
+
+def test_find_review_candidates_uses_csv_source_when_pdf_missing(tmp_path):
+    data_root = tmp_path / "data"
+    review_dir = _review_dir(data_root, "koret-center", "2026-04-01", "a" * 64)
+    _write_provider_json(review_dir, "a" * 64, provider="direct")
+    (review_dir / "source.csv").write_text("Monday Hours: 7am-7pm\n")
+
+    candidates = find_review_candidates(data_root=data_root)
+    assert len(candidates) == 1
+    assert candidates[0].source_path == review_dir / "source.csv"
 
 
 def test_find_review_candidates_skips_already_reviewed(tmp_path):
