@@ -1,0 +1,92 @@
+{
+  "agent_data_version": 1,
+  "slug": "ucsf-millberry",
+  "name": "UCSF Millberry",
+  "type": "pool",
+  "canonical_url": "https://swimfrancisco.com/spots/ucsf-millberry/",
+  "description_short": null,
+  "body_markdown": "UCSF Millberry is the Parnassus campus fitness-center pool entry for the opt-in membership layer.",
+  "location": {
+    "address": "500 Parnassus Ave, San Francisco, CA 94143",
+    "label": "Parnassus",
+    "lat": 37.7631,
+    "lng": -122.4588
+  },
+  "access": {
+    "access": "day_pass",
+    "access_mode": "limited_public",
+    "access_summary": "UCSF Millberry Fitness Center is the Parnassus UCSF fitness location. The official page publishes facility hours, but the pool schedule needs separate verification.",
+    "access_notes": [],
+    "cost": "paid",
+    "payment_model": "membership",
+    "website": "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/millberry-fitness-center-ucsf-parnassus"
+  },
+  "freshness": {
+    "last_verified_at": "2026-05-17",
+    "schedule_effective": "2026-05-17"
+  },
+  "sources": [
+    {
+      "kind": "official_site",
+      "url": "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/millberry-fitness-center-ucsf-parnassus"
+    }
+  ],
+  "pool": {
+    "subtype": "campus indoor",
+    "setpoint_label": "pool",
+    "schedules": [
+      {
+        "effective_start": "2026-05-17",
+        "last_verified_at": "2026-05-17",
+        "schedule_basis": "facility_hours",
+        "sessions": [],
+        "closures": [],
+        "access_hours": [
+          {
+            "day": "monday",
+            "start": "06:00",
+            "end": "21:00",
+            "label": "Facility hours"
+          },
+          {
+            "day": "tuesday",
+            "start": "06:00",
+            "end": "21:00",
+            "label": "Facility hours"
+          },
+          {
+            "day": "wednesday",
+            "start": "06:00",
+            "end": "21:00",
+            "label": "Facility hours"
+          },
+          {
+            "day": "thursday",
+            "start": "06:00",
+            "end": "21:00",
+            "label": "Facility hours"
+          },
+          {
+            "day": "friday",
+            "start": "06:00",
+            "end": "21:00",
+            "label": "Facility hours"
+          },
+          {
+            "day": "saturday",
+            "start": "08:00",
+            "end": "16:00",
+            "label": "Facility hours"
+          },
+          {
+            "day": "sunday",
+            "start": "08:00",
+            "end": "16:00",
+            "label": "Facility hours"
+          }
+        ]
+      }
+    ]
+  },
+  "generated_at": "2026-06-16T12:36:33-07:00"
+}

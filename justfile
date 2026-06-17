@@ -6,8 +6,8 @@ default:
 build:
     node scripts/generate-i18n.mjs generate
     node scripts/generate-bulletin.mjs
-    zola build
     node scripts/generate-agent-data.mjs
+    zola build
 
 release:
     node scripts/generate-i18n.mjs generate

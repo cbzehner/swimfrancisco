@@ -1,0 +1,56 @@
+{
+  "agent_data_version": 1,
+  "slug": "24-hour-fitness-ocean",
+  "name": "24 Hour Fitness Ocean",
+  "type": "pool",
+  "canonical_url": "https://swimfrancisco.com/spots/24-hour-fitness-ocean/",
+  "description_short": null,
+  "body_markdown": "24 Hour Fitness Ocean is a membership gym pool entry held in a temporary-closure state until renovation ends.",
+  "location": {
+    "address": "1850 Ocean Ave, San Francisco, CA 94112",
+    "label": "Ocean Ave",
+    "lat": 37.7251,
+    "lng": -122.4618
+  },
+  "access": {
+    "access": "day_pass",
+    "access_mode": "membership",
+    "access_summary": "24 Hour Fitness Ocean lists an indoor lap pool, but the official club page says the club is temporarily closed for renovation until May 23, 2026.",
+    "access_notes": [
+      "Keep this out of active swim planning until the official page shows the club has reopened."
+    ],
+    "cost": "paid",
+    "payment_model": "membership",
+    "website": "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport"
+  },
+  "freshness": {
+    "last_verified_at": "2026-05-17",
+    "schedule_effective": "2026-05-17"
+  },
+  "sources": [
+    {
+      "kind": "official_site",
+      "url": "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport"
+    }
+  ],
+  "pool": {
+    "subtype": "gym indoor",
+    "setpoint_label": "lap",
+    "schedules": [
+      {
+        "effective_start": "2026-05-17",
+        "last_verified_at": "2026-05-17",
+        "schedule_basis": "temporarily_closed",
+        "sessions": [],
+        "closures": [
+          {
+            "start": "2026-05-17",
+            "end": "2026-05-22",
+            "reason": "Temporarily closed for renovation"
+          }
+        ]
+      }
+    ]
+  },
+  "generated_at": "2026-06-16T12:36:33-07:00"
+}

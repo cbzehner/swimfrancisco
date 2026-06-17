@@ -1,0 +1,110 @@
+{
+  "agent_data_version": 1,
+  "slug": "chinatown-ymca",
+  "name": "Chinatown YMCA",
+  "type": "pool",
+  "canonical_url": "https://swimfrancisco.com/spots/chinatown-ymca/",
+  "description_short": null,
+  "body_markdown": "Chinatown YMCA is a membership pool option near Portsmouth Square and the Financial District.",
+  "location": {
+    "address": "855 Sacramento St, San Francisco, CA 94108",
+    "label": "Chinatown",
+    "lat": 37.7937,
+    "lng": -122.4071
+  },
+  "access": {
+    "access": "members",
+    "access_mode": "membership",
+    "access_summary": "Chinatown YMCA is a membership YMCA branch with a saltwater pool and aquatics programs. The official location page publishes facility hours, but not a concrete weekly lap/open swim schedule in static page content.",
+    "access_notes": [
+      "Check YMCA schedules before going — only facility hours are listed on the location page."
+    ],
+    "cost": "paid",
+    "payment_model": "membership",
+    "website": "https://www.ymcasf.org/location/chinatown-ymca/"
+  },
+  "freshness": {
+    "last_verified_at": "2026-05-17",
+    "schedule_effective": "2026-05-17"
+  },
+  "sources": [
+    {
+      "kind": "official_site",
+      "url": "https://www.ymcasf.org/location/chinatown-ymca/"
+    }
+  ],
+  "pool": {
+    "subtype": "membership indoor",
+    "setpoint_label": "saltwater",
+    "schedules": [
+      {
+        "effective_start": "2026-05-17",
+        "last_verified_at": "2026-05-17",
+        "schedule_basis": "facility_hours",
+        "sessions": [],
+        "closures": [],
+        "access_hours": [
+          {
+            "day": "monday",
+            "start": "06:30",
+            "end": "19:45",
+            "label": "Facility hours"
+          },
+          {
+            "day": "tuesday",
+            "start": "06:30",
+            "end": "19:45",
+            "label": "Facility hours"
+          },
+          {
+            "day": "wednesday",
+            "start": "06:30",
+            "end": "19:45",
+            "label": "Facility hours"
+          },
+          {
+            "day": "thursday",
+            "start": "06:30",
+            "end": "19:45",
+            "label": "Facility hours"
+          },
+          {
+            "day": "friday",
+            "start": "06:30",
+            "end": "19:45",
+            "label": "Facility hours"
+          },
+          {
+            "day": "saturday",
+            "start": "08:00",
+            "end": "15:45",
+            "label": "Facility hours"
+          },
+          {
+            "day": "sunday",
+            "start": "08:00",
+            "end": "15:45",
+            "label": "Facility hours"
+          }
+        ],
+        "access_exceptions": [
+          {
+            "date": "2026-05-25",
+            "start": "08:00",
+            "end": "13:30",
+            "label": "Holiday facility hours",
+            "reason": "Memorial Day"
+          },
+          {
+            "date": "2026-06-19",
+            "start": "08:00",
+            "end": "13:30",
+            "label": "Holiday facility hours",
+            "reason": "Juneteenth"
+          }
+        ]
+      }
+    ]
+  },
+  "generated_at": "2026-06-16T12:36:33-07:00"
+}

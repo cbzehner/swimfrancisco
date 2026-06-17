@@ -1,0 +1,54 @@
+{
+  "agent_data_version": 1,
+  "slug": "crissy-field",
+  "name": "Crissy Field / East Beach",
+  "type": "open_water",
+  "canonical_url": "https://swimfrancisco.com/spots/crissy-field/",
+  "description_short": "Bay beach inside the Golden Gate with strong tidal currents",
+  "body_markdown": "Crissy Field sits inside the Golden Gate on the bay side of the Presidio, with East Beach offering easy sand entry and classic views of the bridge. Tides rip through the Gate, so conditions vary hour to hour — swim on a slack or flood and stay inside the line of the beach.",
+  "location": {
+    "address": "603 Mason St, San Francisco, CA 94129",
+    "label": "Presidio",
+    "lat": 37.8042,
+    "lng": -122.466
+  },
+  "access": {
+    "access": "beach",
+    "access_mode": "public",
+    "cost": "free",
+    "payment_model": "free",
+    "website": "https://presidio.gov/explore/attractions/crissy-field"
+  },
+  "freshness": {
+    "last_verified_at": null,
+    "schedule_effective": null
+  },
+  "sources": [
+    {
+      "kind": "official_site",
+      "url": "https://presidio.gov/explore/attractions/crissy-field"
+    }
+  ],
+  "open_water": {
+    "water_body": "bay",
+    "hazards": [
+      "strong tidal currents",
+      "cold water year-round",
+      "boat and ship traffic"
+    ],
+    "common_distances": [
+      "East Beach to St. Francis Yacht Club",
+      "Pier-to-pier along the Presidio shoreline"
+    ],
+    "clubs": [],
+    "noaa_tide_station": "9414290",
+    "temp_station_id": "9414290",
+    "temp_station_type": "noaa",
+    "temp_fallback_station_id": "9414750"
+  },
+  "live_conditions": {
+    "api_url": "https://swimfrancisco.com/api/conditions",
+    "condition_key": "crissy-field"
+  },
+  "generated_at": "2026-06-16T12:36:33-07:00"
+}

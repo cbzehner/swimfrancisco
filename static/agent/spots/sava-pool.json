@@ -1,0 +1,189 @@
+{
+  "agent_data_version": 1,
+  "slug": "sava-pool",
+  "name": "Sava Pool",
+  "type": "pool",
+  "canonical_url": "https://swimfrancisco.com/spots/sava-pool/",
+  "description_short": null,
+  "body_markdown": "An indoor pool in the Parkside/Sunset district on 19th Avenue near Stern Grove. Programs include lap swim, senior swim, recreation swim, and lessons.",
+  "location": {
+    "address": "2695 19th Ave, San Francisco, CA 94132",
+    "label": "Parkside",
+    "lat": 37.7371,
+    "lng": -122.4757
+  },
+  "access": {
+    "access": "public",
+    "access_mode": "public",
+    "cost": "paid",
+    "payment_model": "session",
+    "website": "https://sfrecpark.org/facilities/facility/details/Sava-Pool-220"
+  },
+  "freshness": {
+    "last_verified_at": "2026-06-06",
+    "schedule_effective": "2026-06-09"
+  },
+  "sources": [
+    {
+      "kind": "official_site",
+      "url": "https://sfrecpark.org/facilities/facility/details/Sava-Pool-220"
+    }
+  ],
+  "pool": {
+    "subtype": "indoor",
+    "setpoint_label": "80–82°F",
+    "schedules": [
+      {
+        "effective_start": "2026-01-06",
+        "effective_end": "2026-06-08",
+        "last_verified_at": "2026-06-06",
+        "schedule_basis": "temporarily_closed",
+        "sessions": [],
+        "closures": [
+          {
+            "start": "2026-04-16",
+            "end": "2026-06-08",
+            "reason": "Closed for repairs; anticipated reopening summer 2026"
+          }
+        ]
+      },
+      {
+        "effective_start": "2026-06-09",
+        "effective_end": "2026-06-27",
+        "last_verified_at": "2026-06-06",
+        "schedule_basis": "swim_schedule",
+        "sessions": [
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "06:30",
+            "end": "10:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "senior_swim",
+            "start": "11:00",
+            "end": "12:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "family_swim",
+            "start": "13:00",
+            "end": "15:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "08:30",
+            "end": "10:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "senior_swim",
+            "start": "11:00",
+            "end": "12:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "13:00",
+            "end": "15:00"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "15:30",
+            "end": "17:00"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "19:00",
+            "end": "20:30"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "06:30",
+            "end": "10:30"
+          },
+          {
+            "day": "thursday",
+            "type": "senior_swim",
+            "start": "11:00",
+            "end": "12:30"
+          },
+          {
+            "day": "thursday",
+            "type": "family_swim",
+            "start": "13:00",
+            "end": "15:30"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "08:30",
+            "end": "10:30"
+          },
+          {
+            "day": "friday",
+            "type": "senior_swim",
+            "start": "11:00",
+            "end": "12:30"
+          },
+          {
+            "day": "friday",
+            "type": "family_swim",
+            "start": "13:00",
+            "end": "15:00"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "15:30",
+            "end": "17:00"
+          },
+          {
+            "day": "friday",
+            "type": "family_swim",
+            "start": "17:30",
+            "end": "19:30"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "09:00",
+            "end": "11:00",
+            "pool": "4 lanes"
+          },
+          {
+            "day": "saturday",
+            "type": "family_swim",
+            "start": "11:30",
+            "end": "13:00"
+          },
+          {
+            "day": "saturday",
+            "type": "family_swim",
+            "start": "13:30",
+            "end": "15:00"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "15:30",
+            "end": "17:30"
+          }
+        ],
+        "closures": [
+          {
+            "start": "2026-06-19",
+            "end": "2026-06-19",
+            "reason": "Juneteenth"
+          }
+        ]
+      }
+    ]
+  },
+  "generated_at": "2026-06-16T12:36:33-07:00"
+}

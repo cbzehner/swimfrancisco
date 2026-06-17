@@ -1,0 +1,92 @@
+{
+  "agent_data_version": 1,
+  "slug": "fitness-sf-fillmore",
+  "name": "FITNESS SF Fillmore",
+  "type": "pool",
+  "canonical_url": "https://swimfrancisco.com/spots/fitness-sf-fillmore/",
+  "description_short": null,
+  "body_markdown": "FITNESS SF Fillmore is the membership fitness-club pool option in the Fillmore Center.",
+  "location": {
+    "address": "1455 Fillmore St, San Francisco, CA 94115",
+    "label": "Fillmore",
+    "lat": 37.783,
+    "lng": -122.4328
+  },
+  "access": {
+    "access": "members",
+    "access_mode": "membership",
+    "access_summary": "FITNESS SF Fillmore is the FITNESS SF location with a 25-yard, 5-lane pool. The official help page says lap swimming is available and lane reservations are made in person.",
+    "access_notes": [],
+    "cost": "paid",
+    "payment_model": "membership",
+    "website": "https://fitnesssf.com/location/fillmore"
+  },
+  "freshness": {
+    "last_verified_at": "2026-05-17",
+    "schedule_effective": "2026-05-17"
+  },
+  "sources": [
+    {
+      "kind": "official_site",
+      "url": "https://fitnesssf.com/location/fillmore"
+    }
+  ],
+  "pool": {
+    "subtype": "membership indoor",
+    "setpoint_label": "25yd",
+    "schedules": [
+      {
+        "effective_start": "2026-05-17",
+        "last_verified_at": "2026-05-17",
+        "schedule_basis": "pool_hours",
+        "sessions": [],
+        "closures": [],
+        "access_hours": [
+          {
+            "day": "monday",
+            "start": "05:00",
+            "end": "23:59",
+            "label": "Club hours"
+          },
+          {
+            "day": "tuesday",
+            "start": "05:00",
+            "end": "23:59",
+            "label": "Club hours"
+          },
+          {
+            "day": "wednesday",
+            "start": "05:00",
+            "end": "23:59",
+            "label": "Club hours"
+          },
+          {
+            "day": "thursday",
+            "start": "05:00",
+            "end": "23:59",
+            "label": "Club hours"
+          },
+          {
+            "day": "friday",
+            "start": "05:00",
+            "end": "23:00",
+            "label": "Club hours"
+          },
+          {
+            "day": "saturday",
+            "start": "07:00",
+            "end": "20:00",
+            "label": "Club hours"
+          },
+          {
+            "day": "sunday",
+            "start": "07:00",
+            "end": "20:00",
+            "label": "Club hours"
+          }
+        ]
+      }
+    ]
+  },
+  "generated_at": "2026-06-16T12:36:33-07:00"
+}

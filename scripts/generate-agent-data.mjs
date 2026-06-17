@@ -4,14 +4,17 @@
 // can add ignored deploy artifacts without dirtying the source tree.
 
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join, relative } from "node:path";
+import { promisify } from "node:util";
 import { parse } from "smol-toml";
 
+const execFileAsync = promisify(execFile);
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, "..");
 const spotsDir = join(repoRoot, "content/spots");
-const defaultOutputDir = join(repoRoot, "public/agent");
+const defaultOutputDir = join(repoRoot, "static/agent");
 const siteUrl = "https://swimfrancisco.com";
 const agentDataVersion = 1;
 
@@ -29,6 +32,23 @@ function pageUrl(slug) {
 
 function agentSpotUrl(slug) {
   return `${siteUrl}/agent/spots/${slug}.json`;
+}
+
+async function defaultGeneratedAt() {
+  try {
+    const { stdout } = await execFileAsync("git", [
+      "log",
+      "-1",
+      "--format=%cI",
+      "--",
+      "content/spots",
+    ], { cwd: repoRoot });
+    const value = stdout.trim();
+    if (value) return value;
+  } catch (_err) {
+    // Fall back below when git metadata is unavailable in a build context.
+  }
+  return new Date().toISOString();
 }
 
 function cleanBody(text) {
@@ -221,8 +241,10 @@ function buildIndex(spots, generatedAt) {
 
 export async function generateAgentData({
   outputDir = defaultOutputDir,
-  generatedAt = new Date().toISOString(),
+  generatedAt = null,
 } = {}) {
+  generatedAt = generatedAt || await defaultGeneratedAt();
+
   const entries = (await readdir(spotsDir))
     .filter((name) => name.endsWith(".md"))
     .sort();

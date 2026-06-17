@@ -1,0 +1,86 @@
+{
+  "agent_data_version": 1,
+  "slug": "sfsu-mashouf",
+  "name": "SFSU Mashouf Wellness Center",
+  "type": "pool",
+  "canonical_url": "https://swimfrancisco.com/spots/sfsu-mashouf/",
+  "description_short": null,
+  "body_markdown": "SFSU Mashouf Wellness Center is the university/community membership pool option near Lake Merced.",
+  "location": {
+    "address": "755 Font Blvd, San Francisco, CA 94132",
+    "label": "SFSU",
+    "lat": 37.7248,
+    "lng": -122.4839
+  },
+  "access": {
+    "access": "members",
+    "access_mode": "limited_public",
+    "access_summary": "SFSU Mashouf Wellness Center publishes natatorium hours and describes a 25-meter lap pool, activity pool, hot tub, sauna, and locker rooms. Access is campus/community-membership based.",
+    "access_notes": [],
+    "cost": "paid",
+    "payment_model": "membership",
+    "website": "https://campusrec.sfsu.edu/Aquatics"
+  },
+  "freshness": {
+    "last_verified_at": "2026-05-17",
+    "schedule_effective": "2026-05-17"
+  },
+  "sources": [
+    {
+      "kind": "official_site",
+      "url": "https://campusrec.sfsu.edu/Aquatics"
+    }
+  ],
+  "pool": {
+    "subtype": "campus indoor",
+    "setpoint_label": "25m",
+    "schedules": [
+      {
+        "effective_start": "2026-05-17",
+        "last_verified_at": "2026-05-17",
+        "schedule_basis": "pool_hours",
+        "sessions": [],
+        "closures": [],
+        "access_hours": [
+          {
+            "day": "monday",
+            "start": "10:00",
+            "end": "20:00",
+            "label": "Natatorium hours"
+          },
+          {
+            "day": "tuesday",
+            "start": "10:00",
+            "end": "20:00",
+            "label": "Natatorium hours"
+          },
+          {
+            "day": "wednesday",
+            "start": "10:00",
+            "end": "20:00",
+            "label": "Natatorium hours"
+          },
+          {
+            "day": "thursday",
+            "start": "10:00",
+            "end": "20:00",
+            "label": "Natatorium hours"
+          },
+          {
+            "day": "friday",
+            "start": "12:00",
+            "end": "16:00",
+            "label": "Natatorium hours"
+          },
+          {
+            "day": "saturday",
+            "start": "12:00",
+            "end": "16:00",
+            "label": "Natatorium hours"
+          }
+        ]
+      }
+    ]
+  },
+  "generated_at": "2026-06-16T12:36:33-07:00"
+}

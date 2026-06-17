@@ -1,0 +1,92 @@
+{
+  "agent_data_version": 1,
+  "slug": "equinox-sports-club-sf",
+  "name": "Equinox Sports Club SF",
+  "type": "pool",
+  "canonical_url": "https://swimfrancisco.com/spots/equinox-sports-club-sf/",
+  "description_short": null,
+  "body_markdown": "Equinox Sports Club SF is a Market Street membership club with an indoor pool.",
+  "location": {
+    "address": "747 Market St, San Francisco, CA 94103",
+    "label": "Market Street",
+    "lat": 37.7866,
+    "lng": -122.4043
+  },
+  "access": {
+    "access": "members",
+    "access_mode": "membership",
+    "access_summary": "Equinox Sports Club San Francisco lists an indoor pool and club hours on the official location page.",
+    "access_notes": [],
+    "cost": "paid",
+    "payment_model": "membership",
+    "website": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco"
+  },
+  "freshness": {
+    "last_verified_at": "2026-05-17",
+    "schedule_effective": "2026-05-17"
+  },
+  "sources": [
+    {
+      "kind": "official_site",
+      "url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco"
+    }
+  ],
+  "pool": {
+    "subtype": "membership indoor",
+    "setpoint_label": "indoor",
+    "schedules": [
+      {
+        "effective_start": "2026-05-17",
+        "last_verified_at": "2026-05-17",
+        "schedule_basis": "facility_hours",
+        "sessions": [],
+        "closures": [],
+        "access_hours": [
+          {
+            "day": "monday",
+            "start": "05:00",
+            "end": "22:00",
+            "label": "Club hours"
+          },
+          {
+            "day": "tuesday",
+            "start": "05:00",
+            "end": "22:00",
+            "label": "Club hours"
+          },
+          {
+            "day": "wednesday",
+            "start": "05:00",
+            "end": "22:00",
+            "label": "Club hours"
+          },
+          {
+            "day": "thursday",
+            "start": "05:00",
+            "end": "22:00",
+            "label": "Club hours"
+          },
+          {
+            "day": "friday",
+            "start": "05:00",
+            "end": "20:00",
+            "label": "Club hours"
+          },
+          {
+            "day": "saturday",
+            "start": "07:00",
+            "end": "18:00",
+            "label": "Club hours"
+          },
+          {
+            "day": "sunday",
+            "start": "07:00",
+            "end": "18:00",
+            "label": "Club hours"
+          }
+        ]
+      }
+    ]
+  },
+  "generated_at": "2026-06-16T12:36:33-07:00"
+}

@@ -1,0 +1,296 @@
+{
+  "agent_data_version": 1,
+  "slug": "pomeroy-pool",
+  "name": "Pomeroy Pool",
+  "type": "pool",
+  "canonical_url": "https://swimfrancisco.com/spots/pomeroy-pool/",
+  "description_short": null,
+  "body_markdown": "Pomeroy is best modeled as warm-water access for therapy, gentle movement, lessons, and slow lap swimming rather than as a standard lap pool.",
+  "location": {
+    "address": "207 Skyline Blvd, San Francisco, CA 94132",
+    "label": "Lake Merced",
+    "lat": 37.7298,
+    "lng": -122.5019
+  },
+  "access": {
+    "access": "day_pass",
+    "access_mode": "limited_public",
+    "access_summary": "Pomeroy's Herbst Therapeutic Pool is a warm-water therapeutic pool. It offers therapeutic swim, open swim, classes, lessons, and slow lap swimming; it is not a vigorous lap-training pool.",
+    "access_notes": [
+      "The therapeutic swim page says slow lap swimming only and notes the program is for warm-water movement, recovery, and gentle exercise."
+    ],
+    "cost": "paid",
+    "payment_model": "therapy",
+    "pricing": [
+      {
+        "label": "Therapeutic swim pass",
+        "price": "$11",
+        "note": "One swim pass listed on Pomeroy's therapeutic swim page.",
+        "url": "https://www.prrcsf.org/therapeutic-swim",
+        "access_mode": "limited_public",
+        "payment_model": "therapy"
+      },
+      {
+        "label": "10 swim pass",
+        "price": "$105",
+        "note": "Ten-pass price listed on Pomeroy's therapeutic swim page.",
+        "url": "https://www.prrcsf.org/therapeutic-swim",
+        "access_mode": "limited_public",
+        "payment_model": "therapy"
+      }
+    ],
+    "website": "https://www.prrcsf.org/pool"
+  },
+  "freshness": {
+    "last_verified_at": "2026-06-16",
+    "schedule_effective": "2026-06-16"
+  },
+  "sources": [
+    {
+      "kind": "official_site",
+      "url": "https://www.prrcsf.org/pool"
+    },
+    {
+      "kind": "access_or_pricing",
+      "label": "Therapeutic swim pass",
+      "url": "https://www.prrcsf.org/therapeutic-swim"
+    }
+  ],
+  "pool": {
+    "subtype": "therapeutic indoor",
+    "setpoint_label": "92°F",
+    "schedules": [
+      {
+        "effective_start": "2026-05-17",
+        "schedule_basis": "swim_schedule",
+        "last_verified_at": "2026-06-16",
+        "sessions": [
+          {
+            "day": "monday",
+            "type": "lap_swim",
+            "start": "11:00",
+            "end": "11:55"
+          },
+          {
+            "day": "monday",
+            "type": "family_swim",
+            "start": "13:00",
+            "end": "14:55"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "08:00",
+            "end": "08:55"
+          },
+          {
+            "day": "tuesday",
+            "type": "family_swim",
+            "start": "09:00",
+            "end": "09:55"
+          },
+          {
+            "day": "tuesday",
+            "type": "family_swim",
+            "start": "13:00",
+            "end": "14:55"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "08:00",
+            "end": "08:55"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "09:00",
+            "end": "09:55"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "14:00",
+            "end": "14:55"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "08:00",
+            "end": "08:55"
+          },
+          {
+            "day": "thursday",
+            "type": "family_swim",
+            "start": "09:00",
+            "end": "09:55"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "18:00",
+            "end": "18:55"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "08:00",
+            "end": "08:55"
+          },
+          {
+            "day": "friday",
+            "type": "family_swim",
+            "start": "09:00",
+            "end": "09:55"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "17:00",
+            "end": "17:55"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "08:00",
+            "end": "08:55"
+          },
+          {
+            "day": "saturday",
+            "type": "family_swim",
+            "start": "09:00",
+            "end": "09:55"
+          }
+        ],
+        "closures": [
+          {
+            "start": "2026-05-25",
+            "end": "2026-05-25",
+            "reason": "Memorial Day"
+          },
+          {
+            "start": "2026-06-19",
+            "end": "2026-06-19",
+            "reason": "Juneteenth"
+          }
+        ]
+      },
+      {
+        "effective_start": "2026-06-16",
+        "schedule_basis": "swim_schedule",
+        "last_verified_at": "2026-06-16",
+        "sessions": [
+          {
+            "day": "monday",
+            "type": "lap_swim",
+            "start": "11:00",
+            "end": "11:55"
+          },
+          {
+            "day": "monday",
+            "type": "family_swim",
+            "start": "13:00",
+            "end": "14:55"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "08:00",
+            "end": "08:55"
+          },
+          {
+            "day": "tuesday",
+            "type": "family_swim",
+            "start": "09:00",
+            "end": "09:55"
+          },
+          {
+            "day": "tuesday",
+            "type": "family_swim",
+            "start": "13:00",
+            "end": "14:55"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "08:00",
+            "end": "08:55"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "09:00",
+            "end": "09:55"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "14:00",
+            "end": "14:55"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "08:00",
+            "end": "08:55"
+          },
+          {
+            "day": "thursday",
+            "type": "family_swim",
+            "start": "09:00",
+            "end": "09:55"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "18:00",
+            "end": "18:55"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "08:00",
+            "end": "08:55"
+          },
+          {
+            "day": "friday",
+            "type": "family_swim",
+            "start": "09:00",
+            "end": "09:55"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "17:00",
+            "end": "17:55"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "08:00",
+            "end": "08:55"
+          },
+          {
+            "day": "saturday",
+            "type": "family_swim",
+            "start": "09:00",
+            "end": "09:55"
+          }
+        ],
+        "closures": [
+          {
+            "start": "2026-06-19",
+            "end": "2026-06-19",
+            "reason": "Juneteenth"
+          },
+          {
+            "start": "2026-07-04",
+            "end": "2026-07-04",
+            "reason": "Observing Independence Day"
+          }
+        ]
+      }
+    ]
+  },
+  "generated_at": "2026-06-16T12:36:33-07:00"
+}

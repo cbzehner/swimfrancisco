@@ -1,0 +1,51 @@
+{
+  "agent_data_version": 1,
+  "slug": "baker-beach",
+  "name": "Baker Beach",
+  "type": "open_water",
+  "canonical_url": "https://swimfrancisco.com/spots/baker-beach/",
+  "description_short": "Ocean-side beach just outside the Gate with strong surf and rip currents",
+  "body_markdown": "Baker Beach faces the open Pacific just south of the Golden Gate, with dramatic views of the bridge and the Marin Headlands. The surf, cold water, and rip currents make it a serious open water environment — wetsuits and conservative swim plans are the norm.",
+  "location": {
+    "address": "1504 Pershing Dr, San Francisco, CA 94129",
+    "label": "Presidio",
+    "lat": 37.7937,
+    "lng": -122.4836
+  },
+  "access": {
+    "access": "beach",
+    "access_mode": "public",
+    "cost": "free",
+    "payment_model": "free",
+    "website": "https://www.nps.gov/places/000/baker-beach.htm"
+  },
+  "freshness": {
+    "last_verified_at": null,
+    "schedule_effective": null
+  },
+  "sources": [
+    {
+      "kind": "official_site",
+      "url": "https://www.nps.gov/places/000/baker-beach.htm"
+    }
+  ],
+  "open_water": {
+    "water_body": "ocean",
+    "hazards": [
+      "rip currents",
+      "large shore break",
+      "cold water year-round",
+      "no lifeguards"
+    ],
+    "common_distances": [],
+    "clubs": [],
+    "noaa_tide_station": "9414275",
+    "temp_station_id": "46237",
+    "temp_station_type": "ndbc"
+  },
+  "live_conditions": {
+    "api_url": "https://swimfrancisco.com/api/conditions",
+    "condition_key": "baker-beach"
+  },
+  "generated_at": "2026-06-16T12:36:33-07:00"
+}

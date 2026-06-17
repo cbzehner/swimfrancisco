@@ -1,0 +1,102 @@
+{
+  "agent_data_version": 1,
+  "slug": "embarcadero-ymca",
+  "name": "Embarcadero YMCA",
+  "type": "pool",
+  "canonical_url": "https://swimfrancisco.com/spots/embarcadero-ymca/",
+  "description_short": null,
+  "body_markdown": "Embarcadero YMCA adds a downtown waterfront YMCA pool to the membership-only layer of the board.",
+  "location": {
+    "address": "169 Steuart St, San Francisco, CA 94105",
+    "label": "Embarcadero",
+    "lat": 37.7932,
+    "lng": -122.3926
+  },
+  "access": {
+    "access": "members",
+    "access_mode": "membership",
+    "access_summary": "Embarcadero YMCA is a membership YMCA branch on the waterfront with swimming pools and aquatics programs. The official page publishes pool hours as offset from facility hours.",
+    "access_notes": [],
+    "cost": "paid",
+    "payment_model": "membership",
+    "website": "https://www.ymcasf.org/location/embarcadero-ymca/"
+  },
+  "freshness": {
+    "last_verified_at": "2026-05-17",
+    "schedule_effective": "2026-05-17"
+  },
+  "sources": [
+    {
+      "kind": "official_site",
+      "url": "https://www.ymcasf.org/location/embarcadero-ymca/"
+    }
+  ],
+  "pool": {
+    "subtype": "membership indoor",
+    "setpoint_label": "25m",
+    "schedules": [
+      {
+        "effective_start": "2026-05-17",
+        "last_verified_at": "2026-05-17",
+        "schedule_basis": "pool_hours",
+        "sessions": [],
+        "closures": [],
+        "access_hours": [
+          {
+            "day": "monday",
+            "start": "06:00",
+            "end": "20:30",
+            "label": "Pool hours"
+          },
+          {
+            "day": "tuesday",
+            "start": "06:00",
+            "end": "20:30",
+            "label": "Pool hours"
+          },
+          {
+            "day": "wednesday",
+            "start": "06:00",
+            "end": "20:30",
+            "label": "Pool hours"
+          },
+          {
+            "day": "thursday",
+            "start": "06:00",
+            "end": "20:30",
+            "label": "Pool hours"
+          },
+          {
+            "day": "friday",
+            "start": "18:00",
+            "end": "20:30",
+            "label": "Pool hours"
+          },
+          {
+            "day": "saturday",
+            "start": "07:30",
+            "end": "16:30",
+            "label": "Pool hours"
+          }
+        ],
+        "access_exceptions": [
+          {
+            "date": "2026-05-25",
+            "start": "07:30",
+            "end": "13:30",
+            "label": "Holiday pool hours",
+            "reason": "Memorial Day"
+          },
+          {
+            "date": "2026-06-19",
+            "start": "07:30",
+            "end": "13:30",
+            "label": "Holiday pool hours",
+            "reason": "Juneteenth"
+          }
+        ]
+      }
+    ]
+  },
+  "generated_at": "2026-06-16T12:36:33-07:00"
+}

@@ -1,0 +1,112 @@
+{
+  "agent_data_version": 1,
+  "slug": "stonestown-ymca",
+  "name": "Stonestown YMCA",
+  "type": "pool",
+  "canonical_url": "https://swimfrancisco.com/spots/stonestown-ymca/",
+  "description_short": null,
+  "body_markdown": "Stonestown YMCA is the southwest-side YMCA pool option, close to Stonestown and SF State.",
+  "location": {
+    "address": "333 Eucalyptus Dr, San Francisco, CA 94132",
+    "label": "Stonestown",
+    "lat": 37.7311,
+    "lng": -122.4762
+  },
+  "access": {
+    "access": "members",
+    "access_mode": "membership",
+    "access_summary": "Stonestown Family YMCA is a membership YMCA branch with lap swimming and pool activities.",
+    "access_notes": [
+      "Confirm the current pool schedule with the branch; YMCA pages distinguish lap swimming from recreation/household swim reservations."
+    ],
+    "cost": "paid",
+    "payment_model": "membership",
+    "pricing": [
+      {
+        "label": "YMCA member",
+        "price": "Membership",
+        "note": "Use YMCA of Greater San Francisco membership access.",
+        "url": "https://www.ymcasf.org/location/stonestown-family-ymca/",
+        "access_mode": "membership",
+        "payment_model": "membership"
+      },
+      {
+        "label": "Non-member / guest",
+        "price": "Ask YMCA",
+        "note": "Guest/day-pass rules are branch and policy dependent.",
+        "url": "https://www.ymcasf.org/location/stonestown-family-ymca/",
+        "access_mode": "membership",
+        "payment_model": "unknown"
+      }
+    ],
+    "website": "https://www.ymcasf.org/location/stonestown-family-ymca/"
+  },
+  "freshness": {
+    "last_verified_at": "2026-05-17",
+    "schedule_effective": "2026-05-17"
+  },
+  "sources": [
+    {
+      "kind": "official_site",
+      "url": "https://www.ymcasf.org/location/stonestown-family-ymca/"
+    }
+  ],
+  "pool": {
+    "subtype": "membership indoor",
+    "setpoint_label": "pool",
+    "schedules": [
+      {
+        "effective_start": "2026-05-17",
+        "last_verified_at": "2026-05-17",
+        "schedule_basis": "facility_hours",
+        "sessions": [],
+        "closures": [],
+        "access_hours": [
+          {
+            "day": "monday",
+            "start": "05:30",
+            "end": "21:00",
+            "label": "Facility hours"
+          },
+          {
+            "day": "tuesday",
+            "start": "05:30",
+            "end": "21:00",
+            "label": "Facility hours"
+          },
+          {
+            "day": "wednesday",
+            "start": "05:30",
+            "end": "21:00",
+            "label": "Facility hours"
+          },
+          {
+            "day": "thursday",
+            "start": "05:30",
+            "end": "21:00",
+            "label": "Facility hours"
+          },
+          {
+            "day": "friday",
+            "start": "05:30",
+            "end": "21:00",
+            "label": "Facility hours"
+          },
+          {
+            "day": "saturday",
+            "start": "07:00",
+            "end": "17:00",
+            "label": "Facility hours"
+          },
+          {
+            "day": "sunday",
+            "start": "07:00",
+            "end": "17:00",
+            "label": "Facility hours"
+          }
+        ]
+      }
+    ]
+  },
+  "generated_at": "2026-06-16T12:36:33-07:00"
+}
