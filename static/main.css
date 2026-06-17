@@ -1049,7 +1049,11 @@ table.board tbody tr.flap td {
   text-align: left;
   font-family: var(--display);
   font-size: 24px;
-  padding: 24px 14px 0;
+  padding: 20px 14px 16px;
+  /* Anchor the title to the grid with a rule matching the table frame and
+     day-header band, so it reads as a title bar instead of floating above
+     the header row. */
+  border-bottom: 2px solid var(--teal);
 }
 .weekly-grid-meta {
   margin: 6px 14px 12px;
