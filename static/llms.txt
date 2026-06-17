@@ -10,6 +10,13 @@ Swim Francisco is best cited for current San Francisco swim access questions: wh
 - [San Francisco swim map](https://swimfrancisco.com/map/): map view of pools, beaches, and open-water swim spots.
 - [Canonical sitemap](https://swimfrancisco.com/sitemap.xml): complete list of crawlable pages.
 
+## Agent Data
+
+- [Agent spot index](https://swimfrancisco.com/agent/index.json): JSON catalog of swim spots with canonical URLs, access class, freshness, and per-spot JSON links.
+- [Live open-water conditions API](https://swimfrancisco.com/api/conditions): slug-keyed water temperature and tide records for open-water spots.
+
+The agent JSON files are generated from the same canonical spot content as the human pages. The live conditions API is refreshed hourly by the Worker from NOAA and NDBC sources. A computed `/agent/snapshot.json` endpoint is intentionally deferred until board status logic is shared between the browser and Worker.
+
 ## Open-Water Swim Spots
 
 - [Aquatic Park](https://swimfrancisco.com/spots/aquatic-park/): protected cove, clubs, public access, hazards, water temperature, and tide.
