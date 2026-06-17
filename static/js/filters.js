@@ -32,6 +32,7 @@ import {
 import { pacificWallClockDate } from "./helpers/pacific.mjs";
 import { TYPE_TOKENS, TYPE_TO_TOKEN, isDropInType } from "./helpers/programs.mjs";
 import { getCurrentHorizon, renderBoard } from "./status.js";
+import { capture } from "./helpers/analytics.mjs";
 
 const EARTH_RADIUS_MILES = 3958.8;
 const TYPE_NONE = "none";
@@ -279,6 +280,23 @@ function applyFilters(tbody, state, { flap = true } = {}) {
   document.dispatchEvent(new CustomEvent("sf:filters-applied"));
 }
 
+// Emit a product event describing the filter/sort state a user just chose.
+// `result_count` is the number of rows left visible — a zero here means the
+// filter combination returned nothing, which is the friction we most want to
+// see. `when` reflects the active time horizon (owned by status.js, mirrored
+// in the URL). Fired only from user gestures, never from hash restore or the
+// minute tick, so the event count tracks real intent.
+function captureFilter(trigger, state, tbody) {
+  capture("filter_applied", {
+    trigger,
+    program: activeType(state),
+    sort: state.sortByDistance ? "distance" : state.sortByNextOpen ? "open" : "default",
+    memberships: state.includeMemberships,
+    when: new URLSearchParams(window.location.search).get("when") || "now",
+    result_count: tbody.querySelectorAll("tr:not([hidden])").length,
+  });
+}
+
 // Wire click handlers. Returns the state object (handlers close over it).
 function attachHandlers(tbody, filtersRoot) {
   const state = {
@@ -298,6 +316,7 @@ function attachHandlers(tbody, filtersRoot) {
       state.includeMemberships = !state.includeMemberships;
       membershipButton.setAttribute("aria-pressed", String(state.includeMemberships));
       applyFilters(tbody, state);
+      captureFilter("memberships", state, tbody);
       syncStateToHash(state);
     });
   }
@@ -313,6 +332,7 @@ function attachHandlers(tbody, filtersRoot) {
         distanceButton?.setAttribute("aria-pressed", "false");
       }
       applyFilters(tbody, state);
+      captureFilter("open_sort", state, tbody);
       syncStateToHash(state);
     });
   }
@@ -333,6 +353,7 @@ function attachHandlers(tbody, filtersRoot) {
         setPressed(typeButtonsArray, type);
       }
       applyFilters(tbody, state);
+      captureFilter("program", state, tbody);
       syncStateToHash(state);
     });
   });
@@ -351,6 +372,7 @@ function attachHandlers(tbody, filtersRoot) {
         state.userCoords = null;
         distanceButton.setAttribute("aria-pressed", "false");
         applyFilters(tbody, state);
+        captureFilter("distance_sort", state, tbody);
         syncStateToHash(state);
         return;
       }
@@ -374,6 +396,7 @@ function attachHandlers(tbody, filtersRoot) {
             nextOpenButton?.setAttribute("aria-pressed", "false");
           }
           applyFilters(tbody, state);
+          captureFilter("distance_sort", state, tbody);
           syncStateToHash(state);
         },
         () => {

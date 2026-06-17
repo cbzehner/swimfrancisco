@@ -24,6 +24,7 @@ import {
   statusNextLabel,
   t,
 } from "./helpers/i18n.mjs";
+import { capture } from "./helpers/analytics.mjs";
 
 let currentHorizon = resolveHorizon(readHorizonParam(), pacificWallClockDate());
 
@@ -371,6 +372,7 @@ function populateHorizonMenu(control, now) {
       el.setAttribute("aria-checked", String(option.id === selected));
       el.addEventListener("click", () => {
         applyHorizon(option.id);
+        capture("filter_applied", { trigger: "when", when: option.id });
         populateHorizonMenu(control, pacificWallClockDate());
         closeHorizonMenuAndFocusButton(control);
       });
@@ -466,6 +468,7 @@ function initHorizonControl(now) {
 
   document.querySelector("[data-time-banner-reset]")?.addEventListener("click", () => {
     applyHorizon("now");
+    capture("filter_applied", { trigger: "when", when: "now" });
     populateHorizonMenu(control, pacificWallClockDate());
   });
 }
@@ -503,11 +506,36 @@ function initRowNavigation(tbody) {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     if (event.target.closest("a, button")) return;
     if (window.getSelection && String(window.getSelection())) return;
-    const href = event.target
-      .closest("tr")
-      ?.querySelector('[data-cell="spot"] a')
-      ?.getAttribute("href");
-    if (href) window.location.assign(href);
+    const row = event.target.closest("tr");
+    const href = row?.querySelector('[data-cell="spot"] a')?.getAttribute("href");
+    if (href) {
+      captureSpotOpened(row, "board_row");
+      window.location.assign(href);
+    }
+  });
+  // Direct clicks on the spot link itself bypass the overlay branch above
+  // (it ignores clicks on <a>), so capture those here. Modified/middle clicks
+  // that open a new tab still register intent — that's worth counting.
+  tbody.addEventListener("click", (event) => {
+    const link = event.target.closest('[data-cell="spot"] a');
+    if (link) captureSpotOpened(link.closest("tr"), "board_link");
+  });
+}
+
+// Record a spot-detail open from the board, keyed by slug (locale-proof,
+// unlike the autocaptured link text). `status_at_click` lets us see whether
+// people open spots that are currently open or closed.
+function captureSpotOpened(row, source) {
+  if (!row) return;
+  const statusCell = row.querySelector('[data-cell="status"]');
+  capture("spot_opened", {
+    slug: row.getAttribute("data-slug") || "",
+    spot_type: row.getAttribute("data-type") || "",
+    source,
+    status_at_click:
+      statusCell?.dataset.statusValue ||
+      statusCell?.querySelector(".status-pill")?.textContent.trim() ||
+      "",
   });
 }
 

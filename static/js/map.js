@@ -7,6 +7,7 @@
 import { pacificWallClockDate } from "./helpers/pacific.mjs";
 import { formatTideSummary } from "./helpers/tide.mjs";
 import { statusLabel, t } from "./helpers/i18n.mjs";
+import { capture } from "./helpers/analytics.mjs";
 
 const LEAFLET_JS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
 const LEAFLET_JS_INTEGRITY =
@@ -120,8 +121,8 @@ function createPopupHTML(spot) {
     `<div class="sf-map-popup-actions">` +
     `<div class="sf-map-popup-directions">` +
     `<span class="sf-map-popup-key">${escapeHTML(t("directions", "DIRECTIONS"))}</span>` +
-    `<a href="${appleHref}" target="_blank" rel="noopener">APPLE</a>` +
-    `<a href="${googleHref}" target="_blank" rel="noopener">GOOGLE</a>` +
+    `<a href="${appleHref}" target="_blank" rel="noopener" data-outbound="directions">APPLE</a>` +
+    `<a href="${googleHref}" target="_blank" rel="noopener" data-outbound="directions">GOOGLE</a>` +
     `</div>` +
     `</div>` +
     `</div>`
@@ -196,6 +197,33 @@ async function init() {
   const markerLayer = L.layerGroup().addTo(map);
   const refresh = () => renderMarkers(L, map, markerLayer, collectVisibleSpots());
   refresh();
+
+  // The map is lazy-loaded only when someone opens /map/, so a successful
+  // init is itself the adoption signal. `spots_visible` records how many
+  // markers were shown under the inbound filter state.
+  capture("map_opened", { spots_visible: collectVisibleSpots().length });
+
+  // Popups are injected HTML, so delegate from the container. Directions
+  // links are outbound conversions; the popup title opens a spot detail.
+  container.addEventListener("click", (event) => {
+    const directions = event.target.closest('.sf-map-popup-directions a');
+    if (directions) {
+      capture("outbound_click", {
+        destination: "directions",
+        href: directions.getAttribute("href") || "",
+        source: "map_popup",
+      });
+      return;
+    }
+    const title = event.target.closest(".sf-map-popup-title");
+    if (title) {
+      const href = title.getAttribute("href") || "";
+      capture("spot_opened", {
+        slug: (href.match(/\/spots\/([^/]+)\//) || [])[1] || "",
+        source: "map_popup",
+      });
+    }
+  });
 
   // Filters update row.hidden; we re-render markers to match.
   document.addEventListener("sf:filters-applied", refresh);

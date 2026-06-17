@@ -22,6 +22,7 @@ import {
   t,
 } from "./helpers/i18n.mjs";
 import { pacificWallClockDate } from "./helpers/pacific.mjs";
+import { capture } from "./helpers/analytics.mjs";
 
 function formatClosureSuffix(result) {
   if (result.closureKind === "PRE_SEASON" && result.closureTransitionDate) {
@@ -156,8 +157,44 @@ function init() {
   });
 }
 
+// Outbound link tracking — the clearest signal that a visit "converted" into
+// action (booking on the official site, getting directions). Independent of
+// the schedule slab so it still fires on spots with no schedule. `destination`
+// uses the template's explicit data-outbound where present, then a maps-URL
+// sniff, then "external". Slug comes from the path so we don't depend on any
+// one element being rendered.
+function spotSlug() {
+  const match = window.location.pathname.match(/\/spots\/([^/]+)\//);
+  return match ? match[1] : "";
+}
+
+function classifyOutbound(link) {
+  const explicit = link.getAttribute("data-outbound");
+  if (explicit) return explicit;
+  const href = link.getAttribute("href") || "";
+  if (/maps\.apple\.com|google\.[^/]+\/maps/.test(href)) return "directions";
+  return "external";
+}
+
+function initOutboundTracking() {
+  const slug = spotSlug();
+  document.addEventListener("click", (event) => {
+    const link = event.target.closest('a[target="_blank"]');
+    if (!link) return;
+    capture("outbound_click", {
+      slug,
+      destination: classifyOutbound(link),
+      href: link.getAttribute("href") || "",
+    });
+  });
+}
+
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
+  document.addEventListener("DOMContentLoaded", () => {
+    init();
+    initOutboundTracking();
+  });
 } else {
   init();
+  initOutboundTracking();
 }

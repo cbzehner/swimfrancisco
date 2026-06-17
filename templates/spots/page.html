@@ -216,16 +216,16 @@
       {%- endfor %}
     </h1>
     <p class="meta">
-      {% if extra.address %}<span class="key"><a href="{{ place_href }}" target="_blank" rel="noopener">{{ extra.address | upper }}</a></span>{% endif %}
+      {% if extra.address %}<span class="key"><a href="{{ place_href }}" target="_blank" rel="noopener" data-outbound="map">{{ extra.address | upper }}</a></span>{% endif %}
       {% if extra.subtype %}<span class="subtype">{{ chrome::spot_label(label=extra.subtype, active_lang=lang) | upper }}</span>{% endif %}
       {% if extra.setpoint_label %}<span class="setpoint">{{ trans(key='water', lang=lang) }} {{ chrome::spot_label(label=extra.setpoint_label, active_lang=lang) | upper }}</span>{% endif %}
       {{ chrome::cost_badge(extra=extra, active_lang=lang) }}
-      {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">{{ trans(key='official_page', lang=lang) }}</a>{% endif %}
+      {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener" data-outbound="official_site">{{ trans(key='official_page', lang=lang) }}</a>{% endif %}
       {% if extra.address %}
         <span class="address-actions" role="group" aria-label="{{ trans(key='directions', lang=lang) }}">
           <span class="address-actions-label">{{ trans(key='directions', lang=lang) }}</span>
-          <a href="{{ apple_dir }}" target="_blank" rel="noopener">APPLE</a>
-          <a href="{{ google_dir }}" target="_blank" rel="noopener">GOOGLE</a>
+          <a href="{{ apple_dir }}" target="_blank" rel="noopener" data-outbound="directions">APPLE</a>
+          <a href="{{ google_dir }}" target="_blank" rel="noopener" data-outbound="directions">GOOGLE</a>
         </span>
       {% endif %}
     </p>
@@ -574,7 +574,7 @@
       {% if active_schedule and effective_start %}
         <footer class="meta">
           <p class="meta-source">
-            {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener">{{ trans(key='source_official_site', lang=lang) }}</a>{% else %}{{ trans(key='source_official_site', lang=lang) }}{% endif %}
+            {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener" data-outbound="official_site">{{ trans(key='source_official_site', lang=lang) }}</a>{% else %}{{ trans(key='source_official_site', lang=lang) }}{% endif %}
           </p>
           <p class="meta-effective">
             {{ trans(key='schedule_effective_from', lang=lang) }} {{ self::format_iso_date(iso=effective_start, active_lang=lang) }}{% if effective_end %} {{ trans(key='to', lang=lang) }} {{ self::format_iso_date(iso=effective_end, active_lang=lang) }}{% endif %}
