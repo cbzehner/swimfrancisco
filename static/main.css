@@ -1041,6 +1041,10 @@ table.board tbody tr.flap td {
    with its title instead of "untitled". Override the browser default
    text-align: center to match the rest of the section. */
 .weekly-grid-title {
+  /* The table is `display: grid`, so this <caption> is a grid item; without
+     this it gets pinned to the first 9rem column and the title wraps to 3
+     lines. Span every column so it lays out across the full table width. */
+  grid-column: 1 / -1;
   caption-side: top;
   text-align: left;
   font-family: var(--display);
