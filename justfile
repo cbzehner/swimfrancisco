@@ -7,7 +7,7 @@ build:
     node scripts/generate-i18n.mjs generate
     node scripts/generate-bulletin.mjs
     node scripts/generate-agent-data.mjs
-    zola build
+    node scripts/run-zola-build.mjs
     node scripts/generate-build-metadata.mjs
 
 release:

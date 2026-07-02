@@ -8,7 +8,7 @@
     "generate-agent-data": "node scripts/generate-agent-data.mjs",
     "generate-i18n": "node scripts/generate-i18n.mjs generate",
     "check-i18n": "node scripts/generate-i18n.mjs check",
-    "build": "node scripts/generate-i18n.mjs generate && node scripts/generate-bulletin.mjs && node scripts/generate-agent-data.mjs && zola build && node scripts/generate-build-metadata.mjs",
+    "build": "node scripts/generate-i18n.mjs generate && node scripts/generate-bulletin.mjs && node scripts/generate-agent-data.mjs && node scripts/run-zola-build.mjs && node scripts/generate-build-metadata.mjs",
     "smoke-production": "node scripts/smoke-production.mjs"
   },
   "workspaces": [
