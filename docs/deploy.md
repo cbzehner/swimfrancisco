@@ -153,6 +153,7 @@ dashboard invoker is the official production path.)
 curl -X POST "$WORKERS_BUILDS_DEPLOY_HOOK"          # manual rebuild test
 curl -sSf https://swimfrancisco.com/ | head -5      # site served
 curl -sSf https://swimfrancisco.com/api/conditions | head -c 400   # API served
+just smoke-production                               # generated assets + known stale-data checks
 ```
 
 Within 24 hours, Workers Builds → Deployments should show exactly one

@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { generateAgentData, normalizeIsoDate } from "../../scripts/generate-agent-data.mjs";
+import { generateBuildMetadata } from "../../scripts/generate-build-metadata.mjs";
 
 async function readJson(path) {
   return JSON.parse(await readFile(path, "utf8"));
@@ -72,4 +73,23 @@ test("normalizeIsoDate accepts TOML date strings and Date objects", () => {
   assert.equal(normalizeIsoDate("2026-06-16"), "2026-06-16");
   assert.equal(normalizeIsoDate(new Date("2026-06-16T00:00:00.000Z")), "2026-06-16");
   assert.equal(normalizeIsoDate("06/16/2026"), null);
+});
+
+test("build metadata generator writes a production smoke marker", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "swimfrancisco-build-"));
+  try {
+    await generateBuildMetadata({
+      outputDir: dir,
+      generatedAt: "2026-07-02T22:00:00.000Z",
+      gitCommit: "abc123",
+    });
+
+    const metadata = await readJson(join(dir, "build.json"));
+    assert.equal(metadata.site, "Swim Francisco");
+    assert.equal(metadata.generated_at, "2026-07-02T22:00:00.000Z");
+    assert.equal(metadata.git_commit, "abc123");
+    assert.equal(metadata.build_command, "npm run build");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });
