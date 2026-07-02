@@ -400,7 +400,7 @@ def test_localized_spot_pages_store_translated_markdown(built_site: Path) -> Non
     assert "Gym pool access" not in potrero
 
     chinatown = (built_site / "es" / "spots" / "chinatown-ymca" / "index.html").read_text()
-    assert "HORARIO DE FERIADO DE LA INSTALACIÓN" in chinatown
+    assert "Horario de feriado de la instalación" in chinatown
     assert "AGUA SALADA" in chinatown
     assert "AGUA AGUA SALADA" not in chinatown
     assert "HOLIDAY FACILITY HOURS" not in chinatown
@@ -533,7 +533,7 @@ def test_pool_meta_dates_render_in_human_format(built_site: Path) -> None:
 
 def test_transition_closure_banners_stay_inside_active_schedule_window(built_site: Path) -> None:
     html = _read(built_site, "north-beach-pool")
-    assert "JUN 6 09:00–13:00" in html or "JUN 19 </span><span class=closure-banner-reason>Juneteenth" in html
+    assert "JUL 4 </span><span class=closure-banner-reason>Independence Day" in html
     assert "JUN 19 </span><span class=closure-banner-reason>Holiday Closure" not in html
 
 

@@ -20,8 +20,8 @@
     "website": "https://sfrecpark.org/facilities/facility/details/Sava-Pool-220"
   },
   "freshness": {
-    "last_verified_at": "2026-06-06",
-    "schedule_effective": "2026-06-09"
+    "last_verified_at": "2026-07-02",
+    "schedule_effective": "2026-06-30"
   },
   "sources": [
     {
@@ -34,11 +34,11 @@
     "setpoint_label": "80–82°F",
     "schedules": [
       {
+        "sessions": [],
         "effective_start": "2026-01-06",
+        "schedule_basis": "temporarily_closed",
         "effective_end": "2026-06-08",
         "last_verified_at": "2026-06-06",
-        "schedule_basis": "temporarily_closed",
-        "sessions": [],
         "closures": [
           {
             "start": "2026-04-16",
@@ -49,9 +49,9 @@
       },
       {
         "effective_start": "2026-06-09",
+        "schedule_basis": "swim_schedule",
         "effective_end": "2026-06-27",
         "last_verified_at": "2026-06-06",
-        "schedule_basis": "swim_schedule",
         "sessions": [
           {
             "day": "tuesday",
@@ -180,6 +180,134 @@
             "start": "2026-06-19",
             "end": "2026-06-19",
             "reason": "Juneteenth"
+          }
+        ]
+      },
+      {
+        "effective_start": "2026-06-30",
+        "schedule_basis": "swim_schedule",
+        "effective_end": "2026-08-15",
+        "last_verified_at": "2026-07-02",
+        "sessions": [
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "06:30",
+            "end": "08:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "senior_swim",
+            "start": "11:00",
+            "end": "12:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "family_swim",
+            "start": "13:00",
+            "end": "15:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "senior_swim",
+            "start": "11:00",
+            "end": "12:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "13:00",
+            "end": "15:00"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "15:30",
+            "end": "17:00"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "19:00",
+            "end": "20:30"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "06:30",
+            "end": "08:00"
+          },
+          {
+            "day": "thursday",
+            "type": "senior_swim",
+            "start": "11:00",
+            "end": "12:30"
+          },
+          {
+            "day": "thursday",
+            "type": "family_swim",
+            "start": "13:00",
+            "end": "15:30"
+          },
+          {
+            "day": "friday",
+            "type": "senior_swim",
+            "start": "11:00",
+            "end": "12:30"
+          },
+          {
+            "day": "friday",
+            "type": "family_swim",
+            "start": "13:00",
+            "end": "15:00"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "15:30",
+            "end": "17:00"
+          },
+          {
+            "day": "friday",
+            "type": "family_swim",
+            "start": "17:30",
+            "end": "19:30"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "09:00",
+            "end": "11:00"
+          },
+          {
+            "day": "saturday",
+            "type": "family_swim",
+            "start": "11:30",
+            "end": "13:00"
+          },
+          {
+            "day": "saturday",
+            "type": "family_swim",
+            "start": "13:30",
+            "end": "15:00"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "15:30",
+            "end": "17:00"
+          }
+        ],
+        "closures": [
+          {
+            "start": "2026-06-19",
+            "end": "2026-06-19",
+            "reason": "Juneteenth"
+          },
+          {
+            "start": "2026-07-04",
+            "end": "2026-07-04",
+            "reason": "Independence Day"
           }
         ]
       }

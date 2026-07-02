@@ -19,27 +19,11 @@ payment_model = "therapy"
 access_notes = [ "The therapeutic swim page says slow lap swimming only and notes the program is for warm-water movement, recovery, and gentle exercise." ]
 access_summary = "Pomeroy's Herbst Therapeutic Pool is a warm-water therapeutic pool. It offers therapeutic swim, open swim, classes, lessons, and slow lap swimming; it is not a vigorous lap-training pool."
 
-[[extra.pricing]]
-label = "Therapeutic swim pass"
-price = "$11"
-note = "One swim pass listed on Pomeroy's therapeutic swim page."
-url = "https://www.prrcsf.org/therapeutic-swim"
-access_mode = "limited_public"
-payment_model = "therapy"
-
-[[extra.pricing]]
-label = "10 swim pass"
-price = "$105"
-note = "Ten-pass price listed on Pomeroy's therapeutic swim page."
-url = "https://www.prrcsf.org/therapeutic-swim"
-access_mode = "limited_public"
-payment_model = "therapy"
-
-
 [[extra.schedules]]
 effective_start = "2026-05-17"
 schedule_basis = "swim_schedule"
 last_verified_at = "2026-06-16"
+
 [[extra.schedules.sessions]]
 day = "monday"
 type = "lap_swim"
@@ -150,6 +134,7 @@ reason = "Juneteenth"
 effective_start = "2026-06-16"
 schedule_basis = "swim_schedule"
 last_verified_at = "2026-06-16"
+
 [[extra.schedules.sessions]]
 day = "monday"
 type = "lap_swim"
@@ -255,6 +240,22 @@ reason = "Juneteenth"
 start = "2026-07-04"
 end = "2026-07-04"
 reason = "Observing Independence Day"
+
+[[extra.pricing]]
+label = "Therapeutic swim pass"
+price = "$11"
+note = "One swim pass listed on Pomeroy's therapeutic swim page."
+url = "https://www.prrcsf.org/therapeutic-swim"
+access_mode = "limited_public"
+payment_model = "therapy"
+
+[[extra.pricing]]
+label = "10 swim pass"
+price = "$105"
+note = "Ten-pass price listed on Pomeroy's therapeutic swim page."
+url = "https://www.prrcsf.org/therapeutic-swim"
+access_mode = "limited_public"
+payment_model = "therapy"
 +++
 
 Pomeroy is best modeled as warm-water access for therapy, gentle movement, lessons, and slow lap swimming rather than as a standard lap pool.

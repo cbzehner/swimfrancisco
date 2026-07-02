@@ -20,7 +20,7 @@
     "website": "https://sfrecpark.org/facilities/facility/details/Mission-Community-Pool-217"
   },
   "freshness": {
-    "last_verified_at": "2026-06-06",
+    "last_verified_at": "2026-07-02",
     "schedule_effective": "2026-06-09"
   },
   "sources": [
@@ -35,9 +35,9 @@
     "schedules": [
       {
         "effective_start": "2026-05-12",
+        "schedule_basis": "swim_schedule",
         "effective_end": "2026-06-06",
         "last_verified_at": "2026-05-05",
-        "schedule_basis": "swim_schedule",
         "sessions": [
           {
             "day": "tuesday",
@@ -176,9 +176,9 @@
       },
       {
         "effective_start": "2026-06-09",
-        "effective_end": "2026-06-20",
-        "last_verified_at": "2026-06-06",
         "schedule_basis": "swim_schedule",
+        "effective_end": "2026-08-15",
+        "last_verified_at": "2026-07-02",
         "sessions": [
           {
             "day": "tuesday",
@@ -188,23 +188,21 @@
           },
           {
             "day": "tuesday",
-            "type": "family_swim",
-            "start": "09:00",
-            "end": "10:30",
-            "pool": "1 lane"
-          },
-          {
-            "day": "tuesday",
             "type": "senior_swim",
             "start": "09:00",
-            "end": "10:30",
-            "pool": "3 lanes"
+            "end": "10:30"
           },
           {
             "day": "tuesday",
             "type": "lap_swim",
             "start": "10:45",
             "end": "12:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "senior_swim",
+            "start": "12:45",
+            "end": "13:45"
           },
           {
             "day": "tuesday",
@@ -222,14 +220,19 @@
             "day": "wednesday",
             "type": "senior_swim",
             "start": "09:00",
-            "end": "10:30",
-            "pool": "4 lanes"
+            "end": "10:30"
           },
           {
             "day": "wednesday",
             "type": "lap_swim",
             "start": "10:45",
             "end": "12:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "senior_swim",
+            "start": "12:45",
+            "end": "13:45"
           },
           {
             "day": "wednesday",
@@ -251,23 +254,21 @@
           },
           {
             "day": "thursday",
-            "type": "family_swim",
-            "start": "09:00",
-            "end": "10:30",
-            "pool": "1 lane"
-          },
-          {
-            "day": "thursday",
             "type": "senior_swim",
             "start": "09:00",
-            "end": "10:30",
-            "pool": "3 lanes"
+            "end": "10:30"
           },
           {
             "day": "thursday",
             "type": "lap_swim",
             "start": "10:45",
             "end": "12:30"
+          },
+          {
+            "day": "thursday",
+            "type": "senior_swim",
+            "start": "12:45",
+            "end": "13:45"
           },
           {
             "day": "thursday",
@@ -285,25 +286,24 @@
             "day": "friday",
             "type": "senior_swim",
             "start": "09:00",
-            "end": "10:30",
-            "pool": "4 lanes"
+            "end": "10:30"
           },
           {
             "day": "friday",
             "type": "family_swim",
             "start": "11:00",
-            "end": "12:30"
+            "end": "13:00"
           },
           {
             "day": "friday",
             "type": "lap_swim",
-            "start": "14:00",
-            "end": "16:00"
+            "start": "13:30",
+            "end": "16:30"
           },
           {
             "day": "friday",
             "type": "family_swim",
-            "start": "16:30",
+            "start": "17:00",
             "end": "19:00"
           },
           {
@@ -330,6 +330,11 @@
             "start": "2026-06-19",
             "end": "2026-06-19",
             "reason": "Juneteenth"
+          },
+          {
+            "start": "2026-07-04",
+            "end": "2026-07-04",
+            "reason": "Independence Day"
           }
         ]
       }

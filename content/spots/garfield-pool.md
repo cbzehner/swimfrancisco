@@ -18,16 +18,9 @@ payment_model = "session"
 
 [[extra.schedules]]
 effective_start = "2026-06-07"
-effective_end = "2026-08-13"
-last_verified_at = "2026-06-05"
 schedule_basis = "swim_schedule"
-
-[[extra.schedules.sessions]]
-day = "monday"
-type = "family_swim"
-start = "07:00"
-end = "08:30"
-pool = "shallow"
+effective_end = "2026-08-13"
+last_verified_at = "2026-07-02"
 
 [[extra.schedules.sessions]]
 day = "monday"
@@ -65,13 +58,6 @@ pool = "main"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
-type = "family_swim"
-start = "07:00"
-end = "08:30"
-pool = "shallow"
-
-[[extra.schedules.sessions]]
-day = "tuesday"
 type = "lap_swim"
 start = "07:00"
 end = "08:30"
@@ -89,13 +75,6 @@ day = "tuesday"
 type = "family_swim"
 start = "13:15"
 end = "15:15"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
-type = "family_swim"
-start = "07:00"
-end = "08:30"
-pool = "shallow"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -130,13 +109,6 @@ type = "lap_swim"
 start = "17:30"
 end = "19:00"
 pool = "main"
-
-[[extra.schedules.sessions]]
-day = "thursday"
-type = "family_swim"
-start = "07:00"
-end = "08:30"
-pool = "shallow"
 
 [[extra.schedules.sessions]]
 day = "thursday"

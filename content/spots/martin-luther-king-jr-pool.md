@@ -18,9 +18,9 @@ payment_model = "session"
 
 [[extra.schedules]]
 effective_start = "2026-04-07"
+schedule_basis = "swim_schedule"
 effective_end = "2026-06-06"
 last_verified_at = "2026-04-20"
-schedule_basis = "swim_schedule"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -207,33 +207,30 @@ end_time = "13:00"
 
 [[extra.schedules]]
 effective_start = "2026-06-09"
-effective_end = "2026-08-15"
-last_verified_at = "2026-06-06"
 schedule_basis = "swim_schedule"
+effective_end = "2026-08-15"
+last_verified_at = "2026-07-02"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "07:30"
 end = "09:00"
-
-[[extra.schedules.sessions]]
-day = "tuesday"
-type = "lap_swim"
-start = "09:00"
-end = "11:00"
+pool = "10"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "senior_swim"
 start = "09:00"
 end = "11:00"
+pool = "4 & shallow"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
-start = "11:00"
+start = "09:00"
 end = "12:00"
+pool = "4"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -247,36 +244,35 @@ day = "tuesday"
 type = "lap_swim"
 start = "12:30"
 end = "15:30"
+pool = "8"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "15:30"
 end = "17:30"
+pool = "4"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "18:00"
 end = "19:00"
+pool = "8"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "senior_swim"
 start = "09:00"
 end = "10:30"
+pool = "4 & shallow"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "09:00"
-end = "11:00"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
-type = "lap_swim"
-start = "11:00"
 end = "12:00"
+pool = "4"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -290,36 +286,35 @@ day = "wednesday"
 type = "lap_swim"
 start = "12:30"
 end = "15:30"
+pool = "8"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "15:30"
 end = "17:30"
+pool = "4"
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "07:30"
 end = "09:00"
-
-[[extra.schedules.sessions]]
-day = "thursday"
-type = "lap_swim"
-start = "09:00"
-end = "11:00"
+pool = "10"
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "senior_swim"
 start = "09:00"
-end = "11:00"
+end = "10:30"
+pool = "4 & shallow"
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
-start = "11:00"
+start = "09:00"
 end = "12:00"
+pool = "4"
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -333,36 +328,35 @@ day = "thursday"
 type = "lap_swim"
 start = "12:30"
 end = "15:30"
+pool = "8"
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "15:30"
 end = "17:30"
+pool = "4"
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "18:00"
 end = "19:00"
+pool = "8"
 
 [[extra.schedules.sessions]]
 day = "friday"
 type = "senior_swim"
 start = "09:00"
 end = "10:30"
+pool = "4 & shallow"
 
 [[extra.schedules.sessions]]
 day = "friday"
 type = "lap_swim"
 start = "09:00"
-end = "11:00"
-
-[[extra.schedules.sessions]]
-day = "friday"
-type = "lap_swim"
-start = "11:00"
 end = "12:00"
+pool = "4"
 
 [[extra.schedules.sessions]]
 day = "friday"
@@ -376,30 +370,35 @@ day = "friday"
 type = "lap_swim"
 start = "12:30"
 end = "15:30"
+pool = "8"
 
 [[extra.schedules.sessions]]
 day = "friday"
 type = "lap_swim"
 start = "15:30"
 end = "17:30"
+pool = "4"
 
 [[extra.schedules.sessions]]
 day = "saturday"
 type = "lap_swim"
 start = "07:00"
 end = "08:30"
+pool = "10"
 
 [[extra.schedules.sessions]]
 day = "saturday"
 type = "family_swim"
 start = "13:30"
 end = "15:00"
+pool = "10"
 
 [[extra.schedules.sessions]]
 day = "saturday"
 type = "lap_swim"
 start = "15:30"
 end = "17:00"
+pool = "10"
 
 [[extra.schedules.closures]]
 start = "2026-06-19"

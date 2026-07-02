@@ -18,9 +18,9 @@ payment_model = "session"
 
 [[extra.schedules]]
 effective_start = "2026-06-07"
-effective_end = "2026-08-13"
-last_verified_at = "2026-06-05"
 schedule_basis = "swim_schedule"
+effective_end = "2026-08-13"
+last_verified_at = "2026-07-02"
 
 [[extra.schedules.sessions]]
 day = "monday"
@@ -139,12 +139,6 @@ end = "08:30"
 [[extra.schedules.sessions]]
 day = "sunday"
 type = "family_swim"
-start = "11:00"
-end = "12:00"
-
-[[extra.schedules.sessions]]
-day = "sunday"
-type = "family_swim"
 start = "12:30"
 end = "14:00"
 
@@ -157,12 +151,12 @@ end = "15:30"
 [[extra.schedules.closures]]
 start = "2026-06-19"
 end = "2026-06-19"
-reason = "Juneteenth"
+reason = "All city pools will be closed on June 19 in observance of Juneteenth"
 
 [[extra.schedules.closures]]
 start = "2026-07-04"
 end = "2026-07-04"
-reason = "Independence Day"
+reason = "closed on July 4 for Independence Day"
 +++
 
 An indoor pool at Rossi Playground in the Inner Richmond, at the corner of Arguello and Anza. Programs include lap swim, senior swim, recreation swim, and lessons.

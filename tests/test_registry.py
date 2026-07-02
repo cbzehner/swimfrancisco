@@ -6,7 +6,7 @@ def test_registry_loads_expected_pools():
     assert entries[0].slug == "balboa-pool"
     mission = next(entry for entry in entries if entry.slug == "mission-community-pool")
     assert mission.source_status == "published"
-    assert mission.pdf_url.endswith("/29323")
+    assert mission.pdf_url.endswith("/29566")
     koret = next(entry for entry in entries if entry.slug == "koret-center")
     assert koret.source_kind == "koret_google_sheet"
     assert koret.source_status == "published"

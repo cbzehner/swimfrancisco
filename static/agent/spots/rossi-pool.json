@@ -20,7 +20,7 @@
     "website": "https://sfrecpark.org/495/Rossi-Pool"
   },
   "freshness": {
-    "last_verified_at": "2026-06-05",
+    "last_verified_at": "2026-07-02",
     "schedule_effective": "2026-06-07"
   },
   "sources": [
@@ -35,9 +35,9 @@
     "schedules": [
       {
         "effective_start": "2026-06-07",
-        "effective_end": "2026-08-13",
-        "last_verified_at": "2026-06-05",
         "schedule_basis": "swim_schedule",
+        "effective_end": "2026-08-13",
+        "last_verified_at": "2026-07-02",
         "sessions": [
           {
             "day": "monday",
@@ -156,12 +156,6 @@
           {
             "day": "sunday",
             "type": "family_swim",
-            "start": "11:00",
-            "end": "12:00"
-          },
-          {
-            "day": "sunday",
-            "type": "family_swim",
             "start": "12:30",
             "end": "14:00"
           },
@@ -176,12 +170,12 @@
           {
             "start": "2026-06-19",
             "end": "2026-06-19",
-            "reason": "Juneteenth"
+            "reason": "All city pools will be closed on June 19 in observance of Juneteenth"
           },
           {
             "start": "2026-07-04",
             "end": "2026-07-04",
-            "reason": "Independence Day"
+            "reason": "closed on July 4 for Independence Day"
           }
         ]
       }
