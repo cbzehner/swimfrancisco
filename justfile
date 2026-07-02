@@ -8,6 +8,7 @@ build:
     node scripts/generate-bulletin.mjs
     node scripts/generate-agent-data.mjs
     zola build
+    node scripts/generate-build-metadata.mjs
 
 release:
     node scripts/generate-i18n.mjs generate
@@ -49,6 +50,9 @@ browsers:
 test: test-i18n test-python test-js typecheck-worker
 
 check: test test-browser build
+
+smoke-production *args:
+    node scripts/smoke-production.mjs {{args}}
 
 refresh-conditions:
     curl -fsS "http://localhost:8787/__scheduled" && echo
