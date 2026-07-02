@@ -5,7 +5,7 @@
   "type": "pool",
   "canonical_url": "https://swimfrancisco.com/spots/24-hour-fitness-ocean/",
   "description_short": null,
-  "body_markdown": "24 Hour Fitness Ocean is a membership gym pool entry held in a temporary-closure state until renovation ends.",
+  "body_markdown": "This is a gym-pool listing for swimmers who already use 24 Hour Fitness or want a membership-based option near Ocean Avenue.",
   "location": {
     "address": "1850 Ocean Ave, San Francisco, CA 94112",
     "label": "Ocean Ave",
@@ -15,17 +15,27 @@
   "access": {
     "access": "day_pass",
     "access_mode": "membership",
-    "access_summary": "24 Hour Fitness Ocean lists an indoor lap pool, but the official club page says the club is temporarily closed for renovation until May 23, 2026.",
+    "access_summary": "24 Hour Fitness Ocean is a gym pool. The official club page lists an indoor lap pool, whirlpool, steam room, sauna, and current gym hours.",
     "access_notes": [
-      "Keep this out of active swim planning until the official page shows the club has reopened."
+      "Check the club page for current membership, guest access, and facility status."
     ],
     "cost": "paid",
     "payment_model": "membership",
+    "pricing": [
+      {
+        "label": "Gym member",
+        "price": "Membership",
+        "note": "Pool access depends on 24 Hour Fitness membership terms for this club.",
+        "url": "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport",
+        "access_mode": "membership",
+        "payment_model": "membership"
+      }
+    ],
     "website": "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport"
   },
   "freshness": {
-    "last_verified_at": "2026-05-17",
-    "schedule_effective": "2026-05-17"
+    "last_verified_at": "2026-07-02",
+    "schedule_effective": "2026-07-02"
   },
   "sources": [
     {
@@ -38,19 +48,57 @@
     "setpoint_label": "lap",
     "schedules": [
       {
-        "effective_start": "2026-05-17",
-        "last_verified_at": "2026-05-17",
-        "schedule_basis": "temporarily_closed",
+        "effective_start": "2026-07-02",
+        "last_verified_at": "2026-07-02",
+        "schedule_basis": "facility_hours",
         "sessions": [],
-        "closures": [
+        "closures": [],
+        "access_hours": [
           {
-            "start": "2026-05-17",
-            "end": "2026-05-22",
-            "reason": "Temporarily closed for renovation"
+            "day": "monday",
+            "start": "05:00",
+            "end": "23:59",
+            "label": "Gym hours"
+          },
+          {
+            "day": "tuesday",
+            "start": "00:00",
+            "end": "23:59",
+            "label": "Gym hours"
+          },
+          {
+            "day": "wednesday",
+            "start": "00:00",
+            "end": "23:59",
+            "label": "Gym hours"
+          },
+          {
+            "day": "thursday",
+            "start": "00:00",
+            "end": "23:59",
+            "label": "Gym hours"
+          },
+          {
+            "day": "friday",
+            "start": "00:00",
+            "end": "21:00",
+            "label": "Gym hours"
+          },
+          {
+            "day": "saturday",
+            "start": "05:00",
+            "end": "21:00",
+            "label": "Gym hours"
+          },
+          {
+            "day": "sunday",
+            "start": "05:00",
+            "end": "21:00",
+            "label": "Gym hours"
           }
         ]
       }
     ]
   },
-  "generated_at": "2026-06-16T12:36:33-07:00"
+  "generated_at": "2026-07-02T21:12:52.814Z"
 }

@@ -87,6 +87,10 @@ Dashboard → Workers & Pages → Create → Workers → Connect to Git. Select
 | Builds for non-production branches | Enabled (gives PR previews) |
 | Build env var | `ZOLA_VERSION=0.22.1` |
 
+The build command must be `npm run build`, not a direct `zola build`.
+The npm script regenerates translated strings, bulletin metadata, and
+agent JSON before Zola packages the static assets.
+
 Click Deploy. The first build should succeed now that `worker/wrangler.toml`
 has real KV IDs and the `swimfrancisco` script name.
 

@@ -15,19 +15,65 @@ access = "day_pass"
 setpoint_label = "lap"
 access_mode = "membership"
 payment_model = "membership"
-access_notes = [ "Keep this out of active swim planning until the official page shows the club has reopened." ]
-access_summary = "24 Hour Fitness Ocean lists an indoor lap pool, but the official club page says the club is temporarily closed for renovation until May 23, 2026."
+access_notes = [ "Check the club page for current membership, guest access, and facility status." ]
+access_summary = "24 Hour Fitness Ocean is a gym pool. The official club page lists an indoor lap pool, whirlpool, steam room, sauna, and current gym hours."
 
 [[extra.schedules]]
-effective_start = "2026-05-17"
-last_verified_at = "2026-05-17"
-schedule_basis = "temporarily_closed"
+effective_start = "2026-07-02"
+last_verified_at = "2026-07-02"
+schedule_basis = "facility_hours"
 sessions = []
+closures = []
 
-[[extra.schedules.closures]]
-start = "2026-05-17"
-end = "2026-05-22"
-reason = "Temporarily closed for renovation"
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "05:00"
+end = "23:59"
+label = "Gym hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "00:00"
+end = "23:59"
+label = "Gym hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "00:00"
+end = "23:59"
+label = "Gym hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "00:00"
+end = "23:59"
+label = "Gym hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "00:00"
+end = "21:00"
+label = "Gym hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "05:00"
+end = "21:00"
+label = "Gym hours"
+
+[[extra.schedules.access_hours]]
+day = "sunday"
+start = "05:00"
+end = "21:00"
+label = "Gym hours"
+
+[[extra.pricing]]
+label = "Gym member"
+price = "Membership"
+note = "Pool access depends on 24 Hour Fitness membership terms for this club."
+url = "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport"
+access_mode = "membership"
+payment_model = "membership"
 +++
 
-24 Hour Fitness Ocean is a membership gym pool entry held in a temporary-closure state until renovation ends.
+This is a gym-pool listing for swimmers who already use 24 Hour Fitness or want a membership-based option near Ocean Avenue.

@@ -30,8 +30,10 @@ official_page_url = "https://sfrecpark.org/facilities/facility/details/Mission-C
 
 [[pool]]
 slug = "north-beach-pool"
-pdf_url = "https://sfrecpark.org/DocumentCenter/View/29330"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/29568"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/North-Beach-Pool-218"
+source_status = "missing_current_schedule"
+notes = "Official page split the current North Beach schedule into separate Cool Pool (29568) and Warm Pool (29569) PDFs. Current content was manually reviewed from both; automated extraction should stay skipped until split-PDF support exists."
 
 [[pool]]
 slug = "rossi-pool"
@@ -133,7 +135,7 @@ pdf_url = "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport"
 official_page_url = "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport"
 source_status = "access_hours_only"
 source_kind = "twenty_four_hour_fitness_html"
-notes = "Official page confirms an indoor lap pool, but the club is temporarily closed for renovation until May 23, 2026."
+notes = "Official page confirms the renovated club is open, lists an indoor lap pool, and publishes gym hours; no lane availability schedule is published."
 
 [[pool]]
 slug = "equinox-sports-club-sf"
