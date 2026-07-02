@@ -1,0 +1,242 @@
+{
+  "slug": "martin-luther-king-jr-pool",
+  "pdf_sha256": "631524f6aa3c6810fd22e1e76f14c977c8382c1908b5f355dcba12bac666eb44",
+  "reviewed_at": "2026-07-02",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29578",
+  "payload": {
+    "closures": [
+      {
+        "end": "2026-06-19",
+        "reason": "Juneteenth",
+        "start": "2026-06-19"
+      },
+      {
+        "end": "2026-07-04",
+        "reason": "Independence Day",
+        "start": "2026-07-04"
+      }
+    ],
+    "effective_end": "2026-08-15",
+    "effective_start": "2026-06-09",
+    "schedule_basis": "swim_schedule",
+    "sessions": [
+      {
+        "day": "tuesday",
+        "end": "09:00",
+        "evidence": "Lap Swim (10) 7:30am \u2013 9:00am",
+        "pool": "10",
+        "start": "07:30",
+        "type": "lap_swim",
+        "notes": "Agent reviewed against the July 2026 source PDF before projection."
+      },
+      {
+        "day": "tuesday",
+        "end": "11:00",
+        "evidence": "Senior Lap Swim (4 & shallow) 9:00am \u2013 11:00am",
+        "pool": "4 & shallow",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "12:00",
+        "evidence": "Lap Swim (4) 9:00am \u2013 12:00pm",
+        "pool": "4",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim (shallow) 12:30pm \u2013 3:30pm",
+        "pool": "shallow",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:30",
+        "evidence": "Lap Swim (8) 12:30pm \u2013 3:30pm",
+        "pool": "8",
+        "start": "12:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "17:30",
+        "evidence": "Lap Swim (4) 3:30pm \u2013 5:30pm",
+        "pool": "4",
+        "start": "15:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "19:00",
+        "evidence": "Lap Swim (8) 6:00pm \u2013 7:00pm",
+        "pool": "8",
+        "start": "18:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "10:30",
+        "evidence": "Senior Lap Swim (4 & shallow) 9:00am \u2013 10:30am",
+        "pool": "4 & shallow",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "12:00",
+        "evidence": "Lap Swim (4) 9:00am \u2013 12:00pm",
+        "pool": "4",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim (shallow) 12:30pm \u2013 3:30pm",
+        "pool": "shallow",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:30",
+        "evidence": "Lap Swim (8) 12:30pm \u2013 3:30pm",
+        "pool": "8",
+        "start": "12:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "17:30",
+        "evidence": "Lap Swim (4) 3:30pm \u2013 5:30pm",
+        "pool": "4",
+        "start": "15:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "09:00",
+        "evidence": "Lap Swim (10) 7:30am \u2013 9:00am",
+        "pool": "10",
+        "start": "07:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "10:30",
+        "evidence": "Senior Lap Swim (4 & shallow) 9:00am \u2013 10:30am",
+        "pool": "4 & shallow",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "12:00",
+        "evidence": "Lap Swim (4) 9:00am \u2013 12:00pm",
+        "pool": "4",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim (shallow) 12:30pm \u2013 3:30pm",
+        "pool": "shallow",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "15:30",
+        "evidence": "Lap Swim (8) 12:30pm \u2013 3:30pm",
+        "pool": "8",
+        "start": "12:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "17:30",
+        "evidence": "Lap Swim (4) 3:30pm \u2013 5:30pm",
+        "pool": "4",
+        "start": "15:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "19:00",
+        "evidence": "Lap Swim (8) 6:00pm \u2013 7:00pm",
+        "pool": "8",
+        "start": "18:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "10:30",
+        "evidence": "Senior Lap Swim (4 & shallow) 9:00am \u2013 10:30am",
+        "pool": "4 & shallow",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "friday",
+        "end": "12:00",
+        "evidence": "Lap Swim (4) 9:00am \u2013 12:00pm",
+        "pool": "4",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim (shallow) 12:30pm \u2013 3:30pm",
+        "pool": "shallow",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "15:30",
+        "evidence": "Lap Swim (8) 12:30pm \u2013 3:30pm",
+        "pool": "8",
+        "start": "12:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "17:30",
+        "evidence": "Lap Swim (4) 3:30pm \u2013 5:30pm",
+        "pool": "4",
+        "start": "15:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "08:30",
+        "evidence": "Lap Swim (10) 7:00am \u2013 8:30am",
+        "pool": "10",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "15:00",
+        "evidence": "Rec/Family Swim (10) 1:30pm \u2013 3:00pm",
+        "pool": "10",
+        "start": "13:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "17:00",
+        "evidence": "Lap Swim (10) 3:30pm \u2013 5:00pm",
+        "pool": "10",
+        "start": "15:30",
+        "type": "lap_swim"
+      }
+    ]
+  }
+}

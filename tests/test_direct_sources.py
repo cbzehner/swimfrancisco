@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import hashlib
+from datetime import date
 
 import pytest
 
+import schedules.direct_sources as direct_sources
 from schedules.direct_sources import (
     DirectSourceError,
     _cache_text,
@@ -311,7 +313,9 @@ def test_ymca_extractor_reads_first_location_hours_block():
     assert not any(a["day"] == "sunday" for a in payload["access_hours"])
 
 
-def test_ymca_extractor_prefers_facility_hours_block_with_day_ranges():
+def test_ymca_extractor_prefers_facility_hours_block_with_day_ranges(monkeypatch):
+    monkeypatch.setattr(direct_sources, "pacific_today", lambda: date(2026, 5, 17))
+
     payload = _extract_ymca_location(
         """
         <h2>Facility Hours</h2>
@@ -338,7 +342,9 @@ def test_ymca_extractor_prefers_facility_hours_block_with_day_ranges():
     }]
 
 
-def test_ymca_extractor_uses_pool_hours_when_page_gives_pool_rule():
+def test_ymca_extractor_uses_pool_hours_when_page_gives_pool_rule(monkeypatch):
+    monkeypatch.setattr(direct_sources, "pacific_today", lambda: date(2026, 5, 17))
+
     payload = _extract_ymca_location(
         """
         <h2>Hours</h2>

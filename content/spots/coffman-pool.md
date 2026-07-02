@@ -18,9 +18,9 @@ payment_model = "session"
 
 [[extra.schedules]]
 effective_start = "2026-04-21"
+schedule_basis = "swim_schedule"
 effective_end = "2026-06-06"
 last_verified_at = "2026-04-20"
-schedule_basis = "swim_schedule"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -178,9 +178,9 @@ end_time = "13:00"
 
 [[extra.schedules]]
 effective_start = "2026-06-09"
-effective_end = "2026-08-15"
-last_verified_at = "2026-06-06"
 schedule_basis = "swim_schedule"
+effective_end = "2026-08-15"
+last_verified_at = "2026-07-02"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -193,7 +193,6 @@ day = "tuesday"
 type = "senior_swim"
 start = "10:30"
 end = "12:15"
-pool = "4 lanes"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -206,7 +205,6 @@ day = "wednesday"
 type = "lap_swim"
 start = "10:30"
 end = "12:15"
-pool = "3 lanes"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -219,14 +217,12 @@ day = "wednesday"
 type = "family_swim"
 start = "17:30"
 end = "19:00"
-pool = "3 lanes"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "17:30"
 end = "19:00"
-pool = "3 lanes"
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -239,7 +235,6 @@ day = "thursday"
 type = "senior_swim"
 start = "10:30"
 end = "12:15"
-pool = "4 lanes"
 
 [[extra.schedules.sessions]]
 day = "thursday"

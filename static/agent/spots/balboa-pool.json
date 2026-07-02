@@ -20,7 +20,7 @@
     "website": "https://sfrecpark.org/facilities/facility/details/Balboa-Pool-212"
   },
   "freshness": {
-    "last_verified_at": "2026-06-06",
+    "last_verified_at": "2026-07-02",
     "schedule_effective": "2026-06-09"
   },
   "sources": [
@@ -35,9 +35,9 @@
     "schedules": [
       {
         "effective_start": "2026-03-17",
+        "schedule_basis": "swim_schedule",
         "effective_end": "2026-06-06",
         "last_verified_at": "2026-04-20",
-        "schedule_basis": "swim_schedule",
         "sessions": [
           {
             "day": "tuesday",
@@ -197,9 +197,9 @@
       },
       {
         "effective_start": "2026-06-09",
-        "effective_end": "2026-08-15",
-        "last_verified_at": "2026-06-06",
         "schedule_basis": "swim_schedule",
+        "effective_end": "2026-08-15",
+        "last_verified_at": "2026-07-02",
         "sessions": [
           {
             "day": "tuesday",

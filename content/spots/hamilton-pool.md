@@ -18,9 +18,9 @@ payment_model = "session"
 
 [[extra.schedules]]
 effective_start = "2026-03-17"
+schedule_basis = "swim_schedule"
 effective_end = "2026-06-06"
 last_verified_at = "2026-04-19"
-schedule_basis = "swim_schedule"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -185,9 +185,9 @@ end_time = "12:30"
 
 [[extra.schedules]]
 effective_start = "2026-06-09"
-effective_end = "2026-08-15"
-last_verified_at = "2026-06-06"
 schedule_basis = "swim_schedule"
+effective_end = "2026-08-15"
+last_verified_at = "2026-07-02"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -218,13 +218,6 @@ day = "wednesday"
 type = "family_swim"
 start = "14:00"
 end = "15:30"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
-type = "family_swim"
-start = "18:30"
-end = "20:00"
-pool = "small"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -282,13 +275,6 @@ end = "15:30"
 
 [[extra.schedules.sessions]]
 day = "saturday"
-type = "family_swim"
-start = "16:00"
-end = "17:00"
-pool = "small"
-
-[[extra.schedules.sessions]]
-day = "saturday"
 type = "lap_swim"
 start = "16:00"
 end = "17:00"
@@ -296,7 +282,7 @@ end = "17:00"
 [[extra.schedules.closures]]
 start = "2026-06-19"
 end = "2026-06-19"
-reason = "Juneteenth"
+reason = "observance of Juneteenth"
 
 [[extra.schedules.closures]]
 start = "2026-07-04"

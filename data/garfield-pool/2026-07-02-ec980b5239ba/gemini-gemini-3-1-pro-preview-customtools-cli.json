@@ -1,0 +1,404 @@
+{
+  "cost_estimate": "gemini cli",
+  "extracted_at": "2026-07-02T19:20:39.341282+00:00",
+  "grounding": {
+    "grounded_count": 20,
+    "ratio": 1.0,
+    "sessions": [
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 0,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 1,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 2,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 3,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 4,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 5,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 6,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 7,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 8,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 9,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 10,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 11,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 12,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 13,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 14,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 15,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 16,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 17,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 18,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 19,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      }
+    ],
+    "total": 20
+  },
+  "model": "gemini-3.1-pro-preview-customtools-cli",
+  "payload": {
+    "closures": [
+      {
+        "end": "2026-06-19",
+        "reason": "Juneteenth",
+        "start": "2026-06-19"
+      },
+      {
+        "end": "2026-07-04",
+        "reason": "Independence Day",
+        "start": "2026-07-04"
+      }
+    ],
+    "effective_end": "2026-08-13",
+    "effective_start": "2026-06-07",
+    "schedule_basis": "swim_schedule",
+    "sessions": [
+      {
+        "day": "sunday",
+        "end": "10:30",
+        "evidence": "Lap Swim (Main Pool) 8:30 am-10:30 am",
+        "pool": "main",
+        "start": "08:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "14:00",
+        "evidence": "Lap Swim (Main Pool) 12:30 pm-2:00 pm",
+        "pool": "main",
+        "start": "12:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "14:00",
+        "evidence": "Rec/Family Swim (Shallow Pool) 12:30 pm-2:00 pm",
+        "pool": "shallow",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "16:30",
+        "evidence": "Rec/Family Swim 2:30 pm-4:30 pm",
+        "start": "14:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "monday",
+        "end": "08:30",
+        "evidence": "Lap Swim (Main Pool) 7:00 am-8:30 am",
+        "pool": "main",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "monday",
+        "end": "12:45",
+        "evidence": "Senior /Therapy Swim (Main Pool) 11:30 am-12:45 pm",
+        "pool": "main",
+        "start": "11:30",
+        "type": "senior_swim"
+      },
+      {
+        "day": "monday",
+        "end": "15:15",
+        "evidence": "Rec/Family Swim 1:15 pm-3:15 pm",
+        "start": "13:15",
+        "type": "family_swim"
+      },
+      {
+        "day": "monday",
+        "end": "19:00",
+        "evidence": "Rec/Family Swim (Shallow Pool) 5:30 pm-7:00 pm",
+        "pool": "shallow",
+        "start": "17:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "monday",
+        "end": "19:00",
+        "evidence": "Lap Swim (Main Pool) 5:30 pm-7:00 pm",
+        "pool": "main",
+        "start": "17:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "08:30",
+        "evidence": "Lap Swim (Main Pool) 7:00 am-8:30 am",
+        "pool": "main",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "12:45",
+        "evidence": "Senior /Therapy Swim (Main Pool) 11:30 am-12:45 pm",
+        "pool": "main",
+        "start": "11:30",
+        "type": "senior_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:15",
+        "evidence": "Rec/Family Swim 1:15 pm-3:15 pm",
+        "start": "13:15",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "08:30",
+        "evidence": "Lap Swim (Main Pool) 7:00 am-8:30 am",
+        "pool": "main",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "12:45",
+        "evidence": "Senior /Therapy Swim (Main Pool) 11:30 am-12:45 pm",
+        "pool": "main",
+        "start": "11:30",
+        "type": "senior_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:15",
+        "evidence": "Rec/Family Swim 1:15 pm-3:15 pm",
+        "start": "13:15",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:00",
+        "evidence": "Rec/Family Swim (Shallow Pool) 5:30 pm-7:00 pm",
+        "pool": "shallow",
+        "start": "17:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:00",
+        "evidence": "Lap Swim (Main Pool) 5:30 pm-7:00 pm",
+        "pool": "main",
+        "start": "17:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "08:30",
+        "evidence": "Lap Swim (Main Pool) 7:00 am-8:30 am",
+        "pool": "main",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "12:45",
+        "evidence": "Senior /Therapy Swim (Main Pool-2 Lanes) 11:30 am-12:45 pm",
+        "pool": "main-2 lanes",
+        "start": "11:30",
+        "type": "senior_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "15:15",
+        "evidence": "Rec/Family Swim 1:15 pm-3:15 pm",
+        "start": "13:15",
+        "type": "family_swim"
+      }
+    ]
+  },
+  "pdf_sha256": "ec980b5239ba1ed5e0d1ea2b4db4512c9a4f01683aa625c40b8d8519d708f552",
+  "prompt_sha256": "cfd762ed208c6bcdbf1c1af0bfdd21bede40083dc2c37dfd88bd8d06c930e5f7",
+  "provider": "gemini",
+  "schema_sha256": "de685f22a191de60e54dea56caffce56f72a20b0ccd3f17fa5868c3f78977858",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29564",
+  "usage": {
+    "files": {
+      "totalLinesAdded": 0,
+      "totalLinesRemoved": 0
+    },
+    "models": {
+      "gemini-3.1-pro-preview-customtools": {
+        "api": {
+          "totalErrors": 0,
+          "totalLatencyMs": 42346,
+          "totalRequests": 1
+        },
+        "roles": {
+          "main": {
+            "tokens": {
+              "cached": 0,
+              "candidates": 1668,
+              "input": 14632,
+              "prompt": 14632,
+              "thoughts": 4801,
+              "tool": 0,
+              "total": 21101
+            },
+            "totalErrors": 0,
+            "totalLatencyMs": 42346,
+            "totalRequests": 1
+          }
+        },
+        "tokens": {
+          "cached": 0,
+          "candidates": 1668,
+          "input": 14632,
+          "prompt": 14632,
+          "thoughts": 4801,
+          "tool": 0,
+          "total": 21101
+        }
+      }
+    },
+    "tools": {
+      "byName": {},
+      "totalCalls": 0,
+      "totalDecisions": {
+        "accept": 0,
+        "auto_accept": 0,
+        "modify": 0,
+        "reject": 0
+      },
+      "totalDurationMs": 0,
+      "totalFail": 0,
+      "totalSuccess": 0
+    }
+  }
+}

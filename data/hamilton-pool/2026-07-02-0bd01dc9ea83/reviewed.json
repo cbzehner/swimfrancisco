@@ -1,0 +1,131 @@
+{
+  "slug": "hamilton-pool",
+  "pdf_sha256": "0bd01dc9ea83680c17475a0718e79fe77c0b85af5c1a7308c345771bbf8672c6",
+  "reviewed_at": "2026-07-02",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29599",
+  "payload": {
+    "closures": [
+      {
+        "end": "2026-06-19",
+        "reason": "observance of Juneteenth",
+        "start": "2026-06-19"
+      },
+      {
+        "end": "2026-07-04",
+        "reason": "Independence Day",
+        "start": "2026-07-04"
+      }
+    ],
+    "effective_end": "2026-08-15",
+    "effective_start": "2026-06-09",
+    "schedule_basis": "swim_schedule",
+    "sessions": [
+      {
+        "day": "tuesday",
+        "end": "13:15",
+        "evidence": "Lap Swim (4) 11:30 am \u2013 1:15 pm",
+        "start": "11:30",
+        "type": "lap_swim",
+        "notes": "Agent reviewed against the July 2026 source PDF before projection."
+      },
+      {
+        "day": "tuesday",
+        "end": "15:30",
+        "evidence": "Family Swim (Waterslide) 2:00 pm \u2013 3:30 pm",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "08:00",
+        "evidence": "Lap Swim (6) 6:30 am \u2013 8:00 am",
+        "start": "06:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "13:15",
+        "evidence": "Lap Swim (4) 11:30 am \u2013 1:15 pm",
+        "start": "11:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:30",
+        "evidence": "Family Swim (Waterslide) 2:00 pm \u2013 3:30 pm",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "20:00",
+        "evidence": "Lap Swim (6) 6:30 pm \u2013 8:00 pm",
+        "start": "18:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "13:15",
+        "evidence": "Lap Swim (4) 11:30 am \u2013 1:15 pm",
+        "start": "11:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "15:30",
+        "evidence": "Family Swim (Waterslide) 2:00 pm \u2013 3:30 pm",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "08:00",
+        "evidence": "Lap Swim (6) 6:30 am \u2013 8:00 am",
+        "start": "06:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "13:15",
+        "evidence": "Lap Swim (4) 11:30 am \u2013 1:15 pm",
+        "start": "11:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "15:30",
+        "evidence": "Family Swim (Waterslide) 2:00 pm \u2013 3:30 pm",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "20:00",
+        "evidence": "Family Swim 6:30 pm \u2013 8:00 pm",
+        "start": "18:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "10:30",
+        "evidence": "Lap Swim (5) 9:00 am \u2013 10:30 am",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "15:30",
+        "evidence": "Family Swim (Waterslide) 1:30 pm \u2013 3:30 pm",
+        "start": "13:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "17:00",
+        "evidence": "Lap Swim (6) 4:00pm \u2013 5:00pm",
+        "start": "16:00",
+        "type": "lap_swim"
+      }
+    ]
+  }
+}

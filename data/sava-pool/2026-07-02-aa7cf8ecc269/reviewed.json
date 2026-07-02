@@ -1,0 +1,152 @@
+{
+  "slug": "sava-pool",
+  "pdf_sha256": "aa7cf8ecc26978e5a5a713161e86e57376c31668ecd54f1d61a5ae8586188bc9",
+  "reviewed_at": "2026-07-02",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29571",
+  "payload": {
+    "closures": [
+      {
+        "end": "2026-06-19",
+        "reason": "Juneteenth",
+        "start": "2026-06-19"
+      },
+      {
+        "end": "2026-07-04",
+        "reason": "Independence Day",
+        "start": "2026-07-04"
+      }
+    ],
+    "effective_end": "2026-08-15",
+    "effective_start": "2026-06-30",
+    "schedule_basis": "swim_schedule",
+    "sessions": [
+      {
+        "day": "tuesday",
+        "end": "08:00",
+        "evidence": "Lap Swim 6:30 a.m.-8:00 a.m.",
+        "start": "06:30",
+        "type": "lap_swim",
+        "notes": "Agent reviewed against the July 2026 source PDF before projection."
+      },
+      {
+        "day": "tuesday",
+        "end": "12:30",
+        "evidence": "Senior/ Therapy Swim 11:00 a.m. -12:30 a.m.",
+        "start": "11:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:30",
+        "evidence": "Family Swim 1:00 p.m. -3:30 p.m.",
+        "start": "13:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "12:30",
+        "evidence": "Senior/ Therapy Swim 11:00 a.m. -12:30 a.m.",
+        "start": "11:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:00",
+        "evidence": "Family Swim 1:00 p.m. -3:00 p.m.",
+        "start": "13:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "17:00",
+        "evidence": "Lap Swim 3:30 p.m. -5:00 p.m.",
+        "start": "15:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "20:30",
+        "evidence": "Lap Swim 7:00 p.m. -8:30 p.m.",
+        "start": "19:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "08:00",
+        "evidence": "Lap Swim 6:30 a.m.-8:00 a.m.",
+        "start": "06:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "12:30",
+        "evidence": "Senior/ Therapy Swim 11:00 a.m. -12:30 a.m.",
+        "start": "11:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "15:30",
+        "evidence": "Family Swim 1:00 p.m. -3:30 p.m.",
+        "start": "13:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "12:30",
+        "evidence": "Senior/ Therapy Swim 11:00 a.m. -12:30 a.m.",
+        "start": "11:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "friday",
+        "end": "15:00",
+        "evidence": "Family Swim 1:00pm-3:00 p.m.",
+        "start": "13:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "17:00",
+        "evidence": "Lap Swim 3:30 p.m. -5:00 p.m.",
+        "start": "15:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "19:30",
+        "evidence": "Family Swim 5:30 p.m. -7:30 p.m.",
+        "start": "17:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "11:00",
+        "evidence": "Lap Swim (4 Lanes)/ Learn To Swim* 9:00 a.m. -11:00 a.m.",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "13:00",
+        "evidence": "Family Swim 11:30pm-1:00 p.m.",
+        "start": "11:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "15:00",
+        "evidence": "Family Swim 1:30pm-3:00 p.m.",
+        "start": "13:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "17:00",
+        "evidence": "Lap Swim 3:30 p.m. -5:00 p.m.",
+        "start": "15:30",
+        "type": "lap_swim"
+      }
+    ]
+  }
+}

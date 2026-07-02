@@ -20,7 +20,7 @@
     "website": "https://sfrecpark.org/facilities/facility/details/Coffman-Pool-213"
   },
   "freshness": {
-    "last_verified_at": "2026-06-06",
+    "last_verified_at": "2026-07-02",
     "schedule_effective": "2026-06-09"
   },
   "sources": [
@@ -35,9 +35,9 @@
     "schedules": [
       {
         "effective_start": "2026-04-21",
+        "schedule_basis": "swim_schedule",
         "effective_end": "2026-06-06",
         "last_verified_at": "2026-04-20",
-        "schedule_basis": "swim_schedule",
         "sessions": [
           {
             "day": "tuesday",
@@ -199,9 +199,9 @@
       },
       {
         "effective_start": "2026-06-09",
-        "effective_end": "2026-08-15",
-        "last_verified_at": "2026-06-06",
         "schedule_basis": "swim_schedule",
+        "effective_end": "2026-08-15",
+        "last_verified_at": "2026-07-02",
         "sessions": [
           {
             "day": "tuesday",
@@ -213,8 +213,7 @@
             "day": "tuesday",
             "type": "senior_swim",
             "start": "10:30",
-            "end": "12:15",
-            "pool": "4 lanes"
+            "end": "12:15"
           },
           {
             "day": "tuesday",
@@ -226,8 +225,7 @@
             "day": "wednesday",
             "type": "lap_swim",
             "start": "10:30",
-            "end": "12:15",
-            "pool": "3 lanes"
+            "end": "12:15"
           },
           {
             "day": "wednesday",
@@ -239,15 +237,13 @@
             "day": "wednesday",
             "type": "family_swim",
             "start": "17:30",
-            "end": "19:00",
-            "pool": "3 lanes"
+            "end": "19:00"
           },
           {
             "day": "wednesday",
             "type": "lap_swim",
             "start": "17:30",
-            "end": "19:00",
-            "pool": "3 lanes"
+            "end": "19:00"
           },
           {
             "day": "thursday",
@@ -259,8 +255,7 @@
             "day": "thursday",
             "type": "senior_swim",
             "start": "10:30",
-            "end": "12:15",
-            "pool": "4 lanes"
+            "end": "12:15"
           },
           {
             "day": "thursday",

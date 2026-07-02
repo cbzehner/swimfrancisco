@@ -18,9 +18,9 @@ payment_model = "session"
 
 [[extra.schedules]]
 effective_start = "2026-05-12"
+schedule_basis = "swim_schedule"
 effective_end = "2026-06-06"
 last_verified_at = "2026-05-05"
-schedule_basis = "swim_schedule"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -155,9 +155,9 @@ end_time = "14:00"
 
 [[extra.schedules]]
 effective_start = "2026-06-09"
-effective_end = "2026-06-20"
-last_verified_at = "2026-06-06"
 schedule_basis = "swim_schedule"
+effective_end = "2026-08-15"
+last_verified_at = "2026-07-02"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -167,23 +167,21 @@ end = "08:30"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
-type = "family_swim"
-start = "09:00"
-end = "10:30"
-pool = "1 lane"
-
-[[extra.schedules.sessions]]
-day = "tuesday"
 type = "senior_swim"
 start = "09:00"
 end = "10:30"
-pool = "3 lanes"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "10:45"
 end = "12:30"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "senior_swim"
+start = "12:45"
+end = "13:45"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -202,13 +200,18 @@ day = "wednesday"
 type = "senior_swim"
 start = "09:00"
 end = "10:30"
-pool = "4 lanes"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "10:45"
 end = "12:30"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "senior_swim"
+start = "12:45"
+end = "13:45"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -230,23 +233,21 @@ end = "08:30"
 
 [[extra.schedules.sessions]]
 day = "thursday"
-type = "family_swim"
-start = "09:00"
-end = "10:30"
-pool = "1 lane"
-
-[[extra.schedules.sessions]]
-day = "thursday"
 type = "senior_swim"
 start = "09:00"
 end = "10:30"
-pool = "3 lanes"
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "10:45"
 end = "12:30"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "senior_swim"
+start = "12:45"
+end = "13:45"
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -265,24 +266,23 @@ day = "friday"
 type = "senior_swim"
 start = "09:00"
 end = "10:30"
-pool = "4 lanes"
 
 [[extra.schedules.sessions]]
 day = "friday"
 type = "family_swim"
 start = "11:00"
-end = "12:30"
+end = "13:00"
 
 [[extra.schedules.sessions]]
 day = "friday"
 type = "lap_swim"
-start = "14:00"
-end = "16:00"
+start = "13:30"
+end = "16:30"
 
 [[extra.schedules.sessions]]
 day = "friday"
 type = "family_swim"
-start = "16:30"
+start = "17:00"
 end = "19:00"
 
 [[extra.schedules.sessions]]
@@ -307,6 +307,11 @@ end = "17:00"
 start = "2026-06-19"
 end = "2026-06-19"
 reason = "Juneteenth"
+
+[[extra.schedules.closures]]
+start = "2026-07-04"
+end = "2026-07-04"
+reason = "Independence Day"
 +++
 
 The only city-operated outdoor pool in San Francisco. Built in 1916, the 90' x 40' pool sits between Linda and Valencia streets in the heart of the Mission District and operates seasonally from May through October. Programs include lap swim, senior swim, recreation swim, water aerobics, and lessons.
