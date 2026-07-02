@@ -85,11 +85,12 @@ Dashboard → Workers & Pages → Create → Workers → Connect to Git. Select
 | Deploy command | `npx wrangler deploy --config worker/wrangler.toml` |
 | Root directory | `/` |
 | Builds for non-production branches | Enabled (gives PR previews) |
-| Build env var | `ZOLA_VERSION=0.22.1` |
+| Build env var | optional: `ZOLA_VERSION=0.22.1` |
 
 The build command must be `npm run build`, not a direct `zola build`.
 The npm script regenerates translated strings, bulletin metadata, and
-agent JSON before Zola packages the static assets.
+agent JSON before Zola packages the static assets. If Zola is not already
+on the build image's `PATH`, the script downloads the pinned release.
 
 Click Deploy. The first build should succeed now that `worker/wrangler.toml`
 has real KV IDs and the `swimfrancisco` script name.
