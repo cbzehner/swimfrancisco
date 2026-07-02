@@ -7,6 +7,10 @@ def test_registry_loads_expected_pools():
     mission = next(entry for entry in entries if entry.slug == "mission-community-pool")
     assert mission.source_status == "published"
     assert mission.pdf_url.endswith("/29566")
+    north_beach = next(entry for entry in entries if entry.slug == "north-beach-pool")
+    assert north_beach.source_status == "missing_current_schedule"
+    assert north_beach.pdf_url.endswith("/29568")
+    assert "Warm Pool (29569)" in (north_beach.notes or "")
     koret = next(entry for entry in entries if entry.slug == "koret-center")
     assert koret.source_kind == "koret_google_sheet"
     assert koret.source_status == "published"

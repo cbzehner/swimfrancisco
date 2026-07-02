@@ -1,9 +1,15 @@
 [spots.24-hour-fitness-ocean]
 title = "24 Hour Fitness Ocean"
 slug = "24-hour-fitness-ocean"
-access_notes = [ "Huwag muna itong gamitin sa aktibong pagpaplano ng paglangoy hanggang ipakita ng opisyal na pahina na muling bukas na ang club." ]
-access_summary = "Nakalista sa 24 Hour Fitness Ocean ang panloob na pool para sa paglangoy sa lane, pero sinasabi ng opisyal na pahina ng club na pansamantala itong sarado para sa pagkukumpuni hanggang Mayo 23, 2026."
-body = "Ang 24 Hour Fitness Ocean ay gym pool para sa mga miyembro na nakalagay sa pansamantalang saradong estado hanggang matapos ang pagkukumpuni."
+access_notes = [ "Tingnan ang pahina ng club para sa kasalukuyang membership, pagpasok ng bisita, at katayuan ng pasilidad." ]
+access_summary = "Ang 24 Hour Fitness Ocean ay gym pool. Nakalista sa opisyal na pahina ng club ang indoor lap pool, whirlpool, steam room, sauna, at kasalukuyang oras ng gym."
+body = "Ito ay listing ng gym pool para sa mga swimmer na gumagamit na ng 24 Hour Fitness o naghahanap ng membership-based na opsyon malapit sa Ocean Avenue."
+
+[[spots.24-hour-fitness-ocean.pricing]]
+label = "Gym member"
+price = "Membership"
+note = "Nakasalalay ang pagpasok sa pool sa mga tuntunin ng membership ng 24 Hour Fitness para sa club na ito."
+url = "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport"
 
 [spots.24-hour-fitness-potrero]
 title = "24 Hour Fitness Potrero"

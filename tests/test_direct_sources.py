@@ -206,6 +206,32 @@ def test_24_hour_fitness_extractor_models_temporary_closure():
     assert payload["closures"][0]["reason"] == "Temporarily closed for renovation"
 
 
+def test_24_hour_fitness_extractor_models_reopened_facility_hours():
+    payload = _extract_24_hour_fitness(
+        """
+        <h2>Recently Renovated!</h2>
+        <p>Reimagined. Reopened. Ready for you.</p>
+        <p>Indoor Lap Pool</p>
+        <h2>Gym Hours</h2>
+        <span class="ih-days">Monday</span>
+        <span class="ih-hours">05:00 AM - 11:59 PM</span>
+        <span class="ih-days">Tuesday - Thursday</span>
+        <span class="ih-hours">12:00 AM - 11:59 PM</span>
+        <span class="ih-days">Friday</span>
+        <span class="ih-hours">12:00 AM - 09:00 PM</span>
+        <span class="ih-days">Saturday - Sunday</span>
+        <span class="ih-hours">05:00 AM - 09:00 PM</span>
+        """
+    )
+
+    assert payload["schedule_basis"] == "facility_hours"
+    assert payload["sessions"] == []
+    assert payload["closures"] == []
+    assert len(payload["access_hours"]) == 7
+    assert any(a["day"] == "monday" and a["end"] == "23:59" for a in payload["access_hours"])
+    assert any(a["day"] == "wednesday" and a["start"] == "00:00" for a in payload["access_hours"])
+
+
 def test_city_sports_extractor_reads_club_hours():
     payload = _extract_city_sports(
         """

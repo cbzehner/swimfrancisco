@@ -306,8 +306,8 @@ reason = "Holiday Closure"
 
 [[extra.schedules]]
 effective_start = "2026-06-09"
-effective_end = "2026-08-15"
-last_verified_at = "2026-06-06"
+effective_end = "2026-08-10"
+last_verified_at = "2026-07-02"
 schedule_basis = "swim_schedule"
 
 [[extra.schedules.sessions]]
@@ -369,6 +369,13 @@ pool = "c"
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "senior_swim"
+start = "10:15"
+end = "11:15"
+pool = "w"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "senior_swim"
 start = "11:30"
 end = "12:30"
 pool = "w"
@@ -378,6 +385,13 @@ day = "wednesday"
 type = "family_swim"
 start = "13:00"
 end = "15:30"
+pool = "w"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "senior_swim"
+start = "13:45"
+end = "15:00"
 pool = "w"
 
 [[extra.schedules.sessions]]
@@ -411,7 +425,7 @@ pool = "c/w/t"
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "family_swim"
-start = "10:15"
+start = "10:30"
 end = "11:45"
 pool = "w"
 
@@ -433,7 +447,7 @@ pool = "w/t"
 day = "thursday"
 type = "family_swim"
 start = "13:30"
-end = "15:30"
+end = "15:15"
 pool = "w"
 
 [[extra.schedules.sessions]]
@@ -456,6 +470,13 @@ type = "lap_swim"
 start = "10:15"
 end = "12:30"
 pool = "c"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "senior_swim"
+start = "10:15"
+end = "11:15"
+pool = "w"
 
 [[extra.schedules.sessions]]
 day = "friday"
@@ -502,15 +523,15 @@ pool = "c"
 [[extra.schedules.sessions]]
 day = "saturday"
 type = "family_swim"
-start = "12:30"
-end = "14:00"
+start = "12:00"
+end = "13:15"
 pool = "w"
 
 [[extra.schedules.sessions]]
 day = "saturday"
 type = "family_swim"
-start = "14:30"
-end = "15:30"
+start = "15:30"
+end = "17:00"
 pool = "w"
 
 [[extra.schedules.sessions]]
