@@ -20,7 +20,7 @@ export interface Env {
 // served straight from the edge without re-reading KV. The cached response is
 // header-neutral (no CORS); corsHeaders(request) is applied per-request after
 // cache.match, so correctness never depends on the Cache API honoring Vary.
-const JSON_CACHE_CONTROL = "public, max-age=900";
+const JSON_CACHE_CONTROL = "public, max-age=900, s-maxage=3600";
 const NEGATIVE_CACHE_CONTROL = "public, max-age=60";
 
 // Canonical URL used as the Cache API key. Decouples the cache key from the
