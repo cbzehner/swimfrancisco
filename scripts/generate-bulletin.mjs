@@ -23,18 +23,24 @@ async function reviewedSnapshotPaths(dir) {
 const snapshots = await reviewedSnapshotPaths(dataDir);
 snapshots.sort();
 
+const snapshotData = await Promise.all(
+  snapshots.map((snapshot) => readFile(snapshot))
+);
+
 const hash = createHash("sha256");
-for (const snapshot of snapshots) {
-  hash.update(path.relative(root, snapshot));
+for (let i = 0; i < snapshots.length; i++) {
+  hash.update(path.relative(root, snapshots[i]));
   hash.update("\0");
-  hash.update(await readFile(snapshot));
+  hash.update(snapshotData[i]);
   hash.update("\0");
 }
 const scheduleFingerprint = hash.digest("hex");
 
 let existing = {};
+let existingContent = undefined;
 try {
-  existing = JSON.parse(await readFile(outPath, "utf8"));
+  existingContent = await readFile(outPath, "utf8");
+  existing = JSON.parse(existingContent);
 } catch (err) {
   // ENOENT (first run) is expected and starts the launch bulletin at 00.
   // Any other error — parse failure, permission, etc. — would silently
@@ -63,8 +69,15 @@ const payload = {
   label: String(number).padStart(2, "0"),
 };
 
-await writeFile(outPath, `${JSON.stringify(payload, null, 2)}\n`);
-console.log(
-  `Wrote bulletin ${payload.label} from ${snapshots.length} reviewed schedules to ` +
-    path.relative(root, outPath),
-);
+const newContent = `${JSON.stringify(payload, null, 2)}\n`;
+if (newContent !== existingContent) {
+  await writeFile(outPath, newContent);
+  console.log(
+    `Wrote bulletin ${payload.label} from ${snapshots.length} reviewed schedules to ` +
+      path.relative(root, outPath),
+  );
+} else {
+  console.log(
+    `Bulletin ${payload.label} is up to date (${snapshots.length} reviewed schedules)`,
+  );
+}
