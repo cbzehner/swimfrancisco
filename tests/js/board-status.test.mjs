@@ -11,6 +11,7 @@ import {
   computeAccessStatus,
   computeAccessWindowAvailability,
   computeDetailStatus,
+  computeStatusRunKey,
   computeWindowAvailability,
   sortByRank,
   captureBaselineRanks,
@@ -18,6 +19,7 @@ import {
   findActiveClosure,
   findNextDropIn,
   getHorizonOptions,
+  PLACEHOLDER,
   resolveActiveSchedule,
   resolveHorizon,
 } from "../../static/js/helpers/board.mjs";
@@ -553,6 +555,62 @@ test("computeAccessWindowAvailability trims access around partial closures", () 
   assert.equal(result.next, "13:00-16:00");
 });
 
+test("computeWindowAvailability reports unverified when a schedule has no sessions", () => {
+  // Distinct from the "no schedule at all" (NO SESSION/no bestSession key
+  // change) and "no overlapping session" paths: an explicit empty sessions
+  // array surfaces its own copy/nextKind so the board can tell "never
+  // verified" apart from "nothing scheduled in this window".
+  const schedule = { sessions: [], closures: [] };
+  const horizon = resolveHorizon("this-afternoon", new Date("2026-04-14T11:00:00"));
+  const result = computeWindowAvailability(schedule, horizon);
+  assert.deepEqual(result, {
+    status: "NO SESSION",
+    next: "Schedule not verified",
+    nextKind: "not_verified",
+    nextArgs: {},
+    sortRank: 3,
+    bestSession: null,
+  });
+});
+
+test("computeWindowAvailability returns a placeholder for non-window horizons regardless of schedule", () => {
+  // Pinned separately from computeAccessWindowAvailability's equivalent
+  // branch below: the pool variant ranks this Infinity (below even CLOSED)
+  // and always includes a null bestSession, while the access variant ranks
+  // it 3 and omits bestSession entirely.
+  const horizon = { id: "now", kind: "point" };
+  const result = computeWindowAvailability(BASIC_SCHEDULE, horizon);
+  assert.deepEqual(result, {
+    status: PLACEHOLDER,
+    next: PLACEHOLDER,
+    sortRank: Number.POSITIVE_INFINITY,
+    bestSession: null,
+  });
+});
+
+test("computeAccessWindowAvailability reports CHECK/OFFICIAL SITE when a schedule has no access hours or exceptions", () => {
+  const schedule = { sessions: [], access_hours: [], access_exceptions: [], closures: [] };
+  const horizon = resolveHorizon("this-afternoon", new Date("2026-04-14T11:00:00"));
+  const result = computeAccessWindowAvailability(schedule, horizon);
+  assert.deepEqual(result, {
+    status: "CHECK",
+    next: "OFFICIAL SITE",
+    nextKind: "official_site",
+    nextArgs: {},
+    sortRank: 3,
+  });
+});
+
+test("computeAccessWindowAvailability returns a placeholder for non-window horizons without a bestSession key", () => {
+  const horizon = { id: "now", kind: "point" };
+  const schedule = {
+    access_hours: [{ day: "tuesday", start: "05:30", end: "20:30", label: "Facility hours" }],
+    closures: [],
+  };
+  const result = computeAccessWindowAvailability(schedule, horizon);
+  assert.deepEqual(result, { status: PLACEHOLDER, next: PLACEHOLDER, sortRank: 3 });
+});
+
 test("computeDetailStatus treats pre-season as a synthetic closure", () => {
   // Pre-season collapses into the same CLOSED_TODAY shape used for repair
   // shutdowns and holidays; the closure reason carries the transition copy.
@@ -783,6 +841,68 @@ test("queued schedule becomes active on its effective date", () => {
   const status = computeStatus(NORTH_BEACH_TRANSITION_SCHEDULE, startDay);
   assert.equal(status.status, "OPEN");
   assert.equal(status.next, "Closes 08:00");
+});
+
+// computeStatusRunKey backs the memoization in status.js's applyStatuses:
+// filters.js reruns renderBoard on every filter/sort click (it needs to,
+// to pick up the active program-type filter), but a full status recompute
+// (parsing every row's data-schedule, running computeStatus /
+// computeWindowAvailability) should only actually happen when the key
+// changes — i.e. when horizon, the current minute, or the allowed program
+// types genuinely changed. These tests pin that contract.
+test("computeStatusRunKey is stable across calls within the same minute and allowed types", () => {
+  const horizon = { id: "now", kind: "point" };
+  const a = computeStatusRunKey(horizon, new Date("2026-04-14T10:00:05"), ["lap_swim"]);
+  const b = computeStatusRunKey(horizon, new Date("2026-04-14T10:00:55"), ["lap_swim"]);
+  assert.equal(a, b, "same minute + same allowed types must not force a recompute");
+});
+
+test("computeStatusRunKey changes when the minute advances", () => {
+  const horizon = { id: "now", kind: "point" };
+  const a = computeStatusRunKey(horizon, new Date("2026-04-14T10:00:59"), null);
+  const b = computeStatusRunKey(horizon, new Date("2026-04-14T10:01:00"), null);
+  assert.notEqual(a, b, "the minute tick must force a recompute");
+});
+
+test("computeStatusRunKey changes when the allowed program types change", () => {
+  const horizon = { id: "now", kind: "point" };
+  const now = new Date("2026-04-14T10:00:00");
+  const unfiltered = computeStatusRunKey(horizon, now, null);
+  const lapOnly = computeStatusRunKey(horizon, now, ["lap_swim"]);
+  const familyOnly = computeStatusRunKey(horizon, now, ["family_swim"]);
+  assert.notEqual(unfiltered, lapOnly, "selecting a type filter must force a recompute");
+  assert.notEqual(lapOnly, familyOnly, "switching type filters must force a recompute");
+});
+
+test("computeStatusRunKey is order-independent for allowed program types", () => {
+  const horizon = { id: "now", kind: "point" };
+  const now = new Date("2026-04-14T10:00:00");
+  const a = computeStatusRunKey(horizon, now, ["lap_swim", "family_swim"]);
+  const b = computeStatusRunKey(horizon, now, ["family_swim", "lap_swim"]);
+  assert.equal(a, b, "the same set of allowed types must not force a recompute regardless of order");
+});
+
+test("computeStatusRunKey treats null and empty allowed types the same", () => {
+  const horizon = { id: "now", kind: "point" };
+  const now = new Date("2026-04-14T10:00:00");
+  assert.equal(
+    computeStatusRunKey(horizon, now, null),
+    computeStatusRunKey(horizon, now, []),
+  );
+});
+
+test("computeStatusRunKey for window horizons ignores the clock and keys off the horizon date", () => {
+  const horizon = { id: "this-afternoon", kind: "window", date: "2026-04-14" };
+  const a = computeStatusRunKey(horizon, new Date("2026-04-14T09:00:00"), null);
+  const b = computeStatusRunKey(horizon, new Date("2026-04-14T16:00:00"), null);
+  assert.equal(a, b, "a plan-ahead window's key must not depend on the current minute");
+});
+
+test("computeStatusRunKey changes when the horizon id changes", () => {
+  const now = new Date("2026-04-14T10:00:00");
+  const a = computeStatusRunKey({ id: "now", kind: "point" }, now, null);
+  const b = computeStatusRunKey({ id: "this-afternoon", kind: "window", date: "2026-04-14" }, now, null);
+  assert.notEqual(a, b);
 });
 
 test("queued reopening schedule handles Sava repair closure through June 8", () => {

@@ -92,6 +92,27 @@ export function resolveHorizon(id, now = pacificWallClockDate()) {
   return options.find((option) => option.id === id) ?? options[0];
 }
 
+// Memoization key for a full board status pass (status.js's applyStatuses).
+// Status text/rank for every row is a pure function of (horizon, the current
+// minute for point-in-time horizons, allowed program types) — nothing else
+// varies between renders of the same DOM. renderBoard is invoked far more
+// often than those inputs actually change (every filter/sort click reruns it
+// to pick up the active program-type filter), so callers compare this key
+// against the last one they computed and skip re-parsing every row's
+// data-schedule + recomputing status when it's unchanged.
+export function computeStatusRunKey(horizon, now, allowedTypes = null) {
+  const asOf = horizon?.kind === "window"
+    ? horizon.date
+    : `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}T${now.getHours()}:${now.getMinutes()}`;
+  const values = allowedTypes instanceof Set
+    ? Array.from(allowedTypes)
+    : Array.isArray(allowedTypes)
+      ? allowedTypes
+      : [];
+  const typesKey = values.filter(Boolean).sort().join(",");
+  return `${horizon?.id}|${asOf}|${typesKey}`;
+}
+
 function formatISODateHuman(isoDate) {
   if (typeof isoDate !== "string") return "";
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate.trim());
@@ -286,28 +307,49 @@ function normalizeAllowedTypes(allowedTypes) {
   return normalized;
 }
 
-function findNextSession(normalized, closures, now) {
+// Scan up to 7 days ahead (today + offset) for the earliest available
+// {start, end}-shaped window on each day, cutting each day's candidate
+// windows down to the segments closures leave open. `windowsForDate(date)`
+// supplies that day's raw candidate windows (already carrying whatever
+// extra fields the caller wants echoed back, e.g. `type` or `label`) — it
+// alone encodes the source-specific day-selection/override logic; segment
+// splitting, the same-day "must start after now" filter, and the
+// earliest-first sort are identical for every caller.
+function scanForNextWindow(now, closures, windowsForDate) {
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   for (let offset = 0; offset <= 7; offset += 1) {
     const date = new Date(now);
     date.setDate(date.getDate() + offset);
-    const dayKey = DAY_KEYS[date.getDay()];
     const dateISO = formatISODate(date);
 
-    const candidates = normalized
-      .filter((session) => session.day === dayKey)
-      .flatMap((session) => {
-        const end = typeof session.end === "number" ? session.end : session.start + 1;
-        return availableSegmentsAfterClosures(session.start, end, closures, dateISO)
-          .map((segment) => ({ ...session, start: segment.start, end: segment.end }));
-      })
-      .filter((session) => offset > 0 || session.start > nowMinutes)
+    const candidates = windowsForDate(date)
+      .flatMap((w) => availableSegmentsAfterClosures(w.start, w.end, closures, dateISO)
+        .map((segment) => ({ ...w, start: segment.start, end: segment.end })))
+      .filter((w) => offset > 0 || w.start > nowMinutes)
       .sort((a, b) => a.start - b.start);
     if (candidates.length > 0) {
-      return { offset, session: candidates[0] };
+      return { offset, window: candidates[0] };
     }
   }
   return null;
+}
+
+// Sessions may omit `end` (malformed input); `computeNextOpenOffset`/
+// `computeStatus` treat that as a 1-minute session rather than dropping it.
+// Access windows are pre-validated by normalizeAccessHours/
+// normalizeAccessExceptions (both require end > start), so no such fallback
+// is needed there.
+function findNextSession(normalized, closures, now) {
+  const best = scanForNextWindow(now, closures, (date) => {
+    const dayKey = DAY_KEYS[date.getDay()];
+    return normalized
+      .filter((session) => session.day === dayKey)
+      .map((session) => ({
+        ...session,
+        end: typeof session.end === "number" ? session.end : session.start + 1,
+      }));
+  });
+  return best ? { offset: best.offset, session: best.window } : null;
 }
 
 function dateMatchesException(accessException, dateISO) {
@@ -349,21 +391,8 @@ function accessWindowsForDate(schedule, date) {
 }
 
 function findNextAccessWindow(schedule, closures, now) {
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  for (let offset = 0; offset <= 7; offset += 1) {
-    const date = new Date(now);
-    date.setDate(date.getDate() + offset);
-    const dateISO = formatISODate(date);
-    const candidates = accessWindowsForDate(schedule, date)
-      .flatMap((access) => availableSegmentsAfterClosures(access.start, access.end, closures, dateISO)
-        .map((segment) => ({ ...access, start: segment.start, end: segment.end })))
-      .filter((access) => offset > 0 || access.start > nowMinutes)
-      .sort((a, b) => a.start - b.start);
-    if (candidates.length > 0) {
-      return { offset, access: candidates[0] };
-    }
-  }
-  return null;
+  const best = scanForNextWindow(now, closures, (date) => accessWindowsForDate(schedule, date));
+  return best ? { offset: best.offset, access: best.window } : null;
 }
 
 function closureOverlapsWindow(closure, dateISO, windowStart, windowEnd) {
@@ -623,6 +652,34 @@ export function computeNextOpenOffset(schedule, now, allowedTypes = null) {
   return best.offset * 1440 + best.session.start - nowMinutes;
 }
 
+// A closure "blocks" a plan-ahead window only when it has no explicit
+// start_time/end_time (i.e. it closes the whole day, not a partial-day
+// slice) — partial-day closures instead carve segments out of the windows
+// below via availableSegmentsAfterClosures.
+function findBlockingWindowClosure(closures, dateISO, windowStart, windowEnd) {
+  return closures.find((closure) => (
+    closureOverlapsWindow(closure, dateISO, windowStart, windowEnd) &&
+    (parseHHMM(closure.start_time) === null || parseHHMM(closure.end_time) === null)
+  )) ?? null;
+}
+
+// Cut `windows` (each an object carrying at least {start, end}, in
+// minutes-of-day) down to the segments closures leave open on `dateISO`,
+// and attach how many of those minutes overlap [horizonStart, horizonEnd).
+// `overlap > 0` is exactly the "end > horizonStart && start < horizonEnd"
+// boundary check, so this also serves as the window-overlap filter.
+function windowSegmentsWithOverlap(windows, closures, dateISO, horizonStart, horizonEnd) {
+  return windows
+    .flatMap((w) => availableSegmentsAfterClosures(w.start, w.end, closures, dateISO)
+      .map((segment) => ({
+        ...w,
+        start: segment.start,
+        end: segment.end,
+        overlap: Math.min(segment.end, horizonEnd) - Math.max(segment.start, horizonStart),
+      })))
+    .filter((w) => w.overlap > 0);
+}
+
 export function computeWindowAvailability(schedule, horizon, allowedTypes = null) {
   if (horizon?.date) schedule = resolveActiveSchedule(schedule, horizon.date);
   if (!horizon || horizon.kind !== "window") {
@@ -644,10 +701,7 @@ export function computeWindowAvailability(schedule, horizon, allowedTypes = null
 
   const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
   const closures = allClosures(schedule);
-  const blockingClosure = closures.find((closure) => (
-    closureOverlapsWindow(closure, horizon.date, horizon.start, horizon.end) &&
-    (parseHHMM(closure.start_time) === null || parseHHMM(closure.end_time) === null)
-  ));
+  const blockingClosure = findBlockingWindowClosure(closures, horizon.date, horizon.start, horizon.end);
 
   if (blockingClosure) {
     return {
@@ -678,26 +732,19 @@ export function computeWindowAvailability(schedule, horizon, allowedTypes = null
     };
   }
 
-  const normalized = normalizeSessions(sessions, allowedTypes)
+  const candidateSessions = normalizeSessions(sessions, allowedTypes)
     .filter((session) => isDropInType(session.type))
-    .filter((session) => session.day === horizon.day)
-    .filter((session) => session.end > horizon.start && session.start < horizon.end)
-    .flatMap((session) => availableSegmentsAfterClosures(
-      session.start,
-      session.end,
-      closures,
-      horizon.date,
-    ).map((segment) => ({
-      ...session,
-      start: segment.start,
-      end: segment.end,
-      overlap: Math.min(segment.end, horizon.end) - Math.max(segment.start, horizon.start),
-    })))
-    .filter((session) => session.overlap > 0)
-    .sort((a, b) => {
-      if (a.start !== b.start) return a.start - b.start;
-      return b.overlap - a.overlap;
-    });
+    .filter((session) => session.day === horizon.day);
+  const normalized = windowSegmentsWithOverlap(
+    candidateSessions,
+    closures,
+    horizon.date,
+    horizon.start,
+    horizon.end,
+  ).sort((a, b) => {
+    if (a.start !== b.start) return a.start - b.start;
+    return b.overlap - a.overlap;
+  });
 
   if (normalized.length === 0) {
     return {
@@ -729,25 +776,19 @@ export function computeAccessWindowAvailability(schedule, horizon) {
     return { status: "CHECK", next: "OFFICIAL SITE", nextKind: "official_site", nextArgs: {}, sortRank: 3 };
   }
   const closures = allClosures(schedule);
-  const blockingClosure = closures.find((closure) => (
-    closureOverlapsWindow(closure, horizon.date, horizon.start, horizon.end) &&
-    (parseHHMM(closure.start_time) === null || parseHHMM(closure.end_time) === null)
-  ));
+  const blockingClosure = findBlockingWindowClosure(closures, horizon.date, horizon.start, horizon.end);
   if (blockingClosure) {
     return { status: "CLOSED", next: PLACEHOLDER, sortRank: 4 };
   }
 
   const horizonDate = new Date(`${horizon.date}T00:00:00`);
-  const overlaps = accessWindowsForDate(schedule, horizonDate)
-    .filter((access) => access.end > horizon.start && access.start < horizon.end)
-    .flatMap((access) => availableSegmentsAfterClosures(
-      access.start,
-      access.end,
-      closures,
-      horizon.date,
-    ).map((segment) => ({ ...access, start: segment.start, end: segment.end })))
-    .filter((access) => access.end > horizon.start && access.start < horizon.end)
-    .sort((a, b) => a.start - b.start);
+  const overlaps = windowSegmentsWithOverlap(
+    accessWindowsForDate(schedule, horizonDate),
+    closures,
+    horizon.date,
+    horizon.start,
+    horizon.end,
+  ).sort((a, b) => a.start - b.start);
   if (overlaps.length === 0) {
     return { status: "CHECK", next: PLACEHOLDER, sortRank: 3 };
   }
