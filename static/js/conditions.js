@@ -188,13 +188,23 @@ function applyConditions(root, conditions) {
 
 const REFETCH_INTERVAL_MS = 15 * 60 * 1000;
 let lastFetchedAt = 0;
+// Only advanced on success so a failed fetch retries on the next minute tick;
+// the in-flight flag keeps overlapping ticks from stacking requests.
+let fetchInFlight = false;
 
 async function refetchIfDue() {
+  if (fetchInFlight) return;
   if (Date.now() - lastFetchedAt < REFETCH_INTERVAL_MS) return;
-  lastFetchedAt = Date.now(); // set before the await so ticks can't overlap
   const endpoint = (typeof window !== "undefined" && window.SWIMFRANCISCO_API) || DEFAULT_ENDPOINT;
-  const conditions = await fetchConditions(endpoint);
+  fetchInFlight = true;
+  let conditions = null;
+  try {
+    conditions = await fetchConditions(endpoint);
+  } finally {
+    fetchInFlight = false;
+  }
   if (!conditions) return;
+  lastFetchedAt = Date.now();
   window.SWIMFRANCISCO_CONDITIONS = conditions;
   applyConditions(document, conditions);
 }
@@ -203,9 +213,17 @@ async function init() {
   applyBoardSummary(document);
   applyBulletinStrip(document, null);
   const endpoint = (typeof window !== "undefined" && window.SWIMFRANCISCO_API) || DEFAULT_ENDPOINT;
-  lastFetchedAt = Date.now();
-  const conditions = await fetchConditions(endpoint);
-  if (conditions) applyConditions(document, conditions);
+  fetchInFlight = true;
+  let conditions = null;
+  try {
+    conditions = await fetchConditions(endpoint);
+  } finally {
+    fetchInFlight = false;
+  }
+  if (conditions) {
+    lastFetchedAt = Date.now();
+    applyConditions(document, conditions);
+  }
   // Expose for other modules (e.g. map popups) and signal availability.
   window.SWIMFRANCISCO_CONDITIONS = conditions;
   document.dispatchEvent(new CustomEvent("sf:conditions-loaded"));
