@@ -9,20 +9,28 @@ import { formatTideSummary } from "./helpers/tide.mjs";
 import { statusLabel, t } from "./helpers/i18n.mjs";
 import { capture } from "./helpers/analytics.mjs";
 
-const LEAFLET_JS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-const LEAFLET_JS_INTEGRITY =
-  "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=";
+const LEAFLET_CSS_URL = "/vendor/leaflet.css";
+const LEAFLET_JS_URL = "/vendor/leaflet.js";
 const SF_CENTER = [37.7749, -122.4459];
 const SF_ZOOM = 12;
 
+// Lazy-load the Leaflet stylesheet, self-hosted so the map view has no
+// third-party runtime dependency. Idempotent — safe to call more than once.
+function loadLeafletCSS() {
+  if (document.querySelector(`link[href="${LEAFLET_CSS_URL}"]`)) return;
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = LEAFLET_CSS_URL;
+  document.head.appendChild(link);
+}
+
 // Lazy-load Leaflet JS. Resolves to the global `L` or rejects on load error.
 function loadLeaflet() {
+  loadLeafletCSS();
   if (window.L) return Promise.resolve(window.L);
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
     script.src = LEAFLET_JS_URL;
-    script.integrity = LEAFLET_JS_INTEGRITY;
-    script.crossOrigin = "";
     script.async = true;
     script.onload = () =>
       window.L ? resolve(window.L) : reject(new Error("Leaflet missing"));

@@ -14,7 +14,6 @@
 {% block extra_head %}
   {% set_global is_map_view = section.extra.view | default(value='') == 'map' %}
   {% if is_map_view %}
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   {% else %}
     <script type="application/ld+json">
       {
