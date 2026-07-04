@@ -9,6 +9,7 @@ import {
   computeAccessStatus,
   computeAccessWindowAvailability,
   computeStatus,
+  computeStatusRunKey,
   computeWindowAvailability,
   formatHHMM,
   getHorizonOptions,
@@ -25,6 +26,7 @@ import {
   t,
 } from "./helpers/i18n.mjs";
 import { capture } from "./helpers/analytics.mjs";
+import { initHorizonMenu } from "./helpers/horizon-menu.mjs";
 
 let currentHorizon = resolveHorizon(readHorizonParam(), pacificWallClockDate());
 
@@ -151,10 +153,25 @@ function setStatus(statusCell, status, type, sublabel = "") {
   }
 }
 
+// Guards the expensive part of applyStatuses (parsing every row's
+// data-schedule and running computeStatus/computeWindowAvailability) against
+// re-running when nothing that could change its output has changed. status.js
+// calls renderBoard on load, on the minute tick, and on horizon change —
+// all cases where time or horizon genuinely moved. filters.js also calls
+// renderBoard on every filter/sort click so it can pick up the active
+// program-type filter, but most of those clicks (memberships, sort toggles,
+// a repeated click with the same type selected) leave (horizon, now-minute,
+// allowedTypes) unchanged, so the recompute would just re-derive and re-write
+// the same values. See computeStatusRunKey for what's actually significant.
+let lastStatusRunKey = null;
+
 // Apply computed STATUS/NEXT. Pools compute from their schedule; open-water
 // rows have no schedule and are always accessible, so they render as OCEAN.
 function applyStatuses(root, now, allowedTypes = null) {
   const horizon = currentHorizon.id === "now" ? resolveHorizon("now", now) : currentHorizon;
+  const runKey = computeStatusRunKey(horizon, now, allowedTypes);
+  if (runKey === lastStatusRunKey) return;
+  lastStatusRunKey = runKey;
   const poolRows = root.querySelectorAll('table.board tbody tr[data-type="pool"]');
   poolRows.forEach((row) => {
     const statusCell = cell(row, "status");
@@ -264,85 +281,6 @@ export function renderBoard(root, allowedTypes = null, now = pacificWallClockDat
   });
 }
 
-function findHorizonMenu() {
-  return document.querySelector("[data-horizon-menu]");
-}
-
-function closeHorizonMenu(control) {
-  const button = control.querySelector("[data-horizon-button]");
-  const menu = findHorizonMenu();
-  if (!button || !menu) return;
-  menu.hidden = true;
-  button.setAttribute("aria-expanded", "false");
-}
-
-function closeHorizonMenuAndFocusButton(control) {
-  closeHorizonMenu(control);
-  control.querySelector("[data-horizon-button]")?.focus();
-}
-
-function positionHorizonMenu(button) {
-  const rect = button.getBoundingClientRect();
-  const top = rect.bottom + 4;
-  const isMobile = window.matchMedia("(max-width: 640px)").matches;
-  const left = isMobile ? 16 : rect.left;
-  const width = isMobile ? window.innerWidth - 32 : Math.max(rect.width, 256);
-  const root = document.documentElement.style;
-  root.setProperty("--horizon-menu-top", `${Math.round(top)}px`);
-  root.setProperty("--horizon-menu-left", `${Math.round(left)}px`);
-  root.setProperty("--horizon-menu-width", `${Math.round(width)}px`);
-}
-
-function openHorizonMenu(control) {
-  const button = control.querySelector("[data-horizon-button]");
-  const menu = findHorizonMenu();
-  if (!button || !menu) return;
-  menu.hidden = false;
-  positionHorizonMenu(button);
-  button.setAttribute("aria-expanded", "true");
-}
-
-function horizonMenuItems(menu = findHorizonMenu()) {
-  return menu ? Array.from(menu.querySelectorAll("button[role='menuitemradio']")) : [];
-}
-
-function focusHorizonMenuItem(direction = 1) {
-  const items = horizonMenuItems();
-  if (!items.length) return;
-  const checkedIndex = items.findIndex((item) => item.getAttribute("aria-checked") === "true");
-  const targetIndex = checkedIndex >= 0 ? checkedIndex : direction < 0 ? items.length - 1 : 0;
-  items[targetIndex].focus();
-}
-
-function focusAdjacentHorizonItem(direction) {
-  const items = horizonMenuItems();
-  if (!items.length) return;
-  const currentIndex = items.indexOf(document.activeElement);
-  const nextIndex = currentIndex < 0
-    ? direction < 0 ? items.length - 1 : 0
-    : (currentIndex + direction + items.length) % items.length;
-  items[nextIndex].focus();
-}
-
-function activateFocusedHorizonItem(control) {
-  const item = document.activeElement;
-  if (!item || item.getAttribute("role") !== "menuitemradio" || !item.value) return;
-  applyHorizon(item.value);
-  populateHorizonMenu(control, pacificWallClockDate());
-  closeHorizonMenuAndFocusButton(control);
-}
-
-function toggleHorizonMenu(control) {
-  const menu = findHorizonMenu();
-  if (!menu) return;
-  if (menu.hidden) {
-    openHorizonMenu(control);
-    focusHorizonMenuItem();
-  } else {
-    closeHorizonMenu(control);
-  }
-}
-
 function applyHorizon(id, now = pacificWallClockDate()) {
   currentHorizon = resolveHorizon(id, now);
   writeHorizonParam(currentHorizon.id);
@@ -351,34 +289,21 @@ function applyHorizon(id, now = pacificWallClockDate()) {
   document.dispatchEvent(new CustomEvent("sf:horizon-changed", { detail: currentHorizon }));
 }
 
-function populateHorizonMenu(control, now) {
-  const button = control.querySelector("[data-horizon-button]");
-  const menu = findHorizonMenu();
-  if (!button || !menu) return;
+function populateHorizonMenu(horizonMenu, now) {
   const options = getHorizonOptions(now);
   const selected = options.some((option) => option.id === currentHorizon.id)
     ? currentHorizon.id
     : "now";
   currentHorizon = resolveHorizon(selected, now);
-  button.textContent = horizonLabel(currentHorizon);
   applyHorizonChrome(currentHorizon);
-  menu.replaceChildren(
-    ...options.map((option) => {
-      const el = document.createElement("button");
-      el.type = "button";
-      el.setAttribute("role", "menuitemradio");
-      el.value = option.id;
-      el.textContent = horizonLabel(option);
-      el.setAttribute("aria-checked", String(option.id === selected));
-      el.addEventListener("click", () => {
-        applyHorizon(option.id);
-        capture("filter_applied", { trigger: "when", when: option.id });
-        populateHorizonMenu(control, pacificWallClockDate());
-        closeHorizonMenuAndFocusButton(control);
-      });
-      return el;
-    }),
-  );
+  horizonMenu.render({
+    buttonLabel: horizonLabel(currentHorizon),
+    items: options.map((option) => ({
+      id: option.id,
+      label: horizonLabel(option),
+      selected: option.id === selected,
+    })),
+  });
   writeHorizonParam(currentHorizon.id);
 }
 
@@ -388,88 +313,21 @@ function initHorizonControl(now) {
     applyHorizonChrome(currentHorizon);
     return;
   }
-  const button = control.querySelector("[data-horizon-button]");
-  if (!button) return;
-  populateHorizonMenu(control, now);
-
-  button.addEventListener("click", () => {
-    populateHorizonMenu(control, pacificWallClockDate());
-    toggleHorizonMenu(control);
+  const horizonMenu = initHorizonMenu(control, {
+    refresh: () => populateHorizonMenu(horizonMenu, pacificWallClockDate()),
+    onSelect: (id, source) => {
+      applyHorizon(id);
+      if (source === "click") capture("filter_applied", { trigger: "when", when: id });
+      populateHorizonMenu(horizonMenu, pacificWallClockDate());
+    },
   });
-
-  button.addEventListener("keydown", (event) => {
-    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
-    event.preventDefault();
-    populateHorizonMenu(control, pacificWallClockDate());
-    openHorizonMenu(control);
-    focusHorizonMenuItem(event.key === "ArrowUp" ? -1 : 1);
-  });
-
-  document.addEventListener("click", (event) => {
-    const menu = findHorizonMenu();
-    if (control.contains(event.target)) return;
-    if (menu && menu.contains(event.target)) return;
-    closeHorizonMenu(control);
-  });
-
-  // Close on Tab-out so an open menu doesn't strand the user with focus
-  // somewhere unrelated on the page. focusout fires when any element inside
-  // the button or menu loses focus; relatedTarget is who's gaining it.
-  // Only close when focus lands on a keyboard-reachable element
-  // (tabIndex >= 0): WebKit doesn't focus <button>s on tap — it moves focus
-  // to the nearest tabindex ancestor instead, which here is the skip-link
-  // target <main tabindex="-1"> — so an iOS tap on a menu item looked like
-  // Tab-out and closed the menu before the tap's click could land on the
-  // item. A real Tab always stops on tabIndex >= 0. Outside-tap closing is
-  // owned by the document click listener above.
-  document.addEventListener("focusout", (event) => {
-    const menu = findHorizonMenu();
-    if (!menu || menu.hidden) return;
-    const next = event.relatedTarget;
-    if (!next || next.tabIndex < 0) return;
-    if (control.contains(next) || menu.contains(next)) return;
-    closeHorizonMenu(control);
-  });
-
-  document.addEventListener("keydown", (event) => {
-    const menu = findHorizonMenu();
-    if (!menu || menu.hidden) return;
-    if (event.key === "Escape") {
-      event.preventDefault();
-      closeHorizonMenuAndFocusButton(control);
-      return;
-    }
-    if (!menu.contains(document.activeElement)) return;
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      focusAdjacentHorizonItem(1);
-    } else if (event.key === "ArrowUp") {
-      event.preventDefault();
-      focusAdjacentHorizonItem(-1);
-    } else if (event.key === "Home") {
-      event.preventDefault();
-      horizonMenuItems()[0]?.focus();
-    } else if (event.key === "End") {
-      event.preventDefault();
-      horizonMenuItems().at(-1)?.focus();
-    } else if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      activateFocusedHorizonItem(control);
-    }
-  });
-
-  window.addEventListener("resize", () => {
-    if (button.getAttribute("aria-expanded") === "true") positionHorizonMenu(button);
-  });
-
-  window.addEventListener("scroll", () => {
-    if (button.getAttribute("aria-expanded") === "true") positionHorizonMenu(button);
-  });
+  if (!horizonMenu) return;
+  populateHorizonMenu(horizonMenu, now);
 
   document.querySelector("[data-time-banner-reset]")?.addEventListener("click", () => {
     applyHorizon("now");
     capture("filter_applied", { trigger: "when", when: "now" });
-    populateHorizonMenu(control, pacificWallClockDate());
+    populateHorizonMenu(horizonMenu, pacificWallClockDate());
   });
 }
 
