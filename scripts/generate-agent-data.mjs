@@ -3,10 +3,10 @@
 // The default output is public/agent so Zola can build first and this script
 // can add ignored deploy artifacts without dirtying the source tree.
 
-import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join, relative } from "node:path";
-import { parse } from "smol-toml";
+import { readSpotFrontmatter } from "./lib/spot-frontmatter.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, "..");
@@ -14,8 +14,6 @@ const spotsDir = join(repoRoot, "content/spots");
 const defaultOutputDir = join(repoRoot, "static/agent");
 const siteUrl = "https://swimfrancisco.com";
 const agentDataVersion = 1;
-
-const FRONTMATTER_RE = /^\+\+\+\n([\s\S]*?)\n\+\+\+\n?/;
 
 function argValue(name) {
   const prefix = `${name}=`;
@@ -185,11 +183,8 @@ function buildSpotRecord(front, body) {
 async function readSpot(fileName) {
   if (fileName === "_index.md" || fileName.startsWith("_index.")) return null;
   const path = join(spotsDir, fileName);
-  const text = await readFile(path, "utf8");
-  const match = text.match(FRONTMATTER_RE);
-  if (!match) throw new Error(`${path}: missing TOML frontmatter`);
+  const { front, body } = await readSpotFrontmatter(path);
 
-  const front = parse(match[1]);
   const extra = front.extra || {};
   if (extra.localized_from) return null;
   const expectedSlug = fileName.replace(/\.md$/, "");
@@ -200,7 +195,7 @@ async function readSpot(fileName) {
     throw new Error(`${path}: missing title, slug, or extra.type`);
   }
 
-  return buildSpotRecord(front, text.slice(match[0].length));
+  return buildSpotRecord(front, body);
 }
 
 function buildIndex(spots, generatedAt) {

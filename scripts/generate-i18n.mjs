@@ -2,6 +2,7 @@ import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { parse, stringify } from "smol-toml";
+import { splitFrontMatter } from "./lib/spot-frontmatter.mjs";
 
 const ROOT = process.cwd();
 const CONFIG_PATH = path.join(ROOT, "config.toml");
@@ -43,18 +44,15 @@ async function readToml(file) {
   return parse(await readFile(file, "utf8"));
 }
 
-function sortedObject(object) {
-  return Object.fromEntries(Object.entries(object || {}).sort(([a], [b]) => a.localeCompare(b)));
-}
-
 function tomlText(object) {
   return `${stringify(object).trim()}\n`;
 }
 
 function parseFrontMatter(text, file) {
-  const match = /^\+\+\+\n([\s\S]*?)\n\+\+\+\n?([\s\S]*)$/.exec(text);
-  if (!match) throw new Error(`${file} is missing TOML front matter`);
-  return { front: parse(match[1]), body: match[2].trim() };
+  const { front, body } = splitFrontMatter(text, file, {
+    missingMessage: `${file} is missing TOML front matter`,
+  });
+  return { front, body: body.trim() };
 }
 
 async function writeIfChanged(file, text, { dryRun = false, changed = [] } = {}) {
@@ -307,9 +305,7 @@ async function loadSources() {
   return { locales, ui };
 }
 
-async function validateSources() {
-  const { locales, ui } = await loadSources();
-  const dynamicLabels = await loadDynamicLabels();
+function validateLocaleCodes(locales) {
   const defaults = locales.locales.filter((locale) => locale.is_default);
   if (defaults.length !== 1) throw new Error("i18n/locales.toml must define exactly one default locale");
 
@@ -318,12 +314,14 @@ async function validateSources() {
   if (duplicateCodes.length > 0) {
     throw new Error(`i18n/locales.toml contains duplicate locale code(s): ${duplicateCodes.join(", ")}`);
   }
-  await validateLocaleRegistryConsumers(codes);
 
-  const nonDefaultCodes = nonDefaultLocaleCodes(locales);
+  return { defaultLocale: defaults[0], codes };
+}
+
+async function validateUiCatalogs({ codes, defaultLocale, ui }) {
   await validateCatalogFiles({ allCodes: codes });
 
-  const defaultKeys = Object.keys(ui[defaults[0].code] || {}).sort();
+  const defaultKeys = Object.keys(ui[defaultLocale.code] || {}).sort();
   for (const code of codes) {
     const keys = Object.keys(ui[code] || {}).sort();
     const missing = defaultKeys.filter((key) => !keys.includes(key));
@@ -334,7 +332,7 @@ async function validateSources() {
       );
     }
     for (const key of defaultKeys) {
-      const defaultPlaceholders = placeholders(ui[defaults[0].code][key]);
+      const defaultPlaceholders = placeholders(ui[defaultLocale.code][key]);
       const localePlaceholders = placeholders(ui[code][key]);
       if (defaultPlaceholders.join(",") !== localePlaceholders.join(",")) {
         throw new Error(
@@ -354,7 +352,9 @@ async function validateSources() {
       .join("; ");
     throw new Error(`static translation callsite(s) reference missing UI key(s): ${details}`);
   }
+}
 
+async function validateDynamicLabels({ codes, ui, dynamicLabels }) {
   const seenDynamicLabels = new Set();
   const dynamicKeysByCode = new Map();
   const dynamicLabelsByKind = dynamicLabelMap(dynamicLabels);
@@ -410,7 +410,9 @@ async function validateSources() {
       .join("; ");
     throw new Error(`i18n/dynamic-labels.toml is missing canonical display code(s): ${details}`);
   }
+}
 
+async function validateSectionCatalogs({ codes }) {
   const requiredSections = Object.keys(SECTION_TARGETS).sort();
   for (const code of codes) {
     const catalogPath = path.join(SECTIONS_DIR, `${code}.toml`);
@@ -425,9 +427,11 @@ async function validateSources() {
       );
     }
   }
+}
 
+async function validateSpotCatalogs({ codes, defaultLocale }) {
   const expectedSpotSlugs = await canonicalSpotSlugs(codes);
-  const defaultSpotCatalog = await readToml(path.join(SPOTS_DIR, `${defaults[0].code}.toml`));
+  const defaultSpotCatalog = await readToml(path.join(SPOTS_DIR, `${defaultLocale.code}.toml`));
   for (const code of codes) {
     const catalog = await readToml(path.join(SPOTS_DIR, `${code}.toml`));
     const slugs = unique(Object.keys(catalog.spots || {})).sort();
@@ -438,7 +442,7 @@ async function validateSources() {
         `i18n/spots/${code}.toml slug mismatch; missing: ${missing.join(", ") || "none"}; extra: ${extra.join(", ") || "none"}`,
       );
     }
-    if (code === defaults[0].code) continue;
+    if (code === defaultLocale.code) continue;
     const missingFields = [];
     for (const slug of expectedSpotSlugs) {
       const defaultSpot = defaultSpotCatalog.spots?.[slug] || {};
@@ -453,6 +457,17 @@ async function validateSources() {
       throw new Error(`i18n/spots/${code}.toml missing translated spot field(s): ${missingFields.join(", ")}`);
     }
   }
+}
+
+async function validateSources() {
+  const { locales, ui } = await loadSources();
+  const dynamicLabels = await loadDynamicLabels();
+  const { defaultLocale, codes } = validateLocaleCodes(locales);
+  await validateLocaleRegistryConsumers(codes);
+  await validateUiCatalogs({ codes, defaultLocale, ui });
+  await validateDynamicLabels({ codes, ui, dynamicLabels });
+  await validateSectionCatalogs({ codes });
+  await validateSpotCatalogs({ codes, defaultLocale });
 }
 
 async function expectedGeneratedArtifacts() {

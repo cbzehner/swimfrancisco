@@ -3,23 +3,18 @@
 // open-water spot → station mapping has a single source of truth. Runs from
 // wrangler's [build] hook before dev/deploy and from `npm run typecheck`.
 
-import { readdir, readFile, writeFile } from "node:fs/promises";
+import { readdir, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { parse } from "smol-toml";
+import { readSpotFrontmatter } from "./lib/spot-frontmatter.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, "..");
 const spotsDir = join(repoRoot, "content/spots");
 const outputPath = join(repoRoot, "worker/src/spots.ts");
 
-const FRONTMATTER_RE = /^\+\+\+\n([\s\S]*?)\n\+\+\+/;
-
 async function readSpot(path) {
-  const text = await readFile(path, "utf8");
-  const match = text.match(FRONTMATTER_RE);
-  if (!match) throw new Error(`${path}: missing TOML frontmatter`);
-  const front = parse(match[1]);
+  const { front } = await readSpotFrontmatter(path);
   const extra = front.extra || {};
   if (extra.type !== "open_water") return null;
 
@@ -58,11 +53,10 @@ async function main() {
     .filter((name) => name.endsWith(".md") && name !== "_index.md")
     .sort();
 
-  const spots = [];
-  for (const name of entries) {
-    const spot = await readSpot(join(spotsDir, name));
-    if (spot) spots.push(spot);
-  }
+  const spotResults = await Promise.all(
+    entries.map((name) => readSpot(join(spotsDir, name)))
+  );
+  const spots = spotResults.filter(Boolean);
   if (spots.length === 0) {
     throw new Error("Found zero open-water spots — refusing to overwrite worker/src/spots.ts");
   }
