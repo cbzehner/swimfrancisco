@@ -1,11 +1,26 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import get_args
 
-from .models import ScheduleBasis, ValidationResult, Violation
+import jsonschema
 
-_VALID_SCHEDULE_BASES = frozenset(get_args(ScheduleBasis))
+from .models import ValidationResult, Violation
+from .schema import EXTRACTION_SCHEMA
+
+_SCHEMA_VALIDATOR = jsonschema.Draft202012Validator(EXTRACTION_SCHEMA)
+
+
+def _schema_violations(payload: dict) -> list[Violation]:
+    violations: list[Violation] = []
+    for error in _SCHEMA_VALIDATOR.iter_errors(payload):
+        json_path = "$" + "".join(
+            f"[{part!r}]" if isinstance(part, int) else f".{part}" for part in error.absolute_path
+        )
+        violations.append(Violation(
+            code="schema_violation",
+            message=f"{json_path}: {error.message}",
+        ))
+    return violations
 
 
 def validate(payload: dict, *, prior_sessions_count: int | None = None) -> ValidationResult:
@@ -13,15 +28,9 @@ def validate(payload: dict, *, prior_sessions_count: int | None = None) -> Valid
     closures = payload.get("closures") if isinstance(payload.get("closures"), list) else []
     access_hours = payload.get("access_hours") if isinstance(payload.get("access_hours"), list) else []
     access_exceptions = payload.get("access_exceptions") if isinstance(payload.get("access_exceptions"), list) else []
-    violations: list[Violation] = []
+    violations: list[Violation] = _schema_violations(payload)
     catastrophic = False
     schedule_basis = payload.get("schedule_basis")
-
-    if schedule_basis is not None and schedule_basis not in _VALID_SCHEDULE_BASES:
-        violations.append(Violation(
-            code="invalid_schedule_basis",
-            message=f"schedule_basis must be one of: {', '.join(sorted(_VALID_SCHEDULE_BASES))}",
-        ))
 
     if prior_sessions_count and len(sessions) == 0:
         violations.append(Violation(

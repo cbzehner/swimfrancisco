@@ -20,8 +20,9 @@ def _seed_review_dir(data_root: Path, slug: str, date: str, pdf_sha256: str) -> 
         "pdf_sha256": pdf_sha256,
         "payload": {
             "effective_start": "2026-03-17",
+            "schedule_basis": "swim_schedule",
             "sessions": [
-                {"day": d, "type": "lap_swim", "start": "07:00", "end": "08:00"}
+                {"day": d, "type": "lap_swim", "start": "07:00", "end": "08:00", "evidence": "Lap Swim 7-8am"}
                 for d in ("monday", "tuesday", "wednesday", "thursday", "friday")
             ],
             "closures": [],

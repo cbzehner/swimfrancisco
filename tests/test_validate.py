@@ -3,12 +3,13 @@ from schedules.validate import validate
 
 def test_validate_accepts_reasonable_payload():
     payload = {
+        "schedule_basis": "swim_schedule",
         "sessions": [
-            {"day": "monday", "type": "lap_swim", "start": "06:00", "end": "07:00"},
-            {"day": "tuesday", "type": "lap_swim", "start": "06:00", "end": "07:00"},
-            {"day": "wednesday", "type": "lap_swim", "start": "06:00", "end": "07:00"},
-            {"day": "thursday", "type": "lap_swim", "start": "06:00", "end": "07:00"},
-            {"day": "friday", "type": "lap_swim", "start": "06:00", "end": "07:00"},
+            {"day": "monday", "type": "lap_swim", "start": "06:00", "end": "07:00", "evidence": "Lap Swim 6-7am"},
+            {"day": "tuesday", "type": "lap_swim", "start": "06:00", "end": "07:00", "evidence": "Lap Swim 6-7am"},
+            {"day": "wednesday", "type": "lap_swim", "start": "06:00", "end": "07:00", "evidence": "Lap Swim 6-7am"},
+            {"day": "thursday", "type": "lap_swim", "start": "06:00", "end": "07:00", "evidence": "Lap Swim 6-7am"},
+            {"day": "friday", "type": "lap_swim", "start": "06:00", "end": "07:00", "evidence": "Lap Swim 6-7am"},
         ],
         "closures": [],
         "effective_start": "2026-03-17",
@@ -20,9 +21,10 @@ def test_validate_accepts_reasonable_payload():
 
 def test_validate_accepts_access_hours_without_sessions():
     payload = {
+        "schedule_basis": "facility_hours",
         "sessions": [],
         "access_hours": [
-            {"day": "monday", "start": "05:30", "end": "20:30", "label": "Facility hours"}
+            {"day": "monday", "start": "05:30", "end": "20:30", "label": "Facility hours", "evidence": "Facility hours 5:30am-8:30pm"}
         ],
         "closures": [],
         "effective_start": "2026-03-17",
@@ -37,7 +39,7 @@ def test_validate_accepts_access_exceptions():
         "sessions": [],
         "schedule_basis": "facility_hours",
         "access_hours": [
-            {"day": "monday", "start": "06:30", "end": "19:45", "label": "Facility hours"}
+            {"day": "monday", "start": "06:30", "end": "19:45", "label": "Facility hours", "evidence": "Facility hours 6:30am-7:45pm"}
         ],
         "access_exceptions": [
             {
@@ -46,6 +48,7 @@ def test_validate_accepts_access_exceptions():
                 "end": "13:30",
                 "label": "Holiday facility hours",
                 "reason": "Memorial Day",
+                "evidence": "Memorial Day hours 8am-1:30pm",
             }
         ],
         "closures": [],
@@ -80,29 +83,34 @@ def test_validate_rejects_unknown_schedule_basis_value():
         "closures": [],
     })
 
-    assert any(v.code == "invalid_schedule_basis" for v in result.violations)
+    assert any(
+        v.code == "schema_violation" and "schedule_basis" in v.message
+        for v in result.violations
+    )
 
 
 def test_validate_flags_bad_ranges():
     payload = {
-        "sessions": [{"day": "monday", "type": "lap_swim", "start": "07:00", "end": "07:00"}],
+        "schedule_basis": "swim_schedule",
+        "sessions": [{"day": "monday", "type": "lap_swim", "start": "07:00", "end": "07:00", "evidence": "Lap Swim 7-7am"}],
         "closures": [{"start": "2026-04-18", "end": "2026-04-17", "reason": "maintenance"}],
         "effective_start": "not-a-date",
     }
     result = validate(payload)
     assert result.ok is False
-    assert len(result.violations) == 4
+    assert len(result.violations) == 5
 
 
 def _five_weekday_sessions() -> list[dict]:
     return [
-        {"day": d, "type": "lap_swim", "start": "06:00", "end": "07:00"}
+        {"day": d, "type": "lap_swim", "start": "06:00", "end": "07:00", "evidence": "Lap Swim 6-7am"}
         for d in ("monday", "tuesday", "wednesday", "thursday", "friday")
     ]
 
 
 def test_validate_accepts_partial_day_closure():
     payload = {
+        "schedule_basis": "swim_schedule",
         "sessions": _five_weekday_sessions(),
         "closures": [{
             "start": "2026-05-21",
@@ -165,3 +173,54 @@ def test_validate_rejects_partial_day_closure_on_multi_day_range():
     result = validate(payload)
     assert result.ok is False
     assert any(v.code == "multi_day_closure_with_time_range" for v in result.violations)
+
+
+def test_validate_rejects_bad_day_enum():
+    payload = {
+        "schedule_basis": "swim_schedule",
+        "sessions": [
+            {"day": "funday", "type": "lap_swim", "start": "06:00", "end": "07:00"},
+        ],
+        "closures": [],
+        "effective_start": "2026-03-17",
+    }
+    result = validate(payload)
+    assert result.ok is False
+    assert any(
+        v.code == "schema_violation" and "$.sessions[0].day" in v.message
+        for v in result.violations
+    )
+
+
+def test_validate_rejects_bad_session_type():
+    payload = {
+        "schedule_basis": "swim_schedule",
+        "sessions": [
+            {"day": "monday", "type": "water_polo", "start": "06:00", "end": "07:00"},
+        ],
+        "closures": [],
+        "effective_start": "2026-03-17",
+    }
+    result = validate(payload)
+    assert result.ok is False
+    assert any(
+        v.code == "schema_violation" and "$.sessions[0].type" in v.message
+        for v in result.violations
+    )
+
+
+def test_validate_rejects_malformed_time_string():
+    payload = {
+        "schedule_basis": "swim_schedule",
+        "sessions": [
+            {"day": "monday", "type": "lap_swim", "start": "9:00", "end": "10:00"},
+        ],
+        "closures": [],
+        "effective_start": "2026-03-17",
+    }
+    result = validate(payload)
+    assert result.ok is False
+    assert any(
+        v.code == "schema_violation" and "$.sessions[0].start" in v.message
+        for v in result.violations
+    )

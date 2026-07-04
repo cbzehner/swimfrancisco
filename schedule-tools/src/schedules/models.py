@@ -16,7 +16,7 @@ ViolationCode = Literal[
     "invalid_session_time_range",
     "invalid_access_exception_date",
     "invalid_access_exception_time_range",
-    "invalid_schedule_basis",
+    "schema_violation",
     "invalid_closure_date_range",
     "incomplete_closure_time_range",
     "invalid_closure_time_range",

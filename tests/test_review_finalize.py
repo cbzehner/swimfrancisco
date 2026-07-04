@@ -14,8 +14,9 @@ def _valid_draft_envelope(slug: str, pdf_sha256: str) -> dict:
         "source_pdf_url": "https://example.com/schedule.pdf",
         "payload": {
             "effective_start": "2026-03-17",
+            "schedule_basis": "swim_schedule",
             "sessions": [
-                {"day": d, "type": "lap_swim", "start": "07:00", "end": "08:00"}
+                {"day": d, "type": "lap_swim", "start": "07:00", "end": "08:00", "evidence": "Lap Swim 7-8am"}
                 for d in ("monday", "tuesday", "wednesday", "thursday", "friday")
             ],
             "closures": [],

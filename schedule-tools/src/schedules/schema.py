@@ -8,7 +8,11 @@ EXTRACTION_SCHEMA = {
             "items": {
                 "type": "object",
                 "additionalProperties": False,
-                "required": ["day", "type", "start", "end", "evidence"],
+                # "evidence" is intentionally not required: canonicalize_payload
+                # strips it before validate() re-checks the projected payload
+                # (see schedules.project), so requiring it here would reject
+                # every already-reviewed snapshot at projection time.
+                "required": ["day", "type", "start", "end"],
                 "properties": {
                     "day": {
                         "type": "string",
@@ -96,7 +100,9 @@ EXTRACTION_SCHEMA = {
             "items": {
                 "type": "object",
                 "additionalProperties": False,
-                "required": ["day", "start", "end", "label", "evidence"],
+                # "evidence" is intentionally not required: see the sessions
+                # comment above — canonicalize_payload strips it too.
+                "required": ["day", "start", "end", "label"],
                 "properties": {
                     "day": {
                         "type": "string",
@@ -129,7 +135,9 @@ EXTRACTION_SCHEMA = {
             "items": {
                 "type": "object",
                 "additionalProperties": False,
-                "required": ["date", "start", "end", "label", "reason", "evidence"],
+                # "evidence" is intentionally not required: see the sessions
+                # comment above — canonicalize_payload strips it too.
+                "required": ["date", "start", "end", "label", "reason"],
                 "properties": {
                     "date": {
                         "type": "string",
