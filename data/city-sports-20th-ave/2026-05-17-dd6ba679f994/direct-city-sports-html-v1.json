@@ -1,6 +1,6 @@
 {
   "cost_estimate": "deterministic",
-  "extracted_at": "2026-06-16T19:16:22.280371+00:00",
+  "extracted_at": "2026-07-06T16:58:16.386787+00:00",
   "model": "city-sports-html-v1",
   "payload": {
     "access_exceptions": [],
@@ -56,14 +56,14 @@
       }
     ],
     "closures": [],
-    "effective_start": "2026-06-16",
+    "effective_start": "2026-07-06",
     "schedule_basis": "facility_hours",
     "sessions": []
   },
   "pdf_sha256": "dd6ba679f9947825ea92fad333247cb0f842b9d0980e9a7a8f1b194efb376007",
   "prompt_sha256": "c6d66ea6d229afd461a7314ba4ed02cf3682bd0b079c3763047f3d06cb64555a",
   "provider": "direct",
-  "schema_sha256": "de685f22a191de60e54dea56caffce56f72a20b0ccd3f17fa5868c3f78977858",
+  "schema_sha256": "83e30568488faa43b2796db02e2b2eee945e2f70bdb44b38a5b5a3b4ca086afa",
   "source_pdf_url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914",
   "usage": {}
 }
