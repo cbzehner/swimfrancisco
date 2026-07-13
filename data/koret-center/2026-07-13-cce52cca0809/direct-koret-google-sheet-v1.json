@@ -1,0 +1,47 @@
+{
+  "cost_estimate": "deterministic",
+  "extracted_at": "2026-07-13T17:47:22.701410+00:00",
+  "model": "koret-google-sheet-v1",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [],
+    "closures": [
+      {
+        "end": "2026-07-17",
+        "reason": "for cleaning @ 3:30pm (weekdays)",
+        "start": "2026-07-17"
+      }
+    ],
+    "effective_start": "2026-07-13",
+    "schedule_basis": "pool_hours",
+    "sessions": [
+      {
+        "day": "monday",
+        "end": "19:00",
+        "evidence": "Monday Hours: 7am-7:00pm Lane 1 Lane 2 Lane 3 Lane 4 Lane 5 Lane 6 Lane 7 Lane 8 Bulk Head",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "19:00",
+        "evidence": "Tuesday Hours: 7am-7pm (Summer Hours) Lane 1 Lane 2 Lane 3 Lane 4 Lane 5 Lane 6 Lane 7 Lane 8 Bulk Head",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "19:00",
+        "evidence": "Thursday Hours: 7:00am-7:00pm Lane 1 Lane 2 Lane 3 Lane 4 Lane 5 Lane 6 Lane 7 Lane 8 Bulk Head Lane 9 Lane 10 Lane 11 Lane 12 Lane 13 Lane 14 Lane 15 DEEP",
+        "start": "07:00",
+        "type": "lap_swim"
+      }
+    ]
+  },
+  "pdf_sha256": "cce52cca0809cc8031db7f7b0f8b2cfed1ef55efaafe2008b8254ecf1154e4cc",
+  "prompt_sha256": "d890ba6f8d2dfd4dbae8cfba507a0e627b9100313325103fdc48ac549ca8dcc2",
+  "provider": "direct",
+  "schema_sha256": "83e30568488faa43b2796db02e2b2eee945e2f70bdb44b38a5b5a3b4ca086afa",
+  "source_pdf_url": "https://docs.google.com/spreadsheets/d/1PcFSl3ndScM2-SZnubwDvBlbhpmbFsVjEPK-yGilZU0/edit?gid=1958899859&pli=1",
+  "usage": {}
+}

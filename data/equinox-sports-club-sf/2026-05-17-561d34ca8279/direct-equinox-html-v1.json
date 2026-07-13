@@ -1,6 +1,6 @@
 {
   "cost_estimate": "deterministic",
-  "extracted_at": "2026-06-16T19:16:50.595134+00:00",
+  "extracted_at": "2026-07-13T17:47:29.568449+00:00",
   "model": "equinox-html-v1",
   "payload": {
     "access_exceptions": [],
@@ -56,14 +56,14 @@
       }
     ],
     "closures": [],
-    "effective_start": "2026-06-16",
+    "effective_start": "2026-07-13",
     "schedule_basis": "facility_hours",
     "sessions": []
   },
   "pdf_sha256": "561d34ca8279199545cb8bc4f865f0ff096208b66137d587bc760a9fc132c48e",
   "prompt_sha256": "ba8a702335cf62f72261e6eb250e340652b6897710e6976a608e93a50f2cdb81",
   "provider": "direct",
-  "schema_sha256": "de685f22a191de60e54dea56caffce56f72a20b0ccd3f17fa5868c3f78977858",
+  "schema_sha256": "83e30568488faa43b2796db02e2b2eee945e2f70bdb44b38a5b5a3b4ca086afa",
   "source_pdf_url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco",
   "usage": {}
 }

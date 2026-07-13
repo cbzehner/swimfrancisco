@@ -1,6 +1,6 @@
 {
   "cost_estimate": "deterministic",
-  "extracted_at": "2026-06-16T19:16:21.465770+00:00",
+  "extracted_at": "2026-07-13T17:47:27.549882+00:00",
   "model": "fitness-sf-html-v1",
   "payload": {
     "access_exceptions": [],
@@ -56,14 +56,14 @@
       }
     ],
     "closures": [],
-    "effective_start": "2026-06-16",
+    "effective_start": "2026-07-13",
     "schedule_basis": "pool_hours",
     "sessions": []
   },
   "pdf_sha256": "1411e9cb9425888bac87c6d92279ddb7dd402dadfc0676ca438ae73ee7b4893e",
   "prompt_sha256": "2529b3401aac7f9b94d213be7af2b27264162b7f0941f293330790026c3b8ae7",
   "provider": "direct",
-  "schema_sha256": "de685f22a191de60e54dea56caffce56f72a20b0ccd3f17fa5868c3f78977858",
+  "schema_sha256": "83e30568488faa43b2796db02e2b2eee945e2f70bdb44b38a5b5a3b4ca086afa",
   "source_pdf_url": "https://fitnesssf.com/location/fillmore",
   "usage": {}
 }
