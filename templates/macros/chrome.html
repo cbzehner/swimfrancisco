@@ -4,8 +4,13 @@
   {%- set dynamic_labels = load_data(path="data/i18n/dynamic-labels.json") -%}
   {%- set dynamic_label = dynamic_labels.spot_label.by_source[label] | default(value=false) -%}
   {%- set dynamic_translation_key = dynamic_label.translation_key | default(value="") -%}
+  {#- Labels without a dynamic-labels entry are locale-neutral by contract:
+      the i18n generator only creates translation requirements for word
+      labels, and its check gates their coverage. Anything else (e.g. a
+      temperature range like "80–82°F") must render verbatim in every
+      locale, not just the default one. -#}
   {%- if dynamic_translation_key -%}{{- trans(key=dynamic_translation_key, lang=active_lang) -}}
-  {%- elif active_lang == config.default_language -%}{{- label -}}
+  {%- else -%}{{- label -}}
   {%- endif -%}
 {%- endmacro spot_label %}
 
