@@ -1,9 +1,19 @@
 name: schedules-extract
 
-# Auto-extracts SF Rec & Park pool schedule PDFs and opens a PR when
-# new artifacts are produced. Humans always review the resulting PR via
-# `just schedules-review` before merging — this workflow never edits
-# content/spots/ or reviewed.json files.
+# Auto-extracts pool schedules and opens (or refreshes) the rolling
+# `auto/schedules-extract` PR when new artifacts are produced. The
+# pipeline carries human attestation forward when a new capture extracts
+# a payload identical to the last human-reviewed one (writing
+# reviewed.json with `carried_from` provenance); pools whose payload
+# actually changed still require `just schedules-review` before merge.
+# This workflow never edits content/spots/.
+#
+# When every changed pool auto-verified, the PR is set to auto-merge on
+# green CI. Prerequisites for the fully-autonomous path: a
+# SCHEDULES_BOT_TOKEN secret (fine-grained PAT, contents+pull-requests
+# read/write — PRs made with the default GITHUB_TOKEN never trigger the
+# ci workflow), repo setting "Allow auto-merge", and a branch protection
+# rule on main requiring the `check` status.
 #
 # Public-repo safety: only `schedule` and `workflow_dispatch` triggers
 # (forks cannot trigger workflows that need our secrets). No
@@ -11,8 +21,9 @@ name: schedules-extract
 
 on:
   schedule:
-    # Mon 16:00 UTC = Mon 09:00 PT (after PST/PDT both)
-    - cron: '0 16 * * MON'
+    # Daily 16:00 UTC = 09:00 PT (after PST/PDT both). Cache-hit days
+    # produce no diff and stop at the detect step.
+    - cron: '0 16 * * *'
   workflow_dispatch:
 
 permissions:
@@ -31,6 +42,10 @@ jobs:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Pushes and PRs made with the default GITHUB_TOKEN do not
+          # trigger other workflows; the PAT makes CI run on the PR.
+          token: ${{ secrets.SCHEDULES_BOT_TOKEN || github.token }}
 
       - uses: actions/setup-python@v5
         with:
@@ -60,6 +75,11 @@ jobs:
         run: uv --project schedule-tools run schedules eval --stdout > tmp/eval.md
         continue-on-error: true
 
+      - name: Regenerate bulletin fingerprint
+        # Carried attestations add reviewed.json files, and the bulletin
+        # fingerprint/count must track the reviewed set (tests assert it).
+        run: node scripts/generate-bulletin.mjs
+
       - name: Detect new or changed artifacts
         id: detect
         run: |
@@ -79,11 +99,13 @@ jobs:
       - name: Open or update PR
         if: steps.detect.outputs.changed == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.SCHEDULES_BOT_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           DATE=$(date +%Y-%m-%d)
-          BRANCH="auto/schedules-extract-${DATE}"
+          # One rolling branch: daily runs refresh the same PR instead of
+          # piling up parallel week-stamped PRs.
+          BRANCH="auto/schedules-extract"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -103,12 +125,30 @@ jobs:
           git push --force origin "${BRANCH}"
 
           if EXISTING=$(gh pr list --head "${BRANCH}" --json number --jq '.[0].number') && [ -n "${EXISTING}" ]; then
-            gh pr edit "${EXISTING}" --body-file "${BODY_FILE}"
-            echo "Updated existing PR #${EXISTING}"
+            PR_NUMBER="${EXISTING}"
+            gh pr edit "${PR_NUMBER}" \
+              --title "chore(schedules): auto-extract ${DATE}" \
+              --body-file "${BODY_FILE}"
+            echo "Updated existing PR #${PR_NUMBER}"
           else
             gh pr create \
               --head "${BRANCH}" \
               --base main \
               --title "chore(schedules): auto-extract ${DATE}" \
               --body-file "${BODY_FILE}"
+            PR_NUMBER=$(gh pr list --head "${BRANCH}" --json number --jq '.[0].number')
+          fi
+
+          # Fully-autonomous path: nothing awaits a human (every changed
+          # pool carried its attestation forward), so merge on green CI.
+          # `--auto` needs repo setting "Allow auto-merge" plus a branch
+          # protection rule requiring the `check` status; if either is
+          # missing this logs a notice and leaves the PR open.
+          PENDING=$(uv --project schedule-tools run schedules pending-reviews)
+          if [ -z "${PENDING}" ]; then
+            gh pr merge "${PR_NUMBER}" --auto --squash \
+              || echo "::notice::auto-merge unavailable; PR #${PR_NUMBER} left open for manual merge"
+          else
+            echo "Pools awaiting human review:"
+            echo "${PENDING}"
           fi

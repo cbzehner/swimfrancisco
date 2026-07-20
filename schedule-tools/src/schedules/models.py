@@ -37,6 +37,7 @@ ReviewNoteKind = Literal[
     "grounding_coverage_low",
     "compare_provider_failed",
     "direct_extractor_note",
+    "review_carried_forward",
 ]
 
 

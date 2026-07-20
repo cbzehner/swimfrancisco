@@ -17,6 +17,7 @@ from .providers import extract as extract_with_provider
 from .providers.anthropic_provider import DEFAULT_MODEL as ANTHROPIC_DEFAULT_MODEL
 from .providers.gemini_provider import DEFAULT_MODEL as GEMINI_DEFAULT_MODEL
 from .registry import load_registry
+from .review import carry_forward_review
 from .reviewed_snapshots import load_reviewed_snapshot_from_path
 from .diff import compare_payloads
 from .report import write_report
@@ -80,6 +81,15 @@ def _build_unchanged(entry: PoolEntry, *, pdf_sha256: str, page_count: int, revi
         reviewed_file, expected_slug=entry.slug, expected_sha=pdf_sha256
     )
     payload = envelope["payload"]
+    review_notes = []
+    if envelope.get("carried_from"):
+        review_notes.append(
+            ReviewNote(
+                kind="review_carried_forward",
+                message=f"attestation carried forward from {envelope['carried_from']}",
+                severity="info",
+            )
+        )
     return Unchanged(
         **_identity_kwargs(entry),
         provider="reviewed-snapshot",
@@ -90,7 +100,7 @@ def _build_unchanged(entry: PoolEntry, *, pdf_sha256: str, page_count: int, revi
         closures_count=len(payload.get("closures") or []),
         effective_start=str(payload.get("effective_start") or ""),
         schedule_basis=payload.get("schedule_basis"),
-        review_notes=[],
+        review_notes=review_notes,
         artifact_paths={"reviewed-snapshot": str(reviewed_file)},
     )
 
@@ -189,6 +199,25 @@ def _process_entry(
                 grounding=grounding,
             )
 
+        # A payload identical to the last human-reviewed one needs no new
+        # review — carry the attestation to this capture. Bakeoff runs
+        # (--compare-with) always produce a full Extracted result.
+        if not compare_with:
+            carried = carry_forward_review(
+                slug=entry.slug,
+                review_dir=reviewed_file.parent,
+                pdf_sha256=fetch_result.sha256,
+                payload=payload,
+                ignore_effective_start=False,
+            )
+            if carried is not None:
+                return _build_unchanged(
+                    entry,
+                    pdf_sha256=fetch_result.sha256,
+                    page_count=fetch_result.page_count,
+                    reviewed_file=carried,
+                )
+
         # Review notes from three sources: PDF signals, grounding, prior-vs-current delta.
         review_notes: list[ReviewNote] = [
             *source_notes_for_signals(pdf_signals),
@@ -277,6 +306,24 @@ def _process_direct_entry(entry: PoolEntry, prior_snapshot: dict) -> PoolResult:
         )
 
     payload = extracted.payload
+
+    # Direct extractors stamp payload.effective_start with the fetch date, so
+    # the carry comparison ignores that one clock-derived field.
+    carried = carry_forward_review(
+        slug=entry.slug,
+        review_dir=fetch_result.path.parent,
+        pdf_sha256=fetch_result.sha256,
+        payload=payload,
+        ignore_effective_start=True,
+    )
+    if carried is not None:
+        return _build_unchanged(
+            entry,
+            pdf_sha256=fetch_result.sha256,
+            page_count=0,
+            reviewed_file=carried,
+        )
+
     review_notes = [
         ReviewNote(
             kind="direct_extractor_note",

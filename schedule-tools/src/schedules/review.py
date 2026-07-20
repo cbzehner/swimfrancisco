@@ -7,7 +7,7 @@ from pathlib import Path
 
 from ._time import pacific_today
 from .envelope import EnvelopeValidationError, validate_envelope
-from .paths import CONTENT_SPOTS_DIR, DATA_DIR, all_review_dirs, reviewed_path
+from .paths import CONTENT_SPOTS_DIR, DATA_DIR, all_review_dirs, relative_to_repo, reviewed_path
 from .project import ProjectError, project
 from .validate import validate
 
@@ -83,6 +83,81 @@ def find_review_candidates(
             )
     candidates.sort(key=lambda c: (c.fetch_date, c.slug))
     return candidates
+
+
+def carry_forward_review(
+    *,
+    slug: str,
+    review_dir: Path,
+    pdf_sha256: str,
+    payload: dict,
+    ignore_effective_start: bool,
+    data_root: Path = DATA_DIR,
+) -> Path | None:
+    """Re-use an existing human attestation for an identical payload.
+
+    When a new source capture extracts a payload byte-equal to the pool's
+    most recent human-reviewed payload, the human has already attested this
+    exact schedule — the source merely churned. Write ``reviewed.json`` into
+    the new capture dir (same envelope, new source sha, ``carried_from``
+    provenance) so the pool never enters the review queue. Any payload
+    difference returns None and review proceeds as usual.
+
+    ``ignore_effective_start`` is for direct extractors, which stamp
+    ``payload.effective_start`` with the fetch date; the field is
+    clock-derived there, not source-derived, so it must not block a carry.
+    """
+    prior = _latest_reviewed_snapshot(slug, exclude_dir=review_dir, data_root=data_root)
+    if prior is None:
+        return None
+    prior_path, prior_envelope = prior
+
+    if _comparable(payload, ignore_effective_start) != _comparable(
+        prior_envelope.get("payload", {}), ignore_effective_start
+    ):
+        return None
+
+    envelope = {
+        **prior_envelope,
+        "pdf_sha256": pdf_sha256,
+        "carried_from": relative_to_repo(prior_path),
+    }
+    validate_envelope(envelope)
+
+    target = review_dir / "reviewed.json"
+    target.write_text(json.dumps(envelope, indent=2) + "\n")
+    return target
+
+
+def _latest_reviewed_snapshot(
+    slug: str, *, exclude_dir: Path, data_root: Path
+) -> tuple[Path, dict] | None:
+    for review_dir in reversed(all_review_dirs(slug, root=data_root)):
+        if review_dir.resolve() == exclude_dir.resolve():
+            continue
+        reviewed_file = review_dir / "reviewed.json"
+        if not reviewed_file.exists():
+            continue
+        try:
+            envelope = json.loads(reviewed_file.read_text())
+            validate_envelope(envelope)
+        except (OSError, json.JSONDecodeError, EnvelopeValidationError):
+            continue
+        return reviewed_file, envelope
+    return None
+
+
+def _comparable(payload: dict, ignore_effective_start: bool) -> str:
+    # Older reviewed payloads omit collections newer extractors emit as
+    # empty ([] / null) — semantically identical, so empties are dropped
+    # from both sides before comparing.
+    trimmed = {
+        key: value
+        for key, value in payload.items()
+        if value not in (None, [], {})
+        and not (ignore_effective_start and key == "effective_start")
+    }
+    return json.dumps(trimmed, sort_keys=True, separators=(",", ":"))
 
 
 def _source_path(review_dir: Path) -> Path:

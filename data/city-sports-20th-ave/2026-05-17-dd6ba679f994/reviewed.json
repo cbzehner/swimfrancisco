@@ -1,0 +1,64 @@
+{
+  "slug": "city-sports-20th-ave",
+  "pdf_sha256": "dd6ba679f9947825ea92fad333247cb0f842b9d0980e9a7a8f1b194efb376007",
+  "reviewed_at": "2026-05-17",
+  "source_pdf_url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914",
+  "payload": {
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "23:00",
+        "evidence": "Mon-Thu: 5:00am - 11:00pm",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "23:00",
+        "evidence": "Mon-Thu: 5:00am - 11:00pm",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "23:00",
+        "evidence": "Mon-Thu: 5:00am - 11:00pm",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "thursday",
+        "end": "23:00",
+        "evidence": "Mon-Thu: 5:00am - 11:00pm",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "friday",
+        "end": "22:00",
+        "evidence": "Fri: 5:00am - 10:00pm",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "saturday",
+        "end": "20:00",
+        "evidence": "Sat-Sun: 8:00am - 8:00pm",
+        "label": "Club hours",
+        "start": "08:00"
+      },
+      {
+        "day": "sunday",
+        "end": "20:00",
+        "evidence": "Sat-Sun: 8:00am - 8:00pm",
+        "label": "Club hours",
+        "start": "08:00"
+      }
+    ],
+    "closures": [],
+    "schedule_basis": "facility_hours",
+    "effective_start": "2026-05-17",
+    "sessions": []
+  },
+  "carried_from": "data/city-sports-20th-ave/2026-05-17-88e72fa59fa3/reviewed.json"
+}
