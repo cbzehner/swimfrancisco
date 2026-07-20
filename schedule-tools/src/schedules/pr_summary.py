@@ -254,17 +254,8 @@ def _render_whats_here(changed: dict[str, dict[str, list[tuple[str, str]]]]) -> 
 
 def _render_review(branch: str, changed_slugs: list[str]) -> list[str]:
     minutes = max(_REVIEW_MIN_PER_POOL, len(changed_slugs) * _REVIEW_MIN_PER_POOL)
-    if len(changed_slugs) == 1:
-        slug = changed_slugs[0]
-        review_step = (
-            f"`just schedules-review --slug {slug}` — opens the PDF and a seeded JSON in `$EDITOR`"
-        )
-    else:
-        first = changed_slugs[0]
-        review_step = (
-            f"For each pool, `just schedules-review --slug <slug>` — opens its PDF and a seeded JSON in `$EDITOR` "
-            f"(start with `{first}`)"
-        )
+    first = changed_slugs[0]
+    review_step = f"Run `just schedules-review` and review the browser queue (start with `{first}`)"
 
     return [
         f"## Review (~{minutes} min)",
@@ -272,7 +263,7 @@ def _render_review(branch: str, changed_slugs: list[str]) -> list[str]:
         f"- [ ] `git fetch origin && git checkout {branch}`",
         f"- [ ] {review_step}",
         "- [ ] Read each session row against the PDF cell it claims to come from. Drop invented or misclassified rows, fix wrong days/times, leave correct rows alone.",
-        "- [ ] Save and quit. The CLI projects the verified payload into `content/spots/<slug>.md`.",
+        "- [ ] Confirm every source cell, then choose **Save & next pool**. The site projects the verified payload into `content/spots/<slug>.md`.",
         "- [ ] Commit `reviewed.json` and the projected MD, push, merge.",
         "",
         "Skip this week → close the PR. Next Monday will produce another.",

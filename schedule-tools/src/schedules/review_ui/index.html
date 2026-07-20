@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Schedule Review · SwimFrancisco</title>
+  <link rel="stylesheet" href="/brand/main.css">
+  <link rel="stylesheet" href="/review.css">
+</head>
+<body>
+  <a class="skip-link" href="#editor">Skip to schedule editor</a>
+  <header class="review-header">
+    <a class="site-title" href="https://swimfrancisco.com">SWIM<span>FRANCISCO</span></a>
+    <div>
+      <p class="eyebrow">Schedule desk</p>
+      <p id="queue-count" class="queue-count">Loading review queue…</p>
+    </div>
+  </header>
+
+  <main class="review-shell">
+    <nav class="queue" aria-label="Pool review queue">
+      <p class="eyebrow">On deck</p>
+      <div id="queue-list"></div>
+    </nav>
+
+    <section id="empty" class="empty" hidden>
+      <p class="eyebrow">All clear</p>
+      <h1>Every schedule is reviewed.</h1>
+      <p>The water’s fine. Commit the reviewed data and projected spot pages.</p>
+    </section>
+
+    <div id="workspace" class="workspace" hidden>
+      <section id="source-panel" class="source-panel">
+        <div class="panel-bar">
+          <div>
+            <p class="eyebrow">Source schedule</p>
+            <strong id="source-label"></strong>
+          </div>
+          <div class="source-actions">
+            <label id="pdf-page-control">Page <input id="pdf-page" type="number" value="1" min="1" inputmode="numeric"></label>
+            <button id="zoom-out" class="small-button" type="button" aria-label="Zoom out">−</button>
+            <output id="zoom-label">Fit width</output>
+            <button id="zoom-in" class="small-button" type="button" aria-label="Zoom in">+</button>
+            <a id="source-new-tab" class="small-button" target="_blank" rel="noreferrer">Open live official</a>
+            <button id="fullscreen-source" class="primary-button" type="button">Full screen</button>
+          </div>
+        </div>
+        <div class="source-cursor" aria-label="Source review position">
+          <span class="eyebrow">Review cursor</span>
+          <div id="day-cursor" class="day-cursor"></div>
+          <span id="freshness-state" class="freshness-state" role="status">Checking source…</span>
+          <button id="freshness-action" class="small-button" type="button" hidden></button>
+          <button id="mark-day" class="small-button" type="button">Mark checked</button>
+        </div>
+        <iframe id="source-frame" title="Source schedule"></iframe>
+      </section>
+
+      <section id="editor" class="editor" tabindex="-1">
+        <div class="panel-bar editor-heading">
+          <div>
+            <p class="eyebrow">Verified structure</p>
+            <h1 id="pool-name"></h1>
+          </div>
+          <span id="save-state" role="status"></span>
+        </div>
+
+        <div class="schedule-meta">
+          <label>Effective start <input id="effective-start" type="date"></label>
+          <label>Effective end <input id="effective-end" type="date"></label>
+          <label>Basis <select id="schedule-basis"></select></label>
+        </div>
+
+        <div id="collections"></div>
+
+        <footer class="save-bar">
+          <label class="attestation"><input id="attested" type="checkbox"> I checked every source cell for this schedule.</label>
+          <button id="save-next" class="primary-button" type="button">Save &amp; next pool →</button>
+        </footer>
+      </section>
+    </div>
+  </main>
+  <template id="row-template"><div class="data-row"></div></template>
+  <script src="/review.js" defer></script>
+</body>
+</html>
