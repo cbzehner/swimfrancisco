@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import io
 import zipfile
-from datetime import date, time
+from datetime import date, time, timedelta
 
 import pytest
 from openpyxl import Workbook
@@ -171,6 +171,88 @@ def test_koret_google_sheet_extractor_reads_dated_notice_closure(tmp_path):
         "end_time": "10:30",
         "reason": "Change from long course to short course",
     }]
+
+
+def test_koret_notice_closure_rolls_year_forward(tmp_path, monkeypatch):
+    monkeypatch.setattr(direct_sources, "pacific_today", lambda: date(2026, 12, 20))
+    sheets = {
+        day: [[day], ["Hours: 7am-7pm"]]
+        for day in ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
+    }
+    sheets["Weekend"] = [[None, "Saturday"], ["Sunday"]]
+    sheets["Long Course Notice"] = [["Long Course Notice"], ["On 1/5 the pool will be closed from 8:30-10:30 to change back to short course."]]
+    payload = _extract_koret(_koret_workbook(tmp_path, sheets))
+
+    assert payload["closures"][0]["start"] == "2027-01-05"
+
+
+def test_koret_closed_banner_weekday_emits_closure_and_keeps_sessions(tmp_path):
+    workbook = Workbook()
+    workbook.remove(workbook.active)
+    for day in ("Monday", "Tuesday", "Wednesday", "Thursday"):
+        sheet = workbook.create_sheet(day)
+        sheet.append([day])
+        sheet.append(["Hours: 7am-7pm"])
+    friday = workbook.create_sheet("Friday")
+    friday.append(["Friday"])
+    friday.append(["Closed Juneteenth"])
+    friday.append(["Hours: 7am-7pm"])
+    friday.merge_cells("A2:I2")
+    weekend = workbook.create_sheet("Weekend")
+    weekend.append([None, "Saturday"])
+    weekend.append(["Sunday"])
+    workbook.create_sheet("Long Course Notice")
+    path = tmp_path / "koret.xlsx"
+    workbook.save(path)
+
+    payload = _extract_koret(path)
+
+    today = direct_sources.pacific_today()
+    expected = (today + timedelta(days=(4 - today.weekday()) % 7)).isoformat()
+    assert {"start": expected, "end": expected, "reason": "Juneteenth"} in payload["closures"]
+    assert any(session["day"] == "friday" for session in payload["sessions"])
+
+
+def test_koret_ordinal_closures_only_accept_real_saturdays(tmp_path):
+    sheets = {
+        day: [[day], ["Hours: 7am-7pm"]]
+        for day in ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
+    }
+    sheets["Weekend"] = [[None, "Saturday"], [time(8), "slow"], [time(16), "slow"], ["Sunday"], ["Saturday CLOSED 31ST"]]
+    payload = _extract_koret(_koret_workbook(tmp_path, sheets))
+
+    for closure in payload["closures"]:
+        assert date.fromisoformat(closure["start"]).weekday() == 5
+
+
+def test_koret_closed_block_reaching_last_grid_row_is_subtracted(tmp_path):
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Monday"
+    sheet.append(["Monday"])
+    sheet.append(["Hours: 7am-7pm"])
+    sheet.append([None, "Lane 1", "Lane 2", "Lane 3", "Lane 4", "Lane 5", "Lane 6", "Lane 7", "Lane 8"])
+    sheet.append([time(7), "fast"])
+    sheet.append([time(8), "fast"])
+    sheet.append([time(9), "Closed for cleaning"])
+    sheet.append([time(10)])
+    sheet.merge_cells("B6:I7")
+    for day in ("Tuesday", "Wednesday", "Thursday", "Friday"):
+        other = workbook.create_sheet(day)
+        other.append([day])
+        other.append(["Hours: 7am-7pm"])
+    weekend = workbook.create_sheet("Weekend")
+    weekend.append([None, "Saturday"])
+    weekend.append(["Sunday"])
+    workbook.create_sheet("Long Course Notice")
+    path = tmp_path / "koret.xlsx"
+    workbook.save(path)
+
+    payload = _extract_koret(path)
+
+    assert [(session["start"], session["end"]) for session in payload["sessions"] if session["day"] == "monday"] == [
+        ("07:00", "09:00"),
+    ]
 
 
 def test_pomeroy_html_extractor_handles_table_rowspans():

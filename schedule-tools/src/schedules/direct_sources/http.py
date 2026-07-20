@@ -8,7 +8,7 @@ from io import BytesIO
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from zipfile import ZipFile
+from zipfile import BadZipFile, ZipFile
 
 import httpx
 
@@ -74,24 +74,30 @@ def fetch_koret_workbook(slug: str, workbook_url: str, *, cache_root: Path = DAT
         "User-Agent": "SwimFranciscoScheduleBot/0.1 (+https://swimfrancisco.com)",
         "Accept": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf;q=0.9,*/*;q=0.8",
     }
-    with httpx.Client(follow_redirects=True, timeout=30.0, headers=headers) as client:
-        export_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export"
-        workbook_response = client.get(export_url, params={"format": "xlsx"})
-        workbook_response.raise_for_status()
-        pdf_response = client.get(export_url, params={
-            "format": "pdf",
-            "portrait": "false",
-            "fitw": "true",
-            "sheetnames": "true",
-            "pagenumbers": "true",
-            "gridlines": "false",
-            "fzr": "true",
-        })
-        pdf_response.raise_for_status()
+    try:
+        with httpx.Client(follow_redirects=True, timeout=30.0, headers=headers) as client:
+            export_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export"
+            workbook_response = client.get(export_url, params={"format": "xlsx"})
+            workbook_response.raise_for_status()
+            pdf_response = client.get(export_url, params={
+                "format": "pdf",
+                "portrait": "false",
+                "fitw": "true",
+                "sheetnames": "true",
+                "pagenumbers": "true",
+                "gridlines": "false",
+                "fzr": "true",
+            })
+            pdf_response.raise_for_status()
+    except httpx.HTTPError as exc:
+        raise DirectSourceError(f"Failed to fetch {slug} workbook: {exc}") from exc
 
     workbook_bytes = workbook_response.content
     pdf_bytes = pdf_response.content
-    sha256 = _xlsx_content_sha256(workbook_bytes)
+    try:
+        sha256 = _xlsx_content_sha256(workbook_bytes)
+    except BadZipFile as exc:
+        raise DirectSourceError(f"{slug} workbook export is not a valid XLSX (interstitial page?)") from exc
     slug_dir = cache_root / slug
     slug_dir.mkdir(parents=True, exist_ok=True)
     prefix = sha256[:12]
