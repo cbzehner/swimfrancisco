@@ -17,7 +17,7 @@ export const SPOTS: SpotConfig[] = [
     slug: "aquatic-park",
     tempStationId: "9414290",
     tempStationType: "noaa",
-    tempFallbackStationId: "9414750",
+    tempFallbackStationId: "9414863",
     tideStationId: "9414290",
   },
   {
@@ -36,7 +36,7 @@ export const SPOTS: SpotConfig[] = [
     slug: "crissy-field",
     tempStationId: "9414290",
     tempStationType: "noaa",
-    tempFallbackStationId: "9414750",
+    tempFallbackStationId: "9414863",
     tideStationId: "9414290",
   },
   {
