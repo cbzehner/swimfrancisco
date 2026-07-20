@@ -322,10 +322,10 @@ test("computeNextOpenOffset respects effective-window closures", () => {
     effective_end: "2026-06-06",
   };
 
-  const before = new Date("2026-05-05T08:00:00-07:00");
+  const before = new Date("2026-05-05T08:00:00");
   assert.equal(computeNextOpenOffset(schedule, before), 7 * 1440 - 30);
 
-  const after = new Date("2026-06-09T08:00:00-07:00");
+  const after = new Date("2026-06-09T08:00:00");
   assert.equal(computeNextOpenOffset(schedule, after), Number.POSITIVE_INFINITY);
 });
 
@@ -528,7 +528,7 @@ test("computeWindowAvailability trims sessions around partial closures", () => {
       reason: "Inservice Training",
     }],
   };
-  const horizon = resolveHorizon("this-afternoon", new Date("2026-06-06T11:00:00-07:00"));
+  const horizon = resolveHorizon("this-afternoon", new Date("2026-06-06T11:00:00"));
   const result = computeWindowAvailability(schedule, horizon, ["lap_swim"]);
   assert.equal(result.status, "AVAILABLE");
   assert.equal(result.bestSession.start, 13 * 60);
@@ -549,7 +549,7 @@ test("computeAccessWindowAvailability trims access around partial closures", () 
       reason: "Staff training",
     }],
   };
-  const horizon = resolveHorizon("this-afternoon", new Date("2026-06-06T11:00:00-07:00"));
+  const horizon = resolveHorizon("this-afternoon", new Date("2026-06-06T11:00:00"));
   const result = computeAccessWindowAvailability(schedule, horizon);
   assert.equal(result.status, "ACCESS");
   assert.equal(result.next, "13:00-16:00");
@@ -620,7 +620,7 @@ test("computeDetailStatus treats pre-season as a synthetic closure", () => {
     effective_start: "2026-05-12",
     effective_end: "2026-06-06",
   };
-  const before = new Date("2026-05-05T15:00:00-07:00");
+  const before = new Date("2026-05-05T15:00:00");
   const result = computeDetailStatus(schedule, before);
   assert.equal(result.kind, "CLOSED_TODAY");
   assert.equal(result.closureKind, "PRE_SEASON");
@@ -634,7 +634,7 @@ test("computeDetailStatus treats post-season as a synthetic closure", () => {
     effective_start: "2026-05-12",
     effective_end: "2026-06-06",
   };
-  const after = new Date("2026-06-09T08:00:00-07:00");
+  const after = new Date("2026-06-09T08:00:00");
   const result = computeDetailStatus(schedule, after);
   assert.equal(result.kind, "CLOSED_TODAY");
   assert.equal(result.closureKind, "POST_SEASON");
@@ -650,7 +650,7 @@ test("computeStatus dashboard line for pre-season points at schedule start", () 
     effective_start: "2026-05-12",
     effective_end: "2026-06-06",
   };
-  const before = new Date("2026-05-05T15:00:00-07:00");
+  const before = new Date("2026-05-05T15:00:00");
   const { status, next, nextKind, nextArgs } = computeStatus(schedule, before);
   assert.equal(status, "CLOSED");
   assert.equal(next, "Schedule starts May 12, 2026");
@@ -663,7 +663,7 @@ test("computeStatus dashboard line for same-day closure surfaces the reason", ()
     sessions: [{ day: "saturday", type: "lap_swim", start: "09:00", end: "10:30" }],
     closures: [{ start: "2026-06-06", end: "2026-06-06", reason: "Inservice Training", reason_code: "in_service_training" }],
   };
-  const during = new Date("2026-06-06T13:25:00-07:00");
+  const during = new Date("2026-06-06T13:25:00");
   const { status, next, nextKind, nextArgs } = computeStatus(schedule, during);
   assert.equal(status, "CLOSED");
   assert.equal(next, "Inservice Training");
@@ -678,7 +678,7 @@ test("computeStatus dashboard line for post-season uses 'Schedule ended'", () =>
     effective_start: "2026-05-12",
     effective_end: "2026-06-06",
   };
-  const after = new Date("2026-06-09T08:00:00-07:00");
+  const after = new Date("2026-06-09T08:00:00");
   const { status, next, nextKind, nextArgs } = computeStatus(schedule, after);
   assert.equal(status, "CLOSED");
   assert.equal(next, "Schedule ended Jun 6, 2026");
@@ -695,15 +695,15 @@ test("findActiveClosure respects start_time/end_time on partial-day closures", (
     reason: "Aquatics training",
   }];
   // 10:00 AM — before the closure window — pool is open.
-  const before = new Date("2026-05-21T10:00:00-07:00");
+  const before = new Date("2026-05-21T10:00:00");
   assert.equal(findActiveClosure(closures, before), null);
   // 12:00 PM — inside the window — closed.
-  const during = new Date("2026-05-21T12:00:00-07:00");
+  const during = new Date("2026-05-21T12:00:00");
   const active = findActiveClosure(closures, during);
   assert.ok(active);
   assert.equal(active.reason, "Aquatics training");
   // 14:00 — boundary — open (end is exclusive).
-  const after = new Date("2026-05-21T14:00:00-07:00");
+  const after = new Date("2026-05-21T14:00:00");
   assert.equal(findActiveClosure(closures, after), null);
 });
 
@@ -718,7 +718,7 @@ test("computeStatus dashboard line for partial-day closure shows the time window
       reason: "Aquatics training",
     }],
   };
-  const during = new Date("2026-05-21T12:00:00-07:00");
+  const during = new Date("2026-05-21T12:00:00");
   const { status, next, nextKind, nextArgs } = computeStatus(schedule, during);
   assert.equal(status, "CLOSED");
   // No "through DATE" copy when a partial window is present — just the
@@ -745,7 +745,7 @@ test("findNextSession skips sessions inside a partial-day closure", () => {
   // Tuesday morning, looking ahead. The 11:30 Thursday lap swim falls in
   // the partial closure and must be skipped; the 16:00 Thursday session
   // is the real next slot.
-  const now = new Date("2026-05-19T10:00:00-07:00");
+  const now = new Date("2026-05-19T10:00:00");
   const next = findNextDropIn(schedule, now);
   assert.ok(next);
   assert.equal(next.day, "thursday");
@@ -756,7 +756,7 @@ test("computeStatus surfaces 'Schedule not yet verified' on bare schedules", () 
   // No sessions, no closures, no effective window — the canonical
   // "we have no idea what this pool is doing" state.
   const empty = { sessions: [], closures: [] };
-  const t = new Date("2026-05-05T15:00:00-07:00");
+  const t = new Date("2026-05-05T15:00:00");
   const { status, next } = computeStatus(empty, t);
   assert.equal(status, "CLOSED");
   assert.equal(next, "Schedule not yet verified");
@@ -769,7 +769,7 @@ test("computeDetailStatus runs normal logic inside the effective window", () => 
     effective_start: "2026-05-12",
     effective_end: "2026-06-06",
   };
-  const inside = new Date("2026-05-19T08:00:00-07:00");
+  const inside = new Date("2026-05-19T08:00:00");
   const result = computeDetailStatus(schedule, inside);
   assert.equal(result.kind, "OPEN");
 });
@@ -779,7 +779,7 @@ test("computeDetailStatus ignores effective_start when missing", () => {
     sessions: [{ day: "tuesday", type: "lap_swim", start: "07:30", end: "09:30" }],
     closures: [],
   };
-  const t = new Date("2026-05-19T08:00:00-07:00");
+  const t = new Date("2026-05-19T08:00:00");
   const result = computeDetailStatus(schedule, t);
   assert.equal(result.kind, "OPEN");
 });
@@ -813,20 +813,20 @@ const NORTH_BEACH_TRANSITION_SCHEDULE = {
 };
 
 test("queued schedule keeps North Beach current schedule active on June 6", () => {
-  const duringClosure = new Date("2026-06-06T10:00:00-07:00");
+  const duringClosure = new Date("2026-06-06T10:00:00");
   const closed = computeStatus(NORTH_BEACH_TRANSITION_SCHEDULE, duringClosure);
   assert.equal(closed.status, "CLOSED");
   assert.equal(closed.next, "Closed 09:00–13:00");
   assert.equal(closed.nextKind, "closed_window");
 
-  const afterClosure = new Date("2026-06-06T13:01:00-07:00");
+  const afterClosure = new Date("2026-06-06T13:01:00");
   const open = computeStatus(NORTH_BEACH_TRANSITION_SCHEDULE, afterClosure);
   assert.equal(open.status, "OPEN");
   assert.equal(open.next, "Closes 14:00");
 });
 
 test("queued schedule surfaces start date during gap before summer schedule", () => {
-  const gap = new Date("2026-06-07T10:00:00-07:00");
+  const gap = new Date("2026-06-07T10:00:00");
   const status = computeStatus(NORTH_BEACH_TRANSITION_SCHEDULE, gap);
   assert.equal(status.status, "CLOSED");
   assert.equal(status.next, "Schedule starts Jun 9, 2026");
@@ -835,7 +835,7 @@ test("queued schedule surfaces start date during gap before summer schedule", ()
 });
 
 test("queued schedule becomes active on its effective date", () => {
-  const startDay = new Date("2026-06-09T07:30:00-07:00");
+  const startDay = new Date("2026-06-09T07:30:00");
   const active = resolveActiveSchedule(NORTH_BEACH_TRANSITION_SCHEDULE, startDay);
   assert.equal(active.effective_start, "2026-06-09");
   const status = computeStatus(NORTH_BEACH_TRANSITION_SCHEDULE, startDay);
@@ -926,11 +926,11 @@ test("queued reopening schedule handles Sava repair closure through June 8", () 
       },
     ],
   };
-  const before = computeStatus(schedule, new Date("2026-06-08T12:00:00-07:00"));
+  const before = computeStatus(schedule, new Date("2026-06-08T12:00:00"));
   assert.equal(before.status, "CLOSED");
   assert.equal(before.next, "Closed through Jun 8, 2026");
 
-  const reopened = computeStatus(schedule, new Date("2026-06-09T07:00:00-07:00"));
+  const reopened = computeStatus(schedule, new Date("2026-06-09T07:00:00"));
   assert.equal(reopened.status, "OPEN");
   assert.equal(reopened.next, "Closes 10:30");
 });
