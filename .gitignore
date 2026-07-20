@@ -38,3 +38,10 @@ test-results/
 
 # Lavish Editor review artifacts (local design-review surfaces)
 .lavish/
+
+# Local agent/tool state
+.claude/settings.local.json
+.codex/
+
+# Worker build artifacts
+worker/out/

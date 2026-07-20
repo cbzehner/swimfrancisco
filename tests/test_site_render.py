@@ -531,10 +531,99 @@ def test_pool_meta_dates_render_in_human_format(built_site: Path) -> None:
     assert html.index("recently reopened after a $9M renovation") < html.index(effective_copy)
 
 
-def test_transition_closure_banners_stay_inside_active_schedule_window(built_site: Path) -> None:
-    html = _read(built_site, "north-beach-pool")
-    assert "JUL 4 </span><span class=closure-banner-reason>Independence Day" in html
-    assert "JUN 19 </span><span class=closure-banner-reason>Holiday Closure" not in html
+_EN_MONTH_LABELS = [
+    "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+    "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
+]
+
+
+def _en_date_label(iso: str) -> str:
+    _, month, day = (int(part) for part in iso.split("-"))
+    return f"{_EN_MONTH_LABELS[month - 1]} {day}"
+
+
+def _expected_banner_date_labels(schedules: list, today_iso: str, window_end_iso: str) -> list[str]:
+    from schedules.merge import pick_active_schedule
+
+    active = pick_active_schedule(schedules, today_iso)
+    if not active:
+        return []
+    effective_start = active.get("effective_start") or "0000-00-00"
+    effective_end = active.get("effective_end") or "9999-12-31"
+    labels = []
+    for closure in active.get("closures") or []:
+        in_window = closure["start"] <= window_end_iso and closure["end"] >= today_iso
+        in_effective = closure["end"] >= effective_start and closure["start"] <= effective_end
+        if not (in_window and in_effective):
+            continue
+        if closure["start"] == closure["end"]:
+            label = _en_date_label(closure["start"])
+            if closure.get("start_time") and closure.get("end_time"):
+                label += f" {closure['start_time']}–{closure['end_time']}"
+        else:
+            label = f"{_en_date_label(closure['start'])} – {_en_date_label(closure['end'])}"
+        labels.append(label)
+    for exception in active.get("access_exceptions") or []:
+        if today_iso <= exception["date"] <= window_end_iso and effective_start <= exception["date"] <= effective_end:
+            labels.append(f"{_en_date_label(exception['date'])} {exception['start']}–{exception['end']}")
+    return labels
+
+
+def test_expected_banner_labels_flag_only_active_window_closures() -> None:
+    """Fixed-date fixture for the expectation builder used below: a closure
+    in the expired schedule must not surface, one inside the active window
+    must."""
+    schedules = [
+        {
+            "effective_start": "2026-03-17",
+            "effective_end": "2026-06-06",
+            "closures": [{"start": "2026-06-19", "end": "2026-06-19", "reason": "Holiday Closure"}],
+        },
+        {
+            "effective_start": "2026-06-09",
+            "effective_end": "2026-08-10",
+            "closures": [{"start": "2026-07-04", "end": "2026-07-04", "reason": "Independence Day"}],
+        },
+    ]
+    assert _expected_banner_date_labels(schedules, "2026-07-01", "2026-07-15") == ["JUL 4"]
+
+
+def test_closure_banners_match_active_schedule_window(built_site: Path) -> None:
+    """Pin the template's upcoming-closure banners to the frontmatter data.
+
+    The template renders closure and access-exception banners only for the
+    active schedule and only inside [today, today+14d]. Recompute that
+    selection in Python for every spot and require the rendered banners to
+    match exactly: in-window closures must render, and closures from
+    expired or upcoming-but-inactive schedules must never leak. (An earlier
+    version asserted a literal "JUL 4" banner and rotted once the date
+    passed.)
+    """
+    from datetime import timedelta
+
+    from schedules._time import pacific_today
+
+    today = pacific_today()
+    today_iso = today.isoformat()
+    window_end_iso = (today + timedelta(days=14)).isoformat()
+    for spot_md in sorted((ROOT / "content" / "spots").glob("*.md")):
+        if len(spot_md.suffixes) != 1 or spot_md.stem.startswith("_"):
+            continue
+        page = built_site / "spots" / spot_md.stem / "index.html"
+        if not page.exists():
+            continue
+        frontmatter, _ = _markdown_frontmatter_and_body(spot_md)
+        schedules = frontmatter.get("extra", {}).get("schedules") or []
+        expected = _expected_banner_date_labels(schedules, today_iso, window_end_iso)
+        rendered = [
+            " ".join(label.split())
+            for label in re.findall(
+                r'<span class="?closure-banner-date"?>(.*?)</span>',
+                page.read_text(),
+                flags=re.S,
+            )
+        ]
+        assert sorted(rendered) == sorted(expected), spot_md.stem
 
 
 @pytest.mark.parametrize("slug", ["balboa-pool", "north-beach-pool"])
