@@ -122,6 +122,33 @@ def test_koret_google_sheet_extractor_reads_weekday_and_weekend_hours(tmp_path):
     assert any(s["day"] == "sunday" and s["start"] == "08:00" and s["end"] == "18:00" for s in payload["sessions"])
 
 
+def test_koret_weekend_stated_hours_win_over_the_lane_grid(tmp_path):
+    """The Weekend sheet states "Hours 8am-4pm" with no colon, over a grid whose
+    lanes stay assigned until 5pm for the USF squads. Closing time is 4pm; the
+    Sunday banner carries "(Summer Hours)" but no range and must not be read as
+    one."""
+    sheets = {
+        day: [[day], ["Hours: 7am-7pm (Summer Hours)"], [time(6), "slow"], [time(20), "slow"]]
+        for day in ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
+    }
+    sheets["Weekend"] = [
+        [None, "Saturday"],
+        [None, "Hours 8am-4pm (Summer Hours)"],
+        [time(8), "slow"],
+        [time(17), "slow"],
+        ["Sunday"],
+        ["KORET CLOSED (Summer Hours)"],
+        [time(8), "slow"],
+        [time(17), "slow"],
+    ]
+    payload = _extract_koret(_koret_workbook(tmp_path, sheets))
+
+    saturday = [s for s in payload["sessions"] if s["day"] == "saturday"]
+    assert [(s["start"], s["end"]) for s in saturday] == [("08:00", "16:00")]
+    assert "8am-4pm" in saturday[0]["evidence"]
+    assert not [s for s in payload["sessions"] if s["day"] == "sunday"]
+
+
 def test_koret_google_sheet_extractor_splits_hours_around_closed_grid_rows(tmp_path):
     workbook = Workbook()
     sheet = workbook.active

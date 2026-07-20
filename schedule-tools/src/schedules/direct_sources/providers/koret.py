@@ -44,7 +44,7 @@ def _extract_koret(path: Path) -> dict:
 
 
 def _weekday_sessions(sheet: Worksheet) -> list[dict]:
-    hours = _headline_hours(sheet)
+    hours = _headline_hours(sheet, start_row=1, end_row=sheet.max_row)
     if hours is None:
         hours = _time_grid_range(sheet, start_row=1, end_row=sheet.max_row)
     if hours is None:
@@ -68,7 +68,9 @@ def _weekend_schedule(sheet: Worksheet) -> tuple[list[dict], list[dict]]:
         raise DirectSourceError("Weekend: Sunday marker not found")
 
     sessions: list[dict] = []
-    saturday = _time_grid_range(sheet, start_row=1, end_row=sunday_row - 1)
+    saturday = _headline_hours(sheet, start_row=1, end_row=sunday_row - 1, label="Saturday")
+    if saturday is None:
+        saturday = _time_grid_range(sheet, start_row=1, end_row=sunday_row - 1)
     if saturday is not None:
         start, end, evidence = saturday
         sessions.append(_session("saturday", "lap_swim", start, end, evidence))
@@ -79,7 +81,9 @@ def _weekend_schedule(sheet: Worksheet) -> tuple[list[dict], list[dict]]:
         for column in range(1, sheet.max_column + 1)
     )
     if "closed" not in sunday_text.lower():
-        sunday = _time_grid_range(sheet, start_row=sunday_row + 1, end_row=sheet.max_row)
+        sunday = _headline_hours(sheet, start_row=sunday_row, end_row=sheet.max_row, label="Sunday")
+        if sunday is None:
+            sunday = _time_grid_range(sheet, start_row=sunday_row + 1, end_row=sheet.max_row)
         if sunday is not None:
             start, end, evidence = sunday
             sessions.append(_session("sunday", "lap_swim", start, end, evidence))
@@ -88,14 +92,24 @@ def _weekend_schedule(sheet: Worksheet) -> tuple[list[dict], list[dict]]:
     return sessions, closures
 
 
-def _headline_hours(sheet: Worksheet) -> tuple[str, str, str] | None:
-    for row in sheet.iter_rows():
-        for cell in row:
-            value = str(cell.value or "").strip()
-            if "hours:" not in value.lower():
+def _headline_hours(
+    sheet: Worksheet, *, start_row: int, end_row: int, label: str | None = None
+) -> tuple[str, str, str] | None:
+    """The stated opening hours, which are authoritative over the lane grid: the
+    grid runs past closing on days the USF teams have the water. The colon is
+    optional because the Weekend sheet writes "Hours 8am-4pm" without one, and
+    "(Summer Hours)" appears inside banners carrying no range at all — so a cell
+    only counts once a range actually parses out of it."""
+    for row in range(start_row, end_row + 1):
+        for column in range(1, sheet.max_column + 1):
+            value = str(sheet.cell(row, column).value or "").strip()
+            if "hours" not in value.lower():
                 continue
-            start, end = _parse_hours_range(value)
-            return start, end, f"{sheet.title} {value}"
+            try:
+                start, end = _parse_hours_range(value)
+            except DirectSourceError:
+                continue
+            return start, end, f"{label or sheet.title} {value}"
     return None
 
 
