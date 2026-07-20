@@ -1,9 +1,6 @@
 from __future__ import annotations
 
 import os
-import shlex
-import subprocess
-
 import click
 
 from .models import Aborted, Extracted, PoolResult, Skipped, Unchanged
@@ -17,12 +14,7 @@ from .pipeline import run_pipeline
 from .pr_summary import render_pr_body, staged_data_has_meaningful_changes
 from .report import result_counts
 from .project import ProjectError, project as _project
-from .review import (
-    FinalizeError,
-    finalize_draft,
-    find_review_candidates,
-    seed_draft,
-)
+from .review_server import ReviewApp, serve_review_app
 
 
 def _default_provider() -> str:
@@ -107,44 +99,18 @@ def project_command(slug: str) -> None:
 
 
 @cli.command("review")
-@click.option("--slug", help="Restrict review to this pool slug.")
-def review_command(slug: str | None) -> None:
-    """Approve the next pipeline-extracted pool schedule."""
+@click.option("--port", type=int, default=0, help="Local port (default: choose an available port).")
+@click.option("--no-open", is_flag=True, help="Do not open the browser automatically.")
+def review_command(port: int, no_open: bool) -> None:
+    """Open the local browser-based schedule reviewer."""
     if not DATA_DIR.is_dir():
         click.echo("nothing to review (run `schedules extract` first?)")
         return
 
-    candidates = find_review_candidates(
-        data_root=DATA_DIR,
-        only_slug=slug,
-    )
-    if not candidates:
+    if not ReviewApp(data_root=DATA_DIR, content_spots_dir=CONTENT_SPOTS_DIR).list_reviews():
         click.echo("nothing to review")
         return
-
-    candidate = candidates[0]
-    draft = seed_draft(candidate=candidate, data_root=DATA_DIR)
-    click.echo(f"Reviewing {candidate.slug} ({candidate.pdf_sha256[:12]})")
-    click.echo(f"Source: {candidate.source_path}")
-    click.echo(f"Draft:  {draft}")
-
-    if candidate.source_path and candidate.source_path.exists():
-        try:
-            subprocess.run(["open", str(candidate.source_path)], check=False)
-        except FileNotFoundError:
-            click.echo(f"(note: `open` not available; source at {candidate.source_path})")
-
-    editor = os.getenv("EDITOR") or "hx"
-    subprocess.run([*shlex.split(editor), str(draft)], check=False)
-
-    try:
-        final = finalize_draft(
-            reviewed_json_path=draft,
-            content_spots_dir=CONTENT_SPOTS_DIR,
-        )
-    except FinalizeError as exc:
-        raise click.ClickException(str(exc)) from exc
-    click.echo(f"Wrote {final}")
+    serve_review_app(port=port, open_browser=not no_open)
 
 
 @cli.command("pr-summary")

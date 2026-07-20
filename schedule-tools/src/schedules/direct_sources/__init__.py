@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 
 from .._time import pacific_today
 from ..models import PoolEntry
@@ -9,6 +10,7 @@ from .errors import DirectSourceError
 from .http import (
     DirectFetchResult,
     _cache_text,
+    _xlsx_content_sha256,
     _payload_fingerprint,
     fetch_koret_workbook,
     fetch_text,
@@ -34,6 +36,7 @@ __all__ = [
     "extract_direct",
     "fetch_koret_workbook",
     "fetch_text",
+    "_xlsx_content_sha256",
 ]
 
 
@@ -45,13 +48,14 @@ class DirectExtraction:
     notes: list[str]
 
 
-def extract_direct(entry: PoolEntry) -> DirectExtraction:
+def extract_direct(entry: PoolEntry, *, cache_root: Path | None = None) -> DirectExtraction:
+    fetch_kwargs = {"cache_root": cache_root} if cache_root is not None else {}
     if entry.source_kind == "koret_google_sheet":
-        fetched = fetch_koret_workbook(entry.slug, entry.pdf_url)
+        fetched = fetch_koret_workbook(entry.slug, entry.pdf_url, **fetch_kwargs)
         return DirectExtraction(
             fetch_result=fetched,
-            payload=_extract_koret(fetched.text),
-            model="koret-google-sheet-v1",
+            payload=_extract_koret(fetched.path),
+            model="koret-google-workbook-v1",
             notes=["Koret sessions represent official pool hours; the sheet still carries lane-level restrictions and team bookings."],
         )
     spec = _HTML_EXTRACTORS.get(entry.source_kind or "")
@@ -63,6 +67,7 @@ def extract_direct(entry: PoolEntry) -> DirectExtraction:
         entry.pdf_url,
         extension="html",
         fingerprint=_payload_fingerprint(extractor),
+        **fetch_kwargs,
     )
     return DirectExtraction(
         fetch_result=fetched,

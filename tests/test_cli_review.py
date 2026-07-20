@@ -1,9 +1,11 @@
 import json
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 
 from schedules.cli import cli
+from schedules.review_server import ReviewApp, _csv_sections
 
 
 def _review_dir(data_root: Path, slug: str, date: str, pdf_sha256: str) -> Path:
@@ -64,126 +66,87 @@ def test_cli_review_hints_extract_when_data_missing(tmp_path, monkeypatch):
     assert "schedules extract" in result.output
 
 
-def _editing_fake_run(calls: list[list[str]], data_root: Path, slug: str, sha12: str):
-    """Fake subprocess.run that simulates an editor making a real edit.
-
-    The byte-identical guard in finalize_draft refuses to mark a review
-    complete when the saved payload still byte-equals the provider seed,
-    so test runs that mock the editor have to mutate something.
-    """
-    reviewed_path = data_root / slug / f"2026-04-01-{sha12}" / "reviewed.json"
-
-    def fake_run(cmd, *args, **kwargs):
-        calls.append(list(cmd))
-        if reviewed_path.exists() and any(str(reviewed_path) == part for part in cmd):
-            envelope = json.loads(reviewed_path.read_text())
-            envelope["payload"]["sessions"][0]["notes"] = "verified"
-            reviewed_path.write_text(json.dumps(envelope, indent=2))
-
-        class R:
-            returncode = 0
-
-        return R()
-
-    return fake_run
-
-
-def test_cli_review_end_to_end_with_editor_edit(tmp_path, monkeypatch):
-    data, content = _patch_dirs(monkeypatch, tmp_path)
+def test_cli_review_launches_local_site(tmp_path, monkeypatch):
+    data, _ = _patch_dirs(monkeypatch, tmp_path)
     _seed_review_dir(data, "hamilton-pool", "2026-04-01", "a" * 64)
-    _seed_content_md(content, "hamilton-pool")
-
-    calls: list[list[str]] = []
-    monkeypatch.setattr(
-        "schedules.cli.subprocess.run",
-        _editing_fake_run(calls, data, "hamilton-pool", "a" * 12),
-    )
-    monkeypatch.setenv("EDITOR", "hx")
+    calls = []
+    monkeypatch.setattr("schedules.cli.serve_review_app", lambda **kwargs: calls.append(kwargs))
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["review"])
+    result = runner.invoke(cli, ["review", "--port", "4317", "--no-open"])
     assert result.exit_code == 0, result.output
-    reviewed_file = data / "hamilton-pool" / "2026-04-01-aaaaaaaaaaaa" / "reviewed.json"
-    assert reviewed_file.exists()
-    assert "Wrote" in result.output
-    assert any(call[0] == "open" for call in calls)
-    assert any(call[0] in {"hx", "$EDITOR"} or call[0].endswith("hx") for call in calls)
+    assert calls == [{"port": 4317, "open_browser": False}]
 
 
-def test_cli_review_opens_csv_source_for_direct_review(tmp_path, monkeypatch):
-    data, content = _patch_dirs(monkeypatch, tmp_path)
+def test_review_app_lists_source_kind_and_seed_without_writing(tmp_path):
+    data = tmp_path / "data"
+    content = tmp_path / "content" / "spots"
     review_dir = _seed_review_dir(data, "koret-center", "2026-04-01", "a" * 64)
-    (review_dir / "source.pdf").unlink()
-    (review_dir / "source.csv").write_text("Monday Hours: 7am-7pm\n")
+    (review_dir / "source.pdf").rename(review_dir / "source.csv")
+    app = ReviewApp(data_root=data, content_spots_dir=content)
+
+    assert app.list_reviews() == [{"slug": "koret-center", "fetch_date": "2026-04-01", "source_kind": "csv"}]
+    assert app.review("koret-center")["envelope"]["slug"] == "koret-center"
+    assert not (review_dir / "reviewed.json").exists()
+
+
+def test_review_app_lists_only_latest_pending_capture_per_pool(tmp_path):
+    data = tmp_path / "data"
+    content = tmp_path / "content" / "spots"
+    _seed_review_dir(data, "koret-center", "2026-07-06", "a" * 64)
+    latest = _seed_review_dir(data, "koret-center", "2026-07-10", "b" * 64)
+    app = ReviewApp(data_root=data, content_spots_dir=content)
+
+    assert app.list_reviews() == [{"slug": "koret-center", "fetch_date": "2026-07-10", "source_kind": "pdf"}]
+    assert app.candidate("koret-center").review_dir == latest
+
+
+def test_csv_source_is_split_into_calendar_sections():
+    source = '--- Monday ---\n"Monday Hours","Lane 1"\n"7:00 AM","Lap Swim"\n\n--- Tuesday ---\n"Tuesday Hours","Lane 1"'
+
+    assert _csv_sections(source) == [
+        ("Monday", [["Monday Hours", "Lane 1"], ["7:00 AM", "Lap Swim"]]),
+        ("Tuesday", [["Tuesday Hours", "Lane 1"]]),
+    ]
+
+
+def test_review_app_saves_identical_attested_payload_and_projects(tmp_path, monkeypatch):
+    data = tmp_path / "data"
+    content = tmp_path / "content" / "spots"
+    review_dir = _seed_review_dir(data, "koret-center", "2026-04-01", "a" * 64)
     _seed_content_md(content, "koret-center")
+    app = ReviewApp(data_root=data, content_spots_dir=content)
+    envelope = app.review("koret-center")["envelope"]
+    monkeypatch.setattr("schedules.review_server.current_source_identity", lambda slug: "a" * 64)
 
-    calls: list[list[str]] = []
-    monkeypatch.setattr(
-        "schedules.cli.subprocess.run",
-        _editing_fake_run(calls, data, "koret-center", "a" * 12),
-    )
-    monkeypatch.setenv("EDITOR", "hx")
+    result = app.save("koret-center", envelope, "a" * 64)
 
-    runner = CliRunner()
-    result = runner.invoke(cli, ["review", "--slug", "koret-center"])
-    assert result.exit_code == 0, result.output
-    assert ["open", str(review_dir / "source.csv")] in calls
-    assert f"Source: {review_dir / 'source.csv'}" in result.output
+    assert result == review_dir / "reviewed.json"
+    assert result.exists()
+    assert "[[extra.schedules.sessions]]" in (content / "koret-center.md").read_text()
 
 
-def test_cli_review_rejects_unedited_payload(tmp_path, monkeypatch):
-    data, content = _patch_dirs(monkeypatch, tmp_path)
-    _seed_review_dir(data, "hamilton-pool", "2026-04-01", "a" * 64)
-    _seed_content_md(content, "hamilton-pool")
+def test_review_app_rejects_save_when_source_changed(tmp_path, monkeypatch):
+    data = tmp_path / "data"
+    content = tmp_path / "content" / "spots"
+    _seed_review_dir(data, "koret-center", "2026-04-01", "a" * 64)
+    _seed_content_md(content, "koret-center")
+    app = ReviewApp(data_root=data, content_spots_dir=content)
+    envelope = app.review("koret-center")["envelope"]
+    monkeypatch.setattr("schedules.review_server.current_source_identity", lambda slug: "b" * 64)
 
-    def fake_run(cmd, *args, **kwargs):
-        class R:
-            returncode = 0
-
-        return R()
-
-    monkeypatch.setattr("schedules.cli.subprocess.run", fake_run)
-    monkeypatch.setenv("EDITOR", "hx")
-
-    runner = CliRunner()
-    result = runner.invoke(cli, ["review"])
-    assert result.exit_code != 0
-    assert "byte-identical" in result.output
+    with pytest.raises(Exception, match="Official source changed"):
+        app.save("koret-center", envelope, "a" * 64)
 
 
-def test_cli_review_splits_multi_word_editor(tmp_path, monkeypatch):
-    data, content = _patch_dirs(monkeypatch, tmp_path)
-    _seed_review_dir(data, "hamilton-pool", "2026-04-01", "a" * 64)
-    _seed_content_md(content, "hamilton-pool")
+def test_review_app_reports_current_and_changed_source(tmp_path, monkeypatch):
+    data = tmp_path / "data"
+    content = tmp_path / "content" / "spots"
+    _seed_review_dir(data, "koret-center", "2026-04-01", "a" * 64)
+    app = ReviewApp(data_root=data, content_spots_dir=content)
 
-    calls: list[list[str]] = []
-    fake_run = _editing_fake_run(calls, data, "hamilton-pool", "a" * 12)
+    monkeypatch.setattr("schedules.review_server.current_source_identity", lambda slug: "a" * 64)
+    assert app.check_source("koret-center") == {"status": "current", "source_identity": "a" * 64}
 
-    monkeypatch.setattr("schedules.cli.subprocess.run", fake_run)
-    monkeypatch.setenv("EDITOR", "code --wait")
-
-    runner = CliRunner()
-    result = runner.invoke(cli, ["review"])
-    assert result.exit_code == 0, result.output
-    editor_calls = [call for call in calls if call and call[0] == "code"]
-    assert editor_calls, f"expected `code` invocation, got {calls}"
-    assert editor_calls[0][1] == "--wait"
-
-
-def test_cli_review_filters_by_slug(tmp_path, monkeypatch):
-    data, content = _patch_dirs(monkeypatch, tmp_path)
-    _seed_review_dir(data, "hamilton-pool", "2026-04-01", "a" * 64)
-    _seed_review_dir(data, "balboa-pool", "2026-04-01", "b" * 64)
-    _seed_content_md(content, "balboa-pool")
-
-    monkeypatch.setattr(
-        "schedules.cli.subprocess.run",
-        _editing_fake_run([], data, "balboa-pool", "b" * 12),
-    )
-    monkeypatch.setenv("EDITOR", "hx")
-
-    runner = CliRunner()
-    result = runner.invoke(cli, ["review", "--slug", "balboa-pool"])
-    assert result.exit_code == 0, result.output
-    assert (data / "balboa-pool" / "2026-04-01-bbbbbbbbbbbb" / "reviewed.json").exists()
-    assert not (data / "hamilton-pool" / "2026-04-01-aaaaaaaaaaaa" / "reviewed.json").exists()
+    monkeypatch.setattr("schedules.review_server.current_source_identity", lambda slug: "b" * 64)
+    assert app.check_source("koret-center") == {"status": "changed", "source_identity": "b" * 64}

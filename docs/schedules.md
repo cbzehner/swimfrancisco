@@ -112,6 +112,11 @@ data/<slug>/<fetch-date>-<pdf-sha12>/
   reviewed.json                # present ⇔ human-approved
 ```
 
+Koret is workbook-backed: `source.xlsx` is the canonical hashed source and
+`source.pdf` is the full-workbook visual export used by the reviewer. The XLSX
+preserves visible sheet names, merged ranges, and cell values; every visible
+sheet must be classified by the extractor or extraction fails.
+
 Review status is a filesystem predicate: `reviewed.json` present ⇒ done;
 absent ⇒ needs review. `--force` and `--compare-with` bypass this
 fast-path.
@@ -121,9 +126,9 @@ fast-path.
 3. Review `git diff content/spots/`.
 4. For any pool with `review_note[...]` lines, inspect the provider
    outputs under `data/<slug>/<fetch-date>-<sha12>/`.
-5. Run `just schedules-review` to approve the next pending pool. The
-   CLI picks the oldest unreviewed directory, seeds `reviewed.json`, opens
-   the PDF, and launches `$EDITOR`. On exit it validates, projects into
+5. Run `just schedules-review` to open the local review site. Select each
+   pending pool, compare its source with the structured rows, then choose
+   **Save & next pool**. The site validates the result, projects it into
    `content/spots/<slug>.md`, and leaves `reviewed.json` on disk.
 6. Spot-check flagged pools against the source PDF before accepting a
    content diff.
@@ -183,23 +188,27 @@ The pre-v2 contract was all-day-only, which over-reported "Closed for staff trai
 
 ## Reviewing extracted schedules
 
-Every extracted pool joins the review queue until a human approves it. Approve extractions by running:
+Every extracted pool joins the review queue until a human approves it. Start the local reviewer with:
 
 ```
 just schedules-review
 ```
 
-The CLI scans `data/<slug>/` for review dirs that have provider JSON but
-no `reviewed.json`, picks the oldest-PDF-first, and:
+The command binds to `127.0.0.1` on an available port and opens a browser. The
+site scans `data/<slug>/` for review directories with provider JSON but no
+`reviewed.json`, then provides:
 
-1. Writes `reviewed.json` into the review dir (no separate draft tree).
-2. Opens the PDF in Preview (macOS `open`).
-3. Launches `$EDITOR` (or `hx`) on `reviewed.json`. Helix's JSON LSP picks up the `$schema` pointer and gives you autocomplete + inline validation.
-4. On editor exit, validates (schema + `validate()` invariants) and projects into `content/spots/<slug>.md`.
+1. A pending-pool queue and source schedule beside the seeded structured data.
+2. Add, edit, and remove controls for sessions, access hours, exceptions, and closures.
+3. PDF page and zoom controls, a full-screen source view, and a persistent weekday review cursor.
+4. A live source-identity check before editing; changed sources must be refreshed and re-extracted first.
+5. An explicit source-cell attestation before save, followed by a second source check.
+6. Schema and schedule validation followed by projection into `content/spots/<slug>.md`.
 
-To review a specific pool: `just schedules-review --slug hamilton-pool`.
+Use `just schedules-review --no-open` to print the URL without opening a browser,
+or `just schedules-review --port 4317` to choose a fixed local port.
 
-If finalization fails after `reviewed.json` is written (rare; projection error), re-run `just schedules project <slug>` to finish.
+If projection fails after a manual `reviewed.json` edit, run `just schedules project <slug>` to finish.
 
 If you edit an already-reviewed `reviewed.json` by hand, re-run
 `just schedules project <slug>`, then `just release`.

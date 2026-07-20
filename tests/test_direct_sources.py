@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 import hashlib
-from datetime import date
+import io
+import zipfile
+from datetime import date, time
 
 import pytest
+from openpyxl import Workbook
 
 import schedules.direct_sources as direct_sources
 from schedules.direct_sources import (
     DirectSourceError,
     _cache_text,
+    _xlsx_content_sha256,
     _extract_24_hour_fitness,
     _extract_city_sports,
     _extract_equinox,
@@ -45,6 +49,19 @@ def test_cache_text_can_key_dynamic_html_by_semantic_fingerprint(tmp_path):
     assert (cached.parent / "source.sha256").read_text().strip() == sha256
 
 
+def test_xlsx_identity_ignores_zip_metadata():
+    def make_xlsx(timestamp):
+        output = io.BytesIO()
+        with zipfile.ZipFile(output, "w") as archive:
+            info = zipfile.ZipInfo("xl/workbook.xml", date_time=timestamp)
+            archive.writestr(info, b"<workbook/>")
+        return output.getvalue()
+
+    assert _xlsx_content_sha256(make_xlsx((2026, 7, 10, 10, 0, 0))) == _xlsx_content_sha256(
+        make_xlsx((2026, 7, 10, 11, 0, 0))
+    )
+
+
 def test_jccsf_html_extractor_models_lap_and_family_hours():
     payload = _extract_jccsf(
         """
@@ -79,61 +96,81 @@ def test_jccsf_html_extractor_rejects_page_when_posted_hours_change():
         )
 
 
-def test_koret_google_sheet_extractor_reads_weekday_and_weekend_hours():
-    payload = _extract_koret(
-        """--- Monday ---
-"Monday Hours: 6am - 9pm (Subject to change due to emergency) ","Lane 1"
-"6:00 AM","slow"
---- Tuesday ---
-"Tuesday Hours: 6am - 9pm (Subject to change due to emergency) ","Lane 1"
---- Wednesday ---
-"Wednesday Hours: 6am - 9pm (Subject to change due to emergency) ","Lane 1"
---- Thursday ---
-"Thursday Hours: 6am - 9pm (Subject to change due to emergency) ","Lane 1"
---- Friday ---
-"Friday Hours: 6am - 9pm (Subject to change due to emergency) ","Lane 1"
---- Weekend ---
-"","Saturday Hours: 8am - 6pm (Subject to change due to emergency) Lane 1"
-"""
-    )
+def _koret_workbook(tmp_path, sheets):
+    workbook = Workbook()
+    workbook.remove(workbook.active)
+    for title, rows in sheets.items():
+        sheet = workbook.create_sheet(title)
+        for row in rows:
+            sheet.append(row)
+    path = tmp_path / "koret.xlsx"
+    workbook.save(path)
+    return path
+
+
+def test_koret_google_sheet_extractor_reads_weekday_and_weekend_hours(tmp_path):
+    sheets = {
+        day: [[day], ["Hours: 6am - 9pm"], [time(6), "slow"], [time(20), "slow"]]
+        for day in ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
+    }
+    sheets["Weekend"] = [[None, "Saturday"], [time(8), "slow"], [time(17), "slow"], ["Sunday"], [time(8), "slow"], [time(17), "slow"]]
+    sheets["Long Course Notice"] = [["Long Course Notice"]]
+    payload = _extract_koret(_koret_workbook(tmp_path, sheets))
 
     assert any(s["day"] == "monday" and s["start"] == "06:00" and s["end"] == "21:00" for s in payload["sessions"])
     assert any(s["day"] == "saturday" and s["start"] == "08:00" and s["end"] == "18:00" for s in payload["sessions"])
     assert any(s["day"] == "sunday" and s["start"] == "08:00" and s["end"] == "18:00" for s in payload["sessions"])
 
 
-def test_koret_google_sheet_extractor_handles_closed_day_and_weekend_grid():
-    payload = _extract_koret(
-        """--- Monday ---
-"Monday Hours: 7am-7:00pm ","Lane 1"
---- Tuesday ---
-"Tuesday Hours: 7am-7pm (Summer Hours) ","Lane 1"
---- Wednesday ---
-"Wednesday Hours: 7am-7pm ","Lane 1"
---- Thursday ---
-"Thursday Hours: 7:00am-7:00pm  ","Lane 1"
---- Friday ---
-"Friday","",""
-"Closed Juneteenth","",""
---- Weekend ---
-" ","Saturday Lane 1","Lane 2"
-"6:00 AM","fast","fast"
-"7:00 AM","fast","fast"
-"8:00 AM","fast","fast"
-"3:00 PM","",""
-"","","Sunday"
-"","Shallow & Mini Lane","Lane 1"
-"""
-    )
+def test_koret_google_sheet_extractor_splits_hours_around_closed_grid_rows(tmp_path):
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Monday"
+    sheet.append(["Monday"])
+    sheet.append(["Hours: 7am-7pm"])
+    sheet.append([])
+    sheet.append([None, "Lane 1", "Lane 2", "Lane 3", "Lane 4", "Lane 5", "Lane 6", "Lane 7", "Lane 8"])
+    sheet.append([time(7), "fast"])
+    sheet.append([time(8), "fast"])
+    sheet.append([])
+    sheet.append([time(9), "Closed for bulk head transition"])
+    sheet.append([time(10)])
+    sheet.append([time(11), "fast"])
+    sheet.merge_cells("B8:I9")
+    for day in ("Tuesday", "Wednesday", "Thursday", "Friday"):
+        other = workbook.create_sheet(day)
+        other.append([day])
+        other.append(["Hours: 7am-7pm"])
+    weekend = workbook.create_sheet("Weekend")
+    weekend.append([None, "Saturday"])
+    weekend.append(["Sunday"])
+    workbook.create_sheet("Long Course Notice")
+    path = tmp_path / "koret.xlsx"
+    workbook.save(path)
+    payload = _extract_koret(path)
 
-    assert {(s["day"], s["start"], s["end"]) for s in payload["sessions"]} == {
-        ("monday", "07:00", "19:00"),
-        ("tuesday", "07:00", "19:00"),
-        ("wednesday", "07:00", "19:00"),
-        ("thursday", "07:00", "19:00"),
-        ("saturday", "06:00", "16:00"),
+    assert [(session["start"], session["end"]) for session in payload["sessions"] if session["day"] == "monday"] == [
+        ("07:00", "09:00"),
+        ("11:00", "19:00"),
+    ]
+
+
+def test_koret_google_sheet_extractor_reads_dated_notice_closure(tmp_path):
+    sheets = {
+        day: [[day], ["Hours: 7am-7pm"]]
+        for day in ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
     }
-    assert payload["closures"][0]["reason"] == "Juneteenth"
+    sheets["Weekend"] = [[None, "Saturday"], ["Sunday"]]
+    sheets["Long Course Notice"] = [["Long Course Notice"], ["On 7/13 the pool will be closed from 8:30-10:30 to change back to short course."]]
+    payload = _extract_koret(_koret_workbook(tmp_path, sheets))
+
+    assert payload["closures"] == [{
+        "start": "2026-07-13",
+        "end": "2026-07-13",
+        "start_time": "08:30",
+        "end_time": "10:30",
+        "reason": "Change from long course to short course",
+    }]
 
 
 def test_pomeroy_html_extractor_handles_table_rowspans():
