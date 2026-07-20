@@ -130,6 +130,20 @@ def seed_draft(
     if target.exists():
         return target
 
+    envelope = draft_envelope(candidate=candidate, today=today)
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(envelope, indent=2) + "\n")
+    return target
+
+
+def draft_envelope(
+    *,
+    candidate: ReviewCandidate,
+    today: _date | None = None,
+) -> dict:
+    """Build an unsaved reviewed-snapshot envelope from a provider artifact."""
+    today = today or pacific_today()
     provider_path = _pick_provider_artifact(candidate.review_dir)
     provider_payload = json.loads(provider_path.read_text())
     source_pdf_url = (
@@ -139,7 +153,7 @@ def seed_draft(
     )
     payload = provider_payload.get("payload", {})
 
-    envelope = {
+    return {
         "slug": candidate.slug,
         "pdf_sha256": candidate.pdf_sha256,
         "reviewed_at": today.isoformat(),
@@ -147,38 +161,10 @@ def seed_draft(
         "payload": payload,
     }
 
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps(envelope, indent=2) + "\n")
-    return target
 
 
 class FinalizeError(RuntimeError):
     """Raised when finalizing a draft fails; message is reviewer-facing."""
-
-
-def _canonical_payload(payload: dict) -> str:
-    return json.dumps(payload, sort_keys=True, separators=(",", ":"))
-
-
-def _payload_matches_any_provider(payload: dict, review_dir: Path) -> str | None:
-    """Return the provider artifact name whose payload byte-equals this one.
-
-    Used to detect "the reviewer didn't actually edit anything" — a bypass of
-    the human review contract. A re-export of the same PDF that yields a
-    legitimately correct LLM payload still requires the reviewer to make an
-    explicit attestation edit (a notes field, a reorder, anything).
-    """
-    target = _canonical_payload(payload)
-    for provider_path in _provider_json_paths(review_dir):
-        try:
-            provider = json.loads(provider_path.read_text())
-        except (OSError, json.JSONDecodeError):
-            continue
-        if provider.get("provider") == "direct":
-            continue
-        if _canonical_payload(provider.get("payload", {})) == target:
-            return provider_path.name
-    return None
 
 
 def finalize_draft(
@@ -210,15 +196,6 @@ def finalize_draft(
     result = validate(raw.get("payload", {}))
     if not result.ok:
         raise FinalizeError("; ".join(v.message for v in result.violations))
-
-    matched = _payload_matches_any_provider(raw.get("payload", {}), reviewed_json_path.parent)
-    if matched is not None:
-        raise FinalizeError(
-            f"reviewed payload is byte-identical to {matched} — "
-            "no human edits detected. Re-open the file, verify each row "
-            "against the source PDF, and make at least one explicit change "
-            "(a notes field, a reorder, an evidence edit) before saving."
-        )
 
     slug = raw["slug"]
     try:

@@ -4,9 +4,11 @@ import hashlib
 import json
 import re
 import time
+from io import BytesIO
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from zipfile import BadZipFile, ZipFile
 
 import httpx
 
@@ -68,30 +70,57 @@ def fetch_text(
 
 def fetch_koret_workbook(slug: str, workbook_url: str, *, cache_root: Path = DATA_DIR) -> DirectFetchResult:
     sheet_id = _extract_google_sheet_id(workbook_url)
-    combined: list[str] = []
     headers = {
         "User-Agent": "SwimFranciscoScheduleBot/0.1 (+https://swimfrancisco.com)",
-        "Accept": "text/csv,text/plain;q=0.9,*/*;q=0.8",
+        "Accept": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf;q=0.9,*/*;q=0.8",
     }
-    with httpx.Client(follow_redirects=True, timeout=30.0, headers=headers) as client:
-        for sheet in ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Weekend"):
-            url = (
-                f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq"
-                f"?tqx=out:csv&sheet={sheet}"
-            )
-            response = client.get(url)
-            response.raise_for_status()
-            combined.append(f"--- {sheet} ---\n{response.text.strip()}\n")
+    try:
+        with httpx.Client(follow_redirects=True, timeout=30.0, headers=headers) as client:
+            export_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export"
+            workbook_response = client.get(export_url, params={"format": "xlsx"})
+            workbook_response.raise_for_status()
+            pdf_response = client.get(export_url, params={
+                "format": "pdf",
+                "portrait": "false",
+                "fitw": "true",
+                "sheetnames": "true",
+                "pagenumbers": "true",
+                "gridlines": "false",
+                "fzr": "true",
+            })
+            pdf_response.raise_for_status()
+    except httpx.HTTPError as exc:
+        raise DirectSourceError(f"Failed to fetch {slug} workbook: {exc}") from exc
 
-    text = "\n".join(combined)
-    sha256 = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    workbook_bytes = workbook_response.content
+    pdf_bytes = pdf_response.content
+    try:
+        sha256 = _xlsx_content_sha256(workbook_bytes)
+    except BadZipFile as exc:
+        raise DirectSourceError(f"{slug} workbook export is not a valid XLSX (interstitial page?)") from exc
     slug_dir = cache_root / slug
     slug_dir.mkdir(parents=True, exist_ok=True)
-    path, from_cache = _cache_text(slug_dir, sha256, "csv", text)
+    prefix = sha256[:12]
+    matches = sorted(slug_dir.glob(f"*-{prefix}/source.xlsx"))
+    if matches:
+        path = matches[0]
+        if _xlsx_content_sha256(path.read_bytes()) != sha256:
+            raise DirectSourceError(f"prefix collision under {slug_dir}: {prefix}")
+        from_cache = True
+    else:
+        review_dir = slug_dir / f"{pacific_today().isoformat()}-{prefix}"
+        review_dir.mkdir(parents=True, exist_ok=True)
+        path = review_dir / "source.xlsx"
+        path.write_bytes(workbook_bytes)
+        (review_dir / "source.sha256").write_text(f"{sha256}\n")
+        from_cache = False
+    pdf_path = path.parent / "source.pdf"
+    if not pdf_path.exists() or not from_cache:
+        pdf_path.write_bytes(pdf_bytes)
     return DirectFetchResult(
         path=path,
         sha256=sha256,
-        text=path.read_text(),
+        text="",
         from_cache=from_cache,
         response_url=workbook_url,
     )
@@ -115,6 +144,17 @@ def _cache_text(slug_dir: Path, sha256: str, extension: str, text: str) -> tuple
     path.write_text(text)
     (review_dir / "source.sha256").write_text(f"{sha256}\n")
     return path, False
+
+
+def _xlsx_content_sha256(payload: bytes) -> str:
+    digest = hashlib.sha256()
+    with ZipFile(BytesIO(payload)) as archive:
+        for name in sorted(archive.namelist()):
+            digest.update(name.encode("utf-8"))
+            digest.update(b"\0")
+            digest.update(archive.read(name))
+            digest.update(b"\0")
+    return digest.hexdigest()
 
 
 def _payload_fingerprint(extractor: Callable[[str], dict]) -> Callable[[str], str]:
