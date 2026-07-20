@@ -13,6 +13,8 @@ const repoRoot = join(here, "..");
 const spotsDir = join(repoRoot, "content/spots");
 const outputPath = join(repoRoot, "worker/src/spots.ts");
 
+const TEMP_SOURCE_TYPES = ["usgs", "noaa", "ndbc", "erddap", "sst"];
+
 async function readSpot(path) {
   const { front } = await readSpotFrontmatter(path);
   const extra = front.extra || {};
@@ -20,17 +22,23 @@ async function readSpot(path) {
 
   const spot = {
     slug: front.slug,
-    tempStationId: extra.temp_station_id,
-    tempStationType: extra.temp_station_type,
-    tempFallbackStationId: extra.temp_fallback_station_id,
+    tempSources: extra.temp_sources,
     tideStationId: extra.noaa_tide_station,
   };
 
-  for (const key of ["slug", "tempStationId", "tempStationType", "tideStationId"]) {
+  for (const key of ["slug", "tideStationId"]) {
     if (!spot[key]) throw new Error(`${path}: missing required field ${key}`);
   }
-  if (spot.tempStationType !== "noaa" && spot.tempStationType !== "ndbc") {
-    throw new Error(`${path}: temp_station_type must be "noaa" or "ndbc"`);
+  if (!Array.isArray(spot.tempSources) || spot.tempSources.length === 0) {
+    throw new Error(`${path}: temp_sources must be a non-empty array of {type, id}`);
+  }
+  for (const source of spot.tempSources) {
+    if (!TEMP_SOURCE_TYPES.includes(source.type)) {
+      throw new Error(`${path}: temp source type must be one of ${TEMP_SOURCE_TYPES.join(", ")}, got ${source.type}`);
+    }
+    if (!source.id || typeof source.id !== "string") {
+      throw new Error(`${path}: temp source of type ${source.type} is missing an id`);
+    }
   }
   return spot;
 }
@@ -38,11 +46,11 @@ async function readSpot(path) {
 function renderSpot(spot) {
   const lines = ["  {"];
   lines.push(`    slug: ${JSON.stringify(spot.slug)},`);
-  lines.push(`    tempStationId: ${JSON.stringify(spot.tempStationId)},`);
-  lines.push(`    tempStationType: ${JSON.stringify(spot.tempStationType)},`);
-  if (spot.tempFallbackStationId) {
-    lines.push(`    tempFallbackStationId: ${JSON.stringify(spot.tempFallbackStationId)},`);
+  lines.push("    tempSources: [");
+  for (const source of spot.tempSources) {
+    lines.push(`      { type: ${JSON.stringify(source.type)}, id: ${JSON.stringify(source.id)} },`);
   }
+  lines.push("    ],");
   lines.push(`    tideStationId: ${JSON.stringify(spot.tideStationId)},`);
   lines.push("  },");
   return lines.join("\n");
@@ -66,13 +74,16 @@ async function main() {
     "// Regenerate via `node scripts/generate-worker-spots.mjs`",
     "// (runs automatically from wrangler [build] before dev and deploy).",
     "",
-    'export type TempStationType = "noaa" | "ndbc";',
+    'export type TempStationType = "usgs" | "noaa" | "ndbc" | "erddap" | "sst";',
+    "",
+    "export interface TempSource {",
+    "  type: TempStationType;",
+    "  id: string;",
+    "}",
     "",
     "export interface SpotConfig {",
     "  slug: string;",
-    "  tempStationId: string;",
-    "  tempStationType: TempStationType;",
-    "  tempFallbackStationId?: string;",
+    "  tempSources: TempSource[];",
     "  tideStationId: string;",
     "}",
     "",

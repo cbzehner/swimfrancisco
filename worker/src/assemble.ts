@@ -1,9 +1,11 @@
 // Compose per-spot conditions records from fetched NOAA / NDBC data,
 // falling back to last-good KV values when an upstream source failed.
 
-import { SPOTS, type SpotConfig } from "./spots.ts";
-import { fetchTempWithFallback, fetchNoaaTides, type NoaaTideData } from "./noaa.ts";
+import { SPOTS, type SpotConfig, type TempSource, type TempStationType } from "./spots.ts";
+import { fetchNoaaTemp, fetchNoaaTides, type NoaaTideData } from "./noaa.ts";
 import { fetchNdbc } from "./ndbc.ts";
+import { fetchUsgsTemp } from "./usgs.ts";
+import { fetchErddapStationTemp, fetchMurSst } from "./erddap.ts";
 import { readConditions, writeConditions } from "./kv.ts";
 
 export interface TideSummary {
@@ -22,7 +24,7 @@ export interface SpotConditions {
   water_temp_c: number | null;
   temp_observed_at: string | null;
   temp_station_id: string | null;
-  temp_station_type: "noaa" | "ndbc" | null;
+  temp_station_type: TempStationType | null;
   tide: TideSummary | null;
   updated_at: string; // ISO 8601 UTC — when this assembly ran
   temp_stale: boolean; // true if temp_* fields were reused from last-good KV value
@@ -36,7 +38,7 @@ interface TempFields {
   water_temp_c: number;
   temp_observed_at: string;
   temp_station_id: string;
-  temp_station_type: "noaa" | "ndbc";
+  temp_station_type: TempStationType;
 }
 
 const NULL_TEMP_FIELDS = {
@@ -76,15 +78,41 @@ function tideToSummary(data: NoaaTideData | null): TideSummary | null {
   };
 }
 
-async function fetchTempForSpot(spot: SpotConfig) {
-  try {
-    return spot.tempStationType === "noaa"
-      ? await fetchTempWithFallback(spot.tempStationId, spot.tempFallbackStationId)
-      : await fetchNdbc(spot.tempStationId);
-  } catch (err) {
-    console.error(`Temp fetch failed for ${spot.slug}:`, err);
-    return null;
+interface TempReading {
+  stationId: string;
+  waterTempC: number;
+  waterTempF: number;
+  observedAt: string;
+}
+
+type TempFetcher = (id: string) => Promise<TempReading | null>;
+
+const TEMP_FETCHERS: Record<TempStationType, TempFetcher> = {
+  usgs: fetchUsgsTemp,
+  noaa: fetchNoaaTemp,
+  ndbc: fetchNdbc,
+  erddap: fetchErddapStationTemp,
+  sst: fetchMurSst,
+};
+
+// Walk the spot's ordered source chain; the first usable reading wins.
+// A source that errors or returns null falls through to the next one, so
+// a decommissioned sensor (NOAA SF/Alameda) or a dark one (the
+// Exploratorium SeaBird) costs one request, not the reading.
+export async function firstTempFromSources(
+  slug: string,
+  sources: TempSource[],
+  fetchers: Record<TempStationType, TempFetcher> = TEMP_FETCHERS,
+): Promise<{ reading: TempReading; sourceType: TempStationType } | null> {
+  for (const source of sources) {
+    try {
+      const reading = await fetchers[source.type](source.id);
+      if (reading) return { reading, sourceType: source.type };
+    } catch (err) {
+      console.error(`Temp source ${source.type}:${source.id} failed for ${slug}:`, err);
+    }
   }
+  return null;
 }
 
 function getOrFetchTide(
@@ -103,14 +131,14 @@ function getOrFetchTide(
   return promise;
 }
 
-function tempFromReading(spot: SpotConfig, reading: { waterTempF: number; waterTempC: number; observedAt: string; stationId: string } | null): TempFields | null {
-  if (!reading) return null;
+function tempFromReading(result: { reading: TempReading; sourceType: TempStationType } | null): TempFields | null {
+  if (!result) return null;
   return {
-    water_temp_f: reading.waterTempF,
-    water_temp_c: reading.waterTempC,
-    temp_observed_at: reading.observedAt,
-    temp_station_id: reading.stationId,
-    temp_station_type: spot.tempStationType,
+    water_temp_f: result.reading.waterTempF,
+    water_temp_c: result.reading.waterTempC,
+    temp_observed_at: result.reading.observedAt,
+    temp_station_id: result.reading.stationId,
+    temp_station_type: result.sourceType,
   };
 }
 
@@ -169,11 +197,11 @@ async function assembleSpot(
   updatedAt: string,
   previous: SpotConditions | null,
 ): Promise<SpotConditions> {
-  const [reading, tideFromApi] = await Promise.all([
-    fetchTempForSpot(spot),
+  const [tempResult, tideFromApi] = await Promise.all([
+    firstTempFromSources(spot.slug, spot.tempSources),
     getOrFetchTide(tideCache, spot.tideStationId),
   ]);
-  const temp = coalesceTemp(tempFromReading(spot, reading), previous);
+  const temp = coalesceTemp(tempFromReading(tempResult), previous);
   const tide = coalesceTide(tideFromApi, previous);
 
   return {
