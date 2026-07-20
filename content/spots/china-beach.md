@@ -13,14 +13,20 @@ website = "https://www.nps.gov/goga/planyourvisit/chinabeach.htm"
 cost = "free"
 access = "beach"
 noaa_tide_station = "9414275"
-temp_station_id = "46237"
-temp_station_type = "ndbc"
 access_mode = "public"
 payment_model = "free"
 clubs = []
 common_distances = []
 description_short = "Small sheltered ocean cove below Sea Cliff, calmer than neighboring beaches"
 hazards = [ "rip currents", "cold water year-round", "seasonal lifeguards only" ]
+
+[[extra.temp_sources]]
+type = "ndbc"
+id = "46237"
+
+[[extra.temp_sources]]
+type = "sst"
+id = "37.79,-122.50"
 +++
 
 China Beach is a small pocket cove tucked below the Sea Cliff neighborhood between Baker Beach and Lands End. Sheltered by headlands on both sides, it sees gentler surf than Ocean or Baker Beach, though it is still ocean water with rip currents and cold temperatures.

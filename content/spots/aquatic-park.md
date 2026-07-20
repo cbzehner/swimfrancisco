@@ -13,9 +13,6 @@ website = "https://sfrecpark.org/Facilities/Facility/Details/Aquatic-Park-200"
 cost = "free"
 access = "beach"
 noaa_tide_station = "9414290"
-temp_station_id = "9414290"
-temp_station_type = "noaa"
-temp_fallback_station_id = "9414863"
 access_mode = "public"
 payment_model = "free"
 access_notes = [ "Club access is separate from swimming in the public cove.", "If you are new to bay swimming, connect with a club or experienced local swimmer before going alone." ]
@@ -23,6 +20,22 @@ access_summary = "The Aquatic Park cove and beach are public and free. The South
 common_distances = [ "0.25mi to breakwater", "1mi loop" ]
 description_short = "Protected cove, calm water, popular with swim clubs"
 hazards = [ "boat traffic outside cove", "cold water year-round" ]
+
+[[extra.temp_sources]]
+type = "usgs"
+id = "374938122251801"
+
+[[extra.temp_sources]]
+type = "noaa"
+id = "9414863"
+
+[[extra.temp_sources]]
+type = "erddap"
+id = "exploratorium-seabird"
+
+[[extra.temp_sources]]
+type = "sst"
+id = "37.81,-122.43"
 
 [[extra.clubs]]
 name = "South End Rowing Club"

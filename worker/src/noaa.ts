@@ -68,7 +68,7 @@ async function noaaGet<T extends { error?: { message?: string } }>(
   return body;
 }
 
-async function fetchNoaaTemp(stationId: string): Promise<NoaaTempReading | null> {
+export async function fetchNoaaTemp(stationId: string): Promise<NoaaTempReading | null> {
   const body = await noaaGet<NoaaTempResponse>("NOAA temp", stationId, {
     product: "water_temperature",
     date: "latest",
@@ -84,26 +84,6 @@ async function fetchNoaaTemp(stationId: string): Promise<NoaaTempReading | null>
     waterTempC: Math.round(waterTempC * 10) / 10,
     observedAt: toLocalIso(latest.t),
   };
-}
-
-// Try primary station; on any error or empty result, try the fallback.
-export async function fetchTempWithFallback(
-  primaryId: string,
-  fallbackId: string | undefined,
-): Promise<NoaaTempReading | null> {
-  try {
-    const reading = await fetchNoaaTemp(primaryId);
-    if (reading) return reading;
-  } catch (err) {
-    console.error(`NOAA temp primary ${primaryId} failed:`, err);
-  }
-  if (!fallbackId) return null;
-  try {
-    return await fetchNoaaTemp(fallbackId);
-  } catch (err) {
-    console.error(`NOAA temp fallback ${fallbackId} failed:`, err);
-    return null;
-  }
 }
 
 // YYYYMMDD in America/Los_Angeles — all our stations are Pacific, so we
