@@ -181,33 +181,52 @@ def render_pr_body(
         )
 
     changed_slugs = sorted(s for s in changed if any(e.slug == s for e in registry))
+    pending_slugs = sorted(s for s in changed_slugs if _has_pending_run(s, changed[s], data_root))
+    carried_slugs = [s for s in changed_slugs if s not in pending_slugs]
     unchanged_n = len(published) - len(changed_slugs)
-    branch = f"auto/schedules-extract-{today.isoformat()}"
+    branch = "auto/schedules-extract"
 
     lines: list[str] = []
-    lines.extend(_render_lead(changed, changed_slugs, unchanged_n))
+    lines.extend(_render_lead(changed, pending_slugs, carried_slugs, unchanged_n))
     lines.extend(_render_whats_here(changed))
-    lines.extend(_render_review(branch, changed_slugs))
+    lines.extend(_render_review(branch, pending_slugs))
     lines.extend(_render_eval_section(data_root=data_root, changed_slugs=set(changed_slugs)))
 
     return "\n".join(lines).rstrip() + "\n"
 
 
+def _has_pending_run(slug: str, runs: dict[str, list[tuple[str, str]]], data_root: Path) -> bool:
+    """A slug still needs review when any of its changed run dirs lacks reviewed.json."""
+    return any(not (data_root / slug / run / "reviewed.json").exists() for run in runs)
+
+
 def _render_lead(
     changed: dict[str, dict[str, list[tuple[str, str]]]],
-    changed_slugs: list[str],
+    pending_slugs: list[str],
+    carried_slugs: list[str],
     unchanged_n: int,
 ) -> list[str]:
-    if len(changed_slugs) == 1:
-        slug = changed_slugs[0]
+    if not pending_slugs:
+        action = (
+            "No human review needed. Every changed pool extracted a payload "
+            "identical to its last human-reviewed one, so the attestation was "
+            "carried forward; this PR auto-merges once checks pass."
+        )
+    elif len(pending_slugs) == 1:
+        slug = pending_slugs[0]
         action = (
             f"`{slug}` needs a human review. "
             "The published page is running on an unverified projection until that happens."
         )
     else:
         action = (
-            f"{_slug_list(changed_slugs)} need human review this week. "
+            f"{_slug_list(pending_slugs)} need human review. "
             "Their published pages run on unverified projections until that happens."
+        )
+    if pending_slugs and carried_slugs:
+        action += (
+            f" {_slug_list(carried_slugs)} auto-verified: extraction matched "
+            "the last human-reviewed payload, so the attestation carried forward."
         )
 
     files = [
@@ -215,6 +234,7 @@ def _render_lead(
         for runs in changed.values()
         for files in runs.values()
         for filename, change in files
+        if filename != "reviewed.json"
     ]
     new_files = [f for f, c in files if c == "A"]
     updated_files = [f for f, c in files if c == "M"]
@@ -243,6 +263,11 @@ def _render_whats_here(changed: dict[str, dict[str, list[tuple[str, str]]]]) -> 
     for slug in sorted(changed):
         for run in sorted(changed[slug]):
             for filename, change in sorted(changed[slug][run]):
+                if filename == "reviewed.json":
+                    lines.append(
+                        f"`data/{slug}/{run}/{filename}` — attestation carried forward."
+                    )
+                    continue
                 provider = _provider_word(filename)
                 state = _change_word(change)
                 lines.append(
@@ -253,6 +278,8 @@ def _render_whats_here(changed: dict[str, dict[str, list[tuple[str, str]]]]) -> 
 
 
 def _render_review(branch: str, changed_slugs: list[str]) -> list[str]:
+    if not changed_slugs:
+        return []
     minutes = max(_REVIEW_MIN_PER_POOL, len(changed_slugs) * _REVIEW_MIN_PER_POOL)
     first = changed_slugs[0]
     review_step = f"Run `just schedules-review` and review the browser queue (start with `{first}`)"

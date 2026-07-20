@@ -29,6 +29,10 @@
       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
       "description": "ISO date (YYYY-MM-DD) in Pacific time when the reviewer approved this payload."
     },
+    "carried_from": {
+      "type": "string",
+      "description": "Repo-relative path of the human-reviewed snapshot this one was auto-carried from. Present only on snapshots written by the pipeline when a new source capture extracted a payload identical to one a human already approved; reviewed_at keeps the original human approval date."
+    },
     "source_pdf_url": {
       "type": "string",
       "format": "uri",

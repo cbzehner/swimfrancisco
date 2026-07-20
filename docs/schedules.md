@@ -121,6 +121,16 @@ Review status is a filesystem predicate: `reviewed.json` present ⇒ done;
 absent ⇒ needs review. `--force` and `--compare-with` bypass this
 fast-path.
 
+When a new capture extracts a payload identical to the pool's most recent
+human-reviewed one, the pipeline carries the attestation forward: it writes
+`reviewed.json` into the new capture dir with the original `reviewed_at`
+and a `carried_from` field pointing at the human-reviewed snapshot. The
+human already approved this exact payload; only the source bytes churned.
+Direct extractors stamp `payload.effective_start` with the fetch date, so
+that one clock-derived field is ignored in the comparison; for PDF pools
+the whole payload must match. Any real payload change queues the pool for
+review as before.
+
 1. Run `just schedules-extract`.
 2. Read `tmp/extraction-report.md`.
 3. Review `git diff content/spots/`.
@@ -234,20 +244,31 @@ Run before and after any prompt or schema tweak; require improvement, not regres
 
 ## Auto-extract workflow
 
-The `.github/workflows/schedules-extract.yml` action runs every Monday at
+The `.github/workflows/schedules-extract.yml` action runs daily at
 09:00 PT and on `workflow_dispatch`. It re-runs extraction with both Gemini
 and Anthropic — provider artifacts under `data/<slug>/<date>-<sha12>/`
-get written, while `content/spots/` and `reviewed.json` stay untouched
-(the pipeline never writes those). If anything changed under `data/`, the
-action commits to an `auto/schedules-extract-YYYY-MM-DD` branch and opens
-or updates a PR with the extraction report and eval scorecard in the body.
+get written, and the pipeline carries attestation forward (writes
+`reviewed.json` with `carried_from`) for pools whose payload matches the
+last human-reviewed one; `content/spots/` stays untouched. If anything
+changed under `data/`, the action commits to the rolling
+`auto/schedules-extract` branch and opens or refreshes its PR with the
+extraction report and eval scorecard in the body. When nothing awaits a
+human — every changed pool auto-verified — the PR is set to auto-merge on
+green CI, so quiet weeks need no attention at all.
 
-Reviewer flow on an auto-PR:
+Fully-autonomous prerequisites (without them the PR is simply left open
+for manual merge): a `SCHEDULES_BOT_TOKEN` fine-grained PAT secret with
+contents and pull-requests read/write (PRs made with the default
+`GITHUB_TOKEN` never trigger the `ci` workflow), the repo setting "Allow
+auto-merge", and a branch protection rule on `main` requiring the
+`check` status.
+
+Reviewer flow on an auto-PR that lists pending pools:
 
 1. Pull the branch locally.
-2. Run `just schedules-review` for any pool the report flags.
-3. Verify each row against the source PDF in `$EDITOR`.
-4. Save `reviewed.json`; the projection writes `content/spots/<slug>.md`.
+2. Run `just schedules-review` and work through the browser queue.
+3. Verify each row against the rendered source, attest, and save.
+4. The site projects into `content/spots/<slug>.md` on save.
 5. Run `just release`.
 6. Commit the reviewed files to the PR branch and merge.
 

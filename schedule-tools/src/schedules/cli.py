@@ -113,6 +113,19 @@ def review_command(port: int, no_open: bool) -> None:
     serve_review_app(port=port, open_browser=not no_open)
 
 
+@cli.command("pending-reviews")
+def pending_reviews_command() -> None:
+    """Print slugs still awaiting human review on this branch, one per line.
+
+    Empty output means every changed pool carries a reviewed snapshot — the
+    auto-extract workflow uses that as its auto-merge condition.
+    """
+    if not DATA_DIR.is_dir():
+        return
+    for review in ReviewApp(data_root=DATA_DIR, content_spots_dir=CONTENT_SPOTS_DIR).list_reviews():
+        click.echo(review["slug"])
+
+
 @cli.command("pr-summary")
 def pr_summary_command() -> None:
     """Print a PR-optimized summary of currently-staged data/ changes.
