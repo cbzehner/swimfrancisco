@@ -569,6 +569,20 @@ def _expected_banner_date_labels(schedules: list, today_iso: str, window_end_iso
     return labels
 
 
+def test_board_water_cells_render_in_every_locale(built_site: Path) -> None:
+    """Locale-neutral spot labels (e.g. "80–82°F") must render verbatim in
+    non-default locales; the spot_label macro used to fall back to the raw
+    label only for English, blanking water temps on every other locale."""
+    for locale in _locales():
+        code = str(locale["code"])
+        board = built_site / ("index.html" if locale.get("is_default") else f"{code}/index.html")
+        html_text = board.read_text()
+        cells = re.findall(r"<td data-cell=water>(.*?)<td", html_text, flags=re.S)
+        assert cells, f"{code}: no water cells found"
+        empty = sum(1 for cell in cells if not cell.strip())
+        assert empty == 0, f"{code}: {empty}/{len(cells)} water cells empty"
+
+
 def test_expected_banner_labels_flag_only_active_window_closures() -> None:
     """Fixed-date fixture for the expectation builder used below: a closure
     in the expired schedule must not surface, one inside the active window
