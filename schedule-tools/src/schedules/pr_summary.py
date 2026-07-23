@@ -190,7 +190,7 @@ def render_pr_body(
     lines.extend(_render_lead(changed, pending_slugs, carried_slugs, unchanged_n))
     lines.extend(_render_whats_here(changed))
     lines.extend(_render_review(branch, pending_slugs))
-    lines.extend(_render_eval_section(data_root=data_root, changed_slugs=set(changed_slugs)))
+    lines.extend(_render_eval_section(data_root=data_root, changed_artifacts=_changed_provider_artifacts(rows)))
 
     return "\n".join(lines).rstrip() + "\n"
 
@@ -306,25 +306,41 @@ def _eval_aggregate_row(provider: str, items: list[PoolEval]) -> str:
     return f"| {provider} | {f1:.2f} |"
 
 
-def _render_eval_section(*, data_root: Path, changed_slugs: set[str]) -> list[str]:
-    evals = collect_pool_evals(data_root=data_root)
-    if not evals:
-        return []
+def _changed_provider_artifacts(
+    rows: list[tuple[str, str, str, str]],
+) -> list[tuple[str, str, str]]:
+    return [
+        (slug, run, filename)
+        for slug, run, filename, _change in rows
+        if filename != "reviewed.json" and filename.endswith(".json")
+    ]
+
+
+def _render_eval_section(
+    *,
+    data_root: Path,
+    changed_artifacts: list[tuple[str, str, str]],
+) -> list[str]:
+    historical_evals = collect_pool_evals(data_root=data_root)
+    changed_evals = collect_pool_evals(data_root=data_root, all_dirs=True)
+
+    lines = _render_changed_artifacts(changed_artifacts, changed_evals)
+    if not historical_evals:
+        return lines
 
     by_provider: dict[str, list[PoolEval]] = {}
-    for e in evals:
+    for e in historical_evals:
         by_provider.setdefault(e.provider, []).append(e)
 
-    relevant = [e for e in evals if e.pool in changed_slugs]
+    lines.extend([
+        "<details><summary>Historical reviewed baseline</summary>",
+        "",
+        "This is the aggregate from committed reviewed artifacts, not a score "
+        "for unreviewed changed artifacts.",
+        "",
+    ])
 
-    if relevant:
-        summary = "Eval baseline (changed pools detailed below)"
-    else:
-        summary = "Eval baseline (changed pools excluded — that's the point of this PR)"
-
-    lines = [f"<details><summary>{summary}</summary>", ""]
-
-    distinct_pools = len({e.pool for e in evals})
+    distinct_pools = len({e.pool for e in historical_evals})
     lines.append(f"| Provider | F1 across {distinct_pools} reviewed pools |")
     lines.append("|---|---:|")
     for provider in sorted(by_provider):
@@ -336,30 +352,57 @@ def _render_eval_section(*, data_root: Path, changed_slugs: set[str]) -> list[st
     )
     lines.append("")
 
-    if relevant:
-        lines.append("**Changed pools, per artifact:**")
-        lines.append("")
-        lines.append("| Pool | Artifact | Truth | Extracted | F1 |")
-        lines.append("|---|---|---:|---:|---:|")
-        for e in sorted(relevant, key=lambda x: (x.pool, x.provider)):
-            lines.append(
-                f"| {e.pool} | {e.provider_artifact} | {e.truth_count} | {e.extracted_count} | {e.f1:.2f} |"
-            )
-        lines.append("")
-        for e in sorted(relevant, key=lambda x: (x.pool, x.provider)):
-            if not (e.extra_examples or e.missing_examples):
-                continue
-            lines.append(f"_{e.pool} — {e.provider_artifact}:_")
-            if e.extra_examples:
-                lines.append("- Extra (extracted but not in truth):")
-                for ex in e.extra_examples:
-                    lines.append(f"  - {ex['day']} {ex['type']} {ex['start']}-{ex['end']}  `{ex['evidence']}`")
-            if e.missing_examples:
-                lines.append("- Missing (in truth but not extracted):")
-                for ex in e.missing_examples:
-                    lines.append(f"  - {ex['day']} {ex['type']} {ex['start']}-{ex['end']}  `{ex['evidence']}`")
-            lines.append("")
-
     lines.append("</details>")
+    lines.append("")
+    return lines
+
+
+def _render_changed_artifacts(
+    changed_artifacts: list[tuple[str, str, str]],
+    evaluations: list[PoolEval],
+) -> list[str]:
+    if not changed_artifacts:
+        return []
+
+    evaluations_by_identity = {
+        (evaluation.pool, evaluation.review_dir.name, evaluation.provider_artifact): evaluation
+        for evaluation in evaluations
+    }
+    lines = [
+        "## Changed artifacts",
+        "",
+        "| Artifact | Evaluation | Truth | Extracted | F1 |",
+        "|---|---|---:|---:|---:|",
+    ]
+    disagreements: list[tuple[str, PoolEval]] = []
+    for slug, run, filename in sorted(changed_artifacts):
+        path = f"data/{slug}/{run}/{filename}"
+        evaluation = evaluations_by_identity.get((slug, run, filename))
+        if evaluation is None:
+            lines.append(f"| `{path}` | unscored — human review required | | | |")
+            continue
+        lines.append(
+            f"| `{path}` | scored | {evaluation.truth_count} | "
+            f"{evaluation.extracted_count} | {evaluation.f1:.2f} |"
+        )
+        if evaluation.extra_examples or evaluation.missing_examples:
+            disagreements.append((path, evaluation))
+    lines.append("")
+    for path, evaluation in disagreements:
+        lines.append(f"_{path}:_")
+        if evaluation.extra_examples:
+            lines.append("- Extra (extracted but not in truth):")
+            for example in evaluation.extra_examples:
+                lines.append(
+                    f"  - {example['day']} {example['type']} {example['start']}-{example['end']}  "
+                    f"`{example['evidence']}`"
+                )
+        if evaluation.missing_examples:
+            lines.append("- Missing (in truth but not extracted):")
+            for example in evaluation.missing_examples:
+                lines.append(
+                    f"  - {example['day']} {example['type']} {example['start']}-{example['end']}  "
+                    f"`{example['evidence']}`"
+                )
     lines.append("")
     return lines
