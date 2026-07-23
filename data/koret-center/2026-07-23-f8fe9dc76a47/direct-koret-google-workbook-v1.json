@@ -1,0 +1,62 @@
+{
+  "cost_estimate": "deterministic",
+  "extracted_at": "2026-07-23T17:28:50.307185+00:00",
+  "model": "koret-google-workbook-v1",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [],
+    "closures": [],
+    "effective_start": "2026-07-23",
+    "schedule_basis": "pool_hours",
+    "sessions": [
+      {
+        "day": "monday",
+        "end": "19:00",
+        "evidence": "Monday Hours: 7am-7pm (Summer Hours)",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "19:00",
+        "evidence": "Tuesday Hours: 7am-7pm (Summer Hours)",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:00",
+        "evidence": "Wednesday Hours: 7am-7pm (Summer Hours)",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "19:00",
+        "evidence": "Thursday Hours: 7am-7pm (Summer Hours)",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "19:00",
+        "evidence": "Friday Hours: 7am-7pm (Summer Hours)",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "18:00",
+        "evidence": "Weekend time grid",
+        "start": "08:00",
+        "type": "lap_swim"
+      }
+    ]
+  },
+  "pdf_sha256": "f8fe9dc76a47d76fbe861159c28adc422c72e39beb57f78f51233e5839169c28",
+  "prompt_sha256": "d890ba6f8d2dfd4dbae8cfba507a0e627b9100313325103fdc48ac549ca8dcc2",
+  "provider": "direct",
+  "schema_sha256": "83e30568488faa43b2796db02e2b2eee945e2f70bdb44b38a5b5a3b4ca086afa",
+  "source_pdf_url": "https://docs.google.com/spreadsheets/d/1PcFSl3ndScM2-SZnubwDvBlbhpmbFsVjEPK-yGilZU0/edit?gid=1958899859&pli=1",
+  "usage": {}
+}
