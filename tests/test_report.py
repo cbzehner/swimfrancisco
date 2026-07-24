@@ -13,7 +13,7 @@ import subprocess
 from pathlib import Path
 
 from schedules.models import Aborted, Extracted, PoolResult, ReviewNote, Skipped, Unchanged, Violation
-from schedules.pr_summary import staged_data_has_meaningful_changes
+from schedules.pr_summary import render_pr_body, staged_data_has_meaningful_changes
 from schedules.report import write_report
 
 
@@ -265,6 +265,17 @@ def _write_provider_json(path: Path, *, extracted_at: str, effective_start: str,
     }, indent=2, sort_keys=True) + "\n")
 
 
+def _write_reviewed_json(path: Path, *, sessions: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({
+        "slug": "koret-center",
+        "pdf_sha256": "a" * 64,
+        "reviewed_at": "2026-07-01",
+        "source_pdf_url": "https://example.test/source.pdf",
+        "payload": {"sessions": sessions},
+    }, indent=2, sort_keys=True) + "\n")
+
+
 class TestMeaningfulStagedDataChanges:
     def test_metadata_only_provider_json_change_is_not_meaningful(self, tmp_path: Path) -> None:
         repo = tmp_path / "repo"
@@ -308,6 +319,107 @@ class TestMeaningfulStagedDataChanges:
         _git(repo, "add", "data")
 
         assert staged_data_has_meaningful_changes(repo) is True
+
+
+class TestArtifactAwarePrSummary:
+    def test_changed_rows_precede_disagreement_details(self, tmp_path: Path) -> None:
+        repo = tmp_path / "repo"
+        repo.mkdir()
+        _git(repo, "init")
+        _git(repo, "config", "user.email", "test@example.com")
+        _git(repo, "config", "user.name", "Test")
+
+        run = repo / "data" / "koret-center" / "2026-07-23-cccccccccccc"
+        truth_sessions = [{"day": "saturday", "type": "lap_swim", "start": "08:00", "end": "16:00"}]
+        _write_reviewed_json(run / "reviewed.json", sessions=truth_sessions)
+        _git(repo, "add", "data")
+        _git(repo, "commit", "-m", "reviewed run")
+
+        _write_provider_json(
+            run / "direct-koret-google-alpha-v1.json",
+            extracted_at="2026-07-23T00:00:00+00:00",
+            effective_start="2026-07-23",
+            sessions=truth_sessions + [
+                {"day": "sunday", "type": "lap_swim", "start": "08:00", "end": "16:00"},
+            ],
+        )
+        _write_provider_json(
+            run / "direct-koret-google-beta-v1.json",
+            extracted_at="2026-07-23T00:00:00+00:00",
+            effective_start="2026-07-23",
+            sessions=truth_sessions,
+        )
+        _git(repo, "add", "data")
+
+        text = render_pr_body(repo_root=repo, data_root=repo / "data")
+        table = text.split("## Changed artifacts", 1)[1].split("## ", 1)[0]
+        alpha_row = "| `data/koret-center/2026-07-23-cccccccccccc/direct-koret-google-alpha-v1.json` | scored |"
+        beta_row = "| `data/koret-center/2026-07-23-cccccccccccc/direct-koret-google-beta-v1.json` | scored |"
+
+        assert table.index(alpha_row) < table.index(beta_row)
+        assert table.index(beta_row) < table.index("_data/koret-center/2026-07-23-cccccccccccc/direct-koret-google-alpha-v1.json:_")
+
+    def test_unreviewed_workbook_does_not_borrow_reviewed_sheet_score(self, tmp_path: Path) -> None:
+        repo = tmp_path / "repo"
+        repo.mkdir()
+        _git(repo, "init")
+        _git(repo, "config", "user.email", "test@example.com")
+        _git(repo, "config", "user.name", "Test")
+
+        old_run = repo / "data" / "koret-center" / "2026-07-01-aaaaaaaaaaaa"
+        sessions = [{"day": "saturday", "type": "lap_swim", "start": "08:00", "end": "16:00"}]
+        _write_reviewed_json(old_run / "reviewed.json", sessions=sessions)
+        _write_provider_json(
+            old_run / "direct-koret-google-sheet-v1.json",
+            extracted_at="2026-07-01T00:00:00+00:00",
+            effective_start="2026-07-01",
+            sessions=sessions,
+        )
+        _git(repo, "add", "data")
+        _git(repo, "commit", "-m", "old reviewed run")
+
+        new_run = repo / "data" / "koret-center" / "2026-07-23-f8fe9dc76a47"
+        _write_provider_json(
+            new_run / "direct-koret-google-workbook-v1.json",
+            extracted_at="2026-07-23T00:00:00+00:00",
+            effective_start="2026-07-23",
+            sessions=[{"day": "saturday", "type": "lap_swim", "start": "08:00", "end": "15:00"}],
+        )
+        _git(repo, "add", "data")
+
+        text = render_pr_body(repo_root=repo, data_root=repo / "data")
+
+        assert "`data/koret-center/2026-07-23-f8fe9dc76a47/direct-koret-google-workbook-v1.json`" in text
+        assert "unscored — human review required" in text
+        assert "| `data/koret-center/2026-07-23-f8fe9dc76a47/direct-koret-google-workbook-v1.json` | unscored" in text
+        assert "| `data/koret-center/2026-07-23-f8fe9dc76a47/direct-koret-google-workbook-v1.json` | scored" not in text
+        assert "| `data/koret-center/2026-07-01-aaaaaaaaaaaa/direct-koret-google-sheet-v1.json` |" not in text
+        assert "Historical reviewed baseline" in text
+        assert "not a score for unreviewed changed artifacts" in text
+
+    def test_same_directory_reviewed_artifact_is_scored(self, tmp_path: Path) -> None:
+        repo = tmp_path / "repo"
+        repo.mkdir()
+        _git(repo, "init")
+        _git(repo, "config", "user.email", "test@example.com")
+        _git(repo, "config", "user.name", "Test")
+
+        run = repo / "data" / "koret-center" / "2026-07-23-bbbbbbbbbbbb"
+        sessions = [{"day": "saturday", "type": "lap_swim", "start": "08:00", "end": "16:00"}]
+        _write_reviewed_json(run / "reviewed.json", sessions=sessions)
+        _git(repo, "add", "data")
+        _git(repo, "commit", "-m", "reviewed run")
+        _write_provider_json(
+            run / "direct-koret-google-workbook-v1.json",
+            extracted_at="2026-07-23T00:00:00+00:00",
+            effective_start="2026-07-23",
+            sessions=sessions,
+        )
+        _git(repo, "add", "data")
+
+        text = render_pr_body(repo_root=repo, data_root=repo / "data")
+
+        assert "| `data/koret-center/2026-07-23-bbbbbbbbbbbb/direct-koret-google-workbook-v1.json` | scored | 1 | 1 | 1.00 |" in text
 
     def test_added_source_file_is_meaningful(self, tmp_path: Path) -> None:
         repo = tmp_path / "repo"
