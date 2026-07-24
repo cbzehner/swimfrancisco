@@ -110,7 +110,7 @@ def _setup_world(tmp_path: Path, monkeypatch, *, with_reviewed: bool, with_cache
     )
     monkeypatch.setattr(
         "schedules.pipeline.write_report",
-        lambda results: write_report(results, path=report_path),
+        lambda results, path=None: write_report(results, path=report_path),
     )
 
     # PDF inspection is out of scope for these pipeline-flow tests.
@@ -153,7 +153,7 @@ def test_extract_skips_llm_when_reviewed_exists(tmp_path, monkeypatch):
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", _raise_if_called)
 
     exit_code, _, results = run_pipeline(
-        slugs=[SLUG], provider="gemini", compare_with=None, force=False,
+        slugs=[SLUG], source_mode="gemini", compare_with=None, force=False,
     )
 
     assert exit_code == 0
@@ -167,7 +167,7 @@ def test_extract_uses_cached_provider_when_prompt_hashes_match(tmp_path, monkeyp
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", _raise_if_called)
 
     exit_code, _, results = run_pipeline(
-        slugs=[SLUG], provider="gemini", compare_with=None, force=False,
+        slugs=[SLUG], source_mode="gemini", compare_with=None, force=False,
     )
 
     from schedules.models import Aborted
@@ -210,7 +210,7 @@ def test_extract_reruns_after_prompt_change(tmp_path, monkeypatch):
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", fake_extract)
 
     exit_code, _, results = run_pipeline(
-        slugs=[SLUG], provider="gemini", compare_with=None, force=False,
+        slugs=[SLUG], source_mode="gemini", compare_with=None, force=False,
     )
 
     assert exit_code == 0

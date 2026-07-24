@@ -6,6 +6,7 @@ from click.testing import CliRunner
 
 from schedules.cli import cli
 from schedules.review_server import ReviewApp, _csv_sections
+from schedules.models import PoolEntry
 
 
 def _review_dir(data_root: Path, slug: str, date: str, pdf_sha256: str) -> Path:
@@ -150,3 +151,52 @@ def test_review_app_reports_current_and_changed_source(tmp_path, monkeypatch):
 
     monkeypatch.setattr("schedules.review_server.current_source_identity", lambda slug: "b" * 64)
     assert app.check_source("koret-center") == {"status": "changed", "source_identity": "b" * 64}
+
+
+@pytest.mark.parametrize("source_kind, configured_provider, expected_mode", [
+    ("koret_google_sheet", "anthropic", "direct"),
+    ("pomeroy_html", "gemini", "direct"),
+    ("sfrecpark_pdf", "anthropic", "anthropic"),
+])
+def test_review_refresh_uses_registry_source_mode(tmp_path, monkeypatch, source_kind, configured_provider, expected_mode):
+    data = tmp_path / "data"
+    content = tmp_path / "content" / "spots"
+    _seed_review_dir(data, "koret-center", "2026-04-01", "a" * 64)
+    app = ReviewApp(data_root=data, content_spots_dir=content)
+    entry = PoolEntry(
+        slug="koret-center",
+        pdf_url="https://example.com/source.pdf",
+        official_page_url="https://example.com/pool",
+        source_kind=source_kind,
+    )
+    monkeypatch.setattr("schedules.review_server.load_registry", lambda: [entry])
+    monkeypatch.setattr("schedules.review_server.current_source_identity", lambda slug: "b" * 64)
+    monkeypatch.setenv("SCHEDULES_PROVIDER", configured_provider)
+    calls = []
+    monkeypatch.setattr(
+        "schedules.review_server.run_pipeline",
+        lambda **kwargs: (calls.append(kwargs) or (0, None, [object()])),
+    )
+
+    app.refresh("koret-center")
+
+    assert calls[0]["source_mode"] == expected_mode
+
+
+def test_review_refresh_rejects_invalid_pdf_provider(tmp_path, monkeypatch):
+    data = tmp_path / "data"
+    content = tmp_path / "content" / "spots"
+    _seed_review_dir(data, "koret-center", "2026-04-01", "a" * 64)
+    app = ReviewApp(data_root=data, content_spots_dir=content)
+    entry = PoolEntry(
+        slug="koret-center",
+        pdf_url="https://example.com/source.pdf",
+        official_page_url="https://example.com/pool",
+        source_kind="sfrecpark_pdf",
+    )
+    monkeypatch.setattr("schedules.review_server.load_registry", lambda: [entry])
+    monkeypatch.setattr("schedules.review_server.current_source_identity", lambda slug: "b" * 64)
+    monkeypatch.setenv("SCHEDULES_PROVIDER", "direct")
+
+    with pytest.raises(ValueError, match="Unsupported provider"):
+        app.refresh("koret-center")

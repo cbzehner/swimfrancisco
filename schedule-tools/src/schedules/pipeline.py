@@ -4,6 +4,7 @@ import json
 import os
 import traceback
 from pathlib import Path
+from typing import Literal
 
 from .artifacts import save_artifact_bundle, skip_if_fresh
 from .delta import check_delta
@@ -12,7 +13,7 @@ from .fetch import fetch_pdf
 from .grounding import grounding_from_text, normalize_pdf_text
 from .merge import read_schedule_snapshot
 from .models import Aborted, Extracted, GroundingResult, PoolEntry, PoolResult, ReviewNote, Skipped, Unchanged
-from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH, artifact_path, reviewed_path
+from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH, REPORT_PATHS, artifact_path, reviewed_path
 from .providers import extract as extract_with_provider
 from .providers.anthropic_provider import DEFAULT_MODEL as ANTHROPIC_DEFAULT_MODEL
 from .providers.gemini_provider import DEFAULT_MODEL as GEMINI_DEFAULT_MODEL
@@ -26,6 +27,20 @@ from .signals import analyze_page_texts, extract_page_texts, source_notes_for_si
 from .validate import validate
 
 _GROUNDING_MIN_RATIO = 0.9
+SourceMode = Literal["direct", "gemini", "anthropic"]
+ProviderMode = Literal["gemini", "anthropic"]
+
+
+def parse_provider(value: str) -> ProviderMode:
+    if value == "gemini" or value == "anthropic":
+        return value
+    raise ValueError(f"Unsupported provider {value!r}; expected 'gemini' or 'anthropic'.")
+
+
+def parse_source_mode(value: str) -> SourceMode:
+    if value == "direct":
+        return value
+    return parse_provider(value)
 
 
 def compute_exit_code(results: list[PoolResult]) -> int:
@@ -367,30 +382,48 @@ def _process_direct_entry(entry: PoolEntry, prior_snapshot: dict) -> PoolResult:
     )
 
 
-def run_pipeline(
+def select_registry_entries(
+    registry: list[PoolEntry],
     *,
+    source_mode: SourceMode,
     slugs: list[str] | None,
-    provider: str,
-    compare_with: str | None,
-    force: bool,
-) -> tuple[int, Path, list[PoolResult]]:
-    registry = load_registry()
-    selected = [entry for entry in registry if slugs is None or entry.slug in slugs]
+) -> list[PoolEntry]:
+    if source_mode == "direct":
+        candidates = [entry for entry in registry if entry.source_kind != "sfrecpark_pdf"]
+    else:
+        candidates = [entry for entry in registry if entry.source_kind == "sfrecpark_pdf"]
+
+    selected = [entry for entry in candidates if slugs is None or entry.slug in slugs]
     if slugs:
         missing = sorted(set(slugs) - {entry.slug for entry in selected})
         if missing:
-            raise ValueError(f"Unknown registry slug(s): {', '.join(missing)}")
+            raise ValueError(
+                f"Unknown or mismatched registry slug(s) for {source_mode} mode: {', '.join(missing)}"
+            )
+    return selected
+
+
+def run_pipeline(
+    *,
+    slugs: list[str] | None,
+    source_mode: SourceMode,
+    compare_with: str | None,
+    force: bool,
+) -> tuple[int, Path, list[PoolResult]]:
+    source_mode = parse_source_mode(source_mode)
+    registry = load_registry()
+    selected = select_registry_entries(registry, source_mode=source_mode, slugs=slugs)
 
     prompt = PROMPT_PATH.read_text().strip()
     results = [
         _process_entry(
             entry,
-            provider=provider,
+            provider=source_mode,
             compare_with=compare_with,
             force=force,
             prompt=prompt,
         )
         for entry in selected
     ]
-    report_path = write_report(results)
+    report_path = write_report(results, path=REPORT_PATHS[source_mode])
     return compute_exit_code(results), report_path, results

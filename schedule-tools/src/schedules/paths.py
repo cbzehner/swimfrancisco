@@ -9,7 +9,11 @@ REPO_ROOT = PROJECT_ROOT.parent
 CONTENT_SPOTS_DIR = REPO_ROOT / "content" / "spots"
 DATA_DIR = REPO_ROOT / "data"
 TMP_DIR = REPO_ROOT / "tmp"
-REPORT_PATH = TMP_DIR / "extraction-report.md"
+REPORT_PATHS = {
+    "direct": TMP_DIR / "extraction-report-direct.md",
+    "gemini": TMP_DIR / "extraction-report-gemini.md",
+    "anthropic": TMP_DIR / "extraction-report-anthropic.md",
+}
 REGISTRY_PATH = PACKAGE_ROOT / "registry.toml"
 PROMPT_PATH = PACKAGE_ROOT / "prompts" / "extract.txt"
 

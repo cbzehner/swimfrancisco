@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 from .models import Aborted, Extracted, PoolResult, ReviewNote, Skipped, Unchanged, Violation, needs_review
-from .paths import REPORT_PATH
 
 
 def result_counts(results: list[PoolResult]) -> dict[str, int]:
@@ -18,7 +17,7 @@ def result_counts(results: list[PoolResult]) -> dict[str, int]:
     }
 
 
-def write_report(results: list[PoolResult], path: Path = REPORT_PATH) -> Path:
+def write_report(results: list[PoolResult], path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
 
     counts = result_counts(results)
@@ -26,6 +25,9 @@ def write_report(results: list[PoolResult], path: Path = REPORT_PATH) -> Path:
 
     lines = [
         "# Extraction Report",
+        "",
+        f"overall status: {'partial success' if counts['failed'] else 'success'}",
+        f"failure count: {counts['failed']}",
         "",
         (
             f"{len(results)} pools processed, {counts['succeeded']} succeeded, "

@@ -1,6 +1,6 @@
 # Pool Schedule Extraction
 
-The schedule extractor is a local `uv`-managed Python CLI under `schedule-tools/`. It fetches SF Rec & Park schedule PDFs, asks an LLM provider to extract structured schedule data, merges the result into `content/spots/*.md`, and writes a review report to `tmp/extraction-report.md`.
+The schedule extractor is a local `uv`-managed Python CLI under `schedule-tools/`. It fetches direct sources once, asks an LLM provider to extract SF Rec & Park schedule PDFs, and writes review reports without changing `content/spots/*.md`.
 
 ## Setup
 
@@ -54,17 +54,22 @@ SCHEDULES_ANTHROPIC_MODEL=claude-sonnet-4-6
 
 ## Usage
 
-Run a single pool:
+Run all provider-independent direct sources once:
 
 ```sh
-just schedules-extract --only hamilton-pool
+just schedules-extract --direct
 ```
 
-Run the full published registry:
+Run the PDF sources with one provider:
 
 ```sh
-just schedules-extract
+just schedules-extract --provider gemini
+just schedules-extract --provider anthropic
 ```
+
+Use `--only slug1,slug2` with either mode. A slug outside the selected source
+group is rejected rather than silently skipped. `--force` re-fetches sources
+and bypasses the unchanged shortcut.
 
 Run a provider bakeoff on a flagged pool:
 
@@ -74,15 +79,18 @@ just schedules debug bakeoff --provider gemini --compare-with anthropic --only h
 
 Useful flags on `extract`:
 
-- `--provider anthropic|gemini`
+- exactly one of `--direct` or `--provider anthropic|gemini`
 - `--only slug1,slug2`
 - `--force`
 
 `extract` never writes `content/spots/*.md` or `reviewed.json` — those
-only change through `schedules review`. The pipeline produces provider
-artifacts under `data/<slug>/<date>-<sha12>/` and a review report; the
-operator approves changes by hand. `schedules debug bakeoff` is the
-same: observational only.
+only change through `schedules review`. The pipeline produces direct or
+provider artifacts under `data/<slug>/<date>-<sha12>/` and writes one fixed
+report per pass: `tmp/extraction-report-direct.md`,
+`tmp/extraction-report-gemini.md`, or `tmp/extraction-report-anthropic.md`.
+Each report labels the run `success` or `partial success`, includes the failure
+count, and retains failed pool identities and complete errors. The operator
+approves changes by hand. `schedules debug bakeoff` is observational only.
 
 **Exit codes:** the `extract` command exits non-zero when any pool failed
 (hard-blocked or errored). Partial failure never exits 0; shell automation
@@ -131,8 +139,8 @@ that one clock-derived field is ignored in the comparison; for PDF pools
 the whole payload must match. Any real payload change queues the pool for
 review as before.
 
-1. Run `just schedules-extract`.
-2. Read `tmp/extraction-report.md`.
+1. Run `just schedules-extract --direct` and, when needed, one or both PDF provider modes.
+2. Read the report for the selected pass under `tmp/extraction-report-<mode>.md`.
 3. Review `git diff content/spots/`.
 4. For any pool with `review_note[...]` lines, inspect the provider
    outputs under `data/<slug>/<fetch-date>-<sha12>/`.
@@ -245,23 +253,46 @@ Run before and after any prompt or schema tweak; require improvement, not regres
 ## Auto-extract workflow
 
 The `.github/workflows/schedules-extract.yml` action runs daily at
-09:00 PT and on `workflow_dispatch`. It re-runs extraction with both Gemini
-and Anthropic — provider artifacts under `data/<slug>/<date>-<sha12>/`
-get written, and the pipeline carries attestation forward (writes
-`reviewed.json` with `carried_from`) for pools whose payload matches the
-last human-reviewed one; `content/spots/` stays untouched. If anything
-changed under `data/`, the action commits to the rolling
-`auto/schedules-extract` branch and opens or refreshes its PR with the
-extraction report and eval scorecard in the body. When nothing awaits a
-human — every changed pool auto-verified — the PR is set to auto-merge on
-green CI, so quiet weeks need no attention at all.
+09:00 PT and on `workflow_dispatch`. It runs direct extraction once, then
+processes the PDF sources once with Gemini and once with Anthropic. Each pass
+has a distinct report; the run summary and uploaded
+`schedule-extraction-reports` artifact retain all reports that were produced,
+including partial-success failure details. Provider artifacts under
+`data/<slug>/<date>-<sha12>/` get written, and the pipeline carries
+attestation forward (writes `reviewed.json` with `carried_from`) for pools
+whose payload matches the last human-reviewed one; `content/spots/` stays
+untouched. If anything changed under `data/`, the action commits to the
+rolling `auto/schedules-extract` branch and opens or refreshes its PR with the
+extraction scorecard in the body. When nothing awaits a human — every changed
+pool auto-verified — the PR is set to auto-merge on green CI, so quiet weeks
+need no attention at all.
 
-Fully-autonomous prerequisites (without them the PR is simply left open
-for manual merge): a `SCHEDULES_BOT_TOKEN` fine-grained PAT secret with
-contents and pull-requests read/write (PRs made with the default
-`GITHUB_TOKEN` never trigger the `ci` workflow), the repo setting "Allow
-auto-merge", and a branch protection rule on `main` requiring the
-`check` status.
+Before checkout, the workflow requires `SCHEDULES_BOT_TOKEN`. Provision a
+repository-scoped fine-grained PAT limited to `cbzehner/swimfrancisco` with
+Contents read/write and Pull requests read/write permissions, then store it as
+that exact Actions secret. The workflow fails with guidance and does not
+publish when it is absent; it never falls back to `github.token`,
+`GITHUB_TOKEN`, or another credential. The PAT should expire within 90 days
+and be rotated through the same Operator-supervised account-settings flow.
+The other prerequisites are the repo setting "Allow auto-merge" and a branch
+protection rule on `main` requiring the `check` status.
+
+Operator provisioning procedure:
+
+If browser control or the ChatGPT Chrome Extension is unavailable, manual
+account-settings/browser provisioning is the fallback.
+
+1. In GitHub account settings, create a fine-grained PAT owned by `cbzehner`,
+   limited to `cbzehner/swimfrancisco`, with only Contents and Pull requests
+   read/write permissions and an expiration no later than 90 days.
+2. Treat password entry and 2FA as manual Operator checkpoints.
+3. At the final token-display checkpoint, copy the token directly into the
+   repository Actions secret named `SCHEDULES_BOT_TOKEN`. The token must not
+   enter chat, browser-automation output, shell history, command arguments,
+   files, logs, screenshots, or Development artifacts.
+4. Verify installation by reading back only the secret name and update time;
+   GitHub does not expose the stored value. Do not reuse the existing broad
+   GitHub CLI OAuth token for Actions publication.
 
 Reviewer flow on an auto-PR that lists pending pools:
 
@@ -278,9 +309,8 @@ Forks cannot run it. `concurrency.cancel-in-progress` caps cost at one
 extraction at a time. Set monthly budget caps on `GOOGLE_API_KEY` and
 `ANTHROPIC_API_KEY` in their respective dashboards as belt-and-suspenders.
 
-Required repo secrets: `GOOGLE_API_KEY`, `ANTHROPIC_API_KEY`. The default
-`GITHUB_TOKEN` (auto-provisioned with `contents: write` and
-`pull-requests: write`) is enough to push the branch and open the PR.
+Required repo secrets: `GOOGLE_API_KEY`, `ANTHROPIC_API_KEY`, and the
+CI-capable `SCHEDULES_BOT_TOKEN` described above.
 
 Required repo settings: Settings → Actions → General →
 - Workflow permissions: **Read and write permissions**
@@ -292,6 +322,10 @@ Branches → main → require pull request review before merging, with at
 least 1 approval. The bot can open a PR but cannot merge it.
 
 ## Future
+
+Semantic XLSX fingerprinting remains a separate provenance-design follow-up.
+This workflow continues to use the existing source-byte identity and does not
+implement canonicalization or semantic identity.
 
 The v4 path is auto-merge for trivially-confident updates: when an
 auto-PR's eval F1 is at or above the prior baseline AND the row diff vs

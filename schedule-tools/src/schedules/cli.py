@@ -3,14 +3,14 @@ from __future__ import annotations
 import os
 import click
 
-from .models import Aborted, Extracted, PoolResult, Skipped, Unchanged
+from .models import PoolResult
 from .paths import (
     CONTENT_SPOTS_DIR,
     DATA_DIR,
     latest_review_dir,
 )
 from .eval import collect_pool_evals, render_report, write_report
-from .pipeline import run_pipeline
+from .pipeline import parse_source_mode, run_pipeline
 from .pr_summary import render_pr_body, staged_data_has_meaningful_changes
 from .report import result_counts
 from .project import ProjectError, project as _project
@@ -52,23 +52,31 @@ def _summary_line(results: list[PoolResult]) -> str:
     help="Comma-separated pool slugs to process.",
 )
 @click.option(
+    "--direct",
+    is_flag=True,
+    help="Process every configured provider-independent direct source.",
+)
+@click.option(
     "--provider",
     type=click.Choice(["anthropic", "gemini"]),
-    default=_default_provider(),
-    show_default="env SCHEDULES_PROVIDER or gemini",
+    help="Process only configured sfrecpark_pdf sources with this provider.",
 )
 @click.option("--force", is_flag=True, help="Re-fetch PDFs and bypass the unchanged shortcut.")
 def extract(
     only: str | None,
-    provider: str,
+    direct: bool,
+    provider: str | None,
     force: bool,
 ) -> None:
     """Fetch PDFs, extract schedules, and write a review report."""
 
+    if direct == bool(provider):
+        raise click.UsageError("exactly one of --direct or --provider is required")
     slugs = _parse_slugs(only)
+    source_mode = "direct" if direct else parse_source_mode(provider or "")
     exit_code, report_path, results = run_pipeline(
         slugs=slugs,
-        provider=provider,
+        source_mode=source_mode,
         compare_with=None,
         force=force,
     )
@@ -215,7 +223,7 @@ def debug_bakeoff(
     slugs = _parse_slugs(only)
     exit_code, report_path, results = run_pipeline(
         slugs=slugs,
-        provider=provider,
+        source_mode=provider,
         compare_with=compare_with,
         force=force,
     )

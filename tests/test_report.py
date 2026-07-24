@@ -134,6 +134,28 @@ class TestSummaryHeader:
         # source_status row (skipped rows are non-published).
         assert "2 flagged for manual review" in text
 
+    def test_partial_success_status_and_failure_count_are_explicit(self, tmp_path: Path) -> None:
+        text = _render([_proposed(slug="ok"), _aborted(slug="broke", error="pool unavailable")], tmp_path)
+
+        assert "overall status: partial success" in text
+        assert "failure count: 1" in text
+        assert "## broke" in text
+        assert "- error: pool unavailable" in text
+
+    def test_consecutive_mode_reports_keep_distinct_contents(self, tmp_path: Path) -> None:
+        paths = {
+            "direct": tmp_path / "extraction-report-direct.md",
+            "gemini": tmp_path / "extraction-report-gemini.md",
+            "anthropic": tmp_path / "extraction-report-anthropic.md",
+        }
+        for mode, path in paths.items():
+            write_report([_proposed(slug=mode)], path)
+
+        for mode, path in paths.items():
+            text = path.read_text()
+            assert f"## {mode}" in text
+            assert "overall status: success" in text
+
 
 class TestPoolBlock:
     def test_sessions_delta_renders_with_sign(self, tmp_path: Path) -> None:

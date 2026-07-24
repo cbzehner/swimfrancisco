@@ -41,11 +41,22 @@ jobs:
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
+      - name: Verify CI-capable publication token
+        id: token-preflight
+        env:
+          SCHEDULES_BOT_TOKEN: ${{ secrets.SCHEDULES_BOT_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SCHEDULES_BOT_TOKEN}" ]; then
+            echo "::error::SCHEDULES_BOT_TOKEN is required before checkout or publication. Configure a repository-scoped fine-grained PAT for cbzehner/swimfrancisco with Contents and Pull requests read/write permissions, then store it as the Actions secret SCHEDULES_BOT_TOKEN."
+            exit 1
+          fi
+
       - uses: actions/checkout@v4
         with:
           # Pushes and PRs made with the default GITHUB_TOKEN do not
           # trigger other workflows; the PAT makes CI run on the PR.
-          token: ${{ secrets.SCHEDULES_BOT_TOKEN || github.token }}
+          token: ${{ secrets.SCHEDULES_BOT_TOKEN }}
 
       - uses: actions/setup-python@v5
         with:
@@ -57,7 +68,13 @@ jobs:
       - name: Sync schedule-tools deps
         run: uv --project schedule-tools sync
 
-      - name: Extract with Gemini (no content writes)
+      - name: Extract direct sources (no content writes)
+        id: extract-direct
+        run: uv --project schedule-tools run schedules extract --direct
+        continue-on-error: true
+
+      - name: Extract PDF sources with Gemini (no content writes)
+        id: extract-gemini
         # `extract` never writes content/spots/*.md or reviewed.json — those
         # only change through `schedules review`. Provider artifacts under
         # data/<slug>/.../ ARE written, but only when the cache check fails
@@ -67,9 +84,59 @@ jobs:
         run: uv --project schedule-tools run schedules extract --provider gemini
         continue-on-error: true
 
-      - name: Extract with Anthropic (no content writes)
+      - name: Extract PDF sources with Anthropic (no content writes)
+        id: extract-anthropic
         run: uv --project schedule-tools run schedules extract --provider anthropic
         continue-on-error: true
+
+      - name: Publish extraction evidence
+        if: always()
+        env:
+          PREFLIGHT_OUTCOME: ${{ steps.token-preflight.outcome }}
+          DIRECT_OUTCOME: ${{ steps.extract-direct.outcome }}
+          GEMINI_OUTCOME: ${{ steps.extract-gemini.outcome }}
+          ANTHROPIC_OUTCOME: ${{ steps.extract-anthropic.outcome }}
+        run: |
+          set -euo pipefail
+          failed=0
+          for pass in direct gemini anthropic; do
+            outcome_var=$(printf '%s_OUTCOME' "${pass^^}")
+            outcome=${!outcome_var:-not-run}
+            if [ "${outcome}" = failure ]; then
+              failed=$((failed + 1))
+            fi
+          done
+          if [ "${PREFLIGHT_OUTCOME}" != success ]; then
+            echo "## Schedule extraction: blocked before extraction" >> "$GITHUB_STEP_SUMMARY"
+            echo "CI-capable publication-token preflight did not pass; no extraction or publication was attempted." >> "$GITHUB_STEP_SUMMARY"
+          elif [ "${failed}" -gt 0 ]; then
+            echo "## Schedule extraction: partial success" >> "$GITHUB_STEP_SUMMARY"
+            echo "${failed} extraction pass(es) failed; inspect the failed pass and report details below." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## Schedule extraction: success" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          for pass in direct gemini anthropic; do
+            outcome_var=$(printf '%s_OUTCOME' "${pass^^}")
+            outcome=${!outcome_var:-not-run}
+            echo "- ${pass}: ${outcome}" >> "$GITHUB_STEP_SUMMARY"
+          done
+          for report in tmp/extraction-report-direct.md tmp/extraction-report-gemini.md tmp/extraction-report-anthropic.md; do
+            if [ -f "${report}" ]; then
+              echo "## ${report}" >> "$GITHUB_STEP_SUMMARY"
+              cat "${report}" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "### ${report}" >> "$GITHUB_STEP_SUMMARY"
+              echo "Report was not produced." >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+
+      - name: Upload extraction reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: schedule-extraction-reports
+          path: tmp/extraction-report-*.md
+          if-no-files-found: warn
 
       - name: Run eval against committed reviewed.json
         run: uv --project schedule-tools run schedules eval --stdout > tmp/eval.md
@@ -99,7 +166,7 @@ jobs:
       - name: Open or update PR
         if: steps.detect.outputs.changed == 'true'
         env:
-          GH_TOKEN: ${{ secrets.SCHEDULES_BOT_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.SCHEDULES_BOT_TOKEN }}
         run: |
           set -euo pipefail
           DATE=$(date +%Y-%m-%d)

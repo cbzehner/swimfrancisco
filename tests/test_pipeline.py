@@ -11,7 +11,9 @@ and is exercised here.
 from __future__ import annotations
 
 from schedules.models import Aborted, Extracted, PoolResult, Skipped, Unchanged
-from schedules.pipeline import compute_exit_code
+from schedules.models import PoolEntry
+from schedules.paths import REPORT_PATHS
+from schedules.pipeline import compute_exit_code, run_pipeline, select_registry_entries
 
 
 def _skipped(slug: str) -> Skipped:
@@ -84,3 +86,91 @@ class TestComputeExitCode:
 
     def test_zero_for_empty(self) -> None:
         assert compute_exit_code([]) == 0
+
+
+def _entry(slug: str, source_kind: str) -> PoolEntry:
+    return PoolEntry(
+        slug=slug,
+        pdf_url="https://example.test/source",
+        official_page_url="https://example.test/pool",
+        source_kind=source_kind,  # type: ignore[arg-type]
+    )
+
+
+def test_source_modes_partition_registry_without_overlap() -> None:
+    registry = [
+        _entry("direct-one", "jccsf_html"),
+        _entry("pdf-one", "sfrecpark_pdf"),
+        _entry("direct-two", "koret_google_sheet"),
+        _entry("pdf-two", "sfrecpark_pdf"),
+    ]
+
+    assert [entry.slug for entry in select_registry_entries(registry, source_mode="direct", slugs=None)] == [
+        "direct-one",
+        "direct-two",
+    ]
+    assert [entry.slug for entry in select_registry_entries(registry, source_mode="gemini", slugs=None)] == [
+        "pdf-one",
+        "pdf-two",
+    ]
+
+
+def test_source_mode_rejects_slug_from_other_partition() -> None:
+    registry = [_entry("direct-one", "jccsf_html"), _entry("pdf-one", "sfrecpark_pdf")]
+
+    try:
+        select_registry_entries(registry, source_mode="anthropic", slugs=["direct-one"])
+    except ValueError as exc:
+        assert "mismatched" in str(exc)
+    else:
+        raise AssertionError("expected a mismatched source slug to fail")
+
+
+def test_each_source_mode_processes_its_partition_exactly_once(monkeypatch, tmp_path) -> None:
+    registry = [
+        _entry("direct-one", "jccsf_html"),
+        _entry("pdf-one", "sfrecpark_pdf"),
+        _entry("direct-two", "koret_google_sheet"),
+        _entry("pdf-two", "sfrecpark_pdf"),
+    ]
+    calls: list[tuple[str, str]] = []
+    reports: dict[str, list[str]] = {}
+
+    monkeypatch.setattr("schedules.pipeline.load_registry", lambda: registry)
+    monkeypatch.setattr("schedules.pipeline.PROMPT_PATH", tmp_path / "prompt.txt")
+    (tmp_path / "prompt.txt").write_text("prompt")
+
+    def process(entry, *, provider, compare_with, force, prompt):
+        calls.append((provider, entry.slug))
+        return _skipped(entry.slug)
+
+    def report(results, *, path):
+        reports[path.name] = [result.slug for result in results]
+        return path
+
+    monkeypatch.setattr("schedules.pipeline._process_entry", process)
+    monkeypatch.setattr("schedules.pipeline.write_report", report)
+
+    for mode in ("direct", "gemini", "anthropic"):
+        run_pipeline(slugs=None, source_mode=mode, compare_with=None, force=False)
+
+    assert calls == [
+        ("direct", "direct-one"),
+        ("direct", "direct-two"),
+        ("gemini", "pdf-one"),
+        ("gemini", "pdf-two"),
+        ("anthropic", "pdf-one"),
+        ("anthropic", "pdf-two"),
+    ]
+    assert reports == {
+        "extraction-report-direct.md": ["direct-one", "direct-two"],
+        "extraction-report-gemini.md": ["pdf-one", "pdf-two"],
+        "extraction-report-anthropic.md": ["pdf-one", "pdf-two"],
+    }
+
+
+def test_source_modes_have_distinct_report_paths() -> None:
+    assert len(set(REPORT_PATHS.values())) == 3
+    assert REPORT_PATHS["direct"].name == "extraction-report-direct.md"
+    assert REPORT_PATHS["gemini"].name == "extraction-report-gemini.md"
+    assert REPORT_PATHS["anthropic"].name == "extraction-report-anthropic.md"
