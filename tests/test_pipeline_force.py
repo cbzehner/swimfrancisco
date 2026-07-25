@@ -84,7 +84,7 @@ def _setup(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr("schedules.pipeline.save_artifact_bundle", lambda **kw: orig_save(root=data_root, **kw))
     monkeypatch.setattr(
         "schedules.pipeline.write_report",
-        lambda results: write_report(results, path=report_path),
+        lambda results, path=None: write_report(results, path=report_path),
     )
 
     from schedules.models import GroundingResult
@@ -135,7 +135,7 @@ def test_force_bypasses_reviewed_fast_path(tmp_path, monkeypatch):
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", fake_extract)
 
     exit_code, _, results = run_pipeline(
-        slugs=[SLUG], provider="gemini", compare_with=None, force=True,
+        slugs=[SLUG], source_mode="gemini", compare_with=None, force=True,
     )
 
     assert exit_code == 0
@@ -154,7 +154,7 @@ def test_compare_with_bypasses_reviewed_fast_path(tmp_path, monkeypatch):
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", fake_extract)
 
     exit_code, _, results = run_pipeline(
-        slugs=[SLUG], provider="gemini", compare_with="anthropic", force=False,
+        slugs=[SLUG], source_mode="gemini", compare_with="anthropic", force=False,
     )
 
     assert exit_code == 0

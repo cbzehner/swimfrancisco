@@ -19,7 +19,7 @@ from urllib.parse import unquote, urlparse
 from .paths import CONTENT_SPOTS_DIR, DATA_DIR, reviewed_path
 from .direct_sources import DirectSourceError, extract_direct
 from .fetch import FetchError, fetch_pdf
-from .pipeline import run_pipeline
+from .pipeline import SourceMode, parse_provider, run_pipeline
 from .registry import load_registry
 from .review import FinalizeError, draft_envelope, finalize_draft, find_review_candidates
 
@@ -90,9 +90,15 @@ class ReviewApp:
             raise LookupError(f"No pending review for {slug}.")
         if current_source_identity(slug) == candidate.pdf_sha256:
             return self.review(slug)
+        entry = next((entry for entry in load_registry() if entry.slug == slug), None)
+        if entry is None:
+            raise LookupError(f"Unknown registry slug: {slug}.")
+        source_mode: SourceMode = "direct"
+        if entry.source_kind == "sfrecpark_pdf":
+            source_mode = parse_provider(os.getenv("SCHEDULES_PROVIDER", "gemini"))
         exit_code, _, results = run_pipeline(
             slugs=[slug],
-            provider=os.getenv("SCHEDULES_PROVIDER", "gemini"),
+            source_mode=source_mode,
             compare_with=None,
             force=True,
         )
