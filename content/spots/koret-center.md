@@ -107,6 +107,48 @@ start = "2026-06-19"
 end = "2026-06-19"
 reason = "Juneteenth"
 
+[[extra.schedules]]
+closures = []
+effective_start = "2026-08-12"
+schedule_basis = "pool_hours"
+last_verified_at = "2026-08-12"
+
+[[extra.schedules.sessions]]
+day = "monday"
+type = "lap_swim"
+start = "07:00"
+end = "19:00"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "07:00"
+end = "19:00"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "07:00"
+end = "19:00"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "07:00"
+end = "19:00"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "07:00"
+end = "19:00"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "lap_swim"
+start = "08:00"
+end = "16:00"
+
 [[extra.pricing]]
 label = "Member / eligible pass"
 price = "Varies"

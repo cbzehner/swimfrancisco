@@ -123,20 +123,36 @@ def _extract_sfsu_aquatics(html: str) -> dict:
     _require_text(text, "Natatorium Hours of Operation")
     _require_text(text, "Lap Pool")
     match = re.search(
-        r"Natatorium Hours of Operation\s+Monday-Thursday:\s*(.+?)\s+Friday-Saturday:\s*(.+?)\s+Sunday:\s*Closed",
+        r"Natatorium Hours of Operation\s+Mon,\s*Wed,\s*Thur:\s*(.+?)\s+Tue,\s*Fri:\s*(.+?)\s+Saturday/\s*Sunday:\s*Closed",
         text,
         flags=re.IGNORECASE,
     )
     if not match:
         raise DirectSourceError("SFSU page did not expose natatorium hours in the expected format.")
-    weekday_hours, friday_saturday_hours = match.groups()
-    weekday_start, weekday_end = _parse_hours_range(weekday_hours)
-    weekend_start, weekend_end = _parse_hours_range(friday_saturday_hours)
+    monday_wednesday_thursday_hours, tuesday_friday_hours = match.groups()
+    monday_wednesday_thursday_start, monday_wednesday_thursday_end = _parse_hours_range(
+        monday_wednesday_thursday_hours
+    )
+    tuesday_friday_start, tuesday_friday_end = _parse_hours_range(tuesday_friday_hours)
     return _payload("pool_hours", [], access_hours=[
         *[
-            _access_hour(day, weekday_start, weekday_end, "Natatorium hours", f"Monday-Thursday: {weekday_hours}")
-            for day in ("monday", "tuesday", "wednesday", "thursday")
+            _access_hour(
+                day,
+                monday_wednesday_thursday_start,
+                monday_wednesday_thursday_end,
+                "Natatorium hours",
+                f"Mon, Wed, Thur: {monday_wednesday_thursday_hours}",
+            )
+            for day in ("monday", "wednesday", "thursday")
         ],
-        _access_hour("friday", weekend_start, weekend_end, "Natatorium hours", f"Friday-Saturday: {friday_saturday_hours}"),
-        _access_hour("saturday", weekend_start, weekend_end, "Natatorium hours", f"Friday-Saturday: {friday_saturday_hours}"),
+        *[
+            _access_hour(
+                day,
+                tuesday_friday_start,
+                tuesday_friday_end,
+                "Natatorium hours",
+                f"Tue, Fri: {tuesday_friday_hours}",
+            )
+            for day in ("tuesday", "friday")
+        ],
     ])

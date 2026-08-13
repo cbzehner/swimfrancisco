@@ -69,10 +69,10 @@ def test_jccsf_html_extractor_models_lap_and_family_hours():
         <p>Monday – Friday: 5:30 am – 9:45 pm</p>
         <p>Saturday & Sunday: 7:00 am – 6:45 pm*</p>
         <h3>Rec Pool Hours</h3>
-        <p>Monday, Wednesday: 5:30 am – Noon, 1:30 – 9:45 pm</p>
-        <p>Tuesday: 5:30 – 11:30 am, 12:30 – 9:45 pm</p>
-        <p>Thursday: 5:30 – Noon, 1:00 – 9:45 pm</p>
-        <p>Friday: 5:30 – Noon, 1:30 – 9:45 pm</p>
+        <p>Monday & Wednesday: 5:30 am – Noon, 3:00 – 9:45 pm</p>
+        <p>Tuesday: 5:30 – 11:30 am, 3:00 – 9:45 pm</p>
+        <p>Thursday: 5:30 am – Noon, 3:00 – 9:45 pm</p>
+        <p>Friday: 5:30 – 10:00 am, 1:30 – 9:45 pm</p>
         <p>Saturday & Sunday: 7:00 – 8:00 am, 2:00 – 6:45 pm</p>
         <p>The Lap Pool is available for lap swimming during Aquatics Center hours.</p>
         """
@@ -83,6 +83,13 @@ def test_jccsf_html_extractor_models_lap_and_family_hours():
         for s in payload["sessions"]
     )
     assert any(s["type"] == "family_swim" for s in payload["sessions"])
+    assert any(
+        s["day"] == "tuesday"
+        and s["type"] == "family_swim"
+        and s["start"] == "15:00"
+        and s["end"] == "21:45"
+        for s in payload["sessions"]
+    )
 
 
 def test_jccsf_html_extractor_rejects_page_when_posted_hours_change():
@@ -182,7 +189,8 @@ def test_koret_google_sheet_extractor_splits_hours_around_closed_grid_rows(tmp_p
     ]
 
 
-def test_koret_google_sheet_extractor_reads_dated_notice_closure(tmp_path):
+def test_koret_google_sheet_extractor_reads_dated_notice_closure(tmp_path, monkeypatch):
+    monkeypatch.setattr(direct_sources, "pacific_today", lambda: date(2026, 8, 12))
     sheets = {
         day: [[day], ["Hours: 7am-7pm"]]
         for day in ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
@@ -427,14 +435,15 @@ def test_sfsu_extractor_reads_natatorium_hours():
     payload = _extract_sfsu_aquatics(
         """
         <h2>Natatorium Hours of Operation</h2>
-        <p>Monday-Thursday: 10am- 8pm Friday-Saturday: Noon- 4pm Sunday: Closed</p>
+        <p>Mon, Wed, Thur: Noon - 4:00 p.m. Tue, Fri: 10:00am- 1:30pm Saturday/ Sunday: Closed</p>
         <p>Lap Pool: six lanes.</p>
         """
     )
 
     assert payload["schedule_basis"] == "pool_hours"
-    assert len(payload["access_hours"]) == 6
-    assert any(a["day"] == "friday" and a["start"] == "12:00" for a in payload["access_hours"])
+    assert len(payload["access_hours"]) == 5
+    assert any(a["day"] == "monday" and a["start"] == "12:00" for a in payload["access_hours"])
+    assert any(a["day"] == "friday" and a["start"] == "10:00" for a in payload["access_hours"])
 
 
 def test_ucsf_bakar_extractor_reads_facility_hours():

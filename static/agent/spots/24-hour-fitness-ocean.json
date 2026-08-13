@@ -34,8 +34,8 @@
     "website": "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport"
   },
   "freshness": {
-    "last_verified_at": "2026-07-02",
-    "schedule_effective": "2026-07-02"
+    "last_verified_at": "2026-07-10",
+    "schedule_effective": "2026-07-06"
   },
   "sources": [
     {
@@ -48,11 +48,62 @@
     "setpoint_label": "lap",
     "schedules": [
       {
-        "effective_start": "2026-07-02",
-        "last_verified_at": "2026-07-02",
-        "schedule_basis": "facility_hours",
         "sessions": [],
         "closures": [],
+        "effective_start": "2026-07-02",
+        "schedule_basis": "facility_hours",
+        "last_verified_at": "2026-07-02",
+        "access_hours": [
+          {
+            "day": "monday",
+            "start": "05:00",
+            "end": "23:59",
+            "label": "Gym hours"
+          },
+          {
+            "day": "tuesday",
+            "start": "00:00",
+            "end": "23:59",
+            "label": "Gym hours"
+          },
+          {
+            "day": "wednesday",
+            "start": "00:00",
+            "end": "23:59",
+            "label": "Gym hours"
+          },
+          {
+            "day": "thursday",
+            "start": "00:00",
+            "end": "23:59",
+            "label": "Gym hours"
+          },
+          {
+            "day": "friday",
+            "start": "00:00",
+            "end": "21:00",
+            "label": "Gym hours"
+          },
+          {
+            "day": "saturday",
+            "start": "05:00",
+            "end": "21:00",
+            "label": "Gym hours"
+          },
+          {
+            "day": "sunday",
+            "start": "05:00",
+            "end": "21:00",
+            "label": "Gym hours"
+          }
+        ]
+      },
+      {
+        "sessions": [],
+        "closures": [],
+        "effective_start": "2026-07-06",
+        "schedule_basis": "facility_hours",
+        "last_verified_at": "2026-07-10",
         "access_hours": [
           {
             "day": "monday",
@@ -100,5 +151,5 @@
       }
     ]
   },
-  "generated_at": "2026-07-02T21:12:52.814Z"
+  "generated_at": "2026-08-13T05:55:17.025Z"
 }

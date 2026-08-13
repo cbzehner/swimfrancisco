@@ -42,8 +42,8 @@
     "website": "https://www.usfca.edu/koret/facilities/indoor-swimming"
   },
   "freshness": {
-    "last_verified_at": "2026-06-16",
-    "schedule_effective": "2026-06-16"
+    "last_verified_at": "2026-08-12",
+    "schedule_effective": "2026-08-12"
   },
   "sources": [
     {
@@ -148,8 +148,52 @@
             "reason": "Juneteenth"
           }
         ]
+      },
+      {
+        "closures": [],
+        "effective_start": "2026-08-12",
+        "schedule_basis": "pool_hours",
+        "last_verified_at": "2026-08-12",
+        "sessions": [
+          {
+            "day": "monday",
+            "type": "lap_swim",
+            "start": "07:00",
+            "end": "19:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "07:00",
+            "end": "19:00"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "07:00",
+            "end": "19:00"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "07:00",
+            "end": "19:00"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "07:00",
+            "end": "19:00"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "08:00",
+            "end": "16:00"
+          }
+        ]
       }
     ]
   },
-  "generated_at": "2026-07-02T21:12:52.814Z"
+  "generated_at": "2026-08-13T05:55:17.025Z"
 }

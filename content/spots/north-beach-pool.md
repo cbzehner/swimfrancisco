@@ -18,9 +18,9 @@ payment_model = "session"
 
 [[extra.schedules]]
 effective_start = "2026-03-17"
+schedule_basis = "swim_schedule"
 effective_end = "2026-06-06"
 last_verified_at = "2026-04-20"
-schedule_basis = "swim_schedule"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -306,9 +306,9 @@ reason = "Holiday Closure"
 
 [[extra.schedules]]
 effective_start = "2026-06-09"
+schedule_basis = "swim_schedule"
 effective_end = "2026-08-10"
 last_verified_at = "2026-07-02"
-schedule_basis = "swim_schedule"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -361,17 +361,17 @@ pool = "c/w/t"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
-type = "lap_swim"
-start = "10:15"
-end = "12:30"
-pool = "c"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
 type = "senior_swim"
 start = "10:15"
 end = "11:15"
 pool = "w"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "10:15"
+end = "12:30"
+pool = "c"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -389,17 +389,17 @@ pool = "w"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
-type = "senior_swim"
-start = "13:45"
-end = "15:00"
-pool = "w"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
 type = "lap_swim"
 start = "13:00"
 end = "15:45"
 pool = "c"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "senior_swim"
+start = "13:45"
+end = "15:00"
+pool = "w"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -424,17 +424,17 @@ pool = "c/w/t"
 
 [[extra.schedules.sessions]]
 day = "thursday"
-type = "family_swim"
-start = "10:30"
-end = "11:45"
-pool = "w"
-
-[[extra.schedules.sessions]]
-day = "thursday"
 type = "lap_swim"
 start = "10:15"
 end = "13:00"
 pool = "c"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "family_swim"
+start = "10:30"
+end = "11:45"
+pool = "w"
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -466,17 +466,17 @@ pool = "c/w/t"
 
 [[extra.schedules.sessions]]
 day = "friday"
-type = "lap_swim"
-start = "10:15"
-end = "12:30"
-pool = "c"
-
-[[extra.schedules.sessions]]
-day = "friday"
 type = "senior_swim"
 start = "10:15"
 end = "11:15"
 pool = "w"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "10:15"
+end = "12:30"
+pool = "c"
 
 [[extra.schedules.sessions]]
 day = "friday"
@@ -515,13 +515,6 @@ pool = "c"
 
 [[extra.schedules.sessions]]
 day = "saturday"
-type = "lap_swim"
-start = "12:00"
-end = "15:00"
-pool = "c"
-
-[[extra.schedules.sessions]]
-day = "saturday"
 type = "family_swim"
 start = "12:00"
 end = "13:15"
@@ -529,10 +522,10 @@ pool = "w"
 
 [[extra.schedules.sessions]]
 day = "saturday"
-type = "family_swim"
-start = "15:30"
-end = "17:00"
-pool = "w"
+type = "lap_swim"
+start = "12:00"
+end = "15:00"
+pool = "c"
 
 [[extra.schedules.sessions]]
 day = "saturday"
@@ -540,6 +533,13 @@ type = "lap_swim"
 start = "15:30"
 end = "16:30"
 pool = "c"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "family_swim"
+start = "15:30"
+end = "17:00"
+pool = "w"
 
 [[extra.schedules.closures]]
 start = "2026-06-19"
@@ -550,6 +550,285 @@ reason = "Juneteenth"
 start = "2026-07-04"
 end = "2026-07-04"
 reason = "Independence Day"
+
+[[extra.schedules]]
+effective_start = "2026-08-11"
+schedule_basis = "swim_schedule"
+effective_end = "2026-08-29"
+last_verified_at = "2026-08-12"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "07:00"
+end = "08:30"
+pool = "warm"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "07:00"
+end = "10:00"
+pool = "cool"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "family_swim"
+start = "10:15"
+end = "11:45"
+pool = "warm"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "10:15"
+end = "13:00"
+pool = "cool"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "12:00"
+end = "13:00"
+pool = "warm"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "family_swim"
+start = "13:30"
+end = "15:30"
+pool = "warm"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "13:30"
+end = "15:45"
+pool = "cool"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "16:00"
+end = "18:00"
+pool = "warm"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "16:30"
+end = "18:30"
+pool = "cool"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "08:30"
+end = "10:00"
+pool = "cool"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "senior_swim"
+start = "10:15"
+end = "11:15"
+pool = "warm"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "10:15"
+end = "12:30"
+pool = "cool"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "family_swim"
+start = "13:00"
+end = "15:30"
+pool = "warm"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "13:00"
+end = "15:45"
+pool = "cool"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "family_swim"
+start = "17:15"
+end = "18:30"
+pool = "warm"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "17:30"
+end = "19:00"
+pool = "cool"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "07:00"
+end = "08:30"
+pool = "warm"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "07:00"
+end = "10:00"
+pool = "cool"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "family_swim"
+start = "10:15"
+end = "11:45"
+pool = "warm"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "10:15"
+end = "13:00"
+pool = "cool"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "12:00"
+end = "13:00"
+pool = "warm"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "family_swim"
+start = "13:30"
+end = "15:30"
+pool = "warm"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "13:30"
+end = "15:45"
+pool = "cool"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "family_swim"
+start = "16:00"
+end = "17:15"
+pool = "warm"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "16:30"
+end = "18:30"
+pool = "cool"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "08:30"
+end = "10:00"
+pool = "cool"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "senior_swim"
+start = "10:15"
+end = "11:15"
+pool = "warm"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "10:15"
+end = "12:30"
+pool = "cool"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "family_swim"
+start = "13:00"
+end = "15:30"
+pool = "warm"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "13:00"
+end = "15:45"
+pool = "cool"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "family_swim"
+start = "17:30"
+end = "19:00"
+pool = "warm"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "17:30"
+end = "19:00"
+pool = "cool"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "family_swim"
+start = "12:00"
+end = "13:15"
+pool = "warm"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "lap_swim"
+start = "12:00"
+end = "13:15"
+pool = "cool"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "senior_swim"
+start = "13:45"
+end = "15:00"
+pool = "warm"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "lap_swim"
+start = "13:45"
+end = "16:30"
+pool = "cool"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "family_swim"
+start = "15:30"
+end = "17:00"
+pool = "warm"
+
+[[extra.schedules.closures]]
+start = "2026-08-22"
+end = "2026-08-22"
+reason = "Aquatics in-service training"
+start_time = "09:00"
+end_time = "12:00"
+
+[[extra.schedules.closures]]
+start = "2026-08-27"
+end = "2026-08-27"
+reason = "Aquatics Division training"
+start_time = "12:00"
+end_time = "14:00"
 +++
 
 An indoor complex with two pools: a 25-meter, 21-foot-deep lap pool and an 89-foot recreation pool, plus sauna and community rooms. Programs include lap swim, senior/therapy swim, self-guided exercise, family swim, and learn-to-swim lessons for tiny tots through adults.

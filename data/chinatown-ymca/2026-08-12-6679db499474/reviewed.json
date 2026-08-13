@@ -1,0 +1,129 @@
+{
+  "slug": "chinatown-ymca",
+  "pdf_sha256": "6679db499474cfe6dcfcc340afdc34eca62915aa6d02c2adef06f71a3feaa16a",
+  "reviewed_at": "2026-08-12",
+  "source_pdf_url": "https://www.ymcasf.org/location/chinatown-ymca/",
+  "payload": {
+    "access_exceptions": [
+      {
+        "date": "2026-11-26",
+        "end": "13:30",
+        "evidence": "Thursday, November 26 (Thanksgiving) 7:00 a.m. \u2013 2:00 p.m. Pool Hours: 8:00 a.m. \u2013 1:30 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Thanksgiving",
+        "start": "08:00"
+      },
+      {
+        "date": "2026-11-27",
+        "end": "13:30",
+        "evidence": "Friday, November 27 (Holiday Hours) 7:00 a.m. \u2013 2:00 p.m. Pool Hours: 8:00 a.m. \u2013 1:30 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Holiday Hours",
+        "start": "08:00"
+      },
+      {
+        "date": "2026-12-24",
+        "end": "13:30",
+        "evidence": "Thursday, December 24 (Christmas Eve) 7:00 a.m. \u2013 2:00 p.m. Pool Hours: 8:00 a.m. \u2013 1:30 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Christmas Eve",
+        "start": "08:00"
+      },
+      {
+        "date": "2026-12-31",
+        "end": "13:30",
+        "evidence": "Thursday, December 31 (New Year\u2019s Eve) 7:00 a.m. \u2013 2:00 p.m. Pool Hours: 8:00 a.m. \u2013 1:30 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "New Year\u2019s Eve",
+        "start": "08:00"
+      },
+      {
+        "date": "2027-01-01",
+        "end": "13:30",
+        "evidence": "Friday, January 1 (New Year\u2019s Day) 10:00 a.m. \u2013 4:00 p.m. Pool Hours: 8:00 a.m. \u2013 1:30 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "New Year\u2019s Day",
+        "start": "08:00"
+      },
+      {
+        "date": "2027-01-18",
+        "end": "14:00",
+        "evidence": "Monday, January 18 (Martin Luther King Jr. Day) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Martin Luther King Jr. Day",
+        "start": "07:00"
+      },
+      {
+        "date": "2027-03-28",
+        "end": "13:30",
+        "evidence": "Sunday, March 28 (Easter Sunday) 7:00 a.m. \u2013 2:00 p.m. Pool Hours: 8:00 a.m. \u2013 1:30 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Easter Sunday",
+        "start": "08:00"
+      },
+      {
+        "date": "2027-07-04",
+        "end": "13:30",
+        "evidence": "Saturday, July 4 (Independence Day) 7:00 a.m. \u2013 2:00 p.m. Pool Hours: 8:00 a.m. \u2013 1:30 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Independence Day",
+        "start": "08:00"
+      }
+    ],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "19:45",
+        "evidence": "Monday-Friday: 6:30 a.m. \u2013 7:45 p.m.",
+        "label": "Facility hours",
+        "start": "06:30"
+      },
+      {
+        "day": "tuesday",
+        "end": "19:45",
+        "evidence": "Monday-Friday: 6:30 a.m. \u2013 7:45 p.m.",
+        "label": "Facility hours",
+        "start": "06:30"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:45",
+        "evidence": "Monday-Friday: 6:30 a.m. \u2013 7:45 p.m.",
+        "label": "Facility hours",
+        "start": "06:30"
+      },
+      {
+        "day": "thursday",
+        "end": "19:45",
+        "evidence": "Monday-Friday: 6:30 a.m. \u2013 7:45 p.m.",
+        "label": "Facility hours",
+        "start": "06:30"
+      },
+      {
+        "day": "friday",
+        "end": "19:45",
+        "evidence": "Monday-Friday: 6:30 a.m. \u2013 7:45 p.m.",
+        "label": "Facility hours",
+        "start": "06:30"
+      },
+      {
+        "day": "saturday",
+        "end": "15:45",
+        "evidence": "Saturday and Sunday: 8:00 a.m. \u2013 3:45 p.m.",
+        "label": "Facility hours",
+        "start": "08:00"
+      },
+      {
+        "day": "sunday",
+        "end": "15:45",
+        "evidence": "Saturday and Sunday: 8:00 a.m. \u2013 3:45 p.m.",
+        "label": "Facility hours",
+        "start": "08:00"
+      }
+    ],
+    "closures": [],
+    "effective_start": "2026-08-12",
+    "schedule_basis": "facility_hours",
+    "sessions": []
+  }
+}
