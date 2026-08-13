@@ -100,14 +100,11 @@
         "source_url": "https://dolphinclub.org/swimming/"
       }
     ],
-    "noaa_tide_station": "9414290",
-    "temp_station_id": "9414290",
-    "temp_station_type": "noaa",
-    "temp_fallback_station_id": "9414750"
+    "noaa_tide_station": "9414290"
   },
   "live_conditions": {
     "api_url": "https://swimfrancisco.com/api/conditions",
     "condition_key": "aquatic-park"
   },
-  "generated_at": "2026-07-02T21:12:52.814Z"
+  "generated_at": "2026-08-13T05:55:17.025Z"
 }

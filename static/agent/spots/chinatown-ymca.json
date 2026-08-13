@@ -24,8 +24,8 @@
     "website": "https://www.ymcasf.org/location/chinatown-ymca/"
   },
   "freshness": {
-    "last_verified_at": "2026-05-17",
-    "schedule_effective": "2026-05-17"
+    "last_verified_at": "2026-08-12",
+    "schedule_effective": "2026-08-12"
   },
   "sources": [
     {
@@ -38,11 +38,11 @@
     "setpoint_label": "saltwater",
     "schedules": [
       {
-        "effective_start": "2026-05-17",
-        "last_verified_at": "2026-05-17",
-        "schedule_basis": "facility_hours",
         "sessions": [],
         "closures": [],
+        "effective_start": "2026-05-17",
+        "schedule_basis": "facility_hours",
+        "last_verified_at": "2026-05-17",
         "access_hours": [
           {
             "day": "monday",
@@ -103,8 +103,117 @@
             "reason": "Juneteenth"
           }
         ]
+      },
+      {
+        "sessions": [],
+        "closures": [],
+        "effective_start": "2026-08-12",
+        "schedule_basis": "facility_hours",
+        "last_verified_at": "2026-08-12",
+        "access_hours": [
+          {
+            "day": "monday",
+            "start": "06:30",
+            "end": "19:45",
+            "label": "Facility hours"
+          },
+          {
+            "day": "tuesday",
+            "start": "06:30",
+            "end": "19:45",
+            "label": "Facility hours"
+          },
+          {
+            "day": "wednesday",
+            "start": "06:30",
+            "end": "19:45",
+            "label": "Facility hours"
+          },
+          {
+            "day": "thursday",
+            "start": "06:30",
+            "end": "19:45",
+            "label": "Facility hours"
+          },
+          {
+            "day": "friday",
+            "start": "06:30",
+            "end": "19:45",
+            "label": "Facility hours"
+          },
+          {
+            "day": "saturday",
+            "start": "08:00",
+            "end": "15:45",
+            "label": "Facility hours"
+          },
+          {
+            "day": "sunday",
+            "start": "08:00",
+            "end": "15:45",
+            "label": "Facility hours"
+          }
+        ],
+        "access_exceptions": [
+          {
+            "date": "2026-11-26",
+            "start": "08:00",
+            "end": "13:30",
+            "label": "Holiday facility hours",
+            "reason": "Thanksgiving"
+          },
+          {
+            "date": "2026-11-27",
+            "start": "08:00",
+            "end": "13:30",
+            "label": "Holiday facility hours",
+            "reason": "Holiday Hours"
+          },
+          {
+            "date": "2026-12-24",
+            "start": "08:00",
+            "end": "13:30",
+            "label": "Holiday facility hours",
+            "reason": "Christmas Eve"
+          },
+          {
+            "date": "2026-12-31",
+            "start": "08:00",
+            "end": "13:30",
+            "label": "Holiday facility hours",
+            "reason": "New Year’s Eve"
+          },
+          {
+            "date": "2027-01-01",
+            "start": "08:00",
+            "end": "13:30",
+            "label": "Holiday facility hours",
+            "reason": "New Year’s Day"
+          },
+          {
+            "date": "2027-01-18",
+            "start": "07:00",
+            "end": "14:00",
+            "label": "Holiday facility hours",
+            "reason": "Martin Luther King Jr. Day"
+          },
+          {
+            "date": "2027-03-28",
+            "start": "08:00",
+            "end": "13:30",
+            "label": "Holiday facility hours",
+            "reason": "Easter Sunday"
+          },
+          {
+            "date": "2027-07-04",
+            "start": "08:00",
+            "end": "13:30",
+            "label": "Holiday facility hours",
+            "reason": "Independence Day"
+          }
+        ]
       }
     ]
   },
-  "generated_at": "2026-07-02T21:12:52.814Z"
+  "generated_at": "2026-08-13T05:55:17.025Z"
 }

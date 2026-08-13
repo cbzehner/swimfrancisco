@@ -19,11 +19,11 @@ access_notes = []
 access_summary = "SFSU Mashouf Wellness Center publishes natatorium hours and describes a 25-meter lap pool, activity pool, hot tub, sauna, and locker rooms. Access is campus/community-membership based."
 
 [[extra.schedules]]
-effective_start = "2026-05-17"
-last_verified_at = "2026-05-17"
-schedule_basis = "pool_hours"
 sessions = []
 closures = []
+effective_start = "2026-05-17"
+schedule_basis = "pool_hours"
+last_verified_at = "2026-05-17"
 
 [[extra.schedules.access_hours]]
 day = "monday"
@@ -59,6 +59,43 @@ label = "Natatorium hours"
 day = "saturday"
 start = "12:00"
 end = "16:00"
+label = "Natatorium hours"
+
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-08-12"
+schedule_basis = "pool_hours"
+last_verified_at = "2026-08-12"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "12:00"
+end = "16:00"
+label = "Natatorium hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "10:00"
+end = "13:30"
+label = "Natatorium hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "12:00"
+end = "16:00"
+label = "Natatorium hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "12:00"
+end = "16:00"
+label = "Natatorium hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "10:00"
+end = "13:30"
 label = "Natatorium hours"
 +++
 

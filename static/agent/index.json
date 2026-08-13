@@ -1,7 +1,7 @@
 {
   "site": "Swim Francisco",
   "agent_data_version": 1,
-  "generated_at": "2026-07-02T21:12:52.814Z",
+  "generated_at": "2026-08-13T05:55:17.025Z",
   "local_timezone": "America/Los_Angeles",
   "spots": [
     {
@@ -13,7 +13,7 @@
       "description_short": null,
       "access_mode": "membership",
       "payment_model": "membership",
-      "last_verified_at": "2026-07-02"
+      "last_verified_at": "2026-07-10"
     },
     {
       "slug": "24-hour-fitness-potrero",
@@ -90,7 +90,7 @@
       "description_short": null,
       "access_mode": "membership",
       "payment_model": "membership",
-      "last_verified_at": "2026-05-17"
+      "last_verified_at": "2026-08-12"
     },
     {
       "slug": "city-sports-20th-ave",
@@ -134,7 +134,7 @@
       "description_short": null,
       "access_mode": "membership",
       "payment_model": "membership",
-      "last_verified_at": "2026-05-17"
+      "last_verified_at": "2026-08-12"
     },
     {
       "slug": "equinox-sports-club-sf",
@@ -189,7 +189,7 @@
       "description_short": null,
       "access_mode": "membership",
       "payment_model": "membership",
-      "last_verified_at": "2026-05-17"
+      "last_verified_at": "2026-08-12"
     },
     {
       "slug": "koret-center",
@@ -200,7 +200,7 @@
       "description_short": null,
       "access_mode": "limited_public",
       "payment_model": "session",
-      "last_verified_at": "2026-06-16"
+      "last_verified_at": "2026-08-12"
     },
     {
       "slug": "martin-luther-king-jr-pool",
@@ -233,7 +233,7 @@
       "description_short": null,
       "access_mode": "public",
       "payment_model": "session",
-      "last_verified_at": "2026-07-02"
+      "last_verified_at": "2026-08-12"
     },
     {
       "slug": "ocean-beach",
@@ -255,7 +255,7 @@
       "description_short": null,
       "access_mode": "limited_public",
       "payment_model": "therapy",
-      "last_verified_at": "2026-06-16"
+      "last_verified_at": "2026-08-12"
     },
     {
       "slug": "presidio-ymca-letterman",
@@ -299,7 +299,7 @@
       "description_short": null,
       "access_mode": "limited_public",
       "payment_model": "membership",
-      "last_verified_at": "2026-05-17"
+      "last_verified_at": "2026-08-12"
     },
     {
       "slug": "stonestown-ymca",
@@ -310,7 +310,7 @@
       "description_short": null,
       "access_mode": "membership",
       "payment_model": "membership",
-      "last_verified_at": "2026-05-17"
+      "last_verified_at": "2026-08-12"
     },
     {
       "slug": "ucsf-bakar",

@@ -1,0 +1,64 @@
+{
+  "slug": "equinox-sports-club-sf",
+  "pdf_sha256": "561d34ca8279199545cb8bc4f865f0ff096208b66137d587bc760a9fc132c48e",
+  "reviewed_at": "2026-05-17",
+  "source_pdf_url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco",
+  "payload": {
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "22:00",
+        "evidence": "Monday: 05:00-22:00",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "22:00",
+        "evidence": "Tuesday: 05:00-22:00",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "22:00",
+        "evidence": "Wednesday: 05:00-22:00",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "thursday",
+        "end": "22:00",
+        "evidence": "Thursday: 05:00-22:00",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "friday",
+        "end": "20:00",
+        "evidence": "Friday: 05:00-20:00",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "saturday",
+        "end": "18:00",
+        "evidence": "Saturday: 07:00-18:00",
+        "label": "Club hours",
+        "start": "07:00"
+      },
+      {
+        "day": "sunday",
+        "end": "18:00",
+        "evidence": "Sunday: 07:00-18:00",
+        "label": "Club hours",
+        "start": "07:00"
+      }
+    ],
+    "closures": [],
+    "schedule_basis": "facility_hours",
+    "effective_start": "2026-05-17",
+    "sessions": []
+  },
+  "carried_from": "data/equinox-sports-club-sf/2026-05-17-f277c35f2d57/reviewed.json"
+}

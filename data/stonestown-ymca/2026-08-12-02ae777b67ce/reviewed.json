@@ -1,0 +1,161 @@
+{
+  "slug": "stonestown-ymca",
+  "pdf_sha256": "02ae777b67ce6e75f2415369cae4bdd02be765162e6c75c7a3bab20a730eac29",
+  "reviewed_at": "2026-08-12",
+  "source_pdf_url": "https://www.ymcasf.org/location/stonestown-family-ymca/",
+  "payload": {
+    "access_exceptions": [
+      {
+        "date": "2026-09-07",
+        "end": "14:00",
+        "evidence": "Monday, September 7 (Labor Day) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Labor Day",
+        "start": "07:00"
+      },
+      {
+        "date": "2026-11-26",
+        "end": "14:00",
+        "evidence": "Thursday, November 26 (Thanksgiving) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Thanksgiving",
+        "start": "07:00"
+      },
+      {
+        "date": "2026-11-27",
+        "end": "14:00",
+        "evidence": "Friday, November 27 (Holiday Hours) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Holiday Hours",
+        "start": "07:00"
+      },
+      {
+        "date": "2026-12-24",
+        "end": "14:00",
+        "evidence": "Thursday, December 24 (Christmas Eve) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Christmas Eve",
+        "start": "07:00"
+      },
+      {
+        "date": "2026-12-31",
+        "end": "14:00",
+        "evidence": "Thursday, December 31 (New Year\u2019s Eve) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "New Year\u2019s Eve",
+        "start": "07:00"
+      },
+      {
+        "date": "2027-01-01",
+        "end": "16:00",
+        "evidence": "Friday, January 1 (New Year\u2019s Day) 10:00 a.m. \u2013 4:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "New Year\u2019s Day",
+        "start": "10:00"
+      },
+      {
+        "date": "2027-01-18",
+        "end": "14:00",
+        "evidence": "Monday, January 18 (Martin Luther King Jr. Day) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Martin Luther King Jr. Day",
+        "start": "07:00"
+      },
+      {
+        "date": "2027-02-06",
+        "end": "14:00",
+        "evidence": "Saturday, February 6 (Lunar New Year) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Lunar New Year",
+        "start": "07:00"
+      },
+      {
+        "date": "2027-03-28",
+        "end": "14:00",
+        "evidence": "Sunday, March 28 (Easter Sunday) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Easter Sunday",
+        "start": "07:00"
+      },
+      {
+        "date": "2027-05-31",
+        "end": "14:00",
+        "evidence": "Monday, May 31 (Memorial Day) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Memorial Day",
+        "start": "07:00"
+      },
+      {
+        "date": "2027-06-19",
+        "end": "14:00",
+        "evidence": "Saturday, June 19 (Juneteenth) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Juneteenth",
+        "start": "07:00"
+      },
+      {
+        "date": "2027-07-04",
+        "end": "14:00",
+        "evidence": "Saturday, July 4 (Independence Day) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Independence Day",
+        "start": "07:00"
+      }
+    ],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "21:00",
+        "evidence": "Monday: 5:30 am \u2013 9:00 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "tuesday",
+        "end": "21:00",
+        "evidence": "Tuesday: 5:30 am \u2013 9:00 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "wednesday",
+        "end": "21:00",
+        "evidence": "Wednesday: 5:30 am \u2013 9:00 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "thursday",
+        "end": "21:00",
+        "evidence": "Thursday: 5:30 am \u2013 9:00 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "friday",
+        "end": "21:00",
+        "evidence": "Friday: 5:30 am \u2013 9:00 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "saturday",
+        "end": "17:00",
+        "evidence": "Saturday: 7:00 am \u2013 5:00 pm",
+        "label": "Facility hours",
+        "start": "07:00"
+      },
+      {
+        "day": "sunday",
+        "end": "17:00",
+        "evidence": "Sunday: 7:00 am \u2013 5:00 pm",
+        "label": "Facility hours",
+        "start": "07:00"
+      }
+    ],
+    "closures": [],
+    "effective_start": "2026-08-12",
+    "schedule_basis": "facility_hours",
+    "sessions": []
+  }
+}

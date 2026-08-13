@@ -1,0 +1,130 @@
+{
+  "slug": "embarcadero-ymca",
+  "pdf_sha256": "8b8d51955f1cc65cc5710d571339f97ed1a7f07fc8636c5e8cc61f6636e1a61e",
+  "reviewed_at": "2026-08-12",
+  "source_pdf_url": "https://www.ymcasf.org/location/embarcadero-ymca/",
+  "payload": {
+    "access_exceptions": [
+      {
+        "date": "2026-09-07",
+        "end": "13:30",
+        "evidence": "Monday, September 7 (Labor Day) 7:00 a.m. \u2013 2:00 p.m. Pool Closes at 1:30 p.m.",
+        "label": "Holiday pool hours",
+        "reason": "Labor Day",
+        "start": "07:30"
+      },
+      {
+        "date": "2026-11-26",
+        "end": "13:30",
+        "evidence": "Thursday, November 26 (Thanksgiving) 7:00 a.m. \u2013 2:00 p.m. Pool Closes at 1:30 p.m.",
+        "label": "Holiday pool hours",
+        "reason": "Thanksgiving",
+        "start": "07:30"
+      },
+      {
+        "date": "2026-11-27",
+        "end": "13:30",
+        "evidence": "Friday, November 27 (Holiday Hours) 7:00 a.m. \u2013 2:00 p.m. Pool Closes at 1:30 p.m.",
+        "label": "Holiday pool hours",
+        "reason": "Holiday Hours",
+        "start": "07:30"
+      },
+      {
+        "date": "2026-12-24",
+        "end": "13:30",
+        "evidence": "Thursday, December 24 (Christmas Eve) 7:00 a.m. \u2013 2:00 p.m. Pool Closes at 1:30 p.m.",
+        "label": "Holiday pool hours",
+        "reason": "Christmas Eve",
+        "start": "07:30"
+      },
+      {
+        "date": "2026-12-31",
+        "end": "13:30",
+        "evidence": "Thursday, December 31 (New Year\u2019s Eve) 7:00 a.m. \u2013 2:00 p.m. Pool Closes at 1:30 p.m.",
+        "label": "Holiday pool hours",
+        "reason": "New Year\u2019s Eve",
+        "start": "07:30"
+      },
+      {
+        "date": "2027-01-01",
+        "end": "15:30",
+        "evidence": "Friday, January 1 (New Year\u2019s Day) 10:00 a.m. \u2013 4:00 p.m. Pool Closes at 3:30 p.m.",
+        "label": "Holiday pool hours",
+        "reason": "New Year\u2019s Day",
+        "start": "10:30"
+      },
+      {
+        "date": "2027-01-18",
+        "end": "13:30",
+        "evidence": "Monday, January 18 (Martin Luther King Jr. Day) 7:00 a.m. \u2013 2:00 p.m. Pool Closes at 1:30 p.m.",
+        "label": "Holiday pool hours",
+        "reason": "Martin Luther King Jr. Day",
+        "start": "07:30"
+      },
+      {
+        "date": "2027-02-06",
+        "end": "13:30",
+        "evidence": "Saturday, February 6 (Lunar New Year) 7:00 a.m. \u2013 2:00 p.m. Pool Closes at 1:30 p.m.",
+        "label": "Holiday pool hours",
+        "reason": "Lunar New Year",
+        "start": "07:30"
+      },
+      {
+        "date": "2027-07-04",
+        "end": "13:30",
+        "evidence": "Saturday, July 4 (Independence Day) 7:00 a.m. \u2013 2:00 p.m. Pool Closes at 1:30 p.m.",
+        "label": "Holiday pool hours",
+        "reason": "Independence Day",
+        "start": "07:30"
+      }
+    ],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "20:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "06:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "20:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "06:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "20:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "06:00"
+      },
+      {
+        "day": "thursday",
+        "end": "20:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "06:00"
+      },
+      {
+        "day": "friday",
+        "end": "20:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "06:00"
+      },
+      {
+        "day": "saturday",
+        "end": "16:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "07:30"
+      }
+    ],
+    "closures": [],
+    "effective_start": "2026-08-12",
+    "schedule_basis": "pool_hours",
+    "sessions": []
+  }
+}

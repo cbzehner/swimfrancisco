@@ -15,10 +15,10 @@ from ..parsing import (
 _JCCSF_HOUR_GUARDS = (
     "Monday – Friday: 5:30 am – 9:45 pm",
     "Saturday & Sunday: 7:00 am – 6:45 pm",
-    "Monday, Wednesday: 5:30 am – Noon, 1:30 – 9:45 pm",
-    "Tuesday: 5:30 – 11:30 am, 12:30 – 9:45 pm",
-    "Thursday: 5:30 – Noon, 1:00 – 9:45 pm",
-    "Friday: 5:30 – Noon, 1:30 – 9:45 pm",
+    "Monday & Wednesday: 5:30 am – Noon, 3:00 – 9:45 pm",
+    "Tuesday: 5:30 – 11:30 am, 3:00 – 9:45 pm",
+    "Thursday: 5:30 am – Noon, 3:00 – 9:45 pm",
+    "Friday: 5:30 – 10:00 am, 1:30 – 9:45 pm",
     "Saturday & Sunday: 7:00 – 8:00 am, 2:00 – 6:45 pm",
 )
 
@@ -46,7 +46,7 @@ def _extract_jccsf(html: str) -> dict:
                 "wednesday": ("05:30", "12:00"),
                 "tuesday": ("05:30", "11:30"),
                 "thursday": ("05:30", "12:00"),
-                "friday": ("05:30", "12:00"),
+                "friday": ("05:30", "10:00"),
                 "saturday": ("07:00", "08:00"),
                 "sunday": ("07:00", "08:00"),
             },
@@ -55,10 +55,10 @@ def _extract_jccsf(html: str) -> dict:
         *_weekly_hours_sessions(
             "family_swim",
             {
-                "monday": ("13:30", "21:45"),
-                "wednesday": ("13:30", "21:45"),
-                "tuesday": ("12:30", "21:45"),
-                "thursday": ("13:00", "21:45"),
+                "monday": ("15:00", "21:45"),
+                "wednesday": ("15:00", "21:45"),
+                "tuesday": ("15:00", "21:45"),
+                "thursday": ("15:00", "21:45"),
                 "friday": ("13:30", "21:45"),
                 "saturday": ("14:00", "18:45"),
                 "sunday": ("14:00", "18:45"),

@@ -241,6 +241,112 @@ start = "2026-07-04"
 end = "2026-07-04"
 reason = "Observing Independence Day"
 
+[[extra.schedules]]
+effective_start = "2026-08-12"
+schedule_basis = "swim_schedule"
+last_verified_at = "2026-08-12"
+
+[[extra.schedules.sessions]]
+day = "monday"
+type = "lap_swim"
+start = "11:00"
+end = "11:55"
+
+[[extra.schedules.sessions]]
+day = "monday"
+type = "family_swim"
+start = "13:00"
+end = "14:55"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "08:00"
+end = "08:55"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "family_swim"
+start = "09:00"
+end = "09:55"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "family_swim"
+start = "13:00"
+end = "14:55"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "08:00"
+end = "08:55"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "family_swim"
+start = "09:00"
+end = "09:55"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "family_swim"
+start = "14:00"
+end = "14:55"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "08:00"
+end = "08:55"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "family_swim"
+start = "09:00"
+end = "09:55"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "18:00"
+end = "18:55"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "08:00"
+end = "08:55"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "family_swim"
+start = "09:00"
+end = "09:55"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "17:00"
+end = "17:55"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "lap_swim"
+start = "08:00"
+end = "08:55"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "family_swim"
+start = "09:00"
+end = "09:55"
+
+[[extra.schedules.closures]]
+start = "2026-09-07"
+end = "2026-09-07"
+reason = "Labor Day"
+
 [[extra.pricing]]
 label = "Therapeutic swim pass"
 price = "$11"

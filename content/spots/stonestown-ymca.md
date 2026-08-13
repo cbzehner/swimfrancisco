@@ -19,11 +19,11 @@ access_notes = [ "Confirm the current pool schedule with the branch; YMCA pages 
 access_summary = "Stonestown Family YMCA is a membership YMCA branch with lap swimming and pool activities."
 
 [[extra.schedules]]
-effective_start = "2026-05-17"
-last_verified_at = "2026-05-17"
-schedule_basis = "facility_hours"
 sessions = []
 closures = []
+effective_start = "2026-05-17"
+schedule_basis = "facility_hours"
+last_verified_at = "2026-05-17"
 
 [[extra.schedules.access_hours]]
 day = "monday"
@@ -66,6 +66,139 @@ day = "sunday"
 start = "07:00"
 end = "17:00"
 label = "Facility hours"
+
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-08-12"
+schedule_basis = "facility_hours"
+last_verified_at = "2026-08-12"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "07:00"
+end = "17:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "sunday"
+start = "07:00"
+end = "17:00"
+label = "Facility hours"
+
+[[extra.schedules.access_exceptions]]
+date = "2026-09-07"
+start = "07:00"
+end = "14:00"
+label = "Holiday facility hours"
+reason = "Labor Day"
+
+[[extra.schedules.access_exceptions]]
+date = "2026-11-26"
+start = "07:00"
+end = "14:00"
+label = "Holiday facility hours"
+reason = "Thanksgiving"
+
+[[extra.schedules.access_exceptions]]
+date = "2026-11-27"
+start = "07:00"
+end = "14:00"
+label = "Holiday facility hours"
+reason = "Holiday Hours"
+
+[[extra.schedules.access_exceptions]]
+date = "2026-12-24"
+start = "07:00"
+end = "14:00"
+label = "Holiday facility hours"
+reason = "Christmas Eve"
+
+[[extra.schedules.access_exceptions]]
+date = "2026-12-31"
+start = "07:00"
+end = "14:00"
+label = "Holiday facility hours"
+reason = "New Year’s Eve"
+
+[[extra.schedules.access_exceptions]]
+date = "2027-01-01"
+start = "10:00"
+end = "16:00"
+label = "Holiday facility hours"
+reason = "New Year’s Day"
+
+[[extra.schedules.access_exceptions]]
+date = "2027-01-18"
+start = "07:00"
+end = "14:00"
+label = "Holiday facility hours"
+reason = "Martin Luther King Jr. Day"
+
+[[extra.schedules.access_exceptions]]
+date = "2027-02-06"
+start = "07:00"
+end = "14:00"
+label = "Holiday facility hours"
+reason = "Lunar New Year"
+
+[[extra.schedules.access_exceptions]]
+date = "2027-03-28"
+start = "07:00"
+end = "14:00"
+label = "Holiday facility hours"
+reason = "Easter Sunday"
+
+[[extra.schedules.access_exceptions]]
+date = "2027-05-31"
+start = "07:00"
+end = "14:00"
+label = "Holiday facility hours"
+reason = "Memorial Day"
+
+[[extra.schedules.access_exceptions]]
+date = "2027-06-19"
+start = "07:00"
+end = "14:00"
+label = "Holiday facility hours"
+reason = "Juneteenth"
+
+[[extra.schedules.access_exceptions]]
+date = "2027-07-04"
+start = "07:00"
+end = "14:00"
+label = "Holiday facility hours"
+reason = "Independence Day"
 
 [[extra.pricing]]
 label = "YMCA member"

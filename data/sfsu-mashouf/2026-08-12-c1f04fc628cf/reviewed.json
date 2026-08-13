@@ -1,0 +1,50 @@
+{
+  "slug": "sfsu-mashouf",
+  "pdf_sha256": "c1f04fc628cf8b6743859b4496e248ab2ad06e4a87e4695425aa4242dd37c7f3",
+  "reviewed_at": "2026-08-12",
+  "source_pdf_url": "https://campusrec.sfsu.edu/Aquatics",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "16:00",
+        "evidence": "Mon, Wed, Thur: Noon - 4:00 p.m.",
+        "label": "Natatorium hours",
+        "start": "12:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "13:30",
+        "evidence": "Tue, Fri: 10:00am- 1:30pm",
+        "label": "Natatorium hours",
+        "start": "10:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "16:00",
+        "evidence": "Mon, Wed, Thur: Noon - 4:00 p.m.",
+        "label": "Natatorium hours",
+        "start": "12:00"
+      },
+      {
+        "day": "thursday",
+        "end": "16:00",
+        "evidence": "Mon, Wed, Thur: Noon - 4:00 p.m.",
+        "label": "Natatorium hours",
+        "start": "12:00"
+      },
+      {
+        "day": "friday",
+        "end": "13:30",
+        "evidence": "Tue, Fri: 10:00am- 1:30pm",
+        "label": "Natatorium hours",
+        "start": "10:00"
+      }
+    ],
+    "closures": [],
+    "effective_start": "2026-08-12",
+    "schedule_basis": "pool_hours",
+    "sessions": []
+  }
+}

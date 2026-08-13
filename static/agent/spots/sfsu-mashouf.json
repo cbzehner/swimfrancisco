@@ -22,8 +22,8 @@
     "website": "https://campusrec.sfsu.edu/Aquatics"
   },
   "freshness": {
-    "last_verified_at": "2026-05-17",
-    "schedule_effective": "2026-05-17"
+    "last_verified_at": "2026-08-12",
+    "schedule_effective": "2026-08-12"
   },
   "sources": [
     {
@@ -36,11 +36,11 @@
     "setpoint_label": "25m",
     "schedules": [
       {
-        "effective_start": "2026-05-17",
-        "last_verified_at": "2026-05-17",
-        "schedule_basis": "pool_hours",
         "sessions": [],
         "closures": [],
+        "effective_start": "2026-05-17",
+        "schedule_basis": "pool_hours",
+        "last_verified_at": "2026-05-17",
         "access_hours": [
           {
             "day": "monday",
@@ -79,8 +79,47 @@
             "label": "Natatorium hours"
           }
         ]
+      },
+      {
+        "sessions": [],
+        "closures": [],
+        "effective_start": "2026-08-12",
+        "schedule_basis": "pool_hours",
+        "last_verified_at": "2026-08-12",
+        "access_hours": [
+          {
+            "day": "monday",
+            "start": "12:00",
+            "end": "16:00",
+            "label": "Natatorium hours"
+          },
+          {
+            "day": "tuesday",
+            "start": "10:00",
+            "end": "13:30",
+            "label": "Natatorium hours"
+          },
+          {
+            "day": "wednesday",
+            "start": "12:00",
+            "end": "16:00",
+            "label": "Natatorium hours"
+          },
+          {
+            "day": "thursday",
+            "start": "12:00",
+            "end": "16:00",
+            "label": "Natatorium hours"
+          },
+          {
+            "day": "friday",
+            "start": "10:00",
+            "end": "13:30",
+            "label": "Natatorium hours"
+          }
+        ]
       }
     ]
   },
-  "generated_at": "2026-07-02T21:12:52.814Z"
+  "generated_at": "2026-08-13T05:55:17.025Z"
 }

@@ -101,7 +101,7 @@ async function main() {
   assert(!/temporar/i.test(ocean.access?.access_summary || ""), "24 Hour Fitness Ocean still mentions a temporary closure");
 
   const northBeachSchedule = latestSchedule(northBeach.pool?.schedules || []);
-  assert(northBeachSchedule?.effective_end === "2026-08-10", "North Beach Pool does not expose the current Aug 10 schedule");
+  assert(northBeachSchedule?.effective_end === "2026-08-29", "North Beach Pool does not expose the current Aug 29 schedule");
   assert(northBeach.freshness?.last_verified_at >= staleFloorDate, "North Beach Pool verification date is stale");
 
   const aquaticPark = conditions["aquatic-park"];

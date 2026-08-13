@@ -42,8 +42,8 @@
     "website": "https://www.jccsf.org/fitness/aquatics/"
   },
   "freshness": {
-    "last_verified_at": "2026-05-17",
-    "schedule_effective": "2026-05-17"
+    "last_verified_at": "2026-08-12",
+    "schedule_effective": "2026-08-12"
   },
   "sources": [
     {
@@ -56,10 +56,10 @@
     "setpoint_label": "80°F",
     "schedules": [
       {
-        "effective_start": "2026-05-17",
-        "last_verified_at": "2026-05-17",
-        "schedule_basis": "swim_schedule",
         "closures": [],
+        "effective_start": "2026-05-17",
+        "schedule_basis": "swim_schedule",
+        "last_verified_at": "2026-05-17",
         "sessions": [
           {
             "day": "monday",
@@ -188,8 +188,142 @@
             "end": "18:45"
           }
         ]
+      },
+      {
+        "closures": [],
+        "effective_start": "2026-08-12",
+        "schedule_basis": "swim_schedule",
+        "last_verified_at": "2026-08-12",
+        "sessions": [
+          {
+            "day": "monday",
+            "type": "family_swim",
+            "start": "05:30",
+            "end": "12:00"
+          },
+          {
+            "day": "monday",
+            "type": "lap_swim",
+            "start": "05:30",
+            "end": "21:45"
+          },
+          {
+            "day": "monday",
+            "type": "family_swim",
+            "start": "15:00",
+            "end": "21:45"
+          },
+          {
+            "day": "tuesday",
+            "type": "family_swim",
+            "start": "05:30",
+            "end": "11:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "05:30",
+            "end": "21:45"
+          },
+          {
+            "day": "tuesday",
+            "type": "family_swim",
+            "start": "15:00",
+            "end": "21:45"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "05:30",
+            "end": "12:00"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "05:30",
+            "end": "21:45"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "15:00",
+            "end": "21:45"
+          },
+          {
+            "day": "thursday",
+            "type": "family_swim",
+            "start": "05:30",
+            "end": "12:00"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "05:30",
+            "end": "21:45"
+          },
+          {
+            "day": "thursday",
+            "type": "family_swim",
+            "start": "15:00",
+            "end": "21:45"
+          },
+          {
+            "day": "friday",
+            "type": "family_swim",
+            "start": "05:30",
+            "end": "10:00"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "05:30",
+            "end": "21:45"
+          },
+          {
+            "day": "friday",
+            "type": "family_swim",
+            "start": "13:30",
+            "end": "21:45"
+          },
+          {
+            "day": "saturday",
+            "type": "family_swim",
+            "start": "07:00",
+            "end": "08:00"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "07:00",
+            "end": "18:45"
+          },
+          {
+            "day": "saturday",
+            "type": "family_swim",
+            "start": "14:00",
+            "end": "18:45"
+          },
+          {
+            "day": "sunday",
+            "type": "family_swim",
+            "start": "07:00",
+            "end": "08:00"
+          },
+          {
+            "day": "sunday",
+            "type": "lap_swim",
+            "start": "07:00",
+            "end": "18:45"
+          },
+          {
+            "day": "sunday",
+            "type": "family_swim",
+            "start": "14:00",
+            "end": "18:45"
+          }
+        ]
       }
     ]
   },
-  "generated_at": "2026-07-02T21:12:52.814Z"
+  "generated_at": "2026-08-13T05:55:17.025Z"
 }
