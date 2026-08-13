@@ -189,7 +189,8 @@ def test_koret_google_sheet_extractor_splits_hours_around_closed_grid_rows(tmp_p
     ]
 
 
-def test_koret_google_sheet_extractor_reads_dated_notice_closure(tmp_path):
+def test_koret_google_sheet_extractor_reads_dated_notice_closure(tmp_path, monkeypatch):
+    monkeypatch.setattr(direct_sources, "pacific_today", lambda: date(2026, 8, 12))
     sheets = {
         day: [[day], ["Hours: 7am-7pm"]]
         for day in ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
