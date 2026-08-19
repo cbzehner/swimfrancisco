@@ -317,10 +317,11 @@ Required repo settings: Settings → Actions → General →
 - Workflow permissions: **Read and write permissions**
 - **Allow GitHub Actions to create and approve pull requests: ENABLED**
 
-GitHub bundles create + approve into a single toggle. The defense against
-the bot self-approving its own PRs is branch protection: Settings →
-Branches → main → require pull request review before merging, with at
-least 1 approval. The bot can open a PR but cannot merge it.
+GitHub bundles create + approve into a single toggle. Do not require
+reviews on `main`: the publication token opens PRs as the Operator, so a
+required approval would deadlock quiet-week auto-merge. The merge gate is
+the required `check` status, enforced for administrators. The bot can
+open a PR; it cannot land on `main` until CI is green.
 
 ## Future
 
