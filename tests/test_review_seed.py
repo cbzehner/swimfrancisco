@@ -70,12 +70,12 @@ def test_seed_draft_is_idempotent(tmp_path):
 
     first = seed_draft(candidate=candidate, data_root=data_root, today=date(2026, 4, 19))
     envelope = json.loads(first.read_text())
-    envelope["reviewed_by"] = "Chris Zehner <cbzehner@gmail.com>"
+    envelope["reviewed_by"] = "reviewer@example.com"
     first.write_text(json.dumps(envelope, indent=2) + "\n")
     second = seed_draft(candidate=candidate, data_root=data_root, today=date(2026, 4, 20))
 
     assert first == second
-    assert '"reviewed_by": "Chris Zehner <cbzehner@gmail.com>"' in second.read_text()
+    assert '"reviewed_by": "reviewer@example.com"' in second.read_text()
 
 
 def test_seed_draft_uses_pacific_time_for_today(tmp_path, monkeypatch):

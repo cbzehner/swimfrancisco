@@ -14,11 +14,9 @@ A cron trigger runs hourly (`0 * * * *`, see `wrangler.toml`). The scheduled han
 
 ## Deploy prereqs
 
-1. Create a KV namespace: `wrangler kv:namespace create CONDITIONS`
-2. Paste the returned `id` (and optionally `preview_id`) into `wrangler.toml` under `[[kv_namespaces]]`.
-3. `wrangler deploy`
+KV namespace IDs are already in `wrangler.toml`. Recreate them only if you rebuild the Terraform-managed namespaces; then paste the new `id` / `preview_id` into `[[kv_namespaces]]`.
 
-See [`../docs/deploy.md`](../docs/deploy.md) for the end-to-end flow (Pages + Worker + custom domain).
+See [`../docs/deploy.md`](../docs/deploy.md) for the end-to-end Workers Builds + Terraform runbook.
 
 ## First-deploy bootstrap
 
@@ -28,10 +26,9 @@ To populate immediately:
 
 ```sh
 wrangler triggers deploy         # register the cron
-wrangler cron trigger --env production   # or click "Trigger" in the dashboard
 ```
 
-Re-run either command any time you want to force a fresh assemble.
+Then run the cron from the dashboard: Workers & Pages → `swimfrancisco` → Triggers → Cron Triggers → **Run**. Wrangler 4 has no `wrangler cron trigger` command.
 
 ## Local dev
 

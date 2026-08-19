@@ -57,7 +57,7 @@ def test_schema_accepts_access_hours_without_sessions():
     [
         ("$schema", "../schemas/reviewed-snapshot.json"),
         ("version", 1),
-        ("reviewed_by", "Chris Zehner <cbzehner@gmail.com>"),
+        ("reviewed_by", "reviewer@example.com"),
         ("reviewed_against", [{"provider": "gemini", "model": "x"}]),
     ],
 )

@@ -1,6 +1,8 @@
 # Swim Francisco
 
-A "departure board" for San Francisco swim spots — 9 city pools and 5 open-water locations — with live open/closed status, water temperatures, and tide predictions.
+A "departure board" for San Francisco swim spots — 9 public city pools, 5 open-water locations, and membership or limited-access pools behind a toggle — with live open/closed status, water temperatures, and tide predictions.
+
+Pool hours are derived from official facility sources and may be wrong. The board marks unverified rows; treat it as a starting point, not a guarantee.
 
 ## Architecture
 
@@ -20,6 +22,8 @@ docs/            spec.md, deploy.md, design-concepts.md, testing-webkit.md, …
 ```
 
 ## Local development
+
+Requires [Nix](https://nixos.org/download/) and [devenv](https://devenv.sh/). After a clone:
 
 ```sh
 devenv shell          # enter the Nix-managed dev environment
@@ -71,7 +75,7 @@ Create a new file at `content/spots/<slug>.md` with TOML frontmatter. See `docs/
 
 For new **open-water** spots, the Worker's station mapping is regenerated from the markdown frontmatter automatically — `wrangler dev` and `wrangler deploy` invoke `scripts/generate-worker-spots.mjs` via the `[build]` hook. Pools do not need worker changes.
 
-For pool schedule refreshes, use the local extractor in `docs/schedules.md`. It lives in `schedule-tools/`, is `uv`-managed, reads provider credentials from a gitignored root `.env` loaded by `devenv`'s built-in dotenv integration, has a `schedules debug bakeoff` subcommand that runs two providers and saves raw review artifacts alongside the PDF under `data/<slug>/<date>-<sha12>/`, and locks manually reviewed payloads via a committed `reviewed.json` in the same directory. `npm run build` and `just build` refresh `data/bulletin.json`; when the reviewed schedule fingerprint changes, the visible bulletin number bumps automatically.
+For pool schedule refreshes, use the local extractor in `docs/schedules.md`. It lives in `schedule-tools/`, is `uv`-managed, reads provider credentials from a gitignored root `.env` loaded by `devenv`'s built-in dotenv integration, has a `schedules debug bakeoff` subcommand that runs two providers and saves raw review artifacts under `data/<slug>/<date>-<sha12>/`, and locks manually reviewed payloads via a committed `reviewed.json` in the same directory. Source snapshots (`source.pdf` / `source.html` / `source.xlsx`) stay local; git keeps `source.sha256`, provider JSON, and `reviewed.json`. `npm run build` and `just build` refresh `data/bulletin.json`; when the reviewed schedule fingerprint changes, the visible bulletin number bumps automatically.
 
 ## Adding or updating translations
 
@@ -104,13 +108,17 @@ Zola, plain JS (no build step for frontend), Leaflet (lazy-loaded for map view),
 
 ## Known gaps
 
-- All 8 pools with current published schedule PDFs have manually reviewed `sessions[]` data. `sava-pool` still depends on upstream publishing a reopening schedule PDF.
+- Sava Pool is still marked closed pending a current official schedule PDF.
 - Lat/lng for all spots are best-estimate geocodes; re-verify before any distance-critical UX work.
 - Worker bootstrap: after first deploy `/api/conditions` returns 503 until the first hourly cron fires or the dashboard cron trigger is run manually — see `docs/deploy.md`.
 
+Issues and pull requests are welcome.
+
 ## License
 
-GPL-3.0-only. See [`LICENSE`](LICENSE).
+Copyright (C) 2026 Chris Zehner.
+
+GPL-3.0-only. See [`LICENSE`](LICENSE). Leaflet and the bundled fonts keep their own licenses; see [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 
 ## Links
 

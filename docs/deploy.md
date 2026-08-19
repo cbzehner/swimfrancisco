@@ -69,9 +69,9 @@ Save the two KV namespace IDs.
 
 ### 4. Wire the KV IDs into `worker/wrangler.toml`
 
-Replace the `REPLACE_ME` placeholders in the `[[kv_namespaces]]` block with
-the IDs from step 3 (`kv_namespace_id` → `id`,
-`kv_preview_namespace_id` → `preview_id`). Commit and push to `main`.
+The `[[kv_namespaces]]` block in `worker/wrangler.toml` already has the
+production and preview IDs from step 3. Rewrite `id` / `preview_id` only
+if you recreate those namespaces, then commit and push to `main`.
 
 ### 5. Create the Workers Builds project
 

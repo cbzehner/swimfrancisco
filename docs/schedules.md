@@ -114,11 +114,17 @@ Everything for a given (slug, PDF) lives in one directory:
 
 ```
 data/<slug>/<fetch-date>-<pdf-sha12>/
-  source.pdf
+  source.pdf                   # local snapshot; gitignored
+  source.sha256                # committed hash of the snapshot
   gemini-<model>.json          # self-describing provider output
   anthropic-<model>.json
   reviewed.json                # present ⇔ human-approved
 ```
+
+Source bodies (`source.pdf`, `source.html`, `source.xlsx`, `source.csv`) stay
+on disk for extraction and `schedules review`. They are not committed. A fresh
+clone re-fetches them from the registry URL; the sha256 file is the published
+integrity check.
 
 Koret is workbook-backed: `source.xlsx` is the canonical hashed source and
 `source.pdf` is the full-workbook visual export used by the reviewer. The XLSX
@@ -153,8 +159,9 @@ review as before.
 7. Run `just release`. If the reviewed schedule fingerprint changed, the
    visible bulletin number bumps automatically.
 8. Commit `content/spots/`, `data/bulletin.json`, the registry change if
-   the PDF URL moved, and the per-review directory (`source.pdf`, provider
-   JSONs, `reviewed.json`) once the diff looks trustworthy.
+   the PDF URL moved, and the per-review directory (`source.sha256`, provider
+   JSONs, `reviewed.json`) once the diff looks trustworthy. Do not add
+   `source.pdf` / `source.html` / `source.xlsx` / `source.csv`.
 
 Every new PDF requires a fresh human pass via `schedules review` — there
 is no auto-ratification shortcut. If a re-exported PDF has identical
@@ -277,22 +284,16 @@ and be rotated through the same Operator-supervised account-settings flow.
 The other prerequisites are the repo setting "Allow auto-merge" and a branch
 protection rule on `main` requiring the `check` status.
 
-Operator provisioning procedure:
-
-If browser control or the ChatGPT Chrome Extension is unavailable, manual
-account-settings/browser provisioning is the fallback.
+To provision `SCHEDULES_BOT_TOKEN`:
 
 1. In GitHub account settings, create a fine-grained PAT owned by `cbzehner`,
    limited to `cbzehner/swimfrancisco`, with only Contents and Pull requests
    read/write permissions and an expiration no later than 90 days.
-2. Treat password entry and 2FA as manual Operator checkpoints.
-3. At the final token-display checkpoint, copy the token directly into the
-   repository Actions secret named `SCHEDULES_BOT_TOKEN`. The token must not
-   enter chat, browser-automation output, shell history, command arguments,
-   files, logs, screenshots, or Development artifacts.
-4. Verify installation by reading back only the secret name and update time;
-   GitHub does not expose the stored value. Do not reuse the existing broad
-   GitHub CLI OAuth token for Actions publication.
+2. Store it as the repository Actions secret named `SCHEDULES_BOT_TOKEN`.
+   Do not paste the token into chat, commit it, or put it in shell history.
+3. Confirm the secret exists by name and update time. GitHub does not expose
+   the stored value. Do not reuse a broad GitHub CLI OAuth token for Actions
+   publication.
 
 Reviewer flow on an auto-PR that lists pending pools:
 

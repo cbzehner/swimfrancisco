@@ -53,9 +53,10 @@ bug with personality.
 
 ## Why There Is No App
 
-There is no account, no saved profile, and no tracking. The board is
-a public status page. A swimmer should be able to open it, decide,
-and leave.
+There is no account and no saved profile. The board is a public status
+page. A swimmer should be able to open it, decide, and leave. Anonymous
+product analytics (page views, web vitals, a few named UI events) go to
+PostHog through a first-party `/ingest` proxy.
 
 That constraint shapes the technical choices: static pages, tiny
 client modules, one Worker, and no runtime database.

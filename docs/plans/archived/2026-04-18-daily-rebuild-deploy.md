@@ -124,7 +124,7 @@ started_at: 2026-04-19T01:13:14-07:00
 | `docs/deploy.md` | modify | Rewrite for Workers Builds + Terraform + daily rebuild. |
 | `docs/superpowers/plans/2026-04-18-daily-rebuild-static-cleanup.md` | delete | Superseded by this plan. |
 
-Memory update (`~/.claude/projects/.../memory/project_pacific_time_convention.md`) happens during Task 15.
+Memory update (Claude project memory for the Pacific Time convention) happens during Task 15.
 
 ---
 
@@ -1399,7 +1399,7 @@ correctness from depending on visual inspection.
 ## Task 16: Memory retirement — update `project_pacific_time_convention.md`
 
 **Files:**
-- Modify: `~/.claude/projects/-Users-cbzehner-Developer-Personal-swimfrancisco/memory/project_pacific_time_convention.md`
+- Modify: Claude project memory file `project_pacific_time_convention.md`
 
 - [ ] **Step 1: Rewrite the memory body**
 
@@ -1433,7 +1433,7 @@ correctness from depending on visual inspection.
 
 - [ ] **Step 2: Confirm `MEMORY.md` pointer still matches**
 
-  Check: `grep 'Pacific Time' ~/.claude/projects/-Users-cbzehner-Developer-Personal-swimfrancisco/memory/MEMORY.md`
+  Check: `grep 'Pacific Time'` on the Claude project `MEMORY.md`
   Expected: existing bullet points at `project_pacific_time_convention.md`. Update the one-line hook after the `— ` to match the new `description` field if it's drifted.
 
   Note: no git commit — these files are user-level memory, not part of the repo.

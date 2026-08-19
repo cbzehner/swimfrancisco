@@ -3,9 +3,12 @@
 devenv.local.nix
 devenv.local.yaml
 
-# direnv
+# direnv / secrets
 .direnv
 .env
+.env.*
+!.env.example
+.dev.vars
 
 # pre-commit
 .pre-commit-config.yaml
@@ -22,7 +25,16 @@ dist/
 .venv/
 __pycache__/
 *.pyc
+.pytest_cache/
+.ruff_cache/
 tmp/
+
+# Third-party source snapshots. Fetched locally for extraction and review;
+# the committed trail is source.sha256 + provider JSON + reviewed.json.
+data/**/source.html
+data/**/source.pdf
+data/**/source.xlsx
+data/**/source.csv
 
 # Editor/OS
 .DS_Store
@@ -40,7 +52,7 @@ test-results/
 .lavish/
 
 # Local agent/tool state
-.claude/settings.local.json
+.claude/
 .codex/
 
 # Worker build artifacts

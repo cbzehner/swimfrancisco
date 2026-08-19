@@ -13,7 +13,11 @@ swimfrancisco.com — a live-updating database of all the places to swim in San 
 
 ## Data
 
-### Pools (9 — SF Rec & Parks)
+### SF Rec & Parks pools (9)
+
+The live board also lists membership and limited-access pools; those live
+in `content/spots/` and stay behind the membership toggle. The table below
+is the original city set.
 
 | Pool | Address | Type |
 |------|---------|------|

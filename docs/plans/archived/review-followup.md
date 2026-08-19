@@ -33,8 +33,7 @@ work_unit_granularity: step
 Reference: review performed on 2026-04-17 across source, `zola build`,
 `worker/npm run typecheck`, `devenv up`, local `/__scheduled`, and live UI
 inspection in headless Chrome. Magi synthesis on 2026-04-17 reshaped the
-plan from 10 loose steps into 7 grouped steps; see
-`~/.claude/magi/sessions/2026-04-17-swimfrancisco-review-followup-plan-rewrite.md`.
+plan from 10 loose steps into 7 grouped steps.
 
 Product ideas (Swim Windows, Time Scrubber, Trust Layer) live in
 `docs/ideas/product-directions.md` and are intentionally out of scope here.
