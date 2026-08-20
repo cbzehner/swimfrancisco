@@ -181,20 +181,51 @@ misinterpretation, not typos.
 
 The source registry lives at `schedule-tools/src/schedules/registry.toml`.
 
-When SF Rec moves a PDF URL:
+CI discovers Rec & Park `DocumentCenter` IDs daily from each pool's
+`official_page_url`. `schedules discover` rewrites `pdf_url` only when
+exactly one session-grid PDF is safe to adopt. Extract then fetches that
+pointer. Discover never writes `content/spots/`. The live site stays on
+the last reviewed window until a reviewed PR merges.
 
-1. Open the pool facility page on `sfrecpark.org`.
-2. Copy the current schedule PDF `DocumentCenter/View/...` link into the matching registry entry.
-3. Leave `official_page_url` pointed at the facility page.
-4. If the facility page has no current PDF yet, keep the pool skipped and record the blocker in `source_status` and `notes`.
+Humans review payloads. They also handle split PDFs, closure notices, and
+2-window cases — those FLAG and do not auto-adopt:
 
-## Current Blockers
+- **Payload change.** Work the rolling PR with `just schedules-review`.
+- **Split PDFs** (North Beach Cool + Warm, MLK `pt.1` / `pt.2`). Discover
+  flags and sets `missing_current_schedule`. Do not pick a part. Stay
+  skipped until a combined whole-pool PDF exists.
+- **2+ session-grid windows** (Sava Fall 1 + Fall 2). Discover flags both,
+  leaves `published`, and does not roll `pdf_url`. Adopt one, then extract
+  that pointer locally:
 
-As of 2026-05-04:
+  ```
+  just schedules discover --adopt sava-pool=29815
+  just schedules-extract --provider gemini --only sava-pool
+  just schedules-review
+  ```
 
-- All 8 pools with current published PDFs have `reviewed.json` committed under `data/<slug>/<date>-<sha12>/`.
-- `mission-community-pool` uses the Spring 2026 PDF (`DocumentCenter/View/28959`, effective 2026-05-12 through 2026-06-06), reviewed under `data/mission-community-pool/2026-05-03-6d12e60b17f1/`.
-- `sava-pool` is skipped because the pool remains closed for repairs and the page only links an old Fall 2025 schedule.
+- **Closure notice or band-only grid** (Garfield flyer + unlinked fall
+  grid). Discover never puts a flyer on `pdf_url`. To project a
+  closure-only window without changing the schedule URL:
+
+  ```
+  just schedules-extract --provider gemini --only garfield-pool --url https://sfrecpark.org/DocumentCenter/View/29808
+  ```
+
+  To extract an unlinked grid:
+
+  ```
+  just schedules discover --adopt garfield-pool=29799
+  just schedules-extract --provider gemini --only garfield-pool
+  just schedules-review
+  ```
+
+`--adopt` of a `session_grid` writes `pdf_url` and sets
+`source_status = published`. `--adopt` of a `split_part` writes `pdf_url`
+but does not publish. `--url` fetches without rewriting the registry. CI
+never passes `--url`.
+
+Leave `official_page_url` pointed at the facility page.
 
 ## Closure Contract (v2)
 
@@ -260,19 +291,28 @@ Run before and after any prompt or schema tweak; require improvement, not regres
 ## Auto-extract workflow
 
 The `.github/workflows/schedules-extract.yml` action runs daily at
-09:00 PT and on `workflow_dispatch`. It runs direct extraction once, then
-processes the PDF sources once with Gemini and once with Anthropic. Each pass
-has a distinct report; the run summary and uploaded
+09:00 PT and on `workflow_dispatch`. It discovers Rec & Park PDF URLs
+first (`schedules discover` writes `registry.toml`), then runs direct
+extraction once, then processes the PDF sources once with Gemini
+(`extract --provider gemini --no-discover`). There is no daily Anthropic
+step; bakeoff stays local (`schedules debug bakeoff`). Each pass has a
+distinct report; the run summary and uploaded
 `schedule-extraction-reports` artifact retain all reports that were produced,
-including partial-success failure details. Provider artifacts under
-`data/<slug>/<date>-<sha12>/` get written, and the pipeline carries
-attestation forward (writes `reviewed.json` with `carried_from`) for pools
-whose payload matches the last human-reviewed one; `content/spots/` stays
-untouched. If anything changed under `data/`, the action commits to the
-rolling `auto/schedules-extract` branch and opens or refreshes its PR with the
-extraction scorecard in the body. When nothing awaits a human — every changed
-pool auto-verified — the PR is set to auto-merge on green CI, so quiet weeks
-need no attention at all.
+including `tmp/discovery-report.md` and partial-success failure details.
+Provider artifacts under `data/<slug>/<date>-<sha12>/` get written, and
+the pipeline carries attestation forward (writes `reviewed.json` with
+`carried_from`) for pools whose payload matches the last human-reviewed
+one; `content/spots/` stays untouched. The live site stays on the last
+reviewed window until a reviewed PR merges.
+
+If `data/` or `registry.toml` changed, the action commits to the rolling
+`auto/schedules-extract` branch and opens or refreshes its PR. Daily
+extract refreshes that PR; closing it without merging reopens on the next
+run that still sees a diff against `main`. When nothing awaits a human —
+every changed pool auto-verified **and** `discover-blocking` is empty —
+the PR is set to auto-merge on green CI, so quiet weeks need no attention
+at all. A FLAG (split PDF, flyer, band-only grid, 2+ session-grid windows)
+blocks auto-merge even when `data/` is quiet.
 
 Before checkout, the workflow requires `SCHEDULES_BOT_TOKEN`. Provision a
 repository-scoped fine-grained PAT limited to `cbzehner/swimfrancisco` with
@@ -295,23 +335,31 @@ To provision `SCHEDULES_BOT_TOKEN`:
    the stored value. Do not reuse a broad GitHub CLI OAuth token for Actions
    publication.
 
-Reviewer flow on an auto-PR that lists pending pools:
+Reviewer flow on an auto-PR that lists pending pools or discover flags:
 
-1. Pull the branch locally.
-2. Run `just schedules-review` and work through the browser queue.
-3. Verify each row against the rendered source, attest, and save.
-4. The site projects into `content/spots/<slug>.md` on save.
-5. Run `just release`.
-6. Commit the reviewed files to the PR branch and merge.
+```
+git fetch origin && git checkout auto/schedules-extract
+just schedules-review          # work the queue; Save projects content
+just release                   # bulletin only if reviewed payloads changed
+git add content/spots data schedule-tools/src/schedules/registry.toml
+git commit -m "review Rec & Park schedules"
+# merge this PR; do not open a second one
+```
+
+If the queue is empty, `schedules-review` prints `nothing to review`. Adopt a
+band-flagged or multi-window ID first, or extract a closure notice with
+`--url`, as in Registry Maintenance. Then review, release, and merge the
+same rolling PR.
 
 Public-repo safety: the workflow has no `pull_request` or
 `pull_request_target` triggers, only `schedule` and `workflow_dispatch`.
 Forks cannot run it. `concurrency.cancel-in-progress` caps cost at one
-extraction at a time. Set monthly budget caps on `GOOGLE_API_KEY` and
-`ANTHROPIC_API_KEY` in their respective dashboards as belt-and-suspenders.
+extraction at a time.
 
-Required repo secrets: `GOOGLE_API_KEY`, `ANTHROPIC_API_KEY`, and the
-CI-capable `SCHEDULES_BOT_TOKEN` described above.
+Required repo secrets: `GOOGLE_API_KEY` and the CI-capable
+`SCHEDULES_BOT_TOKEN` described above. `ANTHROPIC_API_KEY` is a local
+bakeoff secret, not a CI requirement. Set monthly budget caps on
+`GOOGLE_API_KEY` and, when used locally, `ANTHROPIC_API_KEY`.
 
 Required repo settings: Settings → Actions → General →
 - Workflow permissions: **Read and write permissions**
