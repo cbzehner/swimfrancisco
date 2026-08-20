@@ -81,6 +81,13 @@ def test_github_token_only_in_pager_jobs() -> None:
     assert "GH_TOKEN: ${{ github.token }}" not in jobs["extract"]
 
 
+def test_no_checkout_pager_jobs_set_gh_repo() -> None:
+    jobs = _jobs(_workflow())
+    for name in ("ensure-labels", "page-schedules-extract"):
+        assert "GH_REPO: ${{ github.repository }}" in jobs[name]
+        assert "actions/checkout" not in jobs[name]
+
+
 def test_checkout_and_pr_use_schedules_bot_token() -> None:
     workflow = _workflow()
     extract = _jobs(workflow)["extract"]
@@ -166,8 +173,12 @@ def test_auto_merge_requires_discover_blocking() -> None:
     pr = _steps(_jobs(_workflow())["extract"])["Open or update PR"]
     assert "schedules discover-blocking" in pr
     assert "schedules pending-reviews" in pr
-    assert '[ -z "${PENDING}" ] && [ -z "${BLOCKING}" ]' in pr
+    assert "BLOCKING_STATUS" in pr
+    assert (
+        '[ "${BLOCKING_STATUS}" -eq 0 ] && [ -z "${PENDING}" ] && [ -z "${BLOCKING}" ]'
+    ) in pr
     assert 'gh pr edit "${PR_NUMBER}" --add-label "needs-schedule-review"' in pr
+    assert "discover-blocking failed; not auto-merging." in pr
 
 
 def test_page_issue_on_preflight_failure_close_on_preflight_success() -> None:

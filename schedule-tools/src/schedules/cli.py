@@ -196,12 +196,17 @@ def discover_command(only: str | None, dry_run: bool, adopt_spec: str | None) ->
 def discover_blocking_command() -> None:
     """Print slugs with blocking discover flags, one per line.
 
-    Empty output means no flags — the auto-extract workflow uses that as its
-    second auto-merge gate.
+    Empty stdout with exit 0 means no flags — the auto-extract workflow
+    uses that as its second auto-merge gate. A missing decisions file
+    exits 1; that is not "no flags."
     """
     path = TMP_DIR / "discovery-decisions.json"
     if not path.exists():
-        return
+        click.echo(
+            "tmp/discovery-decisions.json is missing; cannot verify discover flags.",
+            err=True,
+        )
+        raise SystemExit(1)
     payload = json.loads(path.read_text())
     if not isinstance(payload, list):
         return

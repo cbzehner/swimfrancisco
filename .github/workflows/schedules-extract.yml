@@ -237,18 +237,26 @@ jobs:
           fi
 
           # Fully-autonomous path: nothing awaits a human (every changed
-          # pool carried its attestation forward, and discover has no
-          # blocking flags), so merge on green CI. `--auto` needs repo
-          # setting "Allow auto-merge" plus a branch protection rule
-          # requiring the `check` status; if either is missing this logs
-          # a notice and leaves the PR open.
+          # pool carried its attestation forward, and discover-blocking
+          # exited 0 with empty stdout). A missing decisions file is an
+          # error, not "no flags." `--auto` needs repo setting "Allow
+          # auto-merge" plus a branch protection rule requiring the
+          # `check` status; if either is missing this logs a notice and
+          # leaves the PR open.
           PENDING=$(uv --project schedule-tools run schedules pending-reviews)
-          BLOCKING=$(uv --project schedule-tools run schedules discover-blocking)
-          if [ -z "${PENDING}" ] && [ -z "${BLOCKING}" ]; then
+          if BLOCKING=$(uv --project schedule-tools run schedules discover-blocking); then
+            BLOCKING_STATUS=0
+          else
+            BLOCKING_STATUS=$?
+          fi
+          if [ "${BLOCKING_STATUS}" -eq 0 ] && [ -z "${PENDING}" ] && [ -z "${BLOCKING}" ]; then
             gh pr merge "${PR_NUMBER}" --auto --squash \
               || echo "::notice::auto-merge unavailable; PR #${PR_NUMBER} left open for manual merge"
           else
             gh pr edit "${PR_NUMBER}" --add-label "needs-schedule-review"
+            if [ "${BLOCKING_STATUS}" -ne 0 ]; then
+              echo "discover-blocking failed; not auto-merging."
+            fi
             if [ -n "${PENDING}" ]; then
               echo "Pools awaiting human review:"
               echo "${PENDING}"
