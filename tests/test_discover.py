@@ -410,7 +410,7 @@ def test_choose_roll_empty_table() -> None:
     assert decision.blocking is True
 
 
-def test_persisted_band_ids_reads_flag_line_only() -> None:
+def test_persisted_band_ids_reads_flag_and_adopt_not_extra() -> None:
     notes = (
         "discover: 2026-08-19 flag closure_notice "
         "id=29808:closure_notice:table band_session_grid id=29799:session_grid:band\n\n"
@@ -419,6 +419,11 @@ def test_persisted_band_ids_reads_flag_line_only() -> None:
     assert persisted_band_ids(notes) == frozenset({29799})
     extra = "discover: 2026-08-19 extra id=29808:closure_notice:table"
     assert persisted_band_ids(extra) == frozenset()
+    adopt = (
+        "discover: 2026-08-19 adopt session_grid "
+        "band_session_grid id=29799:session_grid:persisted"
+    )
+    assert persisted_band_ids(adopt) == frozenset({29799})
 
 
 def test_selection_is_exactly_nine_rec_park_pools() -> None:
@@ -804,6 +809,10 @@ def test_discover_all_garfield_flyer_flags_unchanged_url(tmp_path, monkeypatch) 
             "filename": "Garfield Pool Maintenance Closure 8-14_9-7 2026.pdf",
             "content": _pdf_bytes(),
         },
+        29564: {
+            "filename": "Garfield Pool Summer 2026.pdf",
+            "content": _grid_pdf(),
+        },
     }
     _install_http(monkeypatch, pages=pages, views=views)
     decisions = discover_all(
@@ -814,6 +823,7 @@ def test_discover_all_garfield_flyer_flags_unchanged_url(tmp_path, monkeypatch) 
     )
     assert decisions[0].action == "flag"
     assert decisions[0].kind == "closure_notice"
+    assert decisions[0].blocking is True
     loaded = next(
         item for item in load_registry(registry) if item.slug == "garfield-pool"
     )
@@ -826,7 +836,13 @@ def test_discover_all_empty_table_flags(tmp_path, monkeypatch) -> None:
     registry = _copy_registry(tmp_path)
     entry = next(item for item in load_registry() if item.slug == "hamilton-pool")
     pages = {entry.official_page_url: _fixture("empty-table.html")}
-    _install_http(monkeypatch, pages=pages, views={})
+    views = {
+        29599: {
+            "filename": "Hamilton Pool Summer 2026.pdf",
+            "content": _grid_pdf(),
+        },
+    }
+    _install_http(monkeypatch, pages=pages, views=views)
     decisions = discover_all(
         [entry],
         delay=0,
@@ -1146,10 +1162,6 @@ def test_adopt_band_only_then_flyer_table_is_unchanged(tmp_path, monkeypatch) ->
     registry = _copy_registry(tmp_path)
     text = registry.read_text()
     text = text.replace(
-        'pdf_url = "https://sfrecpark.org/DocumentCenter/View/29564"',
-        'pdf_url = "https://sfrecpark.org/DocumentCenter/View/29799"',
-    )
-    text = text.replace(
         'pdf_url = "https://sfrecpark.org/DocumentCenter/View/29571"',
         'pdf_url = "https://sfrecpark.org/DocumentCenter/View/29815"',
     )
@@ -1157,12 +1169,15 @@ def test_adopt_band_only_then_flyer_table_is_unchanged(tmp_path, monkeypatch) ->
     loaded = load_registry(registry)
     garfield = next(item for item in loaded if item.slug == "garfield-pool")
     sava = next(item for item in loaded if item.slug == "sava-pool")
-    assert garfield.notes is None
     pages = {
         garfield.official_page_url: _fixture("garfield-flyer-only.html"),
         sava.official_page_url: _fixture("sava-two-session-grids.html"),
     }
     views = {
+        29564: {
+            "filename": "Garfield Pool Summer 2026.pdf",
+            "content": _grid_pdf(),
+        },
         29799: {
             "filename": "Garfield Pool Fall 2026 Schedule.pdf",
             "content": _grid_pdf(),
@@ -1177,13 +1192,28 @@ def test_adopt_band_only_then_flyer_table_is_unchanged(tmp_path, monkeypatch) ->
         },
     }
     _install_http(monkeypatch, pages=pages, views=views)
-    decisions = discover_all(
+    first = discover_all(
+        [garfield, sava],
+        delay=0,
+        registry_path=registry,
+        report_dir=tmp_path,
+        adopt=("garfield-pool", 29799),
+    )
+    by_slug = {item.slug: item for item in first}
+    assert by_slug["garfield-pool"].action == "adopt"
+    after_adopt = load_registry(registry)
+    garfield = next(item for item in after_adopt if item.slug == "garfield-pool")
+    sava = next(item for item in after_adopt if item.slug == "sava-pool")
+    assert garfield.pdf_url.endswith("/29799")
+    assert 29799 in persisted_band_ids(garfield.notes)
+
+    second = discover_all(
         [garfield, sava],
         delay=0,
         registry_path=registry,
         report_dir=tmp_path,
     )
-    by_slug = {item.slug: item for item in decisions}
+    by_slug = {item.slug: item for item in second}
     assert by_slug["garfield-pool"].action == "unchanged"
     assert by_slug["garfield-pool"].blocking is False
     reloaded = next(
@@ -1191,8 +1221,9 @@ def test_adopt_band_only_then_flyer_table_is_unchanged(tmp_path, monkeypatch) ->
     )
     assert reloaded.pdf_url.endswith("/29799")
     assert reloaded.source_status == "published"
+    assert 29799 in persisted_band_ids(reloaded.notes)
     notes = reloaded.notes or ""
-    assert "flag" not in notes.split("\n")[0] if notes else True
+    assert "flag" not in notes.split("\n")[0]
 
 
 def test_persist_kept_on_non_404_miss(tmp_path, monkeypatch) -> None:
@@ -1284,6 +1315,10 @@ def test_discover_all_garfield_flyer_with_weekdays_does_not_adopt(
         29808: {
             "filename": "Garfield Pool Maintenance Closure 8-14_9-7 2026.pdf",
             "content": _pdf_with_text("Monday Tuesday Wednesday Thursday Friday"),
+        },
+        29564: {
+            "filename": "Garfield Pool Summer 2026.pdf",
+            "content": _grid_pdf(),
         },
     }
     _install_http(monkeypatch, pages=pages, views=views)

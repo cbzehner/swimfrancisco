@@ -298,7 +298,7 @@ def persisted_band_ids(notes: str | None) -> frozenset[int]:
     if line is None:
         return frozenset()
     match = _DISCOVER_LINE_RE.match(line)
-    if match is None or match.group(2) != "flag":
+    if match is None or match.group(2) not in {"flag", "adopt"}:
         return frozenset()
     ids: set[int] = set()
     for token in _BAND_SESSION_GRID_RE.finditer(line):
@@ -479,36 +479,6 @@ def discover_all(
             source=source,
         )
         add_classified(slug, item)
-
-    for entry in selected:
-        current_id = view_id_from_url(entry.pdf_url)
-        if current_id is None or current_id in seen_ids[entry.slug]:
-            continue
-        fetched = views.get(current_id)
-        if fetched is None or not fetched.is_pdf:
-            continue
-        link = DocumentLink(
-            view_id=current_id,
-            href=absolute_view_url(current_id),
-            anchor_text=fetched.filename or "",
-        )
-        item = classify_pdf(
-            link,
-            pool_slug=entry.slug,
-            pdf_bytes=fetched.content,
-            filename=fetched.filename,
-            source="persisted",
-        )
-        if item.kind != "session_grid":
-            continue
-        # Leftover summer pin: do not count 29599 as a second window next to
-        # unique table 29800, and do not let it satisfy rule 2 over a band find.
-        if any(
-            other.kind == "session_grid" and other.link.view_id != current_id
-            for other in classified_by_slug[entry.slug]
-        ):
-            continue
-        add_classified(entry.slug, item)
 
     decisions: list[DiscoverDecision] = []
     for entry in selected:
@@ -927,12 +897,35 @@ def _apply_decision_to_block(block: str, decision: DiscoverDecision) -> str:
     return _replace_or_insert_notes(updated, composed)
 
 
+def _off_table_current_grids(decision: DiscoverDecision) -> list[ClassifiedDocument]:
+    current_id = view_id_from_url(decision.new_url or decision.old_url)
+    if current_id is None:
+        return []
+    out: list[ClassifiedDocument] = []
+    seen: set[int] = set()
+    for item in decision.candidates:
+        if (
+            item.link.view_id == current_id
+            and item.kind == "session_grid"
+            and item.source in {"band", "persisted"}
+            and item.link.view_id not in seen
+        ):
+            seen.add(item.link.view_id)
+            out.append(item)
+    return out
+
+
 def _desired_machine_line(decision: DiscoverDecision) -> str | None:
     date = pacific_today().isoformat()
+    extras = [item for item in decision.extra_candidates if item.kind != "session_grid"]
+    persist = _off_table_current_grids(decision)
     if decision.action in {"adopt", "unchanged"}:
-        extras = [
-            item for item in decision.extra_candidates if item.kind != "session_grid"
-        ]
+        if persist:
+            tokens = " ".join(
+                [_id_token(item, prefix_band=True) for item in persist]
+                + [_id_token(item) for item in extras]
+            )
+            return f"discover: {date} adopt session_grid {tokens}".rstrip()
         if not extras:
             return None
         tokens = " ".join(_id_token(item) for item in extras)
