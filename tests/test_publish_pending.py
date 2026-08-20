@@ -67,13 +67,14 @@ def _write_candidate(
     grounding: dict | None | object = Ellipsis,
     source_pdf: bool = True,
     fetch_date: str = "2026-08-19",
+    source_pdf_url: str = "https://sfrecpark.org/DocumentCenter/View/29800",
 ) -> ReviewCandidate:
     payload = payload if payload is not None else _payload()
     review_dir = data / slug / f"{fetch_date}-{sha[:12]}"
     review_dir.mkdir(parents=True, exist_ok=True)
     artifact: dict = {
         "pdf_sha256": sha,
-        "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29800",
+        "source_pdf_url": source_pdf_url,
         "payload": payload,
     }
     if grounding is Ellipsis:
@@ -609,6 +610,78 @@ def test_publish_pending_all_eligible_unique_grid(iso):
     )
     assert envelope["attested_by"] == "ci"
     assert "1 published, 0 refused" in report.read_text()
+
+
+def test_unique_grid_refuses_sibling_session_grids(iso, monkeypatch):
+    _write_candidate(
+        iso.data,
+        slug="sava-pool",
+        source_pdf_url="https://sfrecpark.org/DocumentCenter/View/29815",
+    )
+    _seed_content(iso.content, "sava-pool")
+    monkeypatch.setattr(
+        "schedules.publish.load_registry",
+        lambda: [
+            PoolEntry(
+                slug="sava-pool",
+                pdf_url="https://sfrecpark.org/DocumentCenter/View/29815",
+                official_page_url="https://sfrecpark.org/facilities/facility/details/Sava-Pool-220",
+                source_kind="sfrecpark_pdf",
+                source_status="published",
+            )
+        ],
+    )
+    iso.tmp.joinpath("discovery-decisions.json").write_text(
+        json.dumps(
+            [
+                {
+                    "slug": "sava-pool",
+                    "action": "adopt",
+                    "blocking": False,
+                    "kind": "session_grid",
+                    "reason": "operator_adopt",
+                    "candidates": [
+                        {
+                            "view_id": 29815,
+                            "kind": "session_grid",
+                            "source": "table",
+                        },
+                        {
+                            "view_id": 29805,
+                            "kind": "session_grid",
+                            "source": "band",
+                        },
+                    ],
+                }
+            ]
+        )
+    )
+    count, report = publish_pending_all(
+        data_root=iso.data, content_spots_dir=iso.content, today=date(2026, 8, 20)
+    )
+    assert count == 0
+    refused = json.loads(report.with_name("publish-pending.json").read_text())["refused"]
+    assert refused[0]["code"] == "sibling_session_grids"
+    assert not (
+        iso.data / "sava-pool" / f"2026-08-19-{SHA[:12]}" / "reviewed.json"
+    ).exists()
+
+
+def test_unique_grid_refuses_not_current_pin(iso):
+    _write_candidate(
+        iso.data,
+        source_pdf_url="https://sfrecpark.org/DocumentCenter/View/29799",
+    )
+    _seed_content(iso.content, "hamilton-pool")
+    count, report = publish_pending_all(
+        data_root=iso.data, content_spots_dir=iso.content, today=date(2026, 8, 20)
+    )
+    assert count == 0
+    refused = json.loads(report.with_name("publish-pending.json").read_text())["refused"]
+    assert refused[0]["code"] == "not_current_pin"
+    assert not (
+        iso.data / "hamilton-pool" / f"2026-08-19-{SHA[:12]}" / "reviewed.json"
+    ).exists()
 
 
 def test_grounding_0_89_does_not_write(iso):

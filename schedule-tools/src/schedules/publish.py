@@ -11,6 +11,7 @@ from pathlib import Path
 import tomlkit
 
 from ._time import pacific_today
+from .discover import view_id_from_url
 from .fetch import fetch_pdf
 from .merge import _split_frontmatter, read_schedule_snapshot
 from .models import GroundingResult, SourceStatus
@@ -491,6 +492,7 @@ def publish_pending_all(
                 quarantined_shas=quarantined_shas,
                 content_spots_dir=content_spots_dir,
                 attested_at=attested_at,
+                decisions=decisions,
             )
         except PublishRefuse as exc:
             refused.append(
@@ -552,6 +554,7 @@ def _publish_unique_grid(
     quarantined_shas: frozenset[str],
     content_spots_dir: Path,
     attested_at: date,
+    decisions: list[dict],
 ) -> None:
     entry = entries.get(candidate.slug)
     if entry is None:
@@ -561,6 +564,30 @@ def _publish_unique_grid(
         artifact = json.loads(_pick_provider_artifact(candidate.review_dir).read_text())
     except (OSError, json.JSONDecodeError, FileNotFoundError) as exc:
         raise PublishRefuse("identity_mismatch", "no provider JSON in review dir") from exc
+
+    decision = next(
+        (
+            item
+            for item in decisions
+            if isinstance(item, dict) and item.get("slug") == candidate.slug
+        ),
+        None,
+    )
+    grid_ids = _decision_session_grid_ids(decision)
+    # Unique-grid would publish the 10-day interim while a sibling season PDF sits unused.
+    if len(grid_ids) >= 2:
+        raise PublishRefuse(
+            "sibling_session_grids",
+            f"{candidate.slug} has {len(grid_ids)} session_grid IDs",
+        )
+    source_url = artifact.get("source_pdf_url")
+    candidate_id = view_id_from_url(source_url) if isinstance(source_url, str) else None
+    pin_id = view_id_from_url(entry.pdf_url)
+    if candidate_id is not None and pin_id is not None and candidate_id != pin_id:
+        raise PublishRefuse(
+            "not_current_pin",
+            f"candidate View {candidate_id} is not pdf_url View {pin_id}",
+        )
 
     payload = artifact.get("payload") if isinstance(artifact.get("payload"), dict) else {}
     grounding = _grounding_from_artifact(artifact)
@@ -656,6 +683,25 @@ def _grounding_from_artifact(artifact: dict) -> GroundingResult | None:
         grounded_count=int(raw.get("grounded_count") or 0),
         total=int(raw.get("total") or 0),
     )
+
+
+def _decision_session_grid_ids(decision: dict | None) -> set[int]:
+    if not isinstance(decision, dict):
+        return set()
+    ids: set[int] = set()
+    for key in ("candidates", "extra_candidates"):
+        items = decision.get(key) or []
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if not isinstance(item, dict) or item.get("kind") != "session_grid":
+                continue
+            view_id = item.get("view_id")
+            if isinstance(view_id, int):
+                ids.add(view_id)
+            elif isinstance(view_id, str) and view_id.isdigit():
+                ids.add(int(view_id))
+    return ids
 
 
 def _load_decisions(tmp_dir: Path) -> list[dict]:

@@ -506,6 +506,22 @@ def test_choose_roll_unchanged_when_current_is_classified_session_grid() -> None
     assert all(item.kind != "session_grid" for item in decision.extra_candidates)
 
 
+def test_choose_roll_current_id_with_sibling_is_not_unchanged() -> None:
+    entry = _entry("sava-pool", view_id=29815)
+    decision = choose_roll(
+        entry,
+        [
+            _classified(29815, "session_grid", source="table"),
+            _classified(29805, "session_grid", source="band"),
+        ],
+    )
+    assert decision.action != "unchanged"
+    assert decision.action == "flag"
+    assert decision.reason == "multiple_windows"
+    assert decision.blocking is True
+    assert {item.link.view_id for item in decision.candidates} == {29815, 29805}
+
+
 def test_choose_roll_flags_when_not_published() -> None:
     entry = _entry("north-beach-pool", view_id=29778, status="missing_current_schedule")
     decision = choose_roll(
@@ -542,6 +558,11 @@ def test_persisted_band_ids_reads_flag_and_adopt_not_extra() -> None:
         "band_session_grid id=29799:session_grid:persisted"
     )
     assert persisted_band_ids(adopt) == frozenset({29799})
+    unchanged = (
+        "discover: 2026-08-19 unchanged current_session_grid "
+        "band_session_grid id=29805:session_grid:band"
+    )
+    assert persisted_band_ids(unchanged) == frozenset({29805})
 
 
 def test_selection_is_exactly_nine_rec_park_pools() -> None:
@@ -1235,6 +1256,55 @@ def test_discover_all_operator_adopt(tmp_path, monkeypatch) -> None:
     loaded = next(item for item in load_registry(registry) if item.slug == "sava-pool")
     assert loaded.pdf_url.endswith("/29815")
     assert loaded.source_status == "published"
+    assert "id=29805" in (loaded.notes or "")
+
+
+def test_adopt_persists_sibling_absent_from_later_html(tmp_path, monkeypatch) -> None:
+    _freeze_today(monkeypatch)
+    registry = _copy_registry(tmp_path)
+    sava = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "sava-pool")
+    pages = {sava.official_page_url: _fixture("sava-two-session-grids.html")}
+    views = {
+        29815: {
+            "filename": "Sava_Pool_Fall12026_Aug18toDec26_.pdf",
+            "content": _pdf_bytes(),
+        },
+        29805: {"filename": "Sava Pool Fall 2 2026.pdf", "content": _pdf_bytes()},
+        29571: {"filename": "Sava Pool Summer.pdf", "content": _pdf_bytes()},
+    }
+    _install_http(monkeypatch, pages=pages, views=views)
+    discover_all(
+        [sava],
+        delay=0,
+        registry_path=registry,
+        report_dir=tmp_path,
+        adopt=("sava-pool", 29815),
+    )
+    loaded = next(item for item in load_registry(registry) if item.slug == "sava-pool")
+    assert loaded.pdf_url.endswith("/29815")
+    assert "id=29805" in (loaded.notes or "")
+
+    requested: list[str] = []
+    _install_http(monkeypatch, pages=pages, views=views, requested=requested)
+    second = discover_all(
+        [loaded],
+        delay=0,
+        registry_path=registry,
+        report_dir=tmp_path,
+    )
+    view_ids = [
+        int(match.group(1)) for url in requested if (match := VIEW_ID_RE.search(url))
+    ]
+    assert 29805 in view_ids
+    window = set(range(29816, 29856))
+    assert window.issubset(set(view_ids))
+    assert 29805 not in window
+    assert [item.slug for item in second] == ["sava-pool"]
+    classified = {
+        item.link.view_id for item in second[0].candidates if item.kind == "session_grid"
+    }
+    assert 29805 in classified
+    assert 29815 in classified
 
 
 def test_dry_run_does_not_write_registry(tmp_path, monkeypatch) -> None:

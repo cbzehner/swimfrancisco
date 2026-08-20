@@ -226,6 +226,10 @@ def choose_roll(
             kind = "closure_notice"
         return decide("flag", reason, kind=kind, blocking=True)
 
+    # Sole-grid unchanged would drop Fall 2 after --adopt of Fall 1.
+    if len(all_grid_ids) >= 2:
+        return decide("flag", "multiple_windows", kind="session_grid", blocking=True)
+
     if current_id is not None and current_id in all_grid_ids:
         return decide(
             "unchanged",
@@ -235,9 +239,6 @@ def choose_roll(
             blocking=False,
             extra=non_grid,
         )
-
-    if len(all_grid_ids) >= 2:
-        return decide("flag", "multiple_windows", kind="session_grid", blocking=True)
 
     if table_splits:
         return decide("flag", "split_part", kind="split_part", blocking=True)
@@ -286,7 +287,7 @@ def persisted_band_ids(notes: str | None) -> frozenset[int]:
     if line is None:
         return frozenset()
     match = _DISCOVER_LINE_RE.match(line)
-    if match is None or match.group(2) not in {"flag", "adopt"}:
+    if match is None or match.group(2) == "extra":
         return frozenset()
     ids: set[int] = set()
     for token in _BAND_SESSION_GRID_RE.finditer(line):
@@ -491,13 +492,12 @@ def discover_all(
         decision = choose_roll(entry, classified)
         if adopt is not None and adopt[0] == entry.slug:
             decision = _operator_adopt_decision(entry, classified, views, adopt[1])
-        if decision.action == "flag":
-            decision = _with_persisted_survivors(
-                decision,
-                persisted_by_slug.get(entry.slug, frozenset()),
-                dropped_persisted,
-                views,
-            )
+        decision = _with_persisted_survivors(
+            decision,
+            persisted_by_slug.get(entry.slug, frozenset()),
+            dropped_persisted,
+            views,
+        )
         decisions.append(decision)
 
     if not dry_run:
@@ -544,6 +544,7 @@ def _operator_adopt_decision(
         for item in classified
         if item.kind != "session_grid" and item.link.view_id != view_id
     )
+    # Sibling session_grids stay on candidates so adopt notes keep them.
     return DiscoverDecision(
         slug=entry.slug,
         action="adopt",
@@ -957,17 +958,43 @@ def _off_table_current_grids(decision: DiscoverDecision) -> list[ClassifiedDocum
     return out
 
 
+def _sibling_session_grids(decision: DiscoverDecision) -> list[ClassifiedDocument]:
+    pin = view_id_from_url(decision.new_url or decision.old_url)
+    out: list[ClassifiedDocument] = []
+    seen: set[int] = set()
+    for item in decision.candidates:
+        if item.kind != "session_grid":
+            continue
+        if pin is not None and item.link.view_id == pin:
+            continue
+        if item.link.view_id in seen:
+            continue
+        seen.add(item.link.view_id)
+        out.append(item)
+    return out
+
+
 def _desired_machine_line(decision: DiscoverDecision) -> str | None:
     date = pacific_today().isoformat()
     extras = [item for item in decision.extra_candidates if item.kind != "session_grid"]
     persist = _off_table_current_grids(decision)
+    siblings = _sibling_session_grids(decision)
+    persist_items: list[ClassifiedDocument] = []
+    seen: set[int] = set()
+    for item in persist + siblings:
+        if item.link.view_id in seen:
+            continue
+        seen.add(item.link.view_id)
+        persist_items.append(item)
     if decision.action in {"adopt", "unchanged"}:
-        if persist:
+        if persist_items:
             tokens = " ".join(
-                [_id_token(item, prefix_band=True) for item in persist]
+                [_id_token(item, prefix_band=True) for item in persist_items]
                 + [_id_token(item) for item in extras]
             )
-            return f"discover: {date} adopt session_grid {tokens}".rstrip()
+            return (
+                f"discover: {date} {decision.action} {decision.reason} {tokens}"
+            ).rstrip()
         if not extras:
             return None
         tokens = " ".join(_id_token(item) for item in extras)
