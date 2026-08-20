@@ -494,7 +494,7 @@ def publish_pending_all(
                 quarantined_shas=quarantined_shas,
                 entries=entries,
                 data_root=data_root,
-                blocking_slugs=blocking_slugs - {slug},
+                blocking_slugs=blocking_slugs,
             )
         except PublishRefuse as exc:
             refused.append({"slug": slug, "code": exc.code, "message": exc.message})
@@ -752,7 +752,7 @@ def publish_sequential_slug(
                     else None,
                 }
             )
-    except (PublishRefuse, FinalizeError) as exc:
+    except Exception as exc:
         if backup is not None:
             md_path.write_text(backup)
         for path in written:
@@ -877,41 +877,13 @@ def _sequential_slugs(decisions: list[dict]) -> list[str]:
         slug = decision.get("slug")
         if not isinstance(slug, str) or slug in seen:
             continue
-        if decision.get("reason") == "sequential_windows" or _decision_is_sequential(
-            decision
+        # Discover already chose sequential vs FLAG; do not re-derive from dates.
+        if decision.get("reason") == "sequential_windows" and not decision.get(
+            "blocking"
         ):
             seen.add(slug)
             slugs.append(slug)
     return slugs
-
-
-def _decision_is_sequential(decision: dict) -> bool:
-    kept = collapse_grid_candidates(
-        list(decision.get("candidates") or []) + list(decision.get("extra_candidates") or [])
-    )
-    if len(kept) < 2:
-        return False
-    ranges: list[tuple[date, date]] = []
-    for item in kept:
-        parsed = _json_window(item)
-        if parsed is None:
-            return False
-        ranges.append(parsed)
-    return all(
-        windows_disjoint(left, right)
-        for index, left in enumerate(ranges)
-        for right in ranges[index + 1 :]
-    )
-
-
-def _json_window(item: dict) -> tuple[date, date] | None:
-    start, end = item.get("window_start"), item.get("window_end")
-    if not isinstance(start, str) or not isinstance(end, str):
-        return None
-    try:
-        return date.fromisoformat(start), date.fromisoformat(end)
-    except ValueError:
-        return None
 
 
 def _payload_window(payload: dict) -> tuple[date, date] | None:
