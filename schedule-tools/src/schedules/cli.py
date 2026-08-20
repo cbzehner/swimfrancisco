@@ -99,14 +99,18 @@ def extract(
         and not no_discover
         and override_url is None
     )
-    exit_code, report_path, results = run_pipeline(
-        slugs=slugs,
-        source_mode=source_mode,
-        compare_with=None,
-        force=force,
-        apply_discover=apply_discover,
-        override_url=override_url,
-    )
+    try:
+        exit_code, report_path, results = run_pipeline(
+            slugs=slugs,
+            source_mode=source_mode,
+            compare_with=None,
+            force=force,
+            apply_discover=apply_discover,
+            override_url=override_url,
+        )
+    except DiscoverError as exc:
+        click.echo(str(exc), err=True)
+        raise SystemExit(1) from exc
     click.echo(f"Wrote {report_path}")
     click.echo(_summary_line(results))
     raise SystemExit(exit_code)

@@ -14,6 +14,8 @@ import json
 from dataclasses import replace
 from pathlib import Path
 
+import pytest
+
 from schedules.discover import DiscoverError
 from schedules.models import Aborted, Extracted, FetchResult, PoolResult, Skipped, Unchanged
 from schedules.models import PoolEntry
@@ -725,16 +727,15 @@ def test_discover_error_exits_one_and_keeps_report(monkeypatch, tmp_path) -> Non
 
     monkeypatch.setattr("schedules.pipeline.discover_all", boom)
 
-    exit_code, _, results = run_pipeline(
-        slugs=["hamilton-pool"],
-        source_mode="gemini",
-        compare_with=None,
-        force=False,
-        apply_discover=True,
-    )
+    with pytest.raises(DiscoverError, match="every Rec & Park facility page failed"):
+        run_pipeline(
+            slugs=["hamilton-pool"],
+            source_mode="gemini",
+            compare_with=None,
+            force=False,
+            apply_discover=True,
+        )
 
-    assert exit_code == 1
-    assert results == []
     assert state["fetched"] == []
     assert report.read_text() == "# kept\n"
 

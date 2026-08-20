@@ -3,6 +3,7 @@ from pathlib import Path
 from click.testing import CliRunner
 
 from schedules.cli import cli
+from schedules.discover import DiscoverError
 
 
 def test_extract_requires_exactly_one_source_mode() -> None:
@@ -144,3 +145,14 @@ def test_bakeoff_does_not_apply_discover(monkeypatch) -> None:
     assert result.exit_code == 0
     assert captured["apply_discover"] is False
     assert captured["compare_with"] == "anthropic"
+
+
+def test_extract_prints_discover_error(monkeypatch) -> None:
+    def boom(**_kwargs):
+        raise DiscoverError("every Rec & Park facility page failed to fetch")
+
+    monkeypatch.setattr("schedules.cli.run_pipeline", boom)
+    result = CliRunner().invoke(cli, ["extract", "--provider", "gemini"])
+    assert result.exit_code == 1
+    assert "every Rec & Park facility page failed to fetch" in result.output
+    assert "0 pools processed" not in result.output

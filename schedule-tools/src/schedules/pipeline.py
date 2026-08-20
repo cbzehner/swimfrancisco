@@ -10,7 +10,7 @@ from typing import Literal
 from .artifacts import save_artifact_bundle, skip_if_fresh
 from .delta import check_delta
 from .direct_sources import extract_direct
-from .discover import DiscoverError, discover_all, rec_park_entries
+from .discover import discover_all, rec_park_entries
 from .fetch import fetch_pdf
 from .grounding import grounding_from_text, normalize_pdf_text
 from .merge import read_schedule_snapshot
@@ -442,12 +442,8 @@ def run_pipeline(
             if not apply_slugs:
                 rec_park = []
         if rec_park:
-            try:
-                # Full Rec & Park set for max_id / band; slugs limits apply.
-                discover_all(rec_park, slugs=apply_slugs)
-            except DiscoverError:
-                report_path = write_report([], path=REPORT_PATHS[source_mode])
-                return 1, report_path, []
+            # Full Rec & Park set for max_id / band; slugs limits apply.
+            discover_all(rec_park, slugs=apply_slugs)
         registry = load_registry()
         selected = select_registry_entries(registry, source_mode=source_mode, slugs=slugs)
 
