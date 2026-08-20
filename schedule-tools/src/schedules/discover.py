@@ -6,6 +6,7 @@ import time
 import tomllib
 from collections.abc import Callable
 from dataclasses import dataclass, replace
+from datetime import date
 from html import unescape
 from html.parser import HTMLParser
 from pathlib import Path
@@ -20,6 +21,7 @@ from .models import PoolEntry
 from .paths import REGISTRY_PATH, TMP_DIR
 from .registry import load_registry
 from .signals import _has_grid_header, extract_page_texts
+from .window_dates import parse_window_dates
 
 CandidateKind = Literal["session_grid", "closure_notice", "split_part", "other"]
 CandidateSource = Literal["table", "band", "persisted"]
@@ -84,6 +86,8 @@ class ClassifiedDocument:
     filename: str | None
     source: CandidateSource
     grid_confirmed: bool | None = None
+    window_start: date | None = None
+    window_end: date | None = None
 
 
 @dataclass(frozen=True)
@@ -165,12 +169,13 @@ def classify_pdf(
         page_text=page_text,
         grid_confirmed=grid_confirmed,
     )
-    return ClassifiedDocument(
+    return _classified_with_window(
         link=link,
         kind=kind,
         filename=filename,
         source=source,
         grid_confirmed=grid_confirmed,
+        page_text=page_text,
     )
 
 
@@ -574,8 +579,13 @@ def _with_persisted_survivors(
             continue
         fetched = views.get(view_id)
         filename = fetched.filename if fetched else None
+        page_text = (
+            _first_page_text(fetched.content)
+            if fetched is not None and fetched.is_pdf
+            else ""
+        )
         survivors.append(
-            ClassifiedDocument(
+            _classified_with_window(
                 link=DocumentLink(
                     view_id=view_id,
                     href=absolute_view_url(view_id),
@@ -584,6 +594,7 @@ def _with_persisted_survivors(
                 kind="session_grid",
                 filename=filename,
                 source="persisted",
+                page_text=page_text,
             )
         )
     if not survivors:
@@ -1173,6 +1184,59 @@ def _decision_to_json(decision: DiscoverDecision) -> dict:
     }
 
 
+def _classified_with_window(
+    *,
+    link: DocumentLink,
+    kind: CandidateKind,
+    filename: str | None,
+    source: CandidateSource,
+    page_text: str = "",
+    grid_confirmed: bool | None = None,
+) -> ClassifiedDocument:
+    window = parse_window_dates(
+        page_text=page_text,
+        anchor_text=link.anchor_text,
+        filename=filename,
+        year_default=pacific_today().year,
+    )
+    return ClassifiedDocument(
+        link=link,
+        kind=kind,
+        filename=filename,
+        source=source,
+        grid_confirmed=grid_confirmed,
+        window_start=window[0] if window else None,
+        window_end=window[1] if window else None,
+    )
+
+
+def _iso_or_none(value: date | None) -> str | None:
+    return value.isoformat() if value else None
+
+
+def _range_label(start: date, end: date) -> str:
+    return f"{start.isoformat()}..{end.isoformat()}"
+
+
+def _candidate_window_line(item: ClassifiedDocument) -> str | None:
+    if item.window_start is None or item.window_end is None:
+        return None
+    winning = _range_label(item.window_start, item.window_end)
+    filename_parsed = parse_window_dates(
+        page_text=None,
+        anchor_text=None,
+        filename=item.filename,
+        year_default=pacific_today().year,
+    )
+    if filename_parsed is not None:
+        filename_range = _range_label(*filename_parsed)
+        if filename_range != winning:
+            return (
+                f"{item.link.view_id}: page-1 {winning}; filename {filename_range}"
+            )
+    return f"{item.link.view_id}: {winning}"
+
+
 def _classified_to_json(item: ClassifiedDocument) -> dict:
     return {
         "view_id": item.link.view_id,
@@ -1181,6 +1245,8 @@ def _classified_to_json(item: ClassifiedDocument) -> dict:
         "kind": item.kind,
         "filename": item.filename,
         "source": item.source,
+        "window_start": _iso_or_none(item.window_start),
+        "window_end": _iso_or_none(item.window_end),
     }
 
 
@@ -1214,6 +1280,10 @@ def _render_report(
                 for item in decision.candidates
             )
             lines.append(f"- candidates: {listed}")
+            for item in decision.candidates:
+                window_line = _candidate_window_line(item)
+                if window_line:
+                    lines.append(f"- window {window_line}")
         extra = [
             item for item in decision.extra_candidates if item.kind != "session_grid"
         ]
@@ -1222,6 +1292,10 @@ def _render_report(
                 f"{item.link.view_id}:{item.kind}:{item.source}" for item in extra
             )
             lines.append(f"- extra: {listed}")
+            for item in extra:
+                window_line = _candidate_window_line(item)
+                if window_line:
+                    lines.append(f"- window {window_line}")
         persisted = persisted_by_slug.get(decision.slug) or frozenset()
         if persisted:
             lines.append(

@@ -16,6 +16,8 @@ from schedules.discover import (
     DiscoverDecision,
     DiscoverError,
     DocumentLink,
+    _classified_to_json,
+    _render_report,
     apply_discover_decision,
     choose_roll,
     classify_pdf,
@@ -27,6 +29,7 @@ from schedules.discover import (
 )
 from schedules.models import PoolEntry
 from schedules.registry import load_registry
+from schedules.window_dates import parse_window_dates
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures" / "discover"
 FIXTURE_REGISTRY = FIXTURE_DIR / "registry.toml"
@@ -371,6 +374,116 @@ def test_mlk_pt2_is_session_grid() -> None:
         filename="MLK Pool_Fall2026_pt2_Sep27_Dec12.pdf",
     )
     assert classified.kind == "session_grid"
+
+
+@pytest.mark.parametrize(
+    ("page_text", "anchor_text", "filename", "expected"),
+    [
+        (None, None, "Aug18toDec26", (date(2026, 8, 18), date(2026, 12, 26))),
+        (None, None, "Aug18toDec26_", (date(2026, 8, 18), date(2026, 12, 26))),
+        (
+            "August 18–28 plus nearby 2026",
+            None,
+            None,
+            (date(2026, 8, 18), date(2026, 8, 28)),
+        ),
+        (
+            "August 18-28 plus nearby 2026",
+            None,
+            None,
+            (date(2026, 8, 18), date(2026, 8, 28)),
+        ),
+        (None, None, "Aug 18_Sep26", (date(2026, 8, 18), date(2026, 9, 26))),
+        (None, None, "Aug18_toOct17", (date(2026, 8, 18), date(2026, 10, 17))),
+        (None, "Sept 8 to Dec 10", None, (date(2026, 9, 8), date(2026, 12, 10))),
+        (
+            None,
+            "September 8 to December 10",
+            None,
+            (date(2026, 9, 8), date(2026, 12, 10)),
+        ),
+        (None, "8-14_9-7 2026", None, (date(2026, 8, 14), date(2026, 9, 7))),
+        (None, "Aug 11 to Aug 29", None, (date(2026, 8, 11), date(2026, 8, 29))),
+        (
+            "August 18–28 2026",
+            None,
+            "Aug18toDec26",
+            (date(2026, 8, 18), date(2026, 8, 28)),
+        ),
+    ],
+)
+def test_parse_window_dates_fixture_rows(
+    page_text: str | None,
+    anchor_text: str | None,
+    filename: str | None,
+    expected: tuple[date, date],
+) -> None:
+    parsed = parse_window_dates(
+        page_text=page_text,
+        anchor_text=anchor_text,
+        filename=filename,
+        year_default=2026,
+    )
+    assert parsed == expected
+
+
+def test_parse_window_dates_end_before_start_is_unparseable() -> None:
+    assert (
+        parse_window_dates(
+            page_text=None,
+            anchor_text="Dec 10 to Aug 18",
+            filename=None,
+            year_default=2026,
+        )
+        is None
+    )
+
+
+def test_sava_29815_header_beats_filename() -> None:
+    classified = classify_pdf(
+        _link(29815, "Sava_Pool_Fall12026_Aug18toDec26_"),
+        pool_slug="sava-pool",
+        pdf_bytes=_pdf_with_text("Sava Pool Fall 1\nAugust 18-28 2026\nMonday Tuesday Wednesday"),
+        filename="Sava_Pool_Fall12026_Aug18toDec26_.pdf",
+    )
+    assert classified.kind == "session_grid"
+    assert classified.window_start == date(2026, 8, 18)
+    assert classified.window_end == date(2026, 8, 28)
+    payload = _classified_to_json(classified)
+    assert payload["window_start"] == "2026-08-18"
+    assert payload["window_end"] == "2026-08-28"
+
+
+def test_classified_to_json_emits_null_windows() -> None:
+    payload = _classified_to_json(_classified(19019, "other", filename="deck-rules.pdf"))
+    assert payload["window_start"] is None
+    assert payload["window_end"] is None
+
+
+def test_render_report_prints_page1_and_filename_when_they_disagree() -> None:
+    decision = DiscoverDecision(
+        slug="sava-pool",
+        action="flag",
+        old_url="https://sfrecpark.org/DocumentCenter/View/29571",
+        new_url=None,
+        kind="session_grid",
+        reason="multiple_windows",
+        candidates=(
+            ClassifiedDocument(
+                link=_link(29815, "Sava_Pool_Fall12026_Aug18toDec26_"),
+                kind="session_grid",
+                filename="Sava_Pool_Fall12026_Aug18toDec26_.pdf",
+                source="table",
+                window_start=date(2026, 8, 18),
+                window_end=date(2026, 8, 28),
+            ),
+        ),
+        extra_candidates=(),
+        blocking=True,
+    )
+    report = _render_report([decision], {})
+    assert "page-1 2026-08-18..2026-08-28" in report
+    assert "filename 2026-08-18..2026-12-26" in report
 
 
 def test_closure_notice_wins_over_weekday_grid_header(monkeypatch) -> None:

@@ -28,33 +28,10 @@ from .review import (
 )
 from .signals import analyze_page_texts, extract_page_texts
 from .validate import validate
+from .window_dates import parse_window_dates
 
 QUARANTINE_PATH = PACKAGE_ROOT / "quarantine.toml"
 _AUTO_PUBLISHABLE_BASES = frozenset({"swim_schedule", "temporarily_closed"})
-_MONTHS = {
-    "january": 1,
-    "february": 2,
-    "march": 3,
-    "april": 4,
-    "may": 5,
-    "june": 6,
-    "july": 7,
-    "august": 8,
-    "september": 9,
-    "october": 10,
-    "november": 11,
-    "december": 12,
-}
-_MONTH_ALT = "|".join(_MONTHS)
-_MD_RANGE_RE = re.compile(
-    r"(?<!\d)(\d{1,2})-(\d{1,2})_(\d{1,2})-(\d{1,2})(?:\s+(\d{4}))?"
-)
-_MONTH_TO_MONTH_RE = re.compile(
-    rf"(?i)({_MONTH_ALT})\s+(\d{{1,2}})\s+to\s+({_MONTH_ALT})\s+(\d{{1,2}}),?\s*(\d{{4}})?"
-)
-_SAME_MONTH_RANGE_RE = re.compile(
-    rf"(?i)({_MONTH_ALT})\s+(\d{{1,2}})\s*[–-]\s*(\d{{1,2}}),?\s*(\d{{4}})?"
-)
 _DIR_NAME_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})-([0-9a-f]{12})$")
 
 
@@ -177,59 +154,12 @@ def pager_job_payload(tmp_dir: Path) -> dict:
 def parse_closure_dates(
     filename: str | None, anchor_text: str | None
 ) -> tuple[date, date] | None:
-    for text in (anchor_text, filename):
-        parsed = _parse_closure_text(text)
-        if parsed is not None:
-            return parsed
-    return None
-
-
-def _parse_closure_text(text: str | None) -> tuple[date, date] | None:
-    if not text:
-        return None
-    year_default = pacific_today().year
-    match = _MD_RANGE_RE.search(text)
-    if match:
-        start_month, start_day, end_month, end_day, year_token = match.groups()
-        return _dates_or_none(
-            year_token, year_default, start_month, start_day, end_month, end_day
-        )
-    match = _MONTH_TO_MONTH_RE.search(text)
-    if match:
-        start_month_name, start_day, end_month_name, end_day, year_token = match.groups()
-        return _dates_or_none(
-            year_token,
-            year_default,
-            _MONTHS[start_month_name.lower()],
-            start_day,
-            _MONTHS[end_month_name.lower()],
-            end_day,
-        )
-    match = _SAME_MONTH_RANGE_RE.search(text)
-    if match:
-        month_name, start_day, end_day, year_token = match.groups()
-        month = _MONTHS[month_name.lower()]
-        return _dates_or_none(
-            year_token, year_default, month, start_day, month, end_day
-        )
-    return None
-
-
-def _dates_or_none(
-    year_token: str | None,
-    year_default: int,
-    start_month: int | str,
-    start_day: str,
-    end_month: int | str,
-    end_day: str,
-) -> tuple[date, date] | None:
-    year = int(year_token) if year_token else year_default
-    try:
-        start = date(year, int(start_month), int(start_day))
-        end = date(year, int(end_month), int(end_day))
-    except ValueError:
-        return None
-    return start, end
+    return parse_window_dates(
+        page_text=None,
+        anchor_text=anchor_text,
+        filename=filename,
+        year_default=pacific_today().year,
+    )
 
 
 def publish_eligible(
