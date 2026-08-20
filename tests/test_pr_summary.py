@@ -122,6 +122,9 @@ def test_flag_only_pr_names_garfield_off_table_sibling(tmp_path: Path) -> None:
     text = render_pr_body(repo_root=repo, data_root=repo / "data")
 
     assert "Nothing to review" not in text
+    assert "No human review needed" not in text
+    assert "attestation was carried" not in text
+    assert "this PR auto-merges once checks pass" not in text
     assert "`garfield-pool`" in text
     assert "flyer 29808" in text
     assert "29799" in text
@@ -170,6 +173,8 @@ def test_sava_lead_names_table_and_off_table_windows(tmp_path: Path) -> None:
     text = render_pr_body(repo_root=repo, data_root=repo / "data")
 
     assert "Nothing to review" not in text
+    assert "No human review needed" not in text
+    assert "this PR auto-merges once checks pass" not in text
     line = next(row for row in text.splitlines() if row.startswith("- `sava-pool`:"))
     assert "29815" in line
     assert "29805" in line
@@ -229,3 +234,40 @@ def test_empty_diff_without_decisions_still_says_nothing_to_review(tmp_path: Pat
     assert text.startswith("Nothing to review.")
     assert "unverified projection" not in text
     assert "Next Monday" not in text
+
+
+def test_registry_only_adopt_does_not_claim_carried_attestation(tmp_path: Path) -> None:
+    repo = _init_repo(tmp_path)
+    _stage_registry(repo, 'slug = "coffman-pool"\n')
+    _write_decisions(
+        repo,
+        [
+            {
+                "slug": "coffman-pool",
+                "action": "adopt",
+                "old_url": "https://sfrecpark.org/DocumentCenter/View/29563",
+                "new_url": "https://sfrecpark.org/DocumentCenter/View/29798",
+                "kind": "session_grid",
+                "reason": "session_grid",
+                "blocking": False,
+                "candidates": [
+                    _candidate(
+                        29798,
+                        kind="session_grid",
+                        source="table",
+                        filename="Coffman Pool Fall 2026 Aug18_Dec12.pdf",
+                    )
+                ],
+                "extra_candidates": [],
+            }
+        ],
+    )
+
+    text = render_pr_body(repo_root=repo, data_root=repo / "data")
+
+    assert "Nothing to review" not in text
+    assert "attestation was carried" not in text
+    assert "identical to its last human-reviewed" not in text
+    assert "No human review needed" in text
+    assert "auto-merges" in text
+    assert "29563 → 29798" in text

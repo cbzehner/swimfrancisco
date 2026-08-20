@@ -163,10 +163,11 @@ review as before.
    JSONs, `reviewed.json`) once the diff looks trustworthy. Do not add
    `source.pdf` / `source.html` / `source.xlsx` / `source.csv`.
 
-Every new PDF requires a fresh human pass via `schedules review` — there
-is no auto-ratification shortcut. If a re-exported PDF has identical
-content to a prior review, approving it via the reviewer is cheap (few
-seconds) and preserves the "human vouched for this hash" contract.
+A new PDF whose extracted payload differs from the last human-reviewed
+one still requires `just schedules-review`. If the payload is identical,
+the pipeline carries the attestation forward and the rolling PR can
+auto-merge. That is not a second publication path: a human already
+approved that payload.
 
 Each `<provider>-<model>.json` is self-describing: it carries
 `prompt_sha256`, `schema_sha256`, `source_pdf_url`, `pdf_sha256`, and
@@ -192,8 +193,11 @@ Humans review payloads. They also handle split PDFs, closure notices, and
 
 - **Payload change.** Work the rolling PR with `just schedules-review`.
 - **Split PDFs** (North Beach Cool + Warm, MLK `pt.1` / `pt.2`). Discover
-  flags and sets `missing_current_schedule`. Do not pick a part. Stay
-  skipped until a combined whole-pool PDF exists.
+  flags and sets `missing_current_schedule`. Do not pick a part. Extract
+  stays skipped. Discover never auto-promotes `missing_current_schedule`
+  to `published`. Only an operator `--adopt` of a classified
+  `session_grid` (a later combined whole-pool PDF) publishes. `--adopt`
+  of a `split_part` writes `pdf_url` but does not publish.
 - **2+ session-grid windows** (Sava Fall 1 + Fall 2). Discover flags both,
   leaves `published`, and does not roll `pdf_url`. Adopt one, then extract
   that pointer locally:

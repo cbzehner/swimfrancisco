@@ -183,9 +183,11 @@ def test_pending_run_detection_uses_reviewed_presence(tmp_path):
 
 
 def test_lead_distinguishes_pending_from_carried():
-    all_carried = "\n".join(_render_lead({}, [], ["a-pool", "b-pool"], 3))
+    changed = {"a-pool": {"2026-07-13-bbbbbbbbbbbb": [("gemini.json", "A")]}}
+    all_carried = "\n".join(_render_lead(changed, [], ["a-pool", "b-pool"], 3))
     assert "No human review needed" in all_carried
     assert "auto-merges" in all_carried
+    assert "attestation was carried" in all_carried
     assert "unverified projection" not in all_carried
 
     mixed = "\n".join(_render_lead({}, ["a-pool"], ["b-pool"], 3))

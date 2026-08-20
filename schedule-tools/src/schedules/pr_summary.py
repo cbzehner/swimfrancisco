@@ -484,13 +484,22 @@ def _render_lead(
     decisions = decisions or []
     windows = windows or {}
     review_slugs = pending_slugs if review_slugs is None else review_slugs
+    if not review_slugs:
+        review_slugs = sorted(
+            {item["slug"] for item in decisions if item.get("blocking")}
+        )
     minutes = len(review_slugs) * _REVIEW_MIN_PER_POOL
     if not review_slugs:
-        action = (
-            "No human review needed. Every changed pool extracted a payload "
-            "identical to its last human-reviewed one, so the attestation was "
-            "carried forward; this PR auto-merges once checks pass."
-        )
+        if changed:
+            action = (
+                "No human review needed. Every changed pool extracted a payload "
+                "identical to its last human-reviewed one, so the attestation was "
+                "carried forward; this PR auto-merges once checks pass."
+            )
+        else:
+            action = (
+                "No human review needed. This PR auto-merges once checks pass."
+            )
     elif len(review_slugs) == 1:
         action = (
             f"`{review_slugs[0]}` needs a human review (~{minutes} min). "
