@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import re
 from datetime import date
+from typing import Literal
+
+WindowSource = Literal["page-1", "anchor", "filename"]
 
 # Full names plus the Rec & Park filename aliases (sep/sept → september).
 _MONTHS = {
@@ -38,8 +41,11 @@ _YEAR_RE = re.compile(r"20\d{2}")
 _MD_RANGE_RE = re.compile(
     r"(?<!\d)(\d{1,2})-(\d{1,2})_(\d{1,2})-(\d{1,2})"
 )
+_ORDINAL = r"(?:st|nd|rd|th)?"
+# Rec & Park page-1 titles use hyphen/en-dash, not only "to" (August 18- December 12).
 _CROSS_MONTH_RE = re.compile(
-    rf"(?i){_MONTH_TOKEN}\s*(\d{{1,2}})\s*(?:_to|to|_)\s*{_MONTH_NAME}\s*(\d{{1,2}})"
+    rf"(?i){_MONTH_TOKEN}\s*(\d{{1,2}}){_ORDINAL}\s*(?:_to|to|_|[–—-])\s*"
+    rf"{_MONTH_NAME}\s*(\d{{1,2}}){_ORDINAL}"
 )
 _SAME_MONTH_RE = re.compile(
     rf"(?i){_MONTH_TOKEN}\s*(\d{{1,2}})\s*[–—-]\s*(\d{{1,2}})"
@@ -55,10 +61,34 @@ def parse_window_dates(
     year_default: int,
 ) -> tuple[date, date] | None:
     """First successful parse wins: page-1 header, then anchor, then filename."""
-    for text in (_page1_header(page_text), anchor_text, filename):
+    parsed = parse_window_with_source(
+        page_text=page_text,
+        anchor_text=anchor_text,
+        filename=filename,
+        year_default=year_default,
+    )
+    if parsed is None:
+        return None
+    start, end, _source = parsed
+    return start, end
+
+
+def parse_window_with_source(
+    *,
+    page_text: str | None,
+    anchor_text: str | None,
+    filename: str | None,
+    year_default: int,
+) -> tuple[date, date, WindowSource] | None:
+    sources: tuple[tuple[WindowSource, str | None], ...] = (
+        ("page-1", _page1_header(page_text)),
+        ("anchor", anchor_text),
+        ("filename", filename),
+    )
+    for source, text in sources:
         parsed = _parse_window_text(text, year_default)
         if parsed is not None:
-            return parsed
+            return parsed[0], parsed[1], source
     return None
 
 

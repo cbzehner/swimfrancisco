@@ -410,6 +410,36 @@ def test_mlk_pt2_is_session_grid() -> None:
             "Aug18toDec26",
             (date(2026, 8, 18), date(2026, 8, 28)),
         ),
+        (
+            "August 18- December 12",
+            None,
+            None,
+            (date(2026, 8, 18), date(2026, 12, 12)),
+        ),
+        (
+            "JUNE 9- JUNE 20",
+            None,
+            None,
+            (date(2026, 6, 9), date(2026, 6, 20)),
+        ),
+        (
+            "AUGUST 18 – DECEMBER 12",
+            None,
+            None,
+            (date(2026, 8, 18), date(2026, 12, 12)),
+        ),
+        (
+            "JUNE 30TH- AUGUST  15TH",
+            None,
+            None,
+            (date(2026, 6, 30), date(2026, 8, 15)),
+        ),
+        (
+            "COFFMAN POOL Fall 2026 SCHEDULE (August 18- December 12)",
+            None,
+            "Aug18toOct17",
+            (date(2026, 8, 18), date(2026, 12, 12)),
+        ),
     ],
 )
 def test_parse_window_dates_fixture_rows(
@@ -476,6 +506,7 @@ def test_render_report_prints_page1_and_filename_when_they_disagree() -> None:
                 source="table",
                 window_start=date(2026, 8, 18),
                 window_end=date(2026, 8, 28),
+                window_source="page-1",
             ),
         ),
         extra_candidates=(),
@@ -484,6 +515,34 @@ def test_render_report_prints_page1_and_filename_when_they_disagree() -> None:
     report = _render_report([decision], {})
     assert "page-1 2026-08-18..2026-08-28" in report
     assert "filename 2026-08-18..2026-12-26" in report
+
+
+def test_render_report_does_not_label_anchor_win_as_page1() -> None:
+    decision = DiscoverDecision(
+        slug="garfield-pool",
+        action="flag",
+        old_url="https://sfrecpark.org/DocumentCenter/View/29564",
+        new_url=None,
+        kind="closure_notice",
+        reason="band_session_grid",
+        candidates=(
+            ClassifiedDocument(
+                link=_link(29808, "Garfield Pool Maintenance Closure 8-14_9-7 2026"),
+                kind="closure_notice",
+                filename="Aug18toDec26.pdf",
+                source="table",
+                window_start=date(2026, 8, 14),
+                window_end=date(2026, 9, 7),
+                window_source="anchor",
+            ),
+        ),
+        extra_candidates=(),
+        blocking=True,
+    )
+    report = _render_report([decision], {})
+    assert "anchor 2026-08-14..2026-09-07" in report
+    assert "filename 2026-08-18..2026-12-26" in report
+    assert "page-1" not in report
 
 
 def test_closure_notice_wins_over_weekday_grid_header(monkeypatch) -> None:

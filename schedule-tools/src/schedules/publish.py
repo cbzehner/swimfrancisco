@@ -315,11 +315,6 @@ def publish_closure_notice(
     if parsed is None:
         raise PublishRefuse("closure_dates_unparsed", "could not parse closure dates")
     start, end = parsed
-    if end < start:
-        raise PublishRefuse(
-            "closure_dates_invalid",
-            f"closure end {end.isoformat()} is before start {start.isoformat()}",
-        )
 
     md_path = content_spots_dir / f"{slug}.md"
     if not md_path.exists() or not _schedule_tables(md_path):

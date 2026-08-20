@@ -21,7 +21,7 @@ from .models import PoolEntry
 from .paths import REGISTRY_PATH, TMP_DIR
 from .registry import load_registry
 from .signals import _has_grid_header, extract_page_texts
-from .window_dates import parse_window_dates
+from .window_dates import WindowSource, parse_window_dates, parse_window_with_source
 
 CandidateKind = Literal["session_grid", "closure_notice", "split_part", "other"]
 CandidateSource = Literal["table", "band", "persisted"]
@@ -88,6 +88,7 @@ class ClassifiedDocument:
     grid_confirmed: bool | None = None
     window_start: date | None = None
     window_end: date | None = None
+    window_source: WindowSource | None = None
 
 
 @dataclass(frozen=True)
@@ -1193,7 +1194,7 @@ def _classified_with_window(
     page_text: str = "",
     grid_confirmed: bool | None = None,
 ) -> ClassifiedDocument:
-    window = parse_window_dates(
+    window = parse_window_with_source(
         page_text=page_text,
         anchor_text=link.anchor_text,
         filename=filename,
@@ -1207,6 +1208,7 @@ def _classified_with_window(
         grid_confirmed=grid_confirmed,
         window_start=window[0] if window else None,
         window_end=window[1] if window else None,
+        window_source=window[2] if window else None,
     )
 
 
@@ -1231,9 +1233,8 @@ def _candidate_window_line(item: ClassifiedDocument) -> str | None:
     if filename_parsed is not None:
         filename_range = _range_label(*filename_parsed)
         if filename_range != winning:
-            return (
-                f"{item.link.view_id}: page-1 {winning}; filename {filename_range}"
-            )
+            source = item.window_source or "parsed"
+            return f"{item.link.view_id}: {source} {winning}; filename {filename_range}"
     return f"{item.link.view_id}: {winning}"
 
 
