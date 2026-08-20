@@ -81,6 +81,7 @@ class ClassifiedDocument:
     kind: CandidateKind
     filename: str | None
     source: CandidateSource
+    grid_confirmed: bool | None = None
 
 
 @dataclass(frozen=True)
@@ -155,12 +156,15 @@ def classify_pdf(
     kind = _classify_kind(
         primary, pool_slug=pool_slug, pdf_bytes=pdf_bytes, filename=filename
     )
+    grid_confirmed: bool | None = _page_has_grid(pdf_bytes) if pdf_bytes else None
     if kind == "closure_notice":
         # Page-1 day tokens must not demote a flyer.
-        if pdf_bytes:
-            _page_has_grid(pdf_bytes)
         return ClassifiedDocument(
-            link=link, kind=kind, filename=filename, source=source
+            link=link,
+            kind=kind,
+            filename=filename,
+            source=source,
+            grid_confirmed=grid_confirmed,
         )
     if kind == "other" and pdf_bytes:
         page_text = _first_page_text(pdf_bytes)
@@ -173,9 +177,13 @@ def classify_pdf(
             )
             if _CLOSURE_RE.search(primary):
                 kind = "closure_notice"
-    if kind == "session_grid" and pdf_bytes:
-        _page_has_grid(pdf_bytes)
-    return ClassifiedDocument(link=link, kind=kind, filename=filename, source=source)
+    return ClassifiedDocument(
+        link=link,
+        kind=kind,
+        filename=filename,
+        source=source,
+        grid_confirmed=grid_confirmed,
+    )
 
 
 def choose_roll(
@@ -248,6 +256,13 @@ def choose_roll(
 
     if len(table_grid_ids) == 1 and not band_only_ids:
         only = table_grids[0]
+        if only.grid_confirmed is False:
+            return decide(
+                "flag",
+                "no_grid_header",
+                kind="session_grid",
+                blocking=True,
+            )
         if only.link.view_id != current_id:
             return decide(
                 "adopt",
@@ -339,8 +354,10 @@ def discover_all(
         selected = list(rec_park)
     selected_slugs = {entry.slug for entry in selected}
 
-    if adopt is not None and adopt[0] not in {entry.slug for entry in rec_park}:
-        raise DiscoverError(f"Unknown or non-Rec & Park slug for --adopt: {adopt[0]}")
+    if adopt is not None and adopt[0] not in selected_slugs:
+        raise DiscoverError(
+            f"--adopt slug {adopt[0]!r} is not in the selected Rec & Park pools"
+        )
 
     max_id = _max_pdf_view_id(rec_park)
     persisted_by_slug = {
@@ -463,6 +480,36 @@ def discover_all(
         )
         add_classified(slug, item)
 
+    for entry in selected:
+        current_id = view_id_from_url(entry.pdf_url)
+        if current_id is None or current_id in seen_ids[entry.slug]:
+            continue
+        fetched = views.get(current_id)
+        if fetched is None or not fetched.is_pdf:
+            continue
+        link = DocumentLink(
+            view_id=current_id,
+            href=absolute_view_url(current_id),
+            anchor_text=fetched.filename or "",
+        )
+        item = classify_pdf(
+            link,
+            pool_slug=entry.slug,
+            pdf_bytes=fetched.content,
+            filename=fetched.filename,
+            source="persisted",
+        )
+        if item.kind != "session_grid":
+            continue
+        # Leftover summer pin: do not count 29599 as a second window next to
+        # unique table 29800, and do not let it satisfy rule 2 over a band find.
+        if any(
+            other.kind == "session_grid" and other.link.view_id != current_id
+            for other in classified_by_slug[entry.slug]
+        ):
+            continue
+        add_classified(entry.slug, item)
+
     decisions: list[DiscoverDecision] = []
     for entry in selected:
         if entry.slug in fetch_errors:
@@ -565,18 +612,16 @@ def _with_persisted_survivors(
         if view_id in dropped or view_id in current_ids or view_id == adopted_id:
             continue
         fetched = views.get(view_id)
-        if fetched is None or not fetched.is_pdf:
-            continue
-        link = DocumentLink(
-            view_id=view_id,
-            href=absolute_view_url(view_id),
-            anchor_text=fetched.filename or "",
-        )
+        filename = fetched.filename if fetched else None
         survivors.append(
             ClassifiedDocument(
-                link=link,
+                link=DocumentLink(
+                    view_id=view_id,
+                    href=absolute_view_url(view_id),
+                    anchor_text=filename or "",
+                ),
                 kind="session_grid",
-                filename=fetched.filename,
+                filename=filename,
                 source="persisted",
             )
         )
@@ -860,6 +905,10 @@ def _apply_decision_to_block(block: str, decision: DiscoverDecision) -> str:
         updated = _replace_quoted_field(updated, "pdf_url", decision.new_url)
         if decision.kind == "session_grid":
             updated = _ensure_source_status(updated, "published", insert=False)
+        elif decision.kind == "split_part":
+            updated = _ensure_source_status(
+                updated, "missing_current_schedule", insert=True
+            )
     if decision.action == "flag" and decision.kind == "split_part":
         updated = _ensure_source_status(
             updated, "missing_current_schedule", insert=True
