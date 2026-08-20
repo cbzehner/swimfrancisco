@@ -7,6 +7,7 @@ from pathlib import Path
 
 from ._time import pacific_today
 from .envelope import EnvelopeValidationError, validate_envelope
+from .merge import read_schedule_snapshot
 from .paths import CONTENT_SPOTS_DIR, DATA_DIR, all_review_dirs, relative_to_repo, reviewed_path
 from .project import ProjectError, project
 from .validate import validate
@@ -94,14 +95,15 @@ def carry_forward_review(
     ignore_effective_start: bool,
     data_root: Path = DATA_DIR,
 ) -> Path | None:
-    """Re-use an existing human attestation for an identical payload.
+    """Re-use an existing attestation for an identical payload.
 
     When a new source capture extracts a payload byte-equal to the pool's
-    most recent human-reviewed payload, the human has already attested this
+    most recent attested payload, a prior attestor has already signed this
     exact schedule — the source merely churned. Write ``reviewed.json`` into
     the new capture dir (same envelope, new source sha, ``carried_from``
-    provenance) so the pool never enters the review queue. Any payload
-    difference returns None and review proceeds as usual.
+    provenance) so the pool never enters the review queue. Copies the prior
+    ``attested_by`` (or omits it on legacy files). Any payload difference
+    returns None and review proceeds as usual.
 
     ``ignore_effective_start`` is for direct extractors, which stamp
     ``payload.effective_start`` with the fetch date; the field is
@@ -216,6 +218,7 @@ def draft_envelope(
     *,
     candidate: ReviewCandidate,
     today: _date | None = None,
+    attested_by: str = "human",
 ) -> dict:
     """Build an unsaved reviewed-snapshot envelope from a provider artifact."""
     today = today or pacific_today()
@@ -232,6 +235,7 @@ def draft_envelope(
         "slug": candidate.slug,
         "pdf_sha256": candidate.pdf_sha256,
         "reviewed_at": today.isoformat(),
+        "attested_by": attested_by,
         "source_pdf_url": source_pdf_url,
         "payload": payload,
     }
@@ -268,11 +272,17 @@ def finalize_draft(
     except EnvelopeValidationError as exc:
         raise FinalizeError(f"schema: {exc}") from exc
 
-    result = validate(raw.get("payload", {}))
+    slug = raw["slug"]
+    prior_sessions_count = 0
+    md_path = content_spots_dir / f"{slug}.md"
+    if md_path.exists():
+        snapshot = read_schedule_snapshot(md_path)
+        prior_sessions_count = len(snapshot.get("sessions") or [])
+
+    result = validate(raw.get("payload", {}), prior_sessions_count=prior_sessions_count)
     if not result.ok:
         raise FinalizeError("; ".join(v.message for v in result.violations))
 
-    slug = raw["slug"]
     try:
         project(
             slug=slug,

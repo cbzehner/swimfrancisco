@@ -28,7 +28,7 @@ from .schema import EXTRACTION_SCHEMA
 from .signals import analyze_page_texts, extract_page_texts, source_notes_for_signals
 from .validate import validate
 
-_GROUNDING_MIN_RATIO = 0.9
+GROUNDING_MIN_RATIO = 0.9
 SourceMode = Literal["direct", "gemini", "anthropic"]
 ProviderMode = Literal["gemini", "anthropic"]
 
@@ -77,7 +77,7 @@ def _default_model(provider: str) -> str:
 
 
 def _grounding_notes(provider: str, grounding: GroundingResult) -> list[ReviewNote]:
-    if grounding.total == 0 or grounding.ratio >= _GROUNDING_MIN_RATIO:
+    if grounding.total == 0 or grounding.ratio >= GROUNDING_MIN_RATIO:
         return []
 
     ungrounded_total = grounding.total - grounding.grounded_count

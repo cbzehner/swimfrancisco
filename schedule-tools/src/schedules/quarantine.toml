@@ -1,0 +1,8 @@
+# pdf_sha256 values publish-pending must refuse.
+# Human review may still attest. Delete the row to resume auto-publish.
+
+# [[quarantine]]
+# pdf_sha256 = "…"
+# slug = "hamilton-pool"
+# reason = "wrong Saturday family swim"
+# added = "2026-08-20"

@@ -268,7 +268,7 @@ def test_classify_session_grid_vs_flyer_vs_jpeg_vs_part() -> None:
     assert grid.kind == "session_grid"
     assert flyer.kind == "closure_notice"
     assert jpeg.kind == "other"
-    assert part.kind == "split_part"
+    assert part.kind == "session_grid"
 
 
 def test_fall12026_is_not_split_part() -> None:
@@ -277,6 +277,33 @@ def test_fall12026_is_not_split_part() -> None:
         pool_slug="sava-pool",
         pdf_bytes=_pdf_bytes(),
         filename="Sava_Pool_Fall12026_Aug18toDec26_.pdf",
+    )
+    assert classified.kind == "session_grid"
+
+
+def test_cool_warm_is_still_split_part() -> None:
+    cool = classify_pdf(
+        _link(29778, "North Beach Cool Pool Fall 2026"),
+        pool_slug="north-beach-pool",
+        pdf_bytes=_pdf_bytes(),
+        filename="North Beach Cool Pool Fall 2026.pdf",
+    )
+    warm = classify_pdf(
+        _link(29779, "North Beach Warm Pool Fall 2026"),
+        pool_slug="north-beach-pool",
+        pdf_bytes=_pdf_bytes(),
+        filename="North Beach Warm Pool Fall 2026.pdf",
+    )
+    assert cool.kind == "split_part"
+    assert warm.kind == "split_part"
+
+
+def test_mlk_pt2_is_session_grid() -> None:
+    classified = classify_pdf(
+        _link(29803, "MLK Pool_Fall2026_pt2_Sep27_Dec12"),
+        pool_slug="martin-luther-king-jr-pool",
+        pdf_bytes=_pdf_bytes(),
+        filename="MLK Pool_Fall2026_pt2_Sep27_Dec12.pdf",
     )
     assert classified.kind == "session_grid"
 
@@ -360,6 +387,32 @@ def test_choose_roll_multiple_windows_leave_published() -> None:
     assert decision.blocking is True
     assert decision.extra_candidates == ()
     assert {item.link.view_id for item in decision.candidates} == {29815, 29805}
+    assert entry.source_status == "published"
+
+
+def test_choose_roll_mlk_pt1_pt2_flags_multiple_windows_leaves_published() -> None:
+    entry = _entry("martin-luther-king-jr-pool", view_id=29578)
+    decision = choose_roll(
+        entry,
+        [
+            _classified(
+                29802,
+                "session_grid",
+                text="MLK Pool_Fall2026_pt1",
+                source="table",
+            ),
+            _classified(
+                29803,
+                "session_grid",
+                text="MLK Pool_Fall2026_pt2",
+                source="band",
+            ),
+        ],
+    )
+    assert decision.action == "flag"
+    assert decision.reason == "multiple_windows"
+    assert decision.blocking is True
+    assert decision.new_url is None
     assert entry.source_status == "published"
 
 
@@ -557,21 +610,21 @@ def test_apply_split_part_sets_missing_current_schedule(tmp_path, monkeypatch) -
     _freeze_today(monkeypatch)
     path = _copy_registry(tmp_path)
     decision = DiscoverDecision(
-        slug="martin-luther-king-jr-pool",
+        slug="north-beach-pool",
         action="flag",
-        old_url="https://sfrecpark.org/DocumentCenter/View/29578",
+        old_url="https://sfrecpark.org/DocumentCenter/View/29778",
         new_url=None,
         kind="split_part",
         reason="split_part",
-        candidates=(_classified(29802, "split_part", text="MLK Pool_Fall2026_pt1"),),
+        candidates=(_classified(29778, "split_part", text="North Beach Cool Pool"),),
         extra_candidates=(),
         blocking=True,
     )
     apply_discover_decision(path, decision)
     loaded = load_registry(path)
-    mlk = next(entry for entry in loaded if entry.slug == "martin-luther-king-jr-pool")
-    assert mlk.source_status == "missing_current_schedule"
-    assert mlk.pdf_url.endswith("/29578")
+    north = next(entry for entry in loaded if entry.slug == "north-beach-pool")
+    assert north.source_status == "missing_current_schedule"
+    assert north.pdf_url.endswith("/29778")
 
 
 def test_adopt_session_grid_sets_published(tmp_path, monkeypatch) -> None:
@@ -622,21 +675,21 @@ def test_adopt_split_part_on_published_sets_missing(tmp_path, monkeypatch) -> No
     _freeze_today(monkeypatch)
     path = _copy_registry(tmp_path)
     decision = DiscoverDecision(
-        slug="martin-luther-king-jr-pool",
+        slug="hamilton-pool",
         action="adopt",
-        old_url="https://sfrecpark.org/DocumentCenter/View/29578",
-        new_url="https://sfrecpark.org/DocumentCenter/View/29802",
+        old_url="https://sfrecpark.org/DocumentCenter/View/29599",
+        new_url="https://sfrecpark.org/DocumentCenter/View/29778",
         kind="split_part",
         reason="operator_adopt",
-        candidates=(_classified(29802, "split_part"),),
+        candidates=(_classified(29778, "split_part", text="Cool Pool"),),
         extra_candidates=(),
         blocking=False,
     )
     apply_discover_decision(path, decision)
     loaded = load_registry(path)
-    mlk = next(entry for entry in loaded if entry.slug == "martin-luther-king-jr-pool")
-    assert mlk.source_status == "missing_current_schedule"
-    assert mlk.pdf_url.endswith("/29802")
+    hamilton = next(entry for entry in loaded if entry.slug == "hamilton-pool")
+    assert hamilton.source_status == "missing_current_schedule"
+    assert hamilton.pdf_url.endswith("/29778")
 
 
 def test_rewrite_registry_pdf_url(tmp_path) -> None:

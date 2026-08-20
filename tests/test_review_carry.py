@@ -190,8 +190,16 @@ def test_lead_distinguishes_pending_from_carried():
     assert "attestation was carried" in all_carried
     assert "unverified projection" not in all_carried
 
-    mixed = "\n".join(_render_lead({}, ["a-pool"], ["b-pool"], 3))
-    assert "`a-pool` needs a human review" in mixed
-    assert "`b-pool` auto-verified" in mixed
-    assert "The live site stays on the last reviewed window until this PR merges." in mixed
+    mixed = "\n".join(
+        _render_lead(
+            {},
+            ["a-pool"],
+            ["b-pool"],
+            3,
+            show_checklist=True,
+        )
+    )
+    assert "just schedules-review" in mixed
+    assert "needs a human review" not in mixed
+    assert "The live site stays on the last reviewed window until this PR merges." not in mixed
     assert "unverified projection" not in mixed

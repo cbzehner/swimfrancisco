@@ -121,6 +121,7 @@ class ReviewApp:
             candidate.pdf_sha256,
             root=self.data_root,
         )
+        envelope = {**envelope, "attested_by": "human"}
         target.write_text(json.dumps(envelope, indent=2) + "\n")
         try:
             return finalize_draft(

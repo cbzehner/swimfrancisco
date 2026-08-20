@@ -118,7 +118,7 @@ data/<slug>/<fetch-date>-<pdf-sha12>/
   source.sha256                # hash of the snapshot
   gemini-<model>.json          # self-describing provider output
   anthropic-<model>.json
-  reviewed.json                # present ⇔ human-approved
+  reviewed.json                # present ⇔ attested (`human`, `ci`, or omitted)
 ```
 
 Source bodies (`source.pdf`, `source.html`, `source.xlsx`, `source.csv`) are
@@ -133,19 +133,21 @@ Koret is workbook-backed: `source.xlsx` is the canonical hashed source and
 preserves visible sheet names, merged ranges, and cell values; every visible
 sheet must be classified by the extractor or extraction fails.
 
-Review status is a filesystem predicate: `reviewed.json` present ⇒ done;
-absent ⇒ needs review. `--force` and `--compare-with` bypass this
+Review status is a filesystem predicate: `reviewed.json` present ⇒ attested;
+absent ⇒ not published. `--force` and `--compare-with` bypass this
 fast-path.
 
 When a new capture extracts a payload identical to the pool's most recent
-human-reviewed one, the pipeline carries the attestation forward: it writes
+attested one, the pipeline carries the attestation forward: it writes
 `reviewed.json` into the new capture dir with the original `reviewed_at`
-and a `carried_from` field pointing at the human-reviewed snapshot. The
-human already approved this exact payload; only the source bytes churned.
+and a `carried_from` field pointing at the prior snapshot. A prior attestor
+already signed this exact payload; only the source bytes churned.
 Direct extractors stamp `payload.effective_start` with the fetch date, so
 that one clock-derived field is ignored in the comparison; for PDF pools
-the whole payload must match. Any real payload change queues the pool for
-review as before.
+the whole payload must match. A new Rec & Park unique-grid SHA is attested
+by `schedules publish-pending` (`attested_by: ci`) when the auto-publish
+gates pass. FLAG URL choice and a re-queued bad auto-publish still use
+`just schedules-review`.
 
 1. Run `just schedules-extract --direct` and, when needed, one or both PDF provider modes.
 2. Read the report for the selected pass under `tmp/extraction-report-<mode>.md`.
@@ -165,11 +167,10 @@ review as before.
    `source.html` / `source.xlsx` / `source.csv`, `source.sha256`, provider
    JSONs, `reviewed.json`) once the diff looks trustworthy.
 
-A new PDF whose extracted payload differs from the last human-reviewed
-one still requires `just schedules-review`. If the payload is identical,
-the pipeline carries the attestation forward and the rolling PR can
-auto-merge. That is not a second publication path: a human already
-approved that payload.
+A new unique Rec & Park session-grid PDF auto-publishes when
+`publish-pending` gates pass. Identical payloads still carry the prior
+attestation. FLAG URL choice (Cool/Warm splits, Sava/MLK two-window,
+band-only grids) stays operator work.
 
 Each `<provider>-<model>.json` is self-describing: it carries
 `prompt_sha256`, `schema_sha256`, `source_pdf_url`, `pdf_sha256`, and
@@ -177,8 +178,8 @@ Each `<provider>-<model>.json` is self-describing: it carries
 current prompt and schema; an edit to either re-triggers the LLM.
 
 `reviewed.json` payloads pass through the same validation and grounding
-that provider output does — human review protects against
-misinterpretation, not typos.
+that provider output does. Grounding and schema are filters, not proof a
+cell was read correctly.
 
 ## Registry Maintenance
 
@@ -187,38 +188,35 @@ The source registry lives at `schedule-tools/src/schedules/registry.toml`.
 CI discovers Rec & Park `DocumentCenter` IDs daily from each pool's
 `official_page_url`. `schedules discover` rewrites `pdf_url` only when
 exactly one session-grid PDF is safe to adopt. Extract then fetches that
-pointer. Discover never writes `content/spots/`. The live site stays on
-the last reviewed window until a reviewed PR merges.
+pointer. Discover never writes `content/spots/`. `publish-pending` writes
+eligible unique grids and unique table closure flyers. The live site
+updates when that PR merges.
 
-Humans review payloads. They also handle split PDFs, closure notices, and
-2-window cases — those FLAG and do not auto-adopt:
+FLAG URL choice stays operator work. Unique-grid payload change does not:
 
-- **Payload change.** Work the rolling PR with `just schedules-review`.
-- **Split PDFs** (North Beach Cool + Warm, MLK `pt.1` / `pt.2`). Discover
-  flags and sets `missing_current_schedule`. Do not pick a part. Extract
-  stays skipped. Discover never auto-promotes `missing_current_schedule`
-  to `published`. Only an operator `--adopt` of a classified
-  `session_grid` (a later combined whole-pool PDF) publishes. `--adopt`
-  of a `split_part` writes `pdf_url` but does not publish.
-- **2+ session-grid windows** (Sava Fall 1 + Fall 2). Discover flags both,
-  leaves `published`, and does not roll `pdf_url`. Adopt one, then extract
-  that pointer locally:
+- **Unique table `session_grid`.** CI auto-publishes after extract when
+  gates pass. No `just schedules-review` on the happy path.
+- **Split PDFs** (North Beach Cool + Warm only). Discover flags and sets
+  `missing_current_schedule`. Do not pick a part. Extract stays skipped.
+  Discover never auto-promotes `missing_current_schedule` to `published`.
+  Only an operator `--adopt` of a classified `session_grid` (a later
+  combined whole-pool PDF) publishes. `--adopt` of a `split_part` writes
+  `pdf_url` but does not publish.
+- **2+ session-grid windows** (Sava Fall 1 + Fall 2, MLK `pt.1` / `pt.2`).
+  Sequential date windows, not Cool/Warm. Discover flags both, leaves
+  `published`, and does not roll `pdf_url`. Adopt one, then extract that
+  pointer locally:
 
   ```
   just schedules discover --adopt sava-pool=29815
   just schedules-extract --provider gemini --only sava-pool
-  just schedules-review
+  just schedules publish-pending
   ```
 
 - **Closure notice or band-only grid** (Garfield flyer + unlinked fall
-  grid). Discover never puts a flyer on `pdf_url`. To project a
-  closure-only window without changing the schedule URL:
-
-  ```
-  just schedules-extract --provider gemini --only garfield-pool --url https://sfrecpark.org/DocumentCenter/View/29808
-  ```
-
-  To extract an unlinked grid:
+  grid). Discover never puts a flyer on `pdf_url`. CI `publish-pending`
+  projects a unique table `closure_notice` as `temporarily_closed`. To
+  extract an unlinked grid:
 
   ```
   just schedules discover --adopt garfield-pool=29799
@@ -250,7 +248,7 @@ The pre-v2 contract was all-day-only, which over-reported "Closed for staff trai
 
 ## Reviewing extracted schedules
 
-Every extracted pool joins the review queue until a human approves it. Start the local reviewer with:
+FLAG URL adopt and a re-queued bad auto-publish still use the local reviewer. Eligible unique grids do not join that queue. Start the local reviewer with:
 
 ```
 just schedules-review
@@ -285,14 +283,15 @@ just schedules-eval --stdout      # prints the same report
 just schedules-eval --all-dirs    # include historical review dirs (default: latest only)
 ```
 
-The eval reads existing per-review artifacts — no API calls. For each pool with a
-committed `reviewed.json`, it diffs every same-dir provider artifact against the
-human-reviewed payload using `(day, type, start, end, pool)` as the row identity.
-Output is per-provider aggregate plus per-pool/per-artifact precision/recall/F1,
-plus a sample of disagreements (extra rows the model emitted, missing rows it
-dropped).
+The eval reads existing per-review artifacts — no API calls. Quality baseline
+is same-dir provider JSON vs a human Save or omitted `attested_by` (legacy).
+CI-attested dirs are not same-dir truth and are never scored CI vs CI. When
+the latest dir is `attested_by: ci` with no `carried_from`, eval may look
+back to an older human envelope and list that pair in a **seasonal-delta**
+table only. Seasonal-delta F1 is not the quality aggregate.
 
-Run before and after any prompt or schema tweak; require improvement, not regression.
+Run before and after any prompt or schema tweak as an observational check.
+Do not gate on "require improvement" against a CI-attested fall grid.
 
 ## Auto-extract workflow
 
@@ -307,18 +306,23 @@ distinct report; the run summary and uploaded
 including `tmp/discovery-report.md` and partial-success failure details.
 Provider artifacts under `data/<slug>/<date>-<sha12>/` get written, and
 the pipeline carries attestation forward (writes `reviewed.json` with
-`carried_from`) for pools whose payload matches the last human-reviewed
-one; `content/spots/` stays untouched. The live site stays on the last
-reviewed window until a reviewed PR merges.
+`carried_from`) for pools whose payload matches the last attested one.
+`schedules publish-pending` then attests eligible unique Rec & Park grids
+(`attested_by: ci`) and projects `content/spots/`. The live site updates
+when that PR merges.
 
-If `data/` or `registry.toml` changed, the action commits to the rolling
-`auto/schedules-extract` branch and opens or refreshes its PR. Daily
-extract refreshes that PR; closing it without merging reopens on the next
-run that still sees a diff against `main`. When nothing awaits a human —
-every changed pool auto-verified **and** `discover-blocking` is empty —
-the PR is set to auto-merge on green CI, so quiet weeks need no attention
-at all. A FLAG (split PDF, flyer, band-only grid, 2+ session-grid windows)
-blocks auto-merge even when `data/` is quiet.
+If `data/`, `registry.toml`, `content/spots/`, or `quarantine.toml`
+changed, the action commits to the rolling `auto/schedules-extract`
+branch and opens or refreshes its PR. Daily extract refreshes that PR;
+closing it without merging reopens on the next run that still sees a
+diff against `main`. Auto-merge keys on `publish-pending` exit 0. FLAG
+notes do not hostage unique-grid pools. Kill switch:
+`SCHEDULES_AUTO_PROJECT=false` (or `workflow_dispatch` `auto_project=false`)
+skips publish-pending and leaves the PR open with `needs-schedule-review`.
+
+Operator signal for FLAG and unique-grid/closure refuses is the rolling
+GitHub issue `schedules flagged`, not a merge veto. Successful auto-publish
+comments `schedules published`.
 
 Before checkout, the workflow requires `SCHEDULES_BOT_TOKEN`. Provision a
 repository-scoped fine-grained PAT limited to `cbzehner/swimfrancisco` with
@@ -341,21 +345,39 @@ To provision `SCHEDULES_BOT_TOKEN`:
    the stored value. Do not reuse a broad GitHub CLI OAuth token for Actions
    publication.
 
-Reviewer flow on an auto-PR that lists pending pools or discover flags:
+Happy-path unique grids auto-merge. Reviewer flow is debug / FLAG / repair:
 
 ```
 git fetch origin && git checkout auto/schedules-extract
-just schedules-review          # work the queue; Save projects content
+just schedules-review          # FLAG adopt or a re-queued dir
 just release                   # bulletin only if reviewed payloads changed
 git add content/spots data schedule-tools/src/schedules/registry.toml
 git commit -m "review Rec & Park schedules"
 # merge this PR; do not open a second one
 ```
 
-If the queue is empty, `schedules-review` prints `nothing to review`. Adopt a
-band-flagged or multi-window ID first, or extract a closure notice with
-`--url`, as in Registry Maintenance. Then review, release, and merge the
-same rolling PR.
+If the queue is empty, `schedules-review` prints `nothing to review`. That
+is expected after CI attested a dir. Adopt a band-flagged or multi-window
+ID first, as in Registry Maintenance. Then extract, `publish-pending` or
+review, and merge the same rolling PR.
+
+### Repair sitting
+
+The review UI will not open an already-attested dir.
+
+1. Kill switch: `SCHEDULES_AUTO_PROJECT=false`.
+2. Dashboard tourniquet if the live board is wrong right now.
+3. Prefer a per-pool content revert (delete that `[[extra.schedules]]`
+   table; leave `reviewed.json`) so the next cron does not republish.
+   A squash revert of `data/` requires a `[[quarantine]]` row for that
+   `pdf_sha256` in the same sitting.
+4. Confirm candidate state: `schedules pending-reviews` lists the slug
+   **only if** `reviewed.json` is gone.
+5. Human Save of a corrected payload (`attested_by: human`) overrides
+   quarantine. `publish-pending` still refuses the sha until the row is
+   deleted.
+6. Clear the kill switch after `main` has the revert (and quarantine
+   row, if required).
 
 Public-repo safety: the workflow has no `pull_request` or
 `pull_request_target` triggers, only `schedule` and `workflow_dispatch`.
@@ -383,7 +405,7 @@ Semantic XLSX fingerprinting remains a separate provenance-design follow-up.
 This workflow continues to use the existing source-byte identity and does not
 implement canonicalization or semantic identity.
 
-The v4 path is auto-merge for trivially-confident updates: when an
-auto-PR's eval F1 is at or above the prior baseline AND the row diff vs
-prior `reviewed.json` is below a threshold, allow the bot to mark itself
-mergeable after a quiet period. Out of scope today; humans always review.
+Unique Rec & Park table grids already auto-publish via `publish-pending`.
+Remaining later work is dual-window ingest (Sava, MLK sequential parts)
+and split-PDF extract (North Beach Cool/Warm), not a second human gate
+on unique grids.

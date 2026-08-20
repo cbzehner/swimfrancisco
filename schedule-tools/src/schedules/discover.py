@@ -50,9 +50,10 @@ _CLOSURE_RE = re.compile(
 _SEASON_RE = re.compile(
     r"(?i)(?<![a-z])(?:schedule|fall|spring|summer|winter|interim)(?![a-z])"
 )
+# Cool/Warm only: parallel files for the same days. Sequential windows
+# (MLK pt.1/pt.2, Sava Fall 1/2) classify as session_grid.
 _SPLIT_RE = re.compile(
-    r"(?i)(?:cool\s+pool|warm\s+pool|(?<![a-z])(?:cool|warm)(?![a-z])|"
-    r"(?<![a-z])pt\.?\s*[12](?![a-z0-9])|(?<![a-z])part\s+[12](?![a-z0-9]))"
+    r"(?i)(?:cool\s+pool|warm\s+pool|(?<![a-z])(?:cool|warm)(?![a-z]))"
 )
 _NON_PDF_NAME_RE = re.compile(r"(?i)\.(?:jpe?g|png|gif|webp|html?)\s*$")
 _DISCOVER_LINE_RE = re.compile(r"^discover:\s+(\d{4}-\d{2}-\d{2})\s+(\S+)(?:\s+(.*))?$")
