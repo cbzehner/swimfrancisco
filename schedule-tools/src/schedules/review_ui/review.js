@@ -209,8 +209,12 @@ async function refreshSource() {
   action.disabled = true;
   setFreshnessState("Refreshing extraction…", "");
   try {
-    await request(reviewPath("refresh"), { method: "POST" });
-    await loadQueue(currentKey());
+    const data = await request(reviewPath("refresh"), { method: "POST" });
+    delete sequentialDrafts[currentKey()];
+    const nextKey = data.candidate?.sequential
+      ? `${data.candidate.slug}/${data.candidate.sha12}`
+      : data.candidate?.slug;
+    await loadQueue(nextKey);
   } catch (error) {
     setFreshnessState("Refresh failed", "error");
     $("#save-state").textContent = error.message;

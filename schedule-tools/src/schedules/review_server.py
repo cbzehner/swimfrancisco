@@ -28,6 +28,7 @@ from .publish import (
     _kept_session_grid_ids,
     _load_decisions,
     _sequential_slugs,
+    _unpublished_kept_windows,
     load_quarantine,
     publish_sequential_slug,
 )
@@ -111,7 +112,9 @@ class ReviewApp:
         for slug, items in by_slug.items():
             items = sorted(items, key=lambda item: (item.fetch_date, item.review_dir.name))
             if slug in sequential:
-                selected.extend(items)
+                decision = decisions_by_slug.get(slug)
+                kept = _kept_session_grid_ids(decision) if decision is not None else set()
+                selected.extend(_unpublished_kept_windows(items, kept).values())
             else:
                 selected.append(items[-1])
         priority = {"koret-center": 0, "pomeroy-pool": 1}

@@ -15,6 +15,7 @@ from schedules.review_server import ReviewApp, make_handler
 DAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 SHA_29797 = "1" * 64
 SHA_29796 = "2" * 64
+SHA_29797_NEW = "f" * 64
 SHA_HAM = "a" * 64
 SHA_FALL1 = "c" * 64
 SHA_MAY = "d" * 64
@@ -497,3 +498,94 @@ def test_sequential_queue_lists_every_unpublished_sibling(queue_env, monkeypatch
     listed = app.list_reviews()
     assert [item["sha12"] for item in listed] == [SHA_29797[:12], SHA_29796[:12]]
     assert all(item["sequential"] is True and item["slug"] == "balboa-pool" for item in listed)
+
+
+def test_sequential_refresh_keeps_latest_per_view_id_and_save_all_writes_new(
+    queue_env, monkeypatch
+):
+    data, content, tmp = queue_env
+    _seed_balboa(data)
+    _seed_content(content, "balboa-pool")
+    _write_decisions(tmp, [_balboa_decision()])
+    monkeypatch.setattr(
+        "schedules.review_server.load_registry",
+        lambda: [_entry("balboa-pool", BALBOA_29797)],
+    )
+    monkeypatch.setattr(
+        "schedules.review_server.current_source_identity",
+        _identities((BALBOA_29797, SHA_29797_NEW), (BALBOA_29796, SHA_29796)),
+    )
+
+    def fake_pipeline(**kwargs):
+        _write_capture(
+            data,
+            "balboa-pool",
+            SHA_29797_NEW,
+            fetch_date="2026-08-21",
+            source_pdf_url=BALBOA_29797,
+            payload=_payload(start="2026-08-11", end="2026-08-29"),
+        )
+        return (0, None, [object()])
+
+    monkeypatch.setattr("schedules.review_server.run_pipeline", fake_pipeline)
+    app = _app(data, content, tmp)
+
+    refreshed = app.refresh("balboa-pool", sha12=SHA_29797[:12])
+    assert refreshed["candidate"]["sha12"] == SHA_29797_NEW[:12]
+    listed = {item["sha12"] for item in app.list_reviews()}
+    assert listed == {SHA_29797_NEW[:12], SHA_29796[:12]}
+    assert app.candidate("balboa-pool", sha12=SHA_29797[:12]) is None
+
+    sibling = app.review("balboa-pool", sha12=SHA_29796[:12])
+    app.save_sequential(
+        "balboa-pool",
+        {
+            SHA_29797_NEW[:12]: refreshed["envelope"],
+            SHA_29796[:12]: sibling["envelope"],
+        },
+    )
+
+    new_path = data / "balboa-pool" / f"2026-08-21-{SHA_29797_NEW[:12]}" / "reviewed.json"
+    assert new_path.exists()
+    assert json.loads(new_path.read_text())["pdf_sha256"] == SHA_29797_NEW
+    assert not (
+        data / "balboa-pool" / f"2026-08-19-{SHA_29797[:12]}" / "reviewed.json"
+    ).exists()
+
+
+def test_save_all_overlapping_posted_end_refuses(queue_env, monkeypatch):
+    data, content, tmp = queue_env
+    _seed_balboa(data)
+    _seed_content(content, "balboa-pool")
+    _write_decisions(tmp, [_balboa_decision()])
+    monkeypatch.setattr(
+        "schedules.review_server.load_registry",
+        lambda: [_entry("balboa-pool", BALBOA_29797)],
+    )
+    monkeypatch.setattr(
+        "schedules.review_server.current_source_identity",
+        _identities((BALBOA_29797, SHA_29797), (BALBOA_29796, SHA_29796)),
+    )
+    app = _app(data, content, tmp)
+    first = app.review("balboa-pool", sha12=SHA_29797[:12])
+    second = app.review("balboa-pool", sha12=SHA_29796[:12])
+    first["envelope"]["payload"]["effective_end"] = "2026-12-12"
+    before = (content / "balboa-pool.md").read_bytes()
+
+    with pytest.raises(PublishRefuse) as exc_info:
+        app.save_sequential(
+            "balboa-pool",
+            {
+                SHA_29797[:12]: first["envelope"],
+                SHA_29796[:12]: second["envelope"],
+            },
+        )
+
+    assert exc_info.value.code == "overlapping_windows"
+    assert not (
+        data / "balboa-pool" / f"2026-08-19-{SHA_29797[:12]}" / "reviewed.json"
+    ).exists()
+    assert not (
+        data / "balboa-pool" / f"2026-08-20-{SHA_29796[:12]}" / "reviewed.json"
+    ).exists()
+    assert (content / "balboa-pool.md").read_bytes() == before

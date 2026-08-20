@@ -659,8 +659,16 @@ def publish_sequential_slug(
     ordered = _order_unpublished(unpublished)
     payload_ranges: list[tuple[date, date]] = []
     for candidate in ordered:
-        artifact = _candidate_artifact(candidate)
-        payload = artifact.get("payload") if isinstance(artifact.get("payload"), dict) else {}
+        if envelopes is not None:
+            posted = envelopes.get(candidate.pdf_sha256[:12])
+            payload = (
+                posted.get("payload")
+                if isinstance(posted, dict) and isinstance(posted.get("payload"), dict)
+                else {}
+            )
+        else:
+            artifact = _candidate_artifact(candidate)
+            payload = artifact.get("payload") if isinstance(artifact.get("payload"), dict) else {}
         parsed = _payload_window(payload)
         if parsed is None:
             continue
