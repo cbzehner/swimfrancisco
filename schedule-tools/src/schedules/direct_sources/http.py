@@ -16,6 +16,8 @@ from .._time import pacific_today
 from ..paths import DATA_DIR
 from .errors import DirectSourceError
 
+BOT_USER_AGENT = "SwimFranciscoScheduleBot/0.1 (+https://swimfrancisco.com)"
+
 
 @dataclass(frozen=True)
 class DirectFetchResult:
@@ -41,7 +43,7 @@ def fetch_text(
 
     last_error: Exception | None = None
     headers = {
-        "User-Agent": "SwimFranciscoScheduleBot/0.1 (+https://swimfrancisco.com)",
+        "User-Agent": BOT_USER_AGENT,
         "Accept": "text/html,application/xhtml+xml,text/plain;q=0.9,*/*;q=0.8",
     }
     with httpx.Client(follow_redirects=True, timeout=timeout, headers=headers) as client:
@@ -71,7 +73,7 @@ def fetch_text(
 def fetch_koret_workbook(slug: str, workbook_url: str, *, cache_root: Path = DATA_DIR) -> DirectFetchResult:
     sheet_id = _extract_google_sheet_id(workbook_url)
     headers = {
-        "User-Agent": "SwimFranciscoScheduleBot/0.1 (+https://swimfrancisco.com)",
+        "User-Agent": BOT_USER_AGENT,
         "Accept": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf;q=0.9,*/*;q=0.8",
     }
     try:

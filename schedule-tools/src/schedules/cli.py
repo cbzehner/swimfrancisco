@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+import json
 import os
 import click
 
+from .discover import DiscoverError, discover_all, rec_park_entries
 from .models import PoolResult
 from .paths import (
     CONTENT_SPOTS_DIR,
     DATA_DIR,
+    TMP_DIR,
     latest_review_dir,
 )
+from .registry import load_registry
 from .eval import collect_pool_evals, render_report, write_report
 from .pipeline import parse_source_mode, run_pipeline
 from .pr_summary import render_pr_body, staged_data_has_meaningful_changes
@@ -119,6 +123,66 @@ def review_command(port: int, no_open: bool) -> None:
         click.echo("nothing to review")
         return
     serve_review_app(port=port, open_browser=not no_open)
+
+
+def _parse_adopt(value: str | None) -> tuple[str, int] | None:
+    if value is None:
+        return None
+    if "=" not in value:
+        raise click.UsageError("--adopt must be slug=id")
+    slug, raw_id = value.split("=", 1)
+    slug = slug.strip()
+    if not slug:
+        raise click.UsageError("--adopt must be slug=id")
+    try:
+        view_id = int(raw_id.strip())
+    except ValueError as exc:
+        raise click.UsageError("--adopt id must be an integer") from exc
+    return slug, view_id
+
+
+@cli.command("discover")
+@click.option(
+    "--only",
+    help="Comma-separated pool slugs to process.",
+)
+@click.option("--dry-run", is_flag=True, help="Report only. Do not write registry.toml.")
+@click.option("--adopt", "adopt_spec", help="Confirm a FLAG candidate as slug=id.")
+def discover_command(only: str | None, dry_run: bool, adopt_spec: str | None) -> None:
+    """Parse Rec & Park Documents tables and roll unique session-grid PDF URLs."""
+    slugs = _parse_slugs(only)
+    adopt = _parse_adopt(adopt_spec)
+    entries = rec_park_entries(load_registry())
+    try:
+        decisions = discover_all(entries, dry_run=dry_run, slugs=slugs, adopt=adopt)
+    except DiscoverError as exc:
+        click.echo(str(exc), err=True)
+        raise SystemExit(1) from exc
+    click.echo(f"Wrote {TMP_DIR / 'discovery-report.md'}")
+    if dry_run:
+        click.echo("dry-run: registry not written")
+    flagged = sum(1 for decision in decisions if decision.blocking)
+    click.echo(f"{len(decisions)} Rec & Park pools; {flagged} flagged.")
+
+
+@cli.command("discover-blocking")
+def discover_blocking_command() -> None:
+    """Print slugs with blocking discover flags, one per line.
+
+    Empty output means no flags — the auto-extract workflow uses that as its
+    second auto-merge gate.
+    """
+    path = TMP_DIR / "discovery-decisions.json"
+    if not path.exists():
+        return
+    payload = json.loads(path.read_text())
+    if not isinstance(payload, list):
+        return
+    for item in payload:
+        if isinstance(item, dict) and item.get("blocking"):
+            slug = item.get("slug")
+            if slug:
+                click.echo(slug)
 
 
 @cli.command("pending-reviews")
