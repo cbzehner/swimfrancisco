@@ -2,39 +2,30 @@
 slug = "balboa-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/29562"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Balboa-Pool-212"
-notes = """
-discover: 2026-08-20 flag multiple_windows id=29797:session_grid:table band_session_grid id=29796:session_grid:band
-"""
 
 [[pool]]
 slug = "coffman-pool"
-pdf_url = "https://sfrecpark.org/DocumentCenter/View/29798"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/29563"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Coffman-Pool-213"
 
 [[pool]]
 slug = "garfield-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/29564"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Garfield-Pool-214"
-notes = """
-discover: 2026-08-20 flag band_session_grid id=29808:closure_notice:table band_session_grid id=29799:session_grid:band
-"""
 
 [[pool]]
 slug = "hamilton-pool"
-pdf_url = "https://sfrecpark.org/DocumentCenter/View/29800"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/29599"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Hamilton-Pool-215"
 
 [[pool]]
 slug = "martin-luther-king-jr-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/29578"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Martin-Luther-King-Jr-Pool-216"
-notes = """
-discover: 2026-08-20 flag multiple_windows id=29802:session_grid:table band_session_grid id=29803:session_grid:band
-"""
 
 [[pool]]
 slug = "mission-community-pool"
-pdf_url = "https://sfrecpark.org/DocumentCenter/View/29801"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/29566"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Mission-Community-Pool-217"
 
 [[pool]]
@@ -42,27 +33,17 @@ slug = "north-beach-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/29778"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/North-Beach-Pool-218"
 source_status = "missing_current_schedule"
-notes = """
-discover: 2026-08-20 flag split_part id=29778:split_part:table id=29779:split_part:table
-
-Official page split the current North Beach interim schedule into separate Cool Pool (29778) and Warm Pool (29779) PDFs. Current content was manually reviewed from both; automated extraction should stay skipped until split-PDF support exists.
-"""
+notes = "Official page split the current North Beach interim schedule into separate Cool Pool (29778) and Warm Pool (29779) PDFs. Current content was manually reviewed from both; automated extraction should stay skipped until split-PDF support exists."
 
 [[pool]]
 slug = "rossi-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/29570"
 official_page_url = "https://sfrecpark.org/Facilities/Facility/Details/Rossi-Pool-219"
-notes = """
-discover: 2026-08-20 flag closure_notice id=29804:closure_notice:table
-"""
 
 [[pool]]
 slug = "sava-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/29571"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Sava-Pool-220"
-notes = """
-discover: 2026-08-20 flag multiple_windows id=29815:session_grid:table band_session_grid id=29805:session_grid:band band_session_grid id=29806:session_grid:band
-"""
 
 [[pool]]
 slug = "jccsf"

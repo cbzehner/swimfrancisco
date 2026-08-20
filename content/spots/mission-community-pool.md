@@ -312,6 +312,199 @@ reason = "Juneteenth"
 start = "2026-07-04"
 end = "2026-07-04"
 reason = "Independence Day"
+
+[[extra.schedules]]
+effective_start = "2026-08-18"
+schedule_basis = "swim_schedule"
+effective_end = "2026-10-17"
+last_verified_at = "2026-08-20"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "07:30"
+end = "09:00"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "senior_swim"
+start = "09:15"
+end = "11:00"
+pool = "3"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "11:15"
+end = "13:30"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "14:00"
+end = "15:00"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "family_swim"
+start = "17:45"
+end = "19:00"
+pool = "2"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "17:45"
+end = "19:00"
+pool = "2"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "07:30"
+end = "09:00"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "senior_swim"
+start = "09:15"
+end = "11:00"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "11:30"
+end = "13:30"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "family_swim"
+start = "14:30"
+end = "16:30"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "17:00"
+end = "19:00"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "07:30"
+end = "09:00"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "senior_swim"
+start = "09:15"
+end = "11:00"
+pool = "3"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "11:15"
+end = "13:30"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "14:00"
+end = "15:00"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "family_swim"
+start = "17:45"
+end = "19:00"
+pool = "2"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "17:45"
+end = "19:00"
+pool = "2"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "07:30"
+end = "09:00"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "senior_swim"
+start = "09:15"
+end = "11:00"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "11:30"
+end = "13:30"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "14:30"
+end = "16:30"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "family_swim"
+start = "17:00"
+end = "19:00"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "lap_swim"
+start = "11:30"
+end = "12:45"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "family_swim"
+start = "14:00"
+end = "15:30"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "lap_swim"
+start = "16:00"
+end = "17:30"
+
+[[extra.schedules.closures]]
+start = "2026-08-22"
+end = "2026-08-22"
+reason = "Staff training"
+start_time = "09:00"
+end_time = "11:00"
+
+[[extra.schedules.closures]]
+start = "2026-08-27"
+end = "2026-08-27"
+reason = "Aquatic Division Training"
+start_time = "12:00"
+end_time = "14:00"
+
+[[extra.schedules.closures]]
+start = "2026-09-07"
+end = "2026-09-07"
+reason = "Labor Day"
+
+[[extra.schedules.closures]]
+start = "2026-09-24"
+end = "2026-09-24"
+reason = "Aquatic Division Training"
+start_time = "12:00"
+end_time = "14:00"
+
+[[extra.schedules.closures]]
+start = "2026-10-12"
+end = "2026-10-12"
+reason = "Indigenous People’s Day"
 +++
 
 The only city-operated outdoor pool in San Francisco. Built in 1916, the 90' x 40' pool sits between Linda and Valencia streets in the heart of the Mission District and operates seasonally from May through October. Programs include lap swim, senior swim, recreation swim, water aerobics, and lessons.

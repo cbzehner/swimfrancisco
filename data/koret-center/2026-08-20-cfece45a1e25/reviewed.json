@@ -1,0 +1,58 @@
+{
+  "slug": "koret-center",
+  "pdf_sha256": "cfece45a1e25ad9fc4a484cfa5ddf519b9f6436acf9bd76aa5d2d11002b8eae9",
+  "reviewed_at": "2026-08-12",
+  "source_pdf_url": "https://docs.google.com/spreadsheets/d/1PcFSl3ndScM2-SZnubwDvBlbhpmbFsVjEPK-yGilZU0/edit?gid=1958899859&pli=1",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [],
+    "closures": [],
+    "effective_start": "2026-08-12",
+    "schedule_basis": "pool_hours",
+    "sessions": [
+      {
+        "day": "monday",
+        "end": "19:00",
+        "evidence": "Monday Hours: 7am-7pm (Summer Hours)",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "19:00",
+        "evidence": "Tuesday Hours: 7am-7pm (Summer Hours)",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:00",
+        "evidence": "Wednesday Hours: 7am-7pm (Summer Hours)",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "19:00",
+        "evidence": "Thursday Hours: 7am-7pm (Summer Hours)",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "19:00",
+        "evidence": "Friday Hours: 7am-7pm (Summer Hours)",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "16:00",
+        "evidence": "Saturday Hours 8am-4pm (Summer Hours)",
+        "start": "08:00",
+        "type": "lap_swim"
+      }
+    ]
+  },
+  "carried_from": "data/koret-center/2026-08-19-40d6de7075ca/reviewed.json"
+}

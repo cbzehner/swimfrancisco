@@ -26,10 +26,10 @@ from schedules.discover import (
     rewrite_registry_pdf_url,
 )
 from schedules.models import PoolEntry
-from schedules.paths import REGISTRY_PATH
 from schedules.registry import load_registry
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures" / "discover"
+FIXTURE_REGISTRY = FIXTURE_DIR / "registry.toml"
 REC_PARK_SLUGS = [
     "balboa-pool",
     "coffman-pool",
@@ -128,7 +128,7 @@ def _entry(
 
 def _copy_registry(tmp_path: Path) -> Path:
     dest = tmp_path / "registry.toml"
-    dest.write_text(REGISTRY_PATH.read_text())
+    dest.write_text(FIXTURE_REGISTRY.read_text())
     return dest
 
 
@@ -480,7 +480,7 @@ def test_persisted_band_ids_reads_flag_and_adopt_not_extra() -> None:
 
 
 def test_selection_is_exactly_nine_rec_park_pools() -> None:
-    slugs = [entry.slug for entry in rec_park_entries(load_registry())]
+    slugs = [entry.slug for entry in rec_park_entries(load_registry(FIXTURE_REGISTRY))]
     assert slugs == REC_PARK_SLUGS
     assert "bay-club-gateway" not in slugs
 
@@ -742,7 +742,7 @@ def test_machine_line_upsert_is_idempotent_ignoring_date(tmp_path, monkeypatch) 
 def test_discover_all_hamilton_adopts(tmp_path, monkeypatch) -> None:
     _freeze_today(monkeypatch)
     registry = _copy_registry(tmp_path)
-    entry = next(item for item in load_registry() if item.slug == "hamilton-pool")
+    entry = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "hamilton-pool")
     pages = {entry.official_page_url: _fixture("hamilton-one-grid.html")}
     views = {
         29800: {
@@ -778,7 +778,7 @@ def test_discover_all_north_beach_flags_without_url_write(
 ) -> None:
     _freeze_today(monkeypatch)
     registry = _copy_registry(tmp_path)
-    entry = next(item for item in load_registry() if item.slug == "north-beach-pool")
+    entry = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "north-beach-pool")
     pages = {entry.official_page_url: _fixture("north-beach-two-grids.html")}
     views = {
         29778: {
@@ -810,8 +810,8 @@ def test_discover_all_north_beach_flags_without_url_write(
 def test_discover_all_sava_two_windows_flag_not_extra(tmp_path, monkeypatch) -> None:
     _freeze_today(monkeypatch)
     registry = _copy_registry(tmp_path)
-    sava = next(item for item in load_registry() if item.slug == "sava-pool")
-    north = next(item for item in load_registry() if item.slug == "north-beach-pool")
+    sava = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "sava-pool")
+    north = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "north-beach-pool")
     pages = {
         sava.official_page_url: _fixture("sava-two-session-grids.html"),
         north.official_page_url: _fixture("empty-table.html"),
@@ -858,7 +858,7 @@ def test_only_sava_still_uses_global_band_and_does_not_adopt_fall1(
     """--only sava-pool must still see band 29805 (Fall 2) from the global max_id."""
     _freeze_today(monkeypatch)
     registry = _copy_registry(tmp_path)
-    sava = next(item for item in load_registry() if item.slug == "sava-pool")
+    sava = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "sava-pool")
     pages = {sava.official_page_url: _fixture("sava-two-session-grids.html")}
     views = {
         29815: {
@@ -896,7 +896,7 @@ def test_only_sava_still_uses_global_band_and_does_not_adopt_fall1(
 def test_discover_all_garfield_flyer_flags_unchanged_url(tmp_path, monkeypatch) -> None:
     _freeze_today(monkeypatch)
     registry = _copy_registry(tmp_path)
-    entry = next(item for item in load_registry() if item.slug == "garfield-pool")
+    entry = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "garfield-pool")
     pages = {entry.official_page_url: _fixture("garfield-flyer-only.html")}
     views = {
         29808: {
@@ -928,7 +928,7 @@ def test_discover_all_garfield_flyer_flags_unchanged_url(tmp_path, monkeypatch) 
 def test_discover_all_empty_table_flags(tmp_path, monkeypatch) -> None:
     _freeze_today(monkeypatch)
     registry = _copy_registry(tmp_path)
-    entry = next(item for item in load_registry() if item.slug == "hamilton-pool")
+    entry = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "hamilton-pool")
     pages = {entry.official_page_url: _fixture("empty-table.html")}
     views = {
         29599: {
@@ -952,9 +952,9 @@ def test_discover_all_empty_table_flags(tmp_path, monkeypatch) -> None:
 
 def test_band_walks_full_window_without_404_stop(tmp_path, monkeypatch) -> None:
     _freeze_today(monkeypatch)
-    north = next(item for item in load_registry() if item.slug == "north-beach-pool")
-    garfield = next(item for item in load_registry() if item.slug == "garfield-pool")
-    sava = next(item for item in load_registry() if item.slug == "sava-pool")
+    north = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "north-beach-pool")
+    garfield = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "garfield-pool")
+    sava = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "sava-pool")
     requested: list[str] = []
     views = {
         29779: {"filename": "unrelated.pdf", "content": _pdf_bytes()},
@@ -1071,7 +1071,7 @@ def test_persist_after_max_jump(tmp_path, monkeypatch) -> None:
 
 def test_non_pdf_200_is_not_a_candidate(tmp_path, monkeypatch) -> None:
     _freeze_today(monkeypatch)
-    entry = next(item for item in load_registry() if item.slug == "garfield-pool")
+    entry = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "garfield-pool")
     views = {
         29570: {
             "type": "image/jpeg",
@@ -1102,7 +1102,7 @@ def test_discover_all_excludes_bay_club(tmp_path, monkeypatch) -> None:
     requested: list[str] = []
     _install_http(monkeypatch, requested=requested)
     decisions = discover_all(
-        load_registry(),
+        load_registry(FIXTURE_REGISTRY),
         dry_run=True,
         delay=0,
         registry_path=tmp_path / "unused.toml",
@@ -1115,7 +1115,7 @@ def test_discover_all_excludes_bay_club(tmp_path, monkeypatch) -> None:
 
 def test_discover_all_hard_error_when_every_page_fails(tmp_path, monkeypatch) -> None:
     _freeze_today(monkeypatch)
-    entry = next(item for item in load_registry() if item.slug == "hamilton-pool")
+    entry = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "hamilton-pool")
 
     class FakeClient:
         def __init__(self, *args, **kwargs):
@@ -1147,7 +1147,7 @@ def test_discover_all_hard_error_when_every_page_fails(tmp_path, monkeypatch) ->
 def test_discover_all_operator_adopt(tmp_path, monkeypatch) -> None:
     _freeze_today(monkeypatch)
     registry = _copy_registry(tmp_path)
-    sava = next(item for item in load_registry() if item.slug == "sava-pool")
+    sava = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "sava-pool")
     pages = {sava.official_page_url: _fixture("sava-two-session-grids.html")}
     views = {
         29815: {
@@ -1176,7 +1176,7 @@ def test_dry_run_does_not_write_registry(tmp_path, monkeypatch) -> None:
     _freeze_today(monkeypatch)
     registry = _copy_registry(tmp_path)
     before = registry.read_text()
-    entry = next(item for item in load_registry() if item.slug == "hamilton-pool")
+    entry = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "hamilton-pool")
     pages = {entry.official_page_url: _fixture("hamilton-one-grid.html")}
     views = {
         29800: {"filename": "Hamilton Pool Fall 2026.pdf", "content": _grid_pdf()},
@@ -1235,7 +1235,7 @@ def test_discover_all_hamilton_without_grid_header_does_not_adopt(
 ) -> None:
     _freeze_today(monkeypatch)
     registry = _copy_registry(tmp_path)
-    entry = next(item for item in load_registry() if item.slug == "hamilton-pool")
+    entry = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "hamilton-pool")
     pages = {entry.official_page_url: _fixture("hamilton-one-grid.html")}
     views = {
         29800: {
@@ -1386,7 +1386,7 @@ def test_persist_kept_on_non_404_miss(tmp_path, monkeypatch) -> None:
 
 
 def test_adopt_slug_must_be_in_selected_slugs(tmp_path) -> None:
-    entries = rec_park_entries(load_registry())
+    entries = rec_park_entries(load_registry(FIXTURE_REGISTRY))
     with pytest.raises(DiscoverError, match="not in the selected"):
         discover_all(
             entries,
@@ -1414,7 +1414,7 @@ def test_discover_all_garfield_flyer_with_weekdays_does_not_adopt(
 ) -> None:
     _freeze_today(monkeypatch)
     registry = _copy_registry(tmp_path)
-    entry = next(item for item in load_registry() if item.slug == "garfield-pool")
+    entry = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "garfield-pool")
     pages = {entry.official_page_url: _fixture("garfield-flyer-with-weekdays.html")}
     views = {
         29808: {

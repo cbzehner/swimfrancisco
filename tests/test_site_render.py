@@ -385,11 +385,8 @@ def test_localized_spot_pages_store_translated_markdown(built_site: Path) -> Non
 
     garfield = (built_site / "es" / "spots" / "garfield-pool" / "index.html").read_text()
     assert "<title>Garfield Pool horario de natación y acceso — Swim Francisco</title>" in garfield
-    assert (
-        "El horario empieza 7/6/2026" in garfield
-        or "HORARIO VIGENTE DESDE 7/6/2026 HASTA 13/8/2026" in garfield
-    )
-    assert "SIN NADO LIBRE VIERNES Y SÁBADO" in garfield
+    assert "Piscina cubierta en Garfield Square" in garfield
+    assert "An indoor pool at Garfield Square" not in garfield
 
     mission = (built_site / "es" / "spots" / "mission-community-pool" / "index.html").read_text()
     assert "Capacitación del personal" in mission

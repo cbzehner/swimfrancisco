@@ -166,6 +166,18 @@ reason = "Juneteenth"
 start = "2026-07-04"
 end = "2026-07-04"
 reason = "Independence Day"
+
+[[extra.schedules]]
+sessions = []
+effective_start = "2026-08-14"
+schedule_basis = "temporarily_closed"
+effective_end = "2026-09-07"
+last_verified_at = "2026-08-20"
+
+[[extra.schedules.closures]]
+start = "2026-08-14"
+end = "2026-09-07"
+reason = "Garfield Pool Maintenance Closure 8-14_9-7 2026"
 +++
 
 An indoor pool at Garfield Square in the Mission District, at the corner of 26th and Harrison. Programs include lap swim, senior swim, recreation swim, fitness and exercise classes, and lessons.
