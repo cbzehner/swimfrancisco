@@ -1158,8 +1158,19 @@ def test_cli_discover_blocking(tmp_path, monkeypatch) -> None:
     assert result.output.splitlines() == ["sava-pool", "garfield-pool"]
 
 
-def test_cli_discover_blocking_empty_when_missing(tmp_path, monkeypatch) -> None:
+def test_cli_discover_blocking_errors_when_missing(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr("schedules.cli.TMP_DIR", tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(cli, ["discover-blocking"])
+    assert result.exit_code == 1
+    assert "discovery-decisions.json is missing" in result.output
+
+
+def test_cli_discover_blocking_empty_when_no_flags(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr("schedules.cli.TMP_DIR", tmp_path)
+    (tmp_path / "discovery-decisions.json").write_text(
+        json.dumps([{"slug": "hamilton-pool", "blocking": False}])
+    )
     runner = CliRunner()
     result = runner.invoke(cli, ["discover-blocking"])
     assert result.exit_code == 0

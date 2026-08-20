@@ -1,45 +1,64 @@
 name: schedules-extract
 
 # Auto-extracts pool schedules and opens (or refreshes) the rolling
-# `auto/schedules-extract` PR when new artifacts are produced. The
-# pipeline carries human attestation forward when a new capture extracts
-# a payload identical to the last human-reviewed one (writing
-# reviewed.json with `carried_from` provenance); pools whose payload
-# actually changed still require `just schedules-review` before merge.
-# This workflow never edits content/spots/.
+# `auto/schedules-extract` PR when new artifacts or registry pins are
+# produced. The pipeline carries human attestation forward when a new
+# capture extracts a payload identical to the last human-reviewed one
+# (writing reviewed.json with `carried_from` provenance); pools whose
+# payload actually changed still require `just schedules-review` before
+# merge. Blocking discover flags (split PDFs, flyers, 2+ session-grid
+# windows) also block auto-merge. This workflow never edits
+# content/spots/.
 #
-# When every changed pool auto-verified, the PR is set to auto-merge on
-# green CI. Prerequisites for the fully-autonomous path: a
-# SCHEDULES_BOT_TOKEN secret (fine-grained PAT, contents+pull-requests
-# read/write — PRs made with the default GITHUB_TOKEN never trigger the
-# ci workflow), repo setting "Allow auto-merge", and a branch protection
-# rule on main requiring the `check` status.
+# When every changed pool auto-verified AND discover-blocking is empty,
+# the PR is set to auto-merge on green CI. Prerequisites for the
+# fully-autonomous path: a SCHEDULES_BOT_TOKEN secret (fine-grained PAT,
+# contents+pull-requests read/write — PRs made with the default Actions
+# token never trigger the ci workflow), repo setting "Allow auto-merge",
+# and a branch protection rule on main requiring the `check` status.
 #
 # Public-repo safety: only `schedule` and `workflow_dispatch` triggers
 # (forks cannot trigger workflows that need our secrets). No
-# pull_request_target. Least-privilege permissions block.
+# pull_request_target. Permissions are job-level so pager jobs cannot
+# write contents or pull requests.
 
 on:
   schedule:
     # Daily 16:00 UTC = 09:00 PT (after PST/PDT both). Cache-hit days
-    # produce no diff and stop at the detect step.
+    # with no registry change produce no diff and stop at the detect step.
     - cron: '0 16 * * *'
   workflow_dispatch:
-
-permissions:
-  contents: write
-  pull-requests: write
 
 concurrency:
   group: schedules-extract
   cancel-in-progress: true
 
 jobs:
-  extract:
+  ensure-labels:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Ensure review and pager labels
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh label create needs-schedule-review --force \
+            --color B60205 --description "Schedule extract PR needs a human"
+          gh label create schedules-extract-blocked --force \
+            --color B60205 --description "schedules-extract did not run"
+
+  extract:
+    needs: ensure-labels
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     env:
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    outputs:
+      preflight_outcome: ${{ steps.token-preflight.outcome }}
     steps:
       - name: Verify CI-capable publication token
         id: token-preflight
@@ -48,13 +67,16 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${SCHEDULES_BOT_TOKEN}" ]; then
-            echo "::error::SCHEDULES_BOT_TOKEN is required before checkout or publication. Configure a repository-scoped fine-grained PAT for cbzehner/swimfrancisco with Contents and Pull requests read/write permissions, then store it as the Actions secret SCHEDULES_BOT_TOKEN."
+            echo "::error::SCHEDULES_BOT_TOKEN is empty."
             exit 1
           fi
+          git ls-remote --exit-code \
+            "https://x-access-token:${SCHEDULES_BOT_TOKEN}@github.com/cbzehner/swimfrancisco.git" \
+            HEAD >/dev/null
 
       - uses: actions/checkout@v4
         with:
-          # Pushes and PRs made with the default GITHUB_TOKEN do not
+          # Pushes and PRs made with the default Actions token do not
           # trigger other workflows; the PAT makes CI run on the PR.
           token: ${{ secrets.SCHEDULES_BOT_TOKEN }}
 
@@ -68,6 +90,10 @@ jobs:
       - name: Sync schedule-tools deps
         run: uv --project schedule-tools sync
 
+      - name: Discover Rec & Park PDF URLs
+        id: discover
+        run: uv --project schedule-tools run schedules discover
+
       - name: Extract direct sources (no content writes)
         id: extract-direct
         run: uv --project schedule-tools run schedules extract --direct
@@ -80,26 +106,21 @@ jobs:
         # data/<slug>/.../ ARE written, but only when the cache check fails
         # (PDF sha changed, or prompt/schema sha changed, or no cached
         # artifact exists). No --force: pools with fresh artifacts produce
-        # no diff at all.
-        run: uv --project schedule-tools run schedules extract --provider gemini
-        continue-on-error: true
-
-      - name: Extract PDF sources with Anthropic (no content writes)
-        id: extract-anthropic
-        run: uv --project schedule-tools run schedules extract --provider anthropic
-        continue-on-error: true
+        # no diff at all. --no-discover: CI discover already wrote the
+        # registry; extract must not be a second writer.
+        run: uv --project schedule-tools run schedules extract --provider gemini --no-discover
 
       - name: Publish extraction evidence
         if: always()
         env:
           PREFLIGHT_OUTCOME: ${{ steps.token-preflight.outcome }}
+          DISCOVER_OUTCOME: ${{ steps.discover.outcome }}
           DIRECT_OUTCOME: ${{ steps.extract-direct.outcome }}
           GEMINI_OUTCOME: ${{ steps.extract-gemini.outcome }}
-          ANTHROPIC_OUTCOME: ${{ steps.extract-anthropic.outcome }}
         run: |
           set -euo pipefail
           failed=0
-          for pass in direct gemini anthropic; do
+          for pass in discover direct gemini; do
             outcome_var=$(printf '%s_OUTCOME' "${pass^^}")
             outcome=${!outcome_var:-not-run}
             if [ "${outcome}" = failure ]; then
@@ -115,12 +136,12 @@ jobs:
           else
             echo "## Schedule extraction: success" >> "$GITHUB_STEP_SUMMARY"
           fi
-          for pass in direct gemini anthropic; do
+          for pass in discover direct gemini; do
             outcome_var=$(printf '%s_OUTCOME' "${pass^^}")
             outcome=${!outcome_var:-not-run}
             echo "- ${pass}: ${outcome}" >> "$GITHUB_STEP_SUMMARY"
           done
-          for report in tmp/extraction-report-direct.md tmp/extraction-report-gemini.md tmp/extraction-report-anthropic.md; do
+          for report in tmp/discovery-report.md tmp/extraction-report-direct.md tmp/extraction-report-gemini.md; do
             if [ -f "${report}" ]; then
               echo "## ${report}" >> "$GITHUB_STEP_SUMMARY"
               cat "${report}" >> "$GITHUB_STEP_SUMMARY"
@@ -135,25 +156,33 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: schedule-extraction-reports
-          path: tmp/extraction-report-*.md
+          path: |
+            tmp/extraction-report-*.md
+            tmp/discovery-report.md
           if-no-files-found: warn
 
       - name: Run eval against committed reviewed.json
+        if: always() && steps.token-preflight.outcome == 'success'
         run: uv --project schedule-tools run schedules eval --stdout > tmp/eval.md
         continue-on-error: true
 
       - name: Regenerate bulletin fingerprint
+        if: always() && steps.token-preflight.outcome == 'success'
         # Carried attestations add reviewed.json files, and the bulletin
         # fingerprint/count must track the reviewed set (tests assert it).
         run: node scripts/generate-bulletin.mjs
 
       - name: Detect new or changed artifacts
         id: detect
+        if: always() && steps.token-preflight.outcome == 'success'
         run: |
-          git add data/
+          git add data/ schedule-tools/src/schedules/registry.toml
           if git diff --staged --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No changes detected; nothing to PR."
+          elif git diff --staged --name-only | grep -q 'registry.toml'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git diff --staged --stat | head -50
           elif ! uv --project schedule-tools run schedules has-meaningful-staged-data-changes; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "Only metadata-only data changes detected; nothing to PR."
@@ -164,7 +193,7 @@ jobs:
           fi
 
       - name: Open or update PR
-        if: steps.detect.outputs.changed == 'true'
+        if: always() && steps.token-preflight.outcome == 'success' && steps.detect.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.SCHEDULES_BOT_TOKEN }}
         run: |
@@ -178,8 +207,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           # Always create the branch fresh from current HEAD with the
-          # staged data/ changes. Force-push overwrites any prior content;
-          # the PR body gets updated below to reflect the latest state.
+          # staged data/ and registry.toml changes. Force-push overwrites
+          # any prior content; the PR body gets updated below to reflect
+          # the latest state.
           git checkout -B "${BRANCH}"
 
           # Generate the PR body BEFORE committing — pr-summary reads
@@ -207,15 +237,79 @@ jobs:
           fi
 
           # Fully-autonomous path: nothing awaits a human (every changed
-          # pool carried its attestation forward), so merge on green CI.
-          # `--auto` needs repo setting "Allow auto-merge" plus a branch
-          # protection rule requiring the `check` status; if either is
-          # missing this logs a notice and leaves the PR open.
+          # pool carried its attestation forward, and discover-blocking
+          # exited 0 with empty stdout). A missing decisions file is an
+          # error, not "no flags." `--auto` needs repo setting "Allow
+          # auto-merge" plus a branch protection rule requiring the
+          # `check` status; if either is missing this logs a notice and
+          # leaves the PR open.
           PENDING=$(uv --project schedule-tools run schedules pending-reviews)
-          if [ -z "${PENDING}" ]; then
+          if BLOCKING=$(uv --project schedule-tools run schedules discover-blocking); then
+            BLOCKING_STATUS=0
+          else
+            BLOCKING_STATUS=$?
+          fi
+          if [ "${BLOCKING_STATUS}" -eq 0 ] && [ -z "${PENDING}" ] && [ -z "${BLOCKING}" ]; then
             gh pr merge "${PR_NUMBER}" --auto --squash \
               || echo "::notice::auto-merge unavailable; PR #${PR_NUMBER} left open for manual merge"
           else
-            echo "Pools awaiting human review:"
-            echo "${PENDING}"
+            gh pr edit "${PR_NUMBER}" --add-label "needs-schedule-review"
+            if [ "${BLOCKING_STATUS}" -ne 0 ]; then
+              echo "discover-blocking failed; not auto-merging."
+            fi
+            if [ -n "${PENDING}" ]; then
+              echo "Pools awaiting human review:"
+              echo "${PENDING}"
+            fi
+            if [ -n "${BLOCKING}" ]; then
+              echo "Pools with blocking discover flags:"
+              echo "${BLOCKING}"
+            fi
           fi
+
+  page-schedules-extract:
+    needs: extract
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: File schedules-extract blocked issue
+        if: needs.extract.outputs.preflight_outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          BODY="Token preflight failed.
+
+          Run: ${RUN_URL}
+
+          SCHEDULES_BOT_TOKEN was empty, or git ls-remote of the PAT failed (expired or missing Contents access).
+
+          extract did not run."
+          EXISTING=$(gh issue list --state open --label schedules-extract-blocked \
+            --json number,title,author \
+            --jq '.[] | select(.title=="schedules-extract blocked" and .author.login=="github-actions[bot]") | .number' \
+            | head -1)
+          if [ -n "${EXISTING}" ]; then
+            gh issue comment "${EXISTING}" --body "${BODY}"
+          else
+            gh issue create --title "schedules-extract blocked" \
+              --label schedules-extract-blocked --body "${BODY}"
+          fi
+
+      - name: Close schedules-extract blocked issue
+        if: needs.extract.outputs.preflight_outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          NUMBERS=$(gh issue list --state open --label schedules-extract-blocked \
+            --json number,title,author \
+            --jq '.[] | select(.title=="schedules-extract blocked" and .author.login=="github-actions[bot]") | .number')
+          for n in ${NUMBERS}; do
+            gh issue close "${n}" --comment "Token preflight succeeded. extract ran. This issue means extract did not run, not that a later step failed."
+          done
