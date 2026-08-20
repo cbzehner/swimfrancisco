@@ -34,7 +34,7 @@ def _stage_registry(repo: Path, text: str = 'slug = "garfield-pool"\n') -> None:
 
 def _write_decisions(repo: Path, decisions: list[dict]) -> None:
     path = repo / "tmp" / "discovery-decisions.json"
-    path.parent.mkdir(parents=True)
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(decisions) + "\n")
 
 
@@ -122,19 +122,19 @@ def test_flag_only_pr_names_garfield_off_table_sibling(tmp_path: Path) -> None:
     text = render_pr_body(repo_root=repo, data_root=repo / "data")
 
     assert "Nothing to review" not in text
-    assert "No human review needed" not in text
+    assert "needs a human review" not in text
     assert "attestation was carried" not in text
-    assert "this PR auto-merges once checks pass" not in text
+    assert "This PR auto-merges once checks pass" in text
     assert "`garfield-pool`" in text
     assert "flyer 29808" in text
     assert "29799" in text
     assert "band-flagged" in text
     assert "unverified projection" not in text
     assert "Next Monday" not in text
-    assert "The live site stays on the last reviewed window until this PR merges." in text
-    assert "Daily extract will refresh this PR" in text
+    assert "The live site updates when this PR merges." in text
+    assert "informational" in text
     for item in CHECKLIST:
-        assert item in text
+        assert item not in text
 
 
 def test_sava_lead_names_table_and_off_table_windows(tmp_path: Path) -> None:
@@ -173,8 +173,8 @@ def test_sava_lead_names_table_and_off_table_windows(tmp_path: Path) -> None:
     text = render_pr_body(repo_root=repo, data_root=repo / "data")
 
     assert "Nothing to review" not in text
-    assert "No human review needed" not in text
-    assert "this PR auto-merges once checks pass" not in text
+    assert "needs a human review" not in text
+    assert "This PR auto-merges once checks pass" in text
     line = next(row for row in text.splitlines() if row.startswith("- `sava-pool`:"))
     assert "29815" in line
     assert "29805" in line
@@ -268,6 +268,112 @@ def test_registry_only_adopt_does_not_claim_carried_attestation(tmp_path: Path) 
     assert "Nothing to review" not in text
     assert "attestation was carried" not in text
     assert "identical to its last human-reviewed" not in text
-    assert "No human review needed" in text
+    assert "needs a human review" not in text
     assert "auto-merges" in text
     assert "29563 → 29798" in text
+
+
+def test_ci_attested_reviewed_json_is_auto_published(tmp_path: Path) -> None:
+    repo = _init_repo(tmp_path)
+    _stage_registry(repo, 'slug = "hamilton-pool"\n')
+    run = repo / "data" / "hamilton-pool" / "2026-08-19-aaaaaaaaaaaa"
+    _write_provider_json(
+        run / "gemini-gemini-3-1-flash-lite-preview.json",
+        effective_start="2026-08-18",
+        effective_end="2026-12-12",
+    )
+    (run / "reviewed.json").write_text(
+        json.dumps(
+            {
+                "slug": "hamilton-pool",
+                "pdf_sha256": "a" * 64,
+                "reviewed_at": "2026-08-20",
+                "attested_by": "ci",
+                "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29800",
+                "payload": {
+                    "effective_start": "2026-08-18",
+                    "effective_end": "2026-12-12",
+                    "sessions": [{"day": "monday", "type": "lap_swim", "start": "07:00", "end": "08:00"}],
+                    "closures": [],
+                },
+            }
+        )
+        + "\n"
+    )
+    _git(repo, "add", "data")
+    _write_decisions(
+        repo,
+        [
+            {
+                "slug": "hamilton-pool",
+                "action": "adopt",
+                "old_url": "https://sfrecpark.org/DocumentCenter/View/29599",
+                "new_url": "https://sfrecpark.org/DocumentCenter/View/29800",
+                "kind": "session_grid",
+                "reason": "session_grid",
+                "blocking": False,
+                "candidates": [
+                    _candidate(
+                        29800,
+                        kind="session_grid",
+                        source="table",
+                        filename="Hamilton Pool Fall 2026.pdf",
+                    )
+                ],
+                "extra_candidates": [],
+            }
+        ],
+    )
+    (repo / "tmp" / "publish-pending.json").write_text(
+        json.dumps({"published": ["hamilton-pool"], "refused": [], "closure": []}) + "\n"
+    )
+
+    text = render_pr_body(repo_root=repo, data_root=repo / "data")
+
+    assert "Published 1 Rec & Park pool." in text
+    assert "This PR auto-merges once checks pass" in text
+    assert "The live site updates when this PR merges." in text
+    assert "needs a human review" not in text
+    assert "auto-published (`attested_by: ci`)" in text
+    for item in CHECKLIST:
+        assert item not in text
+
+
+def test_carried_reviewed_json_keeps_carried_line(tmp_path: Path) -> None:
+    repo = _init_repo(tmp_path)
+    _stage_registry(repo, 'slug = "hamilton-pool"\n')
+    run = repo / "data" / "hamilton-pool" / "2026-08-19-aaaaaaaaaaaa"
+    _write_provider_json(
+        run / "gemini-gemini-3-1-flash-lite-preview.json",
+        effective_start="2026-08-18",
+        effective_end="2026-12-12",
+    )
+    (run / "reviewed.json").write_text(
+        json.dumps(
+            {
+                "slug": "hamilton-pool",
+                "pdf_sha256": "a" * 64,
+                "reviewed_at": "2026-07-02",
+                "attested_by": "human",
+                "carried_from": "data/hamilton-pool/2026-07-02-bbbbbbbbbbbb/reviewed.json",
+                "source_pdf_url": "https://example.com/x.pdf",
+                "payload": {
+                    "effective_start": "2026-08-18",
+                    "effective_end": "2026-12-12",
+                    "sessions": [],
+                    "closures": [],
+                },
+            }
+        )
+        + "\n"
+    )
+    _git(repo, "add", "data")
+
+    text = render_pr_body(repo_root=repo, data_root=repo / "data")
+
+    assert "attestation was carried forward" in text
+    assert "auto-published (`attested_by: ci`)" not in text
+    assert "attestation carried forward." in text
+    assert "needs a human review" not in text
+    for item in CHECKLIST:
+        assert item not in text

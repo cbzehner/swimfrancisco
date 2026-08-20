@@ -1,10 +1,11 @@
-"""Bakeoff-style eval that diffs provider extractions against human-reviewed
-ground truth. Reads existing artifacts under ``data/<slug>/<date>-<sha>/``;
-no API calls. Run via ``just schedules-eval``.
+"""Bakeoff-style eval that diffs provider extractions against attested truth.
 
-Trustworthy ground truth comes from ``reviewed.json`` files. Only review dirs
-with a committed ``reviewed.json`` participate — this enforces the napkin's
-contract that the human signed off on those payloads against the source PDF.
+Reads existing artifacts under ``data/<slug>/<date>-<sha>/``; no API calls.
+Run via ``just schedules-eval``.
+
+Quality baseline is human Save or omitted ``attested_by`` (legacy). CI-attested
+dirs are not same-dir truth. A latest CI dir may appear in a seasonal-delta
+table against an older human envelope; never score CI vs CI.
 """
 
 from __future__ import annotations
@@ -60,6 +61,7 @@ class PoolEval:
     false_negatives: int
     extra_examples: list[dict]
     missing_examples: list[dict]
+    table: str = "quality"  # "quality" | "seasonal_delta"
 
     @property
     def precision(self) -> float:
@@ -107,13 +109,66 @@ def _diff_payloads(truth: dict, extracted: dict, sample_n: int = 3) -> tuple[set
     return extras, missings, tp, extra_samples, missing_samples
 
 
-def collect_pool_evals(*, data_root: Path = DATA_DIR, all_dirs: bool = False) -> list[PoolEval]:
-    """Walk data/ and emit one PoolEval per (review_dir, provider artifact) where
-    a reviewed.json exists.
+def _load_envelope(path: Path) -> dict | None:
+    try:
+        envelope = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+    return envelope if isinstance(envelope, dict) else None
 
-    By default, only the latest review dir per pool is included — that is the
-    snapshot in production. Pass ``all_dirs=True`` to include older review dirs
-    as historical baselines.
+
+def _is_ci_attestation(envelope: dict) -> bool:
+    return envelope.get("attested_by") == "ci" and not envelope.get("carried_from")
+
+
+def _is_human_or_omitted(envelope: dict) -> bool:
+    attested = envelope.get("attested_by")
+    return attested != "ci"
+
+
+def _evals_for_dir(
+    *,
+    pool: str,
+    review_dir: Path,
+    truth: dict,
+    table: str,
+) -> list[PoolEval]:
+    results: list[PoolEval] = []
+    for art_path in sorted(review_dir.glob("*.json")):
+        if art_path.name == "reviewed.json":
+            continue
+        try:
+            art = json.loads(art_path.read_text())
+        except (OSError, json.JSONDecodeError):
+            continue
+        extracted = art.get("payload") or {}
+        extras, missings, tp, extra_ex, missing_ex = _diff_payloads(truth, extracted)
+        results.append(
+            PoolEval(
+                pool=pool,
+                review_dir=review_dir,
+                provider_artifact=art_path.name,
+                provider=art_path.stem.split("-", 1)[0],
+                truth_count=len(truth.get("sessions", [])),
+                extracted_count=len(extracted.get("sessions", [])),
+                true_positives=tp,
+                false_positives=len(extras),
+                false_negatives=len(missings),
+                extra_examples=extra_ex,
+                missing_examples=missing_ex,
+                table=table,
+            )
+        )
+    return results
+
+
+def collect_pool_evals(*, data_root: Path = DATA_DIR, all_dirs: bool = False) -> list[PoolEval]:
+    """Walk data/ and emit one PoolEval per (review_dir, provider artifact).
+
+    Quality rows use same-dir truth only when ``attested_by`` is ``human`` or
+    omitted, or when ``carried_from`` is set. A latest CI dir (no carry) is
+    never same-dir truth; look back for a human/omitted envelope and emit a
+    seasonal-delta row against the latest provider JSON. Never score CI vs CI.
     """
     results: list[PoolEval] = []
     if not data_root.is_dir():
@@ -121,41 +176,48 @@ def collect_pool_evals(*, data_root: Path = DATA_DIR, all_dirs: bool = False) ->
     for pool_dir in sorted(data_root.iterdir()):
         if not pool_dir.is_dir():
             continue
-        review_dirs = [d for d in sorted(pool_dir.iterdir()) if d.is_dir() and (d / "reviewed.json").exists()]
+        review_dirs = [
+            d for d in sorted(pool_dir.iterdir()) if d.is_dir() and (d / "reviewed.json").exists()
+        ]
         if not review_dirs:
             continue
-        if not all_dirs:
-            review_dirs = review_dirs[-1:]
+        envelopes: list[tuple[Path, dict]] = []
         for review_dir in review_dirs:
-            reviewed_file = review_dir / "reviewed.json"
-            try:
-                truth = json.loads(reviewed_file.read_text()).get("payload", {})
-            except (OSError, json.JSONDecodeError):
+            envelope = _load_envelope(review_dir / "reviewed.json")
+            if envelope is None:
                 continue
-            for art_path in sorted(review_dir.glob("*.json")):
-                if art_path.name == "reviewed.json":
-                    continue
-                try:
-                    art = json.loads(art_path.read_text())
-                except (OSError, json.JSONDecodeError):
-                    continue
-                extracted = art.get("payload") or {}
-                extras, missings, tp, extra_ex, missing_ex = _diff_payloads(truth, extracted)
-                truth_count = len(truth.get("sessions", []))
-                extracted_count = len(extracted.get("sessions", []))
-                results.append(
-                    PoolEval(
+            envelopes.append((review_dir, envelope))
+        if not envelopes:
+            continue
+
+        quality_dirs = envelopes if all_dirs else envelopes[-1:]
+        for review_dir, envelope in quality_dirs:
+            if _is_ci_attestation(envelope):
+                continue
+            truth = envelope.get("payload") or {}
+            results.extend(
+                _evals_for_dir(
+                    pool=pool_dir.name,
+                    review_dir=review_dir,
+                    truth=truth,
+                    table="quality",
+                )
+            )
+
+        latest_dir, latest_env = envelopes[-1]
+        if _is_ci_attestation(latest_env):
+            human_payload = None
+            for _older_dir, older_env in reversed(envelopes[:-1]):
+                if _is_human_or_omitted(older_env):
+                    human_payload = older_env.get("payload") or {}
+                    break
+            if human_payload is not None:
+                results.extend(
+                    _evals_for_dir(
                         pool=pool_dir.name,
-                        review_dir=review_dir,
-                        provider_artifact=art_path.name,
-                        provider=art_path.stem.split("-", 1)[0],
-                        truth_count=truth_count,
-                        extracted_count=extracted_count,
-                        true_positives=tp,
-                        false_positives=len(extras),
-                        false_negatives=len(missings),
-                        extra_examples=extra_ex,
-                        missing_examples=missing_ex,
+                        review_dir=latest_dir,
+                        truth=human_payload,
+                        table="seasonal_delta",
                     )
                 )
     return results
@@ -163,7 +225,9 @@ def collect_pool_evals(*, data_root: Path = DATA_DIR, all_dirs: bool = False) ->
 
 def render_report(evals: Iterable[PoolEval]) -> str:
     evals = list(evals)
-    if not evals:
+    quality = [item for item in evals if item.table != "seasonal_delta"]
+    seasonal = [item for item in evals if item.table == "seasonal_delta"]
+    if not quality and not seasonal:
         return "# Schedule extraction eval\n\nNo (review_dir, provider) pairs found.\n"
 
     lines: list[str] = []
@@ -171,13 +235,14 @@ def render_report(evals: Iterable[PoolEval]) -> str:
     lines.append("")
     lines.append(f"_Generated {datetime.now(PACIFIC_TZ).isoformat(timespec='seconds')}_")
     lines.append("")
-    lines.append("Diffs each provider artifact against the human-reviewed `reviewed.json`")
-    lines.append("payload in the same review dir. Row identity is `(day, type, start, end, pool)`.")
+    lines.append("Quality baseline diffs each provider artifact against a human or omitted")
+    lines.append("`attested_by` envelope in the same review dir. CI-attested dirs are not")
+    lines.append("same-dir truth. Row identity is `(day, type, start, end, pool)`.")
     lines.append("")
 
-    # Per-provider rollup
+    # Per-provider rollup (quality only — seasonal-delta must not gate quality)
     by_provider: dict[str, list[PoolEval]] = {}
-    for e in evals:
+    for e in quality:
         by_provider.setdefault(e.provider, []).append(e)
 
     lines.append("## Aggregate by provider")
@@ -201,7 +266,7 @@ def render_report(evals: Iterable[PoolEval]) -> str:
     lines.append("")
     lines.append("| Pool | Artifact | Truth | Extr | TP | FP | FN | P | R | F1 |")
     lines.append("|---|---|---:|---:|---:|---:|---:|---:|---:|---:|")
-    for e in sorted(evals, key=lambda x: (x.pool, x.provider)):
+    for e in sorted(quality, key=lambda x: (x.pool, x.provider)):
         lines.append(
             f"| {e.pool} | {e.provider_artifact} | {e.truth_count} | {e.extracted_count} | "
             f"{e.true_positives} | {e.false_positives} | {e.false_negatives} | "
@@ -209,9 +274,25 @@ def render_report(evals: Iterable[PoolEval]) -> str:
         )
     lines.append("")
 
+    if seasonal:
+        lines.append("## Seasonal delta (not quality baseline)")
+        lines.append("")
+        lines.append("Latest CI provider JSON vs an older human/omitted envelope.")
+        lines.append("Seasonal change, not model regression. Not in the quality aggregate.")
+        lines.append("")
+        lines.append("| Pool | Artifact | Truth | Extr | TP | FP | FN | P | R | F1 |")
+        lines.append("|---|---|---:|---:|---:|---:|---:|---:|---:|---:|")
+        for e in sorted(seasonal, key=lambda x: (x.pool, x.provider)):
+            lines.append(
+                f"| {e.pool} | {e.provider_artifact} | {e.truth_count} | {e.extracted_count} | "
+                f"{e.true_positives} | {e.false_positives} | {e.false_negatives} | "
+                f"{e.precision:.0%} | {e.recall:.0%} | {e.f1:.2f} |"
+            )
+        lines.append("")
+
     lines.append("## Disagreements (samples)")
     lines.append("")
-    for e in sorted(evals, key=lambda x: (x.pool, x.provider)):
+    for e in sorted(quality, key=lambda x: (x.pool, x.provider)):
         if not (e.extra_examples or e.missing_examples):
             continue
         lines.append(f"### {e.pool} — {e.provider_artifact}")

@@ -120,12 +120,17 @@ def _schedule_tables(md_path: Path) -> list:
     return list(schedules)
 
 
+_PAGER_EXCLUDED_REFUSE_CODES = frozenset(
+    {"not_rec_park", "split_pdf", "discovery_flagged", "kill_switch"}
+)
+
+
 def pager_flagged_set(
     *,
     refused: list[dict],
     blocking: list[dict] | None = None,
 ) -> list[tuple[str, str]]:
-    """Operator pager rows. Omits not_rec_park (out of scope, not Rec & Park FLAG)."""
+    """Operator pager rows. Omits not_rec_park and other out-of-scope refuses."""
     rows: set[tuple[str, str]] = set()
     for item in blocking or []:
         slug = item.get("slug")
@@ -133,12 +138,39 @@ def pager_flagged_set(
             continue
         rows.add((slug, str(item.get("reason") or item.get("code") or "flag")))
     for item in refused:
-        if item.get("code") == "not_rec_park":
+        if item.get("code") in _PAGER_EXCLUDED_REFUSE_CODES:
             continue
         slug = item.get("slug")
         if slug:
             rows.add((slug, str(item.get("code") or "")))
     return sorted(rows)
+
+
+def pager_job_payload(tmp_dir: Path) -> dict:
+    """Machine payload for the extract job's pager-outputs step."""
+    decisions_path = tmp_dir / "discovery-decisions.json"
+    publish_path = tmp_dir / "publish-pending.json"
+    flagged_computed = decisions_path.is_file()
+    decisions = _load_decisions(tmp_dir)
+    blocking = [item for item in decisions if item.get("blocking")]
+    refused: list[dict] = []
+    published: list[str] = []
+    if publish_path.is_file():
+        try:
+            payload = json.loads(publish_path.read_text())
+        except (OSError, json.JSONDecodeError):
+            payload = {}
+        if isinstance(payload, dict):
+            refused = [item for item in (payload.get("refused") or []) if isinstance(item, dict)]
+            published = [
+                slug for slug in (payload.get("published") or []) if isinstance(slug, str)
+            ]
+    rows = pager_flagged_set(refused=refused, blocking=blocking)
+    return {
+        "flagged_computed": flagged_computed,
+        "flagged_set": [f"{slug}:{code}" for slug, code in rows],
+        "published_slugs": published,
+    }
 
 
 def parse_closure_dates(

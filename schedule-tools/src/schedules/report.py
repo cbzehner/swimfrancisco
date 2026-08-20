@@ -48,9 +48,9 @@ def write_report(results: list[PoolResult], path: Path) -> Path:
             "",
             "- Review `git diff content/spots/`.",
             "- Inspect raw artifacts under `data/<slug>/<fetch-date>-<sha12>/` for any flagged pool.",
-            "- Run `just schedules-review` for provider outputs that need human approval.",
-            "- Review flagged pools against the source PDFs before committing.",
-            "- Suggested add command after review: `git add content/spots data/`.",
+            "- Eligible Rec & Park grids publish via `just schedules publish-pending`.",
+            "- Run `just schedules-review` for FLAG URL adopt or to repair a re-queued dir.",
+            "- Suggested add command: `git add content/spots data/`.",
             "",
         ]
     )

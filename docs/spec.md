@@ -59,7 +59,7 @@ lng = -122.4340
 website = "https://sfrecpark.org/..."
 cost = "paid"
 schedule_effective = "2026-01-06"  # when this schedule took effect
-last_verified_at = "2026-04-16"   # last human verification
+last_verified_at = "2026-04-16"   # last attestation (human Save or CI publish-pending)
 
 [[extra.sessions]]
 day = "monday"

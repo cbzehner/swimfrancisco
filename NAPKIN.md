@@ -28,7 +28,7 @@
 4. **[2026-05-17] Default discovery stays public-first; membership pools are opt-in**
    Do instead: include membership-only gyms/YMCAs/university/community fitness centers as secondary coverage, but hide them from the default board behind an explicit membership/private toggle. Skip hotel-only pools, residential pools, invitation-only private clubs, and schools without a real public/community access path.
 5. **[2026-04-20] `content/spots/*.md` is the source of truth; `data/<slug>/<date>-<sha12>/` is a regeneration aid**
-   Do instead: treat checked-in markdown as authoritative. Each per-review directory holds the original source snapshot, `source.sha256`, per-provider JSON, and `reviewed.json` (present ⇔ human-approved). Every new PDF sha256 requires a fresh human pass via `schedules review` — there is no auto-ratification.
+   Do instead: treat checked-in markdown as authoritative. Each per-review directory holds the original source snapshot, `source.sha256`, per-provider JSON, and `reviewed.json` (present ⇔ attested; `attested_by` is `human`, `ci`, or omitted on legacy files). Unique Rec & Park session grids auto-publish via `schedules publish-pending`. FLAG URL choice and a re-queued bad auto-publish still use `schedules review`.
 6. **[2026-05-04] Mission's Spring 2026 schedule has a reviewed PDF**
    Do instead: use `data/mission-community-pool/2026-05-03-6d12e60b17f1/` and registry URL `DocumentCenter/View/28959` as the current reviewed Mission source; remember timed staff-training closures are represented conservatively by the v1 all-day closure model.
 7. **[2026-04-17] Do not publish stale Sava schedules**

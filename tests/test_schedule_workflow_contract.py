@@ -101,6 +101,17 @@ def test_checkout_and_pr_use_schedules_bot_token() -> None:
     assert "github.token" not in pr
 
 
+def _extract_discover_invocations(workflow: str) -> list[str]:
+    lines: list[str] = []
+    for line in workflow.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("run:"):
+            continue
+        if "schedules extract" in stripped or "schedules discover" in stripped:
+            lines.append(stripped)
+    return lines
+
+
 def test_discover_before_gemini_no_discover_no_anthropic_no_url() -> None:
     workflow = _workflow()
 
@@ -116,7 +127,13 @@ def test_discover_before_gemini_no_discover_no_anthropic_no_url() -> None:
     assert workflow.index(direct) < workflow.index(gemini)
     assert "schedules extract --provider anthropic" not in workflow
     assert "ANTHROPIC_API_KEY" not in workflow
-    assert "--url" not in workflow
+    for line in _extract_discover_invocations(workflow):
+        assert "--url" not in line
+        assert "--adopt" not in line
+    for line in workflow.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("run:") and "schedules review" in stripped:
+            raise AssertionError("workflow must not run schedules review")
 
 
 def test_gemini_fail_closed_direct_continues() -> None:
@@ -165,20 +182,23 @@ def test_detect_and_pr_if_always_preflight() -> None:
 
 def test_git_add_includes_registry() -> None:
     detect = _steps(_jobs(_workflow())["extract"])["Detect new or changed artifacts"]
-    assert "git add data/ schedule-tools/src/schedules/registry.toml" in detect
-    assert "grep -q 'registry.toml'" in detect
-
-
-def test_auto_merge_requires_discover_blocking() -> None:
-    pr = _steps(_jobs(_workflow())["extract"])["Open or update PR"]
-    assert "schedules discover-blocking" in pr
-    assert "schedules pending-reviews" in pr
-    assert "BLOCKING_STATUS" in pr
     assert (
-        '[ "${BLOCKING_STATUS}" -eq 0 ] && [ -z "${PENDING}" ] && [ -z "${BLOCKING}" ]'
-    ) in pr
+        "git add data/ schedule-tools/src/schedules/registry.toml content/spots/ "
+        "schedule-tools/src/schedules/quarantine.toml"
+    ) in detect
+    assert "grep -qE 'registry.toml|content/spots/|quarantine.toml'" in detect
+
+
+def test_auto_merge_keys_on_publish_pending() -> None:
+    pr = _steps(_jobs(_workflow())["extract"])["Open or update PR"]
+    assert "steps.publish-pending.outcome" in pr
+    assert '[ "${{ steps.publish-pending.outcome }}" = "success" ]' in pr
+    assert "schedules pending-reviews" not in pr
+    assert "schedules discover-blocking" not in pr
     assert 'gh pr edit "${PR_NUMBER}" --add-label "needs-schedule-review"' in pr
-    assert "discover-blocking failed; not auto-merging." in pr
+    assert "publish-pending did not succeed; not auto-merging." in pr
+    assert "echo \"pr_number=${PR_NUMBER}\"" in pr or "pr_number=${PR_NUMBER}" in pr
+    assert "flagged_set" not in pr
 
 
 def test_page_issue_on_preflight_failure_close_on_preflight_success() -> None:
@@ -202,6 +222,8 @@ def test_ensure_labels_force_creates_review_and_pager_labels() -> None:
     ensure = _jobs(_workflow())["ensure-labels"]
     assert "gh label create needs-schedule-review --force" in ensure
     assert "gh label create schedules-extract-blocked --force" in ensure
+    assert "gh label create schedules-published --force" in ensure
+    assert "gh label create schedules-flagged --force" in ensure
 
 
 def test_reports_drop_anthropic_and_upload_discovery() -> None:
@@ -216,7 +238,55 @@ def test_reports_drop_anthropic_and_upload_discovery() -> None:
     assert "tmp/extraction-report-direct.md" in publish
     assert "tmp/extraction-report-gemini.md" in publish
     assert "tmp/discovery-report.md" in upload
+    assert "tmp/publish-pending-report.md" in upload
     assert "actions/upload-artifact@v4" in upload
+
+
+def test_publish_pending_before_eval_bulletin_and_upload() -> None:
+    extract = _jobs(_workflow())["extract"]
+    steps = _steps(extract)
+    direct = steps["Extract direct sources (no content writes)"]
+    gemini = steps["Extract PDF sources with Gemini (no content writes)"]
+    publish = steps["Publish pending unique Rec & Park grids"]
+    upload = steps["Upload extraction reports"]
+    pager = steps["Set pager outputs"]
+
+    assert "no content writes" in direct.split("\n", 1)[0] or "no content writes" in direct
+    assert "no content writes" in gemini.split("\n", 1)[0] or "no content writes" in gemini
+    assert "schedules publish-pending" not in "\n".join(
+        line for line in direct.splitlines() if line.strip().startswith("run:")
+    )
+    assert "schedules publish-pending" not in "\n".join(
+        line for line in gemini.splitlines() if line.strip().startswith("run:")
+    )
+    assert "run: uv --project schedule-tools run schedules publish-pending" in publish
+    assert "id: publish-pending" in publish
+    assert "always() && steps.token-preflight.outcome == 'success'" in publish
+    assert "vars.SCHEDULES_AUTO_PROJECT != 'false'" in publish
+    assert extract.index("schedules publish-pending") < extract.index(
+        "Run eval against committed reviewed.json"
+    )
+    assert extract.index("Run eval against committed reviewed.json") < extract.index(
+        "Regenerate bulletin fingerprint"
+    )
+    assert extract.index("schedules publish-pending") < extract.index(
+        "actions/upload-artifact@v4"
+    )
+    assert "tmp/publish-pending-report.md" in upload
+    assert "if: always() && steps.token-preflight.outcome == 'success'" in pager
+    assert "detect.outputs.changed" not in pager
+    assert "flagged_computed" in pager
+    assert "flagged_set" in pager
+    header = _header(_workflow())
+    assert "never edits" not in header
+    assert "workflow never edits" not in extract.lower()
+
+
+def test_header_does_not_forbid_content_spots_writes() -> None:
+    header = _header(_workflow())
+    assert "never edits" not in header
+    assert "content/spots/" in header
+    assert "auto_project" in header or "auto_project" in _workflow()
 
 
 def test_public_repo_safety_schedule_and_dispatch_only() -> None:

@@ -1,11 +1,10 @@
 """Render a PR body for auto-extract runs.
 
-Designed for a human reviewer landing on a freshly-opened PR cold. Leads
-with the action ("X needs a human review"), then a short list of what
-artifacts changed, then a 5-step checklist with rough time estimate.
-The eval baseline is collapsed; reviewers who care about the F1 number
-can expand it. Inputs come from ``git diff --staged`` (data/ and
-registry.toml) plus ``tmp/discovery-decisions.json`` when present.
+Leads with what published or was flagged (informational). Auto-merge PRs
+do not include a ``just schedules-review`` checklist. That checklist is
+debug-only when publish-pending did not succeed. Inputs come from
+``git diff --staged`` (data/, registry.toml, content/spots/) plus
+``tmp/discovery-decisions.json`` and ``tmp/publish-pending.json``.
 """
 
 from __future__ import annotations
@@ -26,13 +25,12 @@ from .registry import load_registry
 _DATA_PATH_RE = re.compile(r"^data/([a-z0-9-]+)/([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9a-f]{12})/(.+)$")
 _REVIEW_MIN_PER_POOL = 10
 _REGISTRY_REL = "schedule-tools/src/schedules/registry.toml"
-_LIVE_SITE_UNTIL_MERGE = (
-    "The live site stays on the last reviewed window until this PR merges."
-)
+_LIVE_SITE_UPDATES = "The live site updates when this PR merges."
 _DAILY_REFRESH = (
     "Daily extract will refresh this PR; closing it without merging will "
     "reopen on the next run that still sees a diff against `main`."
 )
+_AUTO_MERGE = "This PR auto-merges once checks pass."
 
 
 def _staged_data_changes(repo_root: Path = REPO_ROOT) -> list[tuple[str, str, str, str]]:
@@ -182,6 +180,16 @@ def _registry_is_staged(repo_root: Path) -> bool:
     except (subprocess.CalledProcessError, FileNotFoundError):
         return False
     return any(line.strip().endswith("registry.toml") for line in out.splitlines())
+
+
+def _load_json_object(path: Path) -> dict | None:
+    if not path.is_file():
+        return None
+    try:
+        payload = json.loads(path.read_text())
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    return payload if isinstance(payload, dict) else None
 
 
 def _load_discovery_decisions(path: Path) -> list[dict]:
@@ -381,6 +389,9 @@ def _lead_pool_lines(
     pending_slugs: list[str],
     decisions: list[dict],
     windows: dict[str, tuple[str | None, str | None]],
+    *,
+    published_slugs: list[str] | None = None,
+    carried_slugs: list[str] | None = None,
 ) -> list[str]:
     by_slug = {item["slug"]: item for item in decisions}
     slugs: list[str] = []
@@ -401,14 +412,25 @@ def _lead_pool_lines(
         if slug not in seen:
             seen.add(slug)
             slugs.append(slug)
+    for slug in list(published_slugs or []) + list(carried_slugs or []):
+        if slug not in seen:
+            seen.add(slug)
+            slugs.append(slug)
 
+    published = set(published_slugs or [])
+    carried = set(carried_slugs or [])
     lines: list[str] = []
     for slug in slugs:
         decision = by_slug.get(slug)
         if decision is not None:
-            lines.append(_format_decision_line(decision, windows.get(slug)))
+            line = _format_decision_line(decision, windows.get(slug))
         else:
-            lines.append(f"- `{slug}`: payload changed, needs review")
+            line = f"- `{slug}`: payload changed"
+        if slug in published:
+            line += "; auto"
+        elif slug in carried:
+            line += "; carried"
+        lines.append(line)
     return lines
 
 
@@ -424,6 +446,7 @@ def render_pr_body(
     registry = load_registry()
     published = [e for e in registry if e.source_status == "published"]
     decisions = _load_discovery_decisions(repo_root / "tmp" / "discovery-decisions.json")
+    publish_pending = _load_json_object(repo_root / "tmp" / "publish-pending.json")
     registry_staged = _registry_is_staged(repo_root)
     blocking_slugs = sorted(
         {item["slug"] for item in decisions if item.get("blocking")}
@@ -439,11 +462,12 @@ def render_pr_body(
 
     changed_slugs = sorted(s for s in changed if any(e.slug == s for e in registry))
     pending_slugs = sorted(s for s in changed_slugs if _has_pending_run(s, changed[s], data_root))
-    carried_slugs = [s for s in changed_slugs if s not in pending_slugs]
+    auto_slugs, carried_slugs = _split_attested_slugs(changed, changed_slugs, pending_slugs, data_root)
     unchanged_n = len(published) - len(changed_slugs)
     windows = _windows_from_artifacts(changed, data_root)
     branch = "auto/schedules-extract"
-    review_slugs = sorted(set(pending_slugs) | set(blocking_slugs))
+    published_slugs = _published_slugs(publish_pending, auto_slugs)
+    show_checklist = _show_debug_checklist(publish_pending, pending_slugs)
 
     lines: list[str] = []
     lines.extend(
@@ -455,11 +479,15 @@ def render_pr_body(
             decisions=decisions,
             windows=windows,
             registry_staged=registry_staged,
-            review_slugs=review_slugs,
+            published_slugs=published_slugs,
+            blocking_slugs=blocking_slugs,
+            show_checklist=show_checklist,
         )
     )
-    lines.extend(_render_whats_here(changed, registry_staged=registry_staged))
-    lines.extend(_render_review(branch, review_slugs))
+    lines.extend(
+        _render_whats_here(changed, registry_staged=registry_staged, data_root=data_root)
+    )
+    lines.extend(_render_review(branch, pending_slugs, show_checklist=show_checklist))
     lines.extend(_render_eval_section(data_root=data_root, changed_artifacts=_changed_provider_artifacts(rows)))
 
     return "\n".join(lines).rstrip() + "\n"
@@ -468,6 +496,53 @@ def render_pr_body(
 def _has_pending_run(slug: str, runs: dict[str, list[tuple[str, str]]], data_root: Path) -> bool:
     """A slug still needs review when any of its changed run dirs lacks reviewed.json."""
     return any(not (data_root / slug / run / "reviewed.json").exists() for run in runs)
+
+
+def _reviewed_envelope(data_root: Path, slug: str, run: str) -> dict | None:
+    path = data_root / slug / run / "reviewed.json"
+    return _load_json_object(path)
+
+
+def _split_attested_slugs(
+    changed: dict[str, dict[str, list[tuple[str, str]]]],
+    changed_slugs: list[str],
+    pending_slugs: list[str],
+    data_root: Path,
+) -> tuple[list[str], list[str]]:
+    auto: list[str] = []
+    carried: list[str] = []
+    pending = set(pending_slugs)
+    for slug in changed_slugs:
+        if slug in pending:
+            continue
+        kind = "carried"
+        for run in sorted(changed[slug], reverse=True):
+            envelope = _reviewed_envelope(data_root, slug, run)
+            if envelope is None:
+                continue
+            if envelope.get("carried_from"):
+                kind = "carried"
+            elif envelope.get("attested_by") == "ci":
+                kind = "ci"
+            break
+        if kind == "ci":
+            auto.append(slug)
+        else:
+            carried.append(slug)
+    return auto, carried
+
+
+def _published_slugs(publish_pending: dict | None, auto_slugs: list[str]) -> list[str]:
+    if publish_pending is None:
+        return auto_slugs
+    listed = [slug for slug in (publish_pending.get("published") or []) if isinstance(slug, str)]
+    return listed or auto_slugs
+
+
+def _show_debug_checklist(publish_pending: dict | None, pending_slugs: list[str]) -> bool:
+    if publish_pending is not None and publish_pending.get("skipped") == "kill_switch":
+        return True
+    return publish_pending is None and bool(pending_slugs)
 
 
 def _render_lead(
@@ -480,47 +555,48 @@ def _render_lead(
     windows: dict[str, tuple[str | None, str | None]] | None = None,
     registry_staged: bool = False,
     review_slugs: list[str] | None = None,
+    published_slugs: list[str] | None = None,
+    blocking_slugs: list[str] | None = None,
+    show_checklist: bool = False,
 ) -> list[str]:
     decisions = decisions or []
     windows = windows or {}
-    review_slugs = pending_slugs if review_slugs is None else review_slugs
-    if not review_slugs:
-        review_slugs = sorted(
-            {item["slug"] for item in decisions if item.get("blocking")}
-        )
-    minutes = len(review_slugs) * _REVIEW_MIN_PER_POOL
-    if not review_slugs:
-        if changed:
-            action = (
-                "No human review needed. Every changed pool extracted a payload "
-                "identical to its last human-reviewed one, so the attestation was "
-                "carried forward; this PR auto-merges once checks pass."
-            )
-        else:
-            action = (
-                "No human review needed. This PR auto-merges once checks pass."
-            )
-    elif len(review_slugs) == 1:
+    published_slugs = published_slugs or []
+    blocking_slugs = blocking_slugs or []
+    if review_slugs is None:
+        review_slugs = pending_slugs
+    if published_slugs:
+        n = len(published_slugs)
+        noun = "pool" if n == 1 else "pools"
         action = (
-            f"`{review_slugs[0]}` needs a human review (~{minutes} min). "
-            f"{_LIVE_SITE_UNTIL_MERGE}"
+            f"Published {n} Rec & Park {noun}. {_AUTO_MERGE} "
+            f"{_LIVE_SITE_UPDATES}"
+        )
+    elif carried_slugs and not pending_slugs:
+        action = (
+            "No human review needed. Every changed pool extracted a payload "
+            "identical to its last attested one, so the attestation was "
+            "carried forward; this PR auto-merges once checks pass. "
+            f"{_LIVE_SITE_UPDATES}"
+        )
+    elif blocking_slugs and not pending_slugs:
+        n = len(blocking_slugs)
+        noun = "pool" if n == 1 else "pools"
+        action = (
+            f"Discover flagged {n} Rec & Park {noun} (informational). "
+            f"{_AUTO_MERGE} {_LIVE_SITE_UPDATES}"
+        )
+    elif show_checklist and pending_slugs:
+        action = (
+            f"{_slug_list(pending_slugs)} still have no reviewed.json. "
+            "publish-pending did not succeed. Debug with `just schedules-review`."
         )
     else:
-        rec_park = [item["slug"] for item in decisions if item["slug"] in review_slugs]
-        if rec_park and set(rec_park) == set(review_slugs):
-            action = (
-                f"{len(review_slugs)} Rec & Park pools need human review "
-                f"(~{minutes} min). {_LIVE_SITE_UNTIL_MERGE}"
-            )
-        else:
-            action = (
-                f"{_slug_list(review_slugs)} need human review (~{minutes} min). "
-                f"{_LIVE_SITE_UNTIL_MERGE}"
-            )
-    if review_slugs and carried_slugs:
+        action = f"No human review needed. {_AUTO_MERGE} {_LIVE_SITE_UPDATES}"
+    if carried_slugs and published_slugs:
         action += (
             f" {_slug_list(carried_slugs)} auto-verified: extraction matched "
-            "the last human-reviewed payload, so the attestation carried forward."
+            "the last attested payload, so the attestation carried forward."
         )
 
     files = [
@@ -552,7 +628,22 @@ def _render_lead(
         tail = "."
 
     lines = [f"{action} Auto-extract {seed} to start from{tail}", ""]
-    pool_lines = _lead_pool_lines(pending_slugs, decisions, windows)
+    pool_lines = _lead_pool_lines(
+        pending_slugs,
+        decisions,
+        windows,
+        published_slugs=published_slugs,
+        carried_slugs=carried_slugs,
+    )
+    extra_slugs = [
+        slug
+        for slug in published_slugs + carried_slugs
+        if slug not in {item["slug"] for item in decisions} and slug not in pending_slugs
+    ]
+    for slug in extra_slugs:
+        pool_lines.append(
+            f"- `{slug}`: auto" if slug in published_slugs else f"- `{slug}`: carried"
+        )
     if pool_lines:
         lines.extend(pool_lines)
         lines.append("")
@@ -563,6 +654,7 @@ def _render_whats_here(
     changed: dict[str, dict[str, list[tuple[str, str]]]],
     *,
     registry_staged: bool = False,
+    data_root: Path = DATA_DIR,
 ) -> list[str]:
     if not changed and not registry_staged:
         return []
@@ -575,9 +667,14 @@ def _render_whats_here(
         for run in sorted(changed[slug]):
             for filename, change in sorted(changed[slug][run]):
                 if filename == "reviewed.json":
-                    lines.append(
-                        f"`data/{slug}/{run}/{filename}` — attestation carried forward."
-                    )
+                    envelope = _reviewed_envelope(data_root, slug, run) or {}
+                    if envelope.get("carried_from"):
+                        phrase = "attestation carried forward."
+                    elif envelope.get("attested_by") == "ci":
+                        phrase = "auto-published (`attested_by: ci`)."
+                    else:
+                        phrase = "attestation carried forward."
+                    lines.append(f"`data/{slug}/{run}/{filename}` — {phrase}")
                     continue
                 provider = _provider_word(filename)
                 state = _change_word(change)
@@ -588,13 +685,15 @@ def _render_whats_here(
     return lines
 
 
-def _render_review(branch: str, review_slugs: list[str]) -> list[str]:
-    if not review_slugs:
+def _render_review(
+    branch: str, review_slugs: list[str], *, show_checklist: bool = False
+) -> list[str]:
+    if not show_checklist:
         return []
-    minutes = max(_REVIEW_MIN_PER_POOL, len(review_slugs) * _REVIEW_MIN_PER_POOL)
+    minutes = max(_REVIEW_MIN_PER_POOL, max(len(review_slugs), 1) * _REVIEW_MIN_PER_POOL)
 
     return [
-        f"## Review (~{minutes} min)",
+        f"## Debug (~{minutes} min)",
         "",
         f"- [ ] git fetch origin && git checkout {branch}",
         "- [ ] just schedules-review  (work the queue)",
@@ -630,8 +729,14 @@ def _render_eval_section(
     data_root: Path,
     changed_artifacts: list[tuple[str, str, str]],
 ) -> list[str]:
-    historical_evals = collect_pool_evals(data_root=data_root)
-    changed_evals = collect_pool_evals(data_root=data_root, all_dirs=True)
+    historical_evals = [
+        item for item in collect_pool_evals(data_root=data_root) if item.table != "seasonal_delta"
+    ]
+    changed_evals = [
+        item
+        for item in collect_pool_evals(data_root=data_root, all_dirs=True)
+        if item.table != "seasonal_delta"
+    ]
 
     lines = _render_changed_artifacts(changed_artifacts, changed_evals)
     if not historical_evals:
