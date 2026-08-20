@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://swimfrancisco.com/schemas/reviewed-snapshot.json",
-  "title": "Reviewed Snapshot (v1)",
-  "description": "Human-reviewed snapshot of a pool schedule extraction. Locks a canonical payload to a specific PDF content hash.",
+  "title": "Attested snapshot",
+  "description": "Attested snapshot of a pool schedule extraction. Locks a canonical payload to a source hash. Attestor is human Save, CI publish-pending, or carry.",
   "type": "object",
   "required": [
     "slug",
@@ -27,11 +27,16 @@
       "type": "string",
       "format": "date",
       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
-      "description": "ISO date (YYYY-MM-DD) in Pacific time when the reviewer approved this payload."
+      "description": "Pacific date of the attestor action (human Save or CI publish-pending), not necessarily a human cell check."
+    },
+    "attested_by": {
+      "type": "string",
+      "enum": ["human", "ci"],
+      "description": "Who signed this snapshot. Omit on legacy files. Carry copies the prior value and sets carried_from."
     },
     "carried_from": {
       "type": "string",
-      "description": "Repo-relative path of the human-reviewed snapshot this one was auto-carried from. Present only on snapshots written by the pipeline when a new source capture extracted a payload identical to one a human already approved; reviewed_at keeps the original human approval date."
+      "description": "Repo-relative path of a prior attested snapshot (human, CI, or omitted attested_by) this one was auto-carried from. reviewed_at keeps the original attestation date."
     },
     "source_pdf_url": {
       "type": "string",

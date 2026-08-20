@@ -27,7 +27,7 @@ def _valid_envelope() -> dict:
 def test_load_envelope_schema_returns_dict():
     schema = load_envelope_schema()
     assert isinstance(schema, dict)
-    assert schema["title"].startswith("Reviewed Snapshot")
+    assert schema["title"] == "Attested snapshot"
 
 
 def test_validate_envelope_accepts_valid():
@@ -52,5 +52,23 @@ def test_validate_envelope_rejects_bad_time_format():
 def test_validate_envelope_rejects_extra_top_level():
     envelope = _valid_envelope()
     envelope["bogus_field"] = True
+    with pytest.raises(EnvelopeValidationError):
+        validate_envelope(envelope)
+
+
+def test_validate_envelope_accepts_attested_by_ci():
+    envelope = _valid_envelope()
+    envelope["attested_by"] = "ci"
+    validate_envelope(envelope)
+
+
+def test_validate_envelope_accepts_omitted_attested_by():
+    validate_envelope(_valid_envelope())
+    assert "attested_by" not in _valid_envelope()
+
+
+def test_validate_envelope_rejects_attested_by_robot():
+    envelope = _valid_envelope()
+    envelope["attested_by"] = "robot"
     with pytest.raises(EnvelopeValidationError):
         validate_envelope(envelope)

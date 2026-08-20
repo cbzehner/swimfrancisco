@@ -136,6 +136,54 @@ def test_finalize_allows_byte_identical_direct_payload(tmp_path):
     assert result == reviewed
 
 
+def _seed_content_with_sessions(content_dir: Path, slug: str, n: int = 5) -> Path:
+    days = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+    sessions = "\n".join(
+        (
+            "[[extra.schedules.sessions]]\n"
+            f'day = "{days[i]}"\n'
+            'type = "lap_swim"\n'
+            'start = "07:00"\n'
+            'end = "08:00"\n'
+        )
+        for i in range(n)
+    )
+    path = content_dir / f"{slug}.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "+++\n"
+        'title = "X"\n\n'
+        "[extra]\n\n"
+        "[[extra.schedules]]\n"
+        'effective_start = "2026-03-17"\n'
+        'schedule_basis = "swim_schedule"\n'
+        'effective_end = "2026-06-06"\n'
+        'last_verified_at = "2026-04-19"\n\n'
+        f"{sessions}"
+        "+++\n"
+    )
+    return path
+
+
+def test_finalize_drop_to_zero_fails_unless_temporarily_closed(tmp_path):
+    data_root = tmp_path / "data"
+    content = tmp_path / "content" / "spots"
+    envelope = _valid_draft_envelope("hamilton-pool", "a" * 64)
+    envelope["payload"]["sessions"] = []
+    envelope["payload"]["schedule_basis"] = "swim_schedule"
+    reviewed = _write_reviewed(data_root, "hamilton-pool", "a" * 64, envelope)
+    _seed_content_with_sessions(content, "hamilton-pool")
+
+    with pytest.raises(FinalizeError, match="dropped to 0"):
+        finalize_draft(reviewed_json_path=reviewed, content_spots_dir=content)
+    assert reviewed.exists()
+
+    envelope["payload"]["schedule_basis"] = "temporarily_closed"
+    reviewed.write_text(json.dumps(envelope))
+    result = finalize_draft(reviewed_json_path=reviewed, content_spots_dir=content)
+    assert result == reviewed
+
+
 def test_finalize_accepts_payload_with_any_diff_from_provider(tmp_path):
     data_root = tmp_path / "data"
     envelope = _valid_draft_envelope("hamilton-pool", "a" * 64)

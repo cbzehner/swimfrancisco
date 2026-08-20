@@ -190,9 +190,11 @@ class Unchanged(PoolResultBase):
 
 @dataclass(frozen=True)
 class Extracted(PoolResultBase):
-    """Fresh LLM extraction. Sits as a review candidate — the pipeline
-    never writes content/spots/*.md directly; `schedules review` is the
-    only path that lands an approved snapshot.
+    """Fresh LLM extraction. Sits as a review candidate — extract does not
+    write content/spots/*.md. Eligible unique Rec & Park grids are published
+    by ``schedules publish-pending``. ``schedules review`` remains for FLAG
+    URL adopt and for repairing a bad auto-publish after ``reviewed.json``
+    is removed.
 
     `catastrophic=True` means catastrophic validation refused the payload
     (e.g. sessions_dropped_to_zero). The result still records what the LLM

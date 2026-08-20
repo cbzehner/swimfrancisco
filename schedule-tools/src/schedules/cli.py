@@ -12,6 +12,7 @@ from .paths import (
     TMP_DIR,
     latest_review_dir,
 )
+from .publish import publish_pending_all
 from .registry import load_registry
 from .eval import collect_pool_evals, render_report, write_report
 from .pipeline import parse_source_mode, run_pipeline
@@ -196,9 +197,8 @@ def discover_command(only: str | None, dry_run: bool, adopt_spec: str | None) ->
 def discover_blocking_command() -> None:
     """Print slugs with blocking discover flags, one per line.
 
-    Empty stdout with exit 0 means no flags — the auto-extract workflow
-    uses that as its second auto-merge gate. A missing decisions file
-    exits 1; that is not "no flags."
+    Operator/issue signal, not an auto-merge gate. A missing decisions
+    file exits 1; that is not "no flags."
     """
     path = TMP_DIR / "discovery-decisions.json"
     if not path.exists():
@@ -217,12 +217,30 @@ def discover_blocking_command() -> None:
                 click.echo(slug)
 
 
+@cli.command("publish-pending")
+def publish_pending_command() -> None:
+    """Auto-publish eligible unique Rec & Park session grids.
+
+    Writes tmp/publish-pending-report.md. Per-pool refuses exit 0; a
+    crash exits 1. Kill switch: SCHEDULES_AUTO_PROJECT=false no-ops.
+    """
+    try:
+        published, report_path = publish_pending_all()
+    except Exception as exc:
+        click.echo(str(exc), err=True)
+        raise SystemExit(1) from exc
+    payload = json.loads(report_path.with_name("publish-pending.json").read_text())
+    refused = payload.get("refused") or []
+    click.echo(f"Wrote {report_path}")
+    click.echo(f"{published} published, {len(refused)} refused")
+
+
 @cli.command("pending-reviews")
 def pending_reviews_command() -> None:
-    """Print slugs still awaiting human review on this branch, one per line.
+    """Print slugs still awaiting review (no reviewed.json), one per line.
 
-    Empty output means every changed pool carries a reviewed snapshot — the
-    auto-extract workflow uses that as its auto-merge condition.
+    Operator/issue signal, not an auto-merge gate. After auto-publish this
+    set is FLAG, refused, and out-of-scope direct/HTML captures.
     """
     if not DATA_DIR.is_dir():
         return
