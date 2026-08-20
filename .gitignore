@@ -29,13 +29,6 @@ __pycache__/
 .ruff_cache/
 tmp/
 
-# Third-party source snapshots. Fetched locally for extraction and review;
-# the committed trail is source.sha256 + provider JSON + reviewed.json.
-data/**/source.html
-data/**/source.pdf
-data/**/source.xlsx
-data/**/source.csv
-
 # Editor/OS
 .DS_Store
 

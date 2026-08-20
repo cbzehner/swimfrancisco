@@ -114,17 +114,19 @@ Everything for a given (slug, PDF) lives in one directory:
 
 ```
 data/<slug>/<fetch-date>-<pdf-sha12>/
-  source.pdf                   # local snapshot; gitignored
-  source.sha256                # committed hash of the snapshot
+  source.pdf                   # original bytes; committed
+  source.sha256                # hash of the snapshot
   gemini-<model>.json          # self-describing provider output
   anthropic-<model>.json
   reviewed.json                # present ⇔ human-approved
 ```
 
-Source bodies (`source.pdf`, `source.html`, `source.xlsx`, `source.csv`) stay
-on disk for extraction and `schedules review`. They are not committed. A fresh
-clone re-fetches them from the registry URL; the sha256 file is the published
-integrity check.
+Source bodies (`source.pdf`, `source.html`, `source.xlsx`, `source.csv`) are
+committed with the extraction artifacts. They are the backtest corpus: a
+fresh clone can re-run extractors and compare models against the original
+bytes. `source.sha256` is the integrity check. For HTML, the hash may be a
+semantic fingerprint of extracted hours rather than the raw file; for Koret
+workbooks it is the zip-content hash of `source.xlsx`.
 
 Koret is workbook-backed: `source.xlsx` is the canonical hashed source and
 `source.pdf` is the full-workbook visual export used by the reviewer. The XLSX
@@ -159,9 +161,9 @@ review as before.
 7. Run `just release`. If the reviewed schedule fingerprint changed, the
    visible bulletin number bumps automatically.
 8. Commit `content/spots/`, `data/bulletin.json`, the registry change if
-   the PDF URL moved, and the per-review directory (`source.sha256`, provider
-   JSONs, `reviewed.json`) once the diff looks trustworthy. Do not add
-   `source.pdf` / `source.html` / `source.xlsx` / `source.csv`.
+   the PDF URL moved, and the per-review directory (`source.pdf` /
+   `source.html` / `source.xlsx` / `source.csv`, `source.sha256`, provider
+   JSONs, `reviewed.json`) once the diff looks trustworthy.
 
 A new PDF whose extracted payload differs from the last human-reviewed
 one still requires `just schedules-review`. If the payload is identical,

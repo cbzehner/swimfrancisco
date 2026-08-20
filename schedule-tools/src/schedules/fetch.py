@@ -49,6 +49,7 @@ def fetch_pdf(
                         existing_bytes = existing.read_bytes()
                         existing_sha = hashlib.sha256(existing_bytes).hexdigest()
                         if existing_sha == sha256:
+                            _write_source_sha256(existing.parent, sha256)
                             return FetchResult(
                                 path=existing,
                                 sha256=sha256,
@@ -66,6 +67,7 @@ def fetch_pdf(
                 review_dir.mkdir(parents=True, exist_ok=True)
                 path = review_dir / "source.pdf"
                 path.write_bytes(payload)
+                _write_source_sha256(review_dir, sha256)
                 return FetchResult(
                     path=path,
                     sha256=sha256,
@@ -82,6 +84,10 @@ def fetch_pdf(
                 time.sleep(0.25 * (attempt + 1))
 
     raise FetchError(f"Failed to fetch {slug} from {url}: {last_error}") from last_error
+
+
+def _write_source_sha256(review_dir: Path, sha256: str) -> None:
+    (review_dir / "source.sha256").write_text(f"{sha256}\n")
 
 
 def _count_pdf_pages(payload: bytes) -> int:
