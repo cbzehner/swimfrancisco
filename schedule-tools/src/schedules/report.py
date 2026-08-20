@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
+from .discover import view_id_from_url
 from .models import Aborted, Extracted, PoolResult, ReviewNote, Skipped, Unchanged, Violation, needs_review
 
 
@@ -156,3 +158,76 @@ def _review_notes(result: PoolResult) -> list[ReviewNote]:
     if isinstance(result, (Unchanged, Extracted)):
         return result.review_notes
     return []
+
+
+def discovery_notes_from_decisions(path: Path) -> dict[str, list[ReviewNote]]:
+    """Read review notes from a discover writer. Does not re-discover."""
+    if not path.is_file():
+        return {}
+    payload = json.loads(path.read_text())
+    if not isinstance(payload, list):
+        return {}
+
+    notes: dict[str, list[ReviewNote]] = {}
+    for item in payload:
+        if not isinstance(item, dict):
+            continue
+        slug = item.get("slug")
+        if not isinstance(slug, str) or not slug:
+            continue
+        attached = _notes_for_decision(item)
+        if attached:
+            notes[slug] = attached
+    return notes
+
+
+def _notes_for_decision(item: dict) -> list[ReviewNote]:
+    attached: list[ReviewNote] = []
+    action = item.get("action")
+    if action == "adopt":
+        old_id = view_id_from_url(str(item.get("old_url") or ""))
+        new_id = view_id_from_url(str(item.get("new_url") or ""))
+        filename = _candidate_filename(item, new_id)
+        parts: list[str] = []
+        if old_id is not None and new_id is not None:
+            parts.append(f"{old_id} → {new_id}")
+        elif new_id is not None:
+            parts.append(str(new_id))
+        if filename:
+            parts.append(filename)
+        attached.append(
+            ReviewNote(
+                kind="url_rolled",
+                message=", ".join(parts) if parts else "pdf_url rolled",
+                severity="info",
+            )
+        )
+    if action == "flag" or item.get("blocking"):
+        reason = item.get("reason") or "flag"
+        ids = [
+            str(candidate["view_id"])
+            for candidate in item.get("candidates") or []
+            if isinstance(candidate, dict) and candidate.get("view_id") is not None
+        ]
+        id_text = f" ({', '.join(ids)})" if ids else ""
+        attached.append(
+            ReviewNote(
+                kind="discovery_flagged",
+                message=f"{reason}{id_text}",
+                severity="warning",
+            )
+        )
+    return attached
+
+
+def _candidate_filename(item: dict, view_id: int | None) -> str | None:
+    if view_id is None:
+        return None
+    for bucket in ("candidates", "extra_candidates"):
+        for candidate in item.get(bucket) or []:
+            if not isinstance(candidate, dict) or candidate.get("view_id") != view_id:
+                continue
+            filename = candidate.get("filename")
+            if isinstance(filename, str) and filename:
+                return filename
+    return None

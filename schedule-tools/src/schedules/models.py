@@ -38,6 +38,8 @@ ReviewNoteKind = Literal[
     "compare_provider_failed",
     "direct_extractor_note",
     "review_carried_forward",
+    "url_rolled",
+    "discovery_flagged",
 ]
 
 
