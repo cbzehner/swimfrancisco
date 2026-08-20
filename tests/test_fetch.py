@@ -53,6 +53,7 @@ def test_fetch_pdf_writes_to_per_review_dir_on_cache_miss(tmp_path, monkeypatch)
     assert review_dir.name.endswith(f"-{result.sha256[:12]}")
     # Dir name is <YYYY-MM-DD>-<prefix>
     assert len(review_dir.name.split("-")) == 4  # YYYY MM DD prefix
+    assert (review_dir / "source.sha256").read_text() == f"{result.sha256}\n"
     assert counter["count"] == 1
 
 
@@ -70,7 +71,26 @@ def test_fetch_pdf_cache_hit_short_circuits(tmp_path, monkeypatch):
     assert second.from_cache is True
     assert first.sha256 == second.sha256
     assert first.path == second.path  # date-in-dirname is stable after first fetch
+    assert (first.path.parent / "source.sha256").read_text() == f"{first.sha256}\n"
     assert counter["count"] == 2  # note: one extra GET per cache-hit compared to old index
+
+
+def test_fetch_pdf_cache_hit_writes_missing_sha256(tmp_path, monkeypatch):
+    pdf_bytes = _make_pdf_bytes(tmp_path)
+    import hashlib
+
+    sha256 = hashlib.sha256(pdf_bytes).hexdigest()
+    review_dir = tmp_path / "data" / "test-pool" / f"2026-04-17-{sha256[:12]}"
+    review_dir.mkdir(parents=True)
+    (review_dir / "source.pdf").write_bytes(pdf_bytes)
+
+    counter = {"count": 0}
+    monkeypatch.setattr("schedules.fetch.httpx.Client", _fake_client_factory(pdf_bytes, counter))
+
+    result = fetch_pdf("test-pool", "http://example.test/schedule.pdf", cache_root=tmp_path / "data")
+
+    assert result.from_cache is True
+    assert (review_dir / "source.sha256").read_text() == f"{sha256}\n"
 
 
 def test_fetch_pdf_raises_on_prefix_collision(tmp_path, monkeypatch):

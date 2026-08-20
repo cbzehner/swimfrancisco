@@ -859,7 +859,7 @@ No pending-review flag in frontmatter (Key Decision 4).
 |---|---|---|
 | `tmp/discovery-report.md` | no | Human-readable discover scorecard; appended to the Actions step summary |
 | `tmp/discovery-decisions.json` | no | Machine gate for `discover-blocking` and `pr-summary` |
-| `data/<slug>/<date>-<sha12>/` | yes (except `source.pdf`) | Existing extract artifacts |
+| `data/<slug>/<date>-<sha12>/` | yes | Existing extract artifacts, including source snapshots |
 | `schedule-tools/src/schedules/registry.toml` | yes | Staged on the rolling PR; `discover:` notes persist band IDs |
 
 Bulletin is not bumped on detect.
