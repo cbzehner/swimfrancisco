@@ -3,17 +3,19 @@ from __future__ import annotations
 import json
 import os
 import traceback
+from dataclasses import replace
 from pathlib import Path
 from typing import Literal
 
 from .artifacts import save_artifact_bundle, skip_if_fresh
 from .delta import check_delta
 from .direct_sources import extract_direct
+from .discover import discover_all, rec_park_entries
 from .fetch import fetch_pdf
 from .grounding import grounding_from_text, normalize_pdf_text
 from .merge import read_schedule_snapshot
 from .models import Aborted, Extracted, GroundingResult, PoolEntry, PoolResult, ReviewNote, Skipped, Unchanged
-from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH, REPORT_PATHS, artifact_path, reviewed_path
+from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH, REPORT_PATHS, TMP_DIR, artifact_path, reviewed_path
 from .providers import extract as extract_with_provider
 from .providers.anthropic_provider import DEFAULT_MODEL as ANTHROPIC_DEFAULT_MODEL
 from .providers.gemini_provider import DEFAULT_MODEL as GEMINI_DEFAULT_MODEL
@@ -21,7 +23,7 @@ from .registry import load_registry
 from .review import carry_forward_review
 from .reviewed_snapshots import load_reviewed_snapshot_from_path
 from .diff import compare_payloads
-from .report import write_report
+from .report import discovery_notes_from_decisions, write_report
 from .schema import EXTRACTION_SCHEMA
 from .signals import analyze_page_texts, extract_page_texts, source_notes_for_signals
 from .validate import validate
@@ -130,6 +132,7 @@ def _process_entry(
 ) -> PoolResult:
     prior_snapshot = read_schedule_snapshot(CONTENT_SPOTS_DIR / f"{entry.slug}.md")
 
+    # FLAG is a write policy, not a fetch policy: still GET a published pointer.
     can_extract_access_hours = entry.source_status == "access_hours_only" and entry.source_kind != "sfrecpark_pdf"
     if entry.source_status != "published" and not can_extract_access_hours:
         return Skipped(
@@ -403,16 +406,54 @@ def select_registry_entries(
     return selected
 
 
+def _attach_discovery_notes(
+    result: PoolResult, notes_by_slug: dict[str, list[ReviewNote]]
+) -> PoolResult:
+    extra = notes_by_slug.get(result.slug)
+    if not extra:
+        return result
+    return replace(result, review_notes=[*result.review_notes, *extra])
+
+
 def run_pipeline(
     *,
     slugs: list[str] | None,
     source_mode: SourceMode,
     compare_with: str | None,
     force: bool,
+    apply_discover: bool = False,
+    override_url: str | None = None,
 ) -> tuple[int, Path, list[PoolResult]]:
     source_mode = parse_source_mode(source_mode)
+    if source_mode == "direct" or compare_with is not None or override_url is not None:
+        apply_discover = False
+    if override_url is not None and (slugs is None or len(slugs) != 1):
+        raise ValueError("--url requires exactly one --only slug")
+
     registry = load_registry()
     selected = select_registry_entries(registry, source_mode=source_mode, slugs=slugs)
+
+    if apply_discover:
+        rec_park = rec_park_entries(registry)
+        apply_slugs: list[str] | None = None
+        if slugs is not None:
+            rec_slugs = {entry.slug for entry in rec_park}
+            apply_slugs = [slug for slug in slugs if slug in rec_slugs]
+            if not apply_slugs:
+                rec_park = []
+        if rec_park:
+            # Full Rec & Park set for max_id / band; slugs limits apply.
+            discover_all(rec_park, slugs=apply_slugs)
+        registry = load_registry()
+        selected = select_registry_entries(registry, source_mode=source_mode, slugs=slugs)
+
+    if override_url is not None:
+        assert slugs is not None
+        target = slugs[0]
+        selected = [
+            replace(entry, pdf_url=override_url) if entry.slug == target else entry
+            for entry in selected
+        ]
 
     prompt = PROMPT_PATH.read_text().strip()
     results = [
@@ -425,5 +466,7 @@ def run_pipeline(
         )
         for entry in selected
     ]
+    notes_by_slug = discovery_notes_from_decisions(TMP_DIR / "discovery-decisions.json")
+    results = [_attach_discovery_notes(result, notes_by_slug) for result in results]
     report_path = write_report(results, path=REPORT_PATHS[source_mode])
     return compute_exit_code(results), report_path, results

@@ -66,24 +66,51 @@ def _summary_line(results: list[PoolResult]) -> str:
     help="Process only configured sfrecpark_pdf sources with this provider.",
 )
 @click.option("--force", is_flag=True, help="Re-fetch PDFs and bypass the unchanged shortcut.")
+@click.option(
+    "--no-discover",
+    is_flag=True,
+    help="Do not run Rec & Park PDF discovery; fetch working-tree pdf_url.",
+)
+@click.option(
+    "--url",
+    "override_url",
+    help="Fetch this PDF URL for a single --only slug without rewriting the registry.",
+)
 def extract(
     only: str | None,
     direct: bool,
     provider: str | None,
     force: bool,
+    no_discover: bool,
+    override_url: str | None,
 ) -> None:
     """Fetch PDFs, extract schedules, and write a review report."""
 
+    if override_url and direct:
+        raise click.UsageError("--url is incompatible with --direct")
     if direct == bool(provider):
         raise click.UsageError("exactly one of --direct or --provider is required")
     slugs = _parse_slugs(only)
+    if override_url is not None and (slugs is None or len(slugs) != 1):
+        raise click.UsageError("--url requires --only with exactly one slug")
     source_mode = "direct" if direct else parse_source_mode(provider or "")
-    exit_code, report_path, results = run_pipeline(
-        slugs=slugs,
-        source_mode=source_mode,
-        compare_with=None,
-        force=force,
+    apply_discover = (
+        source_mode != "direct"
+        and not no_discover
+        and override_url is None
     )
+    try:
+        exit_code, report_path, results = run_pipeline(
+            slugs=slugs,
+            source_mode=source_mode,
+            compare_with=None,
+            force=force,
+            apply_discover=apply_discover,
+            override_url=override_url,
+        )
+    except DiscoverError as exc:
+        click.echo(str(exc), err=True)
+        raise SystemExit(1) from exc
     click.echo(f"Wrote {report_path}")
     click.echo(_summary_line(results))
     raise SystemExit(exit_code)
@@ -290,6 +317,7 @@ def debug_bakeoff(
         source_mode=provider,
         compare_with=compare_with,
         force=force,
+        apply_discover=False,
     )
     click.echo(f"Wrote {report_path}")
     click.echo(_summary_line(results))

@@ -75,6 +75,25 @@ def test_validate_accepts_temporarily_closed_without_sessions_or_access_hours():
     assert result.ok
 
 
+def test_validate_temporarily_closed_empty_sessions_not_catastrophic_with_prior():
+    result = validate(
+        {
+            "effective_start": "2026-08-14",
+            "schedule_basis": "temporarily_closed",
+            "sessions": [],
+            "access_hours": [],
+            "closures": [
+                {"start": "2026-08-14", "end": "2026-09-07", "reason": "Maintenance"}
+            ],
+        },
+        prior_sessions_count=8,
+    )
+
+    assert result.catastrophic is False
+    assert not any(v.code == "sessions_dropped_to_zero" for v in result.violations)
+    assert result.ok
+
+
 def test_validate_rejects_unknown_schedule_basis_value():
     result = validate({
         "effective_start": "2026-05-17",

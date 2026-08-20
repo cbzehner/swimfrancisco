@@ -31,7 +31,16 @@ def _payload() -> dict:
     }
 
 
-def _setup_world(tmp_path: Path, monkeypatch, *, with_reviewed: bool, with_cached_provider: bool, prompt_text: str) -> Path:
+def _setup_world(
+    tmp_path: Path,
+    monkeypatch,
+    *,
+    with_reviewed: bool,
+    with_cached_provider: bool,
+    prompt_text: str,
+    registry_extra: str = "",
+    pdf_url: str = PDF_URL,
+) -> tuple[Path, list[tuple[str, str]]]:
     data_root = tmp_path / "data"
     review_dir = data_root / SLUG / f"{DATE}-{SHA12}"
     review_dir.mkdir(parents=True)
@@ -68,8 +77,9 @@ def _setup_world(tmp_path: Path, monkeypatch, *, with_reviewed: bool, with_cache
 
     registry_path = tmp_path / "registry.toml"
     registry_path.write_text(
-        f'[[pool]]\nslug = "{SLUG}"\npdf_url = "{PDF_URL}"\n'
+        f'[[pool]]\nslug = "{SLUG}"\npdf_url = "{pdf_url}"\n'
         f'official_page_url = "https://example.com/"\n'
+        f"{registry_extra}"
     )
 
     prompt_path = tmp_path / "extract.txt"
@@ -129,8 +139,10 @@ def _setup_world(tmp_path: Path, monkeypatch, *, with_reviewed: bool, with_cache
     monkeypatch.setattr("schedules.pipeline.check_delta", lambda _payload, _prior: [])
 
     source_pdf = review_dir / "source.pdf"
+    fetched: list[tuple[str, str]] = []
 
     def fake_fetch(slug_, url_, *, force=False):
+        fetched.append((slug_, url_))
         return FetchResult(
             path=source_pdf,
             sha256=PDF_SHA,
@@ -140,8 +152,9 @@ def _setup_world(tmp_path: Path, monkeypatch, *, with_reviewed: bool, with_cache
         )
 
     monkeypatch.setattr("schedules.pipeline.fetch_pdf", fake_fetch)
+    monkeypatch.setattr("schedules.pipeline.TMP_DIR", tmp_path)
 
-    return data_root
+    return data_root, fetched
 
 
 def _raise_if_called(*_args, **_kwargs):
@@ -216,3 +229,49 @@ def test_extract_reruns_after_prompt_change(tmp_path, monkeypatch):
     assert exit_code == 0
     assert call_count["n"] == 1
     assert isinstance(results[0], Extracted)
+
+
+def test_flag_notes_do_not_skip_published_extract(tmp_path, monkeypatch):
+    _, fetched = _setup_world(
+        tmp_path,
+        monkeypatch,
+        with_reviewed=True,
+        with_cached_provider=False,
+        prompt_text="P",
+        registry_extra=(
+            'source_status = "published"\n'
+            'notes = """discover: 2026-08-19 flag closure_notice '
+            'id=29808:closure_notice:table"""\n'
+        ),
+    )
+    monkeypatch.setattr("schedules.pipeline.extract_with_provider", _raise_if_called)
+
+    exit_code, _, results = run_pipeline(
+        slugs=[SLUG], source_mode="gemini", compare_with=None, force=False,
+    )
+
+    assert exit_code == 0
+    assert fetched == [(SLUG, PDF_URL)]
+    assert isinstance(results[0], Unchanged)
+
+
+def test_missing_current_schedule_still_skips(tmp_path, monkeypatch):
+    from schedules.models import Skipped
+
+    _, fetched = _setup_world(
+        tmp_path,
+        monkeypatch,
+        with_reviewed=False,
+        with_cached_provider=False,
+        prompt_text="P",
+        registry_extra='source_status = "missing_current_schedule"\n',
+    )
+    monkeypatch.setattr("schedules.pipeline.extract_with_provider", _raise_if_called)
+
+    exit_code, _, results = run_pipeline(
+        slugs=[SLUG], source_mode="gemini", compare_with=None, force=False,
+    )
+
+    assert exit_code == 0
+    assert fetched == []
+    assert isinstance(results[0], Skipped)

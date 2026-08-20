@@ -32,7 +32,11 @@ def validate(payload: dict, *, prior_sessions_count: int | None = None) -> Valid
     catastrophic = False
     schedule_basis = payload.get("schedule_basis")
 
-    if prior_sessions_count and len(sessions) == 0:
+    if (
+        prior_sessions_count
+        and len(sessions) == 0
+        and schedule_basis != "temporarily_closed"
+    ):
         violations.append(Violation(
             code="sessions_dropped_to_zero",
             message="sessions_count dropped to 0 from a previously non-zero state",

@@ -799,6 +799,47 @@ def test_discover_all_sava_two_windows_flag_not_extra(tmp_path, monkeypatch) -> 
     assert " extra " not in (loaded.notes or "")
 
 
+def test_only_sava_still_uses_global_band_and_does_not_adopt_fall1(
+    tmp_path, monkeypatch
+) -> None:
+    """--only sava-pool must still see band 29805 (Fall 2) from the global max_id."""
+    _freeze_today(monkeypatch)
+    registry = _copy_registry(tmp_path)
+    sava = next(item for item in load_registry() if item.slug == "sava-pool")
+    pages = {sava.official_page_url: _fixture("sava-two-session-grids.html")}
+    views = {
+        29815: {
+            "filename": "Sava_Pool_Fall12026_Aug18toDec26_.pdf",
+            "content": _pdf_bytes(),
+        },
+        29805: {"filename": "Sava Pool Fall 2 2026.pdf", "content": _pdf_bytes()},
+        29571: {"filename": "Sava Pool Summer 2026.pdf", "content": _pdf_bytes()},
+        29778: {"filename": "North Beach Cool Pool.pdf", "content": _pdf_bytes()},
+    }
+    requested: list[str] = []
+    _install_http(monkeypatch, pages=pages, views=views, requested=requested)
+    decisions = discover_all(
+        [sava],
+        delay=0,
+        registry_path=registry,
+        report_dir=tmp_path,
+        slugs=["sava-pool"],
+    )
+    view_ids = [
+        int(match.group(1)) for url in requested if (match := VIEW_ID_RE.search(url))
+    ]
+    assert 29805 in view_ids
+    assert [item.slug for item in decisions] == ["sava-pool"]
+    assert decisions[0].action == "flag"
+    assert decisions[0].reason == "multiple_windows"
+    assert {
+        item.link.view_id for item in decisions[0].candidates if item.kind == "session_grid"
+    } == {29815, 29805}
+    loaded = next(item for item in load_registry(registry) if item.slug == "sava-pool")
+    assert loaded.pdf_url.endswith("/29571")
+    assert loaded.source_status == "published"
+
+
 def test_discover_all_garfield_flyer_flags_unchanged_url(tmp_path, monkeypatch) -> None:
     _freeze_today(monkeypatch)
     registry = _copy_registry(tmp_path)

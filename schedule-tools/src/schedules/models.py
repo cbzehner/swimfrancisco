@@ -38,6 +38,8 @@ ReviewNoteKind = Literal[
     "compare_provider_failed",
     "direct_extractor_note",
     "review_carried_forward",
+    "url_rolled",
+    "discovery_flagged",
 ]
 
 
@@ -166,6 +168,7 @@ class Skipped(PoolResultBase):
 
     reason: str = ""
     notes: str | None = None
+    review_notes: list[ReviewNote] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -222,6 +225,7 @@ class Aborted(PoolResultBase):
     prior_sessions_count: int
     prior_closures_count: int
     prior_schedule_effective: str | None
+    review_notes: list[ReviewNote] = field(default_factory=list)
 
 
 PoolResult = Skipped | Unchanged | Extracted | Aborted
