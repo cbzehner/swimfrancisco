@@ -608,11 +608,14 @@ def _classify_kind(
     # Body closed-cells are not flyers.
     if _CLOSURE_RE.search(primary):
         return "closure_notice"
-    title_text = _page_title_text(page_text)
-    if _SPLIT_RE.search(primary) or (title_text and _SPLIT_RE.search(title_text)):
+    if _SPLIT_RE.search(primary):
         return "split_part"
     if _matches_pool(primary, pool_slug) and _SEASON_RE.search(primary):
         return "session_grid"
+    # Filename/anchor already settled grids; page-1 "warm" cells are not Cool/Warm parts.
+    title_text = _page_title_text(page_text)
+    if title_text and _SPLIT_RE.search(title_text):
+        return "split_part"
     if pdf_bytes and page_text:
         haystack = f"{primary} {page_text}".strip()
         if _matches_other_pool(haystack, pool_slug) and not _matches_pool(
@@ -671,15 +674,14 @@ def _text_has_grid(page_text: str) -> bool:
 
 
 def _page_title_text(page_text: str) -> str:
-    lines: list[str] = []
     for raw in page_text.splitlines():
         line = raw.strip()
         if not line:
             continue
         if _has_grid_header([line]):
-            break
-        lines.append(line)
-    return " ".join(lines)
+            return ""
+        return line
+    return ""
 
 
 def _filename_for_link(link: DocumentLink, fetched: _ViewFetch | None) -> str | None:

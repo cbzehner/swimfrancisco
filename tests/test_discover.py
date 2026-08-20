@@ -339,6 +339,20 @@ def test_page1_closed_cells_do_not_demote_fall_schedule_title(monkeypatch) -> No
     assert classified.kind == "session_grid"
 
 
+def test_page1_warm_word_does_not_split_fall_schedule_title(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "schedules.discover.extract_page_texts",
+        lambda _bytes: ["Warm water exercise on Fridays"],
+    )
+    classified = classify_pdf(
+        _link(29800, "Hamilton Pool Fall 2026"),
+        pool_slug="hamilton-pool",
+        pdf_bytes=_pdf_bytes(),
+        filename="Hamilton Pool Fall 2026.pdf",
+    )
+    assert classified.kind == "session_grid"
+
+
 def test_rossian_does_not_match_rossi() -> None:
     classified = classify_pdf(
         _link(1, "Rossian Pool Fall 2026"),
