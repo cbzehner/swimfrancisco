@@ -86,7 +86,13 @@ def test_review_app_lists_source_kind_and_seed_without_writing(tmp_path):
     (review_dir / "source.pdf").rename(review_dir / "source.csv")
     app = ReviewApp(data_root=data, content_spots_dir=content)
 
-    assert app.list_reviews() == [{"slug": "koret-center", "fetch_date": "2026-04-01", "source_kind": "csv"}]
+    assert app.list_reviews() == [{
+        "slug": "koret-center",
+        "sha12": "a" * 12,
+        "fetch_date": "2026-04-01",
+        "source_kind": "csv",
+        "sequential": False,
+    }]
     assert app.review("koret-center")["envelope"]["slug"] == "koret-center"
     assert not (review_dir / "reviewed.json").exists()
 
@@ -98,7 +104,13 @@ def test_review_app_lists_only_latest_pending_capture_per_pool(tmp_path):
     latest = _seed_review_dir(data, "koret-center", "2026-07-10", "b" * 64)
     app = ReviewApp(data_root=data, content_spots_dir=content)
 
-    assert app.list_reviews() == [{"slug": "koret-center", "fetch_date": "2026-07-10", "source_kind": "pdf"}]
+    assert app.list_reviews() == [{
+        "slug": "koret-center",
+        "sha12": "b" * 12,
+        "fetch_date": "2026-07-10",
+        "source_kind": "pdf",
+        "sequential": False,
+    }]
     assert app.candidate("koret-center").review_dir == latest
 
 

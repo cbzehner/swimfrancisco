@@ -15,7 +15,9 @@ const rowDefaults = {
 };
 
 let queue = [];
-let current = null;
+let currentSlug = null;
+let currentSha12 = null;
+let currentSequential = false;
 let envelope = null;
 let zoom = "page-width";
 let page = 1;
@@ -23,6 +25,7 @@ let sourceKind = null;
 let sourceUrl = null;
 let sourceIdentity = null;
 let verifiedSourceIdentity = null;
+let sequentialDrafts = {};
 
 const $ = (selector) => document.querySelector(selector);
 const pretty = (value) => value.replaceAll("_", " ").replaceAll("-", " ").replace(/\b\w/g, letter => letter.toUpperCase());
@@ -34,7 +37,28 @@ async function request(path, options) {
   return value;
 }
 
-async function loadQueue(preferredSlug) {
+function itemKey(item) {
+  return item.sequential ? `${item.slug}/${item.sha12}` : item.slug;
+}
+
+function currentKey() {
+  return currentSequential ? `${currentSlug}/${currentSha12}` : currentSlug;
+}
+
+function reviewPath(suffix) {
+  const base = currentSequential ? `/api/reviews/${currentSlug}/${currentSha12}` : `/api/reviews/${currentSlug}`;
+  return suffix ? `${base}/${suffix}` : base;
+}
+
+function sourcePath() {
+  return currentSequential ? `/source/${currentSlug}/${currentSha12}` : `/source/${currentSlug}`;
+}
+
+function siblings() {
+  return queue.filter(item => item.slug === currentSlug && item.sequential);
+}
+
+async function loadQueue(preferredKey) {
   queue = (await request("/api/reviews")).reviews;
   $("#queue-count").textContent = `${queue.length} pool${queue.length === 1 ? "" : "s"} awaiting review`;
   renderQueue();
@@ -43,8 +67,8 @@ async function loadQueue(preferredSlug) {
     $("#empty").hidden = false;
     return;
   }
-  const slug = queue.some(item => item.slug === preferredSlug) ? preferredSlug : queue[0].slug;
-  await loadReview(slug);
+  const match = queue.find(item => itemKey(item) === preferredKey) || queue.find(item => item.slug === preferredKey) || queue[0];
+  await loadReview(match);
 }
 
 function renderQueue() {
@@ -52,17 +76,21 @@ function renderQueue() {
   list.replaceChildren(...queue.map(item => {
     const button = document.createElement("button");
     button.type = "button";
-    button.textContent = pretty(item.slug);
-    button.setAttribute("aria-current", String(item.slug === current));
-    button.addEventListener("click", () => loadReview(item.slug));
+    button.textContent = item.sequential ? `${pretty(item.slug)} · ${item.sha12}` : pretty(item.slug);
+    if (sequentialDrafts[itemKey(item)]) button.textContent += " ✓";
+    button.setAttribute("aria-current", String(itemKey(item) === currentKey()));
+    button.addEventListener("click", () => loadReview(item));
     return button;
   }));
 }
 
-async function loadReview(slug) {
-  const data = await request(`/api/reviews/${slug}`);
-  current = slug;
-  envelope = data.envelope;
+async function loadReview(item) {
+  const slug = item.slug;
+  currentSlug = slug;
+  currentSha12 = item.sha12 || null;
+  currentSequential = !!item.sequential;
+  const data = await request(reviewPath());
+  envelope = sequentialDrafts[itemKey(item)] || data.envelope;
   sourceKind = data.candidate.source_kind;
   sourceUrl = envelope.source_pdf_url;
   sourceIdentity = `${slug}:${envelope.pdf_sha256}`;
@@ -74,6 +102,7 @@ async function loadReview(slug) {
   $("#source-label").textContent = `${sourceLabels[sourceKind] || sourceKind.toUpperCase()} · ${data.candidate.fetch_date}`;
   $("#attested").checked = false;
   $("#save-state").textContent = "";
+  $("#save-next").textContent = currentSequential ? "Confirm window →" : "Save & next pool →";
   page = Number(localStorage.getItem(`review-page:${sourceIdentity}`)) || 1;
   zoom = localStorage.getItem(`review-zoom:${sourceIdentity}`) || "page-width";
   $("#pdf-page").value = page;
@@ -90,7 +119,7 @@ async function loadReview(slug) {
 }
 
 function updateSource() {
-  const localUrl = `/source/${current}`;
+  const localUrl = sourcePath();
   const suffix = sourceKind === "pdf" ? `#page=${page}&zoom=${zoom}` : "";
   $("#source-frame").src = localUrl + suffix;
   $("#source-new-tab").href = sourceUrl && sourceUrl.startsWith("http") ? sourceUrl : localUrl + suffix;
@@ -112,8 +141,8 @@ function renderCursor() {
     button.addEventListener("click", () => {
       state.active = day;
       localStorage.setItem(`review-days:${sourceIdentity}`, JSON.stringify(state));
-      if (queue.find(item => item.slug === current)?.source_kind === "csv") {
-        $("#source-frame").src = `/source/${current}#${day}`;
+      if (queue.find(item => itemKey(item) === currentKey())?.source_kind === "csv") {
+        $("#source-frame").src = `${sourcePath()}#${day}`;
       }
       renderCursor();
     });
@@ -153,7 +182,7 @@ async function checkSource() {
   setFreshnessState("Checking official source…", "");
   setEditorLocked(true);
   try {
-    const result = await request(`/api/reviews/${current}/check-source`, { method: "POST" });
+    const result = await request(reviewPath("check-source"), { method: "POST" });
     if (result.status === "current") {
       verifiedSourceIdentity = result.source_identity;
       setFreshnessState("Current source ✓", "current");
@@ -180,8 +209,8 @@ async function refreshSource() {
   action.disabled = true;
   setFreshnessState("Refreshing extraction…", "");
   try {
-    await request(`/api/reviews/${current}/refresh`, { method: "POST" });
-    await loadQueue(current);
+    await request(reviewPath("refresh"), { method: "POST" });
+    await loadQueue(currentKey());
   } catch (error) {
     setFreshnessState("Refresh failed", "error");
     $("#save-state").textContent = error.message;
@@ -265,7 +294,24 @@ $("#save-next").addEventListener("click", async () => {
   button.disabled = true;
   $("#save-state").textContent = "Validating…";
   try {
-    await request(`/api/reviews/${current}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ envelope, attested: $("#attested").checked, source_identity: verifiedSourceIdentity }) });
+    const body = { envelope, attested: $("#attested").checked, source_identity: verifiedSourceIdentity };
+    if (currentSequential) {
+      await request(reviewPath(), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      sequentialDrafts[currentKey()] = structuredClone(envelope);
+      const pending = siblings().filter(item => !sequentialDrafts[itemKey(item)]);
+      if (pending.length) {
+        $("#save-state").textContent = "Window confirmed";
+        await loadReview(pending[0]);
+        return;
+      }
+      const envelopes = Object.fromEntries(
+        siblings().map(item => [item.sha12, sequentialDrafts[itemKey(item)]])
+      );
+      await request(`/api/reviews/${currentSlug}/save-sequential`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ envelopes, attested: true }) });
+      for (const item of siblings()) delete sequentialDrafts[itemKey(item)];
+    } else {
+      await request(reviewPath(), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    }
     localStorage.removeItem(`review-days:${sourceIdentity}`);
     $("#save-state").textContent = "Saved & projected";
     await loadQueue();
