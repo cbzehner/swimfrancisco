@@ -21,6 +21,7 @@ effective_start = "2026-04-21"
 schedule_basis = "swim_schedule"
 effective_end = "2026-06-06"
 last_verified_at = "2026-04-20"
+
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
@@ -180,6 +181,7 @@ effective_start = "2026-06-09"
 schedule_basis = "swim_schedule"
 effective_end = "2026-08-15"
 last_verified_at = "2026-07-02"
+
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
@@ -291,6 +293,7 @@ effective_start = "2026-08-18"
 schedule_basis = "swim_schedule"
 effective_end = "2026-12-12"
 last_verified_at = "2026-08-20"
+
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"

@@ -96,6 +96,14 @@ jobs:
           # trigger other workflows; the PAT makes CI run on the PR.
           token: ${{ secrets.SCHEDULES_BOT_TOKEN }}
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci --omit=dev
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
@@ -140,6 +148,13 @@ jobs:
         # Auto-publish and carried attestations add reviewed.json files; the
         # bulletin fingerprint/count must track the reviewed set.
         run: node scripts/generate-bulletin.mjs
+
+      - name: Regenerate i18n artifacts
+        if: always() && steps.token-preflight.outcome == 'success'
+        # `just check` runs `generate-i18n.mjs check`. project() writes English
+        # spots in a slightly different TOML shape; without this step the
+        # rolling PR fails CI and auto-merge never deploys.
+        run: node scripts/generate-i18n.mjs generate
 
       - name: Publish extraction evidence
         if: always()

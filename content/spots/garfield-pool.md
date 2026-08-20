@@ -21,6 +21,7 @@ effective_start = "2026-06-07"
 schedule_basis = "swim_schedule"
 effective_end = "2026-08-13"
 last_verified_at = "2026-07-02"
+
 [[extra.schedules.sessions]]
 day = "monday"
 type = "lap_swim"

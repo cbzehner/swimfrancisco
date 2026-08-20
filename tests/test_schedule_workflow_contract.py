@@ -165,6 +165,7 @@ def test_detect_and_pr_if_always_preflight() -> None:
     pr = steps["Open or update PR"]
     eval_step = steps["Run eval against committed reviewed.json"]
     bulletin = steps["Regenerate bulletin fingerprint"]
+    i18n = steps["Regenerate i18n artifacts"]
     publish = steps["Publish extraction evidence"]
     upload = steps["Upload extraction reports"]
 
@@ -176,6 +177,8 @@ def test_detect_and_pr_if_always_preflight() -> None:
     ) in pr
     assert "if: always() && steps.token-preflight.outcome == 'success'" in eval_step
     assert "if: always() && steps.token-preflight.outcome == 'success'" in bulletin
+    assert "if: always() && steps.token-preflight.outcome == 'success'" in i18n
+    assert "node scripts/generate-i18n.mjs generate" in i18n
     assert re.search(r"^        if: always\(\)\s*$", publish, re.M)
     assert re.search(r"^        if: always\(\)\s*$", upload, re.M)
 
@@ -268,6 +271,9 @@ def test_publish_pending_before_eval_bulletin_and_upload() -> None:
     )
     assert extract.index("Run eval against committed reviewed.json") < extract.index(
         "Regenerate bulletin fingerprint"
+    )
+    assert extract.index("Regenerate bulletin fingerprint") < extract.index(
+        "Regenerate i18n artifacts"
     )
     assert extract.index("schedules publish-pending") < extract.index(
         "actions/upload-artifact@v4"

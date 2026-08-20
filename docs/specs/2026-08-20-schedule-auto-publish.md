@@ -199,7 +199,8 @@ flowchart TD
   closure --> project
   project --> spots["content/spots/slug.md"]
   spots --> bulletin["node scripts/generate-bulletin.mjs"]
-  bulletin --> detect["git add data/ registry.toml content/spots/"]
+  bulletin --> i18n["node scripts/generate-i18n.mjs generate"]
+  i18n --> detect["git add data/ registry.toml content/spots/"]
   detect -->|meaningful| pr["Rolling PR auto/schedules-extract"]
   pr -->|publish-pending exit 0| automerge["--auto squash; check must be green"]
   pr -->|publish-pending crash or kill switch| openPr["PR open; needs-schedule-review"]
@@ -384,7 +385,7 @@ Extract job after checkout:
 6. `schedules extract --provider gemini --no-discover` (fail-closed). **Still no content writes.**
 7. **`schedules publish-pending`** (`id: publish-pending`, `if:` as above). Writes `tmp/publish-pending-report.md` and `tmp/publish-pending.json`.
 8. Eval (`continue-on-error`, after publish-pending so `attested_by: ci` is visible and skipped from the quality aggregate).
-9. `node scripts/generate-bulletin.mjs` (`if: always() && token-preflight success`).
+9. `node scripts/generate-bulletin.mjs` then `node scripts/generate-i18n.mjs generate` (`if: always() && token-preflight success`). i18n generate is required: `just check` fails when projected English spots do not match the catalog serializer.
 10. Publish extraction evidence + upload artifacts (`if: always()`). Glob includes `tmp/publish-pending-report.md` (the file exists now). `if-no-files-found: warn` when kill switch skipped publish-pending.
 11. Detect: `git add data/ schedule-tools/src/schedules/registry.toml content/spots/` plus `schedule-tools/src/schedules/quarantine.toml` if that file changes.
 12. Commit / force-push `auto/schedules-extract` / `gh pr create|edit` / `--auto --squash` when `steps.publish-pending.outcome == 'success'`. This step’s `if:` stays `always() && preflight && detect.changed == true`. It may set `pr_number` as a **step** output. It does **not** own `flagged_set`.
