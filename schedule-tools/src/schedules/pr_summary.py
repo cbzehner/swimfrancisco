@@ -31,6 +31,10 @@ _DAILY_REFRESH = (
     "reopen on the next run that still sees a diff against `main`."
 )
 _AUTO_MERGE = "This PR auto-merges once checks pass."
+_FLAGGED_ISSUE = "`schedules flagged`"
+_SEQUENTIAL_REASONS = frozenset(
+    {"sequential_windows", "overlapping_windows", "windows_unparsed"}
+)
 
 
 def _staged_data_changes(repo_root: Path = REPO_ROOT) -> list[tuple[str, str, str, str]]:
@@ -230,8 +234,8 @@ def _is_off_table(candidate: dict) -> bool:
 def _kind_label(decision: dict) -> str:
     reason = str(decision.get("reason") or "")
     kind = str(decision.get("kind") or "")
-    if reason == "multiple_windows":
-        return "multiple_windows"
+    if reason in _SEQUENTIAL_REASONS:
+        return reason
     if reason in {"band_session_grid", "band_flag"}:
         return "band_flag"
     if reason == "split_part" or kind == "split_part":
@@ -265,13 +269,14 @@ def _preferred_filename(decision: dict, view_id: int | None) -> str | None:
     return None
 
 
-def _window_from_run(run_dir: Path) -> tuple[str | None, str | None]:
+def _window_from_run(run_dir: Path) -> tuple[str | None, str | None, int | None]:
     if not run_dir.is_dir():
-        return None, None
+        return None, None, None
     paths = sorted(p for p in run_dir.glob("*.json") if p.name != "reviewed.json")
     reviewed = run_dir / "reviewed.json"
     if reviewed.is_file():
         paths.append(reviewed)
+    best: tuple[str | None, str | None, int | None] = (None, None, None)
     for path in paths:
         try:
             envelope = json.loads(path.read_text())
@@ -286,28 +291,78 @@ def _window_from_run(run_dir: Path) -> tuple[str | None, str | None]:
         end = payload.get("effective_end")
         start_s = start if isinstance(start, str) and start else None
         end_s = end if isinstance(end, str) and end else None
-        if start_s or end_s:
-            return start_s, end_s
-    return None, None
+        source_url = envelope.get("source_pdf_url")
+        view_id = view_id_from_url(source_url) if isinstance(source_url, str) else None
+        if not (start_s or end_s):
+            continue
+        if view_id is not None:
+            return start_s, end_s, view_id
+        if best == (None, None, None):
+            best = (start_s, end_s, None)
+    return best
 
 
 def _windows_from_artifacts(
     changed: dict[str, dict[str, list[tuple[str, str]]]],
     data_root: Path,
-) -> dict[str, tuple[str | None, str | None]]:
+) -> tuple[dict[str, tuple[str | None, str | None]], dict[int, tuple[str | None, str | None]]]:
     windows: dict[str, tuple[str | None, str | None]] = {}
+    by_view: dict[int, tuple[str | None, str | None]] = {}
     for slug, runs in changed.items():
         for run in sorted(runs, reverse=True):
-            window = _window_from_run(data_root / slug / run)
-            if window != (None, None):
-                windows[slug] = window
-                break
-    return windows
+            start, end, view_id = _window_from_run(data_root / slug / run)
+            if view_id is not None and (start or end) and view_id not in by_view:
+                by_view[view_id] = (start, end)
+            if slug not in windows and (start or end):
+                windows[slug] = (start, end)
+    return windows, by_view
+
+
+def _published_windows_by_view(publish_pending: dict | None) -> dict[int, tuple[str | None, str | None]]:
+    if not isinstance(publish_pending, dict):
+        return {}
+    by_view: dict[int, tuple[str | None, str | None]] = {}
+    for item in publish_pending.get("windows") or []:
+        if not isinstance(item, dict):
+            continue
+        view_id = item.get("view_id")
+        if not isinstance(view_id, int):
+            continue
+        start = item.get("effective_start")
+        end = item.get("effective_end")
+        start_s = start if isinstance(start, str) and start else None
+        end_s = end if isinstance(end, str) and end else None
+        if start_s or end_s:
+            by_view[view_id] = (start_s, end_s)
+    return by_view
+
+
+def _format_range(start: str | None, end: str | None) -> str | None:
+    if start and end:
+        return f"{start}–{end}"
+    return start or end
+
+
+def _window_text_for_item(
+    item: dict,
+    *,
+    by_view: dict[int, tuple[str | None, str | None]],
+) -> str | None:
+    view_id = item.get("view_id")
+    if isinstance(view_id, int) and view_id in by_view:
+        return _format_range(*by_view[view_id])
+    start = item.get("window_start")
+    end = item.get("window_end")
+    start_s = start if isinstance(start, str) and start else None
+    end_s = end if isinstance(end, str) and end else None
+    return _format_range(start_s, end_s)
 
 
 def _format_decision_line(
     decision: dict,
     window: tuple[str | None, str | None] | None,
+    *,
+    windows_by_view: dict[int, tuple[str | None, str | None]] | None = None,
 ) -> str:
     slug = decision["slug"]
     kind = _kind_label(decision)
@@ -322,9 +377,11 @@ def _format_decision_line(
     ]
     off_grids = [item for item in off_table if item.get("kind") == "session_grid"]
     grid_ids = [item for item in candidates if item.get("kind") == "session_grid"]
+    by_view = windows_by_view or {}
 
     bits: list[str] = []
     mentioned: set[int] = set()
+    attached_dates = False
     action = decision.get("action")
     if action == "adopt" and old_id is not None and new_id is not None and old_id != new_id:
         bits.append(f"{old_id} → {new_id}")
@@ -344,12 +401,17 @@ def _format_decision_line(
         bits.append(f"band-flagged {flagged}")
         _mark(table_flyers)
         _mark(off_grids)
-    elif kind == "multiple_windows" and grid_ids:
+    elif kind in _SEQUENTIAL_REASONS and grid_ids:
         labeled: list[str] = []
         for item in grid_ids:
             where = "off-table" if _is_off_table(item) else "table"
-            labeled.append(f"{where} {_id_and_name(item)}")
-        bits.append(f"multiple_windows {' + '.join(labeled)}")
+            piece = f"{where} {_id_and_name(item)}"
+            dates = _window_text_for_item(item, by_view=by_view)
+            if dates:
+                piece = f"{piece} {dates}"
+                attached_dates = True
+            labeled.append(piece)
+        bits.append(f"{kind} {' + '.join(labeled)}")
         _mark(grid_ids)
     else:
         filename = _preferred_filename(decision, new_id or old_id)
@@ -373,14 +435,10 @@ def _format_decision_line(
     if leftover_extra:
         bits.append("extra " + ", ".join(_id_and_name(item) for item in leftover_extra))
 
-    if window and (window[0] or window[1]):
-        start, end = window
-        if start and end:
-            bits.append(f"{start}–{end}")
-        elif start:
-            bits.append(start)
-        elif end:
-            bits.append(end)
+    if not attached_dates and window and (window[0] or window[1]):
+        ranged = _format_range(window[0], window[1])
+        if ranged:
+            bits.append(ranged)
 
     return f"- `{slug}`: " + "; ".join(bits)
 
@@ -392,6 +450,7 @@ def _lead_pool_lines(
     *,
     published_slugs: list[str] | None = None,
     carried_slugs: list[str] | None = None,
+    windows_by_view: dict[int, tuple[str | None, str | None]] | None = None,
 ) -> list[str]:
     by_slug = {item["slug"]: item for item in decisions}
     slugs: list[str] = []
@@ -403,6 +462,7 @@ def _lead_pool_lines(
         if (
             item.get("blocking")
             or item.get("action") == "adopt"
+            or item.get("reason") in _SEQUENTIAL_REASONS
             or any(_is_off_table(candidate) for candidate in _all_candidates(item))
             or slug in pending_slugs
         ):
@@ -423,7 +483,11 @@ def _lead_pool_lines(
     for slug in slugs:
         decision = by_slug.get(slug)
         if decision is not None:
-            line = _format_decision_line(decision, windows.get(slug))
+            line = _format_decision_line(
+                decision,
+                windows.get(slug),
+                windows_by_view=windows_by_view,
+            )
         else:
             line = f"- `{slug}`: payload changed"
         if slug in published:
@@ -464,7 +528,8 @@ def render_pr_body(
     pending_slugs = sorted(s for s in changed_slugs if _has_pending_run(s, changed[s], data_root))
     auto_slugs, carried_slugs = _split_attested_slugs(changed, changed_slugs, pending_slugs, data_root)
     unchanged_n = len(published) - len(changed_slugs)
-    windows = _windows_from_artifacts(changed, data_root)
+    windows, artifact_by_view = _windows_from_artifacts(changed, data_root)
+    windows_by_view = {**artifact_by_view, **_published_windows_by_view(publish_pending)}
     branch = "auto/schedules-extract"
     published_slugs = _published_slugs(publish_pending, auto_slugs)
     show_checklist = _show_debug_checklist(publish_pending, pending_slugs)
@@ -478,6 +543,7 @@ def render_pr_body(
             unchanged_n,
             decisions=decisions,
             windows=windows,
+            windows_by_view=windows_by_view,
             registry_staged=registry_staged,
             published_slugs=published_slugs,
             blocking_slugs=blocking_slugs,
@@ -553,6 +619,7 @@ def _render_lead(
     *,
     decisions: list[dict] | None = None,
     windows: dict[str, tuple[str | None, str | None]] | None = None,
+    windows_by_view: dict[int, tuple[str | None, str | None]] | None = None,
     registry_staged: bool = False,
     review_slugs: list[str] | None = None,
     published_slugs: list[str] | None = None,
@@ -561,6 +628,7 @@ def _render_lead(
 ) -> list[str]:
     decisions = decisions or []
     windows = windows or {}
+    windows_by_view = windows_by_view or {}
     published_slugs = published_slugs or []
     blocking_slugs = blocking_slugs or []
     if review_slugs is None:
@@ -584,12 +652,18 @@ def _render_lead(
         noun = "pool" if n == 1 else "pools"
         action = (
             f"Discover flagged {n} Rec & Park {noun} (informational). "
+            f"Operator signal is the rolling GitHub issue {_FLAGGED_ISSUE}. "
             f"{_AUTO_MERGE} {_LIVE_SITE_UPDATES}"
         )
     elif show_checklist and pending_slugs:
         action = (
             f"{_slug_list(pending_slugs)} still have no reviewed.json. "
             "publish-pending did not succeed. Debug with `just schedules-review`."
+        )
+    elif pending_slugs:
+        action = (
+            f"{_slug_list(pending_slugs)} remain on the rolling GitHub issue "
+            f"{_FLAGGED_ISSUE}. {_AUTO_MERGE} {_LIVE_SITE_UPDATES}"
         )
     else:
         action = f"No human review needed. {_AUTO_MERGE} {_LIVE_SITE_UPDATES}"
@@ -634,6 +708,7 @@ def _render_lead(
         windows,
         published_slugs=published_slugs,
         carried_slugs=carried_slugs,
+        windows_by_view=windows_by_view,
     )
     extra_slugs = [
         slug

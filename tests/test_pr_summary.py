@@ -44,6 +44,8 @@ def _candidate(
     kind: str,
     source: str,
     filename: str | None = None,
+    window_start: str | None = None,
+    window_end: str | None = None,
 ) -> dict:
     return {
         "view_id": view_id,
@@ -52,6 +54,8 @@ def _candidate(
         "kind": kind,
         "filename": filename,
         "source": source,
+        "window_start": window_start,
+        "window_end": window_end,
     }
 
 
@@ -60,21 +64,20 @@ def _write_provider_json(
     *,
     effective_start: str,
     effective_end: str,
+    source_pdf_url: str | None = None,
 ) -> None:
-    path.parent.mkdir(parents=True)
-    path.write_text(
-        json.dumps(
-            {
-                "provider": "gemini",
-                "payload": {
-                    "effective_start": effective_start,
-                    "effective_end": effective_end,
-                    "sessions": [],
-                },
-            }
-        )
-        + "\n"
-    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload: dict = {
+        "provider": "gemini",
+        "payload": {
+            "effective_start": effective_start,
+            "effective_end": effective_end,
+            "sessions": [],
+        },
+    }
+    if source_pdf_url is not None:
+        payload["source_pdf_url"] = source_pdf_url
+    path.write_text(json.dumps(payload) + "\n")
 
 
 CHECKLIST = [
@@ -133,6 +136,7 @@ def test_flag_only_pr_names_garfield_off_table_sibling(tmp_path: Path) -> None:
     assert "Next Monday" not in text
     assert "The live site updates when this PR merges." in text
     assert "informational" in text
+    assert "schedules flagged" in text
     for item in CHECKLIST:
         assert item not in text
 
@@ -145,24 +149,28 @@ def test_sava_lead_names_table_and_off_table_windows(tmp_path: Path) -> None:
         [
             {
                 "slug": "sava-pool",
-                "action": "flag",
-                "old_url": "https://sfrecpark.org/DocumentCenter/View/29571",
-                "new_url": None,
+                "action": "unchanged",
+                "old_url": "https://sfrecpark.org/DocumentCenter/View/29815",
+                "new_url": "https://sfrecpark.org/DocumentCenter/View/29815",
                 "kind": "session_grid",
-                "reason": "multiple_windows",
-                "blocking": True,
+                "reason": "sequential_windows",
+                "blocking": False,
                 "candidates": [
                     _candidate(
                         29815,
                         kind="session_grid",
                         source="table",
                         filename="Sava_Pool_Fall12026_Aug18toDec26_.pdf",
+                        window_start="2026-08-18",
+                        window_end="2026-08-28",
                     ),
                     _candidate(
                         29805,
                         kind="session_grid",
                         source="band",
                         filename="Sava_Pool_Fall2_2026.pdf",
+                        window_start="2026-08-29",
+                        window_end="2026-12-12",
                     ),
                 ],
                 "extra_candidates": [],
@@ -178,10 +186,13 @@ def test_sava_lead_names_table_and_off_table_windows(tmp_path: Path) -> None:
     line = next(row for row in text.splitlines() if row.startswith("- `sava-pool`:"))
     assert "29815" in line
     assert "29805" in line
-    assert "multiple_windows" in line
+    assert "sequential_windows" in line
+    assert "multiple_windows" not in line
     assert "off-table 29805" in line
     assert "Sava_Pool_Fall2_2026.pdf" in line
     assert "29805" in line.split("extra", 1)[0]
+    assert "2026-08-18–2026-08-28" in line
+    assert "2026-08-29–2026-12-12" in line
 
 
 def test_adopt_line_includes_old_new_filename_kind_and_window(tmp_path: Path) -> None:
@@ -335,6 +346,136 @@ def test_ci_attested_reviewed_json_is_auto_published(tmp_path: Path) -> None:
     assert "The live site updates when this PR merges." in text
     assert "needs a human review" not in text
     assert "auto-published (`attested_by: ci`)" in text
+    for item in CHECKLIST:
+        assert item not in text
+
+
+def test_sequential_publish_lists_per_window_dates_from_publish_pending(
+    tmp_path: Path,
+) -> None:
+    repo = _init_repo(tmp_path)
+    _stage_registry(repo, 'slug = "sava-pool"\n')
+    fall1 = repo / "data" / "sava-pool" / "2026-08-20-aaaaaaaaaaaa"
+    fall2 = repo / "data" / "sava-pool" / "2026-08-20-bbbbbbbbbbbb"
+    _write_provider_json(
+        fall1 / "gemini-gemini-3-1-flash-lite-preview.json",
+        effective_start="2026-08-18",
+        effective_end="2026-08-28",
+        source_pdf_url="https://sfrecpark.org/DocumentCenter/View/29815",
+    )
+    (fall1 / "reviewed.json").write_text(
+        json.dumps(
+            {
+                "slug": "sava-pool",
+                "pdf_sha256": "a" * 64,
+                "reviewed_at": "2026-08-20",
+                "attested_by": "ci",
+                "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29815",
+                "payload": {
+                    "effective_start": "2026-08-18",
+                    "effective_end": "2026-08-28",
+                    "sessions": [],
+                    "closures": [],
+                },
+            }
+        )
+        + "\n"
+    )
+    _write_provider_json(
+        fall2 / "gemini-gemini-3-1-flash-lite-preview.json",
+        effective_start="2026-08-29",
+        effective_end="2026-12-12",
+        source_pdf_url="https://sfrecpark.org/DocumentCenter/View/29805",
+    )
+    (fall2 / "reviewed.json").write_text(
+        json.dumps(
+            {
+                "slug": "sava-pool",
+                "pdf_sha256": "b" * 64,
+                "reviewed_at": "2026-08-20",
+                "attested_by": "ci",
+                "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29805",
+                "payload": {
+                    "effective_start": "2026-08-29",
+                    "effective_end": "2026-12-12",
+                    "sessions": [],
+                    "closures": [],
+                },
+            }
+        )
+        + "\n"
+    )
+    _git(repo, "add", "data")
+    _write_decisions(
+        repo,
+        [
+            {
+                "slug": "sava-pool",
+                "action": "unchanged",
+                "old_url": "https://sfrecpark.org/DocumentCenter/View/29815",
+                "new_url": "https://sfrecpark.org/DocumentCenter/View/29815",
+                "kind": "session_grid",
+                "reason": "sequential_windows",
+                "blocking": False,
+                "candidates": [
+                    _candidate(
+                        29815,
+                        kind="session_grid",
+                        source="table",
+                        filename="Sava_Pool_Fall12026_Aug18toDec26_.pdf",
+                        window_start="2026-08-18",
+                        window_end="2026-08-28",
+                    ),
+                    _candidate(
+                        29805,
+                        kind="session_grid",
+                        source="band",
+                        filename="Sava_Pool_Fall2_2026.pdf",
+                        window_start="2026-08-29",
+                        window_end="2026-12-12",
+                    ),
+                ],
+                "extra_candidates": [],
+            }
+        ],
+    )
+    (repo / "tmp" / "publish-pending.json").write_text(
+        json.dumps(
+            {
+                "published": ["sava-pool"],
+                "refused": [],
+                "closure": [],
+                "windows": [
+                    {
+                        "slug": "sava-pool",
+                        "effective_start": "2026-08-18",
+                        "effective_end": "2026-08-28",
+                        "view_id": 29815,
+                    },
+                    {
+                        "slug": "sava-pool",
+                        "effective_start": "2026-08-29",
+                        "effective_end": "2026-12-12",
+                        "view_id": 29805,
+                    },
+                ],
+            }
+        )
+        + "\n"
+    )
+
+    text = render_pr_body(repo_root=repo, data_root=repo / "data")
+
+    assert "Published 1 Rec & Park pool." in text
+    assert "schedules flagged" not in text.split("\n", 1)[0]
+    line = next(row for row in text.splitlines() if row.startswith("- `sava-pool`:"))
+    assert "sequential_windows" in line
+    assert "table 29815" in line
+    assert "off-table 29805" in line
+    assert "2026-08-18–2026-08-28" in line
+    assert "2026-08-29–2026-12-12" in line
+    assert line.index("2026-08-18–2026-08-28") < line.index("2026-08-29–2026-12-12")
+    assert "; auto" in line
     for item in CHECKLIST:
         assert item not in text
 
