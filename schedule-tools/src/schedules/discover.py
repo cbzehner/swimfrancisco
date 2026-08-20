@@ -18,6 +18,7 @@ from ._time import pacific_today
 from .direct_sources.http import BOT_USER_AGENT
 from .models import PoolEntry
 from .paths import REGISTRY_PATH, TMP_DIR
+from .registry import load_registry
 from .signals import _has_grid_header, extract_page_texts
 
 CandidateKind = Literal["session_grid", "closure_notice", "split_part", "other"]
@@ -359,9 +360,11 @@ def discover_all(
             f"--adopt slug {adopt[0]!r} is not in the selected Rec & Park pools"
         )
 
-    max_id = _max_pdf_view_id(rec_park)
+    # --only limits page fetch and apply; max_id / persist / band stay global.
+    band_scope = _band_scope_entries(rec_park, registry_path)
+    max_id = _max_pdf_view_id(band_scope)
     persisted_by_slug = {
-        entry.slug: persisted_band_ids(entry.notes) for entry in rec_park
+        entry.slug: persisted_band_ids(entry.notes) for entry in band_scope
     }
     all_persisted = (
         set().union(*persisted_by_slug.values()) if persisted_by_slug else set()
@@ -673,6 +676,31 @@ def _filename_for_link(link: DocumentLink, fetched: _ViewFetch | None) -> str | 
     if link.anchor_text:
         return None
     return fetched.filename if fetched else None
+
+
+def _band_scope_entries(entries: list[PoolEntry], registry_path: Path) -> list[PoolEntry]:
+    """Every Rec & Park pool, even when apply is limited to --only slugs."""
+    overlay = {entry.slug: entry for entry in entries}
+    loaded: list[PoolEntry] = []
+    if registry_path.is_file():
+        try:
+            loaded = rec_park_entries(load_registry(path=registry_path))
+        except (OSError, ValueError, tomllib.TOMLDecodeError):
+            loaded = []
+    if not loaded:
+        return list(entries)
+    by_slug = {entry.slug: entry for entry in loaded}
+    by_slug.update(overlay)
+    ordered: list[PoolEntry] = []
+    seen: set[str] = set()
+    for entry in loaded:
+        ordered.append(by_slug[entry.slug])
+        seen.add(entry.slug)
+    for entry in entries:
+        if entry.slug not in seen:
+            ordered.append(entry)
+            seen.add(entry.slug)
+    return ordered
 
 
 def _max_pdf_view_id(entries: list[PoolEntry]) -> int | None:

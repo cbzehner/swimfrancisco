@@ -84,6 +84,8 @@ def _render_pool_block(result: PoolResult) -> list[str]:
             lines.append(f"- notes: {result.notes}")
         if result.reason:
             lines.append(f"- error: {result.reason}")
+        for note in result.review_notes:
+            lines.append(f"- review_note[{note.severity}::{note.kind}]: {note.message}")
         lines.append("")
         return lines
 
@@ -92,7 +94,11 @@ def _render_pool_block(result: PoolResult) -> list[str]:
         lines.append(f"- closures: {result.prior_closures_count} (prior)")
         if result.prior_schedule_effective:
             lines.append(f"- effective_start: {result.prior_schedule_effective} (prior)")
-        lines.append("- review_notes: none")
+        if result.review_notes:
+            for note in result.review_notes:
+                lines.append(f"- review_note[{note.severity}::{note.kind}]: {note.message}")
+        else:
+            lines.append("- review_notes: none")
         lines.append(f"- error: {result.error}")
         lines.append("")
         return lines
@@ -155,16 +161,17 @@ def _violations(result: PoolResult) -> list[Violation]:
 
 
 def _review_notes(result: PoolResult) -> list[ReviewNote]:
-    if isinstance(result, (Unchanged, Extracted)):
-        return result.review_notes
-    return []
+    return list(getattr(result, "review_notes", []) or [])
 
 
 def discovery_notes_from_decisions(path: Path) -> dict[str, list[ReviewNote]]:
     """Read review notes from a discover writer. Does not re-discover."""
     if not path.is_file():
         return {}
-    payload = json.loads(path.read_text())
+    try:
+        payload = json.loads(path.read_text())
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return {}
     if not isinstance(payload, list):
         return {}
 

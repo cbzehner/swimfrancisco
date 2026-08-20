@@ -10,7 +10,7 @@ from typing import Literal
 from .artifacts import save_artifact_bundle, skip_if_fresh
 from .delta import check_delta
 from .direct_sources import extract_direct
-from .discover import discover_all
+from .discover import DiscoverError, discover_all, rec_park_entries
 from .fetch import fetch_pdf
 from .grounding import grounding_from_text, normalize_pdf_text
 from .merge import read_schedule_snapshot
@@ -410,7 +410,7 @@ def _attach_discovery_notes(
     result: PoolResult, notes_by_slug: dict[str, list[ReviewNote]]
 ) -> PoolResult:
     extra = notes_by_slug.get(result.slug)
-    if not extra or not isinstance(result, (Unchanged, Extracted)):
+    if not extra:
         return result
     return replace(result, review_notes=[*result.review_notes, *extra])
 
@@ -434,7 +434,20 @@ def run_pipeline(
     selected = select_registry_entries(registry, source_mode=source_mode, slugs=slugs)
 
     if apply_discover:
-        discover_all(selected)
+        rec_park = rec_park_entries(registry)
+        apply_slugs: list[str] | None = None
+        if slugs is not None:
+            rec_slugs = {entry.slug for entry in rec_park}
+            apply_slugs = [slug for slug in slugs if slug in rec_slugs]
+            if not apply_slugs:
+                rec_park = []
+        if rec_park:
+            try:
+                # Full Rec & Park set for max_id / band; slugs limits apply.
+                discover_all(rec_park, slugs=apply_slugs)
+            except DiscoverError:
+                report_path = write_report([], path=REPORT_PATHS[source_mode])
+                return 1, report_path, []
         registry = load_registry()
         selected = select_registry_entries(registry, source_mode=source_mode, slugs=slugs)
 

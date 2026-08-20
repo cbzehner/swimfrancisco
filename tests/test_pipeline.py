@@ -14,6 +14,7 @@ import json
 from dataclasses import replace
 from pathlib import Path
 
+from schedules.discover import DiscoverError
 from schedules.models import Aborted, Extracted, FetchResult, PoolResult, Skipped, Unchanged
 from schedules.models import PoolEntry
 from schedules.paths import REPORT_PATHS
@@ -666,3 +667,166 @@ def test_discovery_notes_from_decisions_file(tmp_path) -> None:
     assert "multiple_windows" in notes["sava-pool"][0].message
     assert "29815" in notes["sava-pool"][0].message
     assert "29805" in notes["sava-pool"][0].message
+
+
+def test_invalid_decisions_json_yields_no_notes(tmp_path) -> None:
+    path = tmp_path / "discovery-decisions.json"
+    path.write_text("{not-json")
+    assert discovery_notes_from_decisions(path) == {}
+
+
+def test_only_slug_passes_full_rec_park_set_into_discover(monkeypatch, tmp_path) -> None:
+    registry = [
+        _pdf_entry("sava-pool", SAVA_SUMMER),
+        _pdf_entry("hamilton-pool", OLD_URL),
+        _pdf_entry(
+            "north-beach-pool",
+            "https://sfrecpark.org/DocumentCenter/View/29778",
+            status="missing_current_schedule",
+        ),
+    ]
+    state = _stub_extract_pipeline(monkeypatch, tmp_path, registry)
+    seen: dict = {}
+
+    def fake_discover(entries, **kwargs):
+        seen["slugs_arg"] = kwargs.get("slugs")
+        seen["entry_slugs"] = [entry.slug for entry in entries]
+        state["discover_calls"] += 1
+        return []
+
+    monkeypatch.setattr("schedules.pipeline.discover_all", fake_discover)
+
+    run_pipeline(
+        slugs=["sava-pool"],
+        source_mode="gemini",
+        compare_with=None,
+        force=False,
+        apply_discover=True,
+    )
+
+    assert state["discover_calls"] == 1
+    assert seen["slugs_arg"] == ["sava-pool"]
+    assert seen["entry_slugs"] == [
+        "sava-pool",
+        "hamilton-pool",
+        "north-beach-pool",
+    ]
+    assert state["fetched"] == [("sava-pool", SAVA_SUMMER)]
+
+
+def test_discover_error_exits_one_and_keeps_report(monkeypatch, tmp_path) -> None:
+    registry = [_pdf_entry("hamilton-pool", OLD_URL)]
+    state = _stub_extract_pipeline(monkeypatch, tmp_path, registry)
+    report = tmp_path / "discovery-report.md"
+    report.write_text("# kept\n")
+
+    def boom(*_args, **_kwargs):
+        raise DiscoverError("every Rec & Park facility page failed to fetch")
+
+    monkeypatch.setattr("schedules.pipeline.discover_all", boom)
+
+    exit_code, _, results = run_pipeline(
+        slugs=["hamilton-pool"],
+        source_mode="gemini",
+        compare_with=None,
+        force=False,
+        apply_discover=True,
+    )
+
+    assert exit_code == 1
+    assert results == []
+    assert state["fetched"] == []
+    assert report.read_text() == "# kept\n"
+
+
+def test_discovery_notes_attach_to_skipped_and_aborted(monkeypatch, tmp_path) -> None:
+    cool = "https://sfrecpark.org/DocumentCenter/View/29778"
+    skipped_registry = [
+        _pdf_entry("north-beach-pool", cool, status="missing_current_schedule")
+    ]
+    state = _stub_extract_pipeline(monkeypatch, tmp_path, skipped_registry)
+    flag_decision = [
+        {
+            "slug": "north-beach-pool",
+            "action": "flag",
+            "reason": "split_part",
+            "blocking": True,
+            "candidates": [{"view_id": 29778}, {"view_id": 29779}],
+        }
+    ]
+    monkeypatch.setattr(
+        "schedules.pipeline.discover_all",
+        _fake_discover(state, tmp_path=tmp_path, decisions=flag_decision),
+    )
+
+    exit_code, _, results = run_pipeline(
+        slugs=["north-beach-pool"],
+        source_mode="gemini",
+        compare_with=None,
+        force=False,
+        apply_discover=True,
+    )
+
+    assert exit_code == 0
+    assert isinstance(results[0], Skipped)
+    assert any(note.kind == "discovery_flagged" for note in results[0].review_notes)
+
+    aborted_registry = [_pdf_entry("hamilton-pool", OLD_URL)]
+    state = _stub_extract_pipeline(monkeypatch, tmp_path, aborted_registry)
+    (tmp_path / "discovery-decisions.json").write_text(
+        json.dumps(
+            [
+                {
+                    "slug": "hamilton-pool",
+                    "action": "flag",
+                    "reason": "empty_table",
+                    "blocking": True,
+                    "candidates": [{"view_id": 29599}],
+                }
+            ]
+        )
+    )
+
+    def boom(*_args, **_kwargs):
+        raise RuntimeError("fetch failed")
+
+    monkeypatch.setattr("schedules.pipeline.fetch_pdf", boom)
+    monkeypatch.setattr(
+        "schedules.pipeline.discover_all",
+        _fake_discover(state, tmp_path=tmp_path),
+    )
+
+    exit_code, _, results = run_pipeline(
+        slugs=["hamilton-pool"],
+        source_mode="gemini",
+        compare_with=None,
+        force=False,
+        apply_discover=False,
+    )
+
+    assert isinstance(results[0], Aborted)
+    assert any(note.kind == "discovery_flagged" for note in results[0].review_notes)
+
+
+def test_invalid_decisions_json_does_not_break_direct(monkeypatch, tmp_path) -> None:
+    (tmp_path / "discovery-decisions.json").write_text("{not-json")
+    monkeypatch.setattr("schedules.pipeline.TMP_DIR", tmp_path)
+    monkeypatch.setattr("schedules.pipeline.load_registry", lambda: [_entry("direct-one", "jccsf_html")])
+    monkeypatch.setattr("schedules.pipeline.PROMPT_PATH", tmp_path / "prompt.txt")
+    (tmp_path / "prompt.txt").write_text("prompt")
+    monkeypatch.setattr(
+        "schedules.pipeline._process_entry",
+        lambda *args, **kwargs: _skipped("direct-one"),
+    )
+    monkeypatch.setattr("schedules.pipeline.write_report", lambda results, path=None: path)
+
+    exit_code, _, results = run_pipeline(
+        slugs=None,
+        source_mode="direct",
+        compare_with=None,
+        force=False,
+        apply_discover=True,
+    )
+
+    assert exit_code == 0
+    assert [result.slug for result in results] == ["direct-one"]
