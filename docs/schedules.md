@@ -195,7 +195,8 @@ updates when that PR merges.
 FLAG URL choice stays operator work. Unique-grid payload change does not:
 
 - **Unique table `session_grid`.** CI auto-publishes after extract when
-  gates pass. No `just schedules-review` on the happy path.
+  gates pass. No `just schedules-review` on the happy path. Rossi
+  `RossiPool_Fall*.pdf` is a session grid, not a closure flyer.
 - **Split PDFs** (North Beach Cool + Warm only). Discover flags and sets
   `missing_current_schedule`. Do not pick a part. Extract stays skipped.
   Discover never auto-promotes `missing_current_schedule` to `published`.

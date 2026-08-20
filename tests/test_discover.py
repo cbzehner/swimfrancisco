@@ -298,6 +298,57 @@ def test_cool_warm_is_still_split_part() -> None:
     assert warm.kind == "split_part"
 
 
+def test_cool_warm_concatenated_is_split_part() -> None:
+    cool = classify_pdf(
+        _link(29778, "CoolPool Fall 2026"),
+        pool_slug="north-beach-pool",
+        pdf_bytes=_pdf_bytes(),
+        filename="CoolPool_Fall2026.pdf",
+    )
+    warm = classify_pdf(
+        _link(29779, "WarmPool Fall 2026"),
+        pool_slug="north-beach-pool",
+        pdf_bytes=_pdf_bytes(),
+        filename="WarmPool_Fall2026.pdf",
+    )
+    assert cool.kind == "split_part"
+    assert warm.kind == "split_part"
+
+
+def test_rossi_concatenated_filename_is_session_grid() -> None:
+    classified = classify_pdf(
+        _link(29804, "RossiPool_Fall2026_Aug16toDec10"),
+        pool_slug="rossi-pool",
+        pdf_bytes=_pdf_bytes(),
+        filename="RossiPool_Fall2026_Aug16toDec10.pdf",
+    )
+    assert classified.kind == "session_grid"
+
+
+def test_page1_closed_cells_do_not_demote_fall_schedule_title(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "schedules.discover.extract_page_texts",
+        lambda _bytes: ["Closed every 4th Thursday"],
+    )
+    classified = classify_pdf(
+        _link(29804, "RossiPool_Fall2026_Aug16toDec10"),
+        pool_slug="rossi-pool",
+        pdf_bytes=_pdf_bytes(),
+        filename="RossiPool_Fall2026_Aug16toDec10.pdf",
+    )
+    assert classified.kind == "session_grid"
+
+
+def test_rossian_does_not_match_rossi() -> None:
+    classified = classify_pdf(
+        _link(1, "Rossian Pool Fall 2026"),
+        pool_slug="rossi-pool",
+        pdf_bytes=_pdf_bytes(),
+        filename="Rossian Pool Fall 2026.pdf",
+    )
+    assert classified.kind == "other"
+
+
 def test_mlk_pt2_is_session_grid() -> None:
     classified = classify_pdf(
         _link(29803, "MLK Pool_Fall2026_pt2_Sep27_Dec12"),

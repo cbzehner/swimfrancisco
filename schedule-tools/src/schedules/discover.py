@@ -48,12 +48,12 @@ _CLOSURE_RE = re.compile(
     r"(?i)(?<![a-z])(?:maintenance|closure|closed|notice|repair|attention)(?![a-z])"
 )
 _SEASON_RE = re.compile(
-    r"(?i)(?<![a-z])(?:schedule|fall|spring|summer|winter|interim)(?![a-z])"
+    r"(?i)(?<![A-Za-z])(?:schedule|fall|spring|summer|winter|interim)(?-i:(?![a-z]))"
 )
 # Cool/Warm only: parallel files for the same days. Sequential windows
 # (MLK pt.1/pt.2, Sava Fall 1/2) classify as session_grid.
 _SPLIT_RE = re.compile(
-    r"(?i)(?:cool\s+pool|warm\s+pool|(?<![a-z])(?:cool|warm)(?![a-z]))"
+    r"(?i)(?:cool\s+pool|warm\s+pool|(?<![A-Za-z])(?:cool|warm)(?-i:(?![a-z])))"
 )
 _NON_PDF_NAME_RE = re.compile(r"(?i)\.(?:jpe?g|png|gif|webp|html?)\s*$")
 _DISCOVER_LINE_RE = re.compile(r"^discover:\s+(\d{4}-\d{2}-\d{2})\s+(\S+)(?:\s+(.*))?$")
@@ -155,30 +155,16 @@ def classify_pdf(
     title = link.anchor_text or ""
     name = filename or ""
     primary = f"{title} {name}".strip()
+    page_text = _first_page_text(pdf_bytes) if pdf_bytes else ""
+    grid_confirmed: bool | None = _text_has_grid(page_text) if pdf_bytes else None
     kind = _classify_kind(
-        primary, pool_slug=pool_slug, pdf_bytes=pdf_bytes, filename=filename
+        primary,
+        pool_slug=pool_slug,
+        pdf_bytes=pdf_bytes,
+        filename=filename,
+        page_text=page_text,
+        grid_confirmed=grid_confirmed,
     )
-    grid_confirmed: bool | None = _page_has_grid(pdf_bytes) if pdf_bytes else None
-    if kind == "closure_notice":
-        # Page-1 day tokens must not demote a flyer.
-        return ClassifiedDocument(
-            link=link,
-            kind=kind,
-            filename=filename,
-            source=source,
-            grid_confirmed=grid_confirmed,
-        )
-    if kind == "other" and pdf_bytes:
-        page_text = _first_page_text(pdf_bytes)
-        if page_text:
-            kind = _classify_kind(
-                f"{primary} {page_text}",
-                pool_slug=pool_slug,
-                pdf_bytes=None,
-                filename=filename,
-            )
-            if _CLOSURE_RE.search(primary):
-                kind = "closure_notice"
     return ClassifiedDocument(
         link=link,
         kind=kind,
@@ -605,24 +591,38 @@ def _with_persisted_survivors(
 
 
 def _classify_kind(
-    haystack: str,
+    primary: str,
     *,
     pool_slug: str,
     pdf_bytes: bytes | None,
     filename: str | None,
+    page_text: str = "",
+    grid_confirmed: bool | None = None,
 ) -> CandidateKind:
     if _is_non_pdf(filename, pdf_bytes):
         return "other"
-    if _matches_other_pool(haystack, pool_slug) and not _matches_pool(
-        haystack, pool_slug
+    if _matches_other_pool(primary, pool_slug) and not _matches_pool(
+        primary, pool_slug
     ):
         return "other"
-    if _CLOSURE_RE.search(haystack):
+    # Body closed-cells are not flyers.
+    if _CLOSURE_RE.search(primary):
         return "closure_notice"
-    if _SPLIT_RE.search(haystack):
+    title_text = _page_title_text(page_text)
+    if _SPLIT_RE.search(primary) or (title_text and _SPLIT_RE.search(title_text)):
         return "split_part"
-    if _matches_pool(haystack, pool_slug) and _SEASON_RE.search(haystack):
+    if _matches_pool(primary, pool_slug) and _SEASON_RE.search(primary):
         return "session_grid"
+    if pdf_bytes and page_text:
+        haystack = f"{primary} {page_text}".strip()
+        if _matches_other_pool(haystack, pool_slug) and not _matches_pool(
+            haystack, pool_slug
+        ):
+            return "other"
+        if _matches_pool(haystack, pool_slug) and (
+            _SEASON_RE.search(page_text) or grid_confirmed
+        ):
+            return "session_grid"
     return "other"
 
 
@@ -652,7 +652,7 @@ def _matches_other_pool(text: str, slug: str) -> bool:
 def _token_re(token: str) -> re.Pattern[str]:
     parts = [re.escape(part) for part in token.split() if part]
     body = r"\s+".join(parts)
-    return re.compile(rf"(?i)(?<![a-z]){body}(?![a-z])")
+    return re.compile(rf"(?i)(?<![A-Za-z]){body}(?-i:(?![a-z]))")
 
 
 def _first_page_text(pdf_bytes: bytes) -> str:
@@ -663,12 +663,23 @@ def _first_page_text(pdf_bytes: bytes) -> str:
     return pages[0] if pages else ""
 
 
-def _page_has_grid(pdf_bytes: bytes) -> bool:
-    text = _first_page_text(pdf_bytes)
-    if not text:
+def _text_has_grid(page_text: str) -> bool:
+    if not page_text:
         return False
-    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    lines = [line.strip() for line in page_text.splitlines() if line.strip()]
     return _has_grid_header(lines)
+
+
+def _page_title_text(page_text: str) -> str:
+    lines: list[str] = []
+    for raw in page_text.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        if _has_grid_header([line]):
+            break
+        lines.append(line)
+    return " ".join(lines)
 
 
 def _filename_for_link(link: DocumentLink, fetched: _ViewFetch | None) -> str | None:
