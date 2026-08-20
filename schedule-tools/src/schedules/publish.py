@@ -11,11 +11,11 @@ from pathlib import Path
 import tomlkit
 
 from ._time import pacific_today
-from .discover import view_id_from_url
+from .discover import collapse_grid_candidates, view_id_from_url
 from .fetch import fetch_pdf
 from .merge import _split_frontmatter, read_schedule_snapshot
 from .models import GroundingResult, SourceStatus
-from .paths import CONTENT_SPOTS_DIR, DATA_DIR, PACKAGE_ROOT, TMP_DIR
+from .paths import CONTENT_SPOTS_DIR, DATA_DIR, PACKAGE_ROOT, TMP_DIR, all_review_dirs
 from .pipeline import GROUNDING_MIN_RATIO
 from .registry import load_registry
 from .review import (
@@ -28,7 +28,7 @@ from .review import (
 )
 from .signals import analyze_page_texts, extract_page_texts
 from .validate import validate
-from .window_dates import parse_window_dates
+from .window_dates import parse_window_dates, windows_disjoint
 
 QUARANTINE_PATH = PACKAGE_ROOT / "quarantine.toml"
 _AUTO_PUBLISHABLE_BASES = frozenset({"swim_schedule", "temporarily_closed"})
@@ -176,6 +176,11 @@ def publish_eligible(
     has_prior_schedule_window: bool,
     source_pdf_path: Path | None,
     kill_switch: bool = False,
+    require_unique_pin: bool = False,
+    require_grounding: bool = True,
+    pin_url: str | None = None,
+    source_pdf_url: str | None = None,
+    decision: dict | None = None,
 ) -> Eligibility:
     if kill_switch:
         return _refuse("kill_switch", "SCHEDULES_AUTO_PROJECT=false")
@@ -193,6 +198,11 @@ def publish_eligible(
     if candidate.slug in blocking_slugs:
         return _refuse("discovery_flagged", f"{candidate.slug} is discover-blocking")
 
+    if require_unique_pin:
+        unique = _unique_pin_gate(candidate, decision, pin_url, source_pdf_url)
+        if not unique.ok:
+            return unique
+
     if candidate.pdf_sha256 in quarantined_shas:
         return _refuse("quarantined", f"pdf_sha256 {candidate.pdf_sha256} is quarantined")
 
@@ -209,13 +219,14 @@ def publish_eligible(
         first = result.violations[0]
         return _refuse(first.code if first.code else "validate_failed", first.message)
 
-    if grounding is None:
-        return _refuse("grounding_unavailable", "provider JSON is missing a grounding key")
-    if grounding.ratio < GROUNDING_MIN_RATIO:
-        return _refuse(
-            "grounding_coverage_low",
-            f"grounding ratio {grounding.ratio:.2f} is below {GROUNDING_MIN_RATIO}",
-        )
+    if require_grounding:
+        if grounding is None:
+            return _refuse("grounding_unavailable", "provider JSON is missing a grounding key")
+        if grounding.ratio < GROUNDING_MIN_RATIO:
+            return _refuse(
+                "grounding_coverage_low",
+                f"grounding ratio {grounding.ratio:.2f} is below {GROUNDING_MIN_RATIO}",
+            )
 
     grid = _source_pdf_gate(source_pdf_path)
     if not grid.ok:
@@ -236,6 +247,28 @@ def publish_eligible(
             f"effective_start {new_start} is before latest window {latest_effective_start}",
         )
 
+    return _ok()
+
+
+def _unique_pin_gate(
+    candidate: ReviewCandidate,
+    decision: dict | None,
+    pin_url: str | None,
+    source_pdf_url: str | None,
+) -> Eligibility:
+    kept = _kept_session_grid_ids(decision)
+    if len(kept) >= 2:
+        return _refuse(
+            "sibling_session_grids",
+            f"{candidate.slug} has {len(kept)} session_grid windows",
+        )
+    candidate_id = view_id_from_url(source_pdf_url or "")
+    pin_id = view_id_from_url(pin_url or "")
+    if candidate_id is not None and pin_id is not None and candidate_id != pin_id:
+        return _refuse(
+            "not_current_pin",
+            f"candidate View {candidate_id} is not pdf_url View {pin_id}",
+        )
     return _ok()
 
 
@@ -392,6 +425,7 @@ def publish_pending_all(
             published=[],
             refused=[],
             closure=[],
+            windows=[],
             skipped="kill_switch",
         )
         return 0, report_path
@@ -399,7 +433,9 @@ def publish_pending_all(
     published: list[str] = []
     refused: list[dict] = []
     closure: list[str] = []
+    windows: list[dict] = []
     decisions = _load_decisions(tmp_dir)
+    sequential_slugs = _sequential_slugs(decisions)
     blocking_slugs = frozenset(
         item["slug"]
         for item in decisions
@@ -407,8 +443,11 @@ def publish_pending_all(
     )
     quarantined_shas = load_quarantine()
     entries = {entry.slug: entry for entry in load_registry()}
+    candidates = find_review_candidates(data_root=data_root)
 
-    for candidate in find_review_candidates(data_root=data_root):
+    for candidate in candidates:
+        if candidate.slug in sequential_slugs:
+            continue
         try:
             _publish_unique_grid(
                 candidate=candidate,
@@ -433,6 +472,38 @@ def publish_pending_all(
             )
         else:
             published.append(candidate.slug)
+
+    for slug in sequential_slugs:
+        decision = next(
+            (
+                item
+                for item in decisions
+                if isinstance(item, dict) and item.get("slug") == slug
+            ),
+            None,
+        )
+        if decision is None:
+            continue
+        try:
+            sitting_windows = publish_sequential_slug(
+                slug=slug,
+                decision=decision,
+                candidates=[item for item in candidates if item.slug == slug],
+                content_spots_dir=content_spots_dir,
+                attested_at=attested_at,
+                quarantined_shas=quarantined_shas,
+                entries=entries,
+                data_root=data_root,
+                blocking_slugs=blocking_slugs - {slug},
+            )
+        except PublishRefuse as exc:
+            refused.append({"slug": slug, "code": exc.code, "message": exc.message})
+        except FinalizeError as exc:
+            refused.append({"slug": slug, "code": "finalize_failed", "message": str(exc)})
+        else:
+            if sitting_windows:
+                published.append(slug)
+                windows.extend(sitting_windows)
 
     for decision in decisions:
         if not isinstance(decision, dict):
@@ -466,6 +537,7 @@ def publish_pending_all(
         published=published,
         refused=refused,
         closure=closure,
+        windows=windows,
         skipped=None,
     )
     return len(published), report_path
@@ -498,21 +570,8 @@ def _publish_unique_grid(
         ),
         None,
     )
-    grid_ids = _decision_session_grid_ids(decision)
-    # Unique-grid would publish the 10-day interim while a sibling season PDF sits unused.
-    if len(grid_ids) >= 2:
-        raise PublishRefuse(
-            "sibling_session_grids",
-            f"{candidate.slug} has {len(grid_ids)} session_grid IDs",
-        )
     source_url = artifact.get("source_pdf_url")
-    candidate_id = view_id_from_url(source_url) if isinstance(source_url, str) else None
-    pin_id = view_id_from_url(entry.pdf_url)
-    if candidate_id is not None and pin_id is not None and candidate_id != pin_id:
-        raise PublishRefuse(
-            "not_current_pin",
-            f"candidate View {candidate_id} is not pdf_url View {pin_id}",
-        )
+    source_pdf_url = source_url if isinstance(source_url, str) else None
 
     payload = artifact.get("payload") if isinstance(artifact.get("payload"), dict) else {}
     grounding = _grounding_from_artifact(artifact)
@@ -536,6 +595,10 @@ def _publish_unique_grid(
         quarantined_shas=quarantined_shas,
         has_prior_schedule_window=len(tables) > 0,
         source_pdf_path=source_pdf_path,
+        require_unique_pin=True,
+        pin_url=entry.pdf_url,
+        source_pdf_url=source_pdf_url,
+        decision=decision,
     )
     if not eligibility.ok:
         raise PublishRefuse(eligibility.code or "refused", eligibility.message)
@@ -545,6 +608,183 @@ def _publish_unique_grid(
         attested_at=attested_at,
         eligibility=eligibility,
     )
+
+
+def publish_sequential_slug(
+    *,
+    slug: str,
+    decision: dict,
+    candidates: list[ReviewCandidate],
+    content_spots_dir: Path,
+    attested_at: date,
+    quarantined_shas: frozenset[str],
+    entries: dict,
+    attested_by: str = "ci",
+    require_grounding: bool = True,
+    envelopes: dict[str, dict] | None = None,
+    data_root: Path | None = None,
+    blocking_slugs: frozenset[str] = frozenset(),
+) -> list[dict]:
+    """All-or-nothing project of unpublished date-disjoint windows.
+
+    Restores content markdown and unlinks reviewed.json on failure.
+    Calls publish_eligible(..., require_unique_pin=False).
+    """
+    data_root = DATA_DIR if data_root is None else data_root
+    entry = entries.get(slug)
+    if entry is None:
+        raise PublishRefuse("not_rec_park", f"{slug} is not in the registry")
+
+    kept = collapse_grid_candidates(
+        list(decision.get("candidates") or []) + list(decision.get("extra_candidates") or [])
+    )
+    kept_ids = _view_ids(kept)
+    if len(kept_ids) < 2:
+        raise PublishRefuse(
+            "sequential_incomplete",
+            f"{slug} has {len(kept_ids)} kept session_grid windows",
+        )
+
+    unpublished = _unpublished_kept_windows(candidates, kept_ids)
+    attested = _attested_view_ids(slug, data_root, kept_ids)
+    covered = set(unpublished) | attested
+    missing = kept_ids - covered
+    if missing or (not attested and len(unpublished) < 2):
+        raise PublishRefuse(
+            "sequential_incomplete",
+            f"{slug} unpublished={sorted(unpublished)} attested={sorted(attested)} "
+            f"missing={sorted(missing)}",
+        )
+
+    ordered = _order_unpublished(unpublished)
+    payload_ranges: list[tuple[date, date]] = []
+    for candidate in ordered:
+        artifact = _candidate_artifact(candidate)
+        payload = artifact.get("payload") if isinstance(artifact.get("payload"), dict) else {}
+        parsed = _payload_window(payload)
+        if parsed is None:
+            continue
+        payload_ranges.append(parsed)
+    for index, left in enumerate(payload_ranges):
+        for right in payload_ranges[index + 1 :]:
+            if not windows_disjoint(left, right):
+                raise PublishRefuse(
+                    "overlapping_windows",
+                    f"{slug} payload windows overlap",
+                )
+
+    md_path = content_spots_dir / f"{slug}.md"
+    tables = _schedule_tables(md_path)
+    prior_sessions_count = 0
+    if md_path.exists():
+        snapshot = read_schedule_snapshot(md_path)
+        prior_sessions_count = len(snapshot.get("sessions") or [])
+    frozen_latest = latest_effective_start(md_path)
+    backup = md_path.read_text() if md_path.exists() else None
+
+    prepared: list[tuple[ReviewCandidate, dict, Eligibility]] = []
+    for candidate in ordered:
+        artifact = _candidate_artifact(candidate)
+        payload = artifact.get("payload") if isinstance(artifact.get("payload"), dict) else {}
+        source_url = artifact.get("source_pdf_url")
+        source_pdf_url = source_url if isinstance(source_url, str) else None
+        source_pdf_path = candidate.source_path if candidate.source_path.exists() else None
+        eligibility = publish_eligible(
+            candidate=candidate,
+            payload=payload,
+            grounding=_grounding_from_artifact(artifact),
+            prior_sessions_count=prior_sessions_count,
+            latest_effective_start=frozen_latest,
+            source_kind=entry.source_kind,
+            source_status=entry.source_status,
+            blocking_slugs=blocking_slugs,
+            quarantined_shas=quarantined_shas,
+            has_prior_schedule_window=len(tables) > 0,
+            source_pdf_path=source_pdf_path,
+            require_unique_pin=False,
+            require_grounding=require_grounding,
+            pin_url=entry.pdf_url,
+            source_pdf_url=source_pdf_url,
+            decision=decision,
+        )
+        prepared.append((candidate, payload, eligibility))
+
+    failed = next((item for item in prepared if not item[2].ok), None)
+    if failed is not None:
+        raise PublishRefuse("sequential_partial", failed[2].code or "refused")
+
+    written: list[Path] = []
+    windows: list[dict] = []
+    try:
+        for candidate, payload, eligibility in prepared:
+            if envelopes is not None:
+                sha12 = candidate.pdf_sha256[:12]
+                envelope = envelopes.get(sha12)
+                if envelope is None:
+                    raise PublishRefuse(
+                        "sequential_incomplete",
+                        f"{slug} missing posted envelope for {sha12}",
+                    )
+                path = _write_posted_envelope(
+                    candidate=candidate,
+                    envelope=envelope,
+                    attested_at=attested_at,
+                    attested_by=attested_by,
+                    content_spots_dir=content_spots_dir,
+                )
+            else:
+                path = publish_candidate(
+                    candidate=candidate,
+                    content_spots_dir=content_spots_dir,
+                    attested_at=attested_at,
+                    eligibility=eligibility,
+                )
+            written.append(path)
+            artifact = _candidate_artifact(candidate)
+            source_url = artifact.get("source_pdf_url")
+            windows.append(
+                {
+                    "slug": slug,
+                    "effective_start": payload.get("effective_start"),
+                    "effective_end": payload.get("effective_end"),
+                    "view_id": view_id_from_url(source_url)
+                    if isinstance(source_url, str)
+                    else None,
+                }
+            )
+    except (PublishRefuse, FinalizeError) as exc:
+        if backup is not None:
+            md_path.write_text(backup)
+        for path in written:
+            path.unlink(missing_ok=True)
+        raise PublishRefuse("sequential_partial", str(exc)) from exc
+    return windows
+
+
+def _write_posted_envelope(
+    *,
+    candidate: ReviewCandidate,
+    envelope: dict,
+    attested_at: date,
+    attested_by: str,
+    content_spots_dir: Path,
+) -> Path:
+    target = candidate.review_dir / "reviewed.json"
+    payload = dict(envelope)
+    payload["slug"] = candidate.slug
+    payload["pdf_sha256"] = candidate.pdf_sha256
+    payload["reviewed_at"] = attested_at.isoformat()
+    payload["attested_by"] = attested_by
+    target.write_text(json.dumps(payload, indent=2) + "\n")
+    try:
+        finalize_draft(
+            reviewed_json_path=target,
+            content_spots_dir=content_spots_dir,
+        )
+    except Exception:
+        target.unlink(missing_ok=True)
+        raise
+    return target
 
 
 def _publish_closure_for_decision(
@@ -610,23 +850,138 @@ def _grounding_from_artifact(artifact: dict) -> GroundingResult | None:
     )
 
 
-def _decision_session_grid_ids(decision: dict | None) -> set[int]:
+def _kept_session_grid_ids(decision: dict | None) -> set[int]:
     if not isinstance(decision, dict):
         return set()
+    items = list(decision.get("candidates") or []) + list(
+        decision.get("extra_candidates") or []
+    )
+    return _view_ids(collapse_grid_candidates(items))
+
+
+def _view_ids(items: list[dict]) -> set[int]:
     ids: set[int] = set()
-    for key in ("candidates", "extra_candidates"):
-        items = decision.get(key) or []
-        if not isinstance(items, list):
-            continue
-        for item in items:
-            if not isinstance(item, dict) or item.get("kind") != "session_grid":
-                continue
-            view_id = item.get("view_id")
-            if isinstance(view_id, int):
-                ids.add(view_id)
-            elif isinstance(view_id, str) and view_id.isdigit():
-                ids.add(int(view_id))
+    for item in items:
+        view_id = item.get("view_id")
+        if isinstance(view_id, int):
+            ids.add(view_id)
+        elif isinstance(view_id, str) and view_id.isdigit():
+            ids.add(int(view_id))
     return ids
+
+
+def _sequential_slugs(decisions: list[dict]) -> list[str]:
+    slugs: list[str] = []
+    seen: set[str] = set()
+    for decision in decisions:
+        slug = decision.get("slug")
+        if not isinstance(slug, str) or slug in seen:
+            continue
+        if decision.get("reason") == "sequential_windows" or _decision_is_sequential(
+            decision
+        ):
+            seen.add(slug)
+            slugs.append(slug)
+    return slugs
+
+
+def _decision_is_sequential(decision: dict) -> bool:
+    kept = collapse_grid_candidates(
+        list(decision.get("candidates") or []) + list(decision.get("extra_candidates") or [])
+    )
+    if len(kept) < 2:
+        return False
+    ranges: list[tuple[date, date]] = []
+    for item in kept:
+        parsed = _json_window(item)
+        if parsed is None:
+            return False
+        ranges.append(parsed)
+    return all(
+        windows_disjoint(left, right)
+        for index, left in enumerate(ranges)
+        for right in ranges[index + 1 :]
+    )
+
+
+def _json_window(item: dict) -> tuple[date, date] | None:
+    start, end = item.get("window_start"), item.get("window_end")
+    if not isinstance(start, str) or not isinstance(end, str):
+        return None
+    try:
+        return date.fromisoformat(start), date.fromisoformat(end)
+    except ValueError:
+        return None
+
+
+def _payload_window(payload: dict) -> tuple[date, date] | None:
+    start, end = payload.get("effective_start"), payload.get("effective_end")
+    if not isinstance(start, str) or not isinstance(end, str):
+        return None
+    try:
+        return date.fromisoformat(start), date.fromisoformat(end)
+    except ValueError:
+        return None
+
+
+def _candidate_artifact(candidate: ReviewCandidate) -> dict:
+    try:
+        artifact = json.loads(_pick_provider_artifact(candidate.review_dir).read_text())
+    except (OSError, json.JSONDecodeError, FileNotFoundError):
+        return {}
+    return artifact if isinstance(artifact, dict) else {}
+
+
+def _candidate_view_id(candidate: ReviewCandidate) -> int | None:
+    artifact = _candidate_artifact(candidate)
+    source_url = artifact.get("source_pdf_url")
+    return view_id_from_url(source_url) if isinstance(source_url, str) else None
+
+
+def _unpublished_kept_windows(
+    candidates: list[ReviewCandidate], kept_ids: set[int]
+) -> dict[int, ReviewCandidate]:
+    by_id: dict[int, ReviewCandidate] = {}
+    for candidate in candidates:
+        view_id = _candidate_view_id(candidate)
+        if view_id is None or view_id not in kept_ids:
+            continue
+        previous = by_id.get(view_id)
+        if previous is None or candidate.fetch_date >= previous.fetch_date:
+            by_id[view_id] = candidate
+    return by_id
+
+
+def _attested_view_ids(slug: str, data_root: Path, kept_ids: set[int]) -> set[int]:
+    found: set[int] = set()
+    for review_dir in all_review_dirs(slug, root=data_root):
+        path = review_dir / "reviewed.json"
+        if not path.exists():
+            continue
+        try:
+            envelope = json.loads(path.read_text())
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(envelope, dict):
+            continue
+        url = envelope.get("source_pdf_url")
+        view_id = view_id_from_url(url) if isinstance(url, str) else None
+        if view_id in kept_ids:
+            found.add(view_id)
+    return found
+
+
+def _order_unpublished(
+    unpublished: dict[int, ReviewCandidate],
+) -> list[ReviewCandidate]:
+    def sort_key(candidate: ReviewCandidate) -> tuple[str, str]:
+        payload = _candidate_artifact(candidate).get("payload")
+        start = ""
+        if isinstance(payload, dict) and isinstance(payload.get("effective_start"), str):
+            start = payload["effective_start"]
+        return (start, candidate.fetch_date)
+
+    return sorted(unpublished.values(), key=sort_key)
 
 
 def _load_decisions(tmp_dir: Path) -> list[dict]:
@@ -649,6 +1004,7 @@ def _write_reports(
     published: list[str],
     refused: list[dict],
     closure: list[str],
+    windows: list[dict],
     skipped: str | None,
 ) -> None:
     json_path.write_text(
@@ -659,6 +1015,7 @@ def _write_reports(
                     {"slug": item["slug"], "code": item["code"]} for item in refused
                 ],
                 "closure": closure,
+                "windows": windows,
                 **({"skipped": skipped} if skipped else {}),
             },
             indent=2,

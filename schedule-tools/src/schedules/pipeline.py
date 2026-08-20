@@ -10,7 +10,12 @@ from typing import Literal
 from .artifacts import save_artifact_bundle, skip_if_fresh
 from .delta import check_delta
 from .direct_sources import extract_direct
-from .discover import discover_all, rec_park_entries
+from .discover import (
+    absolute_view_url,
+    collapse_grid_candidates,
+    discover_all,
+    rec_park_entries,
+)
 from .fetch import fetch_pdf
 from .grounding import grounding_from_text, normalize_pdf_text
 from .merge import read_schedule_snapshot
@@ -415,6 +420,54 @@ def _attach_discovery_notes(
     return replace(result, review_notes=[*result.review_notes, *extra])
 
 
+def _session_grid_hrefs(entry: PoolEntry, decisions: list[dict]) -> list[str]:
+    """One href per [window_start, window_end]. Table id wins ties.
+    Equal-range copies are omitted. pdf_url is always included."""
+    decision = next(
+        (
+            item
+            for item in decisions
+            if isinstance(item, dict) and item.get("slug") == entry.slug
+        ),
+        None,
+    )
+    hrefs: list[str] = []
+    seen: set[str] = set()
+
+    def add(href: str) -> None:
+        if href and href not in seen:
+            seen.add(href)
+            hrefs.append(href)
+
+    if decision is not None:
+        raw = list(decision.get("candidates") or [])
+        extra = list(decision.get("extra_candidates") or [])
+        for item in collapse_grid_candidates(raw + extra):
+            href = item.get("href")
+            if isinstance(href, str) and href:
+                add(href)
+                continue
+            view_id = item.get("view_id")
+            if isinstance(view_id, int):
+                add(absolute_view_url(view_id))
+            elif isinstance(view_id, str) and view_id.isdigit():
+                add(absolute_view_url(int(view_id)))
+    add(entry.pdf_url)
+    return hrefs
+
+
+def _load_discovery_decisions(path: Path) -> list[dict]:
+    if not path.exists():
+        return []
+    try:
+        data = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return []
+    if not isinstance(data, list):
+        return []
+    return [item for item in data if isinstance(item, dict)]
+
+
 def run_pipeline(
     *,
     slugs: list[str] | None,
@@ -456,16 +509,27 @@ def run_pipeline(
         ]
 
     prompt = PROMPT_PATH.read_text().strip()
-    results = [
-        _process_entry(
-            entry,
-            provider=source_mode,
-            compare_with=compare_with,
-            force=force,
-            prompt=prompt,
-        )
-        for entry in selected
-    ]
+    decisions = _load_discovery_decisions(TMP_DIR / "discovery-decisions.json")
+    results: list[PoolResult] = []
+    for entry in selected:
+        hrefs = [entry.pdf_url]
+        if (
+            override_url is None
+            and entry.source_kind == "sfrecpark_pdf"
+            and entry.source_status == "published"
+        ):
+            hrefs = _session_grid_hrefs(entry, decisions)
+        for href in hrefs:
+            work = entry if href == entry.pdf_url else replace(entry, pdf_url=href)
+            results.append(
+                _process_entry(
+                    work,
+                    provider=source_mode,
+                    compare_with=compare_with,
+                    force=force,
+                    prompt=prompt,
+                )
+            )
     notes_by_slug = discovery_notes_from_decisions(TMP_DIR / "discovery-decisions.json")
     results = [_attach_discovery_notes(result, notes_by_slug) for result in results]
     report_path = write_report(results, path=REPORT_PATHS[source_mode])

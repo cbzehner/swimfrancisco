@@ -53,6 +53,11 @@ _SAME_MONTH_RE = re.compile(
 _PAGE1_LINE_LIMIT = 40
 
 
+def windows_disjoint(a: tuple[date, date], b: tuple[date, date]) -> bool:
+    """Inclusive ranges. Adjacent days are disjoint; equal ranges are not."""
+    return a[1] < b[0] or b[1] < a[0]
+
+
 def parse_window_dates(
     *,
     page_text: str | None,
