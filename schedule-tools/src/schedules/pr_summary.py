@@ -4,8 +4,8 @@ Designed for a human reviewer landing on a freshly-opened PR cold. Leads
 with the action ("X needs a human review"), then a short list of what
 artifacts changed, then a 5-step checklist with rough time estimate.
 The eval baseline is collapsed; reviewers who care about the F1 number
-can expand it. Inputs come from ``git diff --staged`` and the registry,
-so the workflow's plumbing is just "git add data/" → run this command.
+can expand it. Inputs come from ``git diff --staged`` (data/ and
+registry.toml) plus ``tmp/discovery-decisions.json`` when present.
 """
 
 from __future__ import annotations
@@ -17,6 +17,7 @@ from datetime import date as _date
 from pathlib import Path
 
 from ._time import pacific_today
+from .discover import view_id_from_url
 from .eval import PoolEval, collect_pool_evals, prf1
 from .paths import DATA_DIR, REPO_ROOT
 from .registry import load_registry
@@ -24,6 +25,14 @@ from .registry import load_registry
 
 _DATA_PATH_RE = re.compile(r"^data/([a-z0-9-]+)/([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9a-f]{12})/(.+)$")
 _REVIEW_MIN_PER_POOL = 10
+_REGISTRY_REL = "schedule-tools/src/schedules/registry.toml"
+_LIVE_SITE_UNTIL_MERGE = (
+    "The live site stays on the last reviewed window until this PR merges."
+)
+_DAILY_REFRESH = (
+    "Daily extract will refresh this PR; closing it without merging will "
+    "reopen on the next run that still sees a diff against `main`."
+)
 
 
 def _staged_data_changes(repo_root: Path = REPO_ROOT) -> list[tuple[str, str, str, str]]:
@@ -161,6 +170,248 @@ def _slug_list(slugs: list[str]) -> str:
     return ", ".join(f"`{s}`" for s in slugs[:-1]) + f", and `{slugs[-1]}`"
 
 
+def _registry_is_staged(repo_root: Path) -> bool:
+    try:
+        out = subprocess.run(
+            ["git", "diff", "--staged", "--name-only", "--", _REGISTRY_REL],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return False
+    return any(line.strip().endswith("registry.toml") for line in out.splitlines())
+
+
+def _load_discovery_decisions(path: Path) -> list[dict]:
+    if not path.is_file():
+        return []
+    try:
+        payload = json.loads(path.read_text())
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return []
+    if not isinstance(payload, list):
+        return []
+    return [
+        item
+        for item in payload
+        if isinstance(item, dict) and isinstance(item.get("slug"), str) and item["slug"]
+    ]
+
+
+def _all_candidates(decision: dict) -> list[dict]:
+    rows: list[dict] = []
+    seen: set[int] = set()
+    for bucket in ("candidates", "extra_candidates"):
+        for item in decision.get(bucket) or []:
+            if not isinstance(item, dict):
+                continue
+            view_id = item.get("view_id")
+            if not isinstance(view_id, int) or view_id in seen:
+                continue
+            seen.add(view_id)
+            rows.append(item)
+    return rows
+
+
+def _is_off_table(candidate: dict) -> bool:
+    return candidate.get("source") in {"band", "persisted"}
+
+
+def _kind_label(decision: dict) -> str:
+    reason = str(decision.get("reason") or "")
+    kind = str(decision.get("kind") or "")
+    if reason == "multiple_windows":
+        return "multiple_windows"
+    if reason in {"band_session_grid", "band_flag"}:
+        return "band_flag"
+    if reason == "split_part" or kind == "split_part":
+        return "split_pdfs"
+    if reason == "closure_notice" or kind == "closure_notice":
+        return "closure_notice"
+    if kind:
+        return kind
+    if reason:
+        return reason
+    return "session_grid"
+
+
+def _id_and_name(candidate: dict) -> str:
+    view_id = candidate.get("view_id")
+    name = candidate.get("filename")
+    if isinstance(name, str) and name.strip():
+        return f"{view_id} `{name.strip()}`"
+    return str(view_id)
+
+
+def _preferred_filename(decision: dict, view_id: int | None) -> str | None:
+    if view_id is None:
+        return None
+    for candidate in _all_candidates(decision):
+        if candidate.get("view_id") != view_id:
+            continue
+        name = candidate.get("filename")
+        if isinstance(name, str) and name.strip():
+            return name.strip()
+    return None
+
+
+def _window_from_run(run_dir: Path) -> tuple[str | None, str | None]:
+    if not run_dir.is_dir():
+        return None, None
+    paths = sorted(p for p in run_dir.glob("*.json") if p.name != "reviewed.json")
+    reviewed = run_dir / "reviewed.json"
+    if reviewed.is_file():
+        paths.append(reviewed)
+    for path in paths:
+        try:
+            envelope = json.loads(path.read_text())
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            continue
+        if not isinstance(envelope, dict):
+            continue
+        payload = envelope.get("payload")
+        if not isinstance(payload, dict):
+            continue
+        start = payload.get("effective_start")
+        end = payload.get("effective_end")
+        start_s = start if isinstance(start, str) and start else None
+        end_s = end if isinstance(end, str) and end else None
+        if start_s or end_s:
+            return start_s, end_s
+    return None, None
+
+
+def _windows_from_artifacts(
+    changed: dict[str, dict[str, list[tuple[str, str]]]],
+    data_root: Path,
+) -> dict[str, tuple[str | None, str | None]]:
+    windows: dict[str, tuple[str | None, str | None]] = {}
+    for slug, runs in changed.items():
+        for run in sorted(runs, reverse=True):
+            window = _window_from_run(data_root / slug / run)
+            if window != (None, None):
+                windows[slug] = window
+                break
+    return windows
+
+
+def _format_decision_line(
+    decision: dict,
+    window: tuple[str | None, str | None] | None,
+) -> str:
+    slug = decision["slug"]
+    kind = _kind_label(decision)
+    old_id = view_id_from_url(str(decision.get("old_url") or ""))
+    new_id = view_id_from_url(str(decision.get("new_url") or ""))
+    candidates = _all_candidates(decision)
+    off_table = [item for item in candidates if _is_off_table(item)]
+    table_flyers = [
+        item
+        for item in candidates
+        if item.get("source") == "table" and item.get("kind") == "closure_notice"
+    ]
+    off_grids = [item for item in off_table if item.get("kind") == "session_grid"]
+    grid_ids = [item for item in candidates if item.get("kind") == "session_grid"]
+
+    bits: list[str] = []
+    mentioned: set[int] = set()
+    action = decision.get("action")
+    if action == "adopt" and old_id is not None and new_id is not None and old_id != new_id:
+        bits.append(f"{old_id} → {new_id}")
+    elif old_id is not None:
+        bits.append(f"{old_id} unchanged")
+
+    def _mark(items: list[dict]) -> None:
+        for item in items:
+            view_id = item.get("view_id")
+            if isinstance(view_id, int):
+                mentioned.add(view_id)
+
+    if table_flyers and off_grids:
+        flyer = ", ".join(_id_and_name(item) for item in table_flyers)
+        flagged = ", ".join(_id_and_name(item) for item in off_grids)
+        bits.append(f"flyer {flyer}")
+        bits.append(f"band-flagged {flagged}")
+        _mark(table_flyers)
+        _mark(off_grids)
+    elif kind == "multiple_windows" and grid_ids:
+        labeled: list[str] = []
+        for item in grid_ids:
+            where = "off-table" if _is_off_table(item) else "table"
+            labeled.append(f"{where} {_id_and_name(item)}")
+        bits.append(f"multiple_windows {' + '.join(labeled)}")
+        _mark(grid_ids)
+    else:
+        filename = _preferred_filename(decision, new_id or old_id)
+        if filename:
+            bits.append(f"`{filename}`")
+        bits.append(kind)
+        if off_table:
+            bits.append("off-table " + ", ".join(_id_and_name(item) for item in off_table))
+            _mark(off_table)
+
+    extra_ids = {
+        extra.get("view_id")
+        for extra in (decision.get("extra_candidates") or [])
+        if isinstance(extra, dict) and extra.get("kind") != "session_grid"
+    }
+    leftover_extra = [
+        item
+        for item in candidates
+        if item.get("view_id") in extra_ids and item.get("view_id") not in mentioned
+    ]
+    if leftover_extra:
+        bits.append("extra " + ", ".join(_id_and_name(item) for item in leftover_extra))
+
+    if window and (window[0] or window[1]):
+        start, end = window
+        if start and end:
+            bits.append(f"{start}–{end}")
+        elif start:
+            bits.append(start)
+        elif end:
+            bits.append(end)
+
+    return f"- `{slug}`: " + "; ".join(bits)
+
+
+def _lead_pool_lines(
+    pending_slugs: list[str],
+    decisions: list[dict],
+    windows: dict[str, tuple[str | None, str | None]],
+) -> list[str]:
+    by_slug = {item["slug"]: item for item in decisions}
+    slugs: list[str] = []
+    seen: set[str] = set()
+    for item in decisions:
+        slug = item["slug"]
+        if slug in seen:
+            continue
+        if (
+            item.get("blocking")
+            or item.get("action") == "adopt"
+            or any(_is_off_table(candidate) for candidate in _all_candidates(item))
+            or slug in pending_slugs
+        ):
+            seen.add(slug)
+            slugs.append(slug)
+    for slug in pending_slugs:
+        if slug not in seen:
+            seen.add(slug)
+            slugs.append(slug)
+
+    lines: list[str] = []
+    for slug in slugs:
+        decision = by_slug.get(slug)
+        if decision is not None:
+            lines.append(_format_decision_line(decision, windows.get(slug)))
+        else:
+            lines.append(f"- `{slug}`: payload changed, needs review")
+    return lines
+
+
 def render_pr_body(
     *,
     repo_root: Path = REPO_ROOT,
@@ -172,8 +423,14 @@ def render_pr_body(
     changed = _changed_slugs_with_runs(rows)
     registry = load_registry()
     published = [e for e in registry if e.source_status == "published"]
+    decisions = _load_discovery_decisions(repo_root / "tmp" / "discovery-decisions.json")
+    registry_staged = _registry_is_staged(repo_root)
+    blocking_slugs = sorted(
+        {item["slug"] for item in decisions if item.get("blocking")}
+    )
+    adopt_slugs = [item["slug"] for item in decisions if item.get("action") == "adopt"]
 
-    if not changed:
+    if not changed and not registry_staged and not blocking_slugs and not adopt_slugs:
         return (
             "Nothing to review. Auto-extract found no diffs against `main` "
             "(every published pool's PDF, prompt, and schema sha matched the "
@@ -184,12 +441,25 @@ def render_pr_body(
     pending_slugs = sorted(s for s in changed_slugs if _has_pending_run(s, changed[s], data_root))
     carried_slugs = [s for s in changed_slugs if s not in pending_slugs]
     unchanged_n = len(published) - len(changed_slugs)
+    windows = _windows_from_artifacts(changed, data_root)
     branch = "auto/schedules-extract"
+    review_slugs = sorted(set(pending_slugs) | set(blocking_slugs))
 
     lines: list[str] = []
-    lines.extend(_render_lead(changed, pending_slugs, carried_slugs, unchanged_n))
-    lines.extend(_render_whats_here(changed))
-    lines.extend(_render_review(branch, pending_slugs))
+    lines.extend(
+        _render_lead(
+            changed,
+            pending_slugs,
+            carried_slugs,
+            unchanged_n,
+            decisions=decisions,
+            windows=windows,
+            registry_staged=registry_staged,
+            review_slugs=review_slugs,
+        )
+    )
+    lines.extend(_render_whats_here(changed, registry_staged=registry_staged))
+    lines.extend(_render_review(branch, review_slugs))
     lines.extend(_render_eval_section(data_root=data_root, changed_artifacts=_changed_provider_artifacts(rows)))
 
     return "\n".join(lines).rstrip() + "\n"
@@ -205,25 +475,49 @@ def _render_lead(
     pending_slugs: list[str],
     carried_slugs: list[str],
     unchanged_n: int,
+    *,
+    decisions: list[dict] | None = None,
+    windows: dict[str, tuple[str | None, str | None]] | None = None,
+    registry_staged: bool = False,
+    review_slugs: list[str] | None = None,
 ) -> list[str]:
-    if not pending_slugs:
-        action = (
-            "No human review needed. Every changed pool extracted a payload "
-            "identical to its last human-reviewed one, so the attestation was "
-            "carried forward; this PR auto-merges once checks pass."
+    decisions = decisions or []
+    windows = windows or {}
+    review_slugs = pending_slugs if review_slugs is None else review_slugs
+    if not review_slugs:
+        review_slugs = sorted(
+            {item["slug"] for item in decisions if item.get("blocking")}
         )
-    elif len(pending_slugs) == 1:
-        slug = pending_slugs[0]
+    minutes = len(review_slugs) * _REVIEW_MIN_PER_POOL
+    if not review_slugs:
+        if changed:
+            action = (
+                "No human review needed. Every changed pool extracted a payload "
+                "identical to its last human-reviewed one, so the attestation was "
+                "carried forward; this PR auto-merges once checks pass."
+            )
+        else:
+            action = (
+                "No human review needed. This PR auto-merges once checks pass."
+            )
+    elif len(review_slugs) == 1:
         action = (
-            f"`{slug}` needs a human review. "
-            "The published page is running on an unverified projection until that happens."
+            f"`{review_slugs[0]}` needs a human review (~{minutes} min). "
+            f"{_LIVE_SITE_UNTIL_MERGE}"
         )
     else:
-        action = (
-            f"{_slug_list(pending_slugs)} need human review. "
-            "Their published pages run on unverified projections until that happens."
-        )
-    if pending_slugs and carried_slugs:
+        rec_park = [item["slug"] for item in decisions if item["slug"] in review_slugs]
+        if rec_park and set(rec_park) == set(review_slugs):
+            action = (
+                f"{len(review_slugs)} Rec & Park pools need human review "
+                f"(~{minutes} min). {_LIVE_SITE_UNTIL_MERGE}"
+            )
+        else:
+            action = (
+                f"{_slug_list(review_slugs)} need human review (~{minutes} min). "
+                f"{_LIVE_SITE_UNTIL_MERGE}"
+            )
+    if review_slugs and carried_slugs:
         action += (
             f" {_slug_list(carried_slugs)} auto-verified: extraction matched "
             "the last human-reviewed payload, so the attestation carried forward."
@@ -246,6 +540,8 @@ def _render_lead(
     if updated_files:
         providers = sorted({_provider_word(f) for f in updated_files})
         seed_phrases.append(f"refreshed {', '.join(providers)} JSON")
+    if registry_staged:
+        seed_phrases.append("updated Rec & Park registry pins or discover notes")
     seed = " and ".join(seed_phrases) if seed_phrases else "wrote provider artifacts"
 
     if unchanged_n == 1:
@@ -255,11 +551,26 @@ def _render_lead(
     else:
         tail = "."
 
-    return [f"{action} Auto-extract {seed} to start from{tail}", ""]
+    lines = [f"{action} Auto-extract {seed} to start from{tail}", ""]
+    pool_lines = _lead_pool_lines(pending_slugs, decisions, windows)
+    if pool_lines:
+        lines.extend(pool_lines)
+        lines.append("")
+    return lines
 
 
-def _render_whats_here(changed: dict[str, dict[str, list[tuple[str, str]]]]) -> list[str]:
+def _render_whats_here(
+    changed: dict[str, dict[str, list[tuple[str, str]]]],
+    *,
+    registry_staged: bool = False,
+) -> list[str]:
+    if not changed and not registry_staged:
+        return []
     lines = ["## What's here", ""]
+    if registry_staged:
+        lines.append(
+            f"`{_REGISTRY_REL}` — Rec & Park `pdf_url` and discover notes."
+        )
     for slug in sorted(changed):
         for run in sorted(changed[slug]):
             for filename, change in sorted(changed[slug][run]):
@@ -277,23 +588,21 @@ def _render_whats_here(changed: dict[str, dict[str, list[tuple[str, str]]]]) -> 
     return lines
 
 
-def _render_review(branch: str, changed_slugs: list[str]) -> list[str]:
-    if not changed_slugs:
+def _render_review(branch: str, review_slugs: list[str]) -> list[str]:
+    if not review_slugs:
         return []
-    minutes = max(_REVIEW_MIN_PER_POOL, len(changed_slugs) * _REVIEW_MIN_PER_POOL)
-    first = changed_slugs[0]
-    review_step = f"Run `just schedules-review` and review the browser queue (start with `{first}`)"
+    minutes = max(_REVIEW_MIN_PER_POOL, len(review_slugs) * _REVIEW_MIN_PER_POOL)
 
     return [
         f"## Review (~{minutes} min)",
         "",
-        f"- [ ] `git fetch origin && git checkout {branch}`",
-        f"- [ ] {review_step}",
-        "- [ ] Read each session row against the PDF cell it claims to come from. Drop invented or misclassified rows, fix wrong days/times, leave correct rows alone.",
-        "- [ ] Confirm every source cell, then choose **Save & next pool**. The site projects the verified payload into `content/spots/<slug>.md`.",
-        "- [ ] Commit `reviewed.json` and the projected MD, push, merge.",
+        f"- [ ] git fetch origin && git checkout {branch}",
+        "- [ ] just schedules-review  (work the queue)",
+        "- [ ] just release           (bulletin only if reviewed payloads changed)",
+        "- [ ] commit content/spots, data, registry.toml",
+        "- [ ] merge this PR; do not open a second one",
         "",
-        "Skip this week → close the PR. Next Monday will produce another.",
+        _DAILY_REFRESH,
         "",
     ]
 
