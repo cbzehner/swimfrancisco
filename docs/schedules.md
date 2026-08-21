@@ -24,6 +24,10 @@ GOOGLE_API_KEY=...
 ANTHROPIC_API_KEY=...
 ```
 
+CI already has `GOOGLE_API_KEY`. Local extract is optional and is not
+required for sequential FLAG ingest. For a local Gemini pass, copy the
+1Password item "Gemini API Key" into root `.env`. Do not commit it.
+
 The repo uses `devenv`'s built-in dotenv integration:
 
 ```nix
@@ -144,10 +148,11 @@ and a `carried_from` field pointing at the prior snapshot. A prior attestor
 already signed this exact payload; only the source bytes churned.
 Direct extractors stamp `payload.effective_start` with the fetch date, so
 that one clock-derived field is ignored in the comparison; for PDF pools
-the whole payload must match. A new Rec & Park unique-grid SHA is attested
-by `schedules publish-pending` (`attested_by: ci`) when the auto-publish
-gates pass. FLAG URL choice and a re-queued bad auto-publish still use
-`just schedules-review`.
+the whole payload must match. A new Rec & Park unique-grid SHA, and a date-disjoint sequential
+sitting, is attested by `schedules publish-pending` (`attested_by: ci`)
+when the auto-publish gates pass. FLAG URL choice (Garfield band-only,
+North Beach Cool/Warm), sequential grounding repair, and a re-queued
+bad auto-publish still use `just schedules-review`.
 
 1. Run `just schedules-extract --direct` and, when needed, one or both PDF provider modes.
 2. Read the report for the selected pass under `tmp/extraction-report-<mode>.md`.
@@ -168,9 +173,11 @@ gates pass. FLAG URL choice and a re-queued bad auto-publish still use
    JSONs, `reviewed.json`) once the diff looks trustworthy.
 
 A new unique Rec & Park session-grid PDF auto-publishes when
-`publish-pending` gates pass. Identical payloads still carry the prior
-attestation. FLAG URL choice (Cool/Warm splits, Sava/MLK two-window,
-band-only grids) stays operator work.
+`publish-pending` gates pass. Date-disjoint sequential windows
+(Sava, MLK, Balboa) ingest in the same CI sitting. Identical payloads
+still carry the prior attestation. FLAG URL choice (Cool/Warm splits,
+band-only grids) stays operator work. Do not `--adopt` one sequential
+window; that is the 10-day trap.
 
 Each `<provider>-<model>.json` is self-describing: it carries
 `prompt_sha256`, `schema_sha256`, `source_pdf_url`, `pdf_sha256`, and
@@ -186,49 +193,53 @@ cell was read correctly.
 The source registry lives at `schedule-tools/src/schedules/registry.toml`.
 
 CI discovers Rec & Park `DocumentCenter` IDs daily from each pool's
-`official_page_url`. `schedules discover` rewrites `pdf_url` only when
-exactly one session-grid PDF is safe to adopt. Extract then fetches that
-pointer. Discover never writes `content/spots/`. `publish-pending` writes
-eligible unique grids and unique table closure flyers. The live site
-updates when that PR merges.
+`official_page_url`. `schedules discover` rewrites `pdf_url` to the
+table-linked current `session_grid` (a unique table grid, or the current
+window of a date-disjoint sequential set). Extract then fetches one href
+per collapsed window. Discover never writes `content/spots/`.
+`publish-pending` writes eligible unique grids, sequential sittings, and
+unique table closure flyers. The live site updates when that PR merges.
 
-FLAG URL choice stays operator work. Unique-grid payload change does not:
+Happy path is cron. `--adopt` remains Garfield band-only URL confirmation
+and North Beach split confirmation. Unique-grid and sequential payload
+change does not:
 
 - **Unique table `session_grid`.** CI auto-publishes after extract when
   gates pass. No `just schedules-review` on the happy path. Rossi
   `RossiPool_Fall*.pdf` is a session grid, not a closure flyer.
+- **Sequential windows** (Sava Fall 1 + Fall 2, MLK `pt.1` / `pt.2`,
+  Balboa interim + fall). Date-disjoint replacements, not Cool/Warm. CI
+  extracts one href per window. `publish-pending` projects every
+  unpublished window in one sitting, or none. `pdf_url` tracks the
+  table-linked current file. Sibling IDs persist across `--adopt` and
+  `max_id` jumps. Do **not** `--adopt` Fall 1 then extract that pointer
+  locally. That ships one window and is the 10-day trap.
 - **Split PDFs** (North Beach Cool + Warm only). Discover flags and sets
   `missing_current_schedule`. Do not pick a part. Extract stays skipped.
   Discover never auto-promotes `missing_current_schedule` to `published`.
   Only an operator `--adopt` of a classified `session_grid` (a later
   combined whole-pool PDF) publishes. `--adopt` of a `split_part` writes
   `pdf_url` but does not publish.
-- **2+ session-grid windows** (Sava Fall 1 + Fall 2, MLK `pt.1` / `pt.2`).
-  Sequential date windows, not Cool/Warm. Discover flags both, leaves
-  `published`, and does not roll `pdf_url`. Adopt one, then extract that
-  pointer locally:
-
-  ```
-  just schedules discover --adopt sava-pool=29815
-  just schedules-extract --provider gemini --only sava-pool
-  just schedules publish-pending
-  ```
-
-- **Closure notice or band-only grid** (Garfield flyer + unlinked fall
-  grid). Discover never puts a flyer on `pdf_url`. CI `publish-pending`
-  projects a unique table `closure_notice` as `temporarily_closed`. To
-  extract an unlinked grid:
+- **Band-only grid** (Garfield flyer + unlinked fall grid 29799).
+  Discover never puts a flyer on `pdf_url`. CI `publish-pending`
+  projects a unique table `closure_notice` as `temporarily_closed`. CI
+  may extract 29799 while FLAG so the operator does not need a Gemini
+  laptop after `--adopt`. Human Save of 29799 is **not** URL
+  confirmation. `--adopt` is:
 
   ```
   just schedules discover --adopt garfield-pool=29799
-  just schedules-extract --provider gemini --only garfield-pool
-  just schedules-review
   ```
 
+  Commit `registry.toml` on the rolling PR, or wait for the next cron.
+  Next CI: unchanged on 29799; unique-grid publishes the fall window
+  beside the closure.
+
 `--adopt` of a `session_grid` writes `pdf_url` and sets
-`source_status = published`. `--adopt` of a `split_part` writes `pdf_url`
-but does not publish. `--url` fetches without rewriting the registry. CI
-never passes `--url`.
+`source_status = published`. It persists remaining sibling `session_grid`
+IDs. `--adopt` of a `split_part` writes `pdf_url` but does not publish.
+`--url` fetches without rewriting the registry. CI never passes `--url`
+or `--adopt`.
 
 Leave `official_page_url` pointed at the facility page.
 
@@ -249,7 +260,10 @@ The pre-v2 contract was all-day-only, which over-reported "Closed for staff trai
 
 ## Reviewing extracted schedules
 
-FLAG URL adopt and a re-queued bad auto-publish still use the local reviewer. Eligible unique grids do not join that queue. Start the local reviewer with:
+FLAG URL adopt, sequential grounding repair, and a re-queued bad
+auto-publish still use the local reviewer. Eligible unique grids and
+successful sequential sittings do not join that queue. Start the local
+reviewer with:
 
 ```
 just schedules-review
@@ -257,7 +271,12 @@ just schedules-review
 
 The command binds to `127.0.0.1` on an available port and opens a browser. The
 site scans `data/<slug>/` for review directories with provider JSON but no
-`reviewed.json`, then provides:
+`reviewed.json`. After the review-queue cut-over, FLAG captures that sit
+on `main` appear without a git-changed-dir gate. May leftovers older than
+a later reviewed capture stay hidden. Band-only extracts whose View ID is
+not the current `pdf_url` (Garfield 29799 until `--adopt`) stay hidden.
+Sequential slugs list every unpublished kept window. The site then
+provides:
 
 1. A pending-pool queue and source schedule beside the seeded structured data.
 2. Add, edit, and remove controls for sessions, access hours, exceptions, and closures.
@@ -265,6 +284,14 @@ site scans `data/<slug>/` for review directories with provider JSON but no
 4. A live source-identity check before editing; changed sources must be refreshed and re-extracted first.
 5. An explicit source-cell attestation before save, followed by a second source check.
 6. Schema and schedule validation followed by projection into `content/spots/<slug>.md`.
+
+Sequential human repair is **Save-all**, not per-card Save. Confirm every
+unpublished kept-window card, then one Save-all writes the edited
+envelopes and projects both windows or none (`attested_by: human`; no
+0.9 grounding floor). Per-card sequential confirm does not write
+`reviewed.json` or `project()`. Saving one sequential window is the
+10-day trap. Ordinary Save+project stays for Hamilton-class unique-grid
+repair.
 
 Use `just schedules-review --no-open` to print the URL without opening a browser,
 or `just schedules-review --port 4317` to choose a fixed local port.
@@ -309,8 +336,10 @@ Provider artifacts under `data/<slug>/<date>-<sha12>/` get written, and
 the pipeline carries attestation forward (writes `reviewed.json` with
 `carried_from`) for pools whose payload matches the last attested one.
 `schedules publish-pending` then attests eligible unique Rec & Park grids
-(`attested_by: ci`) and projects `content/spots/`. The live site updates
-when that PR merges.
+and date-disjoint sequential sittings (`attested_by: ci`) and projects
+`content/spots/`. Sequential extract fetches one href per collapsed
+window; the workflow does not pass `--url` or `--adopt`. The live site
+updates when that PR merges.
 
 If `data/`, `registry.toml`, `content/spots/`, or `quarantine.toml`
 changed, the action commits to the rolling `auto/schedules-extract`
@@ -321,9 +350,14 @@ notes do not hostage unique-grid pools. Kill switch:
 `SCHEDULES_AUTO_PROJECT=false` (or `workflow_dispatch` `auto_project=false`)
 skips publish-pending and leaves the PR open with `needs-schedule-review`.
 
-Operator signal for FLAG and unique-grid/closure refuses is the rolling
-GitHub issue `schedules flagged`, not a merge veto. Successful auto-publish
-comments `schedules published`.
+Operator signal for FLAG and unique-grid/closure/sequential refuses is
+the rolling GitHub issue `schedules flagged`, not a merge veto.
+Successful auto-publish comments `schedules published`. After this slice
+the `schedules flagged` set is: Rossi leaves on unique-grid publish;
+Sava leaves if both windows pass; MLK and Balboa stay on
+`sequential_partial` (`grounding_coverage_low`) until human Save-all of
+both windows or `--force` re-extract; Garfield stays until `--adopt`
+29799 then unique-grid; North Beach stays until a combined PDF.
 
 Before checkout, the workflow requires `SCHEDULES_BOT_TOKEN`. Provision a
 repository-scoped fine-grained PAT limited to `cbzehner/swimfrancisco` with
@@ -346,21 +380,24 @@ To provision `SCHEDULES_BOT_TOKEN`:
    the stored value. Do not reuse a broad GitHub CLI OAuth token for Actions
    publication.
 
-Happy-path unique grids auto-merge. Reviewer flow is debug / FLAG / repair:
+Happy-path unique grids and sequential windows auto-merge. Reviewer flow
+is debug / FLAG / sequential grounding repair:
 
 ```
 git fetch origin && git checkout auto/schedules-extract
-just schedules-review          # FLAG adopt or a re-queued dir
+just schedules-review          # Save-all sequential cards, or FLAG adopt
 just release                   # bulletin only if reviewed payloads changed
 git add content/spots data schedule-tools/src/schedules/registry.toml
 git commit -m "review Rec & Park schedules"
 # merge this PR; do not open a second one
 ```
 
-If the queue is empty, `schedules-review` prints `nothing to review`. That
-is expected after CI attested a dir. Adopt a band-flagged or multi-window
-ID first, as in Registry Maintenance. Then extract, `publish-pending` or
-review, and merge the same rolling PR.
+If the queue is empty, `schedules-review` prints `nothing to review`.
+That is expected after CI attested unique-grid or sequential dirs. Do
+not `--adopt` a sequential Fall 1 to fill the queue. Garfield 29799 stays
+hidden until `--adopt`. After the review-queue cut-over, FLAG captures
+on `main` (Balboa / MLK `sequential_partial`) appear without a
+git-changed-dir gate.
 
 ### Repair sitting
 
@@ -371,12 +408,15 @@ The review UI will not open an already-attested dir.
 3. Prefer a per-pool content revert (delete that `[[extra.schedules]]`
    table; leave `reviewed.json`) so the next cron does not republish.
    A squash revert of `data/` requires a `[[quarantine]]` row for that
-   `pdf_sha256` in the same sitting.
+   `pdf_sha256` in the same sitting. A sequential sitting needs a row
+   for **each** shipped SHA.
 4. Confirm candidate state: `schedules pending-reviews` lists the slug
    **only if** `reviewed.json` is gone.
 5. Human Save of a corrected payload (`attested_by: human`) overrides
-   quarantine. `publish-pending` still refuses the sha until the row is
-   deleted.
+   quarantine. Sequential repair is Save-all of every unpublished kept
+   window, minus the 0.9 grounding floor (Balboa 0.61 / MLK 0.11). Do
+   not Save one sequential window. `publish-pending` still refuses the
+   sha until the row is deleted.
 6. Clear the kill switch after `main` has the revert (and quarantine
    row, if required).
 
@@ -406,7 +446,7 @@ Semantic XLSX fingerprinting remains a separate provenance-design follow-up.
 This workflow continues to use the existing source-byte identity and does not
 implement canonicalization or semantic identity.
 
-Unique Rec & Park table grids already auto-publish via `publish-pending`.
-Remaining later work is dual-window ingest (Sava, MLK sequential parts)
-and split-PDF extract (North Beach Cool/Warm), not a second human gate
-on unique grids.
+Unique Rec & Park table grids and date-disjoint sequential windows
+already auto-publish via `publish-pending`. Remaining later work is
+split-PDF extract (North Beach Cool/Warm), not a second human gate on
+unique grids or sequential sittings.
