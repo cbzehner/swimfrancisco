@@ -21,7 +21,12 @@ from .models import PoolEntry
 from .paths import REGISTRY_PATH, TMP_DIR
 from .registry import load_registry
 from .signals import _has_grid_header, extract_page_texts
-from .window_dates import WindowSource, parse_window_dates, parse_window_with_source
+from .window_dates import (
+    WindowSource,
+    parse_window_dates,
+    parse_window_with_source,
+    windows_disjoint,
+)
 
 CandidateKind = Literal["session_grid", "closure_notice", "split_part", "other"]
 CandidateSource = Literal["table", "band", "persisted"]
@@ -189,8 +194,6 @@ def choose_roll(
     session_grids = [item for item in classified if item.kind == "session_grid"]
     table_grids = [item for item in session_grids if item.source == "table"]
     table_grid_ids = {item.link.view_id for item in table_grids}
-    all_grid_ids = {item.link.view_id for item in session_grids}
-    band_only_ids = all_grid_ids - table_grid_ids
     table_splits = [
         item
         for item in classified
@@ -232,11 +235,20 @@ def choose_roll(
             kind = "closure_notice"
         return decide("flag", reason, kind=kind, blocking=True)
 
-    # Sole-grid unchanged would drop Fall 2 after --adopt of Fall 1.
-    if len(all_grid_ids) >= 2:
-        return decide("flag", "multiple_windows", kind="session_grid", blocking=True)
+    kept, _extras = _collapse_session_grids(session_grids)
+    kept_ids = {item.link.view_id for item in kept}
 
-    if current_id is not None and current_id in all_grid_ids:
+    if len(kept) >= 2:
+        return _sequential_roll(
+            decide,
+            kept=kept,
+            current_id=current_id,
+            old_url=old_url,
+            extra=non_grid,
+        )
+
+    # Compare against kept ids so an equal-range copy cannot pin the URL.
+    if current_id is not None and current_id in kept_ids:
         return decide(
             "unchanged",
             "current_session_grid",
@@ -249,8 +261,8 @@ def choose_roll(
     if table_splits:
         return decide("flag", "split_part", kind="split_part", blocking=True)
 
-    if len(table_grid_ids) == 1 and not band_only_ids:
-        only = table_grids[0]
+    if len(kept) == 1 and kept[0].source == "table":
+        only = kept[0]
         if only.grid_confirmed is False:
             return decide(
                 "flag",
@@ -286,6 +298,124 @@ def choose_roll(
         return decide("flag", "empty_table", kind=None, blocking=True)
 
     return decide("flag", "no_session_grid", kind=None, blocking=True)
+
+
+def _collapse_session_grids(
+    items: list[ClassifiedDocument],
+) -> tuple[list[ClassifiedDocument], list[ClassifiedDocument]]:
+    """One kept window per [start, end]; table id preferred. Unparsed IDs stay distinct."""
+    groups: dict[tuple, list[ClassifiedDocument]] = {}
+    order: list[tuple] = []
+    for item in items:
+        if item.window_start is not None and item.window_end is not None:
+            key: tuple = ("range", item.window_start, item.window_end)
+        else:
+            key = ("id", item.link.view_id)
+        if key not in groups:
+            order.append(key)
+            groups[key] = []
+        groups[key].append(item)
+    kept: list[ClassifiedDocument] = []
+    extras: list[ClassifiedDocument] = []
+    for key in order:
+        group = groups[key]
+        chosen = next((item for item in group if item.source == "table"), group[0])
+        kept.append(chosen)
+        extras.extend(item for item in group if item is not chosen)
+    return kept, extras
+
+
+def _sequential_roll(
+    decide,
+    *,
+    kept: list[ClassifiedDocument],
+    current_id: int | None,
+    old_url: str,
+    extra: tuple[ClassifiedDocument, ...],
+) -> DiscoverDecision:
+    if any(item.window_start is None or item.window_end is None for item in kept):
+        return decide("flag", "windows_unparsed", kind="session_grid", blocking=True)
+    for index, left in enumerate(kept):
+        assert left.window_start is not None and left.window_end is not None
+        for right in kept[index + 1 :]:
+            assert right.window_start is not None and right.window_end is not None
+            if not windows_disjoint(
+                (left.window_start, left.window_end),
+                (right.window_start, right.window_end),
+            ):
+                return decide(
+                    "flag", "overlapping_windows", kind="session_grid", blocking=True
+                )
+    kept_table = [item for item in kept if item.source == "table"]
+    if not kept_table:
+        return decide("flag", "band_session_grid", kind="session_grid", blocking=True)
+    if len(kept_table) == 1:
+        target = kept_table[0]
+    else:
+        target = _pick_current_table_grid(kept_table)
+    if target.link.view_id != current_id:
+        return decide(
+            "adopt",
+            "sequential_windows",
+            kind="session_grid",
+            new_url=target.link.href,
+            blocking=False,
+            extra=extra,
+        )
+    return decide(
+        "unchanged",
+        "sequential_windows",
+        kind="session_grid",
+        new_url=old_url,
+        blocking=False,
+        extra=extra,
+    )
+
+
+def _pick_current_table_grid(table_grids: list[ClassifiedDocument]) -> ClassifiedDocument:
+    today = pacific_today()
+    containing = [
+        item
+        for item in table_grids
+        if item.window_start is not None
+        and item.window_end is not None
+        and item.window_start <= today <= item.window_end
+    ]
+    if containing:
+        return containing[0]
+    upcoming = [
+        item
+        for item in table_grids
+        if item.window_start is not None and item.window_start > today
+    ]
+    if upcoming:
+        return min(upcoming, key=lambda item: item.window_start or today)
+    return table_grids[0]
+
+
+def collapse_grid_candidates(items: list[dict]) -> list[dict]:
+    """One session_grid dict per [window_start, window_end]; table source wins."""
+    groups: dict[tuple, list[dict]] = {}
+    order: list[tuple] = []
+    for item in items:
+        if not isinstance(item, dict) or item.get("kind") != "session_grid":
+            continue
+        start, end = item.get("window_start"), item.get("window_end")
+        view_id = item.get("view_id")
+        if isinstance(start, str) and isinstance(end, str):
+            key: tuple = ("range", start, end)
+        else:
+            key = ("id", view_id)
+        if key not in groups:
+            order.append(key)
+            groups[key] = []
+        groups[key].append(item)
+    kept: list[dict] = []
+    for key in order:
+        group = groups[key]
+        chosen = next((item for item in group if item.get("source") == "table"), group[0])
+        kept.append(chosen)
+    return kept
 
 
 def persisted_band_ids(notes: str | None) -> frozenset[int]:
@@ -998,10 +1128,24 @@ def _desired_machine_line(decision: DiscoverDecision) -> str | None:
             continue
         seen.add(item.link.view_id)
         persist_items.append(item)
+    pin_item: ClassifiedDocument | None = None
+    pin = view_id_from_url(decision.new_url or decision.old_url)
+    if decision.reason == "sequential_windows" and pin is not None:
+        pin_item = next(
+            (item for item in decision.candidates if item.link.view_id == pin),
+            None,
+        )
     if decision.action in {"adopt", "unchanged"}:
-        if persist_items:
+        if persist_items or pin_item is not None:
+            listed: list[ClassifiedDocument] = []
+            seen_listed: set[int] = set()
+            for item in ([pin_item] if pin_item is not None else []) + persist_items:
+                if item.link.view_id in seen_listed:
+                    continue
+                seen_listed.add(item.link.view_id)
+                listed.append(item)
             tokens = " ".join(
-                [_id_token(item, prefix_band=True) for item in persist_items]
+                [_id_token(item, prefix_band=True) for item in listed]
                 + [_id_token(item) for item in extras]
             )
             return (

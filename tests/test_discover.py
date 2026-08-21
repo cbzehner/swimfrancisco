@@ -29,7 +29,7 @@ from schedules.discover import (
 )
 from schedules.models import PoolEntry
 from schedules.registry import load_registry
-from schedules.window_dates import parse_window_dates
+from schedules.window_dates import parse_window_dates, windows_disjoint
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures" / "discover"
 FIXTURE_REGISTRY = FIXTURE_DIR / "registry.toml"
@@ -100,6 +100,8 @@ def _classified(
     source: str = "table",
     filename: str | None = None,
     grid_confirmed: bool | None = None,
+    window_start: date | None = None,
+    window_end: date | None = None,
 ) -> ClassifiedDocument:
     return ClassifiedDocument(
         link=_link(view_id, text),
@@ -107,6 +109,8 @@ def _classified(
         filename=filename,
         source=source,  # type: ignore[arg-type]
         grid_confirmed=grid_confirmed,
+        window_start=window_start,
+        window_end=window_end,
     )
 
 
@@ -457,6 +461,21 @@ def test_parse_window_dates_fixture_rows(
     assert parsed == expected
 
 
+def test_windows_disjoint_adjacent_days() -> None:
+    assert windows_disjoint(
+        (date(2026, 8, 18), date(2026, 8, 28)),
+        (date(2026, 8, 29), date(2026, 12, 12)),
+    )
+    assert not windows_disjoint(
+        (date(2026, 8, 11), date(2026, 8, 29)),
+        (date(2026, 8, 11), date(2026, 8, 29)),
+    )
+    assert not windows_disjoint(
+        (date(2026, 8, 18), date(2026, 12, 26)),
+        (date(2026, 8, 29), date(2026, 12, 12)),
+    )
+
+
 def test_parse_window_dates_end_before_start_is_unparseable() -> None:
     assert (
         parse_window_dates(
@@ -610,24 +629,37 @@ def test_choose_roll_flags_split_and_signals_missing_status() -> None:
     assert decision.new_url is None
 
 
-def test_choose_roll_multiple_windows_leave_published() -> None:
+def test_choose_roll_sequential_windows_adopts_table() -> None:
     entry = _entry("sava-pool", view_id=29571)
     decision = choose_roll(
         entry,
         [
-            _classified(29815, "session_grid", source="table"),
-            _classified(29805, "session_grid", source="band"),
+            _classified(
+                29815,
+                "session_grid",
+                source="table",
+                window_start=date(2026, 8, 18),
+                window_end=date(2026, 8, 28),
+            ),
+            _classified(
+                29805,
+                "session_grid",
+                source="band",
+                window_start=date(2026, 8, 29),
+                window_end=date(2026, 12, 12),
+            ),
         ],
     )
-    assert decision.action == "flag"
-    assert decision.reason == "multiple_windows"
-    assert decision.blocking is True
-    assert decision.extra_candidates == ()
+    assert decision.action == "adopt"
+    assert decision.reason == "sequential_windows"
+    assert decision.blocking is False
+    assert decision.new_url == "https://sfrecpark.org/DocumentCenter/View/29815"
     assert {item.link.view_id for item in decision.candidates} == {29815, 29805}
+    assert all(item.kind != "session_grid" for item in decision.extra_candidates)
     assert entry.source_status == "published"
 
 
-def test_choose_roll_mlk_pt1_pt2_flags_multiple_windows_leaves_published() -> None:
+def test_choose_roll_mlk_pt1_pt2_is_sequential() -> None:
     entry = _entry("martin-luther-king-jr-pool", view_id=29578)
     decision = choose_roll(
         entry,
@@ -637,19 +669,23 @@ def test_choose_roll_mlk_pt1_pt2_flags_multiple_windows_leaves_published() -> No
                 "session_grid",
                 text="MLK Pool_Fall2026_pt1",
                 source="table",
+                window_start=date(2026, 8, 18),
+                window_end=date(2026, 9, 26),
             ),
             _classified(
                 29803,
                 "session_grid",
                 text="MLK Pool_Fall2026_pt2",
                 source="band",
+                window_start=date(2026, 9, 27),
+                window_end=date(2026, 12, 12),
             ),
         ],
     )
-    assert decision.action == "flag"
-    assert decision.reason == "multiple_windows"
-    assert decision.blocking is True
-    assert decision.new_url is None
+    assert decision.action == "adopt"
+    assert decision.reason == "sequential_windows"
+    assert decision.blocking is False
+    assert decision.new_url == "https://sfrecpark.org/DocumentCenter/View/29802"
     assert entry.source_status == "published"
 
 
@@ -678,20 +714,170 @@ def test_choose_roll_unchanged_when_current_is_classified_session_grid() -> None
     assert all(item.kind != "session_grid" for item in decision.extra_candidates)
 
 
-def test_choose_roll_current_id_with_sibling_is_not_unchanged() -> None:
+def test_choose_roll_current_id_with_sibling_is_sequential_unchanged() -> None:
     entry = _entry("sava-pool", view_id=29815)
     decision = choose_roll(
         entry,
         [
-            _classified(29815, "session_grid", source="table"),
+            _classified(
+                29815,
+                "session_grid",
+                source="table",
+                window_start=date(2026, 8, 18),
+                window_end=date(2026, 8, 28),
+            ),
+            _classified(
+                29805,
+                "session_grid",
+                source="band",
+                window_start=date(2026, 8, 29),
+                window_end=date(2026, 12, 12),
+            ),
+        ],
+    )
+    assert decision.action == "unchanged"
+    assert decision.reason == "sequential_windows"
+    assert decision.blocking is False
+    assert decision.new_url == entry.pdf_url
+    assert {item.link.view_id for item in decision.candidates} == {29815, 29805}
+
+
+def test_choose_roll_unparsed_sibling_flags_windows_unparsed() -> None:
+    entry = _entry("sava-pool", view_id=29815)
+    decision = choose_roll(
+        entry,
+        [
+            _classified(
+                29815,
+                "session_grid",
+                source="table",
+                window_start=date(2026, 8, 18),
+                window_end=date(2026, 8, 28),
+            ),
             _classified(29805, "session_grid", source="band"),
         ],
     )
-    assert decision.action != "unchanged"
     assert decision.action == "flag"
-    assert decision.reason == "multiple_windows"
+    assert decision.reason == "windows_unparsed"
     assert decision.blocking is True
+    assert decision.new_url is None
     assert {item.link.view_id for item in decision.candidates} == {29815, 29805}
+
+
+def test_choose_roll_overlapping_windows_flags() -> None:
+    entry = _entry("sava-pool", view_id=29571)
+    decision = choose_roll(
+        entry,
+        [
+            _classified(
+                29815,
+                "session_grid",
+                source="table",
+                window_start=date(2026, 8, 18),
+                window_end=date(2026, 12, 26),
+            ),
+            _classified(
+                29805,
+                "session_grid",
+                source="band",
+                window_start=date(2026, 8, 29),
+                window_end=date(2026, 12, 12),
+            ),
+        ],
+    )
+    assert decision.action == "flag"
+    assert decision.reason == "overlapping_windows"
+    assert decision.blocking is True
+    assert decision.new_url is None
+
+
+def test_choose_roll_equal_range_duplicate_is_not_overlap() -> None:
+    entry = _entry("sava-pool", view_id=29571)
+    decision = choose_roll(
+        entry,
+        [
+            _classified(
+                29815,
+                "session_grid",
+                source="table",
+                window_start=date(2026, 8, 18),
+                window_end=date(2026, 8, 28),
+            ),
+            _classified(
+                29806,
+                "session_grid",
+                source="band",
+                window_start=date(2026, 8, 18),
+                window_end=date(2026, 8, 28),
+            ),
+            _classified(
+                29805,
+                "session_grid",
+                source="band",
+                window_start=date(2026, 8, 29),
+                window_end=date(2026, 12, 12),
+            ),
+        ],
+    )
+    assert decision.reason == "sequential_windows"
+    assert decision.blocking is False
+    assert decision.new_url == "https://sfrecpark.org/DocumentCenter/View/29815"
+    assert {item.link.view_id for item in decision.candidates} == {29815, 29806, 29805}
+
+
+def test_choose_roll_two_table_grids_picks_window_containing_today(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr("schedules.discover.pacific_today", lambda: date(2026, 8, 19))
+    entry = _entry("sava-pool", view_id=29571)
+    decision = choose_roll(
+        entry,
+        [
+            _classified(
+                29815,
+                "session_grid",
+                source="table",
+                window_start=date(2026, 8, 18),
+                window_end=date(2026, 8, 28),
+            ),
+            _classified(
+                29805,
+                "session_grid",
+                source="table",
+                window_start=date(2026, 8, 29),
+                window_end=date(2026, 12, 12),
+            ),
+        ],
+    )
+    assert decision.reason == "sequential_windows"
+    assert decision.blocking is False
+    assert decision.new_url == "https://sfrecpark.org/DocumentCenter/View/29815"
+
+
+def test_choose_roll_zero_table_two_band_grids_is_band_session_grid() -> None:
+    entry = _entry("sava-pool", view_id=29571)
+    decision = choose_roll(
+        entry,
+        [
+            _classified(
+                29815,
+                "session_grid",
+                source="band",
+                window_start=date(2026, 8, 18),
+                window_end=date(2026, 8, 28),
+            ),
+            _classified(
+                29805,
+                "session_grid",
+                source="band",
+                window_start=date(2026, 8, 29),
+                window_end=date(2026, 12, 12),
+            ),
+        ],
+    )
+    assert decision.action == "flag"
+    assert decision.reason == "band_session_grid"
+    assert decision.blocking is True
 
 
 def test_choose_roll_flags_when_not_published() -> None:
@@ -835,30 +1021,32 @@ def test_apply_north_beach_converts_single_line_notes(tmp_path, monkeypatch) -> 
     assert 'notes = """' in path.read_text()
 
 
-def test_apply_two_window_flag_leaves_published(tmp_path, monkeypatch) -> None:
+def test_apply_sequential_windows_adopts_table_and_persists_sibling(
+    tmp_path, monkeypatch
+) -> None:
     _freeze_today(monkeypatch)
     path = _copy_registry(tmp_path)
     decision = DiscoverDecision(
         slug="sava-pool",
-        action="flag",
+        action="adopt",
         old_url="https://sfrecpark.org/DocumentCenter/View/29571",
-        new_url=None,
+        new_url="https://sfrecpark.org/DocumentCenter/View/29815",
         kind="session_grid",
-        reason="multiple_windows",
+        reason="sequential_windows",
         candidates=(
             _classified(29815, "session_grid", source="table"),
             _classified(29805, "session_grid", source="band"),
         ),
         extra_candidates=(),
-        blocking=True,
+        blocking=False,
     )
     apply_discover_decision(path, decision)
     loaded = load_registry(path)
     sava = next(entry for entry in loaded if entry.slug == "sava-pool")
     assert sava.source_status == "published"
-    assert sava.pdf_url.endswith("/29571")
+    assert sava.pdf_url.endswith("/29815")
     assert sava.notes is not None
-    assert "multiple_windows" in sava.notes
+    assert "sequential_windows" in sava.notes
     assert "id=29815:session_grid:table" in sava.notes
     assert "id=29805:session_grid:band" in sava.notes
     assert " extra " not in sava.notes
@@ -1065,7 +1253,7 @@ def test_discover_all_north_beach_flags_without_url_write(
     assert loaded.source_status == "missing_current_schedule"
 
 
-def test_discover_all_sava_two_windows_flag_not_extra(tmp_path, monkeypatch) -> None:
+def test_discover_all_sava_two_windows_sequential_not_extra(tmp_path, monkeypatch) -> None:
     _freeze_today(monkeypatch)
     registry = _copy_registry(tmp_path)
     sava = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "sava-pool")
@@ -1077,9 +1265,14 @@ def test_discover_all_sava_two_windows_flag_not_extra(tmp_path, monkeypatch) -> 
     views = {
         29815: {
             "filename": "Sava_Pool_Fall12026_Aug18toDec26_.pdf",
-            "content": _pdf_bytes(),
+            "content": _pdf_with_text("Sava Pool Fall 1\nAugust 18-28 2026\nMonday Tuesday"),
         },
-        29805: {"filename": "Sava Pool Fall 2 2026.pdf", "content": _pdf_bytes()},
+        29805: {
+            "filename": "Sava Pool Fall 2 Aug29toDec12.pdf",
+            "content": _pdf_with_text(
+                "Sava Pool Fall 2\nAugust 29-December 12 2026\nMonday Tuesday"
+            ),
+        },
         29571: {"filename": "Sava Pool Summer 2026.pdf", "content": _pdf_bytes()},
         29778: {"filename": "North Beach Cool Pool.pdf", "content": _pdf_bytes()},
     }
@@ -1093,8 +1286,9 @@ def test_discover_all_sava_two_windows_flag_not_extra(tmp_path, monkeypatch) -> 
     )
     assert [item.slug for item in decisions] == ["sava-pool"]
     decision = decisions[0]
-    assert decision.action == "flag"
-    assert decision.reason == "multiple_windows"
+    assert decision.action == "adopt"
+    assert decision.reason == "sequential_windows"
+    assert decision.blocking is False
     assert {
         item.link.view_id for item in decision.candidates if item.kind == "session_grid"
     } == {
@@ -1105,12 +1299,13 @@ def test_discover_all_sava_two_windows_flag_not_extra(tmp_path, monkeypatch) -> 
     assert all(item.link.view_id != 29805 for item in decision.extra_candidates)
     loaded = next(item for item in load_registry(registry) if item.slug == "sava-pool")
     assert loaded.source_status == "published"
-    assert loaded.pdf_url.endswith("/29571")
+    assert loaded.pdf_url.endswith("/29815")
     assert "id=29805:session_grid:band" in (loaded.notes or "")
+    assert "sequential_windows" in (loaded.notes or "")
     assert " extra " not in (loaded.notes or "")
 
 
-def test_only_sava_still_uses_global_band_and_does_not_adopt_fall1(
+def test_only_sava_still_uses_global_band_and_adopts_table_fall1(
     tmp_path, monkeypatch
 ) -> None:
     """--only sava-pool must still see band 29805 (Fall 2) from the global max_id."""
@@ -1121,9 +1316,14 @@ def test_only_sava_still_uses_global_band_and_does_not_adopt_fall1(
     views = {
         29815: {
             "filename": "Sava_Pool_Fall12026_Aug18toDec26_.pdf",
-            "content": _pdf_bytes(),
+            "content": _pdf_with_text("Sava Pool Fall 1\nAugust 18-28 2026\nMonday Tuesday"),
         },
-        29805: {"filename": "Sava Pool Fall 2 2026.pdf", "content": _pdf_bytes()},
+        29805: {
+            "filename": "Sava Pool Fall 2 Aug29toDec12.pdf",
+            "content": _pdf_with_text(
+                "Sava Pool Fall 2\nAugust 29-December 12 2026\nMonday Tuesday"
+            ),
+        },
         29571: {"filename": "Sava Pool Summer 2026.pdf", "content": _pdf_bytes()},
         29778: {"filename": "North Beach Cool Pool.pdf", "content": _pdf_bytes()},
     }
@@ -1141,13 +1341,14 @@ def test_only_sava_still_uses_global_band_and_does_not_adopt_fall1(
     ]
     assert 29805 in view_ids
     assert [item.slug for item in decisions] == ["sava-pool"]
-    assert decisions[0].action == "flag"
-    assert decisions[0].reason == "multiple_windows"
+    assert decisions[0].action == "adopt"
+    assert decisions[0].reason == "sequential_windows"
+    assert decisions[0].blocking is False
     assert {
         item.link.view_id for item in decisions[0].candidates if item.kind == "session_grid"
     } == {29815, 29805}
     loaded = next(item for item in load_registry(registry) if item.slug == "sava-pool")
-    assert loaded.pdf_url.endswith("/29571")
+    assert loaded.pdf_url.endswith("/29815")
     assert loaded.source_status == "published"
 
 

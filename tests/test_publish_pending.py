@@ -20,11 +20,19 @@ from schedules.publish import (
     publish_eligible,
     publish_pending_all,
 )
-from schedules.review import FinalizeError, ReviewCandidate, find_review_candidates
+from schedules.review import (
+    FinalizeError,
+    ReviewCandidate,
+    finalize_draft,
+    find_review_candidates,
+)
 from schedules.validate import validate
 
 SHA = "a" * 64
+SHA2 = "b" * 64
 DAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+SAVA_FALL1 = "https://sfrecpark.org/DocumentCenter/View/29815"
+SAVA_FALL2 = "https://sfrecpark.org/DocumentCenter/View/29805"
 
 
 def _sessions(n: int = 5) -> list[dict]:
@@ -34,10 +42,16 @@ def _sessions(n: int = 5) -> list[dict]:
     ]
 
 
-def _payload(*, n: int = 5, start: str = "2026-08-18", basis: str = "swim_schedule") -> dict:
+def _payload(
+    *,
+    n: int = 5,
+    start: str = "2026-08-18",
+    end: str = "2026-12-12",
+    basis: str = "swim_schedule",
+) -> dict:
     return {
         "effective_start": start,
-        "effective_end": "2026-12-12",
+        "effective_end": end,
         "schedule_basis": basis,
         "sessions": _sessions(n),
         "closures": [],
@@ -741,12 +755,14 @@ def test_pager_flagged_set_omits_not_rec_park():
         refused=[
             {"slug": "koret-center", "code": "not_rec_park"},
             {"slug": "rossi-pool", "code": "grounding_coverage_low"},
+            {"slug": "balboa-pool", "code": "sequential_partial"},
         ],
-        blocking=[{"slug": "sava-pool", "reason": "multiple_windows"}],
+        blocking=[{"slug": "sava-pool", "reason": "windows_unparsed"}],
     )
     assert flagged == [
+        ("balboa-pool", "sequential_partial"),
         ("rossi-pool", "grounding_coverage_low"),
-        ("sava-pool", "multiple_windows"),
+        ("sava-pool", "windows_unparsed"),
     ]
 
 
@@ -757,6 +773,409 @@ def test_latest_effective_start_reads_every_window(iso):
         windows=[("2026-03-17", "2026-06-06"), ("2026-08-18", "2026-12-12")],
     )
     assert latest_effective_start(path) == "2026-08-18"
+
+
+def _sava_entry() -> PoolEntry:
+    return PoolEntry(
+        slug="sava-pool",
+        pdf_url=SAVA_FALL1,
+        official_page_url="https://sfrecpark.org/facilities/facility/details/Sava-Pool-220",
+        source_kind="sfrecpark_pdf",
+        source_status="published",
+    )
+
+
+def _sava_sequential_decision() -> dict:
+    return {
+        "slug": "sava-pool",
+        "action": "unchanged",
+        "blocking": False,
+        "kind": "session_grid",
+        "reason": "sequential_windows",
+        "candidates": [
+            {
+                "view_id": 29815,
+                "href": SAVA_FALL1,
+                "kind": "session_grid",
+                "source": "table",
+                "window_start": "2026-08-18",
+                "window_end": "2026-08-28",
+            },
+            {
+                "view_id": 29805,
+                "href": SAVA_FALL2,
+                "kind": "session_grid",
+                "source": "band",
+                "window_start": "2026-08-29",
+                "window_end": "2026-12-12",
+            },
+        ],
+    }
+
+
+def test_sequential_sitting_does_not_refuse_not_current_pin(iso, monkeypatch):
+    _write_candidate(
+        iso.data,
+        slug="sava-pool",
+        sha=SHA,
+        payload=_payload(start="2026-08-18", end="2026-08-28"),
+        source_pdf_url=SAVA_FALL1,
+    )
+    _write_candidate(
+        iso.data,
+        slug="sava-pool",
+        sha=SHA2,
+        payload=_payload(n=5, start="2026-08-29", end="2026-12-12"),
+        source_pdf_url=SAVA_FALL2,
+        fetch_date="2026-08-20",
+    )
+    _seed_content(iso.content, "sava-pool")
+    monkeypatch.setattr("schedules.publish.load_registry", lambda: [_sava_entry()])
+    iso.tmp.joinpath("discovery-decisions.json").write_text(
+        json.dumps([_sava_sequential_decision()])
+    )
+    count, report = publish_pending_all(
+        data_root=iso.data, content_spots_dir=iso.content, today=date(2026, 8, 20)
+    )
+    assert count == 1
+    payload = json.loads(report.with_name("publish-pending.json").read_text())
+    assert payload["published"] == ["sava-pool"]
+    assert payload["refused"] == []
+    assert {row["view_id"] for row in payload["windows"]} == {29815, 29805}
+    assert (
+        iso.data / "sava-pool" / f"2026-08-19-{SHA[:12]}" / "reviewed.json"
+    ).exists()
+    assert (
+        iso.data / "sava-pool" / f"2026-08-20-{SHA2[:12]}" / "reviewed.json"
+    ).exists()
+    rendered = (iso.content / "sava-pool.md").read_text()
+    assert 'effective_start = "2026-08-18"' in rendered
+    assert 'effective_start = "2026-08-29"' in rendered
+
+
+def test_sequential_partial_grounding_writes_nothing(iso, monkeypatch):
+    _write_candidate(
+        iso.data,
+        slug="sava-pool",
+        sha=SHA,
+        payload=_payload(start="2026-08-18", end="2026-08-28"),
+        source_pdf_url=SAVA_FALL1,
+    )
+    _write_candidate(
+        iso.data,
+        slug="sava-pool",
+        sha=SHA2,
+        payload=_payload(n=5, start="2026-08-29", end="2026-12-12"),
+        grounding={"grounded_count": 89, "total": 100, "ratio": 0.89},
+        source_pdf_url=SAVA_FALL2,
+        fetch_date="2026-08-20",
+    )
+    _seed_content(iso.content, "sava-pool")
+    before = (iso.content / "sava-pool.md").read_bytes()
+    monkeypatch.setattr("schedules.publish.load_registry", lambda: [_sava_entry()])
+    iso.tmp.joinpath("discovery-decisions.json").write_text(
+        json.dumps([_sava_sequential_decision()])
+    )
+    count, report = publish_pending_all(
+        data_root=iso.data, content_spots_dir=iso.content, today=date(2026, 8, 20)
+    )
+    assert count == 0
+    refused = json.loads(report.with_name("publish-pending.json").read_text())["refused"]
+    assert refused[0]["code"] == "sequential_partial"
+    assert "grounding_coverage_low" in (refused[0].get("code", "") + report.read_text())
+    assert not (
+        iso.data / "sava-pool" / f"2026-08-19-{SHA[:12]}" / "reviewed.json"
+    ).exists()
+    assert not (
+        iso.data / "sava-pool" / f"2026-08-20-{SHA2[:12]}" / "reviewed.json"
+    ).exists()
+    assert (iso.content / "sava-pool.md").read_bytes() == before
+
+
+def test_sequential_incomplete_single_extracted(iso, monkeypatch):
+    _write_candidate(
+        iso.data,
+        slug="sava-pool",
+        sha=SHA,
+        payload=_payload(start="2026-08-18", end="2026-08-28"),
+        source_pdf_url=SAVA_FALL1,
+    )
+    _seed_content(iso.content, "sava-pool")
+    monkeypatch.setattr("schedules.publish.load_registry", lambda: [_sava_entry()])
+    iso.tmp.joinpath("discovery-decisions.json").write_text(
+        json.dumps([_sava_sequential_decision()])
+    )
+    count, report = publish_pending_all(
+        data_root=iso.data, content_spots_dir=iso.content, today=date(2026, 8, 20)
+    )
+    assert count == 0
+    refused = json.loads(report.with_name("publish-pending.json").read_text())["refused"]
+    assert refused[0]["code"] == "sequential_incomplete"
+    assert not (
+        iso.data / "sava-pool" / f"2026-08-19-{SHA[:12]}" / "reviewed.json"
+    ).exists()
+
+
+def test_sequential_recovery_publishes_remaining_window(iso, monkeypatch):
+    attested = iso.data / "sava-pool" / f"2026-08-19-{SHA[:12]}"
+    attested.mkdir(parents=True)
+    (attested / "reviewed.json").write_text(
+        json.dumps(
+            {
+                "slug": "sava-pool",
+                "pdf_sha256": SHA,
+                "reviewed_at": "2026-08-19",
+                "attested_by": "ci",
+                "source_pdf_url": SAVA_FALL1,
+                "payload": _payload(start="2026-08-18", end="2026-08-28"),
+            }
+        )
+    )
+    _write_candidate(
+        iso.data,
+        slug="sava-pool",
+        sha=SHA2,
+        payload=_payload(n=5, start="2026-08-29", end="2026-12-12"),
+        source_pdf_url=SAVA_FALL2,
+        fetch_date="2026-08-20",
+    )
+    _seed_content(iso.content, "sava-pool")
+    monkeypatch.setattr("schedules.publish.load_registry", lambda: [_sava_entry()])
+    iso.tmp.joinpath("discovery-decisions.json").write_text(
+        json.dumps([_sava_sequential_decision()])
+    )
+    count, report = publish_pending_all(
+        data_root=iso.data, content_spots_dir=iso.content, today=date(2026, 8, 20)
+    )
+    assert count == 1
+    payload = json.loads(report.with_name("publish-pending.json").read_text())
+    assert payload["published"] == ["sava-pool"]
+    assert payload["windows"][0]["view_id"] == 29805
+    assert (
+        iso.data / "sava-pool" / f"2026-08-20-{SHA2[:12]}" / "reviewed.json"
+    ).exists()
+
+
+def test_sequential_overlapping_payload_writes_nothing(iso, monkeypatch):
+    _write_candidate(
+        iso.data,
+        slug="sava-pool",
+        sha=SHA,
+        payload=_payload(start="2026-08-18", end="2026-12-12"),
+        source_pdf_url=SAVA_FALL1,
+    )
+    overlap = _payload(n=5, start="2026-08-20", end="2026-12-12")
+    _write_candidate(
+        iso.data,
+        slug="sava-pool",
+        sha=SHA2,
+        payload=overlap,
+        source_pdf_url=SAVA_FALL2,
+        fetch_date="2026-08-20",
+    )
+    _seed_content(iso.content, "sava-pool")
+    before = (iso.content / "sava-pool.md").read_bytes()
+    monkeypatch.setattr("schedules.publish.load_registry", lambda: [_sava_entry()])
+    iso.tmp.joinpath("discovery-decisions.json").write_text(
+        json.dumps([_sava_sequential_decision()])
+    )
+    count, report = publish_pending_all(
+        data_root=iso.data, content_spots_dir=iso.content, today=date(2026, 8, 20)
+    )
+    assert count == 0
+    refused = json.loads(report.with_name("publish-pending.json").read_text())["refused"]
+    assert refused[0]["code"] == "overlapping_windows"
+    assert (iso.content / "sava-pool.md").read_bytes() == before
+
+
+def test_band_session_grid_flag_does_not_sequential_publish(iso, monkeypatch):
+    band1 = "https://sfrecpark.org/DocumentCenter/View/29799"
+    band2 = "https://sfrecpark.org/DocumentCenter/View/29796"
+    _write_candidate(
+        iso.data,
+        slug="garfield-pool",
+        sha=SHA,
+        payload=_payload(start="2026-09-08", end="2026-12-12"),
+        source_pdf_url=band1,
+    )
+    _write_candidate(
+        iso.data,
+        slug="garfield-pool",
+        sha=SHA2,
+        payload=_payload(n=5, start="2026-08-11", end="2026-08-29"),
+        source_pdf_url=band2,
+        fetch_date="2026-08-20",
+    )
+    _seed_content(iso.content, "garfield-pool")
+    before = (iso.content / "garfield-pool.md").read_bytes()
+    monkeypatch.setattr(
+        "schedules.publish.load_registry",
+        lambda: [
+            PoolEntry(
+                slug="garfield-pool",
+                pdf_url="https://sfrecpark.org/DocumentCenter/View/29564",
+                official_page_url="https://sfrecpark.org/facilities/facility/details/Garfield-Pool-214",
+                source_kind="sfrecpark_pdf",
+                source_status="published",
+            )
+        ],
+    )
+    iso.tmp.joinpath("discovery-decisions.json").write_text(
+        json.dumps(
+            [
+                {
+                    "slug": "garfield-pool",
+                    "action": "flag",
+                    "blocking": True,
+                    "kind": "session_grid",
+                    "reason": "band_session_grid",
+                    "candidates": [
+                        {
+                            "view_id": 29799,
+                            "href": band1,
+                            "kind": "session_grid",
+                            "source": "band",
+                            "window_start": "2026-09-08",
+                            "window_end": "2026-12-12",
+                        },
+                        {
+                            "view_id": 29796,
+                            "href": band2,
+                            "kind": "session_grid",
+                            "source": "band",
+                            "window_start": "2026-08-11",
+                            "window_end": "2026-08-29",
+                        },
+                    ],
+                }
+            ]
+        )
+    )
+    count, report = publish_pending_all(
+        data_root=iso.data, content_spots_dir=iso.content, today=date(2026, 8, 20)
+    )
+    assert count == 0
+    refused = json.loads(report.with_name("publish-pending.json").read_text())["refused"]
+    assert {item["code"] for item in refused} <= {"discovery_flagged", "sibling_session_grids"}
+    assert refused
+    assert not (
+        iso.data / "garfield-pool" / f"2026-08-19-{SHA[:12]}" / "reviewed.json"
+    ).exists()
+    assert not (
+        iso.data / "garfield-pool" / f"2026-08-20-{SHA2[:12]}" / "reviewed.json"
+    ).exists()
+    assert (iso.content / "garfield-pool.md").read_bytes() == before
+
+
+def test_unique_grid_dated_sibling_refuses_sibling_session_grids(iso, monkeypatch):
+    _write_candidate(
+        iso.data,
+        slug="sava-pool",
+        sha=SHA,
+        payload=_payload(start="2026-08-18", end="2026-08-28"),
+        source_pdf_url=SAVA_FALL1,
+    )
+    _write_candidate(
+        iso.data,
+        slug="sava-pool",
+        sha=SHA2,
+        payload=_payload(n=5, start="2026-08-29", end="2026-12-12"),
+        source_pdf_url=SAVA_FALL2,
+        fetch_date="2026-08-20",
+    )
+    _seed_content(iso.content, "sava-pool")
+    before = (iso.content / "sava-pool.md").read_bytes()
+    monkeypatch.setattr("schedules.publish.load_registry", lambda: [_sava_entry()])
+    iso.tmp.joinpath("discovery-decisions.json").write_text(
+        json.dumps(
+            [
+                {
+                    "slug": "sava-pool",
+                    "action": "adopt",
+                    "blocking": False,
+                    "kind": "session_grid",
+                    "reason": "session_grid",
+                    "candidates": [
+                        {
+                            "view_id": 29815,
+                            "href": SAVA_FALL1,
+                            "kind": "session_grid",
+                            "source": "table",
+                            "window_start": "2026-08-18",
+                            "window_end": "2026-08-28",
+                        },
+                        {
+                            "view_id": 29805,
+                            "href": SAVA_FALL2,
+                            "kind": "session_grid",
+                            "source": "band",
+                            "window_start": "2026-08-29",
+                            "window_end": "2026-12-12",
+                        },
+                    ],
+                }
+            ]
+        )
+    )
+    count, report = publish_pending_all(
+        data_root=iso.data, content_spots_dir=iso.content, today=date(2026, 8, 20)
+    )
+    assert count == 0
+    refused = json.loads(report.with_name("publish-pending.json").read_text())["refused"]
+    assert {item["code"] for item in refused} == {"sibling_session_grids"}
+    assert not (
+        iso.data / "sava-pool" / f"2026-08-19-{SHA[:12]}" / "reviewed.json"
+    ).exists()
+    assert not (
+        iso.data / "sava-pool" / f"2026-08-20-{SHA2[:12]}" / "reviewed.json"
+    ).exists()
+    assert (iso.content / "sava-pool.md").read_bytes() == before
+
+
+def test_sequential_second_finalize_rolls_back_window_1(iso, monkeypatch):
+    _write_candidate(
+        iso.data,
+        slug="sava-pool",
+        sha=SHA,
+        payload=_payload(start="2026-08-18", end="2026-08-28"),
+        source_pdf_url=SAVA_FALL1,
+    )
+    _write_candidate(
+        iso.data,
+        slug="sava-pool",
+        sha=SHA2,
+        payload=_payload(n=5, start="2026-08-29", end="2026-12-12"),
+        source_pdf_url=SAVA_FALL2,
+        fetch_date="2026-08-20",
+    )
+    _seed_content(iso.content, "sava-pool")
+    before = (iso.content / "sava-pool.md").read_bytes()
+    monkeypatch.setattr("schedules.publish.load_registry", lambda: [_sava_entry()])
+    iso.tmp.joinpath("discovery-decisions.json").write_text(
+        json.dumps([_sava_sequential_decision()])
+    )
+    calls = {"n": 0}
+
+    def flaky(**kwargs):
+        calls["n"] += 1
+        if calls["n"] >= 2:
+            raise RuntimeError("second window exploded")
+        return finalize_draft(**kwargs)
+
+    monkeypatch.setattr("schedules.publish.finalize_draft", flaky)
+    count, report = publish_pending_all(
+        data_root=iso.data, content_spots_dir=iso.content, today=date(2026, 8, 20)
+    )
+    assert count == 0
+    refused = json.loads(report.with_name("publish-pending.json").read_text())["refused"]
+    assert refused[0]["code"] == "sequential_partial"
+    assert not (
+        iso.data / "sava-pool" / f"2026-08-19-{SHA[:12]}" / "reviewed.json"
+    ).exists()
+    assert not (
+        iso.data / "sava-pool" / f"2026-08-20-{SHA2[:12]}" / "reviewed.json"
+    ).exists()
+    assert (iso.content / "sava-pool.md").read_bytes() == before
 
 
 def test_drop_to_zero_does_not_write(iso):

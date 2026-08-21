@@ -20,7 +20,12 @@ from schedules.discover import DiscoverError
 from schedules.models import Aborted, Extracted, FetchResult, PoolResult, Skipped, Unchanged
 from schedules.models import PoolEntry
 from schedules.paths import REPORT_PATHS
-from schedules.pipeline import compute_exit_code, run_pipeline, select_registry_entries
+from schedules.pipeline import (
+    _session_grid_hrefs,
+    compute_exit_code,
+    run_pipeline,
+    select_registry_entries,
+)
 from schedules.report import discovery_notes_from_decisions, write_report
 
 
@@ -567,6 +572,97 @@ def test_sava_adopt_then_extract_fetches_adopted_url(monkeypatch, tmp_path) -> N
     assert results[0].source_status == "published"
 
 
+def test_sequential_extract_fetches_each_collapsed_window(monkeypatch, tmp_path) -> None:
+    fall1 = "https://sfrecpark.org/DocumentCenter/View/29815"
+    fall2 = "https://sfrecpark.org/DocumentCenter/View/29805"
+    registry = [_pdf_entry("sava-pool", fall1)]
+    state = _stub_extract_pipeline(monkeypatch, tmp_path, registry)
+    before = [entry.pdf_url for entry in state["registry"]]
+    monkeypatch.setattr(
+        "schedules.pipeline.discover_all",
+        _fake_discover(
+            state,
+            tmp_path=tmp_path,
+            decisions=[
+                {
+                    "slug": "sava-pool",
+                    "action": "unchanged",
+                    "old_url": fall1,
+                    "new_url": fall1,
+                    "kind": "session_grid",
+                    "reason": "sequential_windows",
+                    "blocking": False,
+                    "candidates": [
+                        {
+                            "view_id": 29815,
+                            "href": fall1,
+                            "kind": "session_grid",
+                            "source": "table",
+                            "window_start": "2026-08-18",
+                            "window_end": "2026-08-28",
+                        },
+                        {
+                            "view_id": 29805,
+                            "href": fall2,
+                            "kind": "session_grid",
+                            "source": "band",
+                            "window_start": "2026-08-29",
+                            "window_end": "2026-12-12",
+                        },
+                    ],
+                    "extra_candidates": [],
+                }
+            ],
+        ),
+    )
+
+    exit_code, _, results = run_pipeline(
+        slugs=["sava-pool"],
+        source_mode="gemini",
+        compare_with=None,
+        force=False,
+        apply_discover=True,
+    )
+
+    assert exit_code == 0
+    assert state["fetched"] == [("sava-pool", fall1), ("sava-pool", fall2)]
+    assert [entry.pdf_url for entry in state["registry"]] == before
+    assert {result.pdf_url for result in results} == {fall1, fall2}
+
+
+def test_equal_range_duplicate_is_not_fetched() -> None:
+    fall1 = "https://sfrecpark.org/DocumentCenter/View/29815"
+    duplicate = "https://sfrecpark.org/DocumentCenter/View/29806"
+    entry = _pdf_entry("sava-pool", fall1)
+    hrefs = _session_grid_hrefs(
+        entry,
+        [
+            {
+                "slug": "sava-pool",
+                "candidates": [
+                    {
+                        "view_id": 29815,
+                        "href": fall1,
+                        "kind": "session_grid",
+                        "source": "table",
+                        "window_start": "2026-08-18",
+                        "window_end": "2026-08-28",
+                    },
+                    {
+                        "view_id": 29806,
+                        "href": duplicate,
+                        "kind": "session_grid",
+                        "source": "band",
+                        "window_start": "2026-08-18",
+                        "window_end": "2026-08-28",
+                    },
+                ],
+            }
+        ],
+    )
+    assert hrefs == [fall1]
+
+
 def test_split_part_adopt_does_not_extract(monkeypatch, tmp_path) -> None:
     cool = "https://sfrecpark.org/DocumentCenter/View/29778"
     registry = [_pdf_entry("north-beach-pool", cool, status="missing_current_schedule")]
@@ -590,9 +686,11 @@ def test_split_part_adopt_does_not_extract(monkeypatch, tmp_path) -> None:
 
 
 def test_flag_does_not_skip_published_extract(monkeypatch, tmp_path) -> None:
-    notes = "discover: 2026-08-19 flag multiple_windows id=29815:session_grid:table id=29805:session_grid:band"
+    notes = "discover: 2026-08-19 flag overlapping_windows id=29815:session_grid:table id=29805:session_grid:band"
     registry = [_pdf_entry("sava-pool", SAVA_SUMMER, notes=notes)]
     state = _stub_extract_pipeline(monkeypatch, tmp_path, registry)
+    fall1 = "https://sfrecpark.org/DocumentCenter/View/29815"
+    fall2 = "https://sfrecpark.org/DocumentCenter/View/29805"
     monkeypatch.setattr(
         "schedules.pipeline.discover_all",
         _fake_discover(
@@ -605,11 +703,25 @@ def test_flag_does_not_skip_published_extract(monkeypatch, tmp_path) -> None:
                     "old_url": SAVA_SUMMER,
                     "new_url": None,
                     "kind": "session_grid",
-                    "reason": "multiple_windows",
+                    "reason": "overlapping_windows",
                     "blocking": True,
                     "candidates": [
-                        {"view_id": 29815, "kind": "session_grid", "source": "table"},
-                        {"view_id": 29805, "kind": "session_grid", "source": "band"},
+                        {
+                            "view_id": 29815,
+                            "href": fall1,
+                            "kind": "session_grid",
+                            "source": "table",
+                            "window_start": "2026-08-18",
+                            "window_end": "2026-12-26",
+                        },
+                        {
+                            "view_id": 29805,
+                            "href": fall2,
+                            "kind": "session_grid",
+                            "source": "band",
+                            "window_start": "2026-08-29",
+                            "window_end": "2026-12-12",
+                        },
                     ],
                     "extra_candidates": [],
                 }
@@ -626,7 +738,9 @@ def test_flag_does_not_skip_published_extract(monkeypatch, tmp_path) -> None:
     )
 
     assert exit_code == 0
-    assert state["fetched"] == [("sava-pool", SAVA_SUMMER)]
+    assert ("sava-pool", fall1) in state["fetched"]
+    assert ("sava-pool", fall2) in state["fetched"]
+    assert ("sava-pool", SAVA_SUMMER) in state["fetched"]
     assert not isinstance(results[0], Skipped)
     assert any(note.kind == "discovery_flagged" for note in results[0].review_notes)
 
