@@ -85,29 +85,29 @@ after(async () => {
   if (outDir) rmSync(outDir, { recursive: true, force: true });
 });
 
-async function boardPage(engineName, contextOptions = {}) {
+async function boardPage(t, engineName, contextOptions = {}) {
   const context = await browsers[engineName].newContext({
     viewport: { width: 1280, height: 900 },
     ...contextOptions,
   });
+  t.after(() => context.close());
   const page = await context.newPage();
   const errors = [];
   page.on("pageerror", (err) => errors.push(err.message));
   await page.goto(`${baseURL}/`, { waitUntil: "networkidle" });
-  return { page, context, errors };
+  return { page, errors };
 }
 
 for (const engine of ["webkit", "chromium"]) {
-  test(`[${engine}] board hydrates: statuses computed, no page errors`, async () => {
-    const { page, context, errors } = await boardPage(engine);
+  test(`[${engine}] board hydrates: statuses computed, no page errors`, async (t) => {
+    const { page, errors } = await boardPage(t, engine);
     const pill = await page.locator('[data-cell="status"] .status-pill').first().textContent();
     assert.notEqual(pill.trim(), "—", "status pills still show em-dash placeholders — JS never ran");
     assert.deepEqual(errors, []);
-    await context.close();
   });
 
-  test(`[${engine}] default board shows only access_mode=public rows; PRIVATE reveals the rest`, async () => {
-    const { page, context } = await boardPage(engine);
+  test(`[${engine}] default board shows only access_mode=public rows; PRIVATE reveals the rest`, async (t) => {
+    const { page } = await boardPage(t, engine);
     const counts = () =>
       page.evaluate(() => ({
         visible: document.querySelectorAll("table.board tbody tr:not([hidden])").length,
@@ -119,11 +119,10 @@ for (const engine of ["webkit", "chromium"]) {
     await page.locator('button[data-access="memberships"]').click();
     const afterToggle = await counts();
     assert.equal(afterToggle.visible, afterToggle.total, "toggle must reveal every row");
-    await context.close();
   });
 
-  test(`[${engine}] BACK TO NOW resets the horizon without navigating`, async () => {
-    const { page, context } = await boardPage(engine);
+  test(`[${engine}] BACK TO NOW resets the horizon without navigating`, async (t) => {
+    const { page } = await boardPage(t, engine);
     await page.goto(`${baseURL}/?when=tomorrow-morning`, { waitUntil: "networkidle" });
     await page.locator("[data-time-banner-reset]").click();
     await page.waitForTimeout(200);
@@ -131,11 +130,10 @@ for (const engine of ["webkit", "chromium"]) {
     assert.equal(url.pathname, "/", "reset must not navigate away from the board");
     assert.equal(url.searchParams.get("when"), null, "?when= must be cleared");
     assert.equal((await page.locator("[data-horizon-button]").textContent()).trim(), "Now");
-    await context.close();
   });
 
-  test(`[${engine}] whole-row click navigates; spot link and filters still work`, async () => {
-    const { page, context } = await boardPage(engine);
+  test(`[${engine}] whole-row click navigates; spot link and filters still work`, async (t) => {
+    const { page } = await boardPage(t, engine);
     await page.locator('tr[data-slug="balboa-pool"] [data-cell="water"]').click();
     await page.waitForURL("**/spots/balboa-pool/**");
     await page.goBack({ waitUntil: "networkidle" });
@@ -145,14 +143,11 @@ for (const engine of ["webkit", "chromium"]) {
     const lap = page.locator('button[data-type="lap_swim"]');
     await lap.click();
     assert.equal(await lap.getAttribute("aria-pressed"), "true");
-    await context.close();
   });
 }
 
-test("[webkit/iPhone] horizon menu tap applies the selection", async () => {
-  const context = await browsers.webkit.newContext({ ...devices["iPhone 13"] });
-  const page = await context.newPage();
-  await page.goto(`${baseURL}/`, { waitUntil: "networkidle" });
+test("[webkit/iPhone] horizon menu tap applies the selection", async (t) => {
+  const { page } = await boardPage(t, "webkit", devices["iPhone 13"]);
   await page.locator("[data-horizon-button]").tap();
   const items = page.locator("[data-horizon-menu] button[role='menuitemradio']");
   const label = (await items.nth(2).textContent()).trim();
@@ -161,19 +156,15 @@ test("[webkit/iPhone] horizon menu tap applies the selection", async () => {
   assert.ok(new URL(page.url()).searchParams.get("when"), "tap must set ?when=");
   assert.equal((await page.locator("[data-horizon-button]").textContent()).trim(), label);
   assert.equal(await page.locator("[data-time-banner]").isHidden(), false);
-  await context.close();
 });
 
-test("[webkit/320px] language switcher labels stay horizontal", async () => {
-  const context = await browsers.webkit.newContext({
+test("[webkit/320px] language switcher labels stay horizontal", async (t) => {
+  const { page } = await boardPage(t, "webkit", {
     viewport: { width: 320, height: 700 },
     isMobile: true,
     hasTouch: true,
   });
-  const page = await context.newPage();
-  await page.goto(`${baseURL}/`, { waitUntil: "networkidle" });
   const box = await page.locator('.language-switcher a[lang="zh-Hant"]').boundingBox();
   assert.ok(box, "zh-Hant link must render");
   assert.ok(box.height < 30, `CJK label is stacking vertically (height ${box.height}px)`);
-  await context.close();
 });

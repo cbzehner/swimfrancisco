@@ -89,6 +89,26 @@ def test_carry_treats_absent_and_empty_collections_as_equal(tmp_path):
     assert carried is not None
 
 
+def test_carry_ignores_evidence_and_session_order(tmp_path):
+    _seed_reviewed(tmp_path, "north-beach-pool", "2026-07-06", _OLD_SHA, _payload())
+    new_dir = _new_capture_dir(tmp_path, "north-beach-pool", "2026-07-13", _NEW_SHA)
+
+    reordered = _payload()
+    reordered["sessions"] = [
+        {"day": "monday", "type": "lap_swim", "start": "07:00", "end": "08:00", "evidence": "different quote"},
+    ]
+    carried = carry_forward_review(
+        slug="north-beach-pool",
+        review_dir=new_dir,
+        pdf_sha256=_NEW_SHA,
+        payload=reordered,
+        ignore_effective_start=False,
+        data_root=tmp_path,
+    )
+
+    assert carried is not None
+
+
 def test_carry_refuses_when_payload_differs(tmp_path):
     _seed_reviewed(tmp_path, "north-beach-pool", "2026-07-06", _OLD_SHA, _payload())
     new_dir = _new_capture_dir(tmp_path, "north-beach-pool", "2026-07-13", _NEW_SHA)

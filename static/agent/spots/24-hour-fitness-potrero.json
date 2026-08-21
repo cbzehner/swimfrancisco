@@ -1,5 +1,5 @@
 {
-  "agent_data_version": 1,
+  "agent_data_version": 2,
   "slug": "24-hour-fitness-potrero",
   "name": "24 Hour Fitness Potrero",
   "type": "pool",
@@ -13,13 +13,11 @@
     "lng": -122.4105
   },
   "access": {
-    "access": "day_pass",
     "access_mode": "membership",
     "access_summary": "24 Hour Fitness Potrero is a gym pool. The official club page lists an indoor lap pool, sauna, whirlpool, and steam room among the gym amenities.",
     "access_notes": [
       "Check the club page for current membership, guest access, and facility status."
     ],
-    "cost": "paid",
     "payment_model": "membership",
     "pricing": [
       {
@@ -108,5 +106,5 @@
       }
     ]
   },
-  "generated_at": "2026-08-13T05:55:17.025Z"
+  "generated_at": "2026-08-21T20:18:42.012Z"
 }

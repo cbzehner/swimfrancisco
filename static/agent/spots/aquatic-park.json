@@ -1,5 +1,5 @@
 {
-  "agent_data_version": 1,
+  "agent_data_version": 2,
   "slug": "aquatic-park",
   "name": "Aquatic Park",
   "type": "open_water",
@@ -13,14 +13,12 @@
     "lng": -122.4223
   },
   "access": {
-    "access": "beach",
     "access_mode": "public",
     "access_summary": "The Aquatic Park cove and beach are public and free. The South End and Dolphin clubhouses are separate volunteer clubs; use each club's visitor or membership process for showers, lockers, sauna, and organized club activities.",
     "access_notes": [
       "Club access is separate from swimming in the public cove.",
       "If you are new to bay swimming, connect with a club or experienced local swimmer before going alone."
     ],
-    "cost": "free",
     "payment_model": "free",
     "pricing": [
       {
@@ -106,5 +104,5 @@
     "api_url": "https://swimfrancisco.com/api/conditions",
     "condition_key": "aquatic-park"
   },
-  "generated_at": "2026-08-13T05:55:17.025Z"
+  "generated_at": "2026-08-21T20:18:42.012Z"
 }

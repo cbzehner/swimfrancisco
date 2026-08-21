@@ -92,23 +92,21 @@ export default {
     // Analytics proxy is same-origin and forwards every method (POST for
     // ingestion, GET for the library), so it runs before the OPTIONS/GET
     // gate below, which only governs the JSON API.
-    if (isPosthogPath(new URL(request.url).pathname)) {
-      return handlePosthog(request, ctx);
-    }
-
-    if (request.method === "OPTIONS") return preflight(request);
-
-    if (request.method !== "GET") {
-      return new Response("method not allowed", {
-        status: 405,
-        headers: { "content-type": "text/plain; charset=utf-8", ...corsHeaders(request) },
-      });
-    }
-
     const url = new URL(request.url);
     const path = url.pathname.replace(/\/+$/, "");
 
+    if (isPosthogPath(url.pathname)) {
+      return handlePosthog(request, ctx);
+    }
+
     if (path === "/api/conditions") {
+      if (request.method === "OPTIONS") return preflight(request);
+      if (request.method !== "GET") {
+        return new Response("method not allowed", {
+          status: 405,
+          headers: { "content-type": "text/plain; charset=utf-8", ...corsHeaders(request) },
+        });
+      }
       return handleConditions(request, env, ctx);
     }
 

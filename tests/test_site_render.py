@@ -732,7 +732,7 @@ def test_bulletin_number_matches_reviewed_schedule_snapshots() -> None:
         digest.update(b"\0")
     assert bulletin["reviewed_count"] == len(reviewed_paths)
     assert bulletin["schedule_fingerprint"] == digest.hexdigest()
-    assert isinstance(bulletin["released_schedule_fingerprint"], str)
+    assert "released_schedule_fingerprint" not in bulletin
     assert bulletin["label"] == f"{bulletin['number']:02d}"
 
 

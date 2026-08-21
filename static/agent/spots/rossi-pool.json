@@ -1,5 +1,5 @@
 {
-  "agent_data_version": 1,
+  "agent_data_version": 2,
   "slug": "rossi-pool",
   "name": "Rossi Pool",
   "type": "pool",
@@ -13,15 +13,13 @@
     "lng": -122.458
   },
   "access": {
-    "access": "public",
     "access_mode": "public",
-    "cost": "paid",
     "payment_model": "session",
     "website": "https://sfrecpark.org/495/Rossi-Pool"
   },
   "freshness": {
-    "last_verified_at": "2026-07-02",
-    "schedule_effective": "2026-06-07"
+    "last_verified_at": "2026-08-20",
+    "schedule_effective": "2026-08-16"
   },
   "sources": [
     {
@@ -178,8 +176,195 @@
             "reason": "closed on July 4 for Independence Day"
           }
         ]
+      },
+      {
+        "effective_start": "2026-08-16",
+        "schedule_basis": "swim_schedule",
+        "effective_end": "2026-12-10",
+        "last_verified_at": "2026-08-20",
+        "sessions": [
+          {
+            "day": "monday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "09:45"
+          },
+          {
+            "day": "monday",
+            "type": "senior_swim",
+            "start": "12:00",
+            "end": "13:30"
+          },
+          {
+            "day": "monday",
+            "type": "lap_swim",
+            "start": "13:45",
+            "end": "15:45"
+          },
+          {
+            "day": "monday",
+            "type": "family_swim",
+            "start": "18:15",
+            "end": "19:30"
+          },
+          {
+            "day": "monday",
+            "type": "lap_swim",
+            "start": "18:15",
+            "end": "19:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "09:45"
+          },
+          {
+            "day": "tuesday",
+            "type": "senior_swim",
+            "start": "10:15",
+            "end": "12:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "12:30",
+            "end": "15:45"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "09:45"
+          },
+          {
+            "day": "wednesday",
+            "type": "senior_swim",
+            "start": "09:00",
+            "end": "10:45"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "11:00",
+            "end": "13:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "14:00",
+            "end": "15:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "14:00",
+            "end": "15:30"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "09:45"
+          },
+          {
+            "day": "thursday",
+            "type": "senior_swim",
+            "start": "10:15",
+            "end": "12:00"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "12:30",
+            "end": "15:45"
+          },
+          {
+            "day": "thursday",
+            "type": "family_swim",
+            "start": "18:15",
+            "end": "19:30"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "18:15",
+            "end": "19:30"
+          },
+          {
+            "day": "sunday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "08:30"
+          },
+          {
+            "day": "sunday",
+            "type": "family_swim",
+            "start": "12:30",
+            "end": "14:00"
+          },
+          {
+            "day": "sunday",
+            "type": "family_swim",
+            "start": "14:30",
+            "end": "15:30"
+          }
+        ],
+        "closures": [
+          {
+            "start": "2026-08-27",
+            "end": "2026-08-27",
+            "reason": "Staff training",
+            "start_time": "12:00",
+            "end_time": "14:00"
+          },
+          {
+            "start": "2026-09-07",
+            "end": "2026-09-07",
+            "reason": "Holiday"
+          },
+          {
+            "start": "2026-09-24",
+            "end": "2026-09-24",
+            "reason": "Staff training",
+            "start_time": "12:00",
+            "end_time": "14:00"
+          },
+          {
+            "start": "2026-10-12",
+            "end": "2026-10-12",
+            "reason": "Holiday"
+          },
+          {
+            "start": "2026-10-22",
+            "end": "2026-10-22",
+            "reason": "Staff training",
+            "start_time": "12:00",
+            "end_time": "14:00"
+          },
+          {
+            "start": "2026-11-02",
+            "end": "2026-11-21",
+            "reason": "Annual maintenance"
+          },
+          {
+            "start": "2026-11-11",
+            "end": "2026-11-11",
+            "reason": "Holiday"
+          },
+          {
+            "start": "2026-11-26",
+            "end": "2026-11-26",
+            "reason": "Holiday"
+          },
+          {
+            "start": "2026-11-27",
+            "end": "2026-11-27",
+            "reason": "Holiday"
+          }
+        ]
       }
     ]
   },
-  "generated_at": "2026-08-13T05:55:17.025Z"
+  "generated_at": "2026-08-21T20:18:42.012Z"
 }

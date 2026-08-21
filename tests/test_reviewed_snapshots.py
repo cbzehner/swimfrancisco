@@ -21,6 +21,7 @@ def _valid_envelope(slug, pdf_sha256):
         "source_pdf_url": "https://example.com/schedule.pdf",
         "payload": {
             "effective_start": "2026-03-17",
+            "schedule_basis": "swim_schedule",
             "sessions": [
                 {"day": "monday", "type": "lap_swim", "start": "07:00", "end": "08:00"}
             ],

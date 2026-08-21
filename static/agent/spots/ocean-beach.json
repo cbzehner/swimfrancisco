@@ -1,5 +1,5 @@
 {
-  "agent_data_version": 1,
+  "agent_data_version": 2,
   "slug": "ocean-beach",
   "name": "Ocean Beach",
   "type": "open_water",
@@ -13,9 +13,7 @@
     "lng": -122.5107
   },
   "access": {
-    "access": "beach",
     "access_mode": "public",
-    "cost": "free",
     "payment_model": "free",
     "website": "https://www.nps.gov/goga/planyourvisit/oceanbeach.htm"
   },
@@ -46,5 +44,5 @@
     "api_url": "https://swimfrancisco.com/api/conditions",
     "condition_key": "ocean-beach"
   },
-  "generated_at": "2026-08-13T05:55:17.025Z"
+  "generated_at": "2026-08-21T20:18:42.012Z"
 }

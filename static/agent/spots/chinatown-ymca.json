@@ -1,5 +1,5 @@
 {
-  "agent_data_version": 1,
+  "agent_data_version": 2,
   "slug": "chinatown-ymca",
   "name": "Chinatown YMCA",
   "type": "pool",
@@ -13,13 +13,11 @@
     "lng": -122.4071
   },
   "access": {
-    "access": "members",
     "access_mode": "membership",
     "access_summary": "Chinatown YMCA is a membership YMCA branch with a saltwater pool and aquatics programs. The official location page publishes facility hours, but not a concrete weekly lap/open swim schedule in static page content.",
     "access_notes": [
       "Check YMCA schedules before going — only facility hours are listed on the location page."
     ],
-    "cost": "paid",
     "payment_model": "membership",
     "website": "https://www.ymcasf.org/location/chinatown-ymca/"
   },
@@ -215,5 +213,5 @@
       }
     ]
   },
-  "generated_at": "2026-08-13T05:55:17.025Z"
+  "generated_at": "2026-08-21T20:18:42.012Z"
 }

@@ -4,10 +4,7 @@ from pathlib import Path
 
 from .merge import merge
 from .paths import CONTENT_SPOTS_DIR
-from .reviewed_snapshots import (
-    canonicalize_payload,
-    load_reviewed_snapshot_from_path,
-)
+from .reviewed_snapshots import load_reviewed_snapshot_from_path
 from .validate import validate
 
 
@@ -27,9 +24,9 @@ def project(
     Returns the path to the written MD. Idempotent.
     """
     envelope = load_reviewed_snapshot_from_path(reviewed_json_path, expected_slug=slug)
-    canonical = canonicalize_payload(envelope["payload"])
+    payload = envelope["payload"]
 
-    result = validate(canonical)
+    result = validate(payload)
     if not result.ok:
         raise ProjectError("; ".join(v.message for v in result.violations))
 
@@ -37,5 +34,5 @@ def project(
     if not md_path.exists():
         raise ProjectError(f"content file missing: {md_path}")
 
-    merge(md_path, canonical, last_verified_at=envelope["reviewed_at"])
+    merge(md_path, payload, last_verified_at=envelope["reviewed_at"])
     return md_path

@@ -51,16 +51,15 @@ test("withinFreshnessCeiling accepts recent ISO and rejects old or garbage input
 
 test("coalesceTemp prefers a fresh reading and clears carried-since", () => {
   const out = coalesceTemp(FRESH_TEMP, record({ temp_carried_since: hoursAgo(5) }), NOW);
-  assert.equal(out.fields, FRESH_TEMP);
-  assert.equal(out.stale, false);
-  assert.equal(out.carriedSince, null);
+  assert.equal(out.state, "fresh");
+  assert.equal(out.value, FRESH_TEMP);
 });
 
 test("coalesceTemp carries last-good values, anchored to the observing run", () => {
   const previous = record({ updated_at: hoursAgo(1) });
   const out = coalesceTemp(null, previous, NOW);
-  assert.equal(out.fields.water_temp_f, 58.1);
-  assert.equal(out.stale, true);
+  assert.equal(out.state, "carried");
+  assert.equal(out.value.water_temp_f, 58.1);
   assert.equal(out.carriedSince, previous.updated_at);
 });
 
@@ -70,16 +69,14 @@ test("coalesceTemp preserves the original carried-since across repeated carries"
   // to the run that actually observed the value.
   const previous = record({ updated_at: hoursAgo(1), temp_carried_since: hoursAgo(23), temp_stale: true });
   const out = coalesceTemp(null, previous, NOW);
-  assert.equal(out.stale, true);
+  assert.equal(out.state, "carried");
   assert.equal(out.carriedSince, previous.temp_carried_since);
 });
 
 test("coalesceTemp nulls fields once the carried value passes the 24h ceiling", () => {
   const previous = record({ updated_at: hoursAgo(1), temp_carried_since: hoursAgo(25), temp_stale: true });
   const out = coalesceTemp(null, previous, NOW);
-  assert.equal(out.fields, null);
-  assert.equal(out.stale, false);
-  assert.equal(out.carriedSince, null);
+  assert.equal(out.state, "unavailable");
 });
 
 test("coalesceTemp treats legacy records without carried-since as observed at updated_at", () => {
@@ -87,30 +84,28 @@ test("coalesceTemp treats legacy records without carried-since as observed at up
   delete legacy.temp_carried_since;
   delete legacy.tide_carried_since;
   const out = coalesceTemp(null, legacy, NOW);
-  assert.equal(out.stale, true);
+  assert.equal(out.state, "carried");
   assert.equal(out.carriedSince, legacy.updated_at);
 });
 
 test("coalesceTemp refuses partial previous temp fields", () => {
   const previous = record({ water_temp_c: null });
   const out = coalesceTemp(null, previous, NOW);
-  assert.equal(out.fields, null);
-  assert.equal(out.stale, false);
+  assert.equal(out.state, "unavailable");
 });
 
 test("coalesceTide mirrors the temp contract", () => {
   const previous = record({ updated_at: hoursAgo(1), tide_carried_since: hoursAgo(23), tide_stale: true });
   const carried = coalesceTide(null, previous, NOW);
+  assert.equal(carried.state, "carried");
   assert.equal(carried.value, previous.tide);
-  assert.equal(carried.stale, true);
   assert.equal(carried.carriedSince, previous.tide_carried_since);
 
   const expired = coalesceTide(null, record({ tide_carried_since: hoursAgo(25) }), NOW);
-  assert.equal(expired.value, null);
-  assert.equal(expired.stale, false);
+  assert.equal(expired.state, "unavailable");
 });
 
 test("coalesce helpers handle a missing previous record", () => {
-  assert.deepEqual(coalesceTemp(null, null, NOW), { fields: null, stale: false, carriedSince: null });
-  assert.deepEqual(coalesceTide(null, null, NOW), { value: null, stale: false, carriedSince: null });
+  assert.deepEqual(coalesceTemp(null, null, NOW), { state: "unavailable" });
+  assert.deepEqual(coalesceTide(null, null, NOW), { state: "unavailable" });
 });

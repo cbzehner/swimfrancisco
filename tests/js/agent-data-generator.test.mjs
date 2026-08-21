@@ -20,7 +20,7 @@ test("agent data generator writes index and canonical spot detail records", asyn
     });
 
     const index = await readJson(join(dir, "index.json"));
-    assert.equal(index.agent_data_version, 1);
+    assert.equal(index.agent_data_version, 2);
     assert.equal(index.generated_at, "2026-06-16T15:05:00.000Z");
     assert.ok(index.spots.length >= 1);
 

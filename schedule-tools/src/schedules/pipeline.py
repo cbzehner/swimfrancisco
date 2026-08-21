@@ -138,17 +138,17 @@ def _process_entry(
     prior_snapshot = read_schedule_snapshot(CONTENT_SPOTS_DIR / f"{entry.slug}.md")
 
     # FLAG is a write policy, not a fetch policy: still GET a published pointer.
-    can_extract_access_hours = entry.source_status == "access_hours_only" and entry.source_kind != "sfrecpark_pdf"
-    if entry.source_status != "published" and not can_extract_access_hours:
+    lane = extract_lane(entry)
+    if lane == "skip":
         return Skipped(
             **_identity_kwargs(entry),
-            reason="No current schedule PDF is available for this pool.",
+            reason=skip_reason(entry),
             notes=entry.notes,
         )
 
     try:
-        if entry.source_kind != "sfrecpark_pdf":
-            return _process_direct_entry(entry, prior_snapshot)
+        if lane == "direct":
+            return _process_direct_entry(entry, prior_snapshot, force=force)
 
         # PDF fetch + path setup
         fetch_result = fetch_pdf(entry.slug, entry.pdf_url)
@@ -314,13 +314,30 @@ def _process_entry(
 
 # Runs inside _process_entry's try/except, which wraps any failure in the
 # same Aborted result — no separate error handling needed here.
-def _process_direct_entry(entry: PoolEntry, prior_snapshot: dict) -> PoolResult:
+def extract_lane(entry: PoolEntry) -> Literal["pdf", "direct", "skip"]:
+    if entry.source_kind != "sfrecpark_pdf" and entry.source_status in {
+        "published",
+        "access_hours_only",
+    }:
+        return "direct"
+    if entry.source_kind == "sfrecpark_pdf" and entry.source_status == "published":
+        return "pdf"
+    return "skip"
+
+
+def skip_reason(entry: PoolEntry) -> str:
+    if entry.source_status == "missing_current_schedule":
+        return "No current schedule PDF is available for this pool."
+    return "No extractor is configured for this pool."
+
+
+def _process_direct_entry(entry: PoolEntry, prior_snapshot: dict, *, force: bool = False) -> PoolResult:
     extracted = extract_direct(entry)
     fetch_result = extracted.fetch_result
     date = fetch_result.path.parent.name[:10]
     reviewed_file = reviewed_path(entry.slug, date, fetch_result.sha256)
 
-    if reviewed_file.exists():
+    if not force and reviewed_file.exists():
         return _build_unchanged(
             entry,
             pdf_sha256=fetch_result.sha256,
@@ -397,9 +414,9 @@ def select_registry_entries(
     slugs: list[str] | None,
 ) -> list[PoolEntry]:
     if source_mode == "direct":
-        candidates = [entry for entry in registry if entry.source_kind != "sfrecpark_pdf"]
+        candidates = [entry for entry in registry if extract_lane(entry) == "direct"]
     else:
-        candidates = [entry for entry in registry if entry.source_kind == "sfrecpark_pdf"]
+        candidates = [entry for entry in registry if extract_lane(entry) != "direct"]
 
     selected = [entry for entry in candidates if slugs is None or entry.slug in slugs]
     if slugs:

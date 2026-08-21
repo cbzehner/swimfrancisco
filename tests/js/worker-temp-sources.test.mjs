@@ -178,3 +178,22 @@ test("firstTempFromSources returns null when every source fails", async () => {
   ];
   assert.equal(await firstTempFromSources("aquatic-park", chain, fetchers({})), null);
 });
+
+test("firstTempFromSources shares one in-flight request per source across spots", async () => {
+  let usgsCalls = 0;
+  const cache = new Map();
+  const shared = [{ type: "usgs", id: "374938122251801" }];
+  const sharedFetchers = fetchers({
+    usgs: async () => {
+      usgsCalls += 1;
+      return READING;
+    },
+  });
+  const [first, second] = await Promise.all([
+    firstTempFromSources("aquatic-park", shared, sharedFetchers, cache),
+    firstTempFromSources("crissy-field", shared, sharedFetchers, cache),
+  ]);
+  assert.equal(usgsCalls, 1);
+  assert.equal(first.reading, READING);
+  assert.equal(second.reading, READING);
+});

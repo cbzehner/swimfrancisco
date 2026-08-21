@@ -45,7 +45,7 @@
     },
     "payload": {
       "type": "object",
-      "required": ["effective_start", "sessions", "closures"],
+      "required": ["effective_start", "schedule_basis", "sessions", "closures"],
       "additionalProperties": false,
       "properties": {
         "effective_start": {

@@ -76,3 +76,18 @@ def canonicalize_payload(payload: dict) -> dict:
     if "effective_end" in payload and payload["effective_end"] is not None:
         canonical["effective_end"] = payload["effective_end"]
     return canonical
+
+
+def payloads_equivalent(
+    left: dict,
+    right: dict,
+    *,
+    ignore: frozenset[str] = frozenset(),
+) -> bool:
+    first = canonicalize_payload(left)
+    second = canonicalize_payload(right)
+    for key in ignore:
+        first.pop(key, None)
+        second.pop(key, None)
+    return first == second
+

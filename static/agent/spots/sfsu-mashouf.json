@@ -1,5 +1,5 @@
 {
-  "agent_data_version": 1,
+  "agent_data_version": 2,
   "slug": "sfsu-mashouf",
   "name": "SFSU Mashouf Wellness Center",
   "type": "pool",
@@ -13,11 +13,9 @@
     "lng": -122.4839
   },
   "access": {
-    "access": "members",
     "access_mode": "limited_public",
     "access_summary": "SFSU Mashouf Wellness Center publishes natatorium hours and describes a 25-meter lap pool, activity pool, hot tub, sauna, and locker rooms. Access is campus/community-membership based.",
     "access_notes": [],
-    "cost": "paid",
     "payment_model": "membership",
     "website": "https://campusrec.sfsu.edu/Aquatics"
   },
@@ -121,5 +119,5 @@
       }
     ]
   },
-  "generated_at": "2026-08-13T05:55:17.025Z"
+  "generated_at": "2026-08-21T20:18:42.012Z"
 }

@@ -24,7 +24,6 @@
 
 import {
   computeNextOpenOffset,
-  computeWindowAvailability,
   readScheduleAttribute,
   resolveActiveSchedule,
   sortByRank,
@@ -66,11 +65,25 @@ function writeHashTokens(tokens) {
 }
 
 // Remove this module's tokens from hash, then add the ones currently active.
+function sortKind(state) {
+  return state.sort?.kind || "default";
+}
+
+function applySortAria(state, nextOpenButton, distanceButton) {
+  const kind = sortKind(state);
+  nextOpenButton?.setAttribute("aria-pressed", String(kind === "open"));
+  distanceButton?.setAttribute(
+    "aria-pressed",
+    String(kind === "distance" || kind === "distance-pending"),
+  );
+}
+
 function syncStateToHash(state) {
   const tokens = readHashTokens();
   for (const token of OWNED_TOKENS) tokens.delete(token);
-  if (state.sortByNextOpen) tokens.add("open");
-  if (state.sortByDistance) tokens.add("distance");
+  const kind = sortKind(state);
+  if (kind === "open") tokens.add("open");
+  if (kind === "distance") tokens.add("distance");
   if (state.includeMemberships) tokens.add("memberships");
   for (const type of state.types) {
     const token = TYPE_TO_TOKEN[type];
@@ -173,24 +186,24 @@ function sortRowsByDistance(rows, userCoords) {
   return decorated.map((item) => item.row);
 }
 
+function readWindowRank(row) {
+  const windowRank = Number(row.dataset.windowRank);
+  return Number.isFinite(windowRank) ? windowRank : Number.POSITIVE_INFINITY;
+}
+
 // Sort visible rows by the soonest pool time, keeping beaches below pools
 // when both are visible. Pools with no known upcoming drop-in session fall
 // to the end of the pool group. Stable via baseline rank.
 function sortRowsByNextOpen(rows, allowedTypes, now, horizon) {
   const decorated = rows.map((row, index) => {
-    let offset;
-    if (horizon?.kind === "window") {
-      if (isBeach(row)) {
-        offset = 2;
-      } else {
-        offset = computeWindowAvailability(readScheduleAttribute(row), horizon, allowedTypes).sortRank;
-      }
-    } else {
-      offset =
-        isBeach(row)
-          ? 0
-          : computeNextOpenOffset(readScheduleAttribute(row), now, allowedTypes);
-    }
+    // Window ranks come from applyStatuses via renderBoard, which
+    // applyFilters always runs first. Recomputing here diverged for
+    // access-hours pools (ACCESS ranked as NO SESSION).
+    const offset = horizon?.kind === "window"
+      ? readWindowRank(row)
+      : isBeach(row)
+        ? 0
+        : computeNextOpenOffset(readScheduleAttribute(row), now, allowedTypes);
     const baselineRank = Number(row.dataset.baselineRank);
     return {
       row,
@@ -263,10 +276,11 @@ function applyFilters(tbody, state, { flap = true } = {}) {
     if (passes) visible.push(row);
   });
 
+  const kind = sortKind(state);
   const ordered =
-    state.sortByDistance && state.userCoords
-      ? sortRowsByDistance(visible, state.userCoords)
-      : state.sortByNextOpen
+    kind === "distance"
+      ? sortRowsByDistance(visible, state.sort.coords)
+      : kind === "open"
         ? sortRowsByNextOpen(visible, poolTypes, pacificWallClockDate(), horizon)
       : sortByRank(visible, (row) => Number(row.dataset.baselineRank));
 
@@ -290,7 +304,7 @@ function captureFilter(trigger, state, tbody) {
   capture("filter_applied", {
     trigger,
     program: activeType(state),
-    sort: state.sortByDistance ? "distance" : state.sortByNextOpen ? "open" : "default",
+    sort: sortKind(state) === "distance-pending" ? "distance" : sortKind(state),
     memberships: state.includeMemberships,
     when: new URLSearchParams(window.location.search).get("when") || "now",
     result_count: tbody.querySelectorAll("tr:not([hidden])").length,
@@ -300,11 +314,9 @@ function captureFilter(trigger, state, tbody) {
 // Wire click handlers. Returns the state object (handlers close over it).
 function attachHandlers(tbody, filtersRoot) {
   const state = {
-    sortByNextOpen: false,
+    sort: { kind: "default" },
     types: new Set(),
     includeMemberships: false,
-    sortByDistance: false,
-    userCoords: null,
   };
 
   const distanceButton = document.querySelector('button[data-action="sort-distance"]');
@@ -323,14 +335,8 @@ function attachHandlers(tbody, filtersRoot) {
   if (nextOpenButton) {
     nextOpenButton.setAttribute("aria-pressed", "false");
     nextOpenButton.addEventListener("click", () => {
-      state.sortByNextOpen = !state.sortByNextOpen;
-      nextOpenButton.setAttribute("aria-pressed", String(state.sortByNextOpen));
-      // Mutually exclusive with NEAREST — only one sort active at a time.
-      if (state.sortByNextOpen && state.sortByDistance) {
-        state.sortByDistance = false;
-        state.userCoords = null;
-        distanceButton?.setAttribute("aria-pressed", "false");
-      }
+      state.sort = sortKind(state) === "open" ? { kind: "default" } : { kind: "open" };
+      applySortAria(state, nextOpenButton, distanceButton);
       applyFilters(tbody, state);
       captureFilter("open_sort", state, tbody);
       syncStateToHash(state);
@@ -359,18 +365,12 @@ function attachHandlers(tbody, filtersRoot) {
   });
 
   if (distanceButton) {
-    // Ignore clicks while a geolocation prompt is pending: a second click
-    // would fire a second getCurrentPosition, and a slow first callback
-    // could re-enable distance sort after the user toggled it off.
-    let pendingGeolocation = false;
     distanceButton.setAttribute("aria-pressed", "false");
     distanceButton.addEventListener("click", () => {
-      if (pendingGeolocation) return;
-      // Toggle off if already on.
-      if (state.sortByDistance) {
-        state.sortByDistance = false;
-        state.userCoords = null;
-        distanceButton.setAttribute("aria-pressed", "false");
+      if (sortKind(state) === "distance-pending") return;
+      if (sortKind(state) === "distance") {
+        state.sort = { kind: "default" };
+        applySortAria(state, nextOpenButton, distanceButton);
         applyFilters(tbody, state);
         captureFilter("distance_sort", state, tbody);
         syncStateToHash(state);
@@ -380,30 +380,27 @@ function attachHandlers(tbody, filtersRoot) {
         distanceButton.setAttribute("aria-pressed", "false");
         return;
       }
-      pendingGeolocation = true;
-      distanceButton.setAttribute("aria-pressed", "true");
+      state.sort = { kind: "distance-pending" };
+      applySortAria(state, nextOpenButton, distanceButton);
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          pendingGeolocation = false;
-          state.sortByDistance = true;
-          state.userCoords = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
+          if (sortKind(state) !== "distance-pending") return;
+          state.sort = {
+            kind: "distance",
+            coords: {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            },
           };
-          // Mutually exclusive with OPEN — only one sort active at a time.
-          if (state.sortByNextOpen) {
-            state.sortByNextOpen = false;
-            nextOpenButton?.setAttribute("aria-pressed", "false");
-          }
+          applySortAria(state, nextOpenButton, distanceButton);
           applyFilters(tbody, state);
           captureFilter("distance_sort", state, tbody);
           syncStateToHash(state);
         },
         () => {
-          pendingGeolocation = false;
-          state.sortByDistance = false;
-          state.userCoords = null;
-          distanceButton.setAttribute("aria-pressed", "false");
+          if (sortKind(state) !== "distance-pending") return;
+          state.sort = { kind: "default" };
+          applySortAria(state, nextOpenButton, distanceButton);
         },
       );
     });
@@ -421,15 +418,11 @@ function restoreFromHash(controls) {
 
   if (nextOpenButton) {
     const want = tokens.has("open") || tokens.has("next-open") || tokens.has("open-now");
-    if (want !== state.sortByNextOpen) {
-      state.sortByNextOpen = want;
-      nextOpenButton.setAttribute("aria-pressed", String(want));
+    const isOpen = sortKind(state) === "open";
+    if (want !== isOpen) {
+      state.sort = want ? { kind: "open" } : { kind: "default" };
+      applySortAria(state, nextOpenButton, distanceButton);
       changed = true;
-      if (want && state.sortByDistance) {
-        state.sortByDistance = false;
-        state.userCoords = null;
-        distanceButton?.setAttribute("aria-pressed", "false");
-      }
     }
   }
 
@@ -461,11 +454,16 @@ function restoreFromHash(controls) {
     changed = true;
   }
 
-  const shouldDropDistanceToken = tokens.has("distance") && !state.sortByDistance;
-  if (distanceButton && state.sortByDistance && !tokens.has("distance")) {
-    state.sortByDistance = false;
-    state.userCoords = null;
-    distanceButton.setAttribute("aria-pressed", "false");
+  const kind = sortKind(state);
+  if (kind === "distance-pending") {
+    state.sort = { kind: "default" };
+    applySortAria(state, nextOpenButton, distanceButton);
+    changed = true;
+  }
+  const shouldDropDistanceToken = tokens.has("distance") && sortKind(state) !== "distance";
+  if (distanceButton && sortKind(state) === "distance" && !tokens.has("distance")) {
+    state.sort = { kind: "default" };
+    applySortAria(state, nextOpenButton, distanceButton);
     changed = true;
   }
 

@@ -28,6 +28,35 @@ function archiveHead(target) {
   }
 }
 
+test("generate-i18n removes stale localized spot pages", () => {
+  const worktree = mkdtempSync(path.join(tmpdir(), "swimfrancisco-i18n-stale-"));
+  try {
+    archiveHead(worktree);
+    writeFileSync(
+      path.join(worktree, "scripts", "generate-i18n.mjs"),
+      readFileSync(path.join(ROOT, "scripts", "generate-i18n.mjs")),
+    );
+    const stalePath = path.join(worktree, "content", "spots", "not-a-spot.es.md");
+    writeFileSync(stalePath, "+++\ntitle = \"Gone\"\nslug = \"not-a-spot\"\n[extra]\nlocalized_from = \"hamilton-pool\"\n+++\n");
+
+    const check = spawnSync(process.execPath, ["scripts/generate-i18n.mjs", "check"], {
+      cwd: worktree,
+      encoding: "utf8",
+    });
+    assert.notEqual(check.status, 0);
+    assert.match(`${check.stdout}\n${check.stderr}`, /not-a-spot\.es\.md/);
+
+    const generate = spawnSync(process.execPath, ["scripts/generate-i18n.mjs", "generate"], {
+      cwd: worktree,
+      encoding: "utf8",
+    });
+    assert.equal(generate.status, 0, generate.stderr);
+    assert.equal(existsSync(stalePath), false);
+  } finally {
+    rmSync(worktree, { recursive: true, force: true });
+  }
+});
+
 test("check-i18n fails when a locale UI catalog loses a key", () => {
   const worktree = mkdtempSync(path.join(tmpdir(), "swimfrancisco-i18n-"));
   try {

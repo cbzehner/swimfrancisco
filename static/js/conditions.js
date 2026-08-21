@@ -106,11 +106,7 @@ function applyBoardSummary(root) {
   const rows = Array.from(root.querySelectorAll("table.board tbody tr:not([hidden])"));
   if (rows.length === 0) return;
   const count = rows.filter((row) => {
-    const status =
-      row.querySelector('[data-cell="status"]')?.dataset.statusValue ||
-      row.querySelector('[data-cell="status"] .status-pill')?.textContent.trim().toUpperCase() ||
-      row.querySelector('[data-cell="status"]')?.textContent.trim().toUpperCase() ||
-      "";
+    const status = row.querySelector('[data-cell="status"]')?.dataset.statusValue || "";
     return AVAILABLE_STATUSES.has(status);
   }).length;
   setText(root, "[data-open-count]", String(count));
@@ -192,9 +188,9 @@ let lastFetchedAt = 0;
 // the in-flight flag keeps overlapping ticks from stacking requests.
 let fetchInFlight = false;
 
-async function refetchIfDue() {
+async function loadConditions({ force = false } = {}) {
   if (fetchInFlight) return;
-  if (Date.now() - lastFetchedAt < REFETCH_INTERVAL_MS) return;
+  if (!force && Date.now() - lastFetchedAt < REFETCH_INTERVAL_MS) return;
   const endpoint = (typeof window !== "undefined" && window.SWIMFRANCISCO_API) || DEFAULT_ENDPOINT;
   fetchInFlight = true;
   let conditions = null;
@@ -207,26 +203,13 @@ async function refetchIfDue() {
   lastFetchedAt = Date.now();
   window.SWIMFRANCISCO_CONDITIONS = conditions;
   applyConditions(document, conditions);
+  document.dispatchEvent(new CustomEvent("sf:conditions-loaded"));
 }
 
 async function init() {
   applyBoardSummary(document);
   applyBulletinStrip(document, null);
-  const endpoint = (typeof window !== "undefined" && window.SWIMFRANCISCO_API) || DEFAULT_ENDPOINT;
-  fetchInFlight = true;
-  let conditions = null;
-  try {
-    conditions = await fetchConditions(endpoint);
-  } finally {
-    fetchInFlight = false;
-  }
-  if (conditions) {
-    lastFetchedAt = Date.now();
-    applyConditions(document, conditions);
-  }
-  // Expose for other modules (e.g. map popups) and signal availability.
-  window.SWIMFRANCISCO_CONDITIONS = conditions;
-  document.dispatchEvent(new CustomEvent("sf:conditions-loaded"));
+  await loadConditions({ force: true });
 }
 
 document.addEventListener("sf:status-applied", () => applyBoardSummary(document));
@@ -238,7 +221,7 @@ document.addEventListener("sf:filters-applied", () => applyBoardSummary(document
 document.addEventListener("sf:board-refreshed", () => {
   applyBulletinStrip(document, window.SWIMFRANCISCO_CONDITIONS || null);
   applyBoardSummary(document);
-  refetchIfDue();
+  loadConditions();
 });
 
 if (document.readyState === "loading") {

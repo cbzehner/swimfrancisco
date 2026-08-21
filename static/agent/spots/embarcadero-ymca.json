@@ -1,5 +1,5 @@
 {
-  "agent_data_version": 1,
+  "agent_data_version": 2,
   "slug": "embarcadero-ymca",
   "name": "Embarcadero YMCA",
   "type": "pool",
@@ -13,11 +13,9 @@
     "lng": -122.3926
   },
   "access": {
-    "access": "members",
     "access_mode": "membership",
     "access_summary": "Embarcadero YMCA is a membership YMCA branch on the waterfront with swimming pools and aquatics programs. The official page publishes pool hours as offset from facility hours.",
     "access_notes": [],
-    "cost": "paid",
     "payment_model": "membership",
     "website": "https://www.ymcasf.org/location/embarcadero-ymca/"
   },
@@ -208,5 +206,5 @@
       }
     ]
   },
-  "generated_at": "2026-08-13T05:55:17.025Z"
+  "generated_at": "2026-08-21T20:18:42.012Z"
 }

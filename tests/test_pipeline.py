@@ -356,6 +356,7 @@ def test_same_id_still_uses_unchanged_shortcut(monkeypatch, tmp_path) -> None:
                 "source_pdf_url": OLD_URL,
                 "payload": {
                     "effective_start": "2026-03-17",
+                    "schedule_basis": "swim_schedule",
                     "sessions": [
                         {"day": "monday", "type": "lap_swim", "start": "07:00", "end": "08:00"}
                     ],

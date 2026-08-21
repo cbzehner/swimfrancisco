@@ -1,5 +1,5 @@
 {
-  "agent_data_version": 1,
+  "agent_data_version": 2,
   "slug": "north-beach-pool",
   "name": "North Beach Pool",
   "type": "pool",
@@ -13,9 +13,7 @@
     "lng": -122.4132
   },
   "access": {
-    "access": "public",
     "access_mode": "public",
-    "cost": "paid",
     "payment_model": "session",
     "website": "https://sfrecpark.org/facilities/facility/details/North-Beach-Pool-218"
   },
@@ -861,5 +859,5 @@
       }
     ]
   },
-  "generated_at": "2026-08-13T05:55:17.025Z"
+  "generated_at": "2026-08-21T20:18:42.012Z"
 }

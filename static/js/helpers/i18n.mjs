@@ -47,22 +47,33 @@ function sourceStringFallback(value = "") {
   return activeLanguage() === defaultLanguage ? value : "";
 }
 
+const MONTH_KEYS = [
+  "month_jan",
+  "month_feb",
+  "month_mar",
+  "month_apr",
+  "month_may",
+  "month_jun",
+  "month_jul",
+  "month_aug",
+  "month_sep",
+  "month_oct",
+  "month_nov",
+  "month_dec",
+];
+const MONTH_FALLBACKS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+const ISO_DATE_FORMAT = {
+  en: "month_d_y",
+  fil: "month_d_y",
+  es: "dmy_slash",
+  vi: "dmy_slash",
+  fi: "dmy_dot",
+  "zh-Hant": "ymd_han",
+};
+
 function monthLabel(month) {
-  const key = [
-    "month_jan",
-    "month_feb",
-    "month_mar",
-    "month_apr",
-    "month_may",
-    "month_jun",
-    "month_jul",
-    "month_aug",
-    "month_sep",
-    "month_oct",
-    "month_nov",
-    "month_dec",
-  ][month - 1];
-  const fallback = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][month - 1];
+  const key = MONTH_KEYS[month - 1];
+  const fallback = MONTH_FALLBACKS[month - 1];
   return key ? t(key, fallback) : "";
 }
 
@@ -73,14 +84,12 @@ export function formatLocalizedISODate(isoDate) {
   const year = Number(match[1]);
   const month = Number(match[2]);
   const day = Number(match[3]);
-  const lang = activeLanguage();
-  if (lang.startsWith("zh")) return `${year}年${month}月${day}日`;
-  if (lang.startsWith("fil")) return `${monthLabel(month)} ${day}, ${year}`;
-  if (lang.startsWith("fi")) return `${day}.${month}.${year}`;
-  if (lang.startsWith("vi") || lang.startsWith("es")) return `${day}/${month}/${year}`;
+  const format = ISO_DATE_FORMAT[activeLanguage()] || ISO_DATE_FORMAT.en;
+  if (format === "ymd_han") return `${year}年${month}月${day}日`;
+  if (format === "dmy_dot") return `${day}.${month}.${year}`;
+  if (format === "dmy_slash") return `${day}/${month}/${year}`;
   const label = monthLabel(month);
-  if (lang.startsWith("en")) return `${label} ${day}, ${year}`;
-  return `${day} ${label} ${year}`;
+  return `${label} ${day}, ${year}`;
 }
 
 export function closureReasonLabel(reasonCode, fallback = "") {

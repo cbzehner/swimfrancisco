@@ -1,5 +1,5 @@
 {
-  "agent_data_version": 1,
+  "agent_data_version": 2,
   "slug": "crissy-field",
   "name": "Crissy Field / East Beach",
   "type": "open_water",
@@ -13,9 +13,7 @@
     "lng": -122.466
   },
   "access": {
-    "access": "beach",
     "access_mode": "public",
-    "cost": "free",
     "payment_model": "free",
     "website": "https://presidio.gov/explore/attractions/crissy-field"
   },
@@ -47,5 +45,5 @@
     "api_url": "https://swimfrancisco.com/api/conditions",
     "condition_key": "crissy-field"
   },
-  "generated_at": "2026-08-13T05:55:17.025Z"
+  "generated_at": "2026-08-21T20:18:42.012Z"
 }

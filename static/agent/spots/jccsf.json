@@ -1,5 +1,5 @@
 {
-  "agent_data_version": 1,
+  "agent_data_version": 2,
   "slug": "jccsf",
   "name": "JCCSF",
   "type": "pool",
@@ -13,13 +13,11 @@
     "lng": -122.4472
   },
   "access": {
-    "access": "day_pass",
     "access_mode": "membership",
     "access_summary": "Gallanter Family Aquatics Center access is tied to JCCSF Fitness Center membership. The official aquatics page lists lap-pool access for members and member pricing for swim school.",
     "access_notes": [
       "Check the current lap-lane schedule before going; peak time is listed as 4:00–7:00 pm daily."
     ],
-    "cost": "paid",
     "payment_model": "membership",
     "pricing": [
       {
@@ -325,5 +323,5 @@
       }
     ]
   },
-  "generated_at": "2026-08-13T05:55:17.025Z"
+  "generated_at": "2026-08-21T20:18:42.012Z"
 }

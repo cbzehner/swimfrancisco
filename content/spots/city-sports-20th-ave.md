@@ -10,8 +10,6 @@ locale_label = "Stonestown"
 lat = 37.7288
 lng = -122.4756
 website = "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914"
-cost = "paid"
-access = "members"
 setpoint_label = "lap"
 access_mode = "membership"
 payment_model = "membership"
