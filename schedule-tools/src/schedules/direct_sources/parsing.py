@@ -6,7 +6,7 @@ from html import unescape
 from html.parser import HTMLParser
 
 from .._time import pacific_today
-from ..models import DAY_ORDER
+from ..models import DAY_ORDER, ScheduleBasis
 from .errors import DirectSourceError
 
 _MONTH_NUMBERS = {
@@ -26,7 +26,7 @@ _MONTH_NUMBERS = {
 
 
 def _payload(
-    schedule_basis: str,
+    schedule_basis: ScheduleBasis,
     sessions: list[dict],
     *,
     access_hours: list[dict] | None = None,

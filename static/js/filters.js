@@ -85,10 +85,8 @@ function syncStateToHash(state) {
   if (kind === "open") tokens.add("open");
   if (kind === "distance") tokens.add("distance");
   if (state.includeMemberships) tokens.add("memberships");
-  for (const type of state.types) {
-    const token = TYPE_TO_TOKEN[type];
-    if (token) tokens.add(token);
-  }
+  const typeToken = state.type ? TYPE_TO_TOKEN[state.type] : null;
+  if (typeToken) tokens.add(typeToken);
   writeHashTokens(tokens);
   updateViewSwitcherHref();
 }
@@ -141,8 +139,7 @@ function rowMatchesType(row, type) {
 // (rendered as the "ALL" pill in the UI),
 // every type passes. Otherwise the single selected type must match.
 function rowPassesFilters(row, state) {
-  const type = activeType(state);
-  if (type && type !== TYPE_NONE && !rowMatchesType(row, type)) return false;
+  if (state.type && !rowMatchesType(row, state.type)) return false;
   // Default board = truly walk-in-able places (access_mode "public": city
   // pools + beaches). The toggle opts into the broader set — membership
   // clubs, private facilities, day-pass and campus pools.
@@ -223,13 +220,11 @@ function sortRowsByNextOpen(rows, allowedTypes, now, horizon) {
 }
 
 function allowedPoolTypes(state) {
-  const active = Array.from(state.types).filter((type) => isDropInType(type));
-  return active.length > 0 ? active : null;
+  return state.type && isDropInType(state.type) ? [state.type] : null;
 }
 
 function activeType(state) {
-  const [type] = state.types;
-  return type ?? TYPE_NONE;
+  return state.type ?? TYPE_NONE;
 }
 
 function setPressed(buttons, activeTypeValue) {
@@ -315,7 +310,7 @@ function captureFilter(trigger, state, tbody) {
 function attachHandlers(tbody, filtersRoot) {
   const state = {
     sort: { kind: "default" },
-    types: new Set(),
+    type: null,
     includeMemberships: false,
   };
 
@@ -350,14 +345,8 @@ function attachHandlers(tbody, filtersRoot) {
     const type = button.getAttribute("data-type");
     if (!type) return;
     button.addEventListener("click", () => {
-      if (type === TYPE_NONE) {
-        state.types.clear();
-        setPressed(typeButtonsArray, TYPE_NONE);
-      } else {
-        state.types.clear();
-        state.types.add(type);
-        setPressed(typeButtonsArray, type);
-      }
+      state.type = type === TYPE_NONE ? null : type;
+      setPressed(typeButtonsArray, type);
       applyFilters(tbody, state);
       captureFilter("program", state, tbody);
       syncStateToHash(state);
@@ -448,8 +437,7 @@ function restoreFromHash(controls) {
   );
   if (desiredTypeButton && desiredTypeButton !== pressedTypeButton) {
     const desiredType = desiredTypeButton.getAttribute("data-type");
-    state.types.clear();
-    if (desiredType && desiredType !== TYPE_NONE) state.types.add(desiredType);
+    state.type = desiredType && desiredType !== TYPE_NONE ? desiredType : null;
     setPressed(typeButtonsArray, desiredType || TYPE_NONE);
     changed = true;
   }

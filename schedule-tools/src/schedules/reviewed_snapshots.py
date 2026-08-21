@@ -30,14 +30,18 @@ def load_reviewed_snapshot_from_path(
     return raw
 
 
-_SESSION_COMPARE_KEYS = ("day", "type", "start", "end", "pool")
-_ACCESS_HOUR_COMPARE_KEYS = ("day", "start", "end", "label")
-_ACCESS_EXCEPTION_COMPARE_KEYS = ("date", "start", "end", "label", "reason")
-_CLOSURE_COMPARE_KEYS = ("start", "end", "reason", "start_time", "end_time")
+_COMPARE_KEYS = {
+    "sessions": ("day", "type", "start", "end", "pool"),
+    "access_hours": ("day", "start", "end", "label"),
+    "access_exceptions": ("date", "start", "end", "label", "reason"),
+    "closures": ("start", "end", "reason", "start_time", "end_time"),
+}
 
 
-def _project(source: dict, keys: tuple[str, ...]) -> dict:
-    return {key: source[key] for key in keys if key in source}
+def _canonical_list(items: list, keys: tuple[str, ...]) -> list[dict]:
+    projected = [{key: item[key] for key in keys if key in item} for item in items]
+    projected.sort(key=lambda item: tuple(item.get(key, "") for key in keys))
+    return projected
 
 
 def canonicalize_payload(payload: dict) -> dict:
@@ -47,31 +51,17 @@ def canonicalize_payload(payload: dict) -> dict:
     between a reviewed snapshot and a fresh provider extraction (e.g.
     `evidence`, free-form `notes`).
     """
-    sessions = [_project(session, _SESSION_COMPARE_KEYS) for session in payload.get("sessions") or []]
-    sessions.sort(key=lambda s: tuple(s.get(key, "") for key in _SESSION_COMPARE_KEYS))
-
-    closures = [_project(closure, _CLOSURE_COMPARE_KEYS) for closure in payload.get("closures") or []]
-    closures.sort(key=lambda c: tuple(c.get(key, "") for key in _CLOSURE_COMPARE_KEYS))
-
-    access_hours = [
-        _project(access_hour, _ACCESS_HOUR_COMPARE_KEYS)
-        for access_hour in payload.get("access_hours") or []
-    ]
-    access_hours.sort(key=lambda a: tuple(a.get(key, "") for key in _ACCESS_HOUR_COMPARE_KEYS))
-
-    access_exceptions = [
-        _project(access_exception, _ACCESS_EXCEPTION_COMPARE_KEYS)
-        for access_exception in payload.get("access_exceptions") or []
-    ]
-    access_exceptions.sort(key=lambda a: tuple(a.get(key, "") for key in _ACCESS_EXCEPTION_COMPARE_KEYS))
-
+    lists = {
+        name: _canonical_list(payload.get(name) or [], keys)
+        for name, keys in _COMPARE_KEYS.items()
+    }
     canonical: dict = {
         "effective_start": payload.get("effective_start"),
         "schedule_basis": payload.get("schedule_basis"),
-        "sessions": sessions,
-        "access_hours": access_hours,
-        "access_exceptions": access_exceptions,
-        "closures": closures,
+        "sessions": lists["sessions"],
+        "access_hours": lists["access_hours"],
+        "access_exceptions": lists["access_exceptions"],
+        "closures": lists["closures"],
     }
     if "effective_end" in payload and payload["effective_end"] is not None:
         canonical["effective_end"] = payload["effective_end"]
