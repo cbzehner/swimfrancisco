@@ -127,7 +127,7 @@
     </thead>
     <tbody>
       {% for page in spots.pages %}
-        {% set target_page = get_page(path="spots/" ~ page.slug ~ ".md", lang=lang) %}
+        {% set display = get_page(path="spots/" ~ page.slug ~ ".md", lang=lang) %}
         <tr
           data-slug="{{ page.slug }}"
           data-type="{{ page.extra.type }}"
@@ -138,10 +138,10 @@
           data-schedule='{{ schedule_macros::data_schedule(extra=page.extra) }}'
         >
           <td data-cell="spot">
-            <a href="{{ target_page.permalink }}">{{ page.title | upper }}</a>
+            <a href="{{ display.permalink }}">{{ page.title | upper }}</a>
             {% if page.extra.type == 'open_water' %}
               <span class="spot-subtitle spot-subtitle--description">
-                {{ target_page.extra.description_short | default(value=page.extra.description_short | default(value=trans(key='open_water_fallback', lang=lang))) }}
+                {{ display.extra.description_short | default(value=page.extra.description_short | default(value=trans(key='open_water_fallback', lang=lang))) }}
               </span>
             {% else %}
               <span class="spot-subtitle">

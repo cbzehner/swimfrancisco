@@ -81,7 +81,6 @@ function tideToSummary(data: NoaaTideData | null): TideSummary | null {
 interface TempReading {
   stationId: string;
   waterTempC: number;
-  waterTempF: number;
   observedAt: string;
 }
 
@@ -140,9 +139,10 @@ function getOrFetchTide(
 
 function tempFromReading(result: { reading: TempReading; sourceType: TempStationType } | null): TempFields | null {
   if (!result) return null;
+  const celsius = result.reading.waterTempC;
   return {
-    water_temp_f: result.reading.waterTempF,
-    water_temp_c: result.reading.waterTempC,
+    water_temp_c: Math.round(celsius * 10) / 10,
+    water_temp_f: Math.round((celsius * 9 / 5 + 32) * 10) / 10,
     temp_observed_at: result.reading.observedAt,
     temp_station_id: result.reading.stationId,
     temp_station_type: result.sourceType,

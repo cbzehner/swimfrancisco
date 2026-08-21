@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 from datetime import date, datetime, timedelta
 from html import unescape
@@ -47,6 +48,16 @@ def _payload(
         ),
         "closures": closures or [],
     }
+
+
+def _stable_payload_key(payload: dict) -> str:
+    stable = dict(payload)
+    stable.pop("effective_start", None)
+    stable["closures"] = [
+        {key: value for key, value in closure.items() if key != "start"}
+        for closure in stable.get("closures", [])
+    ]
+    return json.dumps(stable, sort_keys=True, separators=(",", ":"))
 
 
 def _weekly_hours_sessions(kind: str, hours: dict[str, tuple[str, str]], *, evidence: str) -> list[dict]:

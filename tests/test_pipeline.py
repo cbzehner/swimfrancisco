@@ -274,7 +274,6 @@ def _stub_extract_pipeline(monkeypatch, tmp_path: Path, registry: list[PoolEntry
             },
             model="gemini-test",
             usage={},
-            cost_estimate="test",
         )
 
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", fake_extract)

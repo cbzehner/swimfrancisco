@@ -55,7 +55,6 @@ def extract(pdf_bytes: bytes, prompt: str, schema: dict[str, Any]) -> ProviderRe
         payload=payload,
         model=model,
         usage=usage,
-        cost_estimate=_format_usage(usage),
     )
 
 
@@ -78,9 +77,3 @@ def _usage_dict(usage: Any) -> dict[str, Any]:
     }
 
 
-def _format_usage(usage: dict[str, Any]) -> str:
-    input_tokens = usage.get("input_tokens")
-    output_tokens = usage.get("output_tokens")
-    if input_tokens is None and output_tokens is None:
-        return "usage unavailable"
-    return f"input_tokens={input_tokens or 0}, output_tokens={output_tokens or 0}"

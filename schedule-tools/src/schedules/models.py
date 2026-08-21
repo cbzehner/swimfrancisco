@@ -112,12 +112,29 @@ class ValidationResult:
     catastrophic: bool = False
 
 
+def format_provider_usage(usage: dict[str, Any]) -> str:
+    if usage.get("total_token_count") is not None:
+        return (
+            f"prompt_tokens={usage.get('prompt_token_count') or 0}, "
+            f"candidate_tokens={usage.get('candidates_token_count') or 0}, "
+            f"total_tokens={usage['total_token_count']}"
+        )
+    input_tokens = usage.get("input_tokens")
+    output_tokens = usage.get("output_tokens")
+    if input_tokens is None and output_tokens is None:
+        return "usage unavailable"
+    return f"input_tokens={input_tokens or 0}, output_tokens={output_tokens or 0}"
+
+
 @dataclass(frozen=True)
 class ProviderResult:
     payload: ExtractedPayload
     model: str
     usage: dict[str, Any]
-    cost_estimate: str
+
+    @property
+    def cost_estimate(self) -> str:
+        return format_provider_usage(self.usage)
 
 
 @dataclass(frozen=True)

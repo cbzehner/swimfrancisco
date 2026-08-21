@@ -218,7 +218,6 @@ def test_extract_reruns_after_prompt_change(tmp_path, monkeypatch):
             payload=_payload(),
             model="gemini-3.1-flash-lite-preview",
             usage={},
-            cost_estimate="fresh",
         )
 
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", fake_extract)

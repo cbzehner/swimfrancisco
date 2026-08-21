@@ -8,6 +8,7 @@ import {
   captureBaselineRanks,
   computeAccessStatus,
   computeAccessWindowAvailability,
+  computeNextOpenOffset,
   computeStatus,
   computeStatusRunKey,
   computeWindowAvailability,
@@ -187,7 +188,7 @@ function applyStatuses(root, now, allowedTypes = null) {
         : computeAccessWindowAvailability(schedule, horizon);
       setStatus(statusCell, result.status, "pool");
       nextCell.textContent = hasSessions ? formatWindowNext(result) : statusNextLabel(result, PLACEHOLDER);
-      row.dataset.windowRank = String(result.sortRank);
+      writeSortKeys(row, result.sortRank, result.sortRank);
       row.classList.toggle("is-open", OPEN_STATUSES.has(result.status));
       return;
     }
@@ -203,7 +204,10 @@ function applyStatuses(root, now, allowedTypes = null) {
         : { status: PLACEHOLDER, next: PLACEHOLDER };
     setStatus(statusCell, result.status, "pool");
     nextCell.textContent = statusNextLabel(result, PLACEHOLDER);
-    row.dataset.windowRank = result.status === "OPEN" || result.status === "ACCESS" ? "0" : "3";
+    const openOffset = hasSessions
+      ? computeNextOpenOffset(schedule, now, allowedTypes)
+      : Number.POSITIVE_INFINITY;
+    writeSortKeys(row, nowSortRank(result.status), openOffset);
     row.classList.toggle("is-open", OPEN_STATUSES.has(result.status));
   });
 
@@ -215,46 +219,47 @@ function applyStatuses(root, now, allowedTypes = null) {
     if (horizon.kind === "window") {
       setStatus(statusCell, "OCEAN", "open_water");
       nextCell.textContent = t("status_check_conditions", "CHECK CONDITIONS");
-      row.dataset.windowRank = "2";
+      writeSortKeys(row, 2, 2);
       row.classList.remove("is-open");
     } else {
       setStatus(statusCell, "OCEAN", "open_water", t("status_year_round", "YEAR-ROUND"));
       nextCell.textContent = PLACEHOLDER;
-      row.dataset.windowRank = "0";
+      writeSortKeys(row, 0, 0);
       row.classList.add("is-open");
     }
   });
 }
 
+function nowSortRank(status) {
+  if (status === "OPEN" || status === "ACCESS") return 0;
+  if (status === "CHECK" || status === PLACEHOLDER) return 2;
+  return 1;
+}
+
+function writeSortKeys(row, sortRank, openOffset) {
+  row.dataset.sortRank = String(sortRank);
+  row.dataset.openOffset = String(openOffset);
+}
+
 // Sort rows: pools first, with open/available pools above closed pools, then
 // beaches alphabetically at the bottom.
-function sortRows(rows, horizon) {
+function sortRows(rows) {
   const decorated = rows.map((row, index) => {
     const isPool = row.getAttribute("data-type") === "pool";
-    const statusCell = cell(row, "status");
-    const statusText = statusCell?.dataset.statusValue || statusCell?.textContent.trim() || "";
-    const isOpenPool = isPool && (statusText === "OPEN" || statusText === "ACCESS");
-    const isUnverifiedPool = isPool && (statusText === "CHECK" || statusText === PLACEHOLDER);
     const label = cell(row, "spot")?.textContent.trim().toUpperCase() || "";
-    const windowRank = Number(row.dataset.windowRank);
+    const sortRank = Number(row.dataset.sortRank);
     return {
       row,
       index,
       beachRank: isPool ? 0 : 1,
-      isOpenPool,
-      isUnverifiedPool,
-      windowRank: Number.isFinite(windowRank) ? windowRank : Number.POSITIVE_INFINITY,
+      sortRank: Number.isFinite(sortRank) ? sortRank : Number.POSITIVE_INFINITY,
       label,
     };
   });
 
   decorated.sort((a, b) => {
     if (a.beachRank !== b.beachRank) return a.beachRank - b.beachRank;
-    if (horizon.kind === "window" && a.windowRank !== b.windowRank) {
-      return a.windowRank - b.windowRank;
-    }
-    if (a.isOpenPool !== b.isOpenPool) return a.isOpenPool ? -1 : 1;
-    if (a.isUnverifiedPool !== b.isUnverifiedPool) return a.isUnverifiedPool ? 1 : -1;
+    if (a.sortRank !== b.sortRank) return a.sortRank - b.sortRank;
     if (a.label < b.label) return -1;
     if (a.label > b.label) return 1;
     return a.index - b.index;
@@ -274,7 +279,7 @@ export function renderBoard(root, allowedTypes = null, now = pacificWallClockDat
   currentHorizon = resolveHorizon(currentHorizon.id, now);
   applyStatuses(root, now, allowedTypes);
   const rows = Array.from(tbody.querySelectorAll("tr"));
-  const sorted = sortRows(rows, currentHorizon);
+  const sorted = sortRows(rows);
   reorderDom(tbody, sorted);
   captureBaselineRanks(sorted, (row, rank) => {
     row.dataset.baselineRank = String(rank);

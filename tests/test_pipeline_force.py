@@ -120,7 +120,6 @@ def _provider_result() -> ProviderResult:
         payload=_payload(),
         model="gemini-3.1-flash-lite-preview",
         usage={},
-        cost_estimate="fresh",
     )
 
 
