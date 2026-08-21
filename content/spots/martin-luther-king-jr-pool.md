@@ -409,6 +409,410 @@ reason = "Juneteenth"
 start = "2026-07-04"
 end = "2026-07-04"
 reason = "Independence Day"
+
+[[extra.schedules]]
+effective_start = "2026-08-18"
+schedule_basis = "swim_schedule"
+effective_end = "2026-09-26"
+last_verified_at = "2026-08-20"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "07:30"
+end = "09:00"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "09:00"
+end = "12:00"
+pool = "4"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "senior_swim"
+start = "09:00"
+end = "12:00"
+pool = "4 & shallow"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "family_swim"
+start = "12:30"
+end = "15:30"
+pool = "shallow"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "12:30"
+end = "15:30"
+pool = "8"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "15:30"
+end = "17:30"
+pool = "4"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "18:00"
+end = "19:00"
+pool = "8"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "07:30"
+end = "09:00"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "senior_swim"
+start = "09:00"
+end = "10:30"
+pool = "4 & shallow"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "09:00"
+end = "12:00"
+pool = "4"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "family_swim"
+start = "12:30"
+end = "15:30"
+pool = "shallow"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "12:30"
+end = "15:30"
+pool = "8"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "15:30"
+end = "17:30"
+pool = "4"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "09:00"
+end = "12:00"
+pool = "4"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "family_swim"
+start = "12:30"
+end = "15:30"
+pool = "shallow"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "12:30"
+end = "15:30"
+pool = "8"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "15:30"
+end = "17:30"
+pool = "4"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "18:00"
+end = "19:00"
+pool = "8"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "senior_swim"
+start = "09:00"
+end = "10:30"
+pool = "4 & shallow"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "09:00"
+end = "12:00"
+pool = "4"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "family_swim"
+start = "12:30"
+end = "15:30"
+pool = "shallow"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "12:30"
+end = "15:30"
+pool = "8"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "15:30"
+end = "17:30"
+pool = "4"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "lap_swim"
+start = "07:00"
+end = "08:30"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "family_swim"
+start = "13:30"
+end = "15:00"
+pool = "10"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "lap_swim"
+start = "15:30"
+end = "17:00"
+pool = "10"
+
+[[extra.schedules.closures]]
+start = "2026-08-22"
+end = "2026-08-22"
+reason = "Training Closures"
+
+[[extra.schedules.closures]]
+start = "2026-08-27"
+end = "2026-08-27"
+reason = "Maintenance"
+
+[[extra.schedules.closures]]
+start = "2026-09-07"
+end = "2026-09-07"
+reason = "Holiday Closures"
+
+[[extra.schedules.closures]]
+start = "2026-09-24"
+end = "2026-09-24"
+reason = "Maintenance"
+
+[[extra.schedules]]
+effective_start = "2026-09-29"
+schedule_basis = "swim_schedule"
+effective_end = "2026-12-12"
+last_verified_at = "2026-08-20"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "07:30"
+end = "09:00"
+pool = "10"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "09:00"
+end = "12:00"
+pool = "4"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "senior_swim"
+start = "09:00"
+end = "12:00"
+pool = "4 & shallow"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "family_swim"
+start = "12:30"
+end = "15:30"
+pool = "shallow"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "12:30"
+end = "15:30"
+pool = "8"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "18:00"
+end = "19:00"
+pool = "8"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "07:30"
+end = "09:00"
+pool = "10"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "senior_swim"
+start = "09:00"
+end = "10:30"
+pool = "4 & shallow"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "09:00"
+end = "12:00"
+pool = "4"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "family_swim"
+start = "12:30"
+end = "15:30"
+pool = "shallow"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "12:30"
+end = "15:30"
+pool = "8"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "07:30"
+end = "09:00"
+pool = "10"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "09:00"
+end = "12:00"
+pool = "4"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "senior_swim"
+start = "09:00"
+end = "12:00"
+pool = "4 & shallow"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "family_swim"
+start = "12:30"
+end = "15:30"
+pool = "shallow"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "12:30"
+end = "15:30"
+pool = "8"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "18:00"
+end = "19:00"
+pool = "8"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "senior_swim"
+start = "09:00"
+end = "10:30"
+pool = "4 & shallow"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "09:00"
+end = "12:00"
+pool = "4"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "family_swim"
+start = "12:30"
+end = "15:30"
+pool = "shallow"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "12:30"
+end = "15:30"
+pool = "8"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "lap_swim"
+start = "07:00"
+end = "08:30"
+pool = "10"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "family_swim"
+start = "13:30"
+end = "15:00"
+pool = "10"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "lap_swim"
+start = "15:30"
+end = "17:00"
+pool = "10"
+
+[[extra.schedules.closures]]
+start = "2026-10-12"
+end = "2026-10-12"
+reason = "Holiday"
+
+[[extra.schedules.closures]]
+start = "2026-11-11"
+end = "2026-11-11"
+reason = "Holiday"
+
+[[extra.schedules.closures]]
+start = "2026-11-26"
+end = "2026-11-26"
+reason = "Holiday"
+
+[[extra.schedules.closures]]
+start = "2026-11-27"
+end = "2026-11-27"
+reason = "Holiday"
+
+[[extra.schedules.closures]]
+start = "2026-12-12"
+end = "2026-12-12"
+reason = "Training"
 +++
 
 An indoor pool in the Bayview, featuring a 25-yard x 25-meter main pool and a separate wading pool for tots. Programs include lap swim, senior swim, and recreation swim.

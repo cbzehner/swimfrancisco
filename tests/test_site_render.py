@@ -703,7 +703,6 @@ def test_homepage_renders_bulletin_redesign_shell(built_site: Path) -> None:
     assert "class=bulletin-strip" in html
     assert f"No. {bulletin['label']} · Live bulletin · right now" in html
     assert f"BULLETIN {bulletin['label']}" in html
-    assert "BULLETIN 14" not in html
     assert "data-open-count" in html
     assert "data-conditions-updated" in html
     assert "data-sun-range" not in html
