@@ -157,6 +157,189 @@ reason = "All city pools will be closed on June 19 in observance of Juneteenth"
 start = "2026-07-04"
 end = "2026-07-04"
 reason = "closed on July 4 for Independence Day"
+
+[[extra.schedules]]
+effective_start = "2026-08-16"
+schedule_basis = "swim_schedule"
+effective_end = "2026-12-10"
+last_verified_at = "2026-08-20"
+
+[[extra.schedules.sessions]]
+day = "monday"
+type = "lap_swim"
+start = "07:30"
+end = "09:45"
+
+[[extra.schedules.sessions]]
+day = "monday"
+type = "senior_swim"
+start = "12:00"
+end = "13:30"
+
+[[extra.schedules.sessions]]
+day = "monday"
+type = "lap_swim"
+start = "13:45"
+end = "15:45"
+
+[[extra.schedules.sessions]]
+day = "monday"
+type = "family_swim"
+start = "18:15"
+end = "19:30"
+
+[[extra.schedules.sessions]]
+day = "monday"
+type = "lap_swim"
+start = "18:15"
+end = "19:30"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "07:30"
+end = "09:45"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "senior_swim"
+start = "10:15"
+end = "12:00"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "12:30"
+end = "15:45"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "07:30"
+end = "09:45"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "senior_swim"
+start = "09:00"
+end = "10:45"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "11:00"
+end = "13:30"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "family_swim"
+start = "14:00"
+end = "15:30"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "14:00"
+end = "15:30"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "07:30"
+end = "09:45"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "senior_swim"
+start = "10:15"
+end = "12:00"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "12:30"
+end = "15:45"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "family_swim"
+start = "18:15"
+end = "19:30"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "18:15"
+end = "19:30"
+
+[[extra.schedules.sessions]]
+day = "sunday"
+type = "lap_swim"
+start = "07:30"
+end = "08:30"
+
+[[extra.schedules.sessions]]
+day = "sunday"
+type = "family_swim"
+start = "12:30"
+end = "14:00"
+
+[[extra.schedules.sessions]]
+day = "sunday"
+type = "family_swim"
+start = "14:30"
+end = "15:30"
+
+[[extra.schedules.closures]]
+start = "2026-08-27"
+end = "2026-08-27"
+reason = "Staff training"
+start_time = "12:00"
+end_time = "14:00"
+
+[[extra.schedules.closures]]
+start = "2026-09-07"
+end = "2026-09-07"
+reason = "Holiday"
+
+[[extra.schedules.closures]]
+start = "2026-09-24"
+end = "2026-09-24"
+reason = "Staff training"
+start_time = "12:00"
+end_time = "14:00"
+
+[[extra.schedules.closures]]
+start = "2026-10-12"
+end = "2026-10-12"
+reason = "Holiday"
+
+[[extra.schedules.closures]]
+start = "2026-10-22"
+end = "2026-10-22"
+reason = "Staff training"
+start_time = "12:00"
+end_time = "14:00"
+
+[[extra.schedules.closures]]
+start = "2026-11-02"
+end = "2026-11-21"
+reason = "Annual maintenance"
+
+[[extra.schedules.closures]]
+start = "2026-11-11"
+end = "2026-11-11"
+reason = "Holiday"
+
+[[extra.schedules.closures]]
+start = "2026-11-26"
+end = "2026-11-26"
+reason = "Holiday"
+
+[[extra.schedules.closures]]
+start = "2026-11-27"
+end = "2026-11-27"
+reason = "Holiday"
 +++
 
 An indoor pool at Rossi Playground in the Inner Richmond, at the corner of Arguello and Anza. Programs include lap swim, senior swim, recreation swim, and lessons.

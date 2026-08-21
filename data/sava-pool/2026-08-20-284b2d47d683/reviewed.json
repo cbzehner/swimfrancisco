@@ -1,0 +1,191 @@
+{
+  "slug": "sava-pool",
+  "pdf_sha256": "284b2d47d68358356c4fac17a61df1adf774cde37c70b2bf2b238d544e583d87",
+  "reviewed_at": "2026-08-20",
+  "attested_by": "ci",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29815",
+  "payload": {
+    "closures": [
+      {
+        "end": "2026-08-22",
+        "end_time": "11:30",
+        "reason": "staff training",
+        "start": "2026-08-22",
+        "start_time": "09:00"
+      },
+      {
+        "end": "2026-08-27",
+        "end_time": "14:00",
+        "reason": "staff training",
+        "start": "2026-08-27",
+        "start_time": "12:00"
+      }
+    ],
+    "effective_end": "2026-08-28",
+    "effective_start": "2026-08-18",
+    "schedule_basis": "swim_schedule",
+    "sessions": [
+      {
+        "day": "tuesday",
+        "end": "09:00",
+        "evidence": "Lap Swim 7:30 a.m. -9:00 a.m.",
+        "start": "07:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "11:30",
+        "evidence": "Senior/ Therapy Swim 9:30 a.m. -11:30 a.m.",
+        "start": "09:30",
+        "type": "senior_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:30",
+        "evidence": "Lap Swim 12:00 p.m. - 3:30 p.m.",
+        "start": "12:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "09:00",
+        "evidence": "Lap Swim 6:30 a.m.-9:00 a.m.",
+        "start": "06:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "11:30",
+        "evidence": "Senior/ Therapy Swim 9:30 a.m. -11:30 a.m.",
+        "start": "09:30",
+        "type": "senior_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "14:00",
+        "evidence": "Lap Swim 12:00 p.m. - 2:00 p.m.",
+        "start": "12:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "17:00",
+        "evidence": "Family Swim 2:30 p.m. -5:00 p.m.",
+        "start": "14:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "20:30",
+        "evidence": "Lap Swim 7:00 p.m. -8:30 p.m.",
+        "start": "19:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "09:00",
+        "evidence": "Lap Swim 7:30 a.m. -9:00 a.m.",
+        "start": "07:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "11:30",
+        "evidence": "Senior/ Therapy Swim 9:30 a.m. -11:30 a.m.",
+        "start": "09:30",
+        "type": "senior_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "15:30",
+        "evidence": "Lap Swim 12:00 p.m. - 3:30 p.m.",
+        "start": "12:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "09:00",
+        "evidence": "Lap Swim 6:30 a.m.-9:00 a.m.",
+        "start": "06:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "12:00",
+        "evidence": "Senior/ Therapy Swim 9:30 a.m. -12:00 p.m.",
+        "start": "09:30",
+        "type": "senior_swim"
+      },
+      {
+        "day": "friday",
+        "end": "15:00",
+        "evidence": "Lap Swim (4 Lanes)/ Family Swim (4 Lanes) 1:00 p.m. -3:00 p.m.",
+        "start": "13:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "15:00",
+        "evidence": "Lap Swim (4 Lanes)/ Family Swim (4 Lanes) 1:00 p.m. -3:00 p.m.",
+        "start": "13:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "17:00",
+        "evidence": "Lap Swim (4 Lanes)/ Family Swim (4 Lanes) 3:30 p.m. -5:00 p.m.",
+        "start": "15:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "17:00",
+        "evidence": "Lap Swim (4 Lanes)/ Family Swim (4 Lanes) 3:30 p.m. -5:00 p.m.",
+        "start": "15:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "19:30",
+        "evidence": "Lap Swim (4 Lanes)/ Family Swim (4 Lanes) 5:30 p.m. -7:30 p.m.",
+        "start": "17:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "19:30",
+        "evidence": "Lap Swim (4 Lanes)/ Family Swim (4 Lanes) 5:30 p.m. -7:30 p.m.",
+        "start": "17:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "11:00",
+        "evidence": "Lap Swim 9:00 a.m. -11:00 a.m.",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "13:00",
+        "evidence": "Family Swim 11:30am-1:00 p.m.",
+        "start": "11:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "15:00",
+        "evidence": "Family Swim 1:30pm-3:00 p.m.",
+        "start": "13:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "17:00",
+        "evidence": "Lap Swim 3:30 p.m. -5:00 p.m.",
+        "start": "15:30",
+        "type": "lap_swim"
+      }
+    ]
+  }
+}

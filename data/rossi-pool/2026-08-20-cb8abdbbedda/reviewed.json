@@ -1,0 +1,214 @@
+{
+  "slug": "rossi-pool",
+  "pdf_sha256": "cb8abdbbedda075c85b1a8f1400345efb2d9b022eee6f452bf6b21d4876d80bc",
+  "reviewed_at": "2026-08-20",
+  "attested_by": "ci",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29804",
+  "payload": {
+    "closures": [
+      {
+        "end": "2026-09-07",
+        "reason": "Holiday",
+        "start": "2026-09-07"
+      },
+      {
+        "end": "2026-10-12",
+        "reason": "Holiday",
+        "start": "2026-10-12"
+      },
+      {
+        "end": "2026-11-11",
+        "reason": "Holiday",
+        "start": "2026-11-11"
+      },
+      {
+        "end": "2026-11-26",
+        "reason": "Holiday",
+        "start": "2026-11-26"
+      },
+      {
+        "end": "2026-11-27",
+        "reason": "Holiday",
+        "start": "2026-11-27"
+      },
+      {
+        "end": "2026-08-27",
+        "end_time": "14:00",
+        "reason": "Staff training",
+        "start": "2026-08-27",
+        "start_time": "12:00"
+      },
+      {
+        "end": "2026-09-24",
+        "end_time": "14:00",
+        "reason": "Staff training",
+        "start": "2026-09-24",
+        "start_time": "12:00"
+      },
+      {
+        "end": "2026-10-22",
+        "end_time": "14:00",
+        "reason": "Staff training",
+        "start": "2026-10-22",
+        "start_time": "12:00"
+      },
+      {
+        "end": "2026-11-21",
+        "reason": "Annual maintenance",
+        "start": "2026-11-02"
+      }
+    ],
+    "effective_end": "2026-12-10",
+    "effective_start": "2026-08-16",
+    "schedule_basis": "swim_schedule",
+    "sessions": [
+      {
+        "day": "sunday",
+        "end": "08:30",
+        "evidence": "Lap Swim 7:30am-8:30am",
+        "start": "07:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "14:00",
+        "evidence": "Rec/Family Swim 12:30pm-2:00pm",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim 2:30pm- 3:30pm",
+        "start": "14:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "monday",
+        "end": "09:45",
+        "evidence": "Lap Swim 7:30am-9:45am",
+        "start": "07:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "monday",
+        "end": "13:30",
+        "evidence": "Senior/Therapy Swim 12:00pm-1:30pm",
+        "start": "12:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "monday",
+        "end": "15:45",
+        "evidence": "Lap Swim 1:45pm-3:45pm",
+        "start": "13:45",
+        "type": "lap_swim"
+      },
+      {
+        "day": "monday",
+        "end": "19:30",
+        "evidence": "Lap Swim 6:15pm-7:30pm (3)",
+        "start": "18:15",
+        "type": "lap_swim"
+      },
+      {
+        "day": "monday",
+        "end": "19:30",
+        "evidence": "Rec/Family Swim 6:15pm-7:30pm (3)",
+        "start": "18:15",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "09:45",
+        "evidence": "Lap Swim 7:30am-9:45am",
+        "start": "07:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "12:00",
+        "evidence": "Senior/ Therapy Swim 10:15am-12:00pm",
+        "start": "10:15",
+        "type": "senior_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:45",
+        "evidence": "Lap Swim 12:30pm-3:45pm",
+        "start": "12:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "09:45",
+        "evidence": "Lap Swim 7:30am-9:45am",
+        "start": "07:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "10:45",
+        "evidence": "Senior/Therapy Swim 9:00am-10:45am",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "13:30",
+        "evidence": "Lap Swim 11:00am-1:30pm",
+        "start": "11:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim 2:00pm-3:30 (3)",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:30",
+        "evidence": "Lap Swim 2:00pm-3:30pm (3)",
+        "start": "14:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "09:45",
+        "evidence": "Lap Swim 7:30am-9:45am",
+        "start": "07:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "12:00",
+        "evidence": "Senior/ Therapy Swim 10:15am-12:00pm",
+        "start": "10:15",
+        "type": "senior_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "15:45",
+        "evidence": "Lap Swim 12:30pm-3:45pm",
+        "start": "12:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "19:30",
+        "evidence": "Lap Swim 6:15pm-7:30pm",
+        "start": "18:15",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "19:30",
+        "evidence": "Rec/Family Swim 6:15pm-7:30pm (3)",
+        "start": "18:15",
+        "type": "family_swim"
+      }
+    ]
+  }
+}

@@ -1,9 +1,9 @@
 [[pool]]
 slug = "balboa-pool"
-pdf_url = "https://sfrecpark.org/DocumentCenter/View/29562"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/29797"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Balboa-Pool-212"
 notes = """
-discover: 2026-08-20 flag multiple_windows id=29797:session_grid:table band_session_grid id=29796:session_grid:band
+discover: 2026-08-20 adopt sequential_windows id=29797:session_grid:table band_session_grid id=29796:session_grid:persisted
 """
 
 [[pool]]
@@ -16,7 +16,7 @@ slug = "garfield-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/29564"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Garfield-Pool-214"
 notes = """
-discover: 2026-08-20 flag band_session_grid id=29808:closure_notice:table band_session_grid id=29799:session_grid:band
+discover: 2026-08-20 flag band_session_grid id=29808:closure_notice:table band_session_grid id=29799:session_grid:persisted
 """
 
 [[pool]]
@@ -26,16 +26,19 @@ official_page_url = "https://sfrecpark.org/facilities/facility/details/Hamilton-
 
 [[pool]]
 slug = "martin-luther-king-jr-pool"
-pdf_url = "https://sfrecpark.org/DocumentCenter/View/29578"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/29802"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Martin-Luther-King-Jr-Pool-216"
 notes = """
-discover: 2026-08-20 flag multiple_windows id=29802:session_grid:table band_session_grid id=29803:session_grid:band
+discover: 2026-08-20 adopt sequential_windows id=29802:session_grid:table band_session_grid id=29803:session_grid:band
 """
 
 [[pool]]
 slug = "mission-community-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/29801"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Mission-Community-Pool-217"
+notes = """
+discover: 2026-08-20 extra id=29827:other:band id=29828:other:band id=29841:other:band
+"""
 
 [[pool]]
 slug = "north-beach-pool"
@@ -50,18 +53,15 @@ Official page split the current North Beach interim schedule into separate Cool 
 
 [[pool]]
 slug = "rossi-pool"
-pdf_url = "https://sfrecpark.org/DocumentCenter/View/29570"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/29804"
 official_page_url = "https://sfrecpark.org/Facilities/Facility/Details/Rossi-Pool-219"
-notes = """
-discover: 2026-08-20 flag closure_notice id=29804:closure_notice:table
-"""
 
 [[pool]]
 slug = "sava-pool"
-pdf_url = "https://sfrecpark.org/DocumentCenter/View/29571"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/29815"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Sava-Pool-220"
 notes = """
-discover: 2026-08-20 flag multiple_windows id=29815:session_grid:table band_session_grid id=29805:session_grid:band band_session_grid id=29806:session_grid:band
+discover: 2026-08-20 adopt sequential_windows id=29815:session_grid:table band_session_grid id=29805:session_grid:band band_session_grid id=29806:session_grid:band
 """
 
 [[pool]]
