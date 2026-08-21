@@ -514,12 +514,12 @@ def test_closures_render_without_object_literal_across_all_pools(built_site: Pat
 
 def test_pool_meta_dates_render_in_human_format(built_site: Path) -> None:
     html = _read(built_site, "balboa-pool")
-    effective_copies = [
-        "SCHEDULE EFFECTIVE FROM MAR 17, 2026 TO JUN 6, 2026",
-        "SCHEDULE EFFECTIVE FROM JUN 9, 2026 TO AUG 15, 2026",
-    ]
-    effective_copy = next((copy for copy in effective_copies if copy in html), None)
-    assert effective_copy is not None
+    match = re.search(
+        r"SCHEDULE EFFECTIVE FROM [A-Z]{3} \d{1,2}, 2026 TO [A-Z]{3} \d{1,2}, 2026",
+        html,
+    )
+    assert match is not None
+    effective_copy = match.group(0)
     assert '"schedules":[' in html
     assert "SOURCE OFFICIAL SITE" in html
     assert "REVIEWED" not in html
