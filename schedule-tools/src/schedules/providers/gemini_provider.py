@@ -45,7 +45,6 @@ def extract(pdf_bytes: bytes, prompt: str, schema: dict[str, Any]) -> ProviderRe
         payload=payload,
         model=model,
         usage=usage,
-        cost_estimate=_format_usage(usage),
     )
 
 
@@ -59,12 +58,3 @@ def _usage_dict(usage_metadata: Any) -> dict[str, Any]:
     }
 
 
-def _format_usage(usage: dict[str, Any]) -> str:
-    total = usage.get("total_token_count")
-    if total is None:
-        return "usage unavailable"
-    return (
-        f"prompt_tokens={usage.get('prompt_token_count') or 0}, "
-        f"candidate_tokens={usage.get('candidates_token_count') or 0}, "
-        f"total_tokens={total}"
-    )

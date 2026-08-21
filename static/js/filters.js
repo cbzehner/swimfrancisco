@@ -23,7 +23,6 @@
 // board still renders and all rows remain visible.
 
 import {
-  computeNextOpenOffset,
   readScheduleAttribute,
   resolveActiveSchedule,
   sortByRank,
@@ -183,24 +182,17 @@ function sortRowsByDistance(rows, userCoords) {
   return decorated.map((item) => item.row);
 }
 
-function readWindowRank(row) {
-  const windowRank = Number(row.dataset.windowRank);
-  return Number.isFinite(windowRank) ? windowRank : Number.POSITIVE_INFINITY;
+function readOpenOffset(row) {
+  const openOffset = Number(row.dataset.openOffset);
+  return Number.isFinite(openOffset) ? openOffset : Number.POSITIVE_INFINITY;
 }
 
 // Sort visible rows by the soonest pool time, keeping beaches below pools
 // when both are visible. Pools with no known upcoming drop-in session fall
 // to the end of the pool group. Stable via baseline rank.
-function sortRowsByNextOpen(rows, allowedTypes, now, horizon) {
+function sortRowsByNextOpen(rows) {
   const decorated = rows.map((row, index) => {
-    // Window ranks come from applyStatuses via renderBoard, which
-    // applyFilters always runs first. Recomputing here diverged for
-    // access-hours pools (ACCESS ranked as NO SESSION).
-    const offset = horizon?.kind === "window"
-      ? readWindowRank(row)
-      : isBeach(row)
-        ? 0
-        : computeNextOpenOffset(readScheduleAttribute(row), now, allowedTypes);
+    const offset = readOpenOffset(row);
     const baselineRank = Number(row.dataset.baselineRank);
     return {
       row,
@@ -262,7 +254,6 @@ function triggerFlap(rows) {
 function applyFilters(tbody, state, { flap = true } = {}) {
   const poolTypes = allowedPoolTypes(state);
   renderBoard(document, poolTypes);
-  const horizon = getCurrentHorizon();
   const rows = Array.from(tbody.querySelectorAll("tr"));
   const visible = [];
   rows.forEach((row) => {
@@ -276,7 +267,7 @@ function applyFilters(tbody, state, { flap = true } = {}) {
     kind === "distance"
       ? sortRowsByDistance(visible, state.sort.coords)
       : kind === "open"
-        ? sortRowsByNextOpen(visible, poolTypes, pacificWallClockDate(), horizon)
+        ? sortRowsByNextOpen(visible)
       : sortByRank(visible, (row) => Number(row.dataset.baselineRank));
 
   // Move visible rows to the top in their new order; hidden rows retain

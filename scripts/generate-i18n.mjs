@@ -460,9 +460,8 @@ async function validateSpotCatalogs({ codes, defaultLocale }) {
   }
 }
 
-async function validateSources() {
-  const { locales, ui } = await loadSources();
-  const dynamicLabels = await loadDynamicLabels();
+async function validateSources(sources, dynamicLabels) {
+  const { locales, ui } = sources;
   const { defaultLocale, codes } = validateLocaleCodes(locales);
   await validateLocaleRegistryConsumers(codes);
   await validateUiCatalogs({ codes, defaultLocale, ui });
@@ -524,9 +523,9 @@ async function removeStaleGeneratedArtifacts({ dryRun = false, changed = [], wri
   }
 }
 
-async function generateConfig({ dryRun = false, changed = [], written = new Set() } = {}) {
+async function generateConfig({ dryRun = false, changed = [], written = new Set(), sources } = {}) {
   const current = await readToml(CONFIG_PATH);
-  const { locales, ui } = await loadSources();
+  const { locales, ui } = sources;
   const defaultLocale = locales.locales.find((locale) => locale.is_default);
   if (!defaultLocale) throw new Error("i18n/locales.toml must define one default locale");
 
@@ -551,9 +550,8 @@ async function generateConfig({ dryRun = false, changed = [], written = new Set(
   return writeIfChanged(CONFIG_PATH, tomlText(next), { dryRun, changed, written });
 }
 
-async function generateRuntimeData({ dryRun = false, changed = [], written = new Set() } = {}) {
-  const { locales, ui } = await loadSources();
-  const dynamicLabels = await loadDynamicLabels();
+async function generateRuntimeData({ dryRun = false, changed = [], written = new Set(), sources, dynamicLabels } = {}) {
+  const { locales, ui } = sources;
   const dynamicLabelPayload = dynamicLabelData(dynamicLabels);
   const defaultLocale = locales.locales.find((locale) => locale.is_default);
   const runtimeKeys = await runtimeTranslationKeys(ui[defaultLocale.code], dynamicLabels);
@@ -603,8 +601,8 @@ function sectionMarkdown(section) {
   return `+++\n${tomlText(section)}+++\n`;
 }
 
-async function generateSectionPages({ dryRun = false, changed = [], written = new Set() } = {}) {
-  const { locales } = await loadSources();
+async function generateSectionPages({ dryRun = false, changed = [], written = new Set(), sources } = {}) {
+  const { locales } = sources;
   const defaultLocale = locales.locales.find((locale) => locale.is_default);
 
   for (const code of sourceLocaleCodes(locales)) {
@@ -619,8 +617,8 @@ async function generateSectionPages({ dryRun = false, changed = [], written = ne
   }
 }
 
-async function generateSpotPages({ dryRun = false, changed = [], written = new Set() } = {}) {
-  const { locales } = await loadSources();
+async function generateSpotPages({ dryRun = false, changed = [], written = new Set(), sources } = {}) {
+  const { locales } = sources;
   const defaultLocale = locales.locales.find((locale) => locale.is_default);
 
   for (const code of sourceLocaleCodes(locales)) {
@@ -641,10 +639,12 @@ async function generateSpotPages({ dryRun = false, changed = [], written = new S
 }
 
 async function generateAll({ dryRun = false } = {}) {
-  await validateSources();
+  const sources = await loadSources();
+  const dynamicLabels = await loadDynamicLabels();
+  await validateSources(sources, dynamicLabels);
   const changed = [];
   const written = new Set();
-  const opts = { dryRun, changed, written };
+  const opts = { dryRun, changed, written, sources, dynamicLabels };
   await generateConfig(opts);
   await generateRuntimeData(opts);
   await generateSectionPages(opts);

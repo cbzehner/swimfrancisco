@@ -1,21 +1,22 @@
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
 from .._time import pacific_today
 from ..models import PoolEntry
+from ..paths import DATA_DIR
 from .errors import DirectSourceError
 from .http import (
     DirectFetchResult,
     _cache_text,
     _xlsx_content_sha256,
-    _payload_fingerprint,
     fetch_koret_workbook,
     fetch_text,
 )
-from .parsing import _resolve_yearless_date
+from .parsing import _resolve_yearless_date, _stable_payload_key
 from .providers.fitness_clubs import (
     _extract_24_hour_fitness,
     _extract_city_sports,
@@ -62,22 +63,28 @@ def extract_direct(entry: PoolEntry, *, cache_root: Path | None = None) -> Direc
     if spec is None:
         raise DirectSourceError(f"{entry.slug}: unsupported direct source kind {entry.source_kind!r}")
     extractor, model, note = spec
-    fetched = fetch_text(
-        entry.slug,
-        entry.pdf_url,
-        extension="html",
-        fingerprint=_payload_fingerprint(extractor),
-        **fetch_kwargs,
+    cache_root = fetch_kwargs.get("cache_root") or DATA_DIR
+    text, response_url = fetch_text(entry.pdf_url)
+    payload = extractor(text)
+    sha256 = hashlib.sha256(_stable_payload_key(payload).encode("utf-8")).hexdigest()
+    slug_dir = cache_root / entry.slug
+    slug_dir.mkdir(parents=True, exist_ok=True)
+    path, from_cache = _cache_text(slug_dir, sha256, "html", text)
+    fetched = DirectFetchResult(
+        path=path,
+        sha256=sha256,
+        from_cache=from_cache,
+        response_url=response_url,
     )
     return DirectExtraction(
         fetch_result=fetched,
-        payload=extractor(fetched.text),
+        payload=payload,
         model=model,
         notes=[note],
     )
 
 
-# HTML sources all share the fetch_text + payload-fingerprint flow; adding a
+# HTML sources share fetch + one extract + a payload cache key. Adding a
 # site is one registration here plus its extractor. Defined after the
 # extractors so the references resolve at import time.
 _HTML_EXTRACTORS: dict[str, tuple[Callable[[str], dict], str, str]] = {

@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import re
 import time
 from io import BytesIO
-from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile
@@ -23,24 +21,16 @@ BOT_USER_AGENT = "SwimFranciscoScheduleBot/0.1 (+https://swimfrancisco.com)"
 class DirectFetchResult:
     path: Path
     sha256: str
-    text: str
     from_cache: bool
     response_url: str
 
 
 def fetch_text(
-    slug: str,
     url: str,
     *,
-    extension: str,
-    cache_root: Path = DATA_DIR,
     timeout: float = 30.0,
     retries: int = 2,
-    fingerprint: Callable[[str], str] | None = None,
-) -> DirectFetchResult:
-    slug_dir = cache_root / slug
-    slug_dir.mkdir(parents=True, exist_ok=True)
-
+) -> tuple[str, str]:
     last_error: Exception | None = None
     headers = {
         "User-Agent": BOT_USER_AGENT,
@@ -51,23 +41,13 @@ def fetch_text(
             try:
                 response = client.get(url)
                 response.raise_for_status()
-                text = response.text
-                fingerprint_text = fingerprint(text) if fingerprint is not None else text
-                sha256 = hashlib.sha256(fingerprint_text.encode("utf-8")).hexdigest()
-                path, from_cache = _cache_text(slug_dir, sha256, extension, text)
-                return DirectFetchResult(
-                    path=path,
-                    sha256=sha256,
-                    text=path.read_text(),
-                    from_cache=from_cache,
-                    response_url=str(response.url),
-                )
+                return response.text, str(response.url)
             except Exception as exc:  # noqa: BLE001
                 last_error = exc
                 if attempt >= retries:
                     break
                 time.sleep(0.25 * (attempt + 1))
-    raise DirectSourceError(f"Failed to fetch {slug} from {url}: {last_error}") from last_error
+    raise DirectSourceError(f"Failed to fetch {url}: {last_error}") from last_error
 
 
 def fetch_koret_workbook(slug: str, workbook_url: str, *, cache_root: Path = DATA_DIR) -> DirectFetchResult:
@@ -122,7 +102,6 @@ def fetch_koret_workbook(slug: str, workbook_url: str, *, cache_root: Path = DAT
     return DirectFetchResult(
         path=path,
         sha256=sha256,
-        text="",
         from_cache=from_cache,
         response_url=workbook_url,
     )
@@ -157,22 +136,6 @@ def _xlsx_content_sha256(payload: bytes) -> str:
             digest.update(archive.read(name))
             digest.update(b"\0")
     return digest.hexdigest()
-
-
-def _payload_fingerprint(extractor: Callable[[str], dict]) -> Callable[[str], str]:
-    def fingerprint(text: str) -> str:
-        payload = dict(extractor(text))
-        payload.pop("effective_start", None)
-        # Closure starts can be anchored to the scrape date (e.g. "closed until
-        # <reopen>"), which would mint a new review dir every calendar day; the
-        # end date carries the actual signal.
-        payload["closures"] = [
-            {key: value for key, value in closure.items() if key != "start"}
-            for closure in payload.get("closures", [])
-        ]
-        return json.dumps(payload, sort_keys=True, separators=(",", ":"))
-
-    return fingerprint
 
 
 def _extract_google_sheet_id(url: str) -> str:
