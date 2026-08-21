@@ -6,7 +6,6 @@ import json
 import mimetypes
 import os
 import re
-import subprocess
 import tempfile
 import threading
 import webbrowser
@@ -16,10 +15,23 @@ from pathlib import Path
 from io import StringIO
 from urllib.parse import unquote, urlparse
 
-from .paths import CONTENT_SPOTS_DIR, DATA_DIR, reviewed_path
+from ._time import pacific_today
+from .discover import view_id_from_url
+from .paths import CONTENT_SPOTS_DIR, DATA_DIR, TMP_DIR, all_review_dirs, reviewed_path
 from .direct_sources import DirectSourceError, extract_direct
 from .fetch import FetchError, fetch_pdf
 from .pipeline import SourceMode, parse_provider, run_pipeline
+from .publish import (
+    PublishRefuse,
+    _candidate_artifact,
+    _candidate_view_id,
+    _kept_session_grid_ids,
+    _load_decisions,
+    _sequential_slugs,
+    _unpublished_kept_windows,
+    load_quarantine,
+    publish_sequential_slug,
+)
 from .registry import load_registry
 from .review import FinalizeError, draft_envelope, finalize_draft, find_review_candidates
 
@@ -28,69 +40,158 @@ UI_DIR = Path(__file__).resolve().parent / "review_ui"
 REPO_ROOT = Path(__file__).resolve().parents[3]
 BRAND_DIR = REPO_ROOT / "static"
 MAX_BODY_BYTES = 1_000_000
+_SHA12_RE = re.compile(r"^[0-9a-f]{12}$")
 
 
 class ReviewApp:
-    def __init__(self, *, data_root: Path = DATA_DIR, content_spots_dir: Path = CONTENT_SPOTS_DIR):
+    def __init__(
+        self,
+        *,
+        data_root: Path = DATA_DIR,
+        content_spots_dir: Path = CONTENT_SPOTS_DIR,
+        tmp_dir: Path = TMP_DIR,
+    ):
         self.data_root = data_root
         self.content_spots_dir = content_spots_dir
+        self.tmp_dir = tmp_dir
+
+    def _decisions(self) -> list[dict]:
+        return _load_decisions(self.tmp_dir)
+
+    def _sequential_slug_set(self) -> frozenset[str]:
+        decisions = self._decisions()
+        slugs: set[str] = set()
+        for slug in _sequential_slugs(decisions):
+            decision = next((item for item in decisions if item.get("slug") == slug), None)
+            if decision is not None and len(_kept_session_grid_ids(decision)) >= 2:
+                slugs.add(slug)
+        return frozenset(slugs)
+
+    def _decision(self, slug: str) -> dict | None:
+        return next((item for item in self._decisions() if item.get("slug") == slug), None)
 
     def candidates(self):
-        candidates = find_review_candidates(data_root=self.data_root)
-        if self.data_root.resolve() == DATA_DIR.resolve():
-            changed_dirs = _changed_review_dirs()
-            candidates = [candidate for candidate in candidates if candidate.review_dir.resolve() in changed_dirs]
-        latest_by_slug = {
-            candidate.slug: candidate
-            for candidate in sorted(candidates, key=lambda candidate: (candidate.fetch_date, candidate.review_dir.name))
+        raw = find_review_candidates(data_root=self.data_root)
+        decisions = self._decisions()
+        sequential = self._sequential_slug_set()
+        decisions_by_slug = {
+            item["slug"]: item for item in decisions if isinstance(item.get("slug"), str)
         }
+        entries = {entry.slug: entry for entry in load_registry()}
+        latest_reviewed = {
+            slug: _latest_reviewed_fetch_date(slug, self.data_root)
+            for slug in {candidate.slug for candidate in raw}
+        }
+        filtered = []
+        for candidate in raw:
+            cutoff = latest_reviewed.get(candidate.slug)
+            # Hide May leftovers once a later capture is already attested.
+            if cutoff is not None and candidate.fetch_date < cutoff:
+                continue
+            decision = decisions_by_slug.get(candidate.slug)
+            entry = entries.get(candidate.slug)
+            if (
+                decision is not None
+                and decision.get("reason") == "band_session_grid"
+                and entry is not None
+            ):
+                # Saving 29799 is not an --adopt of the pin.
+                view_id = _candidate_view_id(candidate)
+                pin_id = view_id_from_url(entry.pdf_url)
+                if view_id != pin_id:
+                    continue
+            if candidate.slug in sequential:
+                kept = _kept_session_grid_ids(decision) if decision is not None else set()
+                if _candidate_view_id(candidate) not in kept:
+                    continue
+            filtered.append(candidate)
+        by_slug: dict[str, list] = {}
+        for candidate in filtered:
+            by_slug.setdefault(candidate.slug, []).append(candidate)
+        selected = []
+        for slug, items in by_slug.items():
+            items = sorted(items, key=lambda item: (item.fetch_date, item.review_dir.name))
+            if slug in sequential:
+                decision = decisions_by_slug.get(slug)
+                kept = _kept_session_grid_ids(decision) if decision is not None else set()
+                selected.extend(_unpublished_kept_windows(items, kept).values())
+            else:
+                selected.append(items[-1])
         priority = {"koret-center": 0, "pomeroy-pool": 1}
-        return sorted(latest_by_slug.values(), key=lambda candidate: (priority.get(candidate.slug, 2), candidate.fetch_date, candidate.slug))
+        return sorted(
+            selected,
+            key=lambda candidate: (
+                priority.get(candidate.slug, 2),
+                candidate.fetch_date,
+                candidate.slug,
+                candidate.pdf_sha256[:12],
+            ),
+        )
 
-    def candidate(self, slug: str):
-        return next((candidate for candidate in self.candidates() if candidate.slug == slug), None)
+    def candidate(self, slug: str, sha12: str | None = None):
+        matches = [item for item in self.candidates() if item.slug == slug]
+        if sha12 is not None:
+            return next((item for item in matches if item.pdf_sha256[:12] == sha12), None)
+        if slug in self._sequential_slug_set():
+            return None
+        return next(iter(matches), None)
 
     def list_reviews(self) -> list[dict]:
+        sequential = self._sequential_slug_set()
         return [
             {
                 "slug": candidate.slug,
+                "sha12": candidate.pdf_sha256[:12],
                 "fetch_date": candidate.fetch_date,
                 "source_kind": candidate.source_path.suffix.removeprefix("."),
+                "sequential": candidate.slug in sequential,
             }
             for candidate in self.candidates()
         ]
 
-    def review(self, slug: str) -> dict:
-        candidate = self.candidate(slug)
+    def review(self, slug: str, sha12: str | None = None) -> dict:
+        candidate = self.candidate(slug, sha12=sha12)
         if candidate is None:
-            raise LookupError(f"No pending review for {slug}.")
+            raise LookupError(_pending_error(slug, sha12))
         return {
             "candidate": {
                 **asdict(candidate),
                 "review_dir": str(candidate.review_dir),
                 "source_path": str(candidate.source_path),
                 "source_kind": candidate.source_path.suffix.removeprefix("."),
+                "sha12": candidate.pdf_sha256[:12],
+                "sequential": slug in self._sequential_slug_set(),
             },
             "envelope": draft_envelope(candidate=candidate),
         }
 
-    def check_source(self, slug: str) -> dict:
-        candidate = self.candidate(slug)
+    def check_source(self, slug: str, sha12: str | None = None) -> dict:
+        candidate = self.candidate(slug, sha12=sha12)
         if candidate is None:
-            raise LookupError(f"No pending review for {slug}.")
-        identity = current_source_identity(slug)
+            raise LookupError(_pending_error(slug, sha12))
+        identity = (
+            current_source_identity(slug, url=_source_pdf_url(candidate))
+            if sha12
+            else current_source_identity(slug)
+        )
         return {
             "status": "current" if identity == candidate.pdf_sha256 else "changed",
             "source_identity": identity,
         }
 
-    def refresh(self, slug: str) -> dict:
-        candidate = self.candidate(slug)
+    def refresh(self, slug: str, sha12: str | None = None) -> dict:
+        candidate = self.candidate(slug, sha12=sha12)
         if candidate is None:
-            raise LookupError(f"No pending review for {slug}.")
-        if current_source_identity(slug) == candidate.pdf_sha256:
-            return self.review(slug)
-        entry = next((entry for entry in load_registry() if entry.slug == slug), None)
+            raise LookupError(_pending_error(slug, sha12))
+        override_url = _source_pdf_url(candidate) if sha12 else None
+        live = (
+            current_source_identity(slug, url=override_url)
+            if override_url
+            else current_source_identity(slug)
+        )
+        if live == candidate.pdf_sha256:
+            return self.review(slug, sha12=sha12)
+        entry = next((item for item in load_registry() if item.slug == slug), None)
         if entry is None:
             raise LookupError(f"Unknown registry slug: {slug}.")
         source_mode: SourceMode = "direct"
@@ -101,12 +202,28 @@ class ReviewApp:
             source_mode=source_mode,
             compare_with=None,
             force=True,
+            override_url=override_url,
         )
         if exit_code != 0:
             raise RuntimeError(str(results[0]))
-        return self.review(slug)
+        if sha12 is None:
+            return self.review(slug)
+        refreshed = [
+            item
+            for item in self.candidates()
+            if item.slug == slug and _source_pdf_url(item) == override_url
+        ]
+        if not refreshed:
+            raise LookupError(_pending_error(slug, sha12))
+        latest = max(refreshed, key=lambda item: (item.fetch_date, item.review_dir.name))
+        return self.review(slug, sha12=latest.pdf_sha256[:12])
 
     def save(self, slug: str, envelope: dict, source_identity: str) -> Path:
+        if slug in self._sequential_slug_set():
+            raise PublishRefuse(
+                "sequential_incomplete",
+                f"{slug} requires save-sequential",
+            )
         candidate = self.candidate(slug)
         if candidate is None:
             raise LookupError(f"No pending review for {slug}.")
@@ -132,6 +249,54 @@ class ReviewApp:
             target.unlink(missing_ok=True)
             raise
 
+    def confirm(self, slug: str, sha12: str, envelope: dict, source_identity: str) -> None:
+        # UI-only: the sitting writes on save-sequential, not per card.
+        if slug not in self._sequential_slug_set():
+            raise PublishRefuse("sequential_incomplete", f"{slug} is not a sequential sitting")
+        candidate = self.candidate(slug, sha12=sha12)
+        if candidate is None:
+            raise LookupError(_pending_error(slug, sha12))
+        if envelope.get("slug") != slug or envelope.get("pdf_sha256") != candidate.pdf_sha256:
+            raise FinalizeError("Review identity does not match the pending source.")
+        url = _source_pdf_url(candidate)
+        live = current_source_identity(slug, url=url) if url else current_source_identity(slug)
+        if source_identity != candidate.pdf_sha256 or live != source_identity:
+            raise FinalizeError("Official source changed after this review opened. Refresh before saving.")
+
+    def save_sequential(self, slug: str, envelopes: dict[str, dict]) -> list[dict]:
+        if slug not in self._sequential_slug_set():
+            raise PublishRefuse("sequential_incomplete", f"{slug} is not a sequential sitting")
+        decision = self._decision(slug)
+        if decision is None:
+            raise PublishRefuse("sequential_incomplete", f"{slug} has no sequential decision")
+        candidates = [
+            item for item in find_review_candidates(data_root=self.data_root) if item.slug == slug
+        ]
+        for sha12, envelope in envelopes.items():
+            if not isinstance(sha12, str) or not isinstance(envelope, dict):
+                raise ValueError("Review body must contain envelopes keyed by sha12.")
+            match = next((item for item in candidates if item.pdf_sha256[:12] == sha12), None)
+            if match is None or envelope.get("slug") != slug or envelope.get("pdf_sha256") != match.pdf_sha256:
+                raise FinalizeError("Review identity does not match the pending source.")
+            url = _source_pdf_url(match)
+            live = current_source_identity(slug, url=url) if url else current_source_identity(slug)
+            if live != match.pdf_sha256:
+                raise FinalizeError("Official source changed after this review opened. Refresh before saving.")
+        entries = {entry.slug: entry for entry in load_registry()}
+        return publish_sequential_slug(
+            slug=slug,
+            decision=decision,
+            candidates=candidates,
+            content_spots_dir=self.content_spots_dir,
+            attested_at=pacific_today(),
+            quarantined_shas=load_quarantine(),
+            entries=entries,
+            attested_by="human",
+            require_grounding=False,
+            envelopes=envelopes,
+            data_root=self.data_root,
+        )
+
 
 def make_handler(app: ReviewApp):
     class Handler(BaseHTTPRequestHandler):
@@ -141,16 +306,20 @@ def make_handler(app: ReviewApp):
                 if path == "/api/reviews":
                     self._json(200, {"reviews": app.list_reviews()})
                 elif path.startswith("/api/reviews/"):
-                    self._json(200, app.review(path.removeprefix("/api/reviews/")))
+                    slug, sha12, action = _parse_review_path(path.removeprefix("/api/reviews/"))
+                    if action is not None:
+                        self._json(404, {"error": "Not found."})
+                    else:
+                        self._json(200, app.review(slug, sha12=sha12))
                 elif path.startswith("/source/"):
-                    slug = path.removeprefix("/source/")
-                    candidate = app.candidate(slug)
-                    if candidate is None:
+                    slug, sha12, action = _parse_review_path(path.removeprefix("/source/"))
+                    candidate = app.candidate(slug, sha12=sha12)
+                    if candidate is None or action is not None:
                         self._json(404, {"error": "Pending review not found."})
                     elif candidate.source_path.suffix == ".csv":
                         self._csv_schedule(candidate.source_path)
                     elif candidate.source_path.suffix == ".html":
-                        review = app.review(slug)
+                        review = app.review(slug, sha12=sha12)
                         source_url = review["envelope"]["source_pdf_url"]
                         self._html_page(candidate.source_path.read_text(), source_url, "Captured source", review["envelope"]["payload"])
                     else:
@@ -174,27 +343,43 @@ def make_handler(app: ReviewApp):
                 self._json(404, {"error": "Not found."})
                 return
             try:
-                slug_and_action = path.removeprefix("/api/reviews/")
-                if slug_and_action.endswith("/check-source"):
-                    self._json(200, app.check_source(slug_and_action.removesuffix("/check-source")))
+                slug, sha12, action = _parse_review_path(path.removeprefix("/api/reviews/"))
+                if action == "check-source":
+                    self._json(200, app.check_source(slug, sha12=sha12))
                     return
-                if slug_and_action.endswith("/refresh"):
-                    review = app.refresh(slug_and_action.removesuffix("/refresh"))
-                    self._json(200, review)
+                if action == "refresh":
+                    self._json(200, app.refresh(slug, sha12=sha12))
                     return
                 length = int(self.headers.get("Content-Length", "0"))
                 if length <= 0 or length > MAX_BODY_BYTES:
                     raise ValueError("Review body must be between 1 byte and 1 MB.")
                 body = json.loads(self.rfile.read(length))
-                if not isinstance(body, dict) or not isinstance(body.get("envelope"), dict):
-                    raise ValueError("Review body must contain an envelope object.")
+                if not isinstance(body, dict):
+                    raise ValueError("Review body must be a JSON object.")
                 if not body.get("attested"):
                     raise ValueError("Confirm that every source cell was checked before saving.")
+                if action == "save-sequential":
+                    envelopes = body.get("envelopes")
+                    if not isinstance(envelopes, dict) or not envelopes:
+                        raise ValueError("Review body must contain envelopes keyed by sha12.")
+                    app.save_sequential(slug, envelopes)
+                    self._json(200, {"ok": True})
+                    return
+                if action is not None:
+                    self._json(404, {"error": "Not found."})
+                    return
+                if not isinstance(body.get("envelope"), dict):
+                    raise ValueError("Review body must contain an envelope object.")
                 source_identity = body.get("source_identity")
                 if not isinstance(source_identity, str):
                     raise ValueError("Review body must contain a verified source identity.")
-                app.save(slug_and_action, body.get("envelope"), source_identity)
+                if sha12 is None:
+                    app.save(slug, body.get("envelope"), source_identity)
+                else:
+                    app.confirm(slug, sha12, body.get("envelope"), source_identity)
                 self._json(200, {"ok": True})
+            except PublishRefuse as exc:
+                self._json(400, {"error": f"{exc.code}: {exc.message}"})
             except (DirectSourceError, FetchError, FinalizeError, LookupError, RuntimeError, TypeError, ValueError, json.JSONDecodeError) as exc:
                 self._json(400, {"error": str(exc)})
 
@@ -404,26 +589,51 @@ def _csv_sections(source: str) -> list[tuple[str, list[list[str]]]]:
     return sections
 
 
-def _changed_review_dirs() -> set[Path]:
-    commands = (
-        ["git", "diff", "--name-only", "origin/main...HEAD", "--", "data"],
-        ["git", "diff", "--name-only", "--", "data"],
-        ["git", "ls-files", "--others", "--exclude-standard", "--", "data"],
-    )
-    paths: set[Path] = set()
-    for command in commands:
-        result = subprocess.run(command, cwd=REPO_ROOT, text=True, capture_output=True, check=False)
-        if result.returncode == 0:
-            paths.update((REPO_ROOT / line).parent.resolve() for line in result.stdout.splitlines() if line)
-    return paths
+def _parse_review_path(rest: str) -> tuple[str, str | None, str | None]:
+    parts = [part for part in rest.split("/") if part]
+    if not parts:
+        raise LookupError("Pending review not found.")
+    slug = parts[0]
+    sha12 = None
+    extra = parts[1:]
+    if extra and _SHA12_RE.fullmatch(extra[0]):
+        sha12 = extra[0]
+        extra = extra[1:]
+    action = extra[0] if extra else None
+    if action is not None and len(extra) > 1:
+        raise LookupError("Pending review not found.")
+    return slug, sha12, action
 
 
-def current_source_identity(slug: str) -> str:
+def _pending_error(slug: str, sha12: str | None) -> str:
+    if sha12 is None:
+        return f"No pending review for {slug}."
+    return f"No pending review for {slug}/{sha12}."
+
+
+def _latest_reviewed_fetch_date(slug: str, data_root: Path) -> str | None:
+    dates = [
+        review_dir.name[:10]
+        for review_dir in all_review_dirs(slug, root=data_root)
+        if (review_dir / "reviewed.json").exists() and len(review_dir.name) >= 10
+    ]
+    return max(dates) if dates else None
+
+
+def _source_pdf_url(candidate) -> str | None:
+    artifact = _candidate_artifact(candidate)
+    url = artifact.get("source_pdf_url") or artifact.get("pdf_url")
+    return url if isinstance(url, str) and url else None
+
+
+def current_source_identity(slug: str, url: str | None = None) -> str:
     entry = next((entry for entry in load_registry() if entry.slug == slug), None)
     if entry is None:
         raise LookupError(f"Unknown registry slug: {slug}.")
     with tempfile.TemporaryDirectory(prefix="swimfrancisco-source-check-") as directory:
         cache_root = Path(directory)
+        if url is not None:
+            return fetch_pdf(entry.slug, url, cache_root=cache_root).sha256
         if entry.source_kind == "sfrecpark_pdf":
             return fetch_pdf(entry.slug, entry.pdf_url, cache_root=cache_root).sha256
         return extract_direct(entry, cache_root=cache_root).fetch_result.sha256
