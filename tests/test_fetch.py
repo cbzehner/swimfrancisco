@@ -36,6 +36,16 @@ def _fake_client_factory(pdf_bytes, counter):
     return FakeClient
 
 
+def test_fetch_pdf_does_not_write_unreadable_payload(tmp_path, monkeypatch):
+    counter = {"count": 0}
+    monkeypatch.setattr("schedules.fetch.httpx.Client", _fake_client_factory(b"not a pdf", counter))
+    cache_root = tmp_path / "data"
+    with pytest.raises(FetchError, match="not a readable PDF"):
+        fetch_pdf("test-pool", "http://example.test/schedule.pdf", cache_root=cache_root)
+    slug_dir = cache_root / "test-pool"
+    assert not any(slug_dir.glob("*/source.pdf")) if slug_dir.exists() else True
+
+
 def test_fetch_pdf_writes_to_per_review_dir_on_cache_miss(tmp_path, monkeypatch):
     pdf_bytes = _make_pdf_bytes(tmp_path)
     counter = {"count": 0}

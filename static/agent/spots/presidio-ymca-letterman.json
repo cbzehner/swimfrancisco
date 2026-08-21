@@ -1,5 +1,5 @@
 {
-  "agent_data_version": 1,
+  "agent_data_version": 2,
   "slug": "presidio-ymca-letterman",
   "name": "Presidio YMCA Letterman",
   "type": "pool",
@@ -13,13 +13,11 @@
     "lng": -122.45
   },
   "access": {
-    "access": "members",
     "access_mode": "membership",
     "access_summary": "Letterman Pool is part of the Presidio Community YMCA. The official YMCA page lists a 25-yard pool and points swimmers to the online pool schedule.",
     "access_notes": [
       "YMCA financial assistance and membership options may change the effective price; verify directly with YMCA of Greater San Francisco."
     ],
-    "cost": "paid",
     "payment_model": "membership",
     "pricing": [
       {
@@ -108,5 +106,5 @@
       }
     ]
   },
-  "generated_at": "2026-08-13T05:55:17.025Z"
+  "generated_at": "2026-08-21T20:18:42.012Z"
 }

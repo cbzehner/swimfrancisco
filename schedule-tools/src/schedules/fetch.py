@@ -62,7 +62,9 @@ def fetch_pdf(
                             f"prefix collision in {slug}: existing={existing_sha} new={sha256}"
                         )
 
-                # Cache miss — write with today's date.
+                # Cache miss — validate before creating a snapshot directory so
+                # an unreadable HTTP 200 cannot leave a permanent junk file.
+                page_count = _count_pdf_pages(payload)
                 review_dir = slug_dir / f"{pacific_today().isoformat()}-{prefix}"
                 review_dir.mkdir(parents=True, exist_ok=True)
                 path = review_dir / "source.pdf"
@@ -73,7 +75,7 @@ def fetch_pdf(
                     sha256=sha256,
                     bytes=payload,
                     from_cache=False,
-                    page_count=_count_pdf_pages(payload),
+                    page_count=page_count,
                 )
             except FetchError:
                 raise  # don't retry prefix collisions

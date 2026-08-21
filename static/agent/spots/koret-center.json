@@ -1,5 +1,5 @@
 {
-  "agent_data_version": 1,
+  "agent_data_version": 2,
   "slug": "koret-center",
   "name": "Koret Center",
   "type": "pool",
@@ -13,13 +13,11 @@
     "lng": -122.4513
   },
   "access": {
-    "access": "day_pass",
     "access_mode": "limited_public",
     "access_summary": "USF's Koret Center has a large indoor pool. Lap lanes are generally available during pool hours, but access and passes depend on USF/Koret membership or eligible pass options.",
     "access_notes": [
       "Check Koret's pool lane schedule before going; the official page warns lane counts vary with lessons, teams, and events."
     ],
-    "cost": "paid",
     "payment_model": "session",
     "pricing": [
       {
@@ -195,5 +193,5 @@
       }
     ]
   },
-  "generated_at": "2026-08-13T05:55:17.025Z"
+  "generated_at": "2026-08-21T20:18:42.012Z"
 }

@@ -1,5 +1,5 @@
 {
-  "agent_data_version": 1,
+  "agent_data_version": 2,
   "slug": "city-sports-20th-ave",
   "name": "City Sports 20th Ave",
   "type": "pool",
@@ -13,11 +13,9 @@
     "lng": -122.4756
   },
   "access": {
-    "access": "members",
     "access_mode": "membership",
     "access_summary": "City Sports Club on 20th Ave lists a lap pool, Pool & Spa amenities, and club hours on its official location page.",
     "access_notes": [],
-    "cost": "paid",
     "payment_model": "membership",
     "website": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914"
   },
@@ -88,5 +86,5 @@
       }
     ]
   },
-  "generated_at": "2026-08-13T05:55:17.025Z"
+  "generated_at": "2026-08-21T20:18:42.012Z"
 }

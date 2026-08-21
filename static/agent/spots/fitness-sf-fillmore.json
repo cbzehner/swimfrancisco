@@ -1,5 +1,5 @@
 {
-  "agent_data_version": 1,
+  "agent_data_version": 2,
   "slug": "fitness-sf-fillmore",
   "name": "FITNESS SF Fillmore",
   "type": "pool",
@@ -13,11 +13,9 @@
     "lng": -122.4328
   },
   "access": {
-    "access": "members",
     "access_mode": "membership",
     "access_summary": "FITNESS SF Fillmore is the FITNESS SF location with a 25-yard, 5-lane pool. The official help page says lap swimming is available and lane reservations are made in person.",
     "access_notes": [],
-    "cost": "paid",
     "payment_model": "membership",
     "website": "https://fitnesssf.com/location/fillmore"
   },
@@ -88,5 +86,5 @@
       }
     ]
   },
-  "generated_at": "2026-08-13T05:55:17.025Z"
+  "generated_at": "2026-08-21T20:18:42.012Z"
 }

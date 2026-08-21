@@ -1,5 +1,5 @@
 {
-  "agent_data_version": 1,
+  "agent_data_version": 2,
   "slug": "balboa-pool",
   "name": "Balboa Pool",
   "type": "pool",
@@ -13,9 +13,7 @@
     "lng": -122.4432
   },
   "access": {
-    "access": "public",
     "access_mode": "public",
-    "cost": "paid",
     "payment_model": "session",
     "website": "https://sfrecpark.org/facilities/facility/details/Balboa-Pool-212"
   },
@@ -665,5 +663,5 @@
       }
     ]
   },
-  "generated_at": "2026-08-21T17:14:57.010Z"
+  "generated_at": "2026-08-21T20:18:42.012Z"
 }

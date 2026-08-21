@@ -64,11 +64,7 @@ function collectVisibleSpots() {
       row.getAttribute("data-subtype") ||
       type;
     const statusCell = row.querySelector('[data-cell="status"]');
-    const status =
-      statusCell?.dataset.statusValue ||
-      statusCell?.querySelector(".status-pill")?.textContent.trim() ||
-      statusCell?.textContent.trim() ||
-      "";
+    const status = statusCell?.dataset.statusValue || "";
     const next = row.querySelector('[data-cell="next"]')?.textContent.trim() ?? "";
     const temp = row.querySelector('[data-cell="water"]')?.textContent.trim() ?? "";
     spots.push({ slug, type, name, href, lat, lng, typeLabel, status, next, temp });

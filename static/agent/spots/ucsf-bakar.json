@@ -1,5 +1,5 @@
 {
-  "agent_data_version": 1,
+  "agent_data_version": 2,
   "slug": "ucsf-bakar",
   "name": "UCSF Bakar",
   "type": "pool",
@@ -13,13 +13,11 @@
     "lng": -122.3933
   },
   "access": {
-    "access": "day_pass",
     "access_mode": "limited_public",
     "access_summary": "Bakar Fitness Center at UCSF Mission Bay is a membership fitness center with both an indoor swimming pool and an outdoor rooftop pool.",
     "access_notes": [
       "The indoor pool reopened after renovation in June 2025; confirm current pool schedules through UCSF Fitness and Recreation."
     ],
-    "cost": "paid",
     "payment_model": "membership",
     "pricing": [
       {
@@ -108,5 +106,5 @@
       }
     ]
   },
-  "generated_at": "2026-08-13T05:55:17.025Z"
+  "generated_at": "2026-08-21T20:18:42.012Z"
 }

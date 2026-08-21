@@ -103,10 +103,17 @@ export async function firstTempFromSources(
   slug: string,
   sources: TempSource[],
   fetchers: Record<TempStationType, TempFetcher> = TEMP_FETCHERS,
+  cache?: Map<string, Promise<TempReading | null>>,
 ): Promise<{ reading: TempReading; sourceType: TempStationType } | null> {
   for (const source of sources) {
+    const key = `${source.type}:${source.id}`;
     try {
-      const reading = await fetchers[source.type](source.id);
+      let pending = cache?.get(key);
+      if (!pending) {
+        pending = fetchers[source.type](source.id);
+        cache?.set(key, pending);
+      }
+      const reading = await pending;
       if (reading) return { reading, sourceType: source.type };
     } catch (err) {
       console.error(`Temp source ${source.type}:${source.id} failed for ${slug}:`, err);
@@ -157,34 +164,51 @@ function tempFromPrevious(previous: SpotConditions | null): TempFields | null {
   return { water_temp_f, water_temp_c, temp_observed_at, temp_station_id, temp_station_type };
 }
 
+export type Observation<T> =
+  | { state: "fresh"; value: T }
+  | { state: "carried"; value: T; carriedSince: string }
+  | { state: "unavailable" };
+
 export function coalesceTemp(
   fresh: TempFields | null,
   previous: SpotConditions | null,
   now: number = Date.now(),
-): { fields: TempFields | null; stale: boolean; carriedSince: string | null } {
-  if (fresh !== null) return { fields: fresh, stale: false, carriedSince: null };
+): Observation<TempFields> {
+  if (fresh !== null) return { state: "fresh", value: fresh };
   const fallback = tempFromPrevious(previous);
   if (fallback && previous) {
     // Records written before carried-since tracking lack the field entirely.
     const carriedSince = previous.temp_carried_since ?? previous.updated_at;
     if (withinFreshnessCeiling(carriedSince, now)) {
-      return { fields: fallback, stale: true, carriedSince };
+      return { state: "carried", value: fallback, carriedSince };
     }
   }
-  return { fields: null, stale: false, carriedSince: null };
+  return { state: "unavailable" };
 }
 
 export function coalesceTide(
   fresh: TideSummary | null,
   previous: SpotConditions | null,
   now: number = Date.now(),
-): { value: TideSummary | null; stale: boolean; carriedSince: string | null } {
-  if (fresh !== null) return { value: fresh, stale: false, carriedSince: null };
+): Observation<TideSummary> {
+  if (fresh !== null) return { state: "fresh", value: fresh };
   if (previous?.tide) {
     const carriedSince = previous.tide_carried_since ?? previous.updated_at;
     if (withinFreshnessCeiling(carriedSince, now)) {
-      return { value: previous.tide, stale: true, carriedSince };
+      return { state: "carried", value: previous.tide, carriedSince };
     }
+  }
+  return { state: "unavailable" };
+}
+
+function flattenObservation<T>(
+  observation: Observation<T>,
+): { value: T | null; stale: boolean; carriedSince: string | null } {
+  if (observation.state === "fresh") {
+    return { value: observation.value, stale: false, carriedSince: null };
+  }
+  if (observation.state === "carried") {
+    return { value: observation.value, stale: true, carriedSince: observation.carriedSince };
   }
   return { value: null, stale: false, carriedSince: null };
 }
@@ -194,19 +218,20 @@ export function coalesceTide(
 async function assembleSpot(
   spot: SpotConfig,
   tideCache: Map<string, Promise<TideSummary | null>>,
+  tempCache: Map<string, Promise<TempReading | null>>,
   updatedAt: string,
   previous: SpotConditions | null,
 ): Promise<SpotConditions> {
   const [tempResult, tideFromApi] = await Promise.all([
-    firstTempFromSources(spot.slug, spot.tempSources),
+    firstTempFromSources(spot.slug, spot.tempSources, TEMP_FETCHERS, tempCache),
     getOrFetchTide(tideCache, spot.tideStationId),
   ]);
-  const temp = coalesceTemp(tempFromReading(tempResult), previous);
-  const tide = coalesceTide(tideFromApi, previous);
+  const temp = flattenObservation(coalesceTemp(tempFromReading(tempResult), previous));
+  const tide = flattenObservation(coalesceTide(tideFromApi, previous));
 
   return {
     slug: spot.slug,
-    ...(temp.fields ?? NULL_TEMP_FIELDS),
+    ...(temp.value ?? NULL_TEMP_FIELDS),
     tide: tide.value,
     updated_at: updatedAt,
     temp_stale: temp.stale,
@@ -220,10 +245,11 @@ async function assembleSpot(
 export async function assembleAndPersist(kv: KVNamespace): Promise<Conditions> {
   const updatedAt = new Date().toISOString();
   const tideCache = new Map<string, Promise<TideSummary | null>>();
+  const tempCache = new Map<string, Promise<TempReading | null>>();
   const previous = (await readConditions(kv)) ?? {};
 
   const records = await Promise.all(
-    SPOTS.map((spot) => assembleSpot(spot, tideCache, updatedAt, previous[spot.slug] ?? null)),
+    SPOTS.map((spot) => assembleSpot(spot, tideCache, tempCache, updatedAt, previous[spot.slug] ?? null)),
   );
 
   const next: Conditions = Object.fromEntries(records.map((r) => [r.slug, r]));

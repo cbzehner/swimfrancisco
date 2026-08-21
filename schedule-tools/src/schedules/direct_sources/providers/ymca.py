@@ -25,13 +25,13 @@ from ..parsing import (
 def _extract_ymca_location(html: str) -> dict:
     text = _html_text(html)
     _require_text(text, "Hours")
-    access_hours = _extract_ymca_facility_hours(html, label="Facility hours")
-    basis = "facility_hours"
+    pool_rule = "Pool Hours Opens 30 min after, closes 30 min before facility" in text
+    basis = "pool_hours" if pool_rule else "facility_hours"
+    facility_hours = _extract_ymca_facility_hours(html, label="Facility hours")
+    access_hours = (
+        _ymca_pool_hours_from_facility_hours(facility_hours) if pool_rule else facility_hours
+    )
     access_exceptions = _extract_ymca_holiday_access_exceptions(html, basis=basis)
-    if "Pool Hours Opens 30 min after, closes 30 min before facility" in text:
-        basis = "pool_hours"
-        access_hours = _ymca_pool_hours_from_facility_hours(access_hours)
-        access_exceptions = _extract_ymca_holiday_access_exceptions(html, basis=basis)
     if not access_hours:
         raise DirectSourceError("YMCA page did not expose location hours.")
     return _payload(

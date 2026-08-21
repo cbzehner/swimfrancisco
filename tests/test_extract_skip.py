@@ -23,6 +23,7 @@ PDF_URL = "https://example.com/x.pdf"
 def _payload() -> dict:
     return {
         "effective_start": "2026-03-17",
+        "schedule_basis": "swim_schedule",
         "sessions": [
             {"day": d, "type": "lap_swim", "start": "07:00", "end": "08:00"}
             for d in ("monday", "tuesday", "wednesday", "thursday", "friday")

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from ._time import pacific_today
 from .envelope import EnvelopeValidationError, validate_envelope
+from .reviewed_snapshots import payloads_equivalent
 from .merge import read_schedule_snapshot
 from .paths import CONTENT_SPOTS_DIR, DATA_DIR, all_review_dirs, relative_to_repo, reviewed_path
 from .project import ProjectError, project
@@ -114,9 +115,8 @@ def carry_forward_review(
         return None
     prior_path, prior_envelope = prior
 
-    if _comparable(payload, ignore_effective_start) != _comparable(
-        prior_envelope.get("payload", {}), ignore_effective_start
-    ):
+    ignore = frozenset({"effective_start"}) if ignore_effective_start else frozenset()
+    if not payloads_equivalent(payload, prior_envelope.get("payload", {}), ignore=ignore):
         return None
 
     envelope = {
@@ -147,19 +147,6 @@ def _latest_reviewed_snapshot(
             continue
         return reviewed_file, envelope
     return None
-
-
-def _comparable(payload: dict, ignore_effective_start: bool) -> str:
-    # Older reviewed payloads omit collections newer extractors emit as
-    # empty ([] / null) — semantically identical, so empties are dropped
-    # from both sides before comparing.
-    trimmed = {
-        key: value
-        for key, value in payload.items()
-        if value not in (None, [], {})
-        and not (ignore_effective_start and key == "effective_start")
-    }
-    return json.dumps(trimmed, sort_keys=True, separators=(",", ":"))
 
 
 def _source_path(review_dir: Path) -> Path:

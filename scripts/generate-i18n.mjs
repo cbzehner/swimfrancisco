@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { parse, stringify } from "smol-toml";
@@ -55,7 +55,8 @@ function parseFrontMatter(text, file) {
   return { front, body: body.trim() };
 }
 
-async function writeIfChanged(file, text, { dryRun = false, changed = [] } = {}) {
+async function writeIfChanged(file, text, { dryRun = false, changed = [], written = new Set() } = {}) {
+  written.add(path.relative(ROOT, file));
   const prior = existsSync(file) ? await readFile(file, "utf8") : null;
   if (prior === text) return false;
   changed.push(path.relative(ROOT, file));
@@ -470,31 +471,6 @@ async function validateSources() {
   await validateSpotCatalogs({ codes, defaultLocale });
 }
 
-async function expectedGeneratedArtifacts() {
-  const { locales } = await loadSources();
-  const localeCodes = nonDefaultLocaleCodes(locales);
-  const expected = new Set([
-    path.relative(ROOT, DATA_DYNAMIC_LABELS_JSON_PATH),
-  ]);
-
-  for (const code of sourceLocaleCodes(locales)) {
-    expected.add(path.relative(ROOT, path.join(DATA_I18N_DIR, `${code}.json`)));
-  }
-
-  for (const code of localeCodes) {
-    for (const target of Object.values(SECTION_TARGETS)) {
-      expected.add(path.relative(ROOT, path.join(CONTENT_DIR, `${target}.${code}.md`)));
-    }
-
-    const catalog = await readToml(path.join(SPOTS_DIR, `${code}.toml`));
-    for (const slug of Object.keys(catalog.spots || {})) {
-      expected.add(path.relative(ROOT, path.join(CONTENT_SPOTS_DIR, `${slug}.${code}.md`)));
-    }
-  }
-
-  return expected;
-}
-
 async function generatedSectionArtifactsOnDisk() {
   const artifacts = [];
   for (const target of Object.values(SECTION_TARGETS)) {
@@ -532,14 +508,15 @@ async function generatedRuntimeArtifactsOnDisk() {
   return artifacts;
 }
 
-async function removeStaleGeneratedArtifacts({ dryRun = false, changed = [] } = {}) {
-  const expected = await expectedGeneratedArtifacts();
+async function removeStaleGeneratedArtifacts({ dryRun = false, changed = [], written = new Set() } = {}) {
+  // Must run after the writers so `written` is the set of files this pass
+  // produced. Do not reconstruct that set from a parallel path model.
   const actual = [
     ...(await generatedRuntimeArtifactsOnDisk()),
     ...(await generatedSectionArtifactsOnDisk()),
     ...(await generatedSpotArtifactsOnDisk()),
   ];
-  const stale = unique(actual.filter((file) => !expected.has(file))).sort();
+  const stale = unique(actual.filter((file) => !written.has(file))).sort();
 
   for (const file of stale) {
     changed.push(file);
@@ -547,7 +524,7 @@ async function removeStaleGeneratedArtifacts({ dryRun = false, changed = [] } = 
   }
 }
 
-async function generateConfig({ dryRun = false, changed = [] } = {}) {
+async function generateConfig({ dryRun = false, changed = [], written = new Set() } = {}) {
   const current = await readToml(CONFIG_PATH);
   const { locales, ui } = await loadSources();
   const defaultLocale = locales.locales.find((locale) => locale.is_default);
@@ -571,10 +548,10 @@ async function generateConfig({ dryRun = false, changed = [] } = {}) {
     };
   }
 
-  return writeIfChanged(CONFIG_PATH, tomlText(next), { dryRun, changed });
+  return writeIfChanged(CONFIG_PATH, tomlText(next), { dryRun, changed, written });
 }
 
-async function generateRuntimeData({ dryRun = false, changed = [] } = {}) {
+async function generateRuntimeData({ dryRun = false, changed = [], written = new Set() } = {}) {
   const { locales, ui } = await loadSources();
   const dynamicLabels = await loadDynamicLabels();
   const dynamicLabelPayload = dynamicLabelData(dynamicLabels);
@@ -584,12 +561,12 @@ async function generateRuntimeData({ dryRun = false, changed = [] } = {}) {
   for (const code of sourceLocaleCodes(locales)) {
     const runtimeUi = Object.fromEntries(runtimeKeys.map((key) => [key, ui[code][key]]));
     const file = path.join(DATA_I18N_DIR, `${code}.json`);
-    await writeIfChanged(file, `${JSON.stringify(runtimeUi, null, 2)}\n`, { dryRun, changed });
+    await writeIfChanged(file, `${JSON.stringify(runtimeUi, null, 2)}\n`, { dryRun, changed, written });
   }
   await writeIfChanged(
     DATA_DYNAMIC_LABELS_JSON_PATH,
     `${JSON.stringify(dynamicLabelPayload, null, 2)}\n`,
-    { dryRun, changed },
+    { dryRun, changed, written },
   );
 }
 
@@ -626,7 +603,7 @@ function sectionMarkdown(section) {
   return `+++\n${tomlText(section)}+++\n`;
 }
 
-async function generateSectionPages({ dryRun = false, changed = [] } = {}) {
+async function generateSectionPages({ dryRun = false, changed = [], written = new Set() } = {}) {
   const { locales } = await loadSources();
   const defaultLocale = locales.locales.find((locale) => locale.is_default);
 
@@ -637,12 +614,12 @@ async function generateSectionPages({ dryRun = false, changed = [] } = {}) {
       if (!section) throw new Error(`i18n/sections/${code}.toml is missing ${sectionKey}`);
       const suffix = code === defaultLocale.code ? "" : `.${code}`;
       const file = path.join(CONTENT_DIR, `${target}${suffix}.md`);
-      await writeIfChanged(file, sectionMarkdown(section), { dryRun, changed });
+      await writeIfChanged(file, sectionMarkdown(section), { dryRun, changed, written });
     }
   }
 }
 
-async function generateSpotPages({ dryRun = false, changed = [] } = {}) {
+async function generateSpotPages({ dryRun = false, changed = [], written = new Set() } = {}) {
   const { locales } = await loadSources();
   const defaultLocale = locales.locales.find((locale) => locale.is_default);
 
@@ -654,10 +631,10 @@ async function generateSpotPages({ dryRun = false, changed = [] } = {}) {
       if (code === defaultLocale.code) {
         const file = path.join(CONTENT_SPOTS_DIR, `${slug}.md`);
         const currentText = existsSync(file) ? await readFile(file, "utf8") : "";
-        await writeIfChanged(file, canonicalSpotMarkdown(currentText, slug, spot), { dryRun, changed });
+        await writeIfChanged(file, canonicalSpotMarkdown(currentText, slug, spot), { dryRun, changed, written });
       } else {
         const file = path.join(CONTENT_SPOTS_DIR, `${slug}.${code}.md`);
-        await writeIfChanged(file, spotMarkdown(slug, spot), { dryRun, changed });
+        await writeIfChanged(file, spotMarkdown(slug, spot), { dryRun, changed, written });
       }
     }
   }
@@ -666,11 +643,13 @@ async function generateSpotPages({ dryRun = false, changed = [] } = {}) {
 async function generateAll({ dryRun = false } = {}) {
   await validateSources();
   const changed = [];
-  await generateConfig({ dryRun, changed });
-  await generateRuntimeData({ dryRun, changed });
-  await generateSectionPages({ dryRun, changed });
-  await generateSpotPages({ dryRun, changed });
-  await removeStaleGeneratedArtifacts({ dryRun, changed });
+  const written = new Set();
+  const opts = { dryRun, changed, written };
+  await generateConfig(opts);
+  await generateRuntimeData(opts);
+  await generateSectionPages(opts);
+  await generateSpotPages(opts);
+  await removeStaleGeneratedArtifacts(opts);
   return changed;
 }
 

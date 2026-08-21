@@ -46,7 +46,7 @@
       "longitude": {{ extra.lng }}
     },{% endif %}
     {% if extra.website %}"sameAs": {{ extra.website | json_encode | safe }},{% endif %}
-    "isAccessibleForFree": {% if extra.cost == "free" or extra.payment_model | default(value="") == "free" %}true{% else %}false{% endif %}
+    "isAccessibleForFree": {% if extra.payment_model == "free" %}true{% else %}false{% endif %}
   }
 {%- endmacro spot_json_ld %}
 

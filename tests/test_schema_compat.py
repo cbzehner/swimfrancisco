@@ -37,6 +37,15 @@ def _valid_envelope() -> dict:
     }
 
 
+def test_extraction_schema_is_the_envelope_payload():
+    from schedules.schema import EXTRACTION_SCHEMA
+
+    schema = _load_schema()
+    assert EXTRACTION_SCHEMA["required"] == schema["properties"]["payload"]["required"]
+    assert "schedule_basis" in EXTRACTION_SCHEMA["required"]
+    assert EXTRACTION_SCHEMA["properties"]["closures"]["items"]["dependentRequired"] == schema["$defs"]["closure"]["dependentRequired"]
+
+
 def test_schema_accepts_minimal_envelope():
     schema = _load_schema()
     jsonschema.validate(instance=_valid_envelope(), schema=schema)

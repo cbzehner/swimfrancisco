@@ -13,7 +13,7 @@ const repoRoot = join(here, "..");
 const spotsDir = join(repoRoot, "content/spots");
 const defaultOutputDir = join(repoRoot, "static/agent");
 const siteUrl = "https://swimfrancisco.com";
-const agentDataVersion = 1;
+const agentDataVersion = 2;
 
 function argValue(name) {
   const prefix = `${name}=`;
@@ -119,7 +119,7 @@ function buildSpotRecord(front, body) {
   const extra = front.extra || {};
   const slug = front.slug;
   const type = extra.type;
-  const record = {
+  const shared = {
     agent_data_version: agentDataVersion,
     slug,
     name: front.title,
@@ -134,11 +134,9 @@ function buildSpotRecord(front, body) {
       lng: extra.lng ?? null,
     },
     access: pick(extra, [
-      "access",
       "access_mode",
       "access_summary",
       "access_notes",
-      "cost",
       "payment_model",
       "pricing",
       "website",
@@ -151,33 +149,37 @@ function buildSpotRecord(front, body) {
   };
 
   if (type === "pool") {
-    record.pool = pick(extra, [
-      "subtype",
-      "setpoint_label",
-      "schedules",
-      "sessions",
-      "closures",
-    ]);
-  }
-
-  if (type === "open_water") {
-    record.open_water = pick(extra, [
-      "water_body",
-      "hazards",
-      "common_distances",
-      "clubs",
-      "noaa_tide_station",
-      "temp_station_id",
-      "temp_station_type",
-      "temp_fallback_station_id",
-    ]);
-    record.live_conditions = {
-      api_url: `${siteUrl}/api/conditions`,
-      condition_key: slug,
+    return {
+      ...shared,
+      pool: pick(extra, [
+        "subtype",
+        "setpoint_label",
+        "schedules",
+        "sessions",
+        "closures",
+      ]),
     };
   }
-
-  return record;
+  if (type === "open_water") {
+    return {
+      ...shared,
+      open_water: pick(extra, [
+        "water_body",
+        "hazards",
+        "common_distances",
+        "clubs",
+        "noaa_tide_station",
+        "temp_station_id",
+        "temp_station_type",
+        "temp_fallback_station_id",
+      ]),
+      live_conditions: {
+        api_url: `${siteUrl}/api/conditions`,
+        condition_key: slug,
+      },
+    };
+  }
+  throw new Error(`${slug}: extra.type must be "pool" or "open_water", got ${JSON.stringify(type)}`);
 }
 
 async function readSpot(fileName) {

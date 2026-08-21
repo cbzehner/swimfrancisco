@@ -1,5 +1,5 @@
 {
-  "agent_data_version": 1,
+  "agent_data_version": 2,
   "slug": "ucsf-millberry",
   "name": "UCSF Millberry",
   "type": "pool",
@@ -13,11 +13,9 @@
     "lng": -122.4588
   },
   "access": {
-    "access": "day_pass",
     "access_mode": "limited_public",
     "access_summary": "UCSF Millberry Fitness Center is the Parnassus UCSF fitness location. The official page publishes facility hours, but the pool schedule needs separate verification.",
     "access_notes": [],
-    "cost": "paid",
     "payment_model": "membership",
     "website": "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/millberry-fitness-center-ucsf-parnassus"
   },
@@ -88,5 +86,5 @@
       }
     ]
   },
-  "generated_at": "2026-08-13T05:55:17.025Z"
+  "generated_at": "2026-08-21T20:18:42.012Z"
 }

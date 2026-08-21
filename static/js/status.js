@@ -192,8 +192,8 @@ function applyStatuses(root, now, allowedTypes = null) {
       return;
     }
 
-    const access = row.getAttribute("data-access") || "public";
-    const showsCheck = access === "day_pass" || access === "members";
+    const accessMode = row.getAttribute("data-access-mode") || "public";
+    const showsCheck = accessMode !== "public";
     const result = hasSessions
       ? computeStatus(schedule, now, allowedTypes)
       : hasAccessHours

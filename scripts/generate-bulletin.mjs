@@ -50,20 +50,15 @@ try {
 }
 
 const existingNumber = Number.isInteger(existing.number) ? existing.number : 0;
-const hasPreviousFingerprint = typeof existing.schedule_fingerprint === "string";
-const releasedFingerprint =
-  typeof existing.released_schedule_fingerprint === "string"
-    ? existing.released_schedule_fingerprint
-    : hasPreviousFingerprint
-      ? existing.schedule_fingerprint
-      : scheduleFingerprint;
-const releasePending = releasedFingerprint !== scheduleFingerprint;
-const number = releasePending ? existingNumber + 1 : existingNumber;
-const releasedScheduleFingerprint = releasePending ? scheduleFingerprint : releasedFingerprint;
+const previousFingerprint = typeof existing.schedule_fingerprint === "string"
+  ? existing.schedule_fingerprint
+  : null;
+const number = previousFingerprint === null || previousFingerprint === scheduleFingerprint
+  ? existingNumber
+  : existingNumber + 1;
 
 const payload = {
   schedule_fingerprint: scheduleFingerprint,
-  released_schedule_fingerprint: releasedScheduleFingerprint,
   reviewed_count: snapshots.length,
   number,
   label: String(number).padStart(2, "0"),

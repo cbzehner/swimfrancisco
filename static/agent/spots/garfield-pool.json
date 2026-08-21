@@ -1,5 +1,5 @@
 {
-  "agent_data_version": 1,
+  "agent_data_version": 2,
   "slug": "garfield-pool",
   "name": "Garfield Pool",
   "type": "pool",
@@ -13,15 +13,13 @@
     "lng": -122.4121
   },
   "access": {
-    "access": "public",
     "access_mode": "public",
-    "cost": "paid",
     "payment_model": "session",
     "website": "https://sfrecpark.org/facilities/facility/details/Garfield-Pool-214"
   },
   "freshness": {
-    "last_verified_at": "2026-07-02",
-    "schedule_effective": "2026-06-07"
+    "last_verified_at": "2026-08-20",
+    "schedule_effective": "2026-08-14"
   },
   "sources": [
     {
@@ -187,8 +185,22 @@
             "reason": "Independence Day"
           }
         ]
+      },
+      {
+        "sessions": [],
+        "effective_start": "2026-08-14",
+        "schedule_basis": "temporarily_closed",
+        "effective_end": "2026-09-07",
+        "last_verified_at": "2026-08-20",
+        "closures": [
+          {
+            "start": "2026-08-14",
+            "end": "2026-09-07",
+            "reason": "Garfield Pool Maintenance Closure 8-14_9-7 2026"
+          }
+        ]
       }
     ]
   },
-  "generated_at": "2026-08-13T05:55:17.025Z"
+  "generated_at": "2026-08-21T20:18:42.012Z"
 }
