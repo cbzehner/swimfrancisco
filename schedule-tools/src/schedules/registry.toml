@@ -3,7 +3,7 @@ slug = "balboa-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/29797"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Balboa-Pool-212"
 notes = """
-discover: 2026-08-20 adopt sequential_windows id=29797:session_grid:table band_session_grid id=29796:session_grid:persisted
+discover: 2026-08-21 unchanged sequential_windows id=29797:session_grid:table band_session_grid id=29796:session_grid:persisted
 """
 
 [[pool]]
@@ -29,7 +29,7 @@ slug = "martin-luther-king-jr-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/29802"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Martin-Luther-King-Jr-Pool-216"
 notes = """
-discover: 2026-08-20 adopt sequential_windows id=29802:session_grid:table band_session_grid id=29803:session_grid:band
+discover: 2026-08-21 unchanged sequential_windows id=29802:session_grid:table band_session_grid id=29803:session_grid:persisted
 """
 
 [[pool]]
@@ -37,7 +37,7 @@ slug = "mission-community-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/29801"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Mission-Community-Pool-217"
 notes = """
-discover: 2026-08-20 extra id=29827:other:band id=29828:other:band id=29841:other:band
+discover: 2026-08-21 extra id=29827:other:band id=29828:other:band id=29841:other:band id=29847:other:band
 """
 
 [[pool]]
@@ -61,7 +61,7 @@ slug = "sava-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/29815"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Sava-Pool-220"
 notes = """
-discover: 2026-08-20 adopt sequential_windows id=29815:session_grid:table band_session_grid id=29805:session_grid:band band_session_grid id=29806:session_grid:band
+discover: 2026-08-21 unchanged sequential_windows id=29815:session_grid:table band_session_grid id=29805:session_grid:persisted band_session_grid id=29806:session_grid:persisted
 """
 
 [[pool]]
