@@ -274,7 +274,7 @@ CI attests: "this payload passed the auto-publish gates against this source hash
 | 11 | Multi-grid PDF | `source.pdf` on disk has ≥2 day-grid pages (`extract_page_texts` / `analyze_page_texts`). Missing `source.pdf` → `source_pdf_missing`. Do **not** parse `tmp/extraction-report-gemini.md`. `save_artifact_bundle` does not persist review notes. | cousin of split |
 | 12 | Wrong basis | `schedule_basis` not in `{swim_schedule, temporarily_closed}` | unique-grid path |
 | 13 | Effective start regression | new `effective_start` < `max(effective_start)` over **all** `[[extra.schedules]]` tables, not the active snapshot from `pick_active_schedule` | unique-grid path |
-| 14 | Closure sessions / uniqueness | closure-only path: `sessions` non-empty (`flyer_emitted_sessions`); dates unparseable (`closure_dates_unparsed` / `closure_dates_invalid`); zero table flyers (`closure_notice_missing`); two or more table flyers (`closure_notice_not_unique`) | Garfield flyer |
+| 14 | Closure sessions / uniqueness | closure-only path: `sessions` non-empty (`flyer_emitted_sessions`); dates unparseable (`closure_dates_unparsed`); zero table flyers (`closure_notice_missing`); two or more table flyers (`closure_notice_not_unique`) | Garfield flyer |
 
 `prior_sessions_count` for `validate()` stays the **active** snapshot from `read_schedule_snapshot` (what the board shows now). Gate 13 uses `max(effective_start)` over every window in the file. After POST_SEASON those two values are often the same ended summer grid; they are not the same in general (an upcoming window already merged would make max later than active).
 
@@ -325,7 +325,7 @@ Month D to Month D, YYYY
 Month D–D, YYYY  (same month)
 ```
 
-Year from the matched token; if the pattern has no year, Pacific today’s year. End before start in the same year is a refuse (`closure_dates_invalid`), not a year wrap. Unparseable after both strings → `closure_dates_unparsed`, leave FLAG, do not fetch.
+Year from the matched token; if the pattern has no year, Pacific today’s year. End before start in the same year is unparseable (`closure_dates_unparsed`), not a year wrap. Unparseable after both strings → `closure_dates_unparsed`, leave FLAG, do not fetch.
 
 Then:
 
@@ -482,7 +482,7 @@ class Eligibility:
                         # multi_grid_suspected, source_pdf_missing, validate_failed,
                         # not_rec_park, quarantined, no_merge_baseline,
                         # effective_start_regressed, identity_mismatch,
-                        # closure_dates_unparsed, closure_dates_invalid,
+                        # closure_dates_unparsed,
                         # closure_notice_missing, closure_notice_not_unique,
                         # flyer_emitted_sessions
     message: str = ""

@@ -403,6 +403,12 @@ def test_parse_closure_dates_unparseable():
     assert parse_closure_dates("notes.pdf", "See website") is None
 
 
+def test_parse_closure_dates_accepts_month_alias(monkeypatch):
+    monkeypatch.setattr("schedules.publish.pacific_today", lambda: date(2026, 8, 20))
+    parsed = parse_closure_dates("", "Sept 8 to Dec 10")
+    assert parsed == (date(2026, 9, 8), date(2026, 12, 10))
+
+
 def _garfield_decision(*, notices: list[dict], band: dict | None = None) -> dict:
     candidates = list(notices)
     if band is not None:
