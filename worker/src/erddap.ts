@@ -11,7 +11,7 @@
 //   pick water cells (nearshore land cells return null). ~1 day latency,
 //   known cold bias inside the bay — last-resort layer only.
 
-import { readingFromC, type TempReading } from "./assemble.ts";
+import { readingFromC, type TempReading } from "./temp.ts";
 
 const STATION_BASE = "https://erddap.sensors.ioos.us/erddap/tabledap";
 const SST_BASE = "https://coastwatch.pfeg.noaa.gov/erddap/griddap/jplMURSST41.json";

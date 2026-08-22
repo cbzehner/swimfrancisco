@@ -1,4 +1,5 @@
 import re
+from datetime import date
 from pathlib import Path
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
@@ -38,7 +39,12 @@ def parse_review_dir_name(name: str) -> tuple[str, str] | None:
     match = REVIEW_DIR_NAME.fullmatch(name)
     if match is None:
         return None
-    return match.group(1), match.group(2)
+    iso, sha12 = match.group(1), match.group(2)
+    try:
+        date.fromisoformat(iso)
+    except ValueError:
+        return None
+    return iso, sha12
 
 
 def review_dir(slug: str, date: str, pdf_sha256: str, *, root: Path = DATA_DIR) -> Path:

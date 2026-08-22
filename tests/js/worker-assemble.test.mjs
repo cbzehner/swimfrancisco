@@ -12,11 +12,10 @@ import assert from "node:assert/strict";
 import {
   coalesceTemp,
   coalesceTide,
-  readingFromC,
-  readingFromF,
   tempFromReading,
   withinFreshnessCeiling,
 } from "../../worker/src/assemble.ts";
+import { readingFromC, readingFromF } from "../../worker/src/temp.ts";
 
 const NOW = Date.UTC(2026, 3, 17, 12, 0); // 2026-04-17T12:00Z
 

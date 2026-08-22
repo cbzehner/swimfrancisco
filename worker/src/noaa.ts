@@ -1,7 +1,7 @@
 // NOAA CO-OPS Tides & Currents fetches.
 // Docs: https://api.tidesandcurrents.noaa.gov/api/prod/
 
-import { readingFromF, type TempReading } from "./assemble.ts";
+import { readingFromF, type TempReading } from "./temp.ts";
 
 const BASE = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter";
 const APPLICATION = "SwimFrancisco";

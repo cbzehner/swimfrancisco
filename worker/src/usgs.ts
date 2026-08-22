@@ -3,7 +3,7 @@
 // reports water temperature as parameter 00010 in °C.
 // Docs: https://waterservices.usgs.gov/docs/instantaneous-values/
 
-import { readingFromC, type TempReading } from "./assemble.ts";
+import { readingFromC, type TempReading } from "./temp.ts";
 
 const BASE = "https://waterservices.usgs.gov/nwis/iv/";
 const FETCH_TIMEOUT_MS = 10_000;

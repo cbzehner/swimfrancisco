@@ -5,7 +5,7 @@
 // Data rows: "2026 04 16 18 20 270 ... 12.3 ..."
 // Column 14 (0-indexed) is WTMP in Celsius; "MM" means missing.
 
-import { readingFromC, type TempReading } from "./assemble.ts";
+import { readingFromC, type TempReading } from "./temp.ts";
 
 // observedAt is ISO 8601 UTC.
 export type NdbcReading = TempReading;
