@@ -5,6 +5,7 @@ import pytest
 from click.testing import CliRunner
 
 from schedules.cli import cli
+from schedules.pipeline import DirectRun, PdfRun
 from schedules.review_server import ReviewApp, _csv_sections
 from schedules.models import PoolEntry
 
@@ -187,12 +188,17 @@ def test_review_refresh_uses_registry_source_mode(tmp_path, monkeypatch, source_
     calls = []
     monkeypatch.setattr(
         "schedules.review_server.run_pipeline",
-        lambda **kwargs: (calls.append(kwargs) or (0, None, [object()])),
+        lambda command: (calls.append(command) or (0, None, [object()])),
     )
 
     app.refresh("koret-center")
 
-    assert calls[0]["source_mode"] == expected_mode
+    command = calls[0]
+    if expected_mode == "direct":
+        assert isinstance(command, DirectRun)
+    else:
+        assert isinstance(command, PdfRun)
+        assert command.provider == expected_mode
 
 
 def test_review_refresh_rejects_invalid_pdf_provider(tmp_path, monkeypatch):

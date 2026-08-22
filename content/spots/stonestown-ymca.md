@@ -20,6 +20,7 @@ access_summary = "Stonestown Family YMCA is a membership YMCA branch with lap sw
 sessions = []
 closures = []
 effective_start = "2026-05-17"
+effective_end = "2026-08-11"
 schedule_basis = "facility_hours"
 last_verified_at = "2026-05-17"
 

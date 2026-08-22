@@ -21,12 +21,40 @@ from schedules.models import Aborted, Extracted, FetchResult, PoolResult, Skippe
 from schedules.models import PoolEntry
 from schedules.paths import REPORT_PATHS
 from schedules.pipeline import (
+    BakeoffRun,
+    DirectRun,
+    DiscoverAndExpand,
+    ExpandFromDecisions,
+    PdfRun,
+    PinOverride,
     _session_grid_hrefs,
     compute_exit_code,
     run_pipeline,
     select_registry_entries,
 )
 from schedules.report import discovery_notes_from_decisions, write_report
+from schedules.review import DecisionSet
+
+
+def _slugs(slugs: list[str] | None) -> tuple[str, ...] | None:
+    return tuple(slugs) if slugs is not None else None
+
+
+def _pdf_run(
+    *,
+    slugs: list[str] | None = None,
+    force: bool = False,
+    discover: bool = False,
+    url: str | None = None,
+    provider: str = "gemini",
+) -> PdfRun:
+    if url is not None:
+        urls: DiscoverAndExpand | ExpandFromDecisions | PinOverride = PinOverride(url)
+    elif discover:
+        urls = DiscoverAndExpand()
+    else:
+        urls = ExpandFromDecisions()
+    return PdfRun(provider=provider, slugs=_slugs(slugs), force=force, urls=urls)
 
 
 def _skipped(slug: str) -> Skipped:
@@ -153,7 +181,8 @@ def test_each_source_mode_processes_its_partition_exactly_once(monkeypatch, tmp_
     monkeypatch.setattr("schedules.pipeline.PROMPT_PATH", tmp_path / "prompt.txt")
     (tmp_path / "prompt.txt").write_text("prompt")
 
-    def process(entry, *, provider, compare_with, force, prompt):
+    def process(entry, *, command, prompt):
+        provider = "direct" if isinstance(command, DirectRun) else command.provider
         calls.append((provider, entry.slug))
         return _skipped(entry.slug)
 
@@ -165,7 +194,10 @@ def test_each_source_mode_processes_its_partition_exactly_once(monkeypatch, tmp_
     monkeypatch.setattr("schedules.pipeline.write_report", report)
 
     for mode in ("direct", "gemini", "anthropic"):
-        run_pipeline(slugs=None, source_mode=mode, compare_with=None, force=False)
+        if mode == "direct":
+            run_pipeline(DirectRun(slugs=None, force=False))
+        else:
+            run_pipeline(_pdf_run(provider=mode))
 
     assert calls == [
         ("direct", "direct-one"),
@@ -231,7 +263,7 @@ def _stub_extract_pipeline(monkeypatch, tmp_path: Path, registry: list[PoolEntry
 
     monkeypatch.setattr(
         "schedules.pipeline.grounding_from_text",
-        lambda _text, _payload: GroundingResult(sessions=[], grounded_count=0, total=0),
+        lambda _text, _payload: GroundingResult(sessions=[]),
     )
     monkeypatch.setattr("schedules.pipeline.source_notes_for_signals", lambda _sig: [])
     monkeypatch.setattr("schedules.pipeline.check_delta", lambda _payload, _prior: [])
@@ -328,11 +360,7 @@ def test_local_provider_discovers_once_then_fetches_rolled_url(monkeypatch, tmp_
     )
 
     exit_code, _, results = run_pipeline(
-        slugs=["hamilton-pool"],
-        source_mode="gemini",
-        compare_with=None,
-        force=False,
-        apply_discover=True,
+        _pdf_run(slugs=["hamilton-pool"], discover=True),
     )
 
     assert exit_code == 0
@@ -376,11 +404,7 @@ def test_same_id_still_uses_unchanged_shortcut(monkeypatch, tmp_path) -> None:
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", boom)
 
     exit_code, _, results = run_pipeline(
-        slugs=["hamilton-pool"],
-        source_mode="gemini",
-        compare_with=None,
-        force=False,
-        apply_discover=True,
+        _pdf_run(slugs=["hamilton-pool"], discover=True),
     )
 
     assert exit_code == 0
@@ -402,13 +426,7 @@ def test_direct_mode_never_calls_discover(monkeypatch, tmp_path) -> None:
 
     monkeypatch.setattr("schedules.pipeline.discover_all", boom)
 
-    run_pipeline(
-        slugs=None,
-        source_mode="direct",
-        compare_with=None,
-        force=False,
-        apply_discover=True,
-    )
+    run_pipeline(DirectRun(slugs=None, force=False))
 
 
 def test_no_discover_fetches_working_tree_url(monkeypatch, tmp_path) -> None:
@@ -420,13 +438,7 @@ def test_no_discover_fetches_working_tree_url(monkeypatch, tmp_path) -> None:
 
     monkeypatch.setattr("schedules.pipeline.discover_all", boom)
 
-    run_pipeline(
-        slugs=["hamilton-pool"],
-        source_mode="gemini",
-        compare_with=None,
-        force=False,
-        apply_discover=False,
-    )
+    run_pipeline(_pdf_run(slugs=["hamilton-pool"]))
 
     assert state["fetched"] == [("hamilton-pool", OLD_URL)]
 
@@ -442,12 +454,7 @@ def test_url_override_skips_discover_and_does_not_rewrite_registry(monkeypatch, 
     monkeypatch.setattr("schedules.pipeline.discover_all", boom)
 
     exit_code, _, results = run_pipeline(
-        slugs=["garfield-pool"],
-        source_mode="gemini",
-        compare_with=None,
-        force=False,
-        apply_discover=True,
-        override_url=FLYER_URL,
+        _pdf_run(slugs=["garfield-pool"], url=FLYER_URL),
     )
 
     assert exit_code == 0
@@ -469,11 +476,7 @@ def test_force_still_discovers_once(monkeypatch, tmp_path) -> None:
     )
 
     run_pipeline(
-        slugs=["hamilton-pool", "coffman-pool"],
-        source_mode="gemini",
-        compare_with=None,
-        force=True,
-        apply_discover=True,
+        _pdf_run(slugs=["hamilton-pool", "coffman-pool"], force=True, discover=True),
     )
 
     assert state["discover_calls"] == 1
@@ -490,11 +493,12 @@ def test_bakeoff_does_not_call_discover(monkeypatch, tmp_path) -> None:
     monkeypatch.setattr("schedules.pipeline.discover_all", boom)
 
     run_pipeline(
-        slugs=["hamilton-pool"],
-        source_mode="gemini",
-        compare_with="anthropic",
-        force=False,
-        apply_discover=True,
+        BakeoffRun(
+            provider="gemini",
+            compare_with="anthropic",
+            slugs=("hamilton-pool",),
+            force=False,
+        )
     )
 
     assert state["registry"] == before
@@ -538,11 +542,7 @@ def test_garfield_adopt_then_extract_fetches_adopted_url(monkeypatch, tmp_path) 
     )
 
     exit_code, _, results = run_pipeline(
-        slugs=["garfield-pool"],
-        source_mode="gemini",
-        compare_with=None,
-        force=False,
-        apply_discover=True,
+        _pdf_run(slugs=["garfield-pool"], discover=True),
     )
 
     assert exit_code == 0
@@ -559,11 +559,7 @@ def test_sava_adopt_then_extract_fetches_adopted_url(monkeypatch, tmp_path) -> N
     )
 
     exit_code, _, results = run_pipeline(
-        slugs=["sava-pool"],
-        source_mode="gemini",
-        compare_with=None,
-        force=False,
-        apply_discover=True,
+        _pdf_run(slugs=["sava-pool"], discover=True),
     )
 
     assert exit_code == 0
@@ -617,11 +613,7 @@ def test_sequential_extract_fetches_each_collapsed_window(monkeypatch, tmp_path)
     )
 
     exit_code, _, results = run_pipeline(
-        slugs=["sava-pool"],
-        source_mode="gemini",
-        compare_with=None,
-        force=False,
-        apply_discover=True,
+        _pdf_run(slugs=["sava-pool"], discover=True),
     )
 
     assert exit_code == 0
@@ -636,7 +628,8 @@ def test_equal_range_duplicate_is_not_fetched() -> None:
     entry = _pdf_entry("sava-pool", fall1)
     hrefs = _session_grid_hrefs(
         entry,
-        [
+        DecisionSet.from_items(
+            [
             {
                 "slug": "sava-pool",
                 "candidates": [
@@ -658,7 +651,8 @@ def test_equal_range_duplicate_is_not_fetched() -> None:
                     },
                 ],
             }
-        ],
+            ]
+        ),
     )
     assert hrefs == [fall1]
 
@@ -673,11 +667,7 @@ def test_split_part_adopt_does_not_extract(monkeypatch, tmp_path) -> None:
     )
 
     exit_code, _, results = run_pipeline(
-        slugs=["north-beach-pool"],
-        source_mode="gemini",
-        compare_with=None,
-        force=False,
-        apply_discover=True,
+        _pdf_run(slugs=["north-beach-pool"], discover=True),
     )
 
     assert exit_code == 0
@@ -730,11 +720,7 @@ def test_flag_does_not_skip_published_extract(monkeypatch, tmp_path) -> None:
     )
 
     exit_code, _, results = run_pipeline(
-        slugs=["sava-pool"],
-        source_mode="gemini",
-        compare_with=None,
-        force=False,
-        apply_discover=True,
+        _pdf_run(slugs=["sava-pool"], discover=True),
     )
 
     assert exit_code == 0
@@ -773,7 +759,7 @@ def test_discovery_notes_from_decisions_file(tmp_path) -> None:
             ]
         )
     )
-    notes = discovery_notes_from_decisions(path)
+    notes = discovery_notes_from_decisions(DecisionSet.load(path))
     assert notes["hamilton-pool"][0].kind == "url_rolled"
     assert notes["hamilton-pool"][0].severity == "info"
     assert "29599 → 29800" in notes["hamilton-pool"][0].message
@@ -788,7 +774,7 @@ def test_discovery_notes_from_decisions_file(tmp_path) -> None:
 def test_invalid_decisions_json_yields_no_notes(tmp_path) -> None:
     path = tmp_path / "discovery-decisions.json"
     path.write_text("{not-json")
-    assert discovery_notes_from_decisions(path) == {}
+    assert discovery_notes_from_decisions(DecisionSet.load(path)) == {}
 
 
 def test_only_slug_passes_full_rec_park_set_into_discover(monkeypatch, tmp_path) -> None:
@@ -812,13 +798,7 @@ def test_only_slug_passes_full_rec_park_set_into_discover(monkeypatch, tmp_path)
 
     monkeypatch.setattr("schedules.pipeline.discover_all", fake_discover)
 
-    run_pipeline(
-        slugs=["sava-pool"],
-        source_mode="gemini",
-        compare_with=None,
-        force=False,
-        apply_discover=True,
-    )
+    run_pipeline(_pdf_run(slugs=["sava-pool"], discover=True))
 
     assert state["discover_calls"] == 1
     assert seen["slugs_arg"] == ["sava-pool"]
@@ -842,13 +822,7 @@ def test_discover_error_exits_one_and_keeps_report(monkeypatch, tmp_path) -> Non
     monkeypatch.setattr("schedules.pipeline.discover_all", boom)
 
     with pytest.raises(DiscoverError, match="every Rec & Park facility page failed"):
-        run_pipeline(
-            slugs=["hamilton-pool"],
-            source_mode="gemini",
-            compare_with=None,
-            force=False,
-            apply_discover=True,
-        )
+        run_pipeline(_pdf_run(slugs=["hamilton-pool"], discover=True))
 
     assert state["fetched"] == []
     assert report.read_text() == "# kept\n"
@@ -875,11 +849,7 @@ def test_discovery_notes_attach_to_skipped_and_aborted(monkeypatch, tmp_path) ->
     )
 
     exit_code, _, results = run_pipeline(
-        slugs=["north-beach-pool"],
-        source_mode="gemini",
-        compare_with=None,
-        force=False,
-        apply_discover=True,
+        _pdf_run(slugs=["north-beach-pool"], discover=True),
     )
 
     assert exit_code == 0
@@ -911,13 +881,7 @@ def test_discovery_notes_attach_to_skipped_and_aborted(monkeypatch, tmp_path) ->
         _fake_discover(state, tmp_path=tmp_path),
     )
 
-    exit_code, _, results = run_pipeline(
-        slugs=["hamilton-pool"],
-        source_mode="gemini",
-        compare_with=None,
-        force=False,
-        apply_discover=False,
-    )
+    exit_code, _, results = run_pipeline(_pdf_run(slugs=["hamilton-pool"]))
 
     assert isinstance(results[0], Aborted)
     assert any(note.kind == "discovery_flagged" for note in results[0].review_notes)
@@ -935,13 +899,7 @@ def test_invalid_decisions_json_does_not_break_direct(monkeypatch, tmp_path) -> 
     )
     monkeypatch.setattr("schedules.pipeline.write_report", lambda results, path=None: path)
 
-    exit_code, _, results = run_pipeline(
-        slugs=None,
-        source_mode="direct",
-        compare_with=None,
-        force=False,
-        apply_discover=True,
-    )
+    exit_code, _, results = run_pipeline(DirectRun(slugs=None, force=False))
 
     assert exit_code == 0
     assert [result.slug for result in results] == ["direct-one"]

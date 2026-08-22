@@ -142,20 +142,23 @@ def test_all_spots_have_access_classification() -> None:
                 assert isinstance(effective_start, str) and re.fullmatch(
                     r"\d{4}-\d{2}-\d{2}", effective_start
                 ), f"{path.name}: schedule entry missing or non-ISO effective_start"
+            open_ended = [
+                sched for sched in schedules if not sched.get("effective_end")
+            ]
+            assert len(open_ended) <= 1, f"{path.name}: more than one open-ended schedule window"
 
 
 def test_canonical_labels_have_i18n_mappings() -> None:
     extras_by_slug = _canonical_spot_extras()
     translation_keys = set(tomllib.loads((ROOT / "i18n" / "ui" / "en.toml").read_text()))
-    dynamic_labels = tomllib.loads((ROOT / "i18n" / "dynamic-labels.toml").read_text())["labels"]
-    dynamic_label_source_index = {
-        (str(label["kind"]), str(label["source"])): str(label["translation_key"])
-        for label in dynamic_labels
-    }
-    dynamic_label_code_index = {
-        (str(label["kind"]), str(label["code"])): str(label["translation_key"])
-        for label in dynamic_labels
-    }
+    dynamic_labels = tomllib.loads((ROOT / "i18n" / "dynamic-labels.toml").read_text())
+    dynamic_label_source_index: dict[tuple[str, str], str] = {}
+    dynamic_label_code_index: dict[tuple[str, str], str] = {}
+    for kind, records in dynamic_labels.items():
+        for record in records:
+            dynamic_label_code_index[(str(kind), str(record["code"]))] = str(record["translation_key"])
+            for source in record["sources"]:
+                dynamic_label_source_index[(str(kind), str(source))] = str(record["translation_key"])
 
     visible_spot_labels: set[str] = set()
     access_badges: set[str] = set()
@@ -489,7 +492,8 @@ def test_access_panel_renders_pricing_options(built_site: Path) -> None:
     assert "Public day-use Mon / Wed / Fri" in html
 
     jcc = _read(built_site, "jccsf")
-    assert 'class="cost-badge is-day-pass">DAY PASS · $50</span>' in jcc
+    assert 'class="cost-badge is-members">' in jcc
+    assert "DAY PASS · $50" not in jcc
     assert "Fitness Center member" in jcc
     assert "Non-member / guest" in jcc
 

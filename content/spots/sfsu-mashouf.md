@@ -20,6 +20,7 @@ access_summary = "SFSU Mashouf Wellness Center publishes natatorium hours and de
 sessions = []
 closures = []
 effective_start = "2026-05-17"
+effective_end = "2026-08-11"
 schedule_basis = "pool_hours"
 last_verified_at = "2026-05-17"
 

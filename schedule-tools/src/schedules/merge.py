@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any, NamedTuple
 
 import tomlkit
-from tomlkit.items import AoT
 
 from ._time import pacific_today
 from .models import DAY_ORDER
@@ -37,53 +37,31 @@ def merge(
 
     after = _normalized_schedule_payload(extracted)
 
-    # Snapshot existing entries as dicts so we can mutate freely.
     existing_aot = extra.get("schedules")
-    existing_entries: list[dict[str, Any]] = []
-    if existing_aot is not None:
-        for table in existing_aot:
-            entry = _schedule_from_table(table)
-            lva = table.get("last_verified_at")
-            if isinstance(lva, str):
-                entry["_last_verified_at"] = lva
-            existing_entries.append(entry)
+    stored = _index_schedules(existing_aot)
 
     target_start = after.get("effective_start")
-    matching_index: int | None = None
-    for i, entry in enumerate(existing_entries):
-        if entry.get("effective_start") == target_start:
-            matching_index = i
-            break
-
-    # Nothing to add and nothing to update.
-    if matching_index is None and not target_start:
+    if not isinstance(target_start, str) or not target_start:
         return False
 
-    if matching_index is not None:
-        existing_entry = existing_entries[matching_index]
-        existing_verified = existing_entry.get("_last_verified_at")
-        existing_payload = {k: v for k, v in existing_entry.items() if k != "_last_verified_at"}
-        if existing_payload == after and (
-            last_verified_at is None or existing_verified == last_verified_at
+    existing = stored.get(target_start)
+    if existing is not None:
+        if existing.payload == after and (
+            last_verified_at is None or existing.last_verified_at == last_verified_at
         ):
             return False
-        existing_entries[matching_index] = {
-            **after,
-            "_last_verified_at": last_verified_at if last_verified_at is not None else existing_verified,
-        }
+        stored[target_start] = _StoredSchedule(
+            after,
+            last_verified_at if last_verified_at is not None else existing.last_verified_at,
+        )
     else:
-        existing_entries.append({
-            **after,
-            "_last_verified_at": last_verified_at,
-        })
-
-    existing_entries.sort(key=lambda s: s.get("effective_start") or "0000-00-00")
+        stored = _close_overlapping(stored, target_start)
+        stored[target_start] = _StoredSchedule(after, last_verified_at)
 
     new_aot = tomlkit.aot()
-    for entry in existing_entries:
-        verified = entry.get("_last_verified_at")
-        payload = {k: v for k, v in entry.items() if k != "_last_verified_at"}
-        new_aot.append(_build_schedule_table(payload, last_verified_at=verified))
+    for start in sorted(stored):
+        item = stored[start]
+        new_aot.append(_build_schedule_table(item.payload, last_verified_at=item.last_verified_at))
     if "schedules" in extra:
         del extra["schedules"]
     extra["schedules"] = new_aot
@@ -174,6 +152,53 @@ def _empty_schedule() -> dict[str, Any]:
         "schedule_basis": None,
         "effective_end": None,
     }
+
+
+class _StoredSchedule(NamedTuple):
+    payload: dict[str, Any]
+    last_verified_at: str | None
+
+
+def _index_schedules(existing_aot: Any) -> dict[str, _StoredSchedule]:
+    indexed: dict[str, _StoredSchedule] = {}
+    if existing_aot is None:
+        return indexed
+    for table in existing_aot:
+        entry = _schedule_from_table(table)
+        start = entry.get("effective_start")
+        if not isinstance(start, str) or not start:
+            raise ValueError("schedule entry is missing effective_start")
+        if start in indexed:
+            raise ValueError(f"duplicate schedule effective_start {start}")
+        verified = table.get("last_verified_at")
+        indexed[start] = _StoredSchedule(
+            entry,
+            verified if isinstance(verified, str) else None,
+        )
+    return indexed
+
+
+def _close_overlapping(
+    stored: dict[str, _StoredSchedule],
+    new_start: str,
+) -> dict[str, _StoredSchedule]:
+    prior_end = _day_before(new_start)
+    closed: dict[str, _StoredSchedule] = {}
+    for start, item in stored.items():
+        payload = dict(item.payload)
+        end = payload.get("effective_end")
+        overlaps = start < new_start and (not isinstance(end, str) or not end or end >= new_start)
+        if overlaps:
+            payload["effective_end"] = prior_end
+            closed[start] = _StoredSchedule(payload, item.last_verified_at)
+        else:
+            closed[start] = item
+    return closed
+
+
+def _day_before(iso: str) -> str:
+    year, month, day = (int(part) for part in iso.split("-"))
+    return (date(year, month, day) - timedelta(days=1)).isoformat()
 
 
 def _normalized_schedule_payload(extracted: dict[str, Any]) -> dict[str, Any]:

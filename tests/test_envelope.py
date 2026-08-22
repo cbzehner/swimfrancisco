@@ -1,8 +1,13 @@
 import pytest
 
 from schedules.envelope import (
+    AttestationCarried,
+    AttestationCi,
+    AttestationHuman,
+    AttestationLegacy,
     EnvelopeValidationError,
     load_envelope_schema,
+    parse_attestation,
     validate_envelope,
 )
 
@@ -73,3 +78,15 @@ def test_validate_envelope_rejects_attested_by_robot():
     envelope["attested_by"] = "robot"
     with pytest.raises(EnvelopeValidationError):
         validate_envelope(envelope)
+
+
+def test_parse_attestation_four_states():
+    assert isinstance(parse_attestation(_valid_envelope()), AttestationLegacy)
+    human = {**_valid_envelope(), "attested_by": "human"}
+    assert isinstance(parse_attestation(human), AttestationHuman)
+    ci = {**_valid_envelope(), "attested_by": "ci"}
+    assert isinstance(parse_attestation(ci), AttestationCi)
+    carried = {**_valid_envelope(), "attested_by": "ci", "carried_from": "data/hamilton-pool/reviewed.json"}
+    parsed = parse_attestation(carried)
+    assert isinstance(parsed, AttestationCarried)
+    assert isinstance(parsed.origin, AttestationCi)

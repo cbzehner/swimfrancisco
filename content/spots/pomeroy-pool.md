@@ -19,6 +19,7 @@ access_summary = "Pomeroy's Herbst Therapeutic Pool is a warm-water therapeutic 
 
 [[extra.schedules]]
 effective_start = "2026-05-17"
+effective_end = "2026-06-15"
 schedule_basis = "swim_schedule"
 last_verified_at = "2026-06-16"
 
@@ -130,6 +131,7 @@ reason = "Juneteenth"
 
 [[extra.schedules]]
 effective_start = "2026-06-16"
+effective_end = "2026-08-11"
 schedule_basis = "swim_schedule"
 last_verified_at = "2026-06-16"
 

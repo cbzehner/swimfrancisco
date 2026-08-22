@@ -11,31 +11,19 @@
 //   pick water cells (nearshore land cells return null). ~1 day latency,
 //   known cold bias inside the bay — last-resort layer only.
 
+import { readingFromC, type TempReading } from "./assemble.ts";
+
 const STATION_BASE = "https://erddap.sensors.ioos.us/erddap/tabledap";
 const SST_BASE = "https://coastwatch.pfeg.noaa.gov/erddap/griddap/jplMURSST41.json";
 const FETCH_TIMEOUT_MS = 10_000;
 
-export interface ErddapReading {
-  stationId: string;
-  waterTempC: number;
-  waterTempF: number;
-  observedAt: string; // ISO 8601 UTC
-}
+// observedAt is ISO 8601 UTC.
+export type ErddapReading = TempReading;
 
 interface ErddapTable {
   table?: {
     columnNames?: string[];
     rows?: Array<Array<string | number | null>>;
-  };
-}
-
-function reading(stationId: string, waterTempC: number, observedAt: string): ErddapReading {
-  const waterTempF = (waterTempC * 9) / 5 + 32;
-  return {
-    stationId,
-    waterTempC: Math.round(waterTempC * 10) / 10,
-    waterTempF: Math.round(waterTempF * 10) / 10,
-    observedAt,
   };
 }
 
@@ -67,7 +55,7 @@ export async function fetchErddapStationTemp(datasetId: string): Promise<ErddapR
   const [time, temp] = row;
   const waterTempC = Number(temp);
   if (typeof time !== "string" || !Number.isFinite(waterTempC)) return null;
-  return reading(datasetId, waterTempC, time);
+  return readingFromC(datasetId, waterTempC, time);
 }
 
 export async function fetchMurSst(gridPoint: string): Promise<ErddapReading | null> {
@@ -82,5 +70,5 @@ export async function fetchMurSst(gridPoint: string): Promise<ErddapReading | nu
   const [time, , , sst] = row;
   const waterTempC = Number(sst);
   if (typeof time !== "string" || sst === null || !Number.isFinite(waterTempC)) return null;
-  return reading(gridPoint, waterTempC, time);
+  return readingFromC(gridPoint, waterTempC, time);
 }

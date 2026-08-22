@@ -8,7 +8,6 @@ import {
   captureBaselineRanks,
   computeAccessStatus,
   computeAccessWindowAvailability,
-  computeNextOpenOffset,
   computeStatus,
   computeStatusRunKey,
   computeWindowAvailability,
@@ -112,7 +111,7 @@ export function getCurrentHorizon() {
 }
 
 function formatWindowNext(result) {
-  const session = result.bestSession;
+  const session = result.bestWindow;
   if (!session) return statusNextLabel(result, PLACEHOLDER);
   const program = programLabel(session.type);
   return `${program} ${formatHHMM(session.start)}\u2013${formatHHMM(session.end)}`;
@@ -188,7 +187,7 @@ function applyStatuses(root, now, allowedTypes = null) {
         : computeAccessWindowAvailability(schedule, horizon);
       setStatus(statusCell, result.status, "pool");
       nextCell.textContent = hasSessions ? formatWindowNext(result) : statusNextLabel(result, PLACEHOLDER);
-      writeSortKeys(row, result.sortRank, result.sortRank);
+      writeSortKeys(row, result.sortRank, result.openOffset);
       row.classList.toggle("is-open", OPEN_STATUSES.has(result.status));
       return;
     }
@@ -200,14 +199,11 @@ function applyStatuses(root, now, allowedTypes = null) {
       : hasAccessHours
         ? computeAccessStatus(schedule, now)
       : showsCheck
-        ? { status: "CHECK", next: "OFFICIAL SITE", nextKind: "official_site", nextArgs: {} }
-        : { status: PLACEHOLDER, next: PLACEHOLDER };
+        ? { status: "CHECK", next: "OFFICIAL SITE", nextKind: "official_site", nextArgs: {}, sortRank: 2, openOffset: Number.POSITIVE_INFINITY }
+        : { status: PLACEHOLDER, next: PLACEHOLDER, sortRank: 2, openOffset: Number.POSITIVE_INFINITY };
     setStatus(statusCell, result.status, "pool");
     nextCell.textContent = statusNextLabel(result, PLACEHOLDER);
-    const openOffset = hasSessions
-      ? computeNextOpenOffset(schedule, now, allowedTypes)
-      : Number.POSITIVE_INFINITY;
-    writeSortKeys(row, nowSortRank(result.status), openOffset);
+    writeSortKeys(row, result.sortRank, result.openOffset);
     row.classList.toggle("is-open", OPEN_STATUSES.has(result.status));
   });
 
@@ -228,12 +224,6 @@ function applyStatuses(root, now, allowedTypes = null) {
       row.classList.add("is-open");
     }
   });
-}
-
-function nowSortRank(status) {
-  if (status === "OPEN" || status === "ACCESS") return 0;
-  if (status === "CHECK" || status === PLACEHOLDER) return 2;
-  return 1;
 }
 
 function writeSortKeys(row, sortRank, openOffset) {

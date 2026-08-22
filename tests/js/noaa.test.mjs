@@ -6,10 +6,29 @@
 //
 // Imported directly from the TypeScript source; Node 22.6+ strips types.
 
-import { test } from "node:test";
+import { test, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 
-import { toLocalIso } from "../../worker/src/noaa.ts";
+import { fetchNoaaTemp, toLocalIso } from "../../worker/src/noaa.ts";
+import { tempFromReading } from "../../worker/src/assemble.ts";
+
+let originalFetch;
+
+beforeEach(() => {
+  originalFetch = globalThis.fetch;
+});
+
+afterEach(() => {
+  globalThis.fetch = originalFetch;
+});
+
+function mockFetch(body, status = 200) {
+  globalThis.fetch = async () =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { "content-type": "application/json" },
+    });
+}
 
 test("toLocalIso replaces the space with T and pads seconds", () => {
   assert.equal(toLocalIso("2026-04-16 14:30"), "2026-04-16T14:30:00");
@@ -31,4 +50,20 @@ test("toLocalIso output is zoneless (no trailing Z or offset)", () => {
   const out = toLocalIso("2026-04-16 14:30");
   assert.doesNotMatch(out, /Z$/);
   assert.doesNotMatch(out, /[+-]\d{2}:?\d{2}$/);
+});
+
+test("fetchNoaaTemp keeps native Fahrenheit through assemble", async () => {
+  // 58.4°F → 14.666…°C. Rounding C and converting back would yield 58.5°F.
+  mockFetch({ data: [{ t: "2026-04-16 14:30", v: "58.4" }] });
+
+  const reading = await fetchNoaaTemp("9414863");
+  assert.ok(reading);
+  assert.equal(reading.stationId, "9414863");
+  assert.equal(reading.waterTempF, 58.4);
+  assert.equal(reading.waterTempC, 14.7);
+  assert.equal(reading.observedAt, "2026-04-16T14:30:00");
+
+  const fields = tempFromReading({ reading, sourceType: "noaa" });
+  assert.equal(fields.water_temp_f, 58.4);
+  assert.equal(fields.water_temp_c, 14.7);
 });

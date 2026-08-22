@@ -73,7 +73,7 @@ function applySortAria(state, nextOpenButton, distanceButton) {
   nextOpenButton?.setAttribute("aria-pressed", String(kind === "open"));
   distanceButton?.setAttribute(
     "aria-pressed",
-    String(kind === "distance" || kind === "distance-pending"),
+    String(kind === "distance" || state.geo?.status === "pending"),
   );
 }
 
@@ -290,7 +290,7 @@ function captureFilter(trigger, state, tbody) {
   capture("filter_applied", {
     trigger,
     program: activeType(state),
-    sort: sortKind(state) === "distance-pending" ? "distance" : sortKind(state),
+    sort: sortKind(state),
     memberships: state.includeMemberships,
     when: new URLSearchParams(window.location.search).get("when") || "now",
     result_count: tbody.querySelectorAll("tr:not([hidden])").length,
@@ -301,6 +301,7 @@ function captureFilter(trigger, state, tbody) {
 function attachHandlers(tbody, filtersRoot) {
   const state = {
     sort: { kind: "default" },
+    geo: { status: "idle" },
     type: null,
     includeMemberships: false,
   };
@@ -347,9 +348,10 @@ function attachHandlers(tbody, filtersRoot) {
   if (distanceButton) {
     distanceButton.setAttribute("aria-pressed", "false");
     distanceButton.addEventListener("click", () => {
-      if (sortKind(state) === "distance-pending") return;
+      if (state.geo?.status === "pending") return;
       if (sortKind(state) === "distance") {
         state.sort = { kind: "default" };
+        state.geo = { status: "idle" };
         applySortAria(state, nextOpenButton, distanceButton);
         applyFilters(tbody, state);
         captureFilter("distance_sort", state, tbody);
@@ -360,11 +362,12 @@ function attachHandlers(tbody, filtersRoot) {
         distanceButton.setAttribute("aria-pressed", "false");
         return;
       }
-      state.sort = { kind: "distance-pending" };
+      state.geo = { status: "pending" };
       applySortAria(state, nextOpenButton, distanceButton);
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          if (sortKind(state) !== "distance-pending") return;
+          if (state.geo?.status !== "pending") return;
+          state.geo = { status: "idle" };
           state.sort = {
             kind: "distance",
             coords: {
@@ -378,7 +381,8 @@ function attachHandlers(tbody, filtersRoot) {
           syncStateToHash(state);
         },
         () => {
-          if (sortKind(state) !== "distance-pending") return;
+          if (state.geo?.status !== "pending") return;
+          state.geo = { status: "idle" };
           state.sort = { kind: "default" };
           applySortAria(state, nextOpenButton, distanceButton);
         },
@@ -433,9 +437,8 @@ function restoreFromHash(controls) {
     changed = true;
   }
 
-  const kind = sortKind(state);
-  if (kind === "distance-pending") {
-    state.sort = { kind: "default" };
+  if (state.geo?.status === "pending") {
+    state.geo = { status: "idle" };
     applySortAria(state, nextOpenButton, distanceButton);
     changed = true;
   }

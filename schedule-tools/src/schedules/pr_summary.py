@@ -16,10 +16,12 @@ from datetime import date as _date
 from pathlib import Path
 
 from ._time import pacific_today
+from .envelope import AttestationCarried, AttestationCi, parse_attestation
 from .discover import view_id_from_url
 from .eval import PoolEval, collect_pool_evals, prf1
 from .paths import DATA_DIR, REPO_ROOT
 from .registry import load_registry
+from .review import DecisionSet, parse_view_id
 
 
 _DATA_PATH_RE = re.compile(r"^data/([a-z0-9-]+)/([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9a-f]{12})/(.+)$")
@@ -196,22 +198,6 @@ def _load_json_object(path: Path) -> dict | None:
     return payload if isinstance(payload, dict) else None
 
 
-def _load_discovery_decisions(path: Path) -> list[dict]:
-    if not path.is_file():
-        return []
-    try:
-        payload = json.loads(path.read_text())
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
-        return []
-    if not isinstance(payload, list):
-        return []
-    return [
-        item
-        for item in payload
-        if isinstance(item, dict) and isinstance(item.get("slug"), str) and item["slug"]
-    ]
-
-
 def _all_candidates(decision: dict) -> list[dict]:
     rows: list[dict] = []
     seen: set[int] = set()
@@ -219,8 +205,8 @@ def _all_candidates(decision: dict) -> list[dict]:
         for item in decision.get(bucket) or []:
             if not isinstance(item, dict):
                 continue
-            view_id = item.get("view_id")
-            if not isinstance(view_id, int) or view_id in seen:
+            view_id = parse_view_id(item.get("view_id"))
+            if view_id is None or view_id in seen:
                 continue
             seen.add(view_id)
             rows.append(item)
@@ -348,8 +334,8 @@ def _window_text_for_item(
     *,
     by_view: dict[int, tuple[str | None, str | None]],
 ) -> str | None:
-    view_id = item.get("view_id")
-    if isinstance(view_id, int) and view_id in by_view:
+    view_id = parse_view_id(item.get("view_id"))
+    if view_id is not None and view_id in by_view:
         return _format_range(*by_view[view_id])
     start = item.get("window_start")
     end = item.get("window_end")
@@ -390,8 +376,8 @@ def _format_decision_line(
 
     def _mark(items: list[dict]) -> None:
         for item in items:
-            view_id = item.get("view_id")
-            if isinstance(view_id, int):
+            view_id = parse_view_id(item.get("view_id"))
+            if view_id is not None:
                 mentioned.add(view_id)
 
     if table_flyers and off_grids:
@@ -423,14 +409,16 @@ def _format_decision_line(
             _mark(off_table)
 
     extra_ids = {
-        extra.get("view_id")
+        parse_view_id(extra.get("view_id"))
         for extra in (decision.get("extra_candidates") or [])
         if isinstance(extra, dict) and extra.get("kind") != "session_grid"
     }
+    extra_ids.discard(None)
     leftover_extra = [
         item
         for item in candidates
-        if item.get("view_id") in extra_ids and item.get("view_id") not in mentioned
+        if parse_view_id(item.get("view_id")) in extra_ids
+        and parse_view_id(item.get("view_id")) not in mentioned
     ]
     if leftover_extra:
         bits.append("extra " + ", ".join(_id_and_name(item) for item in leftover_extra))
@@ -445,14 +433,14 @@ def _format_decision_line(
 
 def _lead_pool_lines(
     pending_slugs: list[str],
-    decisions: list[dict],
+    decisions: DecisionSet,
     windows: dict[str, tuple[str | None, str | None]],
     *,
     published_slugs: list[str] | None = None,
     carried_slugs: list[str] | None = None,
     windows_by_view: dict[int, tuple[str | None, str | None]] | None = None,
 ) -> list[str]:
-    by_slug = {item["slug"]: item for item in decisions}
+    by_slug = dict(decisions.by_slug)
     slugs: list[str] = []
     seen: set[str] = set()
     for item in decisions:
@@ -509,12 +497,10 @@ def render_pr_body(
     changed = _changed_slugs_with_runs(rows)
     registry = load_registry()
     published = [e for e in registry if e.source_status == "published"]
-    decisions = _load_discovery_decisions(repo_root / "tmp" / "discovery-decisions.json")
+    decisions = DecisionSet.load(repo_root / "tmp" / "discovery-decisions.json")
     publish_pending = _load_json_object(repo_root / "tmp" / "publish-pending.json")
     registry_staged = _registry_is_staged(repo_root)
-    blocking_slugs = sorted(
-        {item["slug"] for item in decisions if item.get("blocking")}
-    )
+    blocking_slugs = sorted(decisions.blocking_slugs)
     adopt_slugs = [item["slug"] for item in decisions if item.get("action") == "adopt"]
 
     if not changed and not registry_staged and not blocking_slugs and not adopt_slugs:
@@ -586,9 +572,10 @@ def _split_attested_slugs(
             envelope = _reviewed_envelope(data_root, slug, run)
             if envelope is None:
                 continue
-            if envelope.get("carried_from"):
+            attestation = parse_attestation(envelope)
+            if isinstance(attestation, AttestationCarried):
                 kind = "carried"
-            elif envelope.get("attested_by") == "ci":
+            elif isinstance(attestation, AttestationCi):
                 kind = "ci"
             break
         if kind == "ci":
@@ -617,7 +604,7 @@ def _render_lead(
     carried_slugs: list[str],
     unchanged_n: int,
     *,
-    decisions: list[dict] | None = None,
+    decisions: DecisionSet | None = None,
     windows: dict[str, tuple[str | None, str | None]] | None = None,
     windows_by_view: dict[int, tuple[str | None, str | None]] | None = None,
     registry_staged: bool = False,
@@ -626,7 +613,7 @@ def _render_lead(
     blocking_slugs: list[str] | None = None,
     show_checklist: bool = False,
 ) -> list[str]:
-    decisions = decisions or []
+    decisions = DecisionSet.from_items([]) if decisions is None else decisions
     windows = windows or {}
     windows_by_view = windows_by_view or {}
     published_slugs = published_slugs or []
@@ -713,7 +700,7 @@ def _render_lead(
     extra_slugs = [
         slug
         for slug in published_slugs + carried_slugs
-        if slug not in {item["slug"] for item in decisions} and slug not in pending_slugs
+        if slug not in decisions.by_slug and slug not in pending_slugs
     ]
     for slug in extra_slugs:
         pool_lines.append(
@@ -743,9 +730,8 @@ def _render_whats_here(
             for filename, change in sorted(changed[slug][run]):
                 if filename == "reviewed.json":
                     envelope = _reviewed_envelope(data_root, slug, run) or {}
-                    if envelope.get("carried_from"):
-                        phrase = "attestation carried forward."
-                    elif envelope.get("attested_by") == "ci":
+                    attestation = parse_attestation(envelope)
+                    if isinstance(attestation, AttestationCi):
                         phrase = "auto-published (`attested_by: ci`)."
                     else:
                         phrase = "attestation carried forward."

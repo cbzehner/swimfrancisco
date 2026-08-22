@@ -123,3 +123,40 @@ def test_fetch_pdf_raises_on_prefix_collision(tmp_path, monkeypatch):
 
     with pytest.raises(FetchError, match="prefix collision"):
         fetch_pdf("test-pool", "http://example.test/x.pdf", cache_root=cache_root)
+
+
+def test_fetch_pdf_collision_regardless_of_sort_order(tmp_path, monkeypatch):
+    import hashlib
+
+    from schedules.artifacts import PrefixCollisionError, find_review_dir_for_sha
+
+    pdf_bytes = _make_pdf_bytes(tmp_path)
+    sha256 = hashlib.sha256(pdf_bytes).hexdigest()
+    prefix = sha256[:12]
+    slug_dir = tmp_path / "test-pool"
+    slug_dir.mkdir()
+    match_dir = slug_dir / f"2026-04-17-{prefix}"
+    collide_dir = slug_dir / f"2026-04-18-{prefix}"
+    match_dir.mkdir()
+    collide_dir.mkdir()
+    (match_dir / "source.pdf").write_bytes(pdf_bytes)
+    (match_dir / "source.sha256").write_text(f"{sha256}\n")
+    (collide_dir / "source.pdf").write_bytes(b"different content, same prefix by construction")
+    (collide_dir / "source.sha256").write_text(f"{'b' * 64}\n")
+
+    with pytest.raises(PrefixCollisionError, match="prefix collision"):
+        find_review_dir_for_sha("test-pool", sha256, root=tmp_path)
+
+    later_match = slug_dir / f"2026-04-19-{prefix}"
+    later_match.mkdir()
+    (later_match / "source.sha256").write_text(f"{sha256}\n")
+    (later_match / "source.pdf").write_bytes(pdf_bytes)
+    collide_dir.rename(slug_dir / f"2026-04-16-{prefix}")
+
+    with pytest.raises(PrefixCollisionError, match="prefix collision"):
+        find_review_dir_for_sha("test-pool", sha256, root=tmp_path)
+
+    counter = {"count": 0}
+    monkeypatch.setattr("schedules.fetch.httpx.Client", _fake_client_factory(pdf_bytes, counter))
+    with pytest.raises(FetchError, match="prefix collision"):
+        fetch_pdf("test-pool", "http://example.test/x.pdf", cache_root=tmp_path)

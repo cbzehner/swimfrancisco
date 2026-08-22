@@ -20,6 +20,7 @@ access_summary = "USF's Koret Center has a large indoor pool. Lap lanes are gene
 [[extra.schedules]]
 closures = []
 effective_start = "2026-05-16"
+effective_end = "2026-06-15"
 schedule_basis = "pool_hours"
 last_verified_at = "2026-05-16"
 
@@ -67,6 +68,7 @@ end = "18:00"
 
 [[extra.schedules]]
 effective_start = "2026-06-16"
+effective_end = "2026-08-11"
 schedule_basis = "pool_hours"
 last_verified_at = "2026-06-16"
 

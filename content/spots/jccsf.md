@@ -20,6 +20,7 @@ access_summary = "Gallanter Family Aquatics Center access is tied to JCCSF Fitne
 [[extra.schedules]]
 closures = []
 effective_start = "2026-05-17"
+effective_end = "2026-08-11"
 schedule_basis = "swim_schedule"
 last_verified_at = "2026-05-17"
 

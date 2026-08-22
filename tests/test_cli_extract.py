@@ -4,6 +4,14 @@ from click.testing import CliRunner
 
 from schedules.cli import cli
 from schedules.discover import DiscoverError
+from schedules.pipeline import (
+    BakeoffRun,
+    DirectRun,
+    DiscoverAndExpand,
+    ExpandFromDecisions,
+    PdfRun,
+    PinOverride,
+)
 
 
 def test_extract_requires_exactly_one_source_mode() -> None:
@@ -23,8 +31,8 @@ def test_extract_requires_exactly_one_source_mode() -> None:
 def _capture_run_pipeline(monkeypatch) -> dict:
     captured: dict = {}
 
-    def fake_run_pipeline(**kwargs):
-        captured.update(kwargs)
+    def fake_run_pipeline(command):
+        captured["command"] = command
         return 0, Path("report.md"), []
 
     monkeypatch.setattr("schedules.cli.run_pipeline", fake_run_pipeline)
@@ -35,9 +43,10 @@ def test_extract_provider_applies_discover(monkeypatch) -> None:
     captured = _capture_run_pipeline(monkeypatch)
     result = CliRunner().invoke(cli, ["extract", "--provider", "gemini"])
     assert result.exit_code == 0
-    assert captured["apply_discover"] is True
-    assert captured["override_url"] is None
-    assert captured["compare_with"] is None
+    command = captured["command"]
+    assert isinstance(command, PdfRun)
+    assert isinstance(command.urls, DiscoverAndExpand)
+    assert command.force is False
 
 
 def test_extract_no_discover_disables_discover(monkeypatch) -> None:
@@ -46,14 +55,18 @@ def test_extract_no_discover_disables_discover(monkeypatch) -> None:
         cli, ["extract", "--provider", "gemini", "--no-discover"]
     )
     assert result.exit_code == 0
-    assert captured["apply_discover"] is False
+    command = captured["command"]
+    assert isinstance(command, PdfRun)
+    assert isinstance(command.urls, ExpandFromDecisions)
 
 
 def test_extract_direct_never_applies_discover(monkeypatch) -> None:
     captured = _capture_run_pipeline(monkeypatch)
     result = CliRunner().invoke(cli, ["extract", "--direct"])
     assert result.exit_code == 0
-    assert captured["apply_discover"] is False
+    command = captured["command"]
+    assert isinstance(command, DirectRun)
+    assert command.force is False
 
 
 def test_extract_force_still_applies_discover(monkeypatch) -> None:
@@ -62,8 +75,10 @@ def test_extract_force_still_applies_discover(monkeypatch) -> None:
         cli, ["extract", "--provider", "gemini", "--force"]
     )
     assert result.exit_code == 0
-    assert captured["apply_discover"] is True
-    assert captured["force"] is True
+    command = captured["command"]
+    assert isinstance(command, PdfRun)
+    assert isinstance(command.urls, DiscoverAndExpand)
+    assert command.force is True
 
 
 def test_extract_url_requires_exactly_one_only_slug() -> None:
@@ -122,9 +137,11 @@ def test_extract_url_skips_discover_and_passes_override(monkeypatch) -> None:
         ],
     )
     assert result.exit_code == 0
-    assert captured["apply_discover"] is False
-    assert captured["override_url"] == url
-    assert captured["slugs"] == ["garfield-pool"]
+    command = captured["command"]
+    assert isinstance(command, PdfRun)
+    assert isinstance(command.urls, PinOverride)
+    assert command.urls.url == url
+    assert command.slugs == ("garfield-pool",)
 
 
 def test_bakeoff_does_not_apply_discover(monkeypatch) -> None:
@@ -143,12 +160,14 @@ def test_bakeoff_does_not_apply_discover(monkeypatch) -> None:
         ],
     )
     assert result.exit_code == 0
-    assert captured["apply_discover"] is False
-    assert captured["compare_with"] == "anthropic"
+    command = captured["command"]
+    assert isinstance(command, BakeoffRun)
+    assert command.compare_with == "anthropic"
+    assert command.slugs == ("hamilton-pool",)
 
 
 def test_extract_prints_discover_error(monkeypatch) -> None:
-    def boom(**_kwargs):
+    def boom(_command):
         raise DiscoverError("every Rec & Park facility page failed to fetch")
 
     monkeypatch.setattr("schedules.cli.run_pipeline", boom)

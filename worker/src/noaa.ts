@@ -1,16 +1,14 @@
 // NOAA CO-OPS Tides & Currents fetches.
 // Docs: https://api.tidesandcurrents.noaa.gov/api/prod/
 
+import { readingFromF, type TempReading } from "./assemble.ts";
+
 const BASE = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter";
 const APPLICATION = "SwimFrancisco";
 const FETCH_TIMEOUT_MS = 10_000;
 
-export interface NoaaTempReading {
-  stationId: string;
-  waterTempF: number;
-  waterTempC: number;
-  observedAt: string; // Station-local time, zoneless ISO (NOAA lst_ldt)
-}
+// observedAt is station-local time, zoneless ISO (NOAA lst_ldt).
+export type NoaaTempReading = TempReading;
 
 export interface NoaaTidePrediction {
   time: string; // Station-local time, zoneless ISO (NOAA lst_ldt)
@@ -77,13 +75,7 @@ export async function fetchNoaaTemp(stationId: string): Promise<NoaaTempReading 
   if (!latest) return null;
   const waterTempF = Number(latest.v);
   if (!Number.isFinite(waterTempF)) return null;
-  const waterTempC = ((waterTempF - 32) * 5) / 9;
-  return {
-    stationId,
-    waterTempF: Math.round(waterTempF * 10) / 10,
-    waterTempC: Math.round(waterTempC * 10) / 10,
-    observedAt: toLocalIso(latest.t),
-  };
+  return readingFromF(stationId, waterTempF, toLocalIso(latest.t));
 }
 
 // YYYYMMDD in America/Los_Angeles — all our stations are Pacific, so we

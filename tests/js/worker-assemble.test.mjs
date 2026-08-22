@@ -9,7 +9,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { coalesceTemp, coalesceTide, withinFreshnessCeiling } from "../../worker/src/assemble.ts";
+import {
+  coalesceTemp,
+  coalesceTide,
+  readingFromC,
+  readingFromF,
+  tempFromReading,
+  withinFreshnessCeiling,
+} from "../../worker/src/assemble.ts";
 
 const NOW = Date.UTC(2026, 3, 17, 12, 0); // 2026-04-17T12:00Z
 
@@ -108,4 +115,20 @@ test("coalesceTide mirrors the temp contract", () => {
 test("coalesce helpers handle a missing previous record", () => {
   assert.deepEqual(coalesceTemp(null, null, NOW), { state: "unavailable" });
   assert.deepEqual(coalesceTide(null, null, NOW), { state: "unavailable" });
+});
+
+test("tempFromReading copies native units without converting again", () => {
+  const noaa = tempFromReading({
+    reading: readingFromF("9414863", 58.4, "2026-04-16T14:30:00"),
+    sourceType: "noaa",
+  });
+  assert.equal(noaa.water_temp_f, 58.4);
+  assert.equal(noaa.water_temp_c, 14.7);
+
+  const usgs = tempFromReading({
+    reading: readingFromC("374938122251801", 17.0, "2026-07-19T21:00:00.000-08:00"),
+    sourceType: "usgs",
+  });
+  assert.equal(usgs.water_temp_f, 62.6);
+  assert.equal(usgs.water_temp_c, 17.0);
 });

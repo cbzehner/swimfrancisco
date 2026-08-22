@@ -17,17 +17,23 @@ def _frontmatter(path: Path) -> dict:
 
 def _content_open_water() -> dict[str, dict]:
     spots: dict[str, dict] = {}
-    for path in (ROOT / "content" / "spots").glob("*.md"):
+    for path in sorted((ROOT / "content" / "spots").glob("*.md")):
+        if path.name.startswith("_index"):
+            continue
         document = _frontmatter(path)
         extra = document.get("extra", {})
-        if extra.get("type") != "open_water":
+        if extra.get("localized_from"):
             continue
         slug = str(document["slug"])
+        assert slug == path.name.removesuffix(".md"), f"{path} slug must match filename"
+        if extra.get("type") != "open_water":
+            continue
         sources = [
             {"type": str(source["type"]), "id": str(source["id"])}
             for source in extra["temp_sources"]
         ]
         assert sources, f"{path} has an empty temp_sources chain"
+        assert slug not in spots, f"duplicate canonical slug {slug}"
         spots[slug] = {
             "tempSources": sources,
             "tideStationId": str(extra["noaa_tide_station"]),
@@ -57,4 +63,20 @@ def _worker_spots() -> dict[str, dict]:
 def test_worker_open_water_station_config_matches_content() -> None:
     content = _content_open_water()
     assert content, "no open-water spots found in content"
-    assert _worker_spots() == content
+    worker = _worker_spots()
+    assert worker == content
+    assert len(worker) == len(set(worker))
+
+
+def test_worker_spots_ignore_localized_files() -> None:
+    worker = _worker_spots()
+    localized = [
+        path
+        for path in (ROOT / "content" / "spots").glob("*.md")
+        if _frontmatter(path).get("extra", {}).get("localized_from")
+    ]
+    assert localized, "expected localized spot files"
+    for path in localized:
+        assert path.stem not in worker
+    source = (ROOT / "worker" / "src" / "spots.ts").read_text()
+    assert source.count('slug: "aquatic-park"') == 1

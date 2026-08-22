@@ -6,7 +6,64 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .models import GroundingResult
-from .paths import DATA_DIR, artifact_path, relative_to_repo
+from .paths import DATA_DIR, all_review_dirs, artifact_path, parse_review_dir_name, relative_to_repo
+
+
+class PrefixCollisionError(RuntimeError):
+    """Two review dirs share a sha12 prefix but differ in full hash."""
+
+
+def _sidecar_sha256(review_dir: Path) -> str | None:
+    sidecar = review_dir / "source.sha256"
+    if not sidecar.is_file():
+        return None
+    try:
+        text = sidecar.read_text().strip()
+    except OSError:
+        return None
+    if len(text) == 64 and all(char in "0123456789abcdef" for char in text):
+        return text
+    return None
+
+
+def _hash_and_backfill_source_pdf(review_dir: Path) -> str | None:
+    pdf = review_dir / "source.pdf"
+    if not pdf.is_file():
+        return None
+    digest = hashlib.sha256(pdf.read_bytes()).hexdigest()
+    (review_dir / "source.sha256").write_text(f"{digest}\n")
+    return digest
+
+
+def find_review_dir_for_sha(slug: str, sha256: str, *, root: Path = DATA_DIR) -> Path | None:
+    """Return the review dir whose full source hash is ``sha256``.
+
+    Only parsed ``<date>-<sha12>`` dirs whose sha12 matches ``sha256[:12]``
+    are considered. A present ``source.sha256`` sidecar wins; otherwise the
+    helper hashes ``source.pdf`` and backfills the sidecar. Any prefix match
+    with a different full hash is a collision.
+    """
+    prefix = sha256[:12]
+    hits: list[Path] = []
+    collision: PrefixCollisionError | None = None
+    for review_dir in all_review_dirs(slug, root=root):
+        parsed = parse_review_dir_name(review_dir.name)
+        if parsed is None or parsed[1] != prefix:
+            continue
+        full = _sidecar_sha256(review_dir)
+        if full is None:
+            full = _hash_and_backfill_source_pdf(review_dir)
+        if full is None:
+            continue
+        if full != sha256:
+            collision = PrefixCollisionError(
+                f"prefix collision in {slug}: existing={full} new={sha256}"
+            )
+            continue
+        hits.append(review_dir)
+    if collision is not None:
+        raise collision
+    return hits[0] if hits else None
 
 
 def _sha256_text(value: str) -> str:

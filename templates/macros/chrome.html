@@ -17,9 +17,9 @@
 {% macro cost_badge(extra, active_lang) %}
   {%- if extra.type == 'open_water' -%}
     <span class="cost-badge is-beach">{{ trans(key='chip_beach', lang=active_lang) }}</span>
-  {%- elif extra.day_pass_price -%}
+  {%- elif extra.day_pass_price and extra.access_mode != 'membership' -%}
     <span class="cost-badge is-day-pass">{{ trans(key='chip_day_pass', lang=active_lang) }} · {{ extra.day_pass_price }}</span>
-  {%- elif extra.payment_model == 'membership' -%}
+  {%- elif extra.payment_model == 'membership' or extra.access_mode == 'membership' -%}
     <span class="cost-badge is-members">{{ trans(key='chip_members', lang=active_lang) }}</span>
   {%- else -%}
     <span class="cost-badge is-public">{{ trans(key='chip_public', lang=active_lang) }}</span>

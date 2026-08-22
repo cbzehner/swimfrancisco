@@ -243,6 +243,38 @@ def test_merge_sorts_schedules_by_effective_start(tmp_path):
     assert pos_base < pos_summer < pos_fall
 
 
+def test_merge_closes_prior_open_ended_window_when_appending(tmp_path):
+    target = tmp_path / "open-ended.md"
+    target.write_text(
+        "+++\n"
+        'title = "Test"\n'
+        'slug = "test"\n'
+        "\n"
+        "[extra]\n"
+        'type = "pool"\n'
+        "\n"
+        "[[extra.schedules]]\n"
+        "sessions = []\n"
+        "closures = []\n"
+        'effective_start = "2026-05-17"\n'
+        'schedule_basis = "swim_schedule"\n'
+        "+++\n"
+    )
+    merge(
+        target,
+        {
+            "sessions": [],
+            "closures": [],
+            "effective_start": "2026-08-12",
+            "schedule_basis": "swim_schedule",
+        },
+    )
+    schedules = _read_schedules_array(target)
+    by_start = {entry["effective_start"]: entry for entry in schedules}
+    assert by_start["2026-05-17"]["effective_end"] == "2026-08-11"
+    assert "effective_end" not in by_start["2026-08-12"]
+
+
 # ---- direct_sources year roll-forward ---------------------------------------
 
 

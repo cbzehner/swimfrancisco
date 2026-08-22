@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Iterable
 
 from ._time import PACIFIC_TZ
+from .envelope import AttestationCarried, AttestationCi, parse_attestation
 from .paths import DATA_DIR, TMP_DIR
 
 
@@ -118,12 +119,14 @@ def _load_envelope(path: Path) -> dict | None:
 
 
 def _is_ci_attestation(envelope: dict) -> bool:
-    return envelope.get("attested_by") == "ci" and not envelope.get("carried_from")
+    return isinstance(parse_attestation(envelope), AttestationCi)
 
 
 def _is_human_or_omitted(envelope: dict) -> bool:
-    attested = envelope.get("attested_by")
-    return attested != "ci"
+    kind = parse_attestation(envelope)
+    if isinstance(kind, AttestationCarried):
+        return not isinstance(kind.origin, AttestationCi)
+    return not isinstance(kind, AttestationCi)
 
 
 def _evals_for_dir(
