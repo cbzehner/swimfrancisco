@@ -2,8 +2,11 @@
 // agent-data, and worker-spots generators.
 
 import { readdir, readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parse } from "smol-toml";
+
+const LOCALES_PATH = join(dirname(fileURLToPath(import.meta.url)), "../../i18n/locales.toml");
 
 export const FRONTMATTER_RE = /^\+\+\+\n([\s\S]*?)\n\+\+\+\n?/;
 
@@ -49,9 +52,20 @@ export function parseOpenWaterStations(extra, label) {
   return { temp_sources, noaa_tide_station: tideStationId };
 }
 
+export function isLocalizedSpotFile(fileName, localeCodes) {
+  return localeCodes.some((code) => fileName.endsWith(`.${code}.md`));
+}
+
+async function sourceLocaleCodes() {
+  const locales = parse(await readFile(LOCALES_PATH, "utf8"));
+  return locales.locales.map((locale) => locale.code);
+}
+
 export async function listCanonicalSpotFiles(spotsDir) {
+  const localeCodes = await sourceLocaleCodes();
   const entries = (await readdir(spotsDir))
     .filter((name) => name.endsWith(".md") && !name.startsWith("_index"))
+    .filter((name) => !isLocalizedSpotFile(name, localeCodes))
     .sort();
 
   const files = [];
@@ -59,7 +73,6 @@ export async function listCanonicalSpotFiles(spotsDir) {
   for (const fileName of entries) {
     const filePath = join(spotsDir, fileName);
     const { front, body, text } = await readSpotFrontmatter(filePath);
-    if (front.extra?.localized_from) continue;
     const stem = fileName.replace(/\.md$/, "");
     if (front.slug !== stem) {
       throw new Error(`${filePath}: canonical spot slug must match filename (${stem})`);

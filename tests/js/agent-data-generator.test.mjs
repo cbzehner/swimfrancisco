@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
@@ -96,6 +96,24 @@ test("canonical spot membership skips localized files and duplicate slugs", asyn
   for (const file of files) {
     assert.equal(file.front.extra?.localized_from, undefined);
     assert.equal(file.front.slug, file.fileName.replace(/\.md$/, ""));
+  }
+});
+
+test("canonical membership skips locale filenames even without localized_from", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "swimfrancisco-canonical-"));
+  try {
+    await writeFile(
+      join(dir, "hamilton-pool.md"),
+      "+++\ntitle = \"Hamilton\"\nslug = \"hamilton-pool\"\n[extra]\ntype = \"pool\"\n+++\n",
+    );
+    await writeFile(
+      join(dir, "hamilton-pool.es.md"),
+      "+++\ntitle = \"Hamilton\"\nslug = \"hamilton-pool\"\n[extra]\n+++\n",
+    );
+    const files = await listCanonicalSpotFiles(dir);
+    assert.deepEqual(files.map((file) => file.fileName), ["hamilton-pool.md"]);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
   }
 });
 

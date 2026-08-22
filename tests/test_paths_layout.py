@@ -58,6 +58,8 @@ def test_parse_review_dir_name_rejects_non_canonical():
     assert paths.parse_review_dir_name("notes") is None
     assert paths.parse_review_dir_name("2026-04-19-aaaaaaaaaaaa-extra") is None
     assert paths.parse_review_dir_name("2026-4-19-aaaaaaaaaaaa") is None
+    assert paths.parse_review_dir_name("2026-99-99-aaaaaaaaaaaa") is None
+    assert paths.parse_review_dir_name("2026-02-30-aaaaaaaaaaaa") is None
 
 
 def test_all_review_dirs_sorts_ascending(tmp_path):

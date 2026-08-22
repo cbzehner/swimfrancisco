@@ -2,7 +2,7 @@ import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { parse, stringify } from "smol-toml";
-import { splitFrontMatter } from "./lib/spot-frontmatter.mjs";
+import { isLocalizedSpotFile, splitFrontMatter } from "./lib/spot-frontmatter.mjs";
 
 const ROOT = process.cwd();
 const CONFIG_PATH = path.join(ROOT, "config.toml");
@@ -159,10 +159,6 @@ function dynamicLabelMap(dynamicLabels) {
 
 function dynamicLabelData(dynamicLabels) {
   return dynamicLabelMap(dynamicLabels);
-}
-
-function isLocalizedSpotFile(file, localeCodes) {
-  return localeCodes.some((code) => file.endsWith(`.${code}.md`));
 }
 
 async function canonicalSpotExtras(localeCodes) {
