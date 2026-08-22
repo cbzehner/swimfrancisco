@@ -1,8 +1,8 @@
 {
-  "cost_estimate": "prompt_tokens=2173, candidate_tokens=2527, total_tokens=4700",
-  "extracted_at": "2026-08-21T04:52:39.722235+00:00",
+  "cost_estimate": "prompt_tokens=2173, candidate_tokens=2686, total_tokens=4859",
+  "extracted_at": "2026-08-22T16:30:59.820568+00:00",
   "grounding": {
-    "grounded_count": 31,
+    "grounded_count": 27,
     "ratio": 1.0,
     "sessions": [
       {
@@ -220,41 +220,9 @@
         "missing_evidence": false,
         "start_in_evidence": true,
         "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 27,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 28,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 29,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 30,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
       }
     ],
-    "total": 31
+    "total": 27
   },
   "model": "gemini-3.1-flash-lite-preview",
   "payload": {
@@ -270,9 +238,14 @@
         "start": "2026-11-11"
       },
       {
-        "end": "2026-11-27",
+        "end": "2026-11-26",
         "reason": "Thanksgiving",
         "start": "2026-11-26"
+      },
+      {
+        "end": "2026-11-27",
+        "reason": "Thanksgiving",
+        "start": "2026-11-27"
       },
       {
         "end": "2026-09-24",
@@ -302,22 +275,6 @@
         "type": "lap_swim"
       },
       {
-        "day": "sunday",
-        "end": "14:00",
-        "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 12:30 pm-2:00 pm",
-        "pool": "small",
-        "start": "12:30",
-        "type": "family_swim"
-      },
-      {
-        "day": "sunday",
-        "end": "16:30",
-        "evidence": "Rec/Family Swim 2:30 pm-4:30 pm",
-        "pool": "small",
-        "start": "14:30",
-        "type": "family_swim"
-      },
-      {
         "day": "monday",
         "end": "08:45",
         "evidence": "Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
@@ -344,15 +301,7 @@
       {
         "day": "monday",
         "end": "15:45",
-        "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:45 pm",
-        "pool": "main",
-        "start": "14:00",
-        "type": "lap_swim"
-      },
-      {
-        "day": "monday",
-        "end": "15:45",
-        "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:45 pm",
+        "evidence": "Rec/Family Swim (Small Pool) 2:00 pm-3:45 pm",
         "pool": "small",
         "start": "14:00",
         "type": "family_swim"
@@ -360,7 +309,7 @@
       {
         "day": "monday",
         "end": "19:00",
-        "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+        "evidence": "Lap Swim (Main Pool) 5:30 pm-7:00 pm",
         "pool": "main",
         "start": "17:30",
         "type": "lap_swim"
@@ -368,7 +317,7 @@
       {
         "day": "monday",
         "end": "19:00",
-        "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+        "evidence": "Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
         "pool": "small",
         "start": "17:30",
         "type": "family_swim"
@@ -408,15 +357,7 @@
       {
         "day": "tuesday",
         "end": "15:30",
-        "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm",
-        "pool": "main",
-        "start": "14:00",
-        "type": "lap_swim"
-      },
-      {
-        "day": "tuesday",
-        "end": "15:30",
-        "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm",
+        "evidence": "Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm",
         "pool": "small",
         "start": "14:00",
         "type": "family_swim"
@@ -424,7 +365,7 @@
       {
         "day": "tuesday",
         "end": "19:00",
-        "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+        "evidence": "Lap Swim (Main Pool) 5:30 pm-7:00 pm",
         "pool": "main",
         "start": "17:30",
         "type": "lap_swim"
@@ -432,7 +373,7 @@
       {
         "day": "tuesday",
         "end": "19:00",
-        "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+        "evidence": "Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
         "pool": "small",
         "start": "17:30",
         "type": "family_swim"
@@ -456,7 +397,7 @@
       {
         "day": "wednesday",
         "end": "13:00",
-        "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm",
+        "evidence": "Lap Swim (Main Pool) 11:00 am-1:00 pm",
         "pool": "main",
         "start": "11:00",
         "type": "lap_swim"
@@ -464,7 +405,7 @@
       {
         "day": "wednesday",
         "end": "13:00",
-        "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm",
+        "evidence": "Rec/Family Swim (Small Pool) 11:00 am-1:00 pm",
         "pool": "small",
         "start": "11:00",
         "type": "family_swim"
@@ -480,7 +421,7 @@
       {
         "day": "wednesday",
         "end": "19:00",
-        "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+        "evidence": "Lap Swim (Main Pool) 5:30 pm-7:00 pm",
         "pool": "main",
         "start": "17:30",
         "type": "lap_swim"
@@ -488,7 +429,7 @@
       {
         "day": "wednesday",
         "end": "19:00",
-        "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+        "evidence": "Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
         "pool": "small",
         "start": "17:30",
         "type": "family_swim"
@@ -512,7 +453,7 @@
       {
         "day": "thursday",
         "end": "13:00",
-        "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm",
+        "evidence": "Lap Swim (Main Pool) 11:00 am-1:00 pm",
         "pool": "main",
         "start": "11:00",
         "type": "lap_swim"
@@ -520,7 +461,7 @@
       {
         "day": "thursday",
         "end": "13:00",
-        "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm",
+        "evidence": "Rec/Family Swim (Small Pool) 11:00 am-1:00 pm",
         "pool": "small",
         "start": "11:00",
         "type": "family_swim"
@@ -528,7 +469,7 @@
       {
         "day": "thursday",
         "end": "15:30",
-        "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm",
+        "evidence": "Lap Swim (Main Pool) 2:00 pm-3:30 pm",
         "pool": "main",
         "start": "14:00",
         "type": "lap_swim"
@@ -536,7 +477,7 @@
       {
         "day": "thursday",
         "end": "15:30",
-        "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm",
+        "evidence": "Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm",
         "pool": "small",
         "start": "14:00",
         "type": "family_swim"
@@ -546,11 +487,11 @@
   "pdf_sha256": "7f5c0074e8ddf2428c38ce3870d36d73521e7ae17f863839c5db20893e26573b",
   "prompt_sha256": "0f0989bc81ce2ca39e49945db206e55736d2a7c960a2a5a0ed9794a5e39d42ad",
   "provider": "gemini",
-  "schema_sha256": "83e30568488faa43b2796db02e2b2eee945e2f70bdb44b38a5b5a3b4ca086afa",
+  "schema_sha256": "8712b59c887d06c0019ae6168dfeb954ab2821655138ecf3d2546b2baeea52f9",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29799",
   "usage": {
-    "candidates_token_count": 2527,
+    "candidates_token_count": 2686,
     "prompt_token_count": 2173,
-    "total_token_count": 4700
+    "total_token_count": 4859
   }
 }
