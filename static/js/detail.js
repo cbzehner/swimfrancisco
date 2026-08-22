@@ -18,6 +18,7 @@ import {
   dayShortLabel,
   formatLocalizedISODate,
   programLabel,
+  statusLabel,
   statusNextLabel,
   t,
 } from "./helpers/i18n.mjs";
@@ -69,31 +70,50 @@ function formatNextLine(result) {
   return `${program} · ${day} ${formatHHMM(result.nextDropIn.start)}`;
 }
 
-function applyStatusSlab(root, schedule, now) {
-  const result = scheduleHasSessions(schedule, now) || !scheduleHasAccessHours(schedule, now)
-    ? computeDetailStatus(schedule, now)
-    : computeAccessStatus(schedule, now);
-  const statusEl = root.querySelector('[data-field="status"]');
-  const nextEl = root.querySelector('[data-field="next"]');
-  if (statusEl) statusEl.textContent = result.kind ? formatStatusLine(result) : result.status;
-  if (nextEl) nextEl.textContent = result.kind ? formatNextLine(result) : statusNextLabel(result);
-  return result;
+function presentDetail(schedule, now) {
+  if (scheduleHasSessions(schedule, now) || !scheduleHasAccessHours(schedule, now)) {
+    const result = computeDetailStatus(schedule, now);
+    const removeToday = new Set([
+      "CLOSED_TODAY",
+      "NOT_VERIFIED",
+      "NO_DROPIN_WEEK",
+      "NO_DROPIN_TODAY",
+    ]);
+    return {
+      family: "sessions",
+      kind: result.kind,
+      statusText: formatStatusLine(result),
+      nextText: formatNextLine(result),
+      today: removeToday.has(result.kind) ? "remove" : "decorate",
+    };
+  }
+  const result = computeAccessStatus(schedule, now);
+  return {
+    family: "access",
+    status: result.status,
+    statusText: statusLabel(result.status),
+    nextText: statusNextLabel(result),
+    today: "keep",
+  };
 }
 
-function decorateTodayBlock(root, now, statusResult) {
-  const suppressedKinds = new Set([
-    "CLOSED_TODAY",
-    "NOT_VERIFIED",
-    "NO_DROPIN_WEEK",
-    "NO_DROPIN_TODAY",
-  ]);
+function applyStatusSlab(root, schedule, now) {
+  const view = presentDetail(schedule, now);
+  const statusEl = root.querySelector('[data-field="status"]');
+  const nextEl = root.querySelector('[data-field="next"]');
+  if (statusEl) statusEl.textContent = view.statusText;
+  if (nextEl) nextEl.textContent = view.nextText;
+  return view;
+}
 
+function decorateTodayBlock(root, now, view) {
   const block = root.querySelector(".today-block");
   if (!block) return;
-  if (suppressedKinds.has(statusResult.kind)) {
+  if (view.today === "remove") {
     block.remove();
     return;
   }
+  if (view.today === "keep") return;
 
   const rows = block.querySelectorAll(".today-block-list li");
   if (rows.length === 0) return;

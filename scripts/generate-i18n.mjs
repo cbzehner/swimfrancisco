@@ -128,28 +128,37 @@ async function loadDynamicLabels() {
   return readToml(SOURCE_DYNAMIC_LABELS_PATH);
 }
 
+function dynamicLabelRecords(dynamicLabels) {
+  const records = [];
+  for (const [kind, items] of Object.entries(dynamicLabels)) {
+    if (!Array.isArray(items)) continue;
+    for (const item of items) {
+      records.push({ kind, ...item });
+    }
+  }
+  return records;
+}
+
 function dynamicLabelMap(dynamicLabels) {
   const byKind = {};
-  for (const label of dynamicLabels.labels || []) {
-    byKind[label.kind] ||= { by_code: {}, by_source: {} };
-    byKind[label.kind].by_source[label.source] = {
-      code: label.code,
-      translation_key: label.translation_key,
+  for (const record of dynamicLabelRecords(dynamicLabels)) {
+    byKind[record.kind] ||= { by_code: {}, by_source: {} };
+    byKind[record.kind].by_code[record.code] = {
+      translation_key: record.translation_key,
+      sources: [...(record.sources || [])],
     };
-    byKind[label.kind].by_code[label.code] ||= {
-      translation_key: label.translation_key,
-      sources: [],
-    };
-    byKind[label.kind].by_code[label.code].sources.push(label.source);
+    for (const source of record.sources || []) {
+      byKind[record.kind].by_source[source] = {
+        code: record.code,
+        translation_key: record.translation_key,
+      };
+    }
   }
   return byKind;
 }
 
 function dynamicLabelData(dynamicLabels) {
-  return {
-    labels: dynamicLabels.labels || [],
-    ...dynamicLabelMap(dynamicLabels),
-  };
+  return dynamicLabelMap(dynamicLabels);
 }
 
 function isLocalizedSpotFile(file, localeCodes) {
@@ -162,7 +171,6 @@ async function canonicalSpotExtras(localeCodes) {
   for (const file of files) {
     if (!file.endsWith(".md") || file.startsWith("_index.") || isLocalizedSpotFile(file, localeCodes)) continue;
     const { front } = parseFrontMatter(await readFile(path.join(CONTENT_SPOTS_DIR, file), "utf8"), file);
-    if (front.extra?.localized_from) continue;
     extras.push({ file, extra: front.extra || {} });
   }
   return extras;
@@ -233,8 +241,8 @@ async function runtimeTranslationKeys(defaultUi, dynamicLabels) {
     }
   }
 
-  for (const label of dynamicLabels.labels || []) {
-    if (defaultKeys.has(label.translation_key)) runtimeKeys.add(label.translation_key);
+  for (const record of dynamicLabelRecords(dynamicLabels)) {
+    if (defaultKeys.has(record.translation_key)) runtimeKeys.add(record.translation_key);
   }
 
   return Array.from(runtimeKeys).sort();
@@ -356,44 +364,48 @@ async function validateUiCatalogs({ codes, defaultLocale, ui }) {
 }
 
 async function validateDynamicLabels({ codes, ui, dynamicLabels }) {
-  const seenDynamicLabels = new Set();
-  const dynamicKeysByCode = new Map();
-  const dynamicLabelsByKind = dynamicLabelMap(dynamicLabels);
-  const dynamicLabelKinds = unique((dynamicLabels.labels || []).map((label) => label.kind)).sort();
+  const records = dynamicLabelRecords(dynamicLabels);
+  const dynamicLabelKinds = unique(records.map((record) => record.kind)).sort();
   const missingDynamicKinds = REQUIRED_DYNAMIC_LABEL_KINDS.filter((kind) => !dynamicLabelKinds.includes(kind));
-  if ((dynamicLabels.labels || []).length === 0 || missingDynamicKinds.length > 0) {
+  if (records.length === 0 || missingDynamicKinds.length > 0) {
     throw new Error(
       `i18n/dynamic-labels.toml must define ${REQUIRED_DYNAMIC_LABEL_KINDS.join(", ")} label kinds; missing: ${missingDynamicKinds.join(", ") || "none"}`,
     );
   }
   const codePattern = /^[a-z][a-z0-9_]*$/;
-  for (const label of dynamicLabels.labels || []) {
-    if (!label.kind || !label.source || !label.code || !label.translation_key) {
-      throw new Error("i18n/dynamic-labels.toml labels must include kind, source, code, and translation_key");
+  const seenSources = new Set();
+  const seenCodes = new Set();
+  for (const record of records) {
+    if (!record.kind || !record.code || !record.translation_key || !Array.isArray(record.sources) || record.sources.length === 0) {
+      throw new Error("i18n/dynamic-labels.toml records must include kind, code, translation_key, and a sources list");
     }
-    if (!codePattern.test(label.code)) {
-      throw new Error(`i18n/dynamic-labels.toml has invalid code for ${label.kind}:${label.source}: ${label.code}`);
+    if (!codePattern.test(record.code)) {
+      throw new Error(`i18n/dynamic-labels.toml has invalid code for ${record.kind}:${record.code}`);
     }
-    const identity = `${label.kind}:${label.source}`;
-    if (seenDynamicLabels.has(identity)) throw new Error(`i18n/dynamic-labels.toml duplicates label: ${identity}`);
-    seenDynamicLabels.add(identity);
-    const codeIdentity = `${label.kind}:${label.code}`;
-    const existingKey = dynamicKeysByCode.get(codeIdentity);
-    if (existingKey && existingKey !== label.translation_key) {
-      throw new Error(
-        `i18n/dynamic-labels.toml maps ${codeIdentity} to both ${existingKey} and ${label.translation_key}`,
-      );
+    const codeIdentity = `${record.kind}:${record.code}`;
+    if (seenCodes.has(codeIdentity)) throw new Error(`i18n/dynamic-labels.toml duplicates code: ${codeIdentity}`);
+    seenCodes.add(codeIdentity);
+    for (const source of record.sources) {
+      if (typeof source !== "string" || source === "") {
+        throw new Error(`i18n/dynamic-labels.toml has invalid source for ${codeIdentity}`);
+      }
+      const sourceIdentity = `${record.kind}:${source}`;
+      if (seenSources.has(sourceIdentity)) {
+        throw new Error(`i18n/dynamic-labels.toml duplicates source: ${sourceIdentity}`);
+      }
+      seenSources.add(sourceIdentity);
     }
-    dynamicKeysByCode.set(codeIdentity, label.translation_key);
     for (const code of codes) {
-      if (!ui[code][label.translation_key]) {
-        throw new Error(`i18n/dynamic-labels.toml references missing ${code} translation key: ${label.translation_key}`);
+      if (!ui[code][record.translation_key]) {
+        throw new Error(`i18n/dynamic-labels.toml references missing ${code} translation key: ${record.translation_key}`);
       }
     }
   }
 
+  const dynamicLabelsByKind = dynamicLabelMap(dynamicLabels);
   const extras = await canonicalSpotExtras(codes);
-  const missingDynamicLabels = dynamicLabelRequirements(extras).filter(
+  const requirements = dynamicLabelRequirements(extras);
+  const missingDynamicLabels = requirements.filter(
     (requirement) => !dynamicLabelsByKind[requirement.kind]?.by_source?.[requirement.source],
   );
   if (missingDynamicLabels.length > 0) {
@@ -402,7 +414,7 @@ async function validateDynamicLabels({ codes, ui, dynamicLabels }) {
       .join("; ");
     throw new Error(`i18n/dynamic-labels.toml is missing canonical display label(s): ${details}`);
   }
-  const missingDynamicCodes = dynamicLabelRequirements(extras).filter(
+  const missingDynamicCodes = requirements.filter(
     (requirement) => requirement.code && !dynamicLabelsByKind[requirement.kind]?.by_code?.[requirement.code],
   );
   if (missingDynamicCodes.length > 0) {
@@ -410,6 +422,20 @@ async function validateDynamicLabels({ codes, ui, dynamicLabels }) {
       .map((item) => `${item.kind}:${item.code} for ${JSON.stringify(item.source)} in ${item.file}`)
       .join("; ");
     throw new Error(`i18n/dynamic-labels.toml is missing canonical display code(s): ${details}`);
+  }
+  const mismatchedDynamicCodes = requirements.filter((requirement) => {
+    if (!requirement.code) return false;
+    const mapped = dynamicLabelsByKind[requirement.kind]?.by_source?.[requirement.source];
+    return Boolean(mapped) && mapped.code !== requirement.code;
+  });
+  if (mismatchedDynamicCodes.length > 0) {
+    const details = mismatchedDynamicCodes
+      .map((item) => {
+        const mapped = dynamicLabelsByKind[item.kind].by_source[item.source].code;
+        return `${item.kind}:${JSON.stringify(item.source)} maps to ${mapped}, not ${item.code} in ${item.file}`;
+      })
+      .join("; ");
+    throw new Error(`spot reason_code must match by_source[source].code: ${details}`);
   }
 }
 
@@ -484,14 +510,13 @@ async function generatedSectionArtifactsOnDisk() {
   return artifacts;
 }
 
-async function generatedSpotArtifactsOnDisk() {
+async function generatedSpotArtifactsOnDisk(localeCodes) {
   const artifacts = [];
   if (!existsSync(CONTENT_SPOTS_DIR)) return artifacts;
   for (const file of await readdir(CONTENT_SPOTS_DIR)) {
     if (!file.endsWith(".md") || file.startsWith("_index.")) continue;
-    const fullPath = path.join(CONTENT_SPOTS_DIR, file);
-    const { front } = parseFrontMatter(await readFile(fullPath, "utf8"), fullPath);
-    if (front.extra?.localized_from) artifacts.push(path.relative(ROOT, fullPath));
+    if (!isLocalizedSpotFile(file, localeCodes)) continue;
+    artifacts.push(path.relative(ROOT, path.join(CONTENT_SPOTS_DIR, file)));
   }
   return artifacts;
 }
@@ -507,13 +532,14 @@ async function generatedRuntimeArtifactsOnDisk() {
   return artifacts;
 }
 
-async function removeStaleGeneratedArtifacts({ dryRun = false, changed = [], written = new Set() } = {}) {
+async function removeStaleGeneratedArtifacts({ dryRun = false, changed = [], written = new Set(), sources } = {}) {
   // Must run after the writers so `written` is the set of files this pass
   // produced. Do not reconstruct that set from a parallel path model.
+  const localeCodes = sourceLocaleCodes(sources.locales);
   const actual = [
     ...(await generatedRuntimeArtifactsOnDisk()),
     ...(await generatedSectionArtifactsOnDisk()),
-    ...(await generatedSpotArtifactsOnDisk()),
+    ...(await generatedSpotArtifactsOnDisk(localeCodes)),
   ];
   const stale = unique(actual.filter((file) => !written.has(file))).sort();
 
@@ -588,6 +614,7 @@ function canonicalSpotMarkdown(currentText, slug, spot) {
   for (const field of SPOT_TRANSLATABLE_EXTRA_FIELDS) delete nextExtra[field];
   Object.assign(nextExtra, extra);
   if (extra.pricing) nextExtra.pricing = mergePricingRows(front.extra?.pricing, extra.pricing);
+  delete nextExtra.localized_from;
   const nextFront = {
     ...front,
     title,

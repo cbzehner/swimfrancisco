@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import tomllib
 from dataclasses import dataclass
 from datetime import date
@@ -11,20 +10,29 @@ from pathlib import Path
 import tomlkit
 
 from ._time import pacific_today
-from .discover import collapse_grid_candidates, view_id_from_url
+from .discover import view_id_from_url
 from .fetch import fetch_pdf
 from .merge import _split_frontmatter, read_schedule_snapshot
-from .models import GroundingResult, SourceStatus
-from .paths import CONTENT_SPOTS_DIR, DATA_DIR, PACKAGE_ROOT, TMP_DIR, all_review_dirs
+from .models import GroundingSummary, SourceStatus
+from .paths import (
+    CONTENT_SPOTS_DIR,
+    DATA_DIR,
+    PACKAGE_ROOT,
+    TMP_DIR,
+    all_review_dirs,
+    parse_review_dir_name,
+)
 from .pipeline import GROUNDING_MIN_RATIO
 from .registry import load_registry
 from .review import (
+    DecisionSet,
     FinalizeError,
     ReviewCandidate,
     _pick_provider_artifact,
     draft_envelope,
     finalize_draft,
     find_review_candidates,
+    kept_grid_ids,
 )
 from .signals import analyze_page_texts, extract_page_texts
 from .validate import validate
@@ -32,7 +40,6 @@ from .window_dates import parse_window_dates, windows_disjoint
 
 QUARANTINE_PATH = PACKAGE_ROOT / "quarantine.toml"
 _AUTO_PUBLISHABLE_BASES = frozenset({"swim_schedule", "temporarily_closed"})
-_DIR_NAME_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})-([0-9a-f]{12})$")
 
 
 @dataclass(frozen=True)
@@ -129,7 +136,7 @@ def pager_job_payload(tmp_dir: Path) -> dict:
     decisions_path = tmp_dir / "discovery-decisions.json"
     publish_path = tmp_dir / "publish-pending.json"
     flagged_computed = decisions_path.is_file()
-    decisions = _load_decisions(tmp_dir)
+    decisions = DecisionSet.load(decisions_path)
     blocking = [item for item in decisions if item.get("blocking")]
     refused: list[dict] = []
     published: list[str] = []
@@ -256,7 +263,7 @@ def _unique_pin_gate(
     pin_url: str | None,
     source_pdf_url: str | None,
 ) -> Eligibility:
-    kept = _kept_session_grid_ids(decision)
+    kept = kept_grid_ids(decision)
     if len(kept) >= 2:
         return _refuse(
             "sibling_session_grids",
@@ -273,8 +280,8 @@ def _unique_pin_gate(
 
 
 def _identity_gate(candidate: ReviewCandidate) -> Eligibility:
-    match = _DIR_NAME_RE.fullmatch(candidate.review_dir.name)
-    if match is None or match.group(2) != candidate.pdf_sha256[:12]:
+    parsed = parse_review_dir_name(candidate.review_dir.name)
+    if parsed is None or parsed[1] != candidate.pdf_sha256[:12]:
         return _refuse(
             "identity_mismatch",
             f"review dir {candidate.review_dir.name} does not match sha {candidate.pdf_sha256[:12]}",
@@ -434,13 +441,9 @@ def publish_pending_all(
     refused: list[dict] = []
     closure: list[str] = []
     windows: list[dict] = []
-    decisions = _load_decisions(tmp_dir)
-    sequential_slugs = _sequential_slugs(decisions)
-    blocking_slugs = frozenset(
-        item["slug"]
-        for item in decisions
-        if isinstance(item, dict) and item.get("blocking") and item.get("slug")
-    )
+    decisions = DecisionSet.load(tmp_dir / "discovery-decisions.json")
+    sequential_slugs = decisions.sequential_slugs
+    blocking_slugs = decisions.blocking_slugs
     quarantined_shas = load_quarantine()
     entries = {entry.slug: entry for entry in load_registry()}
     candidates = find_review_candidates(data_root=data_root)
@@ -474,14 +477,7 @@ def publish_pending_all(
             published.append(candidate.slug)
 
     for slug in sequential_slugs:
-        decision = next(
-            (
-                item
-                for item in decisions
-                if isinstance(item, dict) and item.get("slug") == slug
-            ),
-            None,
-        )
+        decision = decisions.get(slug)
         if decision is None:
             continue
         try:
@@ -506,8 +502,6 @@ def publish_pending_all(
                 windows.extend(sitting_windows)
 
     for decision in decisions:
-        if not isinstance(decision, dict):
-            continue
         slug = decision.get("slug")
         if not isinstance(slug, str):
             continue
@@ -551,7 +545,7 @@ def _publish_unique_grid(
     quarantined_shas: frozenset[str],
     content_spots_dir: Path,
     attested_at: date,
-    decisions: list[dict],
+    decisions: DecisionSet,
 ) -> None:
     entry = entries.get(candidate.slug)
     if entry is None:
@@ -562,18 +556,9 @@ def _publish_unique_grid(
     except (OSError, json.JSONDecodeError, FileNotFoundError) as exc:
         raise PublishRefuse("identity_mismatch", "no provider JSON in review dir") from exc
 
-    decision = next(
-        (
-            item
-            for item in decisions
-            if isinstance(item, dict) and item.get("slug") == candidate.slug
-        ),
-        None,
-    )
-    source_url = artifact.get("source_pdf_url")
-    source_pdf_url = source_url if isinstance(source_url, str) else None
-
-    payload = artifact.get("payload") if isinstance(artifact.get("payload"), dict) else {}
+    decision = decisions.get(candidate.slug)
+    source_pdf_url = candidate.source_url or None
+    payload = dict(candidate.payload)
     grounding = _grounding_from_artifact(artifact)
     md_path = content_spots_dir / f"{candidate.slug}.md"
     tables = _schedule_tables(md_path)
@@ -635,10 +620,7 @@ def publish_sequential_slug(
     if entry is None:
         raise PublishRefuse("not_rec_park", f"{slug} is not in the registry")
 
-    kept = collapse_grid_candidates(
-        list(decision.get("candidates") or []) + list(decision.get("extra_candidates") or [])
-    )
-    kept_ids = _view_ids(kept)
+    kept_ids = kept_grid_ids(decision)
     if len(kept_ids) < 2:
         raise PublishRefuse(
             "sequential_incomplete",
@@ -667,8 +649,7 @@ def publish_sequential_slug(
                 else {}
             )
         else:
-            artifact = _candidate_artifact(candidate)
-            payload = artifact.get("payload") if isinstance(artifact.get("payload"), dict) else {}
+            payload = dict(candidate.payload)
         parsed = _payload_window(payload)
         if parsed is None:
             continue
@@ -692,10 +673,12 @@ def publish_sequential_slug(
 
     prepared: list[tuple[ReviewCandidate, dict, Eligibility]] = []
     for candidate in ordered:
-        artifact = _candidate_artifact(candidate)
-        payload = artifact.get("payload") if isinstance(artifact.get("payload"), dict) else {}
-        source_url = artifact.get("source_pdf_url")
-        source_pdf_url = source_url if isinstance(source_url, str) else None
+        try:
+            artifact = json.loads(_pick_provider_artifact(candidate.review_dir).read_text())
+        except (OSError, json.JSONDecodeError, FileNotFoundError):
+            artifact = {}
+        payload = dict(candidate.payload)
+        source_pdf_url = candidate.source_url or None
         source_pdf_path = candidate.source_path if candidate.source_path.exists() else None
         eligibility = publish_eligible(
             candidate=candidate,
@@ -748,16 +731,12 @@ def publish_sequential_slug(
                     eligibility=eligibility,
                 )
             written.append(path)
-            artifact = _candidate_artifact(candidate)
-            source_url = artifact.get("source_pdf_url")
             windows.append(
                 {
                     "slug": slug,
                     "effective_start": payload.get("effective_start"),
                     "effective_end": payload.get("effective_end"),
-                    "view_id": view_id_from_url(source_url)
-                    if isinstance(source_url, str)
-                    else None,
+                    "view_id": candidate.view_id,
                 }
             )
     except Exception as exc:
@@ -845,53 +824,16 @@ def _publish_closure_for_decision(
     )
 
 
-def _grounding_from_artifact(artifact: dict) -> GroundingResult | None:
+def _grounding_from_artifact(artifact: dict) -> GroundingSummary | None:
     if "grounding" not in artifact:
         return None
     raw = artifact.get("grounding")
     if not isinstance(raw, dict):
         return None
-    return GroundingResult(
-        sessions=[],
+    return GroundingSummary(
         grounded_count=int(raw.get("grounded_count") or 0),
         total=int(raw.get("total") or 0),
     )
-
-
-def _kept_session_grid_ids(decision: dict | None) -> set[int]:
-    if not isinstance(decision, dict):
-        return set()
-    items = list(decision.get("candidates") or []) + list(
-        decision.get("extra_candidates") or []
-    )
-    return _view_ids(collapse_grid_candidates(items))
-
-
-def _view_ids(items: list[dict]) -> set[int]:
-    ids: set[int] = set()
-    for item in items:
-        view_id = item.get("view_id")
-        if isinstance(view_id, int):
-            ids.add(view_id)
-        elif isinstance(view_id, str) and view_id.isdigit():
-            ids.add(int(view_id))
-    return ids
-
-
-def _sequential_slugs(decisions: list[dict]) -> list[str]:
-    slugs: list[str] = []
-    seen: set[str] = set()
-    for decision in decisions:
-        slug = decision.get("slug")
-        if not isinstance(slug, str) or slug in seen:
-            continue
-        # Discover already chose sequential vs FLAG; do not re-derive from dates.
-        if decision.get("reason") == "sequential_windows" and not decision.get(
-            "blocking"
-        ):
-            seen.add(slug)
-            slugs.append(slug)
-    return slugs
 
 
 def _payload_window(payload: dict) -> tuple[date, date] | None:
@@ -904,26 +846,12 @@ def _payload_window(payload: dict) -> tuple[date, date] | None:
         return None
 
 
-def _candidate_artifact(candidate: ReviewCandidate) -> dict:
-    try:
-        artifact = json.loads(_pick_provider_artifact(candidate.review_dir).read_text())
-    except (OSError, json.JSONDecodeError, FileNotFoundError):
-        return {}
-    return artifact if isinstance(artifact, dict) else {}
-
-
-def _candidate_view_id(candidate: ReviewCandidate) -> int | None:
-    artifact = _candidate_artifact(candidate)
-    source_url = artifact.get("source_pdf_url")
-    return view_id_from_url(source_url) if isinstance(source_url, str) else None
-
-
 def _unpublished_kept_windows(
     candidates: list[ReviewCandidate], kept_ids: set[int]
 ) -> dict[int, ReviewCandidate]:
     by_id: dict[int, ReviewCandidate] = {}
     for candidate in candidates:
-        view_id = _candidate_view_id(candidate)
+        view_id = candidate.view_id
         if view_id is None or view_id not in kept_ids:
             continue
         previous = by_id.get(view_id)
@@ -955,26 +883,11 @@ def _order_unpublished(
     unpublished: dict[int, ReviewCandidate],
 ) -> list[ReviewCandidate]:
     def sort_key(candidate: ReviewCandidate) -> tuple[str, str]:
-        payload = _candidate_artifact(candidate).get("payload")
-        start = ""
-        if isinstance(payload, dict) and isinstance(payload.get("effective_start"), str):
-            start = payload["effective_start"]
-        return (start, candidate.fetch_date)
+        start = candidate.payload.get("effective_start")
+        start_s = start if isinstance(start, str) else ""
+        return (start_s, candidate.fetch_date)
 
     return sorted(unpublished.values(), key=sort_key)
-
-
-def _load_decisions(tmp_dir: Path) -> list[dict]:
-    path = tmp_dir / "discovery-decisions.json"
-    if not path.exists():
-        return []
-    try:
-        data = json.loads(path.read_text())
-    except (OSError, json.JSONDecodeError):
-        return []
-    if not isinstance(data, list):
-        return []
-    return [item for item in data if isinstance(item, dict)]
 
 
 def _write_reports(

@@ -3,10 +3,10 @@
 // The default output is public/agent so Zola can build first and this script
 // can add ignored deploy artifacts without dirtying the source tree.
 
-import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join, relative } from "node:path";
-import { readSpotFrontmatter } from "./lib/spot-frontmatter.mjs";
+import { listCanonicalSpotFiles, parseOpenWaterStations } from "./lib/spot-frontmatter.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, "..");
@@ -115,7 +115,7 @@ function pick(extra, keys) {
   );
 }
 
-function buildSpotRecord(front, body) {
+function buildSpotRecord(front, body, label) {
   const extra = front.extra || {};
   const slug = front.slug;
   const type = extra.type;
@@ -161,18 +161,19 @@ function buildSpotRecord(front, body) {
     };
   }
   if (type === "open_water") {
+    const stations = parseOpenWaterStations(extra, label);
     return {
       ...shared,
-      open_water: pick(extra, [
-        "water_body",
-        "hazards",
-        "common_distances",
-        "clubs",
-        "noaa_tide_station",
-        "temp_station_id",
-        "temp_station_type",
-        "temp_fallback_station_id",
-      ]),
+      open_water: {
+        ...pick(extra, [
+          "water_body",
+          "hazards",
+          "common_distances",
+          "clubs",
+        ]),
+        noaa_tide_station: stations.noaa_tide_station,
+        temp_sources: stations.temp_sources,
+      },
       live_conditions: {
         api_url: `${siteUrl}/api/conditions`,
         condition_key: slug,
@@ -182,22 +183,12 @@ function buildSpotRecord(front, body) {
   throw new Error(`${slug}: extra.type must be "pool" or "open_water", got ${JSON.stringify(type)}`);
 }
 
-async function readSpot(fileName) {
-  if (fileName === "_index.md" || fileName.startsWith("_index.")) return null;
-  const path = join(spotsDir, fileName);
-  const { front, body } = await readSpotFrontmatter(path);
-
+function readCanonicalSpot({ filePath, front, body }) {
   const extra = front.extra || {};
-  if (extra.localized_from) return null;
-  const expectedSlug = fileName.replace(/\.md$/, "");
-  if (front.slug !== expectedSlug) {
-    throw new Error(`${path}: canonical spot slug must match filename (${expectedSlug})`);
-  }
   if (!front.title || !front.slug || !extra.type) {
-    throw new Error(`${path}: missing title, slug, or extra.type`);
+    throw new Error(`${filePath}: missing title, slug, or extra.type`);
   }
-
-  return buildSpotRecord(front, body);
+  return buildSpotRecord(front, body, filePath);
 }
 
 function buildIndex(spots, generatedAt) {
@@ -226,14 +217,9 @@ export async function generateAgentData({
 } = {}) {
   generatedAt = generatedAt || defaultGeneratedAt();
 
-  const entries = (await readdir(spotsDir))
-    .filter((name) => name.endsWith(".md"))
-    .sort();
-
   const spots = [];
-  for (const entry of entries) {
-    const spot = await readSpot(entry);
-    if (spot) spots.push(spot);
+  for (const file of await listCanonicalSpotFiles(spotsDir)) {
+    spots.push(readCanonicalSpot(file));
   }
   if (spots.length === 0) {
     throw new Error("Found zero canonical spots - refusing to write agent data");

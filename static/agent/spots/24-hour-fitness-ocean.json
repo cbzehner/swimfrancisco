@@ -48,57 +48,6 @@
       {
         "sessions": [],
         "closures": [],
-        "effective_start": "2026-07-02",
-        "schedule_basis": "facility_hours",
-        "last_verified_at": "2026-07-02",
-        "access_hours": [
-          {
-            "day": "monday",
-            "start": "05:00",
-            "end": "23:59",
-            "label": "Gym hours"
-          },
-          {
-            "day": "tuesday",
-            "start": "00:00",
-            "end": "23:59",
-            "label": "Gym hours"
-          },
-          {
-            "day": "wednesday",
-            "start": "00:00",
-            "end": "23:59",
-            "label": "Gym hours"
-          },
-          {
-            "day": "thursday",
-            "start": "00:00",
-            "end": "23:59",
-            "label": "Gym hours"
-          },
-          {
-            "day": "friday",
-            "start": "00:00",
-            "end": "21:00",
-            "label": "Gym hours"
-          },
-          {
-            "day": "saturday",
-            "start": "05:00",
-            "end": "21:00",
-            "label": "Gym hours"
-          },
-          {
-            "day": "sunday",
-            "start": "05:00",
-            "end": "21:00",
-            "label": "Gym hours"
-          }
-        ]
-      },
-      {
-        "sessions": [],
-        "closures": [],
         "effective_start": "2026-07-06",
         "schedule_basis": "facility_hours",
         "last_verified_at": "2026-07-10",
@@ -149,5 +98,5 @@
       }
     ]
   },
-  "generated_at": "2026-08-21T20:18:42.012Z"
+  "generated_at": "2026-08-22T05:16:52.662Z"
 }

@@ -36,11 +36,21 @@
     ],
     "common_distances": [],
     "clubs": [],
-    "noaa_tide_station": "9414275"
+    "noaa_tide_station": "9414275",
+    "temp_sources": [
+      {
+        "type": "ndbc",
+        "id": "46237"
+      },
+      {
+        "type": "sst",
+        "id": "37.79,-122.50"
+      }
+    ]
   },
   "live_conditions": {
     "api_url": "https://swimfrancisco.com/api/conditions",
     "condition_key": "china-beach"
   },
-  "generated_at": "2026-08-21T20:18:42.012Z"
+  "generated_at": "2026-08-22T05:16:52.662Z"
 }

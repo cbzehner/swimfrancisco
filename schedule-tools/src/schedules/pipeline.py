@@ -3,13 +3,14 @@ from __future__ import annotations
 import json
 import os
 import traceback
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Literal
 
 from .artifacts import save_artifact_bundle, skip_if_fresh
 from .delta import check_delta
 from .direct_sources import extract_direct
+from .envelope import AttestationCarried, parse_attestation
 from .discover import (
     absolute_view_url,
     collapse_grid_candidates,
@@ -25,7 +26,7 @@ from .providers import extract as extract_with_provider
 from .providers.anthropic_provider import DEFAULT_MODEL as ANTHROPIC_DEFAULT_MODEL
 from .providers.gemini_provider import DEFAULT_MODEL as GEMINI_DEFAULT_MODEL
 from .registry import load_registry
-from .review import carry_forward_review
+from .review import DecisionSet, carry_forward_review, parse_view_id
 from .reviewed_snapshots import load_reviewed_snapshot_from_path
 from .diff import compare_payloads
 from .report import discovery_notes_from_decisions, write_report
@@ -36,6 +37,77 @@ from .validate import validate
 GROUNDING_MIN_RATIO = 0.9
 SourceMode = Literal["direct", "gemini", "anthropic"]
 ProviderMode = Literal["gemini", "anthropic"]
+
+
+@dataclass(frozen=True)
+class DiscoverAndExpand:
+    pass
+
+
+@dataclass(frozen=True)
+class ExpandFromDecisions:
+    pass
+
+
+@dataclass(frozen=True)
+class PinOverride:
+    url: str
+
+
+@dataclass(frozen=True)
+class DirectRun:
+    slugs: tuple[str, ...] | None
+    force: bool
+
+
+@dataclass(frozen=True)
+class PdfRun:
+    provider: ProviderMode
+    slugs: tuple[str, ...] | None
+    force: bool
+    urls: DiscoverAndExpand | ExpandFromDecisions | PinOverride
+
+
+@dataclass(frozen=True)
+class BakeoffRun:
+    provider: ProviderMode
+    compare_with: ProviderMode
+    slugs: tuple[str, ...] | None
+    force: bool
+
+
+RunCommand = DirectRun | PdfRun | BakeoffRun
+
+
+@dataclass(frozen=True)
+class ReusePolicy:
+    same_dir_reviewed: bool
+    provider_artifact: bool
+    carry_forward: bool
+    bakeoff: bool
+
+
+def reuse_policy(command: RunCommand) -> ReusePolicy:
+    if isinstance(command, BakeoffRun):
+        return ReusePolicy(
+            same_dir_reviewed=False,
+            provider_artifact=False,
+            carry_forward=False,
+            bakeoff=True,
+        )
+    if command.force:
+        return ReusePolicy(
+            same_dir_reviewed=False,
+            provider_artifact=False,
+            carry_forward=True,
+            bakeoff=False,
+        )
+    return ReusePolicy(
+        same_dir_reviewed=True,
+        provider_artifact=True,
+        carry_forward=True,
+        bakeoff=False,
+    )
 
 
 def parse_provider(value: str) -> ProviderMode:
@@ -104,11 +176,12 @@ def _build_unchanged(entry: PoolEntry, *, pdf_sha256: str, page_count: int, revi
     )
     payload = envelope["payload"]
     review_notes = []
-    if envelope.get("carried_from"):
+    attestation = parse_attestation(envelope)
+    if isinstance(attestation, AttestationCarried):
         review_notes.append(
             ReviewNote(
                 kind="review_carried_forward",
-                message=f"attestation carried forward from {envelope['carried_from']}",
+                message=f"attestation carried forward from {attestation.from_path}",
                 severity="info",
             )
         )
@@ -130,12 +203,12 @@ def _build_unchanged(entry: PoolEntry, *, pdf_sha256: str, page_count: int, revi
 def _process_entry(
     entry: PoolEntry,
     *,
-    provider: str,
-    compare_with: str | None,
-    force: bool,
+    command: RunCommand,
     prompt: str,
 ) -> PoolResult:
     prior_snapshot = read_schedule_snapshot(CONTENT_SPOTS_DIR / f"{entry.slug}.md")
+    policy = reuse_policy(command)
+    provider = "direct" if isinstance(command, DirectRun) else command.provider
 
     # FLAG is a write policy, not a fetch policy: still GET a published pointer.
     lane = extract_lane(entry)
@@ -148,7 +221,7 @@ def _process_entry(
 
     try:
         if lane == "direct":
-            return _process_direct_entry(entry, prior_snapshot, force=force)
+            return _process_direct_entry(entry, prior_snapshot, policy=policy)
 
         # PDF fetch + path setup
         fetch_result = fetch_pdf(entry.slug, entry.pdf_url)
@@ -156,7 +229,7 @@ def _process_entry(
         reviewed_file = reviewed_path(entry.slug, date, fetch_result.sha256)
 
         # Reviewed-snapshot fast path: SHA matches a hand-approved snapshot.
-        if not force and not compare_with and reviewed_file.exists():
+        if policy.same_dir_reviewed and reviewed_file.exists():
             return _build_unchanged(
                 entry,
                 pdf_sha256=fetch_result.sha256,
@@ -171,18 +244,14 @@ def _process_entry(
 
         # Primary extraction (LLM call or cached artifact).
         default_model = _default_model(provider)
-        use_cached = (
-            not force
-            and not compare_with
-            and skip_if_fresh(
-                slug=entry.slug,
-                date=date,
-                pdf_sha256=fetch_result.sha256,
-                provider=provider,
-                model=default_model,
-                prompt=prompt,
-                schema=EXTRACTION_SCHEMA,
-            )
+        use_cached = policy.provider_artifact and skip_if_fresh(
+            slug=entry.slug,
+            date=date,
+            pdf_sha256=fetch_result.sha256,
+            provider=provider,
+            model=default_model,
+            prompt=prompt,
+            schema=EXTRACTION_SCHEMA,
         )
 
         if use_cached:
@@ -224,8 +293,8 @@ def _process_entry(
 
         # A payload identical to the last human-reviewed one needs no new
         # review — carry the attestation to this capture. Bakeoff runs
-        # (--compare-with) always produce a full Extracted result.
-        if not compare_with:
+        # always produce a full Extracted result.
+        if policy.carry_forward:
             carried = carry_forward_review(
                 slug=entry.slug,
                 review_dir=reviewed_file.parent,
@@ -249,7 +318,8 @@ def _process_entry(
         ]
 
         # Optional bakeoff against a second provider.
-        if compare_with:
+        if policy.bakeoff and isinstance(command, BakeoffRun):
+            compare_with = command.compare_with
             try:
                 compare = extract_with_provider(compare_with, fetch_result.bytes, prompt, EXTRACTION_SCHEMA)
                 compare_grounding = grounding_from_text(pdf_text_normalized, compare.payload)
@@ -331,13 +401,15 @@ def skip_reason(entry: PoolEntry) -> str:
     return "No extractor is configured for this pool."
 
 
-def _process_direct_entry(entry: PoolEntry, prior_snapshot: dict, *, force: bool = False) -> PoolResult:
+def _process_direct_entry(
+    entry: PoolEntry, prior_snapshot: dict, *, policy: ReusePolicy
+) -> PoolResult:
     extracted = extract_direct(entry)
     fetch_result = extracted.fetch_result
     date = fetch_result.path.parent.name[:10]
     reviewed_file = reviewed_path(entry.slug, date, fetch_result.sha256)
 
-    if not force and reviewed_file.exists():
+    if policy.same_dir_reviewed and reviewed_file.exists():
         return _build_unchanged(
             entry,
             pdf_sha256=fetch_result.sha256,
@@ -349,20 +421,21 @@ def _process_direct_entry(entry: PoolEntry, prior_snapshot: dict, *, force: bool
 
     # Direct extractors stamp payload.effective_start with the fetch date, so
     # the carry comparison ignores that one clock-derived field.
-    carried = carry_forward_review(
-        slug=entry.slug,
-        review_dir=fetch_result.path.parent,
-        pdf_sha256=fetch_result.sha256,
-        payload=payload,
-        ignore_effective_start=True,
-    )
-    if carried is not None:
-        return _build_unchanged(
-            entry,
+    if policy.carry_forward:
+        carried = carry_forward_review(
+            slug=entry.slug,
+            review_dir=fetch_result.path.parent,
             pdf_sha256=fetch_result.sha256,
-            page_count=0,
-            reviewed_file=carried,
+            payload=payload,
+            ignore_effective_start=True,
         )
+        if carried is not None:
+            return _build_unchanged(
+                entry,
+                pdf_sha256=fetch_result.sha256,
+                page_count=0,
+                reviewed_file=carried,
+            )
 
     review_notes = [
         ReviewNote(
@@ -437,17 +510,10 @@ def _attach_discovery_notes(
     return replace(result, review_notes=[*result.review_notes, *extra])
 
 
-def _session_grid_hrefs(entry: PoolEntry, decisions: list[dict]) -> list[str]:
+def _session_grid_hrefs(entry: PoolEntry, decisions: DecisionSet) -> list[str]:
     """One href per [window_start, window_end]. Table id wins ties.
     Equal-range copies are omitted. pdf_url is always included."""
-    decision = next(
-        (
-            item
-            for item in decisions
-            if isinstance(item, dict) and item.get("slug") == entry.slug
-        ),
-        None,
-    )
+    decision = decisions.get(entry.slug)
     hrefs: list[str] = []
     seen: set[str] = set()
 
@@ -464,46 +530,30 @@ def _session_grid_hrefs(entry: PoolEntry, decisions: list[dict]) -> list[str]:
             if isinstance(href, str) and href:
                 add(href)
                 continue
-            view_id = item.get("view_id")
-            if isinstance(view_id, int):
+            view_id = parse_view_id(item.get("view_id"))
+            if view_id is not None:
                 add(absolute_view_url(view_id))
-            elif isinstance(view_id, str) and view_id.isdigit():
-                add(absolute_view_url(int(view_id)))
     add(entry.pdf_url)
     return hrefs
 
 
-def _load_discovery_decisions(path: Path) -> list[dict]:
-    if not path.exists():
-        return []
-    try:
-        data = json.loads(path.read_text())
-    except (OSError, json.JSONDecodeError):
-        return []
-    if not isinstance(data, list):
-        return []
-    return [item for item in data if isinstance(item, dict)]
+def _source_mode(command: RunCommand) -> SourceMode:
+    if isinstance(command, DirectRun):
+        return "direct"
+    return command.provider
 
 
-def run_pipeline(
-    *,
-    slugs: list[str] | None,
-    source_mode: SourceMode,
-    compare_with: str | None,
-    force: bool,
-    apply_discover: bool = False,
-    override_url: str | None = None,
-) -> tuple[int, Path, list[PoolResult]]:
-    source_mode = parse_source_mode(source_mode)
-    if source_mode == "direct" or compare_with is not None or override_url is not None:
-        apply_discover = False
-    if override_url is not None and (slugs is None or len(slugs) != 1):
-        raise ValueError("--url requires exactly one --only slug")
+def run_pipeline(command: RunCommand) -> tuple[int, Path, list[PoolResult]]:
+    source_mode = _source_mode(command)
+    slugs = list(command.slugs) if command.slugs is not None else None
+    if isinstance(command, PdfRun) and isinstance(command.urls, PinOverride):
+        if slugs is None or len(slugs) != 1:
+            raise ValueError("--url requires exactly one --only slug")
 
     registry = load_registry()
     selected = select_registry_entries(registry, source_mode=source_mode, slugs=slugs)
 
-    if apply_discover:
+    if isinstance(command, PdfRun) and isinstance(command.urls, DiscoverAndExpand):
         rec_park = rec_park_entries(registry)
         apply_slugs: list[str] | None = None
         if slugs is not None:
@@ -517,37 +567,29 @@ def run_pipeline(
         registry = load_registry()
         selected = select_registry_entries(registry, source_mode=source_mode, slugs=slugs)
 
-    if override_url is not None:
-        assert slugs is not None
+    if isinstance(command, PdfRun) and isinstance(command.urls, PinOverride):
         target = slugs[0]
         selected = [
-            replace(entry, pdf_url=override_url) if entry.slug == target else entry
+            replace(entry, pdf_url=command.urls.url) if entry.slug == target else entry
             for entry in selected
         ]
 
     prompt = PROMPT_PATH.read_text().strip()
-    decisions = _load_discovery_decisions(TMP_DIR / "discovery-decisions.json")
+    decisions = DecisionSet.load(TMP_DIR / "discovery-decisions.json")
+    expand_hrefs = isinstance(command, PdfRun) and not isinstance(command.urls, PinOverride)
     results: list[PoolResult] = []
     for entry in selected:
         hrefs = [entry.pdf_url]
         if (
-            override_url is None
+            expand_hrefs
             and entry.source_kind == "sfrecpark_pdf"
             and entry.source_status == "published"
         ):
             hrefs = _session_grid_hrefs(entry, decisions)
         for href in hrefs:
             work = entry if href == entry.pdf_url else replace(entry, pdf_url=href)
-            results.append(
-                _process_entry(
-                    work,
-                    provider=source_mode,
-                    compare_with=compare_with,
-                    force=force,
-                    prompt=prompt,
-                )
-            )
-    notes_by_slug = discovery_notes_from_decisions(TMP_DIR / "discovery-decisions.json")
+            results.append(_process_entry(work, command=command, prompt=prompt))
+    notes_by_slug = discovery_notes_from_decisions(decisions)
     results = [_attach_discovery_notes(result, notes_by_slug) for result in results]
     report_path = write_report(results, path=REPORT_PATHS[source_mode])
     return compute_exit_code(results), report_path, results

@@ -8,7 +8,7 @@ from schedules import artifacts as artifacts_mod
 from schedules import paths as paths_mod
 from schedules import registry as registry_mod
 from schedules.models import FetchResult, ProviderResult
-from schedules.pipeline import run_pipeline
+from schedules.pipeline import BakeoffRun, PdfRun, ExpandFromDecisions, run_pipeline
 from schedules.report import write_report
 
 
@@ -96,7 +96,7 @@ def _setup(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr("schedules.pipeline.normalize_pdf_text", lambda _pages: "")
     monkeypatch.setattr(
         "schedules.pipeline.grounding_from_text",
-        lambda _text, _payload: GroundingResult(sessions=[], grounded_count=0, total=0),
+        lambda _text, _payload: GroundingResult(sessions=[]),
     )
     monkeypatch.setattr("schedules.pipeline.source_notes_for_signals", lambda _sig: [])
     monkeypatch.setattr("schedules.pipeline.check_delta", lambda _payload, _prior: [])
@@ -134,7 +134,7 @@ def test_force_bypasses_reviewed_fast_path(tmp_path, monkeypatch):
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", fake_extract)
 
     exit_code, _, results = run_pipeline(
-        slugs=[SLUG], source_mode="gemini", compare_with=None, force=True,
+        PdfRun(provider="gemini", slugs=(SLUG,), force=True, urls=ExpandFromDecisions()),
     )
 
     assert exit_code == 0
@@ -153,7 +153,7 @@ def test_compare_with_bypasses_reviewed_fast_path(tmp_path, monkeypatch):
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", fake_extract)
 
     exit_code, _, results = run_pipeline(
-        slugs=[SLUG], source_mode="gemini", compare_with="anthropic", force=False,
+        BakeoffRun(provider="gemini", compare_with="anthropic", slugs=(SLUG,), force=False),
     )
 
     assert exit_code == 0

@@ -3,17 +3,15 @@
 // reports water temperature as parameter 00010 in °C.
 // Docs: https://waterservices.usgs.gov/docs/instantaneous-values/
 
+import { readingFromC, type TempReading } from "./assemble.ts";
+
 const BASE = "https://waterservices.usgs.gov/nwis/iv/";
 const FETCH_TIMEOUT_MS = 10_000;
 // USGS marks missing/invalid readings with large negative sentinels.
 const MISSING_SENTINEL_CEILING = -100;
 
-export interface UsgsReading {
-  stationId: string;
-  waterTempC: number;
-  waterTempF: number;
-  observedAt: string; // ISO 8601 with UTC offset, as reported by NWIS
-}
+// observedAt is ISO 8601 with UTC offset, as reported by NWIS.
+export type UsgsReading = TempReading;
 
 interface NwisResponse {
   value?: {
@@ -43,13 +41,7 @@ export async function fetchUsgsTemp(stationId: string): Promise<UsgsReading | nu
       for (let i = points.length - 1; i >= 0; i--) {
         const waterTempC = Number(points[i].value);
         if (!Number.isFinite(waterTempC) || waterTempC <= MISSING_SENTINEL_CEILING) continue;
-        const waterTempF = (waterTempC * 9) / 5 + 32;
-        return {
-          stationId,
-          waterTempC: Math.round(waterTempC * 10) / 10,
-          waterTempF: Math.round(waterTempF * 10) / 10,
-          observedAt: points[i].dateTime,
-        };
+        return readingFromC(stationId, waterTempC, points[i].dateTime);
       }
     }
   }

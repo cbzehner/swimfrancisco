@@ -1,221 +1,178 @@
-[[labels]]
-kind = "access_window"
-source = "Facility hours"
+[[access_window]]
 code = "facility_hours"
 translation_key = "access_label_facility_hours"
+sources = ["Facility hours"]
 
-[[labels]]
-kind = "access_window"
-source = "Pool hours"
+[[access_window]]
 code = "pool_hours"
 translation_key = "access_label_pool_hours"
+sources = ["Pool hours"]
 
-[[labels]]
-kind = "access_window"
-source = "Gym hours"
+[[access_window]]
 code = "gym_hours"
 translation_key = "access_label_gym_hours"
+sources = ["Gym hours"]
 
-[[labels]]
-kind = "access_window"
-source = "Club hours"
+[[access_window]]
 code = "club_hours"
 translation_key = "access_label_club_hours"
+sources = ["Club hours"]
 
-[[labels]]
-kind = "access_window"
-source = "Natatorium hours"
+[[access_window]]
 code = "natatorium_hours"
 translation_key = "access_label_natatorium_hours"
+sources = ["Natatorium hours"]
 
-[[labels]]
-kind = "access_window"
-source = "Holiday facility hours"
+[[access_window]]
 code = "holiday_facility_hours"
 translation_key = "access_label_holiday_facility_hours"
+sources = ["Holiday facility hours"]
 
-[[labels]]
-kind = "access_window"
-source = "Holiday pool hours"
+[[access_window]]
 code = "holiday_pool_hours"
 translation_key = "access_label_holiday_pool_hours"
+sources = ["Holiday pool hours"]
 
-[[labels]]
-kind = "closure_reason"
-source = "Memorial Day"
+[[closure_reason]]
 code = "memorial_day"
 translation_key = "reason_memorial_day"
+sources = ["Memorial Day"]
 
-[[labels]]
-kind = "closure_reason"
-source = "Juneteenth"
+[[closure_reason]]
 code = "juneteenth"
 translation_key = "reason_juneteenth"
+sources = ["Juneteenth"]
 
-[[labels]]
-kind = "closure_reason"
-source = "Independence Day"
+[[closure_reason]]
 code = "independence_day"
 translation_key = "reason_independence_day"
+sources = ["Independence Day"]
 
-[[labels]]
-kind = "closure_reason"
-source = "Holiday Closure"
+[[closure_reason]]
 code = "holiday_closure"
 translation_key = "reason_holiday_closure"
+sources = ["Holiday Closure"]
 
-[[labels]]
-kind = "closure_reason"
-source = "In Service Training"
+[[closure_reason]]
 code = "in_service_training"
 translation_key = "reason_in_service_training"
+sources = [
+  "In Service Training",
+  "Inservice Training",
+  "Inservice Training Closure",
+]
 
-[[labels]]
-kind = "closure_reason"
-source = "Inservice Training"
-code = "in_service_training"
-translation_key = "reason_in_service_training"
-
-[[labels]]
-kind = "closure_reason"
-source = "In-Service (9am–1pm)"
+[[closure_reason]]
 code = "in_service_9_1"
 translation_key = "reason_in_service_9_1"
+sources = ["In-Service (9am–1pm)"]
 
-[[labels]]
-kind = "closure_reason"
-source = "Department Training"
+[[closure_reason]]
 code = "department_training"
 translation_key = "reason_department_training"
+sources = ["Department Training"]
 
-[[labels]]
-kind = "closure_reason"
-source = "Aquatics In Service Training"
+[[closure_reason]]
 code = "aquatics_training"
 translation_key = "reason_aquatics_training"
+sources = ["Aquatics In Service Training"]
 
-[[labels]]
-kind = "closure_reason"
-source = "Staff training"
+[[closure_reason]]
 code = "staff_training"
 translation_key = "reason_staff_training"
+sources = ["Staff training"]
 
-[[labels]]
-kind = "closure_reason"
-source = "Inservice Training Closure"
-code = "in_service_training"
-translation_key = "reason_in_service_training"
-
-[[labels]]
-kind = "closure_reason"
-source = "In- Service Training: Pool Closed 9:00-1:00pm"
+[[closure_reason]]
 code = "in_service_pool_closed_9_1"
 translation_key = "reason_in_service_pool_closed_9_1"
+sources = ["In- Service Training: Pool Closed 9:00-1:00pm"]
 
-[[labels]]
-kind = "closure_reason"
-source = "Temporarily closed for renovation"
+[[closure_reason]]
 code = "temporarily_closed_for_renovation"
 translation_key = "reason_temporarily_closed_for_renovation"
+sources = ["Temporarily closed for renovation"]
 
-[[labels]]
-kind = "closure_reason"
-source = "Closed for repairs; anticipated reopening summer 2026"
+[[closure_reason]]
 code = "closed_for_repairs_summer_2026"
 translation_key = "reason_closed_for_repairs_summer_2026"
+sources = ["Closed for repairs; anticipated reopening summer 2026"]
 
-[[labels]]
-kind = "closure_reason"
-source = "Pool closed Thursday 5/21 11:30am–1pm"
+[[closure_reason]]
 code = "pool_closed_5_21"
 translation_key = "reason_pool_closed_5_21"
+sources = ["Pool closed Thursday 5/21 11:30am–1pm"]
 
-[[labels]]
-kind = "closure_reason"
-source = "Every 3rd Thursday of the Month Closed for Aquatic Division Training 11:00am-2:00pm"
+[[closure_reason]]
 code = "monthly_aquatic_training"
 translation_key = "reason_monthly_aquatic_training"
+sources = ["Every 3rd Thursday of the Month Closed for Aquatic Division Training 11:00am-2:00pm"]
 
-[[labels]]
-kind = "spot_label"
-source = "lap"
+[[spot_label]]
 code = "lap"
 translation_key = "setpoint_lap"
+sources = ["lap"]
 
-[[labels]]
-kind = "spot_label"
-source = "heated"
+[[spot_label]]
 code = "heated"
 translation_key = "setpoint_heated"
+sources = ["heated"]
 
-[[labels]]
-kind = "spot_label"
-source = "pool"
+[[spot_label]]
 code = "pool"
 translation_key = "setpoint_pool"
+sources = ["pool"]
 
-[[labels]]
-kind = "spot_label"
-source = "indoor"
+[[spot_label]]
 code = "indoor"
 translation_key = "setpoint_indoor"
+sources = ["indoor"]
 
-[[labels]]
-kind = "spot_label"
-source = "saltwater"
+[[spot_label]]
 code = "saltwater"
 translation_key = "setpoint_saltwater"
+sources = ["saltwater"]
 
-[[labels]]
-kind = "spot_label"
-source = "indoor + roof"
+[[spot_label]]
 code = "indoor_roof"
 translation_key = "setpoint_indoor_roof"
+sources = ["indoor + roof"]
 
-[[labels]]
-kind = "spot_label"
-source = "gym indoor"
+[[spot_label]]
 code = "gym_indoor"
 translation_key = "subtype_gym_indoor"
+sources = ["gym indoor"]
 
-[[labels]]
-kind = "spot_label"
-source = "membership indoor"
+[[spot_label]]
 code = "membership_indoor"
 translation_key = "subtype_membership_indoor"
+sources = ["membership indoor"]
 
-[[labels]]
-kind = "spot_label"
-source = "campus indoor"
+[[spot_label]]
 code = "campus_indoor"
 translation_key = "subtype_campus_indoor"
+sources = ["campus indoor"]
 
-[[labels]]
-kind = "spot_label"
-source = "private indoor"
+[[spot_label]]
 code = "private_indoor"
 translation_key = "subtype_private_indoor"
+sources = ["private indoor"]
 
-[[labels]]
-kind = "spot_label"
-source = "private indoor/outdoor"
+[[spot_label]]
 code = "private_indoor_outdoor"
 translation_key = "subtype_private_indoor_outdoor"
+sources = ["private indoor/outdoor"]
 
-[[labels]]
-kind = "spot_label"
-source = "private outdoor"
+[[spot_label]]
 code = "private_outdoor"
 translation_key = "subtype_private_outdoor"
+sources = ["private outdoor"]
 
-[[labels]]
-kind = "spot_label"
-source = "therapeutic indoor"
+[[spot_label]]
 code = "therapeutic_indoor"
 translation_key = "subtype_therapeutic_indoor"
+sources = ["therapeutic indoor"]
 
-[[labels]]
-kind = "spot_label"
-source = "outdoor"
+[[spot_label]]
 code = "outdoor"
 translation_key = "subtype_outdoor"
+sources = ["outdoor"]

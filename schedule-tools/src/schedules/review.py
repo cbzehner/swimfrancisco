@@ -1,17 +1,97 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, field
 from datetime import date as _date
 from pathlib import Path
+from types import MappingProxyType
 
 from ._time import pacific_today
+from .discover import collapse_grid_candidates, view_id_from_url
 from .envelope import EnvelopeValidationError, validate_envelope
 from .reviewed_snapshots import payloads_equivalent
 from .merge import read_schedule_snapshot
-from .paths import CONTENT_SPOTS_DIR, DATA_DIR, all_review_dirs, relative_to_repo, reviewed_path
+from .paths import (
+    CONTENT_SPOTS_DIR,
+    DATA_DIR,
+    all_review_dirs,
+    parse_review_dir_name,
+    relative_to_repo,
+    reviewed_path,
+)
 from .project import ProjectError, project
 from .validate import validate
+
+
+def parse_view_id(value: object) -> int | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str) and value.isdigit():
+        return int(value)
+    return None
+
+
+def kept_grid_ids(decision: dict | None) -> set[int]:
+    if not isinstance(decision, dict):
+        return set()
+    items = list(decision.get("candidates") or []) + list(
+        decision.get("extra_candidates") or []
+    )
+    ids: set[int] = set()
+    for item in collapse_grid_candidates(items):
+        view_id = parse_view_id(item.get("view_id"))
+        if view_id is not None:
+            ids.add(view_id)
+    return ids
+
+
+@dataclass(frozen=True)
+class DecisionSet:
+    by_slug: Mapping[str, dict]
+
+    @classmethod
+    def from_items(cls, items: list[object]) -> DecisionSet:
+        by_slug: dict[str, dict] = {}
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            slug = item.get("slug")
+            if isinstance(slug, str) and slug and slug not in by_slug:
+                by_slug[slug] = item
+        return cls(by_slug=MappingProxyType(by_slug))
+
+    @classmethod
+    def load(cls, path: Path) -> DecisionSet:
+        if not path.is_file():
+            return cls.from_items([])
+        try:
+            data = json.loads(path.read_text())
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            return cls.from_items([])
+        if not isinstance(data, list):
+            return cls.from_items([])
+        return cls.from_items(data)
+
+    def get(self, slug: str) -> dict | None:
+        return self.by_slug.get(slug)
+
+    def __iter__(self):
+        return iter(self.by_slug.values())
+
+    @property
+    def sequential_slugs(self) -> tuple[str, ...]:
+        return tuple(
+            slug for slug, decision in self.by_slug.items() if len(kept_grid_ids(decision)) >= 2
+        )
+
+    @property
+    def blocking_slugs(self) -> frozenset[str]:
+        return frozenset(
+            slug for slug, decision in self.by_slug.items() if decision.get("blocking")
+        )
 
 
 @dataclass(frozen=True)
@@ -21,6 +101,9 @@ class ReviewCandidate:
     review_dir: Path
     source_path: Path
     fetch_date: str  # YYYY-MM-DD derived from the review-dir name prefix
+    payload: Mapping[str, object] = field(default_factory=dict, compare=False)
+    source_url: str = ""
+    view_id: int | None = None
 
 
 _PROVIDER_JSON_EXCLUDES = {"reviewed.json"}
@@ -30,19 +113,6 @@ def _provider_json_paths(review_dir: Path) -> list[Path]:
     return sorted(
         p for p in review_dir.glob("*.json") if p.name not in _PROVIDER_JSON_EXCLUDES
     )
-
-
-def _full_sha_from_provider_jsons(review_dir: Path) -> str | None:
-    """Recover the full pdf_sha256 from any provider payload in the review dir."""
-    for provider_path in _provider_json_paths(review_dir):
-        try:
-            payload = json.loads(provider_path.read_text())
-        except (OSError, json.JSONDecodeError):
-            continue
-        sha = payload.get("pdf_sha256")
-        if isinstance(sha, str) and len(sha) == 64:
-            return sha
-    return None
 
 
 def find_review_candidates(
@@ -68,12 +138,24 @@ def find_review_candidates(
         for review_dir in all_review_dirs(slug, root=data_root):
             if (review_dir / "reviewed.json").exists():
                 continue
-            if not _provider_json_paths(review_dir):
+            parsed = parse_review_dir_name(review_dir.name)
+            if parsed is None:
                 continue
-            full_sha = _full_sha_from_provider_jsons(review_dir)
-            if full_sha is None:
+            fetch_date, _ = parsed
+            try:
+                artifact = json.loads(_pick_provider_artifact(review_dir).read_text())
+            except (OSError, json.JSONDecodeError, FileNotFoundError):
                 continue
-            fetch_date = review_dir.name[:10]
+            if not isinstance(artifact, dict):
+                continue
+            full_sha = artifact.get("pdf_sha256")
+            if not isinstance(full_sha, str) or len(full_sha) != 64:
+                continue
+            payload_raw = artifact.get("payload")
+            payload = dict(payload_raw) if isinstance(payload_raw, dict) else {}
+            source_url = artifact.get("source_pdf_url") or artifact.get("pdf_url") or ""
+            if not isinstance(source_url, str):
+                source_url = ""
             candidates.append(
                 ReviewCandidate(
                     slug=slug,
@@ -81,6 +163,9 @@ def find_review_candidates(
                     review_dir=review_dir,
                     source_path=_source_path(review_dir),
                     fetch_date=fetch_date,
+                    payload=MappingProxyType(payload),
+                    source_url=source_url,
+                    view_id=view_id_from_url(source_url) if source_url else None,
                 )
             )
     candidates.sort(key=lambda c: (c.fetch_date, c.slug))

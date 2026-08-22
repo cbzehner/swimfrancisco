@@ -10,7 +10,7 @@ from click.testing import CliRunner
 
 from schedules.cli import cli
 from schedules.fetch import FetchResult
-from schedules.models import GroundingResult, PoolEntry
+from schedules.models import GroundingSummary, PoolEntry
 from schedules.publish import (
     Eligibility,
     latest_effective_start,
@@ -58,8 +58,8 @@ def _payload(
     }
 
 
-def _grounding(grounded: int, total: int) -> GroundingResult:
-    return GroundingResult(sessions=[], grounded_count=grounded, total=total)
+def _grounding(grounded: int, total: int) -> GroundingSummary:
+    return GroundingSummary(grounded_count=grounded, total=total)
 
 
 def _entry(slug: str = "hamilton-pool", *, kind: str = "sfrecpark_pdf", status: str = "published") -> PoolEntry:
@@ -681,7 +681,7 @@ def test_unique_grid_refuses_sibling_session_grids(iso, monkeypatch):
     )
     assert count == 0
     refused = json.loads(report.with_name("publish-pending.json").read_text())["refused"]
-    assert refused[0]["code"] == "sibling_session_grids"
+    assert refused[0]["code"] == "sequential_incomplete"
     assert not (
         iso.data / "sava-pool" / f"2026-08-19-{SHA[:12]}" / "reviewed.json"
     ).exists()
@@ -1056,7 +1056,11 @@ def test_band_session_grid_flag_does_not_sequential_publish(iso, monkeypatch):
     )
     assert count == 0
     refused = json.loads(report.with_name("publish-pending.json").read_text())["refused"]
-    assert {item["code"] for item in refused} <= {"discovery_flagged", "sibling_session_grids"}
+    assert {item["code"] for item in refused} <= {
+        "discovery_flagged",
+        "sibling_session_grids",
+        "sequential_partial",
+    }
     assert refused
     assert not (
         iso.data / "garfield-pool" / f"2026-08-19-{SHA[:12]}" / "reviewed.json"
@@ -1067,7 +1071,7 @@ def test_band_session_grid_flag_does_not_sequential_publish(iso, monkeypatch):
     assert (iso.content / "garfield-pool.md").read_bytes() == before
 
 
-def test_unique_grid_dated_sibling_refuses_sibling_session_grids(iso, monkeypatch):
+def test_dated_sibling_grids_publish_as_sequential(iso, monkeypatch):
     _write_candidate(
         iso.data,
         slug="sava-pool",
@@ -1084,7 +1088,6 @@ def test_unique_grid_dated_sibling_refuses_sibling_session_grids(iso, monkeypatc
         fetch_date="2026-08-20",
     )
     _seed_content(iso.content, "sava-pool")
-    before = (iso.content / "sava-pool.md").read_bytes()
     monkeypatch.setattr("schedules.publish.load_registry", lambda: [_sava_entry()])
     iso.tmp.joinpath("discovery-decisions.json").write_text(
         json.dumps(
@@ -1120,16 +1123,19 @@ def test_unique_grid_dated_sibling_refuses_sibling_session_grids(iso, monkeypatc
     count, report = publish_pending_all(
         data_root=iso.data, content_spots_dir=iso.content, today=date(2026, 8, 20)
     )
-    assert count == 0
-    refused = json.loads(report.with_name("publish-pending.json").read_text())["refused"]
-    assert {item["code"] for item in refused} == {"sibling_session_grids"}
-    assert not (
+    assert count == 1
+    payload = json.loads(report.with_name("publish-pending.json").read_text())
+    assert payload["published"] == ["sava-pool"]
+    assert payload["refused"] == []
+    assert (
         iso.data / "sava-pool" / f"2026-08-19-{SHA[:12]}" / "reviewed.json"
     ).exists()
-    assert not (
+    assert (
         iso.data / "sava-pool" / f"2026-08-20-{SHA2[:12]}" / "reviewed.json"
     ).exists()
-    assert (iso.content / "sava-pool.md").read_bytes() == before
+    rendered = (iso.content / "sava-pool.md").read_text()
+    assert 'effective_start = "2026-08-18"' in rendered
+    assert 'effective_start = "2026-08-29"' in rendered
 
 
 def test_sequential_second_finalize_rolls_back_window_1(iso, monkeypatch):

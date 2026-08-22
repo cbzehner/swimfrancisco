@@ -5,12 +5,10 @@
 // Data rows: "2026 04 16 18 20 270 ... 12.3 ..."
 // Column 14 (0-indexed) is WTMP in Celsius; "MM" means missing.
 
-export interface NdbcReading {
-  stationId: string;
-  waterTempC: number;
-  waterTempF: number;
-  observedAt: string; // ISO 8601 UTC
-}
+import { readingFromC, type TempReading } from "./assemble.ts";
+
+// observedAt is ISO 8601 UTC.
+export type NdbcReading = TempReading;
 
 function parseTimestampUtc(year: string, mo: string, dy: string, hr: string, mn: string): string | null {
   const y = Number(year);
@@ -54,13 +52,7 @@ export async function fetchNdbc(stationId: string): Promise<NdbcReading | null> 
     if (!Number.isFinite(waterTempC)) continue;
     const observedAt = parseTimestampUtc(cols[0], cols[1], cols[2], cols[3], cols[4]);
     if (!observedAt) continue;
-    const waterTempF = (waterTempC * 9) / 5 + 32;
-    return {
-      stationId,
-      waterTempC: Math.round(waterTempC * 10) / 10,
-      waterTempF: Math.round(waterTempF * 10) / 10,
-      observedAt,
-    };
+    return readingFromC(stationId, waterTempC, observedAt);
   }
   return null;
 }

@@ -1,6 +1,7 @@
+import hashlib
 import json
 
-from schedules.artifacts import save_artifact_bundle, skip_if_fresh
+from schedules.artifacts import find_review_dir_for_sha, save_artifact_bundle, skip_if_fresh
 from schedules.paths import artifact_path
 
 
@@ -84,3 +85,28 @@ def test_skip_if_fresh_false_when_missing(tmp_path):
         schema={"x": 1},
         root=tmp_path,
     )
+
+
+def test_find_review_dir_sidecar_hit_skips_pdf_hash(tmp_path, monkeypatch):
+    sha256 = "a" * 64
+    review_dir = tmp_path / "hamilton-pool" / f"2026-04-19-{sha256[:12]}"
+    review_dir.mkdir(parents=True)
+    (review_dir / "source.sha256").write_text(f"{sha256}\n")
+    (review_dir / "source.pdf").write_bytes(b"bytes that would hash differently")
+
+    def boom(_payload: bytes) -> str:
+        raise AssertionError("sidecar hit must not hash source.pdf")
+
+    monkeypatch.setattr("schedules.artifacts.hashlib.sha256", boom)
+    assert find_review_dir_for_sha("hamilton-pool", sha256, root=tmp_path) == review_dir
+
+
+def test_find_review_dir_backfills_missing_sidecar(tmp_path):
+    pdf_bytes = b"%PDF-fake-source\n"
+    sha256 = hashlib.sha256(pdf_bytes).hexdigest()
+    review_dir = tmp_path / "hamilton-pool" / f"2026-04-19-{sha256[:12]}"
+    review_dir.mkdir(parents=True)
+    (review_dir / "source.pdf").write_bytes(pdf_bytes)
+
+    assert find_review_dir_for_sha("hamilton-pool", sha256, root=tmp_path) == review_dir
+    assert (review_dir / "source.sha256").read_text() == f"{sha256}\n"

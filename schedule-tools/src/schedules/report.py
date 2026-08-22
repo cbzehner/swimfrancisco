@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from .discover import view_id_from_url
 from .models import Aborted, Extracted, PoolResult, ReviewNote, Skipped, Unchanged, Violation, needs_review
+from .review import DecisionSet, parse_view_id
 
 
 def result_counts(results: list[PoolResult]) -> dict[str, int]:
@@ -164,21 +164,10 @@ def _review_notes(result: PoolResult) -> list[ReviewNote]:
     return list(getattr(result, "review_notes", []) or [])
 
 
-def discovery_notes_from_decisions(path: Path) -> dict[str, list[ReviewNote]]:
-    """Read review notes from a discover writer. Does not re-discover."""
-    if not path.is_file():
-        return {}
-    try:
-        payload = json.loads(path.read_text())
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
-        return {}
-    if not isinstance(payload, list):
-        return {}
-
+def discovery_notes_from_decisions(decisions: DecisionSet) -> dict[str, list[ReviewNote]]:
+    """Read review notes from a loaded DecisionSet. Does not re-discover."""
     notes: dict[str, list[ReviewNote]] = {}
-    for item in payload:
-        if not isinstance(item, dict):
-            continue
+    for item in decisions:
         slug = item.get("slug")
         if not isinstance(slug, str) or not slug:
             continue
@@ -212,9 +201,10 @@ def _notes_for_decision(item: dict) -> list[ReviewNote]:
     if action == "flag" or item.get("blocking"):
         reason = item.get("reason") or "flag"
         ids = [
-            str(candidate["view_id"])
+            str(view_id)
             for candidate in item.get("candidates") or []
-            if isinstance(candidate, dict) and candidate.get("view_id") is not None
+            if isinstance(candidate, dict)
+            and (view_id := parse_view_id(candidate.get("view_id"))) is not None
         ]
         id_text = f" ({', '.join(ids)})" if ids else ""
         attached.append(
@@ -232,7 +222,7 @@ def _candidate_filename(item: dict, view_id: int | None) -> str | None:
         return None
     for bucket in ("candidates", "extra_candidates"):
         for candidate in item.get(bucket) or []:
-            if not isinstance(candidate, dict) or candidate.get("view_id") != view_id:
+            if not isinstance(candidate, dict) or parse_view_id(candidate.get("view_id")) != view_id:
                 continue
             filename = candidate.get("filename")
             if isinstance(filename, str) and filename:

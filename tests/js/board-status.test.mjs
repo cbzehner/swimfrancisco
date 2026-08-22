@@ -24,6 +24,16 @@ import {
   resolveHorizon,
 } from "../../static/js/helpers/board.mjs";
 
+function boardShape(partial) {
+  return {
+    nextKind: "",
+    nextArgs: {},
+    bestWindow: null,
+    openOffset: partial.sortRank,
+    ...partial,
+  };
+}
+
 test("computeStatus uses 'Closed through' for inclusive end dates", () => {
   // Closure spans 2026-04-15..2026-04-20 inclusive. Today is 2026-04-17.
   // The pool is closed today and reopens on 2026-04-21, so the end date
@@ -97,11 +107,12 @@ test("computeAccessWindowAvailability uses access hours for plan-ahead windows",
     ],
     closures: [],
   };
-  assert.deepEqual(computeAccessWindowAvailability(schedule, horizon), {
-    status: "ACCESS",
-    next: "05:30-20:30",
-    sortRank: 2,
-  });
+  const weekly = computeAccessWindowAvailability(schedule, horizon);
+  assert.equal(weekly.status, "ACCESS");
+  assert.equal(weekly.next, "05:30-20:30");
+  assert.equal(weekly.sortRank, 2);
+  assert.equal(weekly.openOffset, 2);
+  assert.equal(weekly.bestWindow.start, 5 * 60 + 30);
 });
 
 test("computeAccessWindowAvailability uses access exceptions for plan-ahead windows", () => {
@@ -122,11 +133,12 @@ test("computeAccessWindowAvailability uses access exceptions for plan-ahead wind
     ],
     closures: [],
   };
-  assert.deepEqual(computeAccessWindowAvailability(schedule, horizon), {
-    status: "ACCESS",
-    next: "07:30-13:30",
-    sortRank: 2,
-  });
+  const holiday = computeAccessWindowAvailability(schedule, horizon);
+  assert.equal(holiday.status, "ACCESS");
+  assert.equal(holiday.next, "07:30-13:30");
+  assert.equal(holiday.sortRank, 2);
+  assert.equal(holiday.openOffset, 2);
+  assert.equal(holiday.bestWindow.start, 7 * 60 + 30);
 });
 
 test("captureBaselineRanks + sortByRank restores baseline order after reshuffle", () => {
@@ -462,8 +474,8 @@ test("computeWindowAvailability marks a useful overlapping session available", (
   const result = computeWindowAvailability(BASIC_SCHEDULE, horizon, ["lap_swim"]);
   assert.equal(result.status, "AVAILABLE");
   assert.equal(result.status, "AVAILABLE");
-  assert.equal(result.bestSession.type, "lap_swim");
-  assert.equal(result.bestSession.start, 12 * 60 + 30);
+  assert.equal(result.bestWindow.type, "lap_swim");
+  assert.equal(result.bestWindow.start, 12 * 60 + 30);
 });
 
 test("computeWindowAvailability marks short overlaps limited", () => {
@@ -512,7 +524,7 @@ test("computeWindowAvailability skips sessions blocked by partial closures", () 
   const horizon = resolveHorizon("this-afternoon", new Date("2026-04-14T11:00:00"));
   const result = computeWindowAvailability(schedule, horizon);
   assert.equal(result.status, "AVAILABLE");
-  assert.equal(result.bestSession.start, 15 * 60);
+  assert.equal(result.bestWindow.start, 15 * 60);
 });
 
 test("computeWindowAvailability trims sessions around partial closures", () => {
@@ -531,8 +543,8 @@ test("computeWindowAvailability trims sessions around partial closures", () => {
   const horizon = resolveHorizon("this-afternoon", new Date("2026-06-06T11:00:00"));
   const result = computeWindowAvailability(schedule, horizon, ["lap_swim"]);
   assert.equal(result.status, "AVAILABLE");
-  assert.equal(result.bestSession.start, 13 * 60);
-  assert.equal(result.bestSession.end, 14 * 60);
+  assert.equal(result.bestWindow.start, 13 * 60);
+  assert.equal(result.bestWindow.end, 14 * 60);
 });
 
 test("computeAccessWindowAvailability trims access around partial closures", () => {
@@ -556,59 +568,60 @@ test("computeAccessWindowAvailability trims access around partial closures", () 
 });
 
 test("computeWindowAvailability reports unverified when a schedule has no sessions", () => {
-  // Distinct from the "no schedule at all" (NO SESSION/no bestSession key
+  // Distinct from the "no schedule at all" (NO SESSION/no bestWindow key
   // change) and "no overlapping session" paths: an explicit empty sessions
   // array surfaces its own copy/nextKind so the board can tell "never
   // verified" apart from "nothing scheduled in this window".
   const schedule = { sessions: [], closures: [] };
   const horizon = resolveHorizon("this-afternoon", new Date("2026-04-14T11:00:00"));
   const result = computeWindowAvailability(schedule, horizon);
-  assert.deepEqual(result, {
+  assert.deepEqual(result, boardShape({
     status: "NO SESSION",
     next: "Schedule not verified",
     nextKind: "not_verified",
     nextArgs: {},
     sortRank: 3,
-    bestSession: null,
-  });
+    bestWindow: null,
+  }));
 });
 
 test("computeWindowAvailability returns a placeholder for non-window horizons regardless of schedule", () => {
   // Pinned separately from computeAccessWindowAvailability's equivalent
   // branch below: the pool variant ranks this Infinity (below even CLOSED)
-  // and always includes a null bestSession, while the access variant ranks
-  // it 3 and omits bestSession entirely.
+  // and always includes a null bestWindow, while the access variant ranks
+  // it 3 and omits bestWindow entirely.
   const horizon = { id: "now", kind: "point" };
   const result = computeWindowAvailability(BASIC_SCHEDULE, horizon);
-  assert.deepEqual(result, {
+  assert.deepEqual(result, boardShape({
     status: PLACEHOLDER,
     next: PLACEHOLDER,
     sortRank: Number.POSITIVE_INFINITY,
-    bestSession: null,
-  });
+    openOffset: Number.POSITIVE_INFINITY,
+    bestWindow: null,
+  }));
 });
 
 test("computeAccessWindowAvailability reports CHECK/OFFICIAL SITE when a schedule has no access hours or exceptions", () => {
   const schedule = { sessions: [], access_hours: [], access_exceptions: [], closures: [] };
   const horizon = resolveHorizon("this-afternoon", new Date("2026-04-14T11:00:00"));
   const result = computeAccessWindowAvailability(schedule, horizon);
-  assert.deepEqual(result, {
+  assert.deepEqual(result, boardShape({
     status: "CHECK",
     next: "OFFICIAL SITE",
     nextKind: "official_site",
     nextArgs: {},
     sortRank: 3,
-  });
+  }));
 });
 
-test("computeAccessWindowAvailability returns a placeholder for non-window horizons without a bestSession key", () => {
+test("computeAccessWindowAvailability returns a placeholder for non-window horizons without a bestWindow key", () => {
   const horizon = { id: "now", kind: "point" };
   const schedule = {
     access_hours: [{ day: "tuesday", start: "05:30", end: "20:30", label: "Facility hours" }],
     closures: [],
   };
   const result = computeAccessWindowAvailability(schedule, horizon);
-  assert.deepEqual(result, { status: PLACEHOLDER, next: PLACEHOLDER, sortRank: 3 });
+  assert.deepEqual(result, boardShape({ status: PLACEHOLDER, next: PLACEHOLDER, sortRank: 3 }));
 });
 
 test("computeDetailStatus treats pre-season as a synthetic closure", () => {

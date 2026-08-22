@@ -345,7 +345,11 @@ def test_hamilton_unique_grid_save_projects_one_dir(queue_env, monkeypatch):
         lambda slug, url=None: SHA_HAM,
     )
     app = _app(data, content, tmp)
-    envelope = app.review("hamilton-pool")["envelope"]
+    review = app.review("hamilton-pool")
+    assert "payload" not in review["candidate"]
+    assert "source_url" not in review["candidate"]
+    assert "view_id" not in review["candidate"]
+    envelope = review["envelope"]
 
     result = app.save("hamilton-pool", envelope, SHA_HAM)
 
@@ -516,7 +520,7 @@ def test_sequential_refresh_keeps_latest_per_view_id_and_save_all_writes_new(
         _identities((BALBOA_29797, SHA_29797_NEW), (BALBOA_29796, SHA_29796)),
     )
 
-    def fake_pipeline(**kwargs):
+    def fake_pipeline(_command):
         _write_capture(
             data,
             "balboa-pool",

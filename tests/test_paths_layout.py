@@ -39,6 +39,27 @@ def test_all_review_dirs_returns_empty_for_missing_slug(tmp_path):
     assert paths.all_review_dirs("ghost-pool", root=tmp_path) == []
 
 
+def test_parse_review_dir_name_accepts_canonical_shape():
+    assert paths.parse_review_dir_name("2026-04-19-aaaaaaaaaaaa") == (
+        "2026-04-19",
+        "aaaaaaaaaaaa",
+    )
+    assert paths.parse_review_dir_name("2026-04-19-0123456789ab") == (
+        "2026-04-19",
+        "0123456789ab",
+    )
+
+
+def test_parse_review_dir_name_rejects_non_canonical():
+    assert paths.parse_review_dir_name("2026-04-19-AAAAAAAAAAAA") is None
+    assert paths.parse_review_dir_name("2026-04-19-aaaaaaaaaaa") is None
+    assert paths.parse_review_dir_name("2026-04-19-aaaaaaaaaaaag") is None
+    assert paths.parse_review_dir_name("2026-04-19") is None
+    assert paths.parse_review_dir_name("notes") is None
+    assert paths.parse_review_dir_name("2026-04-19-aaaaaaaaaaaa-extra") is None
+    assert paths.parse_review_dir_name("2026-4-19-aaaaaaaaaaaa") is None
+
+
 def test_all_review_dirs_sorts_ascending(tmp_path):
     slug_dir = tmp_path / "hamilton-pool"
     slug_dir.mkdir()
@@ -47,6 +68,18 @@ def test_all_review_dirs_sorts_ascending(tmp_path):
     older.mkdir()
     newer.mkdir()
     assert paths.all_review_dirs("hamilton-pool", root=tmp_path) == [older, newer]
+
+
+def test_all_review_dirs_ignores_non_matching_subdirs(tmp_path):
+    slug_dir = tmp_path / "hamilton-pool"
+    slug_dir.mkdir()
+    kept = slug_dir / "2026-04-19-aaaaaaaaaaaa"
+    kept.mkdir()
+    (slug_dir / "notes").mkdir()
+    (slug_dir / "2026-04-19").mkdir()
+    (slug_dir / "2026-04-19-aaaaaaaaaaaag").mkdir()
+    (slug_dir / "scratch.txt").write_text("nope\n")
+    assert paths.all_review_dirs("hamilton-pool", root=tmp_path) == [kept]
 
 
 def test_latest_review_dir_returns_newest(tmp_path):

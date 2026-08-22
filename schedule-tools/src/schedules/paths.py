@@ -31,6 +31,15 @@ def slugify(value: str) -> str:
 
 # Consolidated per-review layout: data/<slug>/<date>-<pdf_sha256[:12]>/
 
+REVIEW_DIR_NAME = re.compile(r"^(\d{4}-\d{2}-\d{2})-([0-9a-f]{12})$")
+
+
+def parse_review_dir_name(name: str) -> tuple[str, str] | None:
+    match = REVIEW_DIR_NAME.fullmatch(name)
+    if match is None:
+        return None
+    return match.group(1), match.group(2)
+
 
 def review_dir(slug: str, date: str, pdf_sha256: str, *, root: Path = DATA_DIR) -> Path:
     return root / slug / f"{date}-{pdf_sha256[:12]}"
@@ -60,7 +69,9 @@ def all_review_dirs(slug: str, *, root: Path = DATA_DIR) -> list[Path]:
     slug_dir = root / slug
     if not slug_dir.is_dir():
         return []
-    return sorted(d for d in slug_dir.iterdir() if d.is_dir())
+    return sorted(
+        d for d in slug_dir.iterdir() if d.is_dir() and parse_review_dir_name(d.name)
+    )
 
 
 def latest_review_dir(slug: str, *, root: Path = DATA_DIR) -> Path | None:

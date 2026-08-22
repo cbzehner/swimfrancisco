@@ -9,7 +9,7 @@ import re
 import tempfile
 import threading
 import webbrowser
-from dataclasses import asdict
+from dataclasses import fields
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from io import StringIO
@@ -20,20 +20,22 @@ from .discover import view_id_from_url
 from .paths import CONTENT_SPOTS_DIR, DATA_DIR, TMP_DIR, all_review_dirs, reviewed_path
 from .direct_sources import DirectSourceError, extract_direct
 from .fetch import FetchError, fetch_pdf
-from .pipeline import SourceMode, parse_provider, run_pipeline
+from .pipeline import DirectRun, ExpandFromDecisions, PdfRun, PinOverride, parse_provider, run_pipeline
 from .publish import (
     PublishRefuse,
-    _candidate_artifact,
-    _candidate_view_id,
-    _kept_session_grid_ids,
-    _load_decisions,
-    _sequential_slugs,
     _unpublished_kept_windows,
     load_quarantine,
     publish_sequential_slug,
 )
 from .registry import load_registry
-from .review import FinalizeError, draft_envelope, finalize_draft, find_review_candidates
+from .review import (
+    DecisionSet,
+    FinalizeError,
+    draft_envelope,
+    finalize_draft,
+    find_review_candidates,
+    kept_grid_ids,
+)
 
 
 UI_DIR = Path(__file__).resolve().parent / "review_ui"
@@ -55,28 +57,19 @@ class ReviewApp:
         self.content_spots_dir = content_spots_dir
         self.tmp_dir = tmp_dir
 
-    def _decisions(self) -> list[dict]:
-        return _load_decisions(self.tmp_dir)
+    def _decisions(self) -> DecisionSet:
+        return DecisionSet.load(self.tmp_dir / "discovery-decisions.json")
 
     def _sequential_slug_set(self) -> frozenset[str]:
-        decisions = self._decisions()
-        slugs: set[str] = set()
-        for slug in _sequential_slugs(decisions):
-            decision = next((item for item in decisions if item.get("slug") == slug), None)
-            if decision is not None and len(_kept_session_grid_ids(decision)) >= 2:
-                slugs.add(slug)
-        return frozenset(slugs)
+        return frozenset(self._decisions().sequential_slugs)
 
     def _decision(self, slug: str) -> dict | None:
-        return next((item for item in self._decisions() if item.get("slug") == slug), None)
+        return self._decisions().get(slug)
 
     def candidates(self):
         raw = find_review_candidates(data_root=self.data_root)
         decisions = self._decisions()
         sequential = self._sequential_slug_set()
-        decisions_by_slug = {
-            item["slug"]: item for item in decisions if isinstance(item.get("slug"), str)
-        }
         entries = {entry.slug: entry for entry in load_registry()}
         latest_reviewed = {
             slug: _latest_reviewed_fetch_date(slug, self.data_root)
@@ -88,7 +81,7 @@ class ReviewApp:
             # Hide May leftovers once a later capture is already attested.
             if cutoff is not None and candidate.fetch_date < cutoff:
                 continue
-            decision = decisions_by_slug.get(candidate.slug)
+            decision = decisions.get(candidate.slug)
             entry = entries.get(candidate.slug)
             if (
                 decision is not None
@@ -96,13 +89,12 @@ class ReviewApp:
                 and entry is not None
             ):
                 # Saving 29799 is not an --adopt of the pin.
-                view_id = _candidate_view_id(candidate)
                 pin_id = view_id_from_url(entry.pdf_url)
-                if view_id != pin_id:
+                if candidate.view_id != pin_id:
                     continue
             if candidate.slug in sequential:
-                kept = _kept_session_grid_ids(decision) if decision is not None else set()
-                if _candidate_view_id(candidate) not in kept:
+                kept = kept_grid_ids(decision)
+                if candidate.view_id not in kept:
                     continue
             filtered.append(candidate)
         by_slug: dict[str, list] = {}
@@ -112,8 +104,8 @@ class ReviewApp:
         for slug, items in by_slug.items():
             items = sorted(items, key=lambda item: (item.fetch_date, item.review_dir.name))
             if slug in sequential:
-                decision = decisions_by_slug.get(slug)
-                kept = _kept_session_grid_ids(decision) if decision is not None else set()
+                decision = decisions.get(slug)
+                kept = kept_grid_ids(decision)
                 selected.extend(_unpublished_kept_windows(items, kept).values())
             else:
                 selected.append(items[-1])
@@ -153,9 +145,14 @@ class ReviewApp:
         candidate = self.candidate(slug, sha12=sha12)
         if candidate is None:
             raise LookupError(_pending_error(slug, sha12))
+        public = {
+            field.name: getattr(candidate, field.name)
+            for field in fields(candidate)
+            if field.name not in {"payload", "source_url", "view_id"}
+        }
         return {
             "candidate": {
-                **asdict(candidate),
+                **public,
                 "review_dir": str(candidate.review_dir),
                 "source_path": str(candidate.source_path),
                 "source_kind": candidate.source_path.suffix.removeprefix("."),
@@ -170,7 +167,7 @@ class ReviewApp:
         if candidate is None:
             raise LookupError(_pending_error(slug, sha12))
         identity = (
-            current_source_identity(slug, url=_source_pdf_url(candidate))
+            current_source_identity(slug, url=candidate.source_url or None)
             if sha12
             else current_source_identity(slug)
         )
@@ -183,7 +180,7 @@ class ReviewApp:
         candidate = self.candidate(slug, sha12=sha12)
         if candidate is None:
             raise LookupError(_pending_error(slug, sha12))
-        override_url = _source_pdf_url(candidate) if sha12 else None
+        override_url = (candidate.source_url or None) if sha12 else None
         live = (
             current_source_identity(slug, url=override_url)
             if override_url
@@ -194,16 +191,17 @@ class ReviewApp:
         entry = next((item for item in load_registry() if item.slug == slug), None)
         if entry is None:
             raise LookupError(f"Unknown registry slug: {slug}.")
-        source_mode: SourceMode = "direct"
         if entry.source_kind == "sfrecpark_pdf":
-            source_mode = parse_provider(os.getenv("SCHEDULES_PROVIDER", "gemini"))
-        exit_code, _, results = run_pipeline(
-            slugs=[slug],
-            source_mode=source_mode,
-            compare_with=None,
-            force=True,
-            override_url=override_url,
-        )
+            urls = PinOverride(override_url) if override_url else ExpandFromDecisions()
+            command = PdfRun(
+                provider=parse_provider(os.getenv("SCHEDULES_PROVIDER", "gemini")),
+                slugs=(slug,),
+                force=True,
+                urls=urls,
+            )
+        else:
+            command = DirectRun(slugs=(slug,), force=True)
+        exit_code, _, results = run_pipeline(command)
         if exit_code != 0:
             raise RuntimeError(str(results[0]))
         if sha12 is None:
@@ -211,7 +209,7 @@ class ReviewApp:
         refreshed = [
             item
             for item in self.candidates()
-            if item.slug == slug and _source_pdf_url(item) == override_url
+            if item.slug == slug and (item.source_url or None) == override_url
         ]
         if not refreshed:
             raise LookupError(_pending_error(slug, sha12))
@@ -258,7 +256,7 @@ class ReviewApp:
             raise LookupError(_pending_error(slug, sha12))
         if envelope.get("slug") != slug or envelope.get("pdf_sha256") != candidate.pdf_sha256:
             raise FinalizeError("Review identity does not match the pending source.")
-        url = _source_pdf_url(candidate)
+        url = candidate.source_url or None
         live = current_source_identity(slug, url=url) if url else current_source_identity(slug)
         if source_identity != candidate.pdf_sha256 or live != source_identity:
             raise FinalizeError("Official source changed after this review opened. Refresh before saving.")
@@ -278,7 +276,7 @@ class ReviewApp:
             match = next((item for item in candidates if item.pdf_sha256[:12] == sha12), None)
             if match is None or envelope.get("slug") != slug or envelope.get("pdf_sha256") != match.pdf_sha256:
                 raise FinalizeError("Review identity does not match the pending source.")
-            url = _source_pdf_url(match)
+            url = match.source_url or None
             live = current_source_identity(slug, url=url) if url else current_source_identity(slug)
             if live != match.pdf_sha256:
                 raise FinalizeError("Official source changed after this review opened. Refresh before saving.")
@@ -618,12 +616,6 @@ def _latest_reviewed_fetch_date(slug: str, data_root: Path) -> str | None:
         if (review_dir / "reviewed.json").exists() and len(review_dir.name) >= 10
     ]
     return max(dates) if dates else None
-
-
-def _source_pdf_url(candidate) -> str | None:
-    artifact = _candidate_artifact(candidate)
-    url = artifact.get("source_pdf_url") or artifact.get("pdf_url")
-    return url if isinstance(url, str) and url else None
 
 
 def current_source_identity(slug: str, url: str | None = None) -> str:

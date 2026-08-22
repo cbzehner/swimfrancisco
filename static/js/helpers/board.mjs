@@ -127,8 +127,34 @@ function formatISODateHuman(isoDate) {
   return `${monthLabels[monthIndex]} ${Number(day)}, ${year}`;
 }
 
-function statusResult(status, next, nextKind = "", nextArgs = {}) {
-  return { status, next, nextKind, nextArgs };
+function nowSortRank(status) {
+  if (status === "OPEN" || status === "ACCESS") return 0;
+  if (status === "CHECK" || status === PLACEHOLDER) return 2;
+  return 1;
+}
+
+function boardResult({
+  status,
+  next,
+  nextKind = "",
+  nextArgs = {},
+  sortRank,
+  openOffset = Number.POSITIVE_INFINITY,
+  bestWindow = null,
+}) {
+  return {
+    status,
+    next,
+    nextKind,
+    nextArgs,
+    sortRank: sortRank === undefined ? nowSortRank(status) : sortRank,
+    openOffset,
+    bestWindow,
+  };
+}
+
+function statusResult(status, next, nextKind = "", nextArgs = {}, extra = {}) {
+  return boardResult({ status, next, nextKind, nextArgs, ...extra });
 }
 
 function scheduleInWindow(schedule, dateISO) {
@@ -535,6 +561,21 @@ function allClosures(schedule) {
   return [...explicit, ...derivedClosures(schedule)];
 }
 
+function nextOpenOffset(normalized, closures, now) {
+  const todayKey = DAY_KEYS[now.getDay()];
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const activeClosure = findActiveClosure(closures, now);
+  if (!activeClosure) {
+    const current = normalized.find(
+      (s) => s.day === todayKey && s.start <= nowMinutes && nowMinutes < s.end,
+    );
+    if (current) return 0;
+  }
+  const best = findNextSession(normalized, closures, now);
+  if (!best) return Number.POSITIVE_INFINITY;
+  return best.offset * 1440 + best.session.start - nowMinutes;
+}
+
 export function computeStatus(schedule, now, allowedTypes = null) {
   schedule = resolveActiveSchedule(schedule, now);
   const empty = statusResult(PLACEHOLDER, PLACEHOLDER);
@@ -542,26 +583,26 @@ export function computeStatus(schedule, now, allowedTypes = null) {
 
   const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
   const allowed = normalizeAllowedTypes(allowedTypes);
-
-  // Pre-season, post-season, and explicit closures all flow through
-  // findActiveClosure so the dashboard renders one shape: status=CLOSED
-  // with English fallback copy plus structured nextKind/nextArgs for i18n.
   const closures = allClosures(schedule);
+  const normalized = normalizeSessions(sessions, allowed);
+  const openOffset = sessions.length === 0 || normalized.length === 0
+    ? Number.POSITIVE_INFINITY
+    : nextOpenOffset(normalized, closures, now);
+
   const activeClosure = findActiveClosure(closures, now);
   if (activeClosure) {
     const { nextKind, nextArgs } = closureNext(activeClosure);
-    return statusResult("CLOSED", closureCopy(activeClosure), nextKind, nextArgs);
+    return statusResult("CLOSED", closureCopy(activeClosure), nextKind, nextArgs, { openOffset });
   }
 
   if (sessions.length === 0) {
-    return statusResult("CLOSED", "Schedule not yet verified", "not_verified");
+    return statusResult("CLOSED", "Schedule not yet verified", "not_verified", {}, { openOffset });
   }
 
   const todayKey = DAY_KEYS[now.getDay()];
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
-  const normalized = normalizeSessions(sessions, allowed);
-  if (normalized.length === 0) return empty;
+  if (normalized.length === 0) return statusResult(PLACEHOLDER, PLACEHOLDER, "", {}, { openOffset });
 
   const current = normalized.find(
     (s) => s.day === todayKey && s.start <= nowMinutes && nowMinutes < s.end,
@@ -569,11 +610,11 @@ export function computeStatus(schedule, now, allowedTypes = null) {
   if (current) {
     return statusResult("OPEN", `Closes ${formatHHMM(current.end)}`, "closes", {
       time: formatHHMM(current.end),
-    });
+    }, { openOffset: 0 });
   }
 
   const best = findNextSession(normalized, closures, now);
-  if (!best) return statusResult("CLOSED", PLACEHOLDER);
+  if (!best) return statusResult("CLOSED", PLACEHOLDER, "", {}, { openOffset });
 
   const label = best.offset === 0
     ? `Opens ${formatHHMM(best.session.start)}`
@@ -584,6 +625,7 @@ export function computeStatus(schedule, now, allowedTypes = null) {
     label,
     best.offset === 0 ? "opens_today" : "opens_day",
     { day: best.session.day, time: formatHHMM(best.session.start) },
+    { openOffset },
   );
 }
 
@@ -626,30 +668,7 @@ export function computeAccessStatus(schedule, now) {
 }
 
 export function computeNextOpenOffset(schedule, now, allowedTypes = null) {
-  schedule = resolveActiveSchedule(schedule, now);
-  if (!schedule || typeof schedule !== "object") return Number.POSITIVE_INFINITY;
-
-  const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
-  const closures = allClosures(schedule);
-  if (sessions.length === 0) return Number.POSITIVE_INFINITY;
-
-  const normalized = normalizeSessions(sessions, allowedTypes);
-  if (normalized.length === 0) return Number.POSITIVE_INFINITY;
-
-  const activeClosure = findActiveClosure(closures, now);
-  const todayKey = DAY_KEYS[now.getDay()];
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
-
-  if (!activeClosure) {
-    const current = normalized.find(
-      (s) => s.day === todayKey && s.start <= nowMinutes && nowMinutes < s.end,
-    );
-    if (current) return 0;
-  }
-
-  const best = findNextSession(normalized, closures, now);
-  if (!best) return Number.POSITIVE_INFINITY;
-  return best.offset * 1440 + best.session.start - nowMinutes;
+  return computeStatus(schedule, now, allowedTypes).openOffset;
 }
 
 // A closure "blocks" a plan-ahead window only when it has no explicit
@@ -683,20 +702,22 @@ function windowSegmentsWithOverlap(windows, closures, dateISO, horizonStart, hor
 export function computeWindowAvailability(schedule, horizon, allowedTypes = null) {
   if (horizon?.date) schedule = resolveActiveSchedule(schedule, horizon.date);
   if (!horizon || horizon.kind !== "window") {
-    return {
+    return boardResult({
       status: PLACEHOLDER,
       next: PLACEHOLDER,
       sortRank: Number.POSITIVE_INFINITY,
-      bestSession: null,
-    };
+      openOffset: Number.POSITIVE_INFINITY,
+      bestWindow: null,
+    });
   }
   if (!schedule || typeof schedule !== "object") {
-    return {
+    return boardResult({
       status: "NO SESSION",
       next: PLACEHOLDER,
       sortRank: 3,
-      bestSession: null,
-    };
+      openOffset: 3,
+      bestWindow: null,
+    });
   }
 
   const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
@@ -704,7 +725,7 @@ export function computeWindowAvailability(schedule, horizon, allowedTypes = null
   const blockingClosure = findBlockingWindowClosure(closures, horizon.date, horizon.start, horizon.end);
 
   if (blockingClosure) {
-    return {
+    return boardResult({
       status: "CLOSED",
       next: typeof blockingClosure.reason === "string"
         ? blockingClosure.reason.toUpperCase()
@@ -717,19 +738,21 @@ export function computeWindowAvailability(schedule, horizon, allowedTypes = null
         }
         : {},
       sortRank: 4,
-      bestSession: null,
-    };
+      openOffset: 4,
+      bestWindow: null,
+    });
   }
 
   if (sessions.length === 0) {
-    return {
+    return boardResult({
       status: "NO SESSION",
       next: "Schedule not verified",
       nextKind: "not_verified",
       nextArgs: {},
       sortRank: 3,
-      bestSession: null,
-    };
+      openOffset: 3,
+      bestWindow: null,
+    });
   }
 
   const candidateSessions = normalizeSessions(sessions, allowedTypes)
@@ -747,38 +770,47 @@ export function computeWindowAvailability(schedule, horizon, allowedTypes = null
   });
 
   if (normalized.length === 0) {
-    return {
+    return boardResult({
       status: "NO SESSION",
       next: PLACEHOLDER,
       sortRank: 3,
-      bestSession: null,
-    };
+      openOffset: 3,
+      bestWindow: null,
+    });
   }
 
   const bestSession = normalized[0];
   const limited = bestSession.overlap < MIN_USEFUL_WINDOW_OVERLAP_MINUTES;
-  return {
+  return boardResult({
     status: limited ? "LIMITED" : "AVAILABLE",
     next: PLACEHOLDER,
     sortRank: limited ? 1 : 0,
-    bestSession,
-  };
+    openOffset: limited ? 1 : 0,
+    bestWindow: bestSession,
+  });
 }
 
 export function computeAccessWindowAvailability(schedule, horizon) {
   if (horizon?.date) schedule = resolveActiveSchedule(schedule, horizon.date);
   if (!horizon || horizon.kind !== "window" || !schedule || typeof schedule !== "object") {
-    return { status: PLACEHOLDER, next: PLACEHOLDER, sortRank: 3 };
+    return boardResult({ status: PLACEHOLDER, next: PLACEHOLDER, sortRank: 3, openOffset: 3 });
   }
   const accessHours = normalizeAccessHours(schedule.access_hours);
   const accessExceptions = normalizeAccessExceptions(schedule.access_exceptions);
   if (accessHours.length === 0 && accessExceptions.length === 0) {
-    return { status: "CHECK", next: "OFFICIAL SITE", nextKind: "official_site", nextArgs: {}, sortRank: 3 };
+    return boardResult({
+      status: "CHECK",
+      next: "OFFICIAL SITE",
+      nextKind: "official_site",
+      nextArgs: {},
+      sortRank: 3,
+      openOffset: 3,
+    });
   }
   const closures = allClosures(schedule);
   const blockingClosure = findBlockingWindowClosure(closures, horizon.date, horizon.start, horizon.end);
   if (blockingClosure) {
-    return { status: "CLOSED", next: PLACEHOLDER, sortRank: 4 };
+    return boardResult({ status: "CLOSED", next: PLACEHOLDER, sortRank: 4, openOffset: 4 });
   }
 
   const horizonDate = new Date(`${horizon.date}T00:00:00`);
@@ -790,14 +822,16 @@ export function computeAccessWindowAvailability(schedule, horizon) {
     horizon.end,
   ).sort((a, b) => a.start - b.start);
   if (overlaps.length === 0) {
-    return { status: "CHECK", next: PLACEHOLDER, sortRank: 3 };
+    return boardResult({ status: "CHECK", next: PLACEHOLDER, sortRank: 3, openOffset: 3 });
   }
   const access = overlaps[0];
-  return {
+  return boardResult({
     status: "ACCESS",
     next: `${formatHHMM(access.start)}-${formatHHMM(access.end)}`,
     sortRank: 2,
-  };
+    openOffset: 2,
+    bestWindow: access,
+  });
 }
 
 // Assign a baseline rank to each item via the provided setter. Keeps this

@@ -15,7 +15,16 @@ from .paths import (
 from .publish import publish_pending_all
 from .registry import load_registry
 from .eval import collect_pool_evals, render_report, write_report
-from .pipeline import parse_source_mode, run_pipeline
+from .pipeline import (
+    BakeoffRun,
+    DirectRun,
+    DiscoverAndExpand,
+    ExpandFromDecisions,
+    PdfRun,
+    PinOverride,
+    parse_provider,
+    run_pipeline,
+)
 from .pr_summary import render_pr_body, staged_data_has_meaningful_changes
 from .report import result_counts
 from .project import ProjectError, project as _project
@@ -92,23 +101,27 @@ def extract(
     if direct == bool(provider):
         raise click.UsageError("exactly one of --direct or --provider is required")
     slugs = _parse_slugs(only)
+    slug_tuple = tuple(slugs) if slugs is not None else None
     if override_url is not None and (slugs is None or len(slugs) != 1):
         raise click.UsageError("--url requires --only with exactly one slug")
-    source_mode = "direct" if direct else parse_source_mode(provider or "")
-    apply_discover = (
-        source_mode != "direct"
-        and not no_discover
-        and override_url is None
-    )
-    try:
-        exit_code, report_path, results = run_pipeline(
-            slugs=slugs,
-            source_mode=source_mode,
-            compare_with=None,
+    if direct:
+        command = DirectRun(slugs=slug_tuple, force=force)
+    elif override_url is not None:
+        command = PdfRun(
+            provider=parse_provider(provider or ""),
+            slugs=slug_tuple,
             force=force,
-            apply_discover=apply_discover,
-            override_url=override_url,
+            urls=PinOverride(override_url),
         )
+    else:
+        command = PdfRun(
+            provider=parse_provider(provider or ""),
+            slugs=slug_tuple,
+            force=force,
+            urls=ExpandFromDecisions() if no_discover else DiscoverAndExpand(),
+        )
+    try:
+        exit_code, report_path, results = run_pipeline(command)
     except DiscoverError as exc:
         click.echo(str(exc), err=True)
         raise SystemExit(1) from exc
@@ -336,11 +349,12 @@ def debug_bakeoff(
 
     slugs = _parse_slugs(only)
     exit_code, report_path, results = run_pipeline(
-        slugs=slugs,
-        source_mode=provider,
-        compare_with=compare_with,
-        force=force,
-        apply_discover=False,
+        BakeoffRun(
+            provider=parse_provider(provider),
+            compare_with=parse_provider(compare_with),
+            slugs=tuple(slugs) if slugs is not None else None,
+            force=force,
+        )
     )
     click.echo(f"Wrote {report_path}")
     click.echo(_summary_line(results))

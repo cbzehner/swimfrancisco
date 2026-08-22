@@ -78,7 +78,6 @@ def _evidence_locally_grounded(evidence: str, pdf_text: str) -> bool:
 
 def grounding_from_text(pdf_text_normalized: str, payload: dict) -> GroundingResult:
     sessions_out: list[SessionGrounding] = []
-    grounded = 0
 
     for index, session in enumerate(payload.get("sessions") or []):
         evidence_raw = session.get("evidence")
@@ -128,8 +127,6 @@ def grounding_from_text(pdf_text_normalized: str, payload: dict) -> GroundingRes
                 not ignore_only,
             )
         )
-        if ok:
-            grounded += 1
 
         sessions_out.append(
             SessionGrounding(
@@ -144,7 +141,7 @@ def grounding_from_text(pdf_text_normalized: str, payload: dict) -> GroundingRes
             )
         )
 
-    return GroundingResult(sessions=sessions_out, grounded_count=grounded, total=len(sessions_out))
+    return GroundingResult(sessions=sessions_out)
 
 
 def _normalize(text: str) -> str:

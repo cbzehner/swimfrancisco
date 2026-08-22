@@ -246,6 +246,7 @@
        creates a loop-local that shadows globals on read. #}
     {% set_global schedules = extra.schedules | default(value=[]) %}
     {% set_global active_schedule = false %}
+    {% set_global schedule_phase = "none" %}
     {% set_global best_start_i = 0 %}
     {% for s in schedules %}
       {% if s.effective_start %}
@@ -256,6 +257,7 @@
           {% if not active_schedule or cs > best_start_i %}
             {% set_global active_schedule = s %}
             {% set_global best_start_i = cs %}
+            {% set_global schedule_phase = "in_window" %}
           {% endif %}
         {% endif %}
       {% endif %}
@@ -268,6 +270,7 @@
           {% if cs > today_i_tb and cs < earliest_start_i %}
             {% set_global active_schedule = s %}
             {% set_global earliest_start_i = cs %}
+            {% set_global schedule_phase = "upcoming" %}
           {% endif %}
         {% endif %}
       {% endfor %}
@@ -280,6 +283,7 @@
           {% if ce < today_i_tb and ce > latest_end_i %}
             {% set_global active_schedule = s %}
             {% set_global latest_end_i = ce %}
+            {% set_global schedule_phase = "expired" %}
           {% endif %}
         {% endif %}
       {% endfor %}
@@ -300,24 +304,21 @@
       {% set_global effective_end = active_schedule.effective_end | default(value="") %}
       {% set_global schedule_basis = active_schedule.schedule_basis | default(value="") %}
     {% endif %}
-    {% set effective_start_i = 0 %}
-    {% set effective_end_i = 99991231 %}
+    {% set_global effective_start_i = 0 %}
+    {% set_global effective_end_i = 99991231 %}
     {% if effective_start %}{% set_global effective_start_i = effective_start | replace(from="-", to="") | int %}{% endif %}
     {% if effective_end %}{% set_global effective_end_i = effective_end | replace(from="-", to="") | int %}{% endif %}
-    {% set pre_effective = effective_start and today_i_tb < effective_start_i %}
-    {% set post_effective = effective_end and today_i_tb > effective_end_i %}
-    {% set schedule_in_window = not pre_effective and not post_effective %}
     <div class="detail-root"
          data-schedule='{{ schedule_macros::data_schedule(extra=extra) }}'>
 
       <section class="status-slab">
         <div class="status-slab-row">
           <span class="status-slab-label">{{ trans(key='status', lang=lang) }}</span>
-          <span class="status-slab-value" data-field="status">{% if pre_effective or post_effective %}{{ trans(key='status_closed_today', lang=lang) }}{% else %}—{% endif %}</span>
+          <span class="status-slab-value" data-field="status">{% if schedule_phase == "upcoming" or schedule_phase == "expired" %}{{ trans(key='status_closed_today', lang=lang) }}{% else %}—{% endif %}</span>
         </div>
         <div class="status-slab-row">
           <span class="status-slab-label">{{ trans(key='next', lang=lang) }}</span>
-          <span class="status-slab-value" data-field="next">{% if pre_effective %}{{ trans(key='status_schedule_starts', lang=lang) }} {{ self::format_iso_date(iso=effective_start, active_lang=lang) }}{% elif post_effective %}{{ trans(key='status_schedule_ended', lang=lang) }} {{ self::format_iso_date(iso=effective_end, active_lang=lang) }}{% else %}—{% endif %}</span>
+          <span class="status-slab-value" data-field="next">{% if schedule_phase == "upcoming" %}{{ trans(key='status_schedule_starts', lang=lang) }} {{ self::format_iso_date(iso=effective_start, active_lang=lang) }}{% elif schedule_phase == "expired" %}{{ trans(key='status_schedule_ended', lang=lang) }} {{ self::format_iso_date(iso=effective_end, active_lang=lang) }}{% else %}—{% endif %}</span>
         </div>
       </section>
 
@@ -334,7 +335,7 @@
         {% endif %}
       {% endfor %}
 
-      {% if schedule_in_window and today_drop_in | length > 0 %}
+      {% if schedule_phase == "in_window" and today_drop_in | length > 0 %}
         <section class="today-block" data-field="today" data-day="{{ today_weekday }}">
           <p class="today-block-heading">{{ trans(key='today_caps', lang=lang) }} · {{ today_weekday_label }}</p>
           <ul class="today-block-list">

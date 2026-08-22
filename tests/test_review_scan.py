@@ -57,6 +57,9 @@ def test_find_review_candidates_returns_unreviewed(tmp_path):
     assert candidates[0].fetch_date == "2026-04-01"
     assert candidates[0].review_dir == review_dir
     assert candidates[0].source_path == review_dir / "source.pdf"
+    assert candidates[0].source_url == "https://example.com/x.pdf"
+    assert candidates[0].payload["effective_start"] == "2026-03-17"
+    assert candidates[0].view_id is None
 
 
 def test_find_review_candidates_uses_csv_source_when_pdf_missing(tmp_path):

@@ -98,11 +98,29 @@
         "source_url": "https://dolphinclub.org/swimming/"
       }
     ],
-    "noaa_tide_station": "9414290"
+    "noaa_tide_station": "9414290",
+    "temp_sources": [
+      {
+        "type": "usgs",
+        "id": "374938122251801"
+      },
+      {
+        "type": "noaa",
+        "id": "9414863"
+      },
+      {
+        "type": "erddap",
+        "id": "exploratorium-seabird"
+      },
+      {
+        "type": "sst",
+        "id": "37.81,-122.43"
+      }
+    ]
   },
   "live_conditions": {
     "api_url": "https://swimfrancisco.com/api/conditions",
     "condition_key": "aquatic-park"
   },
-  "generated_at": "2026-08-21T20:18:42.012Z"
+  "generated_at": "2026-08-22T05:16:52.662Z"
 }

@@ -157,10 +157,26 @@ class SessionGrounding:
 
 
 @dataclass(frozen=True)
-class GroundingResult:
-    sessions: list[SessionGrounding]
+class GroundingSummary:
     grounded_count: int
     total: int
+
+    @property
+    def ratio(self) -> float:
+        return self.grounded_count / self.total if self.total else 1.0
+
+
+@dataclass(frozen=True)
+class GroundingResult:
+    sessions: list[SessionGrounding]
+
+    @property
+    def grounded_count(self) -> int:
+        return sum(1 for session in self.sessions if session.grounded)
+
+    @property
+    def total(self) -> int:
+        return len(self.sessions)
 
     @property
     def ratio(self) -> float:

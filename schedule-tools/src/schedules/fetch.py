@@ -9,8 +9,9 @@ import httpx
 from pypdf import PdfReader
 
 from ._time import pacific_today
+from .artifacts import PrefixCollisionError, find_review_dir_for_sha
 from .models import FetchResult
-from .paths import DATA_DIR
+from .paths import DATA_DIR, review_dir as make_review_dir
 
 
 class FetchError(RuntimeError):
@@ -37,39 +38,36 @@ def fetch_pdf(
                 response.raise_for_status()
                 payload = response.content
                 sha256 = hashlib.sha256(payload).hexdigest()
-                prefix = sha256[:12]
 
-                # Glob by prefix under per-review dirs to detect cache hit or collision.
                 # A matching sha always reuses the existing review dir, even under `force`:
                 # `--force` re-triggers provider extraction (see pipeline.py), not a fresh
                 # dated directory for byte-identical PDFs.
-                matches = sorted(slug_dir.glob(f"*-{prefix}/source.pdf"))
-                if matches:
-                    for existing in matches:
-                        existing_bytes = existing.read_bytes()
-                        existing_sha = hashlib.sha256(existing_bytes).hexdigest()
-                        if existing_sha == sha256:
-                            _write_source_sha256(existing.parent, sha256)
-                            return FetchResult(
-                                path=existing,
-                                sha256=sha256,
-                                bytes=existing_bytes,
-                                from_cache=True,
-                                page_count=_count_pdf_pages(existing_bytes),
-                            )
-                        # Same 12-char prefix, different full hash — collision.
-                        raise FetchError(
-                            f"prefix collision in {slug}: existing={existing_sha} new={sha256}"
-                        )
+                try:
+                    existing_dir = find_review_dir_for_sha(slug, sha256, root=cache_root)
+                except PrefixCollisionError as exc:
+                    raise FetchError(str(exc)) from exc
+                if existing_dir is not None:
+                    existing = existing_dir / "source.pdf"
+                    existing_bytes = existing.read_bytes()
+                    _write_source_sha256(existing_dir, sha256)
+                    return FetchResult(
+                        path=existing,
+                        sha256=sha256,
+                        bytes=existing_bytes,
+                        from_cache=True,
+                        page_count=_count_pdf_pages(existing_bytes),
+                    )
 
                 # Cache miss — validate before creating a snapshot directory so
                 # an unreadable HTTP 200 cannot leave a permanent junk file.
                 page_count = _count_pdf_pages(payload)
-                review_dir = slug_dir / f"{pacific_today().isoformat()}-{prefix}"
-                review_dir.mkdir(parents=True, exist_ok=True)
-                path = review_dir / "source.pdf"
+                dest = make_review_dir(
+                    slug, pacific_today().isoformat(), sha256, root=cache_root
+                )
+                dest.mkdir(parents=True, exist_ok=True)
+                path = dest / "source.pdf"
                 path.write_bytes(payload)
-                _write_source_sha256(review_dir, sha256)
+                _write_source_sha256(dest, sha256)
                 return FetchResult(
                     path=path,
                     sha256=sha256,
