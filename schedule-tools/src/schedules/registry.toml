@@ -58,10 +58,10 @@ official_page_url = "https://sfrecpark.org/Facilities/Facility/Details/Rossi-Poo
 
 [[pool]]
 slug = "sava-pool"
-pdf_url = "https://sfrecpark.org/DocumentCenter/View/29815"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/29805"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Sava-Pool-220"
 notes = """
-discover: 2026-08-27 unchanged sequential_windows id=29815:session_grid:table id=29805:session_grid:table band_session_grid id=29806:session_grid:persisted
+discover: 2026-08-29 adopt sequential_windows id=29805:session_grid:table id=29815:session_grid:table band_session_grid id=29806:session_grid:persisted
 """
 
 [[pool]]
