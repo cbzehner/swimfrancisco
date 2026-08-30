@@ -37,7 +37,7 @@ slug = "mission-community-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/29801"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Mission-Community-Pool-217"
 notes = """
-discover: 2026-08-21 extra id=29827:other:band id=29828:other:band id=29841:other:band id=29847:other:band
+discover: 2026-08-30 extra id=29827:other:band id=29828:other:band id=29841:other:band
 """
 
 [[pool]]
@@ -61,7 +61,7 @@ slug = "sava-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/29805"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Sava-Pool-220"
 notes = """
-discover: 2026-08-29 adopt sequential_windows id=29805:session_grid:table id=29815:session_grid:table band_session_grid id=29806:session_grid:persisted
+discover: 2026-08-30 unchanged sequential_windows id=29805:session_grid:table id=29815:session_grid:table band_session_grid id=29806:session_grid:band
 """
 
 [[pool]]
