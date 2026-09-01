@@ -1,10 +1,7 @@
 [[pool]]
 slug = "balboa-pool"
-pdf_url = "https://sfrecpark.org/DocumentCenter/View/29797"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/29796"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Balboa-Pool-212"
-notes = """
-discover: 2026-08-21 unchanged sequential_windows id=29797:session_grid:table band_session_grid id=29796:session_grid:persisted
-"""
 
 [[pool]]
 slug = "coffman-pool"
@@ -46,7 +43,7 @@ pdf_url = "https://sfrecpark.org/DocumentCenter/View/29778"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/North-Beach-Pool-218"
 source_status = "missing_current_schedule"
 notes = """
-discover: 2026-08-27 flag split_part id=29778:split_part:table id=29779:split_part:table id=29953:split_part:table id=29954:split_part:table
+discover: 2026-09-01 flag split_part id=29953:split_part:table id=29954:split_part:table
 
 Official page split the current North Beach interim schedule into separate Cool Pool (29778) and Warm Pool (29779) PDFs. Current content was manually reviewed from both; automated extraction should stay skipped until split-PDF support exists.
 """
@@ -61,7 +58,7 @@ slug = "sava-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/29805"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Sava-Pool-220"
 notes = """
-discover: 2026-08-30 unchanged sequential_windows id=29805:session_grid:table id=29815:session_grid:table band_session_grid id=29806:session_grid:band
+discover: 2026-09-01 unchanged sequential_windows id=29805:session_grid:table band_session_grid id=29806:session_grid:band band_session_grid id=29815:session_grid:band
 """
 
 [[pool]]
