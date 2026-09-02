@@ -315,7 +315,7 @@ reason = "Independence Day"
 effective_start = "2026-08-18"
 schedule_basis = "swim_schedule"
 effective_end = "2026-10-17"
-last_verified_at = "2026-08-20"
+last_verified_at = "2026-09-02"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -328,7 +328,6 @@ day = "tuesday"
 type = "senior_swim"
 start = "09:15"
 end = "11:00"
-pool = "3"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -340,21 +339,19 @@ end = "13:30"
 day = "tuesday"
 type = "lap_swim"
 start = "14:00"
-end = "15:00"
+end = "15:30"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "family_swim"
-start = "17:45"
-end = "19:00"
-pool = "2"
+start = "15:45"
+end = "17:15"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "17:45"
 end = "19:00"
-pool = "2"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -397,33 +394,31 @@ day = "thursday"
 type = "senior_swim"
 start = "09:15"
 end = "11:00"
-pool = "3"
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "11:15"
 end = "13:30"
+notes = "Closed every 4th Thursday of the Month for Training"
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "14:00"
-end = "15:00"
+end = "15:30"
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "family_swim"
-start = "17:45"
-end = "19:00"
-pool = "2"
+start = "15:45"
+end = "17:15"
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "17:45"
 end = "19:00"
-pool = "2"
 
 [[extra.schedules.sessions]]
 day = "friday"
@@ -476,7 +471,7 @@ end = "17:30"
 [[extra.schedules.closures]]
 start = "2026-08-22"
 end = "2026-08-22"
-reason = "Staff training"
+reason = "staff training"
 start_time = "09:00"
 end_time = "11:00"
 
