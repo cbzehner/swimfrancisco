@@ -7,9 +7,6 @@
 
 import { readingFromC, type TempReading } from "./temp.ts";
 
-// observedAt is ISO 8601 UTC.
-export type NdbcReading = TempReading;
-
 function parseTimestampUtc(year: string, mo: string, dy: string, hr: string, mn: string): string | null {
   const y = Number(year);
   const m = Number(mo);
@@ -24,7 +21,8 @@ function parseTimestampUtc(year: string, mo: string, dy: string, hr: string, mn:
 
 const FETCH_TIMEOUT_MS = 10_000;
 
-export async function fetchNdbc(stationId: string): Promise<NdbcReading | null> {
+// observedAt is ISO 8601 UTC.
+export async function fetchNdbc(stationId: string): Promise<TempReading | null> {
   const url = `https://www.ndbc.noaa.gov/data/realtime2/${stationId}.txt`;
   const res = await fetch(url, { headers: { accept: "text/plain" }, signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
   if (!res.ok) throw new Error(`NDBC ${stationId} HTTP ${res.status}`);

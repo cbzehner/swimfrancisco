@@ -10,9 +10,6 @@ const FETCH_TIMEOUT_MS = 10_000;
 // USGS marks missing/invalid readings with large negative sentinels.
 const MISSING_SENTINEL_CEILING = -100;
 
-// observedAt is ISO 8601 with UTC offset, as reported by NWIS.
-export type UsgsReading = TempReading;
-
 interface NwisResponse {
   value?: {
     timeSeries?: Array<{
@@ -21,7 +18,8 @@ interface NwisResponse {
   };
 }
 
-export async function fetchUsgsTemp(stationId: string): Promise<UsgsReading | null> {
+// observedAt is ISO 8601 with UTC offset, as reported by NWIS.
+export async function fetchUsgsTemp(stationId: string): Promise<TempReading | null> {
   const query = new URLSearchParams({
     sites: stationId,
     parameterCd: "00010",

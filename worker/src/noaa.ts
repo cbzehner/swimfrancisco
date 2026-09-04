@@ -7,9 +7,6 @@ const BASE = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter";
 const APPLICATION = "SwimFrancisco";
 const FETCH_TIMEOUT_MS = 10_000;
 
-// observedAt is station-local time, zoneless ISO (NOAA lst_ldt).
-export type NoaaTempReading = TempReading;
-
 export interface NoaaTidePrediction {
   time: string; // Station-local time, zoneless ISO (NOAA lst_ldt)
   type: "H" | "L";
@@ -66,7 +63,8 @@ async function noaaGet<T extends { error?: { message?: string } }>(
   return body;
 }
 
-export async function fetchNoaaTemp(stationId: string): Promise<NoaaTempReading | null> {
+// observedAt is station-local time, zoneless ISO (NOAA lst_ldt).
+export async function fetchNoaaTemp(stationId: string): Promise<TempReading | null> {
   const body = await noaaGet<NoaaTempResponse>("NOAA temp", stationId, {
     product: "water_temperature",
     date: "latest",
