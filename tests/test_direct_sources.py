@@ -8,7 +8,7 @@ from datetime import date, time, timedelta
 import pytest
 from openpyxl import Workbook
 
-import schedules.direct_sources as direct_sources
+from schedules._time import pacific_today
 from schedules.direct_sources import (
     DirectSourceError,
     _cache_text,
@@ -190,7 +190,7 @@ def test_koret_google_sheet_extractor_splits_hours_around_closed_grid_rows(tmp_p
 
 
 def test_koret_google_sheet_extractor_reads_dated_notice_closure(tmp_path, monkeypatch):
-    monkeypatch.setattr(direct_sources, "pacific_today", lambda: date(2026, 8, 12))
+    monkeypatch.setattr("schedules._time.pacific_today", lambda: date(2026, 8, 12))
     sheets = {
         day: [[day], ["Hours: 7am-7pm"]]
         for day in ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
@@ -209,7 +209,7 @@ def test_koret_google_sheet_extractor_reads_dated_notice_closure(tmp_path, monke
 
 
 def test_koret_notice_closure_rolls_year_forward(tmp_path, monkeypatch):
-    monkeypatch.setattr(direct_sources, "pacific_today", lambda: date(2026, 12, 20))
+    monkeypatch.setattr("schedules._time.pacific_today", lambda: date(2026, 12, 20))
     sheets = {
         day: [[day], ["Hours: 7am-7pm"]]
         for day in ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
@@ -242,7 +242,7 @@ def test_koret_closed_banner_weekday_emits_closure_and_keeps_sessions(tmp_path):
 
     payload = _extract_koret(path)
 
-    today = direct_sources.pacific_today()
+    today = pacific_today()
     expected = (today + timedelta(days=(4 - today.weekday()) % 7)).isoformat()
     assert {"start": expected, "end": expected, "reason": "Juneteenth"} in payload["closures"]
     assert any(session["day"] == "friday" for session in payload["sessions"])
@@ -495,7 +495,7 @@ def test_ymca_extractor_reads_first_location_hours_block():
 
 
 def test_ymca_extractor_prefers_facility_hours_block_with_day_ranges(monkeypatch):
-    monkeypatch.setattr(direct_sources, "pacific_today", lambda: date(2026, 5, 17))
+    monkeypatch.setattr("schedules._time.pacific_today", lambda: date(2026, 5, 17))
 
     payload = _extract_ymca_location(
         """
@@ -524,7 +524,7 @@ def test_ymca_extractor_prefers_facility_hours_block_with_day_ranges(monkeypatch
 
 
 def test_ymca_extractor_uses_pool_hours_when_page_gives_pool_rule(monkeypatch):
-    monkeypatch.setattr(direct_sources, "pacific_today", lambda: date(2026, 5, 17))
+    monkeypatch.setattr("schedules._time.pacific_today", lambda: date(2026, 5, 17))
 
     payload = _extract_ymca_location(
         """

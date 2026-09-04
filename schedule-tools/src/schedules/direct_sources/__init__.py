@@ -5,7 +5,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from .._time import pacific_today
 from ..models import PoolEntry
 from ..paths import DATA_DIR
 from .errors import DirectSourceError
@@ -16,7 +15,7 @@ from .http import (
     fetch_koret_workbook,
     fetch_text,
 )
-from .parsing import _resolve_yearless_date, _stable_payload_key
+from .parsing import _stable_payload_key
 from .providers.fitness_clubs import (
     _extract_24_hour_fitness,
     _extract_city_sports,

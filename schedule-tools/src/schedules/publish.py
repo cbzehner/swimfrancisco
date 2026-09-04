@@ -173,7 +173,7 @@ def publish_eligible(
     *,
     candidate: ReviewCandidate,
     payload: dict,
-    grounding: GroundingResult | None,
+    grounding: GroundingSummary | None,
     prior_sessions_count: int,
     latest_effective_start: str | None,
     source_kind: str,

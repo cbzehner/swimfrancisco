@@ -14,7 +14,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable
+from collections.abc import Iterable
 
 from ._time import PACIFIC_TZ
 from .envelope import AttestationCarried, AttestationCi, parse_attestation
@@ -30,7 +30,7 @@ class RowKey:
     pool: str
 
     @classmethod
-    def from_session(cls, session: dict) -> "RowKey":
+    def from_session(cls, session: dict) -> RowKey:
         return cls(
             day=str(session.get("day", "")),
             type=str(session.get("type", "")),

@@ -339,7 +339,7 @@ def _normalize_closures(raw_closures: list[dict]) -> list[dict[str, str]]:
 def _build_records_value(records: list[dict[str, str]], spec: _RecordSpec):
     if not records:
         return tomlkit.array()
-    aot: AoT = tomlkit.aot()
+    aot = tomlkit.aot()
     for record in records:
         table = tomlkit.table()
         for field in spec.required:

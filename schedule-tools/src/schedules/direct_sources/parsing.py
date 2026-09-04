@@ -6,7 +6,7 @@ from datetime import date, datetime, timedelta
 from html import unescape
 from html.parser import HTMLParser
 
-from .._time import pacific_today
+from .. import _time
 from ..models import DAY_ORDER, ScheduleBasis
 from .errors import DirectSourceError
 
@@ -36,7 +36,7 @@ def _payload(
 ) -> dict:
     return {
         "schedule_basis": schedule_basis,
-        "effective_start": pacific_today().isoformat(),
+        "effective_start": _time.pacific_today().isoformat(),
         "sessions": sorted(sessions, key=lambda s: (DAY_ORDER.index(s["day"]), s["start"], s["end"], s["type"])),
         "access_hours": sorted(
             access_hours or [],
@@ -172,11 +172,7 @@ def _resolve_yearless_date(month: int, day: int, today: date | None = None) -> d
     pages frequently list closures by month/day only — a December scrape that
     sees 'January 15' means next January, not last January."""
     if today is None:
-        # Imported lazily (rather than bound at module load) so that tests
-        # patching `direct_sources.pacific_today` still take effect here.
-        from . import pacific_today as _pacific_today
-
-        today = _pacific_today()
+        today = _time.pacific_today()
     resolved = date(today.year, month, day)
     if (today - resolved).days > 30:
         resolved = date(today.year + 1, month, day)
@@ -235,7 +231,7 @@ class _PoolScheduleParser(HTMLParser):
         self.rows: list[list[dict]] = []
 
     @classmethod
-    def from_html(cls, html: str) -> "_PoolScheduleTable":
+    def from_html(cls, html: str) -> _PoolScheduleTable:
         parser = cls()
         parser.feed(html)
         return _PoolScheduleTable(parser.rows)
