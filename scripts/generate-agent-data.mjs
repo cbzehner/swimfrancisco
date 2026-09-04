@@ -1,7 +1,6 @@
 #!/usr/bin/env node
-// Generates agent-readable JSON from canonical content/spots/*.md.
-// The default output is public/agent so Zola can build first and this script
-// can add ignored deploy artifacts without dirtying the source tree.
+// Generates agent-readable JSON from canonical content/spots/*.md into
+// static/agent (gitignored) so Zola copies it to /agent/* on every build.
 
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";

@@ -3,16 +3,16 @@ set positional-arguments
 default:
     @just --list
 
+# Same pipeline Cloudflare Workers Builds runs; package.json is the one
+# definition of the build steps.
 build:
-    node scripts/generate-i18n.mjs generate
-    node scripts/generate-bulletin.mjs
-    node scripts/generate-agent-data.mjs
-    node scripts/run-zola-build.mjs
-    node scripts/generate-build-metadata.mjs
+    npm run build
 
+# Refresh committed generated artifacts (localized pages, bulletin) before
+# the full gate, so `test-i18n` checks the regenerated tree.
 release:
-    node scripts/generate-i18n.mjs generate
-    node scripts/generate-bulletin.mjs
+    npm run generate-i18n
+    npm run generate-bulletin
     just check
 
 sync:
@@ -22,8 +22,9 @@ dev:
     devenv up
 
 serve:
-    node scripts/generate-i18n.mjs generate
-    node scripts/generate-bulletin.mjs
+    npm run generate-i18n
+    npm run generate-bulletin
+    npm run generate-agent-data
     zola serve --interface 127.0.0.1 --port 1111
 
 test-python:
@@ -36,7 +37,7 @@ typecheck-worker:
     npm --prefix worker run typecheck
 
 test-i18n:
-    node scripts/generate-i18n.mjs check
+    npm run check-i18n
 
 # Real-browser integration tests (WebKit + Chromium). Builds the site on an
 # ephemeral port and drives the regressions that node:test can't see.

@@ -35,10 +35,13 @@
     stages = [ "pre-push" ];
   };
 
+  # Agent JSON under static/agent is a gitignored build artifact derived from
+  # content/spots, so regenerate it before each Zola build.
   processes.zola.exec = ''
     watchexec --no-vcs-ignore \
       --watch content --watch templates --watch static --watch config.toml \
-      -- zola build --base-url http://localhost:8787
+      --ignore 'static/agent/**' \
+      -- sh -c 'node scripts/generate-agent-data.mjs && zola build --base-url http://localhost:8787'
   '';
   # Wrangler dev snapshots `public/` at startup and doesn't hot-reload static
   # assets. Wrap it in a watchexec that restarts the server whenever the Zola
