@@ -9,7 +9,7 @@ compatibility_date = "2025-01-01"
 enabled = true
 invocation_logs = true
 
-# One hourly cron. Every tick refreshes NOAA/NDBC data; the tick that
+# One hourly cron. Every tick refreshes conditions data; the tick that
 # happens to land at 00:00 PT also fires a rebuild (handler-side check
 # via `isPtMidnight`), keeping the server-rendered day-of-week current.
 # DST is handled inside the Worker via Intl, not by the cron config.
@@ -31,21 +31,3 @@ run_worker_first = ["/api/*", "/__scheduled", "/ingest/*"]
 binding = "CONDITIONS"
 id = "3b9bd339595448b3b1e057d44bea7f49"
 preview_id = "71167f5251b447c3aea11e6d3805cf8b"
-
-# CORS: HTTP handlers (Step 15) must allow origin https://swimfrancisco.com
-# (plus https://*.swimfrancisco.pages.dev preview deployments if needed).
-
-# Routes — uncomment ONE of the two options below once the swimfrancisco.com
-# zone exists in this Cloudflare account. See docs/deploy.md for full setup.
-#
-# Option A (recommended, single-origin): bind the Worker under the apex so
-# the static site and API share an origin. No CORS needed for production.
-# [[routes]]
-# pattern = "swimfrancisco.com/api/*"
-# zone_name = "swimfrancisco.com"
-#
-# Option B (dedicated subdomain): expose the Worker at api.swimfrancisco.com.
-# Requires a DNS record and CORS allow-list already covers this host.
-# [[routes]]
-# pattern = "api.swimfrancisco.com/*"
-# zone_name = "swimfrancisco.com"

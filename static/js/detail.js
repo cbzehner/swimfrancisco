@@ -169,7 +169,7 @@ function init() {
   // client-side "NOW" marker agree for non-PT visitors.
   refresh(root, schedule);
   // Intra-day refresh: keep the status slab and NOW/NEXT markers honest in
-  // a long-lived tab. Day tick-over is server-rendered by the 00:05 PT
+  // a long-lived tab. Day tick-over is server-rendered by the 00:00 PT
   // rebuild; the client owns only minute-level updates within the day.
   setInterval(() => refresh(root, schedule), REFRESH_INTERVAL_MS);
   document.addEventListener("visibilitychange", () => {

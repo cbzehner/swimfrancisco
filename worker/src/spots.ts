@@ -1,6 +1,6 @@
 // AUTO-GENERATED from content/spots/*.md — do not edit by hand.
 // Regenerate via `node scripts/generate-worker-spots.mjs`
-// (runs automatically from wrangler [build] before dev and deploy).
+// (also runs before `npm run typecheck` in worker/).
 
 export type TempStationType = "usgs" | "noaa" | "ndbc" | "erddap" | "sst";
 
