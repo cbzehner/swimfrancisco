@@ -24,9 +24,11 @@ name: schedules-extract
 
 on:
   schedule:
-    # Daily 16:00 UTC = 09:00 PT (after PST/PDT both). Cache-hit days
-    # with no registry change produce no diff and stop at the detect step.
-    - cron: '0 16 * * *'
+    # Weekly Monday 16:00 UTC = 09:00 PT. Keeps free-tier Actions minutes
+    # under the personal allowance; workflow_dispatch still runs on demand.
+    # Cache-hit weeks with no registry change produce no diff and stop at
+    # the detect step.
+    - cron: '0 16 * * 1'
   workflow_dispatch:
     inputs:
       auto_project:
@@ -108,8 +110,10 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: schedule-tools/uv.lock
 
       - name: Sync schedule-tools deps
         run: uv --project schedule-tools sync
@@ -238,8 +242,8 @@ jobs:
         run: |
           set -euo pipefail
           DATE=$(date +%Y-%m-%d)
-          # One rolling branch: daily runs refresh the same PR instead of
-          # piling up parallel week-stamped PRs.
+          # One rolling branch: scheduled runs refresh the same PR instead
+          # of piling up parallel week-stamped PRs.
           BRANCH="auto/schedules-extract"
 
           git config user.name "github-actions[bot]"
