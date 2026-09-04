@@ -216,8 +216,12 @@ def test_page_issue_on_preflight_failure_close_on_preflight_success() -> None:
     assert 'gh issue create --title "schedules-extract blocked"' in file_issue
     assert "--label schedules-extract-blocked" in file_issue
     assert "extract did not run." in file_issue
-    assert "github-actions[bot]" in file_issue
-    assert "github-actions[bot]" in close_issue
+    # `gh` reports Actions-authored issues as `app/github-actions`, not
+    # `github-actions[bot]`; matching on the login created a new issue
+    # every run. Dedup must key on `is_bot`.
+    assert "github-actions[bot]" not in file_issue
+    assert ".author.is_bot" in file_issue
+    assert ".author.is_bot" in close_issue
     assert "gh issue close" in close_issue
 
 
