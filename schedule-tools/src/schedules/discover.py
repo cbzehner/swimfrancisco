@@ -186,8 +186,13 @@ def classify_pdf(
 
 
 def choose_roll(
-    entry: PoolEntry, classified: list[ClassifiedDocument]
+    entry: PoolEntry,
+    classified: list[ClassifiedDocument],
+    *,
+    pin_window: tuple[date, date] | None = None,
 ) -> DiscoverDecision:
+    """``pin_window`` is the parsed [start, end] of the current ``pdf_url`` PDF,
+    when known. It lets a lone off-table grid prove it is the pin's successor."""
     candidates = tuple(classified)
     old_url = entry.pdf_url
     current_id = view_id_from_url(old_url)
@@ -289,6 +294,21 @@ def choose_roll(
         )
 
     if not table_grid_ids and session_grids:
+        # The table links no grid (flyer-only or empty) but the band/persist
+        # scan found exactly one for this pool. Adopt it when it proves
+        # itself: filename or page-1 named this pool and no other (already
+        # required to classify), page 1 carries a weekday grid header, the
+        # window parsed, it is still current, and it starts after the pin's
+        # window. Anything weaker stays a blocking FLAG for --adopt.
+        if len(kept) == 1 and _band_grid_is_successor(kept[0], pin_window):
+            return decide(
+                "adopt",
+                "band_session_grid",
+                kind="session_grid",
+                new_url=kept[0].link.href,
+                blocking=False,
+                extra=non_grid,
+            )
         return decide("flag", "band_session_grid", kind="session_grid", blocking=True)
 
     if table_notices and not session_grids:
@@ -298,6 +318,22 @@ def choose_roll(
         return decide("flag", "empty_table", kind=None, blocking=True)
 
     return decide("flag", "no_session_grid", kind=None, blocking=True)
+
+
+def _band_grid_is_successor(
+    item: ClassifiedDocument, pin_window: tuple[date, date] | None
+) -> bool:
+    if item.source not in {"band", "persisted"}:
+        return False
+    if item.grid_confirmed is not True:
+        return False
+    if item.window_start is None or item.window_end is None:
+        return False
+    if item.window_end < pacific_today():
+        return False
+    if pin_window is not None and item.window_start <= pin_window[1]:
+        return False
+    return True
 
 
 def _collapse_session_grids(
@@ -446,6 +482,10 @@ def rewrite_registry_pdf_url(path: Path, slug: str, url: str) -> None:
 
 
 def apply_discover_decision(path: Path, decision: DiscoverDecision) -> None:
+    # A page that failed to fetch tells us nothing about the pool. Never let
+    # it overwrite persisted band IDs, sequential siblings, or extras.
+    if decision.reason == "fetch_error":
+        return
     text = path.read_text()
     start, end = _pool_block_span(text, slug=decision.slug)
     block = text[start:end]
@@ -609,23 +649,23 @@ def discover_all(
 
     decisions: list[DiscoverDecision] = []
     for entry in selected:
-        if entry.slug in fetch_errors:
-            decisions.append(
-                DiscoverDecision(
-                    slug=entry.slug,
-                    action="flag",
-                    old_url=entry.pdf_url,
-                    new_url=None,
-                    kind=None,
-                    reason="fetch_error",
-                    candidates=tuple(classified_by_slug[entry.slug]),
-                    extra_candidates=(),
-                    blocking=True,
-                )
-            )
-            continue
         classified = classified_by_slug[entry.slug]
-        decision = choose_roll(entry, classified)
+        if entry.slug in fetch_errors:
+            decision = DiscoverDecision(
+                slug=entry.slug,
+                action="flag",
+                old_url=entry.pdf_url,
+                new_url=None,
+                kind=None,
+                reason="fetch_error",
+                candidates=tuple(classified),
+                extra_candidates=(),
+                blocking=True,
+            )
+        else:
+            decision = choose_roll(
+                entry, classified, pin_window=_pin_window(entry, views)
+            )
         if adopt is not None and adopt[0] == entry.slug:
             decision = _operator_adopt_decision(entry, classified, views, adopt[1])
         decision = _with_persisted_survivors(
@@ -638,7 +678,7 @@ def discover_all(
 
     if not dry_run:
         for decision in decisions:
-            apply_discover_decision(registry_path, decision)
+            apply_discover_decision(registry_path, decision)  # no-op on fetch_error
 
     report_dir.mkdir(parents=True, exist_ok=True)
     report_path = report_dir / "discovery-report.md"
@@ -651,6 +691,21 @@ def discover_all(
     if selected and fetch_errors and set(fetch_errors) == selected_slugs:
         raise DiscoverError("every Rec & Park facility page failed to fetch")
     return decisions
+
+
+def _pin_window(
+    entry: PoolEntry, views: dict[int, _ViewFetch]
+) -> tuple[date, date] | None:
+    current_id = view_id_from_url(entry.pdf_url)
+    fetched = views.get(current_id) if current_id is not None else None
+    if fetched is None or not fetched.is_pdf:
+        return None
+    return parse_window_dates(
+        page_text=_first_page_text(fetched.content),
+        anchor_text=None,
+        filename=fetched.filename,
+        year_default=pacific_today().year,
+    )
 
 
 def _operator_adopt_decision(
@@ -1419,6 +1474,8 @@ def _render_report(
         lines.append(f"- action: {decision.action}")
         lines.append(f"- reason: {decision.reason}")
         lines.append(f"- blocking: {decision.blocking}")
+        if decision.reason == "fetch_error":
+            lines.append("- registry: unchanged (facility page failed; prior notes kept)")
         if decision.candidates:
             listed = ", ".join(
                 f"{item.link.view_id}:{item.kind}:{item.source}"

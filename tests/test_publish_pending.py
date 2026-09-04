@@ -1194,3 +1194,50 @@ def test_drop_to_zero_does_not_write(iso):
     refused = json.loads(report.with_name("publish-pending.json").read_text())["refused"]
     assert refused[0]["code"] == "sessions_dropped_to_zero"
     assert not (iso.data / "hamilton-pool" / f"2026-08-19-{SHA[:12]}" / "reviewed.json").exists()
+
+
+def test_sequential_expired_reexport_is_covered_not_refused(iso, monkeypatch):
+    """Sava Fall 1 re-exported at a second View ID after it ended: no refuse,
+    no write, sitting stays quiet."""
+    attested_dir = iso.data / "sava-pool" / f"2026-08-19-{SHA[:12]}"
+    attested_dir.mkdir(parents=True)
+    (attested_dir / "reviewed.json").write_text(
+        json.dumps(
+            {
+                "slug": "sava-pool",
+                "pdf_sha256": SHA,
+                "reviewed_at": "2026-08-19",
+                "attested_by": "ci",
+                "source_pdf_url": SAVA_FALL2,
+                "payload": _payload(start="2026-08-29", end="2026-12-12"),
+            }
+        )
+    )
+    _write_candidate(
+        iso.data,
+        slug="sava-pool",
+        sha=SHA2,
+        payload=_payload(n=4, start="2026-08-18", end="2026-08-28"),
+        source_pdf_url="https://sfrecpark.org/DocumentCenter/View/29806",
+        fetch_date="2026-09-01",
+    )
+    _seed_content(
+        iso.content,
+        "sava-pool",
+        windows=[("2026-08-18", "2026-08-28"), ("2026-08-29", "2026-12-12")],
+    )
+    monkeypatch.setattr("schedules.publish.load_registry", lambda: [_sava_entry()])
+    decision = _sava_sequential_decision()
+    decision["candidates"][0]["view_id"] = 29806
+    decision["candidates"][0]["href"] = "https://sfrecpark.org/DocumentCenter/View/29806"
+    decision["candidates"][0]["source"] = "persisted"
+    iso.tmp.joinpath("discovery-decisions.json").write_text(json.dumps([decision]))
+    count, report = publish_pending_all(
+        data_root=iso.data, content_spots_dir=iso.content, today=date(2026, 9, 4)
+    )
+    assert count == 0
+    payload = json.loads(report.with_name("publish-pending.json").read_text())
+    assert payload["refused"] == []
+    assert not (
+        iso.data / "sava-pool" / f"2026-09-01-{SHA2[:12]}" / "reviewed.json"
+    ).exists()
