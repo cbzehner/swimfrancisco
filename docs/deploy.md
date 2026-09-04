@@ -143,6 +143,26 @@ wrangler secret put WORKERS_BUILDS_DEPLOY_HOOK
 wrangler secret list   # confirm WORKERS_BUILDS_DEPLOY_HOOK is bound
 ```
 
+### CARTO basemap key
+
+Set the map's browser-facing key as a Worker secret, not a build variable:
+
+```sh
+npx wrangler secret put CARTO_BASEMAP_API_KEY --config worker/wrangler.toml
+# Paste the issued key at the hidden prompt.
+```
+
+`GET /api/map-config` exposes only this key to the map, with `no-store`.
+The browser sends it directly to CARTO in tile requests; it is not a private
+server credential. Keep it out of Git and logs, and register the domains
+where it will be used. Replacing the Worker secret takes effect on the next
+page load without rebuilding the site. Previews need their own configuration.
+
+For local Worker development, put `CARTO_BASEMAP_API_KEY` in the ignored
+`worker/.dev.vars` file. A plain Zola server does not serve this API route;
+use Wrangler for a working basemap. Browser tests mock configuration and
+tile requests, so they never need the issued key.
+
 ### 8. Publish cron triggers
 
 ```sh

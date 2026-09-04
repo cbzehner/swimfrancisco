@@ -78,3 +78,55 @@ test("scheduled reports a conditions KV write failure through waitUntil", async 
     console.error = originalConsoleError;
   }
 });
+
+test("map config exposes only the trimmed CARTO key", async () => {
+  const response = await worker.fetch(
+    new Request("https://swimfrancisco.com/api/map-config"),
+    {
+      CARTO_BASEMAP_API_KEY: "  fake-carto-key  ",
+      OTHER_SECRET: "must-not-leak",
+    },
+    {},
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("cache-control"), "no-store");
+  assert.equal(response.headers.get("access-control-allow-origin"), null);
+  assert.deepEqual(await response.json(), { carto_basemap_key: "fake-carto-key" });
+});
+
+test("map config rejects a missing or blank CARTO key", async () => {
+  for (const value of [undefined, "", "   "]) {
+    const response = await worker.fetch(
+      new Request("https://swimfrancisco.com/api/map-config"),
+      { CARTO_BASEMAP_API_KEY: value },
+      {},
+    );
+
+    assert.equal(response.status, 503);
+    assert.equal(response.headers.get("cache-control"), "no-store");
+    assert.deepEqual(await response.json(), { error: "map configuration unavailable" });
+  }
+});
+
+test("map config rejects non-GET requests", async () => {
+  const response = await worker.fetch(
+    new Request("https://swimfrancisco.com/api/map-config", { method: "POST" }),
+    { CARTO_BASEMAP_API_KEY: "fake-carto-key" },
+    {},
+  );
+
+  assert.equal(response.status, 405);
+  assert.equal(response.headers.get("allow"), "GET");
+  assert.equal(response.headers.get("cache-control"), "no-store");
+  assert.deepEqual(await response.json(), { error: "method not allowed" });
+});
+
+test("map config reads the CARTO key on every request", async () => {
+  const request = () => new Request("https://swimfrancisco.com/api/map-config");
+  const first = await worker.fetch(request(), { CARTO_BASEMAP_API_KEY: "fake-key-one" }, {});
+  const second = await worker.fetch(request(), { CARTO_BASEMAP_API_KEY: "fake-key-two" }, {});
+
+  assert.deepEqual(await first.json(), { carto_basemap_key: "fake-key-one" });
+  assert.deepEqual(await second.json(), { carto_basemap_key: "fake-key-two" });
+});

@@ -187,6 +187,23 @@ function renderMarkers(L, map, layer, markers, spots) {
   });
 }
 
+async function loadBasemap(L, map) {
+  const response = await fetch("/api/map-config", { signal: AbortSignal.timeout(10_000) });
+  if (!response.ok) throw new Error("Map configuration unavailable");
+  const config = await response.json();
+  const key = config?.carto_basemap_key;
+  if (typeof key !== "string" || !key.trim()) throw new Error("Map configuration invalid");
+
+  // CartoDB Voyager: warm cream basemap that keeps SF's neighborhoods,
+  // parks, and the bay legible without overwhelming the brand palette.
+  L.tileLayer(`https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(key.trim())}`, {
+    maxZoom: 19,
+    subdomains: "abcd",
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  }).addTo(map);
+}
+
 async function init() {
   const container = document.getElementById("map-view");
   if (!container) return;
@@ -200,14 +217,6 @@ async function init() {
   }
 
   const map = L.map(container).setView(SF_CENTER, SF_ZOOM);
-  // CartoDB Voyager: warm cream basemap that keeps SF's neighborhoods,
-  // parks, and the bay legible without overwhelming the brand palette.
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-    maxZoom: 19,
-    subdomains: "abcd",
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-  }).addTo(map);
   const markerLayer = L.layerGroup().addTo(map);
   const markers = new Map();
   const refresh = () => renderMarkers(L, map, markerLayer, markers, collectVisibleSpots());
@@ -244,6 +253,11 @@ async function init() {
   document.addEventListener("sf:filters-applied", refresh);
   // Conditions arrive async — re-render so beach popups pick up temp/tide.
   document.addEventListener("sf:conditions-loaded", refresh);
+  try {
+    await loadBasemap(L, map);
+  } catch {
+    console.error("[swimfrancisco] basemap unavailable");
+  }
 }
 
 if (document.readyState === "loading") {

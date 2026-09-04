@@ -5,8 +5,13 @@ Cloudflare Worker that fetches water conditions (USGS, NOAA CO-OPS, NDBC, ERDDAP
 ## Routes
 
 - `GET /api/conditions` — slug-keyed record for every spot
+- `GET /api/map-config` — public CARTO basemap configuration for the browser;
+  returns `503` when `CARTO_BASEMAP_API_KEY` is not bound
 
-Responses are JSON with `cache-control: public, max-age=900, s-maxage=3600` (15 min in the browser, 1 h at the edge). CORS allows `swimfrancisco.com`, `*.swimfrancisco.pages.dev`, and `localhost`.
+Conditions responses use `cache-control: public, max-age=900, s-maxage=3600`
+(15 min in the browser, 1 h at the edge). Conditions CORS allows
+`swimfrancisco.com`, `*.swimfrancisco.pages.dev`, and `localhost`. Map
+configuration is same-origin and uses `cache-control: no-store`.
 
 ## Scheduled trigger
 
@@ -26,6 +31,10 @@ HTTP 413 for larger payloads, including requests without Content-Length.
 ## Deploy prereqs
 
 KV namespace IDs are already in `wrangler.toml`. Recreate them only if you rebuild the Terraform-managed namespaces; then paste the new `id` / `preview_id` into `[[kv_namespaces]]`.
+
+Bind `CARTO_BASEMAP_API_KEY` in each deployed environment that serves the map.
+The `/api/map-config` response is never cached, so key rotation takes effect on
+the next request.
 
 See [`../docs/deploy.md`](../docs/deploy.md) for the end-to-end Workers Builds + Terraform runbook.
 
