@@ -1493,11 +1493,9 @@ table.weekly-grid tr { display: contents; }
 
 /* ── Map view (existing #map-view + Leaflet popups, reskinned) ─────────── */
 #map-view {
-  height: 70vh;
-  min-height: 420px;
+  min-height: 0;
   margin: 0;
   border-top: 3px solid var(--ink);
-  border-bottom: 3px solid var(--ink);
   background: #c2d6db;
 }
 
@@ -1515,11 +1513,6 @@ body.map-page main {
   grid-template-rows: auto minmax(0, 1fr);
   border-left: 0;
   border-right: 0;
-}
-body.map-page #map-view {
-  height: auto;
-  min-height: 0;
-  border-bottom: 0;
 }
 body.map-page .site-footer {
   display: none;

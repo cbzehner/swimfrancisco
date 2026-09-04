@@ -14,6 +14,7 @@
 {% block extra_head %}
   {% set_global is_map_view = section.extra.view | default(value='') == 'map' %}
   {% if is_map_view %}
+    <link rel="stylesheet" href="{{ get_url(path='vendor/leaflet.css') }}">
   {% else %}
     <script type="application/ld+json">
       {
@@ -172,7 +173,9 @@
     </tbody>
   </table>
 
-  <div id="map-view"{% if not is_map_view %} hidden{% endif %}></div>
+  {% if is_map_view %}
+    <div id="map-view"></div>
+  {% endif %}
 
 {% endblock %}
 {% block scripts %}
@@ -180,6 +183,7 @@
   <script type="module" src="{{ get_url(path='js/conditions.js') }}"></script>
   <script type="module" src="{{ get_url(path='js/filters.js') }}"></script>
   {% if is_map_view %}
+    <script src="{{ get_url(path='vendor/leaflet.js') }}"></script>
     <script type="module" src="{{ get_url(path='js/map.js') }}"></script>
   {% endif %}
 {% endblock %}

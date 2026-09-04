@@ -6,7 +6,7 @@ Pool hours are derived from official facility sources and may be wrong. The boar
 
 ## Architecture
 
-A [Zola](https://www.getzola.org/) static site served by a single Cloudflare Worker in the Workers Builds model. The Worker serves the built Zola assets, handles `/api/*`, fetches NOAA and NDBC conditions on an hourly cron, and caches them in KV. The frontend is plain vanilla JS (no bundler, no framework). The UI uses an amber-on-navy departure-board aesthetic with split-flap row animations on load. Leaflet is lazy-loaded only when the user opens the map view.
+A [Zola](https://www.getzola.org/) static site served by a single Cloudflare Worker in the Workers Builds model. The Worker serves the built Zola assets, handles `/api/*`, fetches NOAA and NDBC conditions on an hourly cron, and caches them in KV. The frontend is plain vanilla JS (no bundler, no framework). The UI uses an amber-on-navy departure-board aesthetic with split-flap row animations on load. Only map pages load Leaflet.
 
 ## Repo layout
 
@@ -104,7 +104,7 @@ Do not hand-edit generated localized pages for translation changes. Run `npm run
 
 ## Tech stack
 
-Zola, plain JS (no build step for frontend), Leaflet (lazy-loaded for map view), Cloudflare Workers Builds + KV, devenv/Nix for the dev shell, uv/Python for the local schedule extractor.
+Zola, plain JS (no build step for frontend), Leaflet (map pages only), Cloudflare Workers Builds + KV, devenv/Nix for the dev shell, uv/Python for the local schedule extractor.
 
 ## Known gaps
 

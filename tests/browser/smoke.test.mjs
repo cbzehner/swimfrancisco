@@ -254,6 +254,8 @@ for (const engine of ["webkit", "chromium"]) {
         <td data-cell="status" data-status-value="AVAILABLE"></td><td data-cell="next">LAP 12:00–15:00</td>
       </tr></tbody></table>
       <div id="map-view" style="height:600px;width:800px"></div>
+      <link rel="stylesheet" href="/vendor/leaflet.css">
+      <script src="/vendor/leaflet.js"></script>
       <script type="module" src="/js/map.js"></script>`);
     await page.route("**/api/map-config", (route) => route.fulfill({ json: { carto_basemap_key: "test-carto-key" } }));
     await page.route("https://*.basemaps.cartocdn.com/**", (route) => route.abort());
