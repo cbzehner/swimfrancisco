@@ -1503,12 +1503,16 @@ table.weekly-grid tr { display: contents; }
 
 body.map-page {
   overflow: hidden;
+  height: 100svh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 body.map-page main {
   max-width: none;
-  height: 100svh;
+  margin: 0;
+  min-height: 0;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   border-left: 0;
   border-right: 0;
 }
@@ -1654,9 +1658,6 @@ body.map-page .site-footer {
   body { padding-bottom: calc(58px + env(safe-area-inset-bottom)); }
   body.map-page {
     padding-bottom: 0;
-  }
-  body.map-page main {
-    height: calc(100svh - 58px - env(safe-area-inset-bottom));
   }
   main {
     border-left: 0;
