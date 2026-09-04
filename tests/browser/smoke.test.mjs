@@ -119,8 +119,13 @@ for (const engine of ["webkit", "chromium"]) {
       t.after(() => context.close());
       const page = await context.newPage();
       const errors = [];
+      const tileRequests = [];
       page.on("pageerror", (error) => errors.push(error.message));
-      await page.route("https://*.basemaps.cartocdn.com/**", (route) => route.abort());
+      await page.route("**/api/map-config", (route) => route.fulfill({ json: { carto_basemap_key: "test/key&value" } }));
+      await page.route("https://*.basemaps.cartocdn.com/**", (route) => {
+        tileRequests.push(new URL(route.request().url()));
+        return route.abort();
+      });
       await page.route("**/api/conditions", (route) => route.fulfill({ json: {} }));
       await page.goto(`${baseURL}/map/`, { waitUntil: "networkidle" });
       await page.locator(".sf-marker").first().waitFor();
@@ -136,6 +141,8 @@ for (const engine of ["webkit", "chromium"]) {
       }
       const attribution = await page.locator(".leaflet-control-attribution").boundingBox();
       assert.ok(attribution.y + attribution.height <= map.y + map.height + 1, "map attribution must remain visible");
+      assert.ok(tileRequests.length > 0, "map must request basemap tiles");
+      assert.ok(tileRequests.every((url) => url.searchParams.get("key") === "test/key&value"), "every tile must use the configured key");
 
       const markerIndex = await page.locator(".sf-marker").evaluateAll((markers) => markers.findIndex((marker) => {
         const box = marker.getBoundingClientRect();
@@ -153,6 +160,27 @@ for (const engine of ["webkit", "chromium"]) {
       assert.deepEqual(errors, []);
     });
   }
+
+  test(`[${engine}] missing map configuration never sends unauthenticated tile requests`, async (t) => {
+    const context = await browsers[engine].newContext();
+    t.after(() => context.close());
+    const page = await context.newPage();
+    const tileRequests = [];
+    await page.route("https://*.basemaps.cartocdn.com/**", (route) => {
+      tileRequests.push(route.request().url());
+      return route.abort();
+    });
+    await page.route("**/api/conditions", (route) => route.fulfill({ json: {} }));
+    for (const config of [{ status: 503, json: { error: "unavailable" } }, { json: {} }, { json: { carto_basemap_key: " " } }]) {
+      await page.route("**/api/map-config", (route) => route.fulfill(config));
+      const unavailable = page.waitForEvent("console", (message) => message.text() === "[swimfrancisco] basemap unavailable");
+      await page.goto(`${baseURL}/map/`);
+      await unavailable;
+      assert.ok(await page.locator(".sf-marker").count() > 0, "spots must still render when basemap configuration fails");
+      assert.equal(tileRequests.length, 0);
+      await page.unroute("**/api/map-config");
+    }
+  });
 
   test(`[${engine}] detail restores today's sessions after a partial closure`, async (t) => {
     const schedule = {
@@ -227,6 +255,7 @@ for (const engine of ["webkit", "chromium"]) {
       </tr></tbody></table>
       <div id="map-view" style="height:600px;width:800px"></div>
       <script type="module" src="/js/map.js"></script>`);
+    await page.route("**/api/map-config", (route) => route.fulfill({ json: { carto_basemap_key: "test-carto-key" } }));
     await page.route("https://*.basemaps.cartocdn.com/**", (route) => route.abort());
     await page.goto(`${baseURL}/fixture`);
     await page.locator(".sf-marker-open").waitFor();

@@ -3,6 +3,7 @@
 //   NOAA, NDBC, ERDDAP, MUR SST) and NOAA tide predictions; assemble
 //   per-spot records; write KV. The 00:00 PT tick also triggers a rebuild.
 // - HTTP: GET /api/conditions → slug-keyed bulk record from KV.
+// - HTTP: GET /api/map-config → public browser map configuration.
 // - HTTP: /ingest/* → PostHog reverse proxy.
 
 import { assembleAndPersist } from "./assemble.ts";
@@ -15,6 +16,7 @@ import { handlePosthog, isPosthogPath } from "./posthog.ts";
 export interface Env {
   CONDITIONS: KVNamespace;
   WORKERS_BUILDS_DEPLOY_HOOK: string;
+  CARTO_BASEMAP_API_KEY?: string;
 }
 
 // Data refreshes hourly via cron. The Worker writes successful conditions
@@ -89,6 +91,26 @@ async function handleConditions(
   return withCors(request, response);
 }
 
+function handleMapConfig(request: Request, env: Env): Response {
+  const headers = { "cache-control": "no-store" };
+  if (request.method !== "GET") {
+    return Response.json(
+      { error: "method not allowed" },
+      { status: 405, headers: { ...headers, allow: "GET" } },
+    );
+  }
+
+  const cartoBasemapKey = env.CARTO_BASEMAP_API_KEY?.trim();
+  if (!cartoBasemapKey) {
+    return Response.json(
+      { error: "map configuration unavailable" },
+      { status: 503, headers },
+    );
+  }
+
+  return Response.json({ carto_basemap_key: cartoBasemapKey }, { headers });
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     // Analytics proxy is same-origin and forwards every method (POST for
@@ -110,6 +132,10 @@ export default {
         });
       }
       return handleConditions(request, env, ctx);
+    }
+
+    if (path === "/api/map-config") {
+      return handleMapConfig(request, env);
     }
 
     return notFound(request, "not found");
