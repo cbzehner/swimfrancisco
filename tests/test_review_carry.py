@@ -54,6 +54,7 @@ def test_carry_writes_reviewed_snapshot_with_provenance(tmp_path):
         slug="north-beach-pool",
         review_dir=new_dir,
         pdf_sha256=_NEW_SHA,
+        source_pdf_url="https://example.com/y.pdf",
         payload=_payload(effective_start="2026-07-13"),
         ignore_effective_start=True,
         data_root=tmp_path,
@@ -63,6 +64,7 @@ def test_carry_writes_reviewed_snapshot_with_provenance(tmp_path):
     envelope = json.loads(carried.read_text())
     validate_envelope(envelope)
     assert envelope["pdf_sha256"] == _NEW_SHA
+    assert envelope["source_pdf_url"] == "https://example.com/y.pdf"
     assert envelope["reviewed_at"] == "2026-07-06"
     assert envelope["carried_from"].endswith("reviewed.json")
     # The human-reviewed payload is preserved verbatim, including its
@@ -81,6 +83,7 @@ def test_carry_treats_absent_and_empty_collections_as_equal(tmp_path):
         slug="city-sports-20th-ave",
         review_dir=new_dir,
         pdf_sha256=_NEW_SHA,
+        source_pdf_url="https://example.com/y.pdf",
         payload=fresh,
         ignore_effective_start=True,
         data_root=tmp_path,
@@ -101,6 +104,7 @@ def test_carry_ignores_evidence_and_session_order(tmp_path):
         slug="north-beach-pool",
         review_dir=new_dir,
         pdf_sha256=_NEW_SHA,
+        source_pdf_url="https://example.com/y.pdf",
         payload=reordered,
         ignore_effective_start=False,
         data_root=tmp_path,
@@ -119,6 +123,7 @@ def test_carry_refuses_when_payload_differs(tmp_path):
         slug="north-beach-pool",
         review_dir=new_dir,
         pdf_sha256=_NEW_SHA,
+        source_pdf_url="https://example.com/y.pdf",
         payload=changed,
         ignore_effective_start=True,
         data_root=tmp_path,
@@ -135,6 +140,7 @@ def test_carry_refuses_without_prior_review(tmp_path):
         slug="north-beach-pool",
         review_dir=new_dir,
         pdf_sha256=_NEW_SHA,
+        source_pdf_url="https://example.com/y.pdf",
         payload=_payload(),
         ignore_effective_start=True,
         data_root=tmp_path,
@@ -153,6 +159,7 @@ def test_strict_mode_blocks_carry_on_effective_start_change(tmp_path):
         slug="balboa-pool",
         review_dir=new_dir,
         pdf_sha256=_NEW_SHA,
+        source_pdf_url="https://example.com/y.pdf",
         payload=_payload(effective_start="2026-08-12"),
         ignore_effective_start=False,
         data_root=tmp_path,
@@ -168,6 +175,7 @@ def test_carried_snapshot_can_seed_the_next_carry(tmp_path):
         slug="north-beach-pool",
         review_dir=first_dir,
         pdf_sha256=_NEW_SHA,
+        source_pdf_url="https://example.com/y.pdf",
         payload=_payload(effective_start="2026-07-13"),
         ignore_effective_start=True,
         data_root=tmp_path,
@@ -179,6 +187,7 @@ def test_carried_snapshot_can_seed_the_next_carry(tmp_path):
         slug="north-beach-pool",
         review_dir=second_dir,
         pdf_sha256=third_sha,
+        source_pdf_url="https://example.com/z.pdf",
         payload=_payload(effective_start="2026-07-20"),
         ignore_effective_start=True,
         data_root=tmp_path,
@@ -188,6 +197,7 @@ def test_carried_snapshot_can_seed_the_next_carry(tmp_path):
     envelope = json.loads(carried.read_text())
     validate_envelope(envelope)
     assert envelope["pdf_sha256"] == third_sha
+    assert envelope["source_pdf_url"] == "https://example.com/z.pdf"
     assert envelope["reviewed_at"] == "2026-07-06"
 
 

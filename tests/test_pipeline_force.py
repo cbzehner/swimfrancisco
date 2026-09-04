@@ -10,6 +10,7 @@ from schedules import registry as registry_mod
 from schedules.models import FetchResult, ProviderResult
 from schedules.pipeline import BakeoffRun, PdfRun, ExpandFromDecisions, run_pipeline
 from schedules.report import write_report
+from schedules.review import DecisionSet
 
 
 SLUG = "hamilton-pool"
@@ -134,7 +135,12 @@ def test_force_bypasses_reviewed_fast_path(tmp_path, monkeypatch):
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", fake_extract)
 
     exit_code, _, results = run_pipeline(
-        PdfRun(provider="gemini", slugs=(SLUG,), force=True, urls=ExpandFromDecisions()),
+        PdfRun(
+            provider="gemini",
+            slugs=(SLUG,),
+            force=True,
+            urls=ExpandFromDecisions(DecisionSet.from_items([])),
+        ),
     )
 
     assert exit_code == 0

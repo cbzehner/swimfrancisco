@@ -6,7 +6,7 @@
 import { formatPacificDate, formatPacificTime, pacificWallClockDate } from "./helpers/pacific.mjs";
 import { formatTideSummary } from "./helpers/tide.mjs";
 import { t } from "./helpers/i18n.mjs";
-import { OPEN_STATUSES } from "./helpers/board.mjs";
+import { OPEN_STATUSES, PLACEHOLDER } from "./helpers/board.mjs";
 
 const DEFAULT_ENDPOINT = "/api/conditions";
 // The hero count excludes ACCESS: access hours mean the building is open,
@@ -65,10 +65,9 @@ function setText(root, selector, value) {
 // (stale) readings so CSS can dim them instead of presenting them as live.
 function setTemp(root, selector, record) {
   const temp = extractTemp(record);
-  if (!temp) return;
   root.querySelectorAll(selector).forEach((node) => {
-    node.textContent = temp;
-    if (record.temp_stale) {
+    node.textContent = temp || PLACEHOLDER;
+    if (temp && record.temp_stale) {
       node.setAttribute("data-temp-stale", "true");
     } else {
       node.removeAttribute("data-temp-stale");
@@ -132,8 +131,8 @@ function applyBulletinStrip(root, conditions) {
   setTemp(root, "[data-bay-temp-strip]", bayRecord);
   setTemp(root, "[data-ocean-temp]", oceanRecord);
   setTemp(root, "[data-ocean-temp-strip]", oceanRecord);
-  setText(root, "[data-next-tide]", tideSummary);
-  setText(root, "[data-conditions-updated]", updated);
+  setText(root, "[data-next-tide]", tideSummary || PLACEHOLDER);
+  setText(root, "[data-conditions-updated]", updated || PLACEHOLDER);
 }
 
 // Fetch and parse the conditions bulk endpoint. Returns null on any failure.
@@ -175,10 +174,8 @@ function applyConditions(root, conditions) {
     const record = conditions[slug];
     setTemp(panel, '[data-field="water_temp"]', record);
     const tideSummary = formatTideSummary(record, now);
-    if (tideSummary) {
-      const tideField = panel.querySelector('[data-field="tide"]');
-      if (tideField) tideField.textContent = tideSummary;
-    }
+    const tideField = panel.querySelector('[data-field="tide"]');
+    if (tideField) tideField.textContent = tideSummary || PLACEHOLDER;
   });
 }
 
@@ -209,20 +206,21 @@ async function loadConditions({ force = false } = {}) {
 async function init() {
   applyBoardSummary(document);
   applyBulletinStrip(document, null);
+  setInterval(refreshConditions, 60_000);
+  document.addEventListener("visibilitychange", refreshConditions);
   await loadConditions({ force: true });
+}
+
+function refreshConditions() {
+  if (document.hidden) return;
+  applyConditions(document, window.SWIMFRANCISCO_CONDITIONS || {});
+  loadConditions();
 }
 
 document.addEventListener("sf:status-applied", () => applyBoardSummary(document));
 document.addEventListener("sf:horizon-changed", () => applyBoardSummary(document));
 document.addEventListener("sf:filters-applied", () => applyBoardSummary(document));
-// Minute tick from status.js: refresh the bulletin clock/date, recount the
-// open pools, and re-fetch conditions when the data is older than the
-// Worker's cache window.
-document.addEventListener("sf:board-refreshed", () => {
-  applyBulletinStrip(document, window.SWIMFRANCISCO_CONDITIONS || null);
-  applyBoardSummary(document);
-  loadConditions();
-});
+document.addEventListener("sf:board-refreshed", () => applyBoardSummary(document));
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {

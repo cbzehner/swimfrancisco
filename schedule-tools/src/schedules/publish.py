@@ -628,15 +628,34 @@ def publish_sequential_slug(
         )
 
     unpublished = _unpublished_kept_windows(candidates, kept_ids)
+    # CI only: a window that already ended cannot reach the board. Treat it
+    # as covered so a late re-export of a past window (Sava Fall 1 at a second
+    # View ID) neither blocks the sitting nor refuses forever as a regression.
+    # A human Save-all still publishes whatever the operator confirmed.
+    expired: set[int] = set()
+    if attested_by == "ci":
+        expired = {
+            view_id
+            for view_id, candidate in unpublished.items()
+            if (window := _payload_window(dict(candidate.payload))) is not None
+            and window[1] < attested_at
+        }
+    unpublished = {
+        view_id: candidate
+        for view_id, candidate in unpublished.items()
+        if view_id not in expired
+    }
     attested = _attested_view_ids(slug, data_root, kept_ids)
-    covered = set(unpublished) | attested
+    covered = set(unpublished) | attested | expired
     missing = kept_ids - covered
-    if missing or (not attested and len(unpublished) < 2):
+    if missing or (not attested and not expired and len(unpublished) < 2):
         raise PublishRefuse(
             "sequential_incomplete",
             f"{slug} unpublished={sorted(unpublished)} attested={sorted(attested)} "
             f"missing={sorted(missing)}",
         )
+    if not unpublished:
+        return []
 
     ordered = _order_unpublished(unpublished)
     payload_ranges: list[tuple[date, date]] = []
@@ -855,7 +874,7 @@ def _unpublished_kept_windows(
         if view_id is None or view_id not in kept_ids:
             continue
         previous = by_id.get(view_id)
-        if previous is None or candidate.fetch_date >= previous.fetch_date:
+        if previous is None or candidate.recency_key >= previous.recency_key:
             by_id[view_id] = candidate
     return by_id
 

@@ -1,0 +1,266 @@
+{
+  "slug": "garfield-pool",
+  "pdf_sha256": "7f5c0074e8ddf2428c38ce3870d36d73521e7ae17f863839c5db20893e26573b",
+  "reviewed_at": "2026-09-04",
+  "attested_by": "ci",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29799",
+  "payload": {
+    "closures": [
+      {
+        "end": "2026-10-12",
+        "reason": "Indigenous Peoples Day",
+        "start": "2026-10-12"
+      },
+      {
+        "end": "2026-11-11",
+        "reason": "Veterans Day",
+        "start": "2026-11-11"
+      },
+      {
+        "end": "2026-11-26",
+        "reason": "Thanksgiving",
+        "start": "2026-11-26"
+      },
+      {
+        "end": "2026-11-27",
+        "reason": "Thanksgiving",
+        "start": "2026-11-27"
+      },
+      {
+        "end": "2026-09-24",
+        "end_time": "14:00",
+        "reason": "staff training",
+        "start": "2026-09-24",
+        "start_time": "11:00"
+      },
+      {
+        "end": "2026-10-22",
+        "end_time": "14:00",
+        "reason": "staff training",
+        "start": "2026-10-22",
+        "start_time": "11:00"
+      }
+    ],
+    "effective_end": "2026-12-10",
+    "effective_start": "2026-09-08",
+    "schedule_basis": "swim_schedule",
+    "sessions": [
+      {
+        "day": "sunday",
+        "end": "10:30",
+        "evidence": "Lap Swim (Main Pool) 8:30 am-10:30 am",
+        "pool": "main",
+        "start": "08:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "monday",
+        "end": "08:45",
+        "evidence": "Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+        "pool": "small",
+        "start": "07:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "monday",
+        "end": "10:45",
+        "evidence": "Senior /Therapy Swim (Main Pool) 9:00 am-10:45 am",
+        "pool": "main",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "monday",
+        "end": "13:00",
+        "evidence": "Lap Swim (Main Pool) 11:00 am-1:00 pm",
+        "pool": "main",
+        "start": "11:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "monday",
+        "end": "15:45",
+        "evidence": "Rec/Family Swim (Small Pool) 2:00 pm-3:45 pm",
+        "pool": "small",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "monday",
+        "end": "19:00",
+        "evidence": "Lap Swim (Main Pool) 5:30 pm-7:00 pm",
+        "pool": "main",
+        "start": "17:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "monday",
+        "end": "19:00",
+        "evidence": "Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+        "pool": "small",
+        "start": "17:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "08:45",
+        "evidence": "Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+        "pool": "small",
+        "start": "07:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "10:45",
+        "evidence": "Senior /Therapy Swim (Main Pool) 9:00 am-10:45 am",
+        "pool": "main",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "10:45",
+        "evidence": "Rec/Family Swim (Small Pool) 9:00 am-10:45 am",
+        "pool": "small",
+        "start": "09:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "13:00",
+        "evidence": "Lap Swim (Main Pool) 11:00 am-1:00 pm",
+        "pool": "main",
+        "start": "11:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm",
+        "pool": "small",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "19:00",
+        "evidence": "Lap Swim (Main Pool) 5:30 pm-7:00 pm",
+        "pool": "main",
+        "start": "17:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "19:00",
+        "evidence": "Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+        "pool": "small",
+        "start": "17:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "08:45",
+        "evidence": "Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+        "pool": "small",
+        "start": "07:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "10:45",
+        "evidence": "Senior /Therapy Swim (Main Pool) 9:00 am-10:45 am",
+        "pool": "main",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "13:00",
+        "evidence": "Lap Swim (Main Pool) 11:00 am-1:00 pm",
+        "pool": "main",
+        "start": "11:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "13:00",
+        "evidence": "Rec/Family Swim (Small Pool) 11:00 am-1:00 pm",
+        "pool": "small",
+        "start": "11:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:45",
+        "evidence": "Rec/Family Swim School Groups 2:00 pm-3:45 pm",
+        "pool": "small",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:00",
+        "evidence": "Lap Swim (Main Pool) 5:30 pm-7:00 pm",
+        "pool": "main",
+        "start": "17:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:00",
+        "evidence": "Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+        "pool": "small",
+        "start": "17:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "08:45",
+        "evidence": "Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+        "pool": "small",
+        "start": "07:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "10:45",
+        "evidence": "Senior /Therapy Swim(Main Pool-2 Lanes) 9:00 am-10:45 am",
+        "pool": "main-2 lanes",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "13:00",
+        "evidence": "Lap Swim (Main Pool) 11:00 am-1:00 pm",
+        "pool": "main",
+        "start": "11:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "13:00",
+        "evidence": "Rec/Family Swim (Small Pool) 11:00 am-1:00 pm",
+        "pool": "small",
+        "start": "11:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "15:30",
+        "evidence": "Lap Swim (Main Pool) 2:00 pm-3:30 pm",
+        "pool": "main",
+        "start": "14:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm",
+        "pool": "small",
+        "start": "14:00",
+        "type": "family_swim"
+      }
+    ]
+  }
+}

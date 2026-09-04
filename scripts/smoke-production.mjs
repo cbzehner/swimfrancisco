@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 
 import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import { isDeepStrictEqual, promisify } from "node:util";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { buildSpotRecord } from "./generate-agent-data.mjs";
+import { splitFrontMatter } from "./lib/spot-frontmatter.mjs";
 
 const execFileAsync = promisify(execFile);
 const defaultBaseUrl = "https://swimfrancisco.com";
 const defaultMaxGeneratedAgeHours = 36;
-const staleFloorDate = "2026-07-02";
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 function parseArgs(argv) {
   const seen = new Set();
@@ -51,9 +55,24 @@ function parseArgs(argv) {
   return options;
 }
 
-async function currentGitCommit() {
-  const { stdout } = await execFileAsync("git", ["rev-parse", "HEAD"]);
+async function resolveCommit(ref = "HEAD") {
+  const { stdout } = await execFileAsync("git", ["rev-parse", "--verify", "--end-of-options", `${ref}^{commit}`], { cwd: repoRoot });
   return stdout.trim();
+}
+
+async function expectedSpotRecord(slug, commit) {
+  const file = `content/spots/${slug}.md`;
+  const { stdout } = await execFileAsync("git", ["show", `${commit}:${file}`], { cwd: repoRoot });
+  const { front, body } = splitFrontMatter(stdout, file);
+  return buildSpotRecord(front, body, file);
+}
+
+export function assertSpotMatchesContent(actual, expected) {
+  const { generated_at, ...record } = actual;
+  assert(
+    isDeepStrictEqual(record, JSON.parse(JSON.stringify(expected))),
+    `${expected.slug} deployed data does not match the expected commit's content`,
+  );
 }
 
 async function fetchJson(baseUrl, path) {
@@ -74,15 +93,17 @@ function assertFreshIso(label, isoValue, maxAgeHours) {
   assert(Number.isFinite(timestamp), `${label} is not a valid ISO timestamp: ${isoValue}`);
 
   const ageHours = (Date.now() - timestamp) / 3_600_000;
+  assert(ageHours >= 0, `${label} is in the future: ${isoValue}`);
   assert(ageHours <= maxAgeHours, `${label} is ${ageHours.toFixed(1)}h old; max is ${maxAgeHours}h`);
 }
 
-function latestSchedule(schedules) {
-  return [...schedules].sort((a, b) => {
-    const left = a.effective_start || "";
-    const right = b.effective_start || "";
-    return left.localeCompare(right);
-  }).at(-1);
+export function assertConditionsFresh(conditions) {
+  for (const [slug, record] of Object.entries(conditions)) {
+    assertFreshIso(`${slug} conditions updated_at`, record.updated_at, 3);
+    if (record.water_temp_f !== null) {
+      assertFreshIso(`${slug} temperature observed_at`, record.temp_observed_at, record.temp_station_type === "sst" ? 72 : 24);
+    }
+  }
 }
 
 async function main() {
@@ -90,8 +111,8 @@ async function main() {
   const expectedCommit = commit.kind === "skip"
     ? null
     : commit.kind === "exact"
-      ? commit.expectedCommit
-      : await currentGitCommit();
+      ? await resolveCommit(commit.expectedCommit)
+      : await resolveCommit();
 
   assert(
     Number.isFinite(maxGeneratedAgeHours) && maxGeneratedAgeHours > 0,
@@ -115,7 +136,6 @@ async function main() {
     );
   }
 
-  assert(index.generated_at >= staleFloorDate, `agent index generated_at is stale: ${index.generated_at}`);
   assertFreshIso("agent index generated_at", index.generated_at, maxGeneratedAgeHours);
   assert(
     index.spots?.some((spot) => spot.slug === "24-hour-fitness-ocean"),
@@ -126,24 +146,27 @@ async function main() {
     "agent index is missing North Beach Pool",
   );
 
-  const oceanSchedule = latestSchedule(ocean.pool?.schedules || []);
-  assert(oceanSchedule?.schedule_basis === "facility_hours", "24 Hour Fitness Ocean is not using facility-hours access");
-  assert(ocean.freshness?.last_verified_at >= staleFloorDate, "24 Hour Fitness Ocean verification date is stale");
-  assert(!/temporar/i.test(ocean.access?.access_summary || ""), "24 Hour Fitness Ocean still mentions a temporary closure");
-
-  const northBeachSchedule = latestSchedule(northBeach.pool?.schedules || []);
-  assert(northBeachSchedule?.effective_end === "2026-08-29", "North Beach Pool does not expose the current Aug 29 schedule");
-  assert(northBeach.freshness?.last_verified_at >= staleFloorDate, "North Beach Pool verification date is stale");
+  assert(typeof build.git_commit === "string" && /^[0-9a-f]{40}$/.test(build.git_commit), "build marker has no valid git commit");
+  const contentCommit = expectedCommit || await resolveCommit(build.git_commit);
+  const [expectedOcean, expectedNorthBeach] = await Promise.all([
+    expectedSpotRecord("24-hour-fitness-ocean", contentCommit),
+    expectedSpotRecord("north-beach-pool", contentCommit),
+  ]);
+  assertSpotMatchesContent(ocean, expectedOcean);
+  assertSpotMatchesContent(northBeach, expectedNorthBeach);
 
   const aquaticPark = conditions["aquatic-park"];
-  assert(aquaticPark?.updated_at >= staleFloorDate, "conditions feed is stale or missing Aquatic Park");
+  assertConditionsFresh(conditions);
+  assert(aquaticPark?.water_temp_f != null, "Aquatic Park temperature is missing");
   assert(aquaticPark.temp_stale === false, "Aquatic Park temperature is marked stale");
   assert(aquaticPark.tide_stale === false, "Aquatic Park tide is marked stale");
 
   console.log(`Production smoke passed for ${baseUrl}`);
 }
 
-main().catch((err) => {
-  console.error(err.message);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((err) => {
+    console.error(err.message);
+    process.exit(1);
+  });
+}

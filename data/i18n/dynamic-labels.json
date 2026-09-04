@@ -86,19 +86,25 @@
       "juneteenth": {
         "translation_key": "reason_juneteenth",
         "sources": [
-          "Juneteenth"
+          "Juneteenth",
+          "observance of Juneteenth",
+          "All city pools will be closed on June 19 in observance of Juneteenth"
         ]
       },
       "independence_day": {
         "translation_key": "reason_independence_day",
         "sources": [
-          "Independence Day"
+          "Independence Day",
+          "Observing Independence Day",
+          "closed on July 4 for Independence Day"
         ]
       },
       "holiday_closure": {
         "translation_key": "reason_holiday_closure",
         "sources": [
-          "Holiday Closure"
+          "Holiday Closure",
+          "Holiday Closures",
+          "Holiday"
         ]
       },
       "in_service_training": {
@@ -106,7 +112,10 @@
         "sources": [
           "In Service Training",
           "Inservice Training",
-          "Inservice Training Closure"
+          "Inservice Training Closure",
+          "In-Service Training",
+          "Inservice trainings",
+          "Aq. In-Service Training"
         ]
       },
       "in_service_9_1": {
@@ -124,13 +133,117 @@
       "aquatics_training": {
         "translation_key": "reason_aquatics_training",
         "sources": [
-          "Aquatics In Service Training"
+          "Aquatics In Service Training",
+          "Aquatic division training",
+          "Aquatics division training",
+          "Aquatics Division Training",
+          "Aquatic Division Training",
+          "Aquatics in-service training",
+          "Aquatics Division training"
         ]
       },
       "staff_training": {
         "translation_key": "reason_staff_training",
         "sources": [
-          "Staff training"
+          "Staff training",
+          "Staff Training",
+          "staff training"
+        ]
+      },
+      "training": {
+        "translation_key": "reason_training",
+        "sources": [
+          "Training",
+          "Training Closures"
+        ]
+      },
+      "maintenance": {
+        "translation_key": "reason_maintenance",
+        "sources": [
+          "maintenance",
+          "Maintenance"
+        ]
+      },
+      "annual_maintenance": {
+        "translation_key": "reason_annual_maintenance",
+        "sources": [
+          "Annual maintenance",
+          "annual maintenance"
+        ]
+      },
+      "garfield_maintenance": {
+        "translation_key": "reason_garfield_maintenance",
+        "sources": [
+          "Garfield Pool Maintenance Closure 8-14_9-7 2026"
+        ]
+      },
+      "holiday_hours": {
+        "translation_key": "reason_holiday_hours",
+        "sources": [
+          "Holiday Hours"
+        ]
+      },
+      "labor_day": {
+        "translation_key": "reason_labor_day",
+        "sources": [
+          "Labor Day"
+        ]
+      },
+      "thanksgiving": {
+        "translation_key": "reason_thanksgiving",
+        "sources": [
+          "Thanksgiving"
+        ]
+      },
+      "christmas_eve": {
+        "translation_key": "reason_christmas_eve",
+        "sources": [
+          "Christmas Eve"
+        ]
+      },
+      "new_years_eve": {
+        "translation_key": "reason_new_years_eve",
+        "sources": [
+          "New Year’s Eve"
+        ]
+      },
+      "new_years_day": {
+        "translation_key": "reason_new_years_day",
+        "sources": [
+          "New Year’s Day"
+        ]
+      },
+      "martin_luther_king_day": {
+        "translation_key": "reason_martin_luther_king_day",
+        "sources": [
+          "Martin Luther King Jr. Day"
+        ]
+      },
+      "easter_sunday": {
+        "translation_key": "reason_easter_sunday",
+        "sources": [
+          "Easter Sunday"
+        ]
+      },
+      "lunar_new_year": {
+        "translation_key": "reason_lunar_new_year",
+        "sources": [
+          "Lunar New Year"
+        ]
+      },
+      "veterans_day": {
+        "translation_key": "reason_veterans_day",
+        "sources": [
+          "Veterans Day",
+          "Veteran’s Day"
+        ]
+      },
+      "indigenous_peoples_day": {
+        "translation_key": "reason_indigenous_peoples_day",
+        "sources": [
+          "Indigenous Peoples Day",
+          "Indigenous People’s Day",
+          "Indigenous peoples day"
         ]
       },
       "in_service_pool_closed_9_1": {
@@ -173,11 +286,35 @@
         "code": "juneteenth",
         "translation_key": "reason_juneteenth"
       },
+      "observance of Juneteenth": {
+        "code": "juneteenth",
+        "translation_key": "reason_juneteenth"
+      },
+      "All city pools will be closed on June 19 in observance of Juneteenth": {
+        "code": "juneteenth",
+        "translation_key": "reason_juneteenth"
+      },
       "Independence Day": {
         "code": "independence_day",
         "translation_key": "reason_independence_day"
       },
+      "Observing Independence Day": {
+        "code": "independence_day",
+        "translation_key": "reason_independence_day"
+      },
+      "closed on July 4 for Independence Day": {
+        "code": "independence_day",
+        "translation_key": "reason_independence_day"
+      },
       "Holiday Closure": {
+        "code": "holiday_closure",
+        "translation_key": "reason_holiday_closure"
+      },
+      "Holiday Closures": {
+        "code": "holiday_closure",
+        "translation_key": "reason_holiday_closure"
+      },
+      "Holiday": {
         "code": "holiday_closure",
         "translation_key": "reason_holiday_closure"
       },
@@ -193,6 +330,18 @@
         "code": "in_service_training",
         "translation_key": "reason_in_service_training"
       },
+      "In-Service Training": {
+        "code": "in_service_training",
+        "translation_key": "reason_in_service_training"
+      },
+      "Inservice trainings": {
+        "code": "in_service_training",
+        "translation_key": "reason_in_service_training"
+      },
+      "Aq. In-Service Training": {
+        "code": "in_service_training",
+        "translation_key": "reason_in_service_training"
+      },
       "In-Service (9am–1pm)": {
         "code": "in_service_9_1",
         "translation_key": "reason_in_service_9_1"
@@ -205,9 +354,125 @@
         "code": "aquatics_training",
         "translation_key": "reason_aquatics_training"
       },
+      "Aquatic division training": {
+        "code": "aquatics_training",
+        "translation_key": "reason_aquatics_training"
+      },
+      "Aquatics division training": {
+        "code": "aquatics_training",
+        "translation_key": "reason_aquatics_training"
+      },
+      "Aquatics Division Training": {
+        "code": "aquatics_training",
+        "translation_key": "reason_aquatics_training"
+      },
+      "Aquatic Division Training": {
+        "code": "aquatics_training",
+        "translation_key": "reason_aquatics_training"
+      },
+      "Aquatics in-service training": {
+        "code": "aquatics_training",
+        "translation_key": "reason_aquatics_training"
+      },
+      "Aquatics Division training": {
+        "code": "aquatics_training",
+        "translation_key": "reason_aquatics_training"
+      },
       "Staff training": {
         "code": "staff_training",
         "translation_key": "reason_staff_training"
+      },
+      "Staff Training": {
+        "code": "staff_training",
+        "translation_key": "reason_staff_training"
+      },
+      "staff training": {
+        "code": "staff_training",
+        "translation_key": "reason_staff_training"
+      },
+      "Training": {
+        "code": "training",
+        "translation_key": "reason_training"
+      },
+      "Training Closures": {
+        "code": "training",
+        "translation_key": "reason_training"
+      },
+      "maintenance": {
+        "code": "maintenance",
+        "translation_key": "reason_maintenance"
+      },
+      "Maintenance": {
+        "code": "maintenance",
+        "translation_key": "reason_maintenance"
+      },
+      "Annual maintenance": {
+        "code": "annual_maintenance",
+        "translation_key": "reason_annual_maintenance"
+      },
+      "annual maintenance": {
+        "code": "annual_maintenance",
+        "translation_key": "reason_annual_maintenance"
+      },
+      "Garfield Pool Maintenance Closure 8-14_9-7 2026": {
+        "code": "garfield_maintenance",
+        "translation_key": "reason_garfield_maintenance"
+      },
+      "Holiday Hours": {
+        "code": "holiday_hours",
+        "translation_key": "reason_holiday_hours"
+      },
+      "Labor Day": {
+        "code": "labor_day",
+        "translation_key": "reason_labor_day"
+      },
+      "Thanksgiving": {
+        "code": "thanksgiving",
+        "translation_key": "reason_thanksgiving"
+      },
+      "Christmas Eve": {
+        "code": "christmas_eve",
+        "translation_key": "reason_christmas_eve"
+      },
+      "New Year’s Eve": {
+        "code": "new_years_eve",
+        "translation_key": "reason_new_years_eve"
+      },
+      "New Year’s Day": {
+        "code": "new_years_day",
+        "translation_key": "reason_new_years_day"
+      },
+      "Martin Luther King Jr. Day": {
+        "code": "martin_luther_king_day",
+        "translation_key": "reason_martin_luther_king_day"
+      },
+      "Easter Sunday": {
+        "code": "easter_sunday",
+        "translation_key": "reason_easter_sunday"
+      },
+      "Lunar New Year": {
+        "code": "lunar_new_year",
+        "translation_key": "reason_lunar_new_year"
+      },
+      "Veterans Day": {
+        "code": "veterans_day",
+        "translation_key": "reason_veterans_day"
+      },
+      "Veteran’s Day": {
+        "code": "veterans_day",
+        "translation_key": "reason_veterans_day"
+      },
+      "Indigenous Peoples Day": {
+        "code": "indigenous_peoples_day",
+        "translation_key": "reason_indigenous_peoples_day"
+      },
+      "Indigenous People’s Day": {
+        "code": "indigenous_peoples_day",
+        "translation_key": "reason_indigenous_peoples_day"
+      },
+      "Indigenous peoples day": {
+        "code": "indigenous_peoples_day",
+        "translation_key": "reason_indigenous_peoples_day"
       },
       "In- Service Training: Pool Closed 9:00-1:00pm": {
         "code": "in_service_pool_closed_9_1",

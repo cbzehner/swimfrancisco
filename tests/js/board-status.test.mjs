@@ -54,6 +54,28 @@ test("computeStatus uses 'Closed through' for inclusive end dates", () => {
   );
 });
 
+test("current session and access end times stop at the next partial closure", () => {
+  const schedule = {
+    sessions: [{ day: "thursday", type: "lap_swim", start: "11:00", end: "15:00" }],
+    access_hours: [{ day: "thursday", start: "09:00", end: "17:00" }],
+    closures: [{ start: "2026-09-24", end: "2026-09-24", start_time: "12:00", end_time: "14:00" }],
+  };
+  const before = new Date("2026-09-24T11:59:00");
+  assert.equal(computeStatus(schedule, before).next, "Closes 12:00");
+  assert.equal(computeDetailStatus(schedule, before).activeUntil, 12 * 60);
+  assert.equal(computeAccessStatus(schedule, before).next, "Until 12:00");
+
+  const during = new Date("2026-09-24T12:00:00");
+  assert.equal(computeStatus(schedule, during).status, "CLOSED");
+  assert.equal(computeDetailStatus(schedule, during).kind, "CLOSED_TODAY");
+  assert.equal(computeAccessStatus(schedule, during).status, "CLOSED");
+
+  const reopened = new Date("2026-09-24T14:00:00");
+  assert.equal(computeStatus(schedule, reopened).next, "Closes 15:00");
+  assert.equal(computeDetailStatus(schedule, reopened).activeUntil, 15 * 60);
+  assert.equal(computeAccessStatus(schedule, reopened).next, "Until 17:00");
+});
+
 test("computeAccessStatus reports facility access without verified swim sessions", () => {
   const now = new Date("2026-04-14T06:00:00"); // Tuesday
   const schedule = {

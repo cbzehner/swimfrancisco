@@ -9,13 +9,15 @@
 import { test, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 
-import { fetchNoaaTemp, toLocalIso } from "../../worker/src/noaa.ts";
+import { fetchNoaaTemp, fetchNoaaTides, toLocalIso } from "../../worker/src/noaa.ts";
 import { tempFromReading } from "../../worker/src/assemble.ts";
 
 let originalFetch;
+let requestedUrl;
 
 beforeEach(() => {
   originalFetch = globalThis.fetch;
+  requestedUrl = null;
 });
 
 afterEach(() => {
@@ -23,11 +25,13 @@ afterEach(() => {
 });
 
 function mockFetch(body, status = 200) {
-  globalThis.fetch = async () =>
-    new Response(JSON.stringify(body), {
+  globalThis.fetch = async (url) => {
+    requestedUrl = String(url);
+    return new Response(JSON.stringify(body), {
       status,
       headers: { "content-type": "application/json" },
     });
+  };
 }
 
 test("toLocalIso replaces the space with T and pads seconds", () => {
@@ -61,9 +65,19 @@ test("fetchNoaaTemp keeps native Fahrenheit through assemble", async () => {
   assert.equal(reading.stationId, "9414863");
   assert.equal(reading.waterTempF, 58.4);
   assert.equal(reading.waterTempC, 14.7);
-  assert.equal(reading.observedAt, "2026-04-16T14:30:00");
+  assert.equal(reading.observedAt, "2026-04-16T14:30:00Z");
+  assert.equal(new URL(requestedUrl).searchParams.get("time_zone"), "gmt");
 
   const fields = tempFromReading({ reading, sourceType: "noaa" });
   assert.equal(fields.water_temp_f, 58.4);
   assert.equal(fields.water_temp_c, 14.7);
+});
+
+test("fetchNoaaTides keeps station-local timestamps", async () => {
+  mockFetch({ predictions: [{ t: "2026-04-16 14:30", v: "2.1", type: "H" }] });
+
+  const tides = await fetchNoaaTides("9414290");
+
+  assert.equal(new URL(requestedUrl).searchParams.get("time_zone"), "lst_ldt");
+  assert.equal(tides.predictions[0].time, "2026-04-16T14:30:00");
 });

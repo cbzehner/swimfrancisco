@@ -1971,3 +1971,279 @@ def test_cli_discover_passes_dry_run_and_adopt(monkeypatch) -> None:
     assert captured["slugs"] == ["sava-pool"]
     assert captured["adopt"] == ("sava-pool", 29815)
     assert "dry-run: registry not written" in result.output
+
+
+# --- Lone off-table grid: adopt when it proves itself, FLAG otherwise -------
+
+_GARFIELD_FALL_TEXT = (
+    "GARFIELD POOL FALL 2026 SCHEDULE (SEPTEMBER 8- DECEMBER 10)\n"
+    "SUNDAY MONDAY TUESDAY WEDNESDAY THURSDAY"
+)
+_GARFIELD_SUMMER_TEXT = (
+    "GARFIELD POOL SUMMER 2026 SCHEDULE (JUNE 7- AUGUST 13)\n"
+    "SUNDAY MONDAY TUESDAY WEDNESDAY THURSDAY"
+)
+_GARFIELD_PERSIST_NOTES = (
+    'notes = """\n'
+    "discover: 2026-08-20 flag band_session_grid id=29808:closure_notice:table "
+    "band_session_grid id=29799:session_grid:persisted\n"
+    '"""\n'
+)
+
+
+def _confirmed_band_grid(**overrides) -> ClassifiedDocument:
+    fields = dict(
+        view_id=29799,
+        kind="session_grid",
+        source="band",
+        filename="Garfield Pool Fall 2026 Schedule.pdf",
+        grid_confirmed=True,
+        window_start=date(2026, 9, 8),
+        window_end=date(2026, 12, 10),
+    )
+    fields.update(overrides)
+    return _classified(fields.pop("view_id"), fields.pop("kind"), **fields)
+
+
+def test_choose_roll_adopts_lone_confirmed_band_successor(monkeypatch) -> None:
+    _freeze_today(monkeypatch)
+    entry = _entry("garfield-pool", view_id=29564)
+    flyer = _classified(29808, "closure_notice", source="table")
+    decision = choose_roll(
+        entry,
+        [flyer, _confirmed_band_grid()],
+        pin_window=(date(2026, 6, 7), date(2026, 8, 13)),
+    )
+    assert decision.action == "adopt"
+    assert decision.reason == "band_session_grid"
+    assert decision.blocking is False
+    assert decision.new_url == "https://sfrecpark.org/DocumentCenter/View/29799"
+    assert [item.link.view_id for item in decision.extra_candidates] == [29808]
+
+
+def test_choose_roll_adopts_lone_band_grid_when_pin_window_unknown(monkeypatch) -> None:
+    _freeze_today(monkeypatch)
+    entry = _entry("garfield-pool", view_id=29564)
+    decision = choose_roll(entry, [_confirmed_band_grid()], pin_window=None)
+    assert decision.action == "adopt"
+    assert decision.blocking is False
+
+
+@pytest.mark.parametrize(
+    "overrides, pin_window",
+    [
+        # No weekday header on page 1: filename alone is not proof.
+        ({"grid_confirmed": False}, (date(2026, 6, 7), date(2026, 8, 13))),
+        ({"grid_confirmed": None}, (date(2026, 6, 7), date(2026, 8, 13))),
+        # Window did not parse.
+        ({"window_start": None, "window_end": None}, None),
+        # Overlaps or precedes the pinned window: not a successor.
+        ({"window_start": date(2026, 8, 1)}, (date(2026, 6, 7), date(2026, 8, 13))),
+        # Already over.
+        (
+            {"window_start": date(2026, 1, 6), "window_end": date(2026, 3, 1)},
+            None,
+        ),
+    ],
+)
+def test_choose_roll_flags_unproven_lone_band_grid(
+    monkeypatch, overrides, pin_window
+) -> None:
+    _freeze_today(monkeypatch)
+    entry = _entry("garfield-pool", view_id=29564)
+    flyer = _classified(29808, "closure_notice", source="table")
+    decision = choose_roll(
+        entry, [flyer, _confirmed_band_grid(**overrides)], pin_window=pin_window
+    )
+    assert decision.action == "flag"
+    assert decision.reason == "band_session_grid"
+    assert decision.blocking is True
+    assert decision.new_url is None
+
+
+def test_choose_roll_two_confirmed_band_grids_still_flag(monkeypatch) -> None:
+    _freeze_today(monkeypatch)
+    entry = _entry("sava-pool", view_id=29571)
+    decision = choose_roll(
+        entry,
+        [
+            _confirmed_band_grid(
+                view_id=29815,
+                filename="Sava Fall 1.pdf",
+                window_start=date(2026, 8, 18),
+                window_end=date(2026, 8, 28),
+            ),
+            _confirmed_band_grid(
+                view_id=29805,
+                filename="Sava Fall 2.pdf",
+                window_start=date(2026, 8, 29),
+                window_end=date(2026, 12, 12),
+            ),
+        ],
+        pin_window=(date(2026, 6, 30), date(2026, 8, 15)),
+    )
+    assert decision.action == "flag"
+    assert decision.reason == "band_session_grid"
+
+
+def _garfield_registry_with_persisted_29799(tmp_path: Path) -> Path:
+    registry = _copy_registry(tmp_path)
+    text = registry.read_text()
+    text = text.replace(
+        'official_page_url = "https://sfrecpark.org/facilities/facility/details/Garfield-Pool-214"\n',
+        'official_page_url = "https://sfrecpark.org/facilities/facility/details/Garfield-Pool-214"\n'
+        + _GARFIELD_PERSIST_NOTES,
+    )
+    registry.write_text(text)
+    return registry
+
+
+def test_discover_all_adopts_persisted_garfield_grid_then_holds(tmp_path, monkeypatch) -> None:
+    _freeze_today(monkeypatch)
+    registry = _garfield_registry_with_persisted_29799(tmp_path)
+    garfield = next(item for item in load_registry(registry) if item.slug == "garfield-pool")
+    assert 29799 in persisted_band_ids(garfield.notes)
+    pages = {garfield.official_page_url: _fixture("garfield-flyer-only.html")}
+    views = {
+        29564: {
+            "filename": "Garfield Pool Summer 2026.pdf",
+            "content": _pdf_with_text(_GARFIELD_SUMMER_TEXT),
+        },
+        29799: {
+            "filename": "Garfield Pool Fall 2026 Schedule.pdf",
+            "content": _pdf_with_text(_GARFIELD_FALL_TEXT),
+        },
+        29808: {
+            "filename": "Garfield Pool Maintenance Closure 8-14_9-7 2026.pdf",
+            "content": _pdf_bytes(),
+        },
+    }
+    _install_http(monkeypatch, pages=pages, views=views)
+
+    decisions = discover_all(
+        [garfield], delay=0, registry_path=registry, report_dir=tmp_path
+    )
+    decision = decisions[0]
+    assert decision.action == "adopt"
+    assert decision.reason == "band_session_grid"
+    assert decision.blocking is False
+    assert decision.new_url == "https://sfrecpark.org/DocumentCenter/View/29799"
+
+    adopted = next(item for item in load_registry(registry) if item.slug == "garfield-pool")
+    assert adopted.pdf_url.endswith("/29799")
+    assert adopted.source_status == "published"
+    assert "adopt band_session_grid" in (adopted.notes or "")
+    assert 29799 in persisted_band_ids(adopted.notes)
+    assert "id=29808:closure_notice:table" in (adopted.notes or "")
+
+    # Next pass: table is still flyer-only; the adopted pin must hold.
+    _install_http(monkeypatch, pages=pages, views=views)
+    decisions = discover_all(
+        [adopted], delay=0, registry_path=registry, report_dir=tmp_path
+    )
+    assert decisions[0].action == "unchanged"
+    assert decisions[0].reason == "current_session_grid"
+    assert decisions[0].blocking is False
+    held = next(item for item in load_registry(registry) if item.slug == "garfield-pool")
+    assert held.pdf_url.endswith("/29799")
+    assert 29799 in persisted_band_ids(held.notes)
+
+
+def test_discover_all_flags_band_grid_that_overlaps_pin(tmp_path, monkeypatch) -> None:
+    _freeze_today(monkeypatch)
+    registry = _garfield_registry_with_persisted_29799(tmp_path)
+    garfield = next(item for item in load_registry(registry) if item.slug == "garfield-pool")
+    pages = {garfield.official_page_url: _fixture("garfield-flyer-only.html")}
+    views = {
+        29564: {
+            "filename": "Garfield Pool Summer 2026.pdf",
+            "content": _pdf_with_text(_GARFIELD_SUMMER_TEXT),
+        },
+        29799: {
+            "filename": "Garfield Pool Summer 2026 v2.pdf",
+            "content": _pdf_with_text(
+                "GARFIELD POOL SUMMER 2026 SCHEDULE (JULY 1- SEPTEMBER 30)\n"
+                "SUNDAY MONDAY TUESDAY WEDNESDAY THURSDAY"
+            ),
+        },
+    }
+    _install_http(monkeypatch, pages=pages, views=views)
+    decisions = discover_all(
+        [garfield], delay=0, registry_path=registry, report_dir=tmp_path
+    )
+    assert decisions[0].action == "flag"
+    assert decisions[0].reason == "band_session_grid"
+    reloaded = next(item for item in load_registry(registry) if item.slug == "garfield-pool")
+    assert reloaded.pdf_url.endswith("/29564")
+    assert 29799 in persisted_band_ids(reloaded.notes)
+
+
+# --- fetch_error must not erase registry state -----------------------------
+
+
+def test_fetch_error_keeps_registry_notes_and_reports_persisted(tmp_path, monkeypatch) -> None:
+    _freeze_today(monkeypatch)
+    registry = _garfield_registry_with_persisted_29799(tmp_path)
+    before = registry.read_text()
+    garfield = next(item for item in load_registry(registry) if item.slug == "garfield-pool")
+    hamilton = next(item for item in load_registry(registry) if item.slug == "hamilton-pool")
+    views = {
+        29799: {
+            "filename": "Garfield Pool Fall 2026 Schedule.pdf",
+            "content": _pdf_with_text(_GARFIELD_FALL_TEXT),
+        },
+        29800: {"filename": "Hamilton Pool Fall 2026.pdf", "content": _grid_pdf()},
+    }
+    _, requested = _install_http(monkeypatch, views=views)
+
+    class FailPages:
+        def __init__(self, inner):
+            self.inner = inner
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def get(self, url: str):
+            if "/DocumentCenter/View/" not in url:
+                request = httpx.Request("GET", url)
+                return httpx.Response(503, content=b"down", request=request)
+            return self.inner.get(url)
+
+    real_client = __import__("schedules.discover", fromlist=["httpx"]).httpx.Client
+    monkeypatch.setattr(
+        "schedules.discover.httpx.Client",
+        lambda *args, **kwargs: FailPages(real_client(*args, **kwargs)),
+    )
+    with pytest.raises(DiscoverError, match="every Rec & Park"):
+        discover_all(
+            [garfield, hamilton], delay=0, registry_path=registry, report_dir=tmp_path
+        )
+    assert registry.read_text() == before
+    decisions = json.loads((tmp_path / "discovery-decisions.json").read_text())
+    by_slug = {item["slug"]: item for item in decisions}
+    assert by_slug["garfield-pool"]["reason"] == "fetch_error"
+    assert any(item["view_id"] == 29799 for item in by_slug["garfield-pool"]["candidates"])
+    assert "registry: unchanged" in (tmp_path / "discovery-report.md").read_text()
+
+
+def test_apply_discover_decision_ignores_fetch_error(tmp_path) -> None:
+    registry = _garfield_registry_with_persisted_29799(tmp_path)
+    before = registry.read_text()
+    apply_discover_decision(
+        registry,
+        DiscoverDecision(
+            slug="garfield-pool",
+            action="flag",
+            old_url="https://sfrecpark.org/DocumentCenter/View/29564",
+            new_url=None,
+            kind=None,
+            reason="fetch_error",
+            candidates=(),
+            extra_candidates=(),
+            blocking=True,
+        ),
+    )
+    assert registry.read_text() == before

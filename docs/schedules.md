@@ -222,18 +222,22 @@ change does not:
   `pdf_url` but does not publish.
 - **Band-only grid** (Garfield flyer + unlinked fall grid 29799).
   Discover never puts a flyer on `pdf_url`. CI `publish-pending`
-  projects a unique table `closure_notice` as `temporarily_closed`. CI
-  may extract 29799 while FLAG so the operator does not need a Gemini
-  laptop after `--adopt`. Human Save of 29799 is **not** URL
-  confirmation. `--adopt` is:
+  projects a unique table `closure_notice` as `temporarily_closed`. A
+  lone off-table grid **auto-adopts** when it proves itself: its
+  filename or page 1 names this pool and no other, page 1 carries a
+  weekday grid header, its window parsed, it has not ended, and it starts
+  after the pinned PDF's window. Extract and the unique-grid
+  `publish-pending` gates then run as for a table grid. Anything weaker
+  (no grid header, unparsed or overlapping window, two off-table grids)
+  stays a blocking FLAG for:
 
   ```
   just schedules discover --adopt garfield-pool=29799
   ```
 
-  Commit `registry.toml` on the rolling PR, or wait for the next cron.
-  Next CI: unchanged on 29799; unique-grid publishes the fall window
-  beside the closure.
+- **Facility page fetch failure.** A `fetch_error` decision writes
+  nothing to `registry.toml`; persisted band IDs and sequential siblings
+  survive the outage. The report says `registry: unchanged`.
 
 `--adopt` of a `session_grid` writes `pdf_url` and sets
 `source_status = published`. It persists remaining sibling `session_grid`
@@ -356,8 +360,9 @@ Successful auto-publish comments `schedules published`. After this slice
 the `schedules flagged` set is: Rossi leaves on unique-grid publish;
 Sava leaves if both windows pass; MLK and Balboa stay on
 `sequential_partial` (`grounding_coverage_low`) until human Save-all of
-both windows or `--force` re-extract; Garfield stays until `--adopt`
-29799 then unique-grid; North Beach stays until a combined PDF.
+both windows or `--force` re-extract; North Beach stays until a combined
+PDF. A kept sequential window that has already ended counts as covered,
+so a late re-export of a past window does not refuse forever.
 
 Before checkout, the workflow requires `SCHEDULES_BOT_TOKEN`. Provision a
 repository-scoped fine-grained PAT limited to `cbzehner/swimfrancisco` with

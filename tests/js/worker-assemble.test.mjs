@@ -12,6 +12,7 @@ import assert from "node:assert/strict";
 import {
   coalesceTemp,
   coalesceTide,
+  tempReadingIsFresh,
   tempFromReading,
   withinFreshnessCeiling,
 } from "../../worker/src/assemble.ts";
@@ -55,6 +56,19 @@ test("withinFreshnessCeiling accepts recent ISO and rejects old or garbage input
   assert.equal(withinFreshnessCeiling("not-a-date", NOW), false);
 });
 
+test("tempReadingIsFresh rejects timestamps without an explicit zone", () => {
+  assert.equal(tempReadingIsFresh("noaa", "2026-04-16T13:00:00", NOW), false);
+  assert.equal(tempReadingIsFresh("noaa", "2026-04-16T13:00:00Z", NOW), true);
+});
+
+test("tempReadingIsFresh uses source-specific age limits", () => {
+  assert.equal(tempReadingIsFresh("ndbc", hoursAgo(23), NOW), true);
+  assert.equal(tempReadingIsFresh("ndbc", hoursAgo(25), NOW), false);
+  assert.equal(tempReadingIsFresh("sst", hoursAgo(71), NOW), true);
+  assert.equal(tempReadingIsFresh("sst", hoursAgo(73), NOW), false);
+  assert.equal(tempReadingIsFresh("ndbc", hoursAgo(-1), NOW), false);
+});
+
 test("coalesceTemp prefers a fresh reading and clears carried-since", () => {
   const out = coalesceTemp(FRESH_TEMP, record({ temp_carried_since: hoursAgo(5) }), NOW);
   assert.equal(out.state, "fresh");
@@ -83,6 +97,15 @@ test("coalesceTemp nulls fields once the carried value passes the 24h ceiling", 
   const previous = record({ updated_at: hoursAgo(1), temp_carried_since: hoursAgo(25), temp_stale: true });
   const out = coalesceTemp(null, previous, NOW);
   assert.equal(out.state, "unavailable");
+});
+
+test("coalesceTemp does not carry an expired source observation", () => {
+  const previous = record({
+    temp_observed_at: hoursAgo(25),
+    temp_carried_since: hoursAgo(1),
+    temp_stale: true,
+  });
+  assert.deepEqual(coalesceTemp(null, previous, NOW), { state: "unavailable" });
 });
 
 test("coalesceTemp treats legacy records without carried-since as observed at updated_at", () => {
@@ -118,7 +141,7 @@ test("coalesce helpers handle a missing previous record", () => {
 
 test("tempFromReading copies native units without converting again", () => {
   const noaa = tempFromReading({
-    reading: readingFromF("9414863", 58.4, "2026-04-16T14:30:00"),
+    reading: readingFromF("9414863", 58.4, "2026-04-16T14:30:00Z"),
     sourceType: "noaa",
   });
   assert.equal(noaa.water_temp_f, 58.4);

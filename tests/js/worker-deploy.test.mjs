@@ -9,6 +9,7 @@ import { test, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 
 import { triggerRebuild } from "../../worker/src/deploy.ts";
+import worker from "../../worker/src/index.ts";
 
 const HOOK = "https://example.invalid/hook";
 const SCHEDULED_AT = Date.UTC(2026, 3, 18, 7, 0);
@@ -45,4 +46,35 @@ test("triggerRebuild throws with the status code on non-ok responses", async () 
     () => triggerRebuild(HOOK, SCHEDULED_AT),
     /deploy hook returned 503/,
   );
+});
+
+test("scheduled reports a conditions KV write failure through waitUntil", async () => {
+  globalThis.fetch = async () => {
+    throw new Error("upstream unavailable");
+  };
+  const originalConsoleError = console.error;
+  console.error = () => {};
+  const tasks = [];
+  const env = {
+    CONDITIONS: {
+      get: async () => null,
+      put: async () => {
+        throw new Error("KV write failed");
+      },
+    },
+    WORKERS_BUILDS_DEPLOY_HOOK: HOOK,
+  };
+  const ctx = {
+    waitUntil(promise) {
+      tasks.push(promise);
+    },
+  };
+
+  try {
+    await worker.scheduled({ scheduledTime: Date.UTC(2026, 3, 18, 19, 0) }, env, ctx);
+    assert.equal(tasks.length, 1);
+    await assert.rejects(tasks[0], /KV write failed/);
+  } finally {
+    console.error = originalConsoleError;
+  }
 });

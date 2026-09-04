@@ -83,3 +83,12 @@ def all_review_dirs(slug: str, *, root: Path = DATA_DIR) -> list[Path]:
 def latest_review_dir(slug: str, *, root: Path = DATA_DIR) -> Path | None:
     dirs = all_review_dirs(slug, root=root)
     return dirs[-1] if dirs else None
+
+
+def latest_reviewed_dir(slug: str, *, root: Path = DATA_DIR) -> Path | None:
+    dirs = [
+        review_dir
+        for review_dir in all_review_dirs(slug, root=root)
+        if (review_dir / "reviewed.json").is_file()
+    ]
+    return dirs[-1] if dirs else None

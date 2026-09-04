@@ -175,19 +175,19 @@ def test_canonical_labels_have_i18n_mappings() -> None:
                 visible_spot_labels.add(setpoint)
         if access_label := extra.get("access_label"):
             access_badges.add(str(access_label))
-        for key in ("access_hours", "access_exceptions"):
-            for window in extra.get(key, []):
+        for schedule in extra.get("schedules", []):
+            windows = [
+                *schedule.get("access_hours", []),
+                *schedule.get("access_exceptions", []),
+                *schedule.get("closures", []),
+            ]
+            for window in windows:
                 if label := window.get("label"):
                     access_window_labels.add(str(label))
                 if reason := window.get("reason"):
                     closure_reasons.add(str(reason))
                 if window.get("reason_code"):
                     closure_reason_codes.add(str(window["reason_code"]))
-        for closure in extra.get("closures", []):
-            if reason := closure.get("reason"):
-                closure_reasons.add(str(reason))
-            if closure.get("reason_code"):
-                closure_reason_codes.add(str(closure["reason_code"]))
 
     for label in visible_spot_labels | access_badges:
         assert ("spot_label", label) in dynamic_label_source_index

@@ -117,7 +117,61 @@ def test_validate_flags_bad_ranges():
     }
     result = validate(payload)
     assert result.ok is False
-    assert len(result.violations) == 5
+    assert any(v.code == "invalid_session_time_range" for v in result.violations)
+    assert any(v.code == "invalid_closure_date_range" for v in result.violations)
+    assert any(v.code == "invalid_schedule_effective_date" for v in result.violations)
+
+
+def test_validate_rejects_invalid_effective_end_date():
+    payload = {
+        "schedule_basis": "swim_schedule",
+        "sessions": _five_weekday_sessions(),
+        "closures": [],
+        "effective_start": "2026-09-01",
+        "effective_end": "2026-99-99",
+    }
+
+    result = validate(payload)
+
+    assert result.ok is False
+    assert any(
+        violation.code == "invalid_schedule_effective_end_date"
+        for violation in result.violations
+    )
+
+
+def test_validate_rejects_effective_end_before_start():
+    payload = {
+        "schedule_basis": "swim_schedule",
+        "sessions": _five_weekday_sessions(),
+        "closures": [],
+        "effective_start": "2026-09-01",
+        "effective_end": "2026-08-31",
+    }
+
+    result = validate(payload)
+
+    assert result.ok is False
+    assert any(
+        violation.code == "invalid_schedule_effective_date_range"
+        for violation in result.violations
+    )
+
+
+def test_validate_rejects_impossible_closure_dates():
+    payload = {
+        "schedule_basis": "swim_schedule",
+        "sessions": _five_weekday_sessions(),
+        "closures": [
+            {"start": "2026-99-01", "end": "2026-99-02", "reason": "Maintenance"}
+        ],
+        "effective_start": "2026-09-01",
+    }
+
+    result = validate(payload)
+
+    assert result.ok is False
+    assert any(v.code == "invalid_closure_date_range" for v in result.violations)
 
 
 def _five_weekday_sessions() -> list[dict]:

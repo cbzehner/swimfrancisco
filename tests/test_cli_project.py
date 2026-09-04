@@ -56,3 +56,23 @@ def test_cli_project_missing_slug_exits_nonzero(tmp_path, monkeypatch):
     result = runner.invoke(cli, ["project", "ghost-pool"])
     assert result.exit_code != 0
     assert "no review dir" in result.output
+
+
+def test_cli_project_skips_newer_pending_capture(tmp_path, monkeypatch):
+    data = tmp_path / "data"
+    content = tmp_path / "content" / "spots"
+    _seed_review_dir(data, "hamilton-pool", "2026-04-18", "a" * 64)
+    pending = data / "hamilton-pool" / f"2026-04-19-{'b' * 12}"
+    pending.mkdir()
+    content.mkdir(parents=True)
+    (content / "hamilton-pool.md").write_text(
+        "+++\ntitle = \"Hamilton\"\n\n[extra]\n+++\n"
+    )
+
+    monkeypatch.setattr("schedules.cli.DATA_DIR", data)
+    monkeypatch.setattr("schedules.cli.CONTENT_SPOTS_DIR", content)
+
+    result = CliRunner().invoke(cli, ["project", "hamilton-pool"])
+
+    assert result.exit_code == 0, result.output
+    assert "[[extra.schedules.sessions]]" in (content / "hamilton-pool.md").read_text()

@@ -33,6 +33,12 @@ function overlayWorkingGenerator(target) {
     "scripts/generate-i18n.mjs",
     "scripts/lib/spot-frontmatter.mjs",
     "i18n/dynamic-labels.toml",
+    "i18n/ui/en.toml",
+    "i18n/ui/es.toml",
+    "i18n/ui/fi.toml",
+    "i18n/ui/fil.toml",
+    "i18n/ui/vi.toml",
+    "i18n/ui/zh-Hant.toml",
   ]) {
     writeFileSync(path.join(target, file), readFileSync(path.join(ROOT, file)));
   }
@@ -133,3 +139,27 @@ test("check-i18n fails when a locale UI catalog loses a key", () => {
     rmSync(worktree, { recursive: true, force: true });
   }
 });
+
+for (const [table, field] of [["closures", "reason"], ["access_exceptions", "label"], ["access_hours", "label"]]) {
+  test(`check-i18n rejects unmapped nested schedule ${table}`, () => {
+    const worktree = mkdtempSync(path.join(tmpdir(), "swimfrancisco-i18n-window-"));
+    try {
+      archiveHead(worktree);
+      overlayWorkingGenerator(worktree);
+      const spotPath = path.join(worktree, "content/spots/hamilton-pool.md");
+      const original = readFileSync(spotPath, "utf8");
+      const closing = original.indexOf("\n+++", 4);
+      const window = `\n[[extra.schedules.${table}]]\n${field} = "Unmapped schedule label"\n`;
+      writeFileSync(spotPath, original.slice(0, closing) + window + original.slice(closing));
+
+      const result = spawnSync(process.execPath, ["scripts/generate-i18n.mjs", "check"], {
+        cwd: worktree,
+        encoding: "utf8",
+      });
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, /missing canonical display label.*Unmapped schedule label/);
+    } finally {
+      rmSync(worktree, { recursive: true, force: true });
+    }
+  });
+}

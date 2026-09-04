@@ -466,6 +466,16 @@ function availableSegmentsAfterClosures(start, end, closures, dateISO) {
   return segments;
 }
 
+function currentWindows(windows, closures, now) {
+  const dateISO = formatISODate(now);
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  return windows.flatMap((window) => (
+    availableSegmentsAfterClosures(window.start, window.end, closures, dateISO)
+      .filter((segment) => segment.start <= nowMinutes && nowMinutes < segment.end)
+      .map((segment) => ({ ...window, ...segment }))
+  ));
+}
+
 // Return the next drop-in session (lap / family / senior) that starts strictly
 // after `now`, scanning up to 7 days ahead. Skips facility-wide closed days.
 // Returns `{ program, day, start }` (start in minutes-of-day) or null if none
@@ -608,13 +618,12 @@ export function computeStatus(schedule, now, allowedTypes = null) {
   }
 
   const todayKey = DAY_KEYS[now.getDay()];
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
   if (normalized.length === 0) return statusResult(PLACEHOLDER, PLACEHOLDER, "", {}, { openOffset });
 
-  const current = normalized.find(
-    (s) => s.day === todayKey && s.start <= nowMinutes && nowMinutes < s.end,
-  );
+  const current = currentWindows(
+    normalized.filter((session) => session.day === todayKey), closures, now,
+  )[0];
   if (current) {
     return statusResult("OPEN", `Closes ${formatHHMM(current.end)}`, "closes", {
       time: formatHHMM(current.end),
@@ -653,9 +662,7 @@ export function computeAccessStatus(schedule, now) {
     return statusResult("CLOSED", closureCopy(activeClosure), nextKind, nextArgs);
   }
 
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  const current = accessWindowsForDate(schedule, now)
-    .find((access) => access.start <= nowMinutes && nowMinutes < access.end);
+  const current = currentWindows(accessWindowsForDate(schedule, now), closures, now)[0];
   if (current) {
     return statusResult("ACCESS", `Until ${formatHHMM(current.end)}`, "until", {
       time: formatHHMM(current.end),
@@ -958,13 +965,10 @@ export function computeDetailStatus(schedule, now) {
   }
 
   const todayKey = DAY_KEYS[now.getDay()];
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const todayAll = normalized.filter((s) => s.day === todayKey);
   const todayDropIn = todayAll.filter((s) => isDropInType(s.type));
 
-  const activeDropIn = todayDropIn.filter(
-    (s) => s.start <= nowMinutes && nowMinutes < s.end,
-  );
+  const activeDropIn = currentWindows(todayDropIn, closures, now);
   if (activeDropIn.length > 0) {
     return {
       ...EMPTY_DETAIL,

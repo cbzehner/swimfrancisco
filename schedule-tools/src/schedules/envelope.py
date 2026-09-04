@@ -62,7 +62,11 @@ def validate_envelope(envelope: dict) -> None:
     Raises EnvelopeValidationError with a human-readable message on failure.
     """
     try:
-        jsonschema.validate(instance=envelope, schema=load_envelope_schema())
+        jsonschema.validate(
+            instance=envelope,
+            schema=load_envelope_schema(),
+            format_checker=jsonschema.FormatChecker(),
+        )
     except jsonschema.ValidationError as exc:
         location = "/".join(str(part) for part in exc.absolute_path) or "<root>"
         raise EnvelopeValidationError(f"{location}: {exc.message}") from exc

@@ -1,8 +1,7 @@
 name: ci
 
-# Runs the same `just check` gate as the devenv pre-push hook, so a
-# push with --no-verify can no longer reach Cloudflare's auto-deploy
-# untested. Keep this green: main deploys on push.
+# Runs full verification. Production Workers Builds waits for this
+# workflow's successful push run for its exact commit before building.
 #
 # Public-repo safety: read-only permissions, no secrets used.
 

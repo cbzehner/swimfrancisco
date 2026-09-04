@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from click.testing import CliRunner
@@ -49,7 +50,12 @@ def test_extract_provider_applies_discover(monkeypatch) -> None:
     assert command.force is False
 
 
-def test_extract_no_discover_disables_discover(monkeypatch) -> None:
+def test_extract_no_discover_reuses_explicit_decisions(tmp_path, monkeypatch) -> None:
+    decisions_path = tmp_path / "discovery-decisions.json"
+    decisions_path.write_text(
+        json.dumps([{"slug": "sava-pool", "blocking": True}])
+    )
+    monkeypatch.setattr("schedules.cli.TMP_DIR", tmp_path)
     captured = _capture_run_pipeline(monkeypatch)
     result = CliRunner().invoke(
         cli, ["extract", "--provider", "gemini", "--no-discover"]
@@ -58,6 +64,10 @@ def test_extract_no_discover_disables_discover(monkeypatch) -> None:
     command = captured["command"]
     assert isinstance(command, PdfRun)
     assert isinstance(command.urls, ExpandFromDecisions)
+    assert command.urls.decisions.get("sava-pool") == {
+        "slug": "sava-pool",
+        "blocking": True,
+    }
 
 
 def test_extract_direct_never_applies_discover(monkeypatch) -> None:

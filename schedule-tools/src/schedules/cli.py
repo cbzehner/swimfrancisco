@@ -10,7 +10,7 @@ from .paths import (
     CONTENT_SPOTS_DIR,
     DATA_DIR,
     TMP_DIR,
-    latest_review_dir,
+    latest_reviewed_dir,
 )
 from .publish import publish_pending_all
 from .registry import load_registry
@@ -28,6 +28,7 @@ from .pipeline import (
 from .pr_summary import render_pr_body, staged_data_has_meaningful_changes
 from .report import result_counts
 from .project import ProjectError, project as _project
+from .review import DecisionSet
 from .review_server import ReviewApp, serve_review_app
 
 
@@ -79,7 +80,7 @@ def _summary_line(results: list[PoolResult]) -> str:
 @click.option(
     "--no-discover",
     is_flag=True,
-    help="Do not run Rec & Park PDF discovery; fetch working-tree pdf_url.",
+    help="Do not run Rec & Park PDF discovery; reuse the last discovery decisions.",
 )
 @click.option(
     "--url",
@@ -118,7 +119,13 @@ def extract(
             provider=parse_provider(provider or ""),
             slugs=slug_tuple,
             force=force,
-            urls=ExpandFromDecisions() if no_discover else DiscoverAndExpand(),
+            urls=(
+                ExpandFromDecisions(
+                    DecisionSet.load(TMP_DIR / "discovery-decisions.json")
+                )
+                if no_discover
+                else DiscoverAndExpand()
+            ),
         )
     try:
         exit_code, report_path, results = run_pipeline(command)
@@ -134,7 +141,7 @@ def extract(
 @click.argument("slug")
 def project_command(slug: str) -> None:
     """Project the latest reviewed.json for SLUG into content/spots/<slug>.md."""
-    review_dir = latest_review_dir(slug, root=DATA_DIR)
+    review_dir = latest_reviewed_dir(slug, root=DATA_DIR)
     if review_dir is None:
         raise click.ClickException(f"no review dir found for slug={slug!r}")
     reviewed_json = review_dir / "reviewed.json"

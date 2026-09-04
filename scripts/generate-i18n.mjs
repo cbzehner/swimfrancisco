@@ -250,25 +250,22 @@ function dynamicLabelRequirements(extrasByFile) {
     if (extra.setpoint_label && /^[a-z][a-z +/.-]*$/i.test(String(extra.setpoint_label))) {
       requirements.push({ kind: "spot_label", source: String(extra.setpoint_label), file });
     }
-    for (const closure of extra.closures || []) {
-      if (closure.reason) {
-        requirements.push({
-          kind: "closure_reason",
-          source: String(closure.reason),
-          code: closure.reason_code ? String(closure.reason_code) : "",
-          file,
-        });
-      }
-    }
-    for (const exception of extra.access_exceptions || []) {
-      if (exception.label) requirements.push({ kind: "access_window", source: String(exception.label), file });
-      if (exception.reason) {
-        requirements.push({
-          kind: "closure_reason",
-          source: String(exception.reason),
-          code: exception.reason_code ? String(exception.reason_code) : "",
-          file,
-        });
+    for (const schedule of extra.schedules || []) {
+      const windows = [
+        ...(schedule.closures || []),
+        ...(schedule.access_hours || []),
+        ...(schedule.access_exceptions || []),
+      ];
+      for (const window of windows) {
+        if (window.label) requirements.push({ kind: "access_window", source: String(window.label), file });
+        if (window.reason) {
+          requirements.push({
+            kind: "closure_reason",
+            source: String(window.reason),
+            code: window.reason_code ? String(window.reason_code) : "",
+            file,
+          });
+        }
       }
     }
   }

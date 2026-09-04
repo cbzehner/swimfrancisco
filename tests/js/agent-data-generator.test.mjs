@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 
 import { generateAgentData, normalizeIsoDate } from "../../scripts/generate-agent-data.mjs";
 import { generateBuildMetadata } from "../../scripts/generate-build-metadata.mjs";
+import { assertConditionsFresh, assertSpotMatchesContent } from "../../scripts/smoke-production.mjs";
 import { listCanonicalSpotFiles } from "../../scripts/lib/spot-frontmatter.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -121,6 +122,33 @@ test("normalizeIsoDate accepts TOML date strings and Date objects", () => {
   assert.equal(normalizeIsoDate("2026-06-16"), "2026-06-16");
   assert.equal(normalizeIsoDate(new Date("2026-06-16T00:00:00.000Z")), "2026-06-16");
   assert.equal(normalizeIsoDate("06/16/2026"), null);
+});
+
+test("production smoke accepts the expected season and rejects older content", () => {
+  const expected = {
+    slug: "north-beach-pool",
+    pool: { schedules: [{ effective_start: "2027-01-01", effective_end: "2027-04-30" }] },
+  };
+  assert.doesNotThrow(() => assertSpotMatchesContent({ ...expected, generated_at: "2027-02-01T00:00:00Z" }, expected));
+  assert.throws(() => assertSpotMatchesContent({
+    ...expected,
+    pool: { schedules: [{ effective_start: "2026-08-11", effective_end: "2026-08-29" }] },
+  }, expected), /north-beach-pool deployed data does not match/);
+});
+
+test("production smoke rejects old observations even when the latest assembly labels them fresh", () => {
+  const now = Date.now();
+  const record = {
+    updated_at: new Date(now).toISOString(),
+    temp_observed_at: new Date(now - 32 * 24 * 3_600_000).toISOString(),
+    water_temp_f: 58,
+    temp_station_type: "ndbc",
+    temp_stale: false,
+  };
+  assert.throws(() => assertConditionsFresh({ "ocean-beach": record }), /ocean-beach temperature observed_at.*old/);
+  assert.doesNotThrow(() => assertConditionsFresh({
+    "ocean-beach": { ...record, water_temp_f: null, temp_observed_at: null },
+  }));
 });
 
 test("build metadata generator writes a production smoke marker", async () => {

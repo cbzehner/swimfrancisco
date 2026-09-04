@@ -6,7 +6,8 @@ as static assets and handles `/api/*` requests. Terraform owns the durable
 infrastructure around it (KV, DNS, the `www → apex` redirect, the apex
 custom-domain binding).
 
-Push to `main` auto-deploys via Workers Builds. The Worker's hourly
+Push to `main` auto-deploys via Workers Builds after GitHub CI passes for
+the exact commit. The Worker's hourly
 cron POSTs to a Workers Builds deploy hook on the tick that lands at
 00:00 PT to daily-rebuild the site so date-tick-over fields in the
 rendered HTML stay correct.
@@ -92,6 +93,20 @@ The npm script regenerates translated strings, bulletin metadata, and
 agent JSON before Zola packages the static assets. If Zola is not already
 on the build image's `PATH`, the script downloads the pinned release.
 
+The npm prebuild hook detects Workers Builds through `WORKERS_CI=1`.
+For `WORKERS_CI_BRANCH=main`, it waits up to ten minutes for the successful
+push run of `.github/workflows/ci.yml` at `WORKERS_CI_COMMIT_SHA`, which
+must match the checked-out commit. GitHub CI and local builds skip this
+gate, so CI can finish its own build. Non-production branch previews also
+skip the gate. The existing dashboard build command needs no change.
+
+The gate reads the public GitHub Actions API. A failed or cancelled run,
+API error, or timeout stops the build before deployment. Retry the build
+after CI passes or API access recovers. An optional build `GITHUB_TOKEN`
+with Actions read access can avoid unauthenticated rate limits. Daily
+rebuilds reuse the successful result for their commit; if that run has
+expired from GitHub's retention, rerun CI before retrying the build.
+
 Click Deploy. The first build should succeed now that `worker/wrangler.toml`
 has real KV IDs and the `swimfrancisco` script name.
 
@@ -154,8 +169,15 @@ dashboard invoker is the official production path.)
 curl -X POST "$WORKERS_BUILDS_DEPLOY_HOOK"          # manual rebuild test
 curl -sSf https://swimfrancisco.com/ | head -5      # site served
 curl -sSf https://swimfrancisco.com/api/conditions | head -c 400   # API served
-just smoke-production                               # generated assets + known stale-data checks
+just smoke-production                               # commit, content, and conditions freshness
 ```
+
+The smoke check compares the deployed pool records with canonical content
+from the expected Git commit, without fixed season dates. It defaults to
+local `HEAD`; `--expected-commit=<ref>` selects another local commit.
+`--skip-commit` accepts the deployed commit but still checks its content,
+so that commit must exist in the local clone. Fetch it before checking an
+older deployment if needed.
 
 Within 24 hours, Workers Builds → Deployments should show exactly one
 hook-triggered build at 00:00 PT in addition to any push-triggered builds.

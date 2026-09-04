@@ -63,17 +63,18 @@ async function noaaGet<T extends { error?: { message?: string } }>(
   return body;
 }
 
-// observedAt is station-local time, zoneless ISO (NOAA lst_ldt).
+// observedAt is explicit UTC ISO. Tide predictions remain station-local.
 export async function fetchNoaaTemp(stationId: string): Promise<TempReading | null> {
   const body = await noaaGet<NoaaTempResponse>("NOAA temp", stationId, {
     product: "water_temperature",
     date: "latest",
+    time_zone: "gmt",
   });
   const latest = body.data?.[body.data.length - 1];
   if (!latest) return null;
   const waterTempF = Number(latest.v);
   if (!Number.isFinite(waterTempF)) return null;
-  return readingFromF(stationId, waterTempF, toLocalIso(latest.t));
+  return readingFromF(stationId, waterTempF, `${toLocalIso(latest.t)}Z`);
 }
 
 // YYYYMMDD in America/Los_Angeles — all our stations are Pacific, so we
