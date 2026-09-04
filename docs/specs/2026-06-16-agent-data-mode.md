@@ -43,7 +43,8 @@ approved only after status computation has one shared implementation
 that both the browser and Worker can use.
 
 Static v1 is implemented by `scripts/generate-agent-data.mjs`, which
-writes ignored build artifacts under `public/agent/` after `zola build`.
+writes gitignored build artifacts under `static/agent/` before `zola build`
+copies them to `/agent/*`.
 The dynamic `/agent/snapshot.json` endpoint remains deferred.
 
 ## Goals
