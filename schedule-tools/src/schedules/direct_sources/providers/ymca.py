@@ -10,7 +10,6 @@ from ..parsing import (
     _access_hour,
     _closure_dates_from_text,
     _expand_day_phrase,
-    _expand_days,
     _html_text,
     _parse_clock_time,
     _parse_hours_range,

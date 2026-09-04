@@ -182,10 +182,6 @@ class GroundingResult:
     def ratio(self) -> float:
         return self.grounded_count / self.total if self.total else 1.0
 
-    @property
-    def ungrounded(self) -> list[SessionGrounding]:
-        return [session for session in self.sessions if not session.grounded]
-
 
 @dataclass(frozen=True)
 class PoolResultBase:

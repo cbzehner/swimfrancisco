@@ -111,15 +111,9 @@ def reuse_policy(command: RunCommand) -> ReusePolicy:
 
 
 def parse_provider(value: str) -> ProviderMode:
-    if value == "gemini" or value == "anthropic":
+    if value in ("gemini", "anthropic"):
         return value
     raise ValueError(f"Unsupported provider {value!r}; expected 'gemini' or 'anthropic'.")
-
-
-def parse_source_mode(value: str) -> SourceMode:
-    if value == "direct":
-        return value
-    return parse_provider(value)
 
 
 def compute_exit_code(results: list[PoolResult]) -> int:
