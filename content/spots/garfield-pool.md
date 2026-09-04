@@ -176,6 +176,235 @@ last_verified_at = "2026-08-20"
 start = "2026-08-14"
 end = "2026-09-07"
 reason = "Garfield Pool Maintenance Closure 8-14_9-7 2026"
+
+[[extra.schedules]]
+effective_start = "2026-09-08"
+schedule_basis = "swim_schedule"
+effective_end = "2026-12-10"
+last_verified_at = "2026-09-04"
+
+[[extra.schedules.sessions]]
+day = "monday"
+type = "family_swim"
+start = "07:00"
+end = "08:45"
+pool = "small"
+
+[[extra.schedules.sessions]]
+day = "monday"
+type = "senior_swim"
+start = "09:00"
+end = "10:45"
+pool = "main"
+
+[[extra.schedules.sessions]]
+day = "monday"
+type = "lap_swim"
+start = "11:00"
+end = "13:00"
+pool = "main"
+
+[[extra.schedules.sessions]]
+day = "monday"
+type = "family_swim"
+start = "14:00"
+end = "15:45"
+pool = "small"
+
+[[extra.schedules.sessions]]
+day = "monday"
+type = "family_swim"
+start = "17:30"
+end = "19:00"
+pool = "small"
+
+[[extra.schedules.sessions]]
+day = "monday"
+type = "lap_swim"
+start = "17:30"
+end = "19:00"
+pool = "main"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "family_swim"
+start = "07:00"
+end = "08:45"
+pool = "small"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "family_swim"
+start = "09:00"
+end = "10:45"
+pool = "small"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "senior_swim"
+start = "09:00"
+end = "10:45"
+pool = "main"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "11:00"
+end = "13:00"
+pool = "main"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "family_swim"
+start = "14:00"
+end = "15:30"
+pool = "small"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "family_swim"
+start = "17:30"
+end = "19:00"
+pool = "small"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "17:30"
+end = "19:00"
+pool = "main"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "family_swim"
+start = "07:00"
+end = "08:45"
+pool = "small"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "senior_swim"
+start = "09:00"
+end = "10:45"
+pool = "main"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "family_swim"
+start = "11:00"
+end = "13:00"
+pool = "small"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "11:00"
+end = "13:00"
+pool = "main"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "family_swim"
+start = "14:00"
+end = "15:45"
+pool = "small"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "family_swim"
+start = "17:30"
+end = "19:00"
+pool = "small"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "17:30"
+end = "19:00"
+pool = "main"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "family_swim"
+start = "07:00"
+end = "08:45"
+pool = "small"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "senior_swim"
+start = "09:00"
+end = "10:45"
+pool = "main-2 lanes"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "family_swim"
+start = "11:00"
+end = "13:00"
+pool = "small"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "11:00"
+end = "13:00"
+pool = "main"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "family_swim"
+start = "14:00"
+end = "15:30"
+pool = "small"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "14:00"
+end = "15:30"
+pool = "main"
+
+[[extra.schedules.sessions]]
+day = "sunday"
+type = "lap_swim"
+start = "08:30"
+end = "10:30"
+pool = "main"
+
+[[extra.schedules.closures]]
+start = "2026-09-24"
+end = "2026-09-24"
+reason = "staff training"
+start_time = "11:00"
+end_time = "14:00"
+
+[[extra.schedules.closures]]
+start = "2026-10-12"
+end = "2026-10-12"
+reason = "Indigenous Peoples Day"
+
+[[extra.schedules.closures]]
+start = "2026-10-22"
+end = "2026-10-22"
+reason = "staff training"
+start_time = "11:00"
+end_time = "14:00"
+
+[[extra.schedules.closures]]
+start = "2026-11-11"
+end = "2026-11-11"
+reason = "Veterans Day"
+
+[[extra.schedules.closures]]
+start = "2026-11-26"
+end = "2026-11-26"
+reason = "Thanksgiving"
+
+[[extra.schedules.closures]]
+start = "2026-11-27"
+end = "2026-11-27"
+reason = "Thanksgiving"
 +++
 
 An indoor pool at Garfield Square in the Mission District, at the corner of 26th and Harrison. Programs include lap swim, senior swim, recreation swim, fitness and exercise classes, and lessons.
