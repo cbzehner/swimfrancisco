@@ -1,7 +1,9 @@
 // Swim Francisco conditions Worker.
-// - Cron (hourly): fetch NOAA 9414290 + fallback 9414750 (bay temp + tides)
-//   and NDBC 46237 (ocean temp); assemble per-spot records; write KV.
+// - Cron (hourly): walk each open-water spot's temp-source chain (USGS,
+//   NOAA, NDBC, ERDDAP, MUR SST) and NOAA tide predictions; assemble
+//   per-spot records; write KV. The 00:00 PT tick also triggers a rebuild.
 // - HTTP: GET /api/conditions → slug-keyed bulk record from KV.
+// - HTTP: /ingest/* → PostHog reverse proxy.
 
 import { assembleAndPersist } from "./assemble.ts";
 import { readConditionsRaw } from "./kv.ts";

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Generates worker/src/spots.ts from content/spots/*.md frontmatter so the
-// open-water spot → station mapping has a single source of truth. Runs from
-// wrangler's [build] hook before dev/deploy and from `npm run typecheck`.
+// open-water spot → station mapping has a single source of truth. The output
+// is committed; `npm run typecheck` (worker/) regenerates it first and
+// tests/test_worker_spots.py fails on drift.
 
 import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -46,7 +47,7 @@ async function main() {
   const body = [
     "// AUTO-GENERATED from content/spots/*.md — do not edit by hand.",
     "// Regenerate via `node scripts/generate-worker-spots.mjs`",
-    "// (runs automatically from wrangler [build] before dev and deploy).",
+    "// (also runs before `npm run typecheck` in worker/).",
     "",
     'export type TempStationType = "usgs" | "noaa" | "ndbc" | "erddap" | "sst";',
     "",

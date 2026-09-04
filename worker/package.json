@@ -4,7 +4,7 @@
   "private": true,
   "license": "GPL-3.0-only",
   "type": "module",
-  "description": "Swim Francisco conditions Worker — hourly cron fetches NOAA/NDBC, serves /api/conditions.",
+  "description": "Swim Francisco conditions Worker — hourly cron fetches USGS/NOAA/NDBC/ERDDAP water temps and NOAA tides, serves /api/conditions.",
   "scripts": {
     "generate-spots": "node ../scripts/generate-worker-spots.mjs",
     "dev": "wrangler dev --test-scheduled",

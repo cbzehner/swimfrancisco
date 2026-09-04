@@ -42,5 +42,5 @@ The agent JSON files are generated from the same canonical spot content as the h
 ## Source And Freshness Notes
 
 - Pool schedule pages include official source links and effective schedule windows when available.
-- Open-water pages use NOAA/NDBC condition sources through Swim Francisco's runtime condition feed.
+- Open-water pages use NOAA, USGS, NDBC, and satellite SST condition sources through Swim Francisco's runtime condition feed.
 - The board is built as static HTML with client-side live status, so crawlers can discover canonical spot pages even without running JavaScript.
