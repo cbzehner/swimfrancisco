@@ -58,13 +58,6 @@ function popupRow(label, value) {
   );
 }
 
-function beachConditions(spot) {
-  const conditions = (typeof window !== "undefined" && window.SWIMFRANCISCO_CONDITIONS) || null;
-  const record = conditions ? conditions[spot.slug] : null;
-  const tide = record ? formatTideSummary(record, pacificWallClockDate()) : null;
-  return { temp: spot.temp, tide };
-}
-
 function createPopupHTML(spot) {
   const name = escapeHTML(spot.name);
   const detailsHref = spot.href;
@@ -73,9 +66,10 @@ function createPopupHTML(spot) {
   const rows = [popupRow(t("type", "TYPE"), spot.typeLabel)];
 
   if (spot.type === "open_water") {
-    const { temp, tide } = beachConditions(spot);
+    const record = window.SWIMFRANCISCO_CONDITIONS?.[spot.slug];
+    const tide = formatTideSummary(record, pacificWallClockDate());
     rows.push(popupRow(t("status", "STATUS"), statusLabel(spot.status || "OPEN")));
-    rows.push(popupRow(t("water", "WATER"), temp));
+    rows.push(popupRow(t("water", "WATER"), spot.temp));
     rows.push(popupRow(t("tide", "TIDE"), tide));
   } else {
     rows.push(popupRow(t("status", "STATUS"), statusLabel(spot.status)));
@@ -120,11 +114,11 @@ function createMarkerIcon(L, spot) {
 // lost (e.g. nearby beaches relative to a pool).
 const FOCUS_ZOOM = 15;
 
-function renderMarkers(L, map, layer, markers, spots) {
+function renderMarkers(L, map, markers, spots) {
   const visibleSlugs = new Set(spots.map((spot) => spot.slug));
   for (const [slug, entry] of markers) {
     if (visibleSlugs.has(slug)) continue;
-    layer.removeLayer(entry.marker);
+    map.removeLayer(entry.marker);
     markers.delete(slug);
   }
   spots.forEach((spot) => {
@@ -155,7 +149,7 @@ function renderMarkers(L, map, layer, markers, spots) {
     marker.on("popupclose", () => {
       marker.getElement()?.focus();
     });
-    layer.addLayer(marker);
+    marker.addTo(map);
     markers.set(spot.slug, { marker, iconClass: icon.options.className, popupHTML });
   });
 }
@@ -188,9 +182,8 @@ async function init() {
   }
 
   const map = L.map(container).setView(SF_CENTER, SF_ZOOM);
-  const markerLayer = L.layerGroup().addTo(map);
   const markers = new Map();
-  const refresh = () => renderMarkers(L, map, markerLayer, markers, collectVisibleSpots());
+  const refresh = () => renderMarkers(L, map, markers, collectVisibleSpots());
   refresh();
 
   // The map is lazy-loaded only when someone opens /map/, so a successful
