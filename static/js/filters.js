@@ -1,4 +1,4 @@
-// Swim Francisco board filters (Step 12).
+// Swim Francisco board filters.
 // Wires up the Next Open sort, Type pills (lap_swim /
 // family_swim / open_water), and Distance sort. Each change re-applies
 // visibility + sort and retriggers the split-flap animation on visible rows.
@@ -23,6 +23,7 @@
 // board still renders and all rows remain visible.
 
 import {
+  readNumberAttribute,
   readScheduleAttribute,
   resolveActiveSchedule,
   sortByRank,
@@ -101,14 +102,6 @@ function updateViewSwitcherHref() {
   });
 }
 
-// Parse a numeric data-* attribute; returns null if absent or non-finite.
-function readNumber(row, attr) {
-  const raw = row.getAttribute(attr);
-  if (!raw) return null;
-  const value = Number(raw);
-  return Number.isFinite(value) ? value : null;
-}
-
 function isBeach(row) {
   return row.getAttribute("data-type") === "open_water";
 }
@@ -166,8 +159,8 @@ function haversineMiles(lat1, lng1, lat2, lng2) {
 // missing lat/lng fall to the end of their group. Stable via index.
 function sortRowsByDistance(rows, userCoords) {
   const decorated = rows.map((row, index) => {
-    const lat = readNumber(row, "data-lat");
-    const lng = readNumber(row, "data-lng");
+    const lat = readNumberAttribute(row, "data-lat");
+    const lng = readNumberAttribute(row, "data-lng");
     const distance =
       lat !== null && lng !== null
         ? haversineMiles(userCoords.latitude, userCoords.longitude, lat, lng)

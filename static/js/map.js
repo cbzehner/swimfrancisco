@@ -4,6 +4,7 @@
 // `sf:filters-applied`. No client-side view toggling — the VIEW BOARD link
 // is a plain <a href="/"> and the browser handles navigation.
 
+import { readNumberAttribute } from "./helpers/board.mjs";
 import { pacificWallClockDate } from "./helpers/pacific.mjs";
 import { formatTideSummary } from "./helpers/tide.mjs";
 import { statusLabel, t } from "./helpers/i18n.mjs";
@@ -39,20 +40,13 @@ function loadLeaflet() {
   });
 }
 
-function readNumber(row, attr) {
-  const raw = row.getAttribute(attr);
-  if (!raw) return null;
-  const value = Number(raw);
-  return Number.isFinite(value) ? value : null;
-}
-
 // Visible rows only — filters.js sets [hidden] on rows that don't match.
 function collectVisibleSpots() {
   const rows = document.querySelectorAll("table.board tbody tr:not([hidden])");
   const spots = [];
   rows.forEach((row) => {
-    const lat = readNumber(row, "data-lat");
-    const lng = readNumber(row, "data-lng");
+    const lat = readNumberAttribute(row, "data-lat");
+    const lng = readNumberAttribute(row, "data-lng");
     if (lat === null || lng === null) return;
     const slug = row.getAttribute("data-slug") || "";
     const type = row.getAttribute("data-type") || "";
