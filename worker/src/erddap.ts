@@ -17,8 +17,7 @@ const STATION_BASE = "https://erddap.sensors.ioos.us/erddap/tabledap";
 const SST_BASE = "https://coastwatch.pfeg.noaa.gov/erddap/griddap/jplMURSST41.json";
 const FETCH_TIMEOUT_MS = 10_000;
 
-// observedAt is ISO 8601 UTC.
-export type ErddapReading = TempReading;
+// observedAt is ISO 8601 UTC for both fetchers.
 
 interface ErddapTable {
   table?: {
@@ -43,7 +42,7 @@ async function erddapGet(label: string, url: string): Promise<ErddapTable | null
   return (await res.json()) as ErddapTable;
 }
 
-export async function fetchErddapStationTemp(datasetId: string): Promise<ErddapReading | null> {
+export async function fetchErddapStationTemp(datasetId: string): Promise<TempReading | null> {
   const query =
     'time,sea_water_temperature&time>=now-1day&sea_water_temperature!=NaN&orderByMax("time")';
   const body = await erddapGet(
@@ -58,7 +57,7 @@ export async function fetchErddapStationTemp(datasetId: string): Promise<ErddapR
   return readingFromC(datasetId, waterTempC, time);
 }
 
-export async function fetchMurSst(gridPoint: string): Promise<ErddapReading | null> {
+export async function fetchMurSst(gridPoint: string): Promise<TempReading | null> {
   const [lat, lon] = gridPoint.split(",").map((part) => Number(part.trim()));
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
     throw new Error(`SST grid point must be "lat,lon", got: ${gridPoint}`);
