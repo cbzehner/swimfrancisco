@@ -73,7 +73,7 @@ function formatNextLine(result) {
 function presentDetail(schedule, now) {
   if (scheduleHasSessions(schedule, now) || !scheduleHasAccessHours(schedule, now)) {
     const result = computeDetailStatus(schedule, now);
-    const removeToday = new Set([
+    const hideToday = new Set([
       "CLOSED_TODAY",
       "NOT_VERIFIED",
       "NO_DROPIN_WEEK",
@@ -84,7 +84,7 @@ function presentDetail(schedule, now) {
       kind: result.kind,
       statusText: formatStatusLine(result),
       nextText: formatNextLine(result),
-      today: removeToday.has(result.kind) ? "remove" : "decorate",
+      today: hideToday.has(result.kind) ? "hide" : "decorate",
     };
   }
   const result = computeAccessStatus(schedule, now);
@@ -109,10 +109,8 @@ function applyStatusSlab(root, schedule, now) {
 function decorateTodayBlock(root, now, view) {
   const block = root.querySelector(".today-block");
   if (!block) return;
-  if (view.today === "remove") {
-    block.remove();
-    return;
-  }
+  block.hidden = view.today === "hide";
+  if (block.hidden) return;
   if (view.today === "keep") return;
 
   const rows = block.querySelectorAll(".today-block-list li");

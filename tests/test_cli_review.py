@@ -14,10 +14,17 @@ def _review_dir(data_root: Path, slug: str, date: str, pdf_sha256: str) -> Path:
     return data_root / slug / f"{date}-{pdf_sha256[:12]}"
 
 
-def _seed_review_dir(data_root: Path, slug: str, date: str, pdf_sha256: str) -> Path:
+def _seed_review_dir(
+    data_root: Path,
+    slug: str,
+    date: str,
+    pdf_sha256: str,
+    *,
+    extracted_at: str | None = None,
+) -> Path:
     review_dir = _review_dir(data_root, slug, date, pdf_sha256)
     review_dir.mkdir(parents=True, exist_ok=True)
-    (review_dir / "gemini-model.json").write_text(json.dumps({
+    artifact = {
         "provider": "gemini",
         "model": "model",
         "source_pdf_url": "https://example.com/x.pdf",
@@ -31,7 +38,10 @@ def _seed_review_dir(data_root: Path, slug: str, date: str, pdf_sha256: str) -> 
             ],
             "closures": [],
         },
-    }))
+    }
+    if extracted_at is not None:
+        artifact["extracted_at"] = extracted_at
+    (review_dir / "gemini-model.json").write_text(json.dumps(artifact))
     (review_dir / "source.pdf").write_bytes(b"%PDF-fake")
     return review_dir
 
@@ -115,6 +125,29 @@ def test_review_app_lists_only_latest_pending_capture_per_pool(tmp_path):
     assert app.candidate("koret-center").review_dir == latest
 
 
+def test_review_app_uses_extraction_time_for_same_day_captures(tmp_path):
+    data = tmp_path / "data"
+    content = tmp_path / "content" / "spots"
+    _seed_review_dir(
+        data,
+        "koret-center",
+        "2026-07-10",
+        "f" * 64,
+        extracted_at="2026-07-10T10:00:00+00:00",
+    )
+    latest = _seed_review_dir(
+        data,
+        "koret-center",
+        "2026-07-10",
+        "a" * 64,
+        extracted_at="2026-07-10T11:00:00+00:00",
+    )
+
+    app = ReviewApp(data_root=data, content_spots_dir=content)
+
+    assert app.candidate("koret-center").review_dir == latest
+
+
 def test_csv_source_is_split_into_calendar_sections():
     source = '--- Monday ---\n"Monday Hours","Lane 1"\n"7:00 AM","Lap Swim"\n\n--- Tuesday ---\n"Tuesday Hours","Lane 1"'
 
@@ -186,9 +219,15 @@ def test_review_refresh_uses_registry_source_mode(tmp_path, monkeypatch, source_
     monkeypatch.setattr("schedules.review_server.current_source_identity", lambda slug: "b" * 64)
     monkeypatch.setenv("SCHEDULES_PROVIDER", configured_provider)
     calls = []
+
+    def fake_run(command):
+        calls.append(command)
+        _seed_review_dir(data, "koret-center", "2026-04-02", "b" * 64)
+        return 0, None, [object()]
+
     monkeypatch.setattr(
         "schedules.review_server.run_pipeline",
-        lambda command: (calls.append(command) or (0, None, [object()])),
+        fake_run,
     )
 
     app.refresh("koret-center")
@@ -199,6 +238,52 @@ def test_review_refresh_uses_registry_source_mode(tmp_path, monkeypatch, source_
     else:
         assert isinstance(command, PdfRun)
         assert command.provider == expected_mode
+
+
+def test_review_refresh_selects_exact_live_same_day_capture(tmp_path, monkeypatch):
+    data = tmp_path / "data"
+    content = tmp_path / "content" / "spots"
+    _seed_content_md(content, "koret-center")
+    live = _seed_review_dir(
+        data,
+        "koret-center",
+        "2026-04-01",
+        "a" * 64,
+        extracted_at="2026-04-01T10:00:00+00:00",
+    )
+    _seed_review_dir(
+        data,
+        "koret-center",
+        "2026-04-01",
+        "f" * 64,
+        extracted_at="2026-04-01T11:00:00+00:00",
+    )
+    entry = PoolEntry(
+        slug="koret-center",
+        pdf_url="https://example.com/x.pdf",
+        official_page_url="https://example.com/pool",
+        source_kind="pomeroy_html",
+    )
+    monkeypatch.setattr("schedules.review_server.load_registry", lambda: [entry])
+    monkeypatch.setattr(
+        "schedules.review_server.current_source_identity",
+        lambda slug: "a" * 64,
+    )
+    monkeypatch.setattr(
+        "schedules.review_server.run_pipeline",
+        lambda command: (0, None, [object()]),
+    )
+
+    review = ReviewApp(data_root=data, content_spots_dir=content).refresh("koret-center")
+
+    assert review["candidate"]["review_dir"] == str(live)
+    reviewed = ReviewApp(data_root=data, content_spots_dir=content).save(
+        "koret-center",
+        review["envelope"],
+        "a" * 64,
+    )
+    assert reviewed == live / "reviewed.json"
+    assert reviewed.exists()
 
 
 def test_review_refresh_rejects_invalid_pdf_provider(tmp_path, monkeypatch):

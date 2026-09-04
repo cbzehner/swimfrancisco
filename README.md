@@ -67,7 +67,7 @@ deliberately with `git push --no-verify`.
 
 ## Deploy
 
-Pushes to `main` auto-deploy through Cloudflare Workers Builds. The build command runs `npm run build`; the deploy command runs `npx wrangler deploy --config worker/wrangler.toml`. The hourly Worker cron also triggers a rebuild on the tick that lands at 00:00 PT so date-sensitive rendered HTML stays current. After a fresh KV bootstrap, `/api/conditions` returns 503 until the hourly cron populates conditions; see `docs/deploy.md` for the full runbook.
+Pushes to `main` auto-deploy through Cloudflare Workers Builds after the GitHub CI workflow passes for that exact commit. The build command runs `npm run build`; its production prebuild gate waits up to ten minutes and stops on a failed check or unavailable result. The deploy command runs `npx wrangler deploy --config worker/wrangler.toml`. The hourly Worker cron also triggers a rebuild on the tick that lands at 00:00 PT so date-sensitive rendered HTML stays current. After a fresh KV bootstrap, `/api/conditions` returns 503 until the hourly cron populates conditions; see `docs/deploy.md` for the full runbook.
 
 ## Adding or updating spots
 

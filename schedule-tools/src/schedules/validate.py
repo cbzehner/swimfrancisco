@@ -90,7 +90,14 @@ def validate(payload: dict, *, prior_sessions_count: int | None = None) -> Valid
     for index, closure in enumerate(closures, start=1):
         start = closure.get("start")
         end = closure.get("end")
-        if not isinstance(start, str) or not isinstance(end, str) or start > end:
+        try:
+            if not isinstance(start, str) or not isinstance(end, str):
+                raise ValueError("closure dates must be strings")
+            start_date = date.fromisoformat(start)
+            end_date = date.fromisoformat(end)
+            if start_date > end_date:
+                raise ValueError("closure start must not follow end")
+        except ValueError:
             violations.append(Violation(
                 code="invalid_closure_date_range",
                 message=f"closure #{index} has an invalid date range",
@@ -120,14 +127,38 @@ def validate(payload: dict, *, prior_sessions_count: int | None = None) -> Valid
             ))
 
     effective_start = payload.get("effective_start")
+    parsed_effective_start: date | None = None
     try:
         if not isinstance(effective_start, str):
             raise ValueError("effective_start must be a string")
-        date.fromisoformat(effective_start)
+        parsed_effective_start = date.fromisoformat(effective_start)
     except ValueError:
         violations.append(Violation(
             code="invalid_schedule_effective_date",
             message="effective_start is not a valid ISO date",
+        ))
+
+    effective_end = payload.get("effective_end")
+    parsed_effective_end: date | None = None
+    if effective_end is not None:
+        try:
+            if not isinstance(effective_end, str):
+                raise ValueError("effective_end must be a string")
+            parsed_effective_end = date.fromisoformat(effective_end)
+        except ValueError:
+            violations.append(Violation(
+                code="invalid_schedule_effective_end_date",
+                message="effective_end is not a valid ISO date",
+            ))
+
+    if (
+        parsed_effective_start is not None
+        and parsed_effective_end is not None
+        and parsed_effective_end < parsed_effective_start
+    ):
+        violations.append(Violation(
+            code="invalid_schedule_effective_date_range",
+            message="effective_end is before effective_start",
         ))
 
     return ValidationResult(

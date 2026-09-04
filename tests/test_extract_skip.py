@@ -9,6 +9,7 @@ from schedules import paths as paths_mod
 from schedules import registry as registry_mod
 from schedules.models import Extracted, FetchResult, Unchanged
 from schedules.pipeline import ExpandFromDecisions, PdfRun, run_pipeline
+from schedules.review import DecisionSet
 from schedules.report import write_report
 from schedules.schema import EXTRACTION_SCHEMA as _EXTRACTION_SCHEMA
 
@@ -167,7 +168,7 @@ def test_extract_skips_llm_when_reviewed_exists(tmp_path, monkeypatch):
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", _raise_if_called)
 
     exit_code, _, results = run_pipeline(
-        PdfRun(provider="gemini", slugs=(SLUG,), force=False, urls=ExpandFromDecisions()),
+        PdfRun(provider="gemini", slugs=(SLUG,), force=False, urls=ExpandFromDecisions(DecisionSet.from_items([]))),
     )
 
     assert exit_code == 0
@@ -181,7 +182,7 @@ def test_extract_uses_cached_provider_when_prompt_hashes_match(tmp_path, monkeyp
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", _raise_if_called)
 
     exit_code, _, results = run_pipeline(
-        PdfRun(provider="gemini", slugs=(SLUG,), force=False, urls=ExpandFromDecisions()),
+        PdfRun(provider="gemini", slugs=(SLUG,), force=False, urls=ExpandFromDecisions(DecisionSet.from_items([]))),
     )
 
     from schedules.models import Aborted
@@ -223,7 +224,7 @@ def test_extract_reruns_after_prompt_change(tmp_path, monkeypatch):
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", fake_extract)
 
     exit_code, _, results = run_pipeline(
-        PdfRun(provider="gemini", slugs=(SLUG,), force=False, urls=ExpandFromDecisions()),
+        PdfRun(provider="gemini", slugs=(SLUG,), force=False, urls=ExpandFromDecisions(DecisionSet.from_items([]))),
     )
 
     assert exit_code == 0
@@ -247,7 +248,7 @@ def test_flag_notes_do_not_skip_published_extract(tmp_path, monkeypatch):
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", _raise_if_called)
 
     exit_code, _, results = run_pipeline(
-        PdfRun(provider="gemini", slugs=(SLUG,), force=False, urls=ExpandFromDecisions()),
+        PdfRun(provider="gemini", slugs=(SLUG,), force=False, urls=ExpandFromDecisions(DecisionSet.from_items([]))),
     )
 
     assert exit_code == 0
@@ -269,7 +270,7 @@ def test_missing_current_schedule_still_skips(tmp_path, monkeypatch):
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", _raise_if_called)
 
     exit_code, _, results = run_pipeline(
-        PdfRun(provider="gemini", slugs=(SLUG,), force=False, urls=ExpandFromDecisions()),
+        PdfRun(provider="gemini", slugs=(SLUG,), force=False, urls=ExpandFromDecisions(DecisionSet.from_items([]))),
     )
 
     assert exit_code == 0

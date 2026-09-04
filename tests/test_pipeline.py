@@ -47,13 +47,14 @@ def _pdf_run(
     discover: bool = False,
     url: str | None = None,
     provider: str = "gemini",
+    decisions: DecisionSet | None = None,
 ) -> PdfRun:
     if url is not None:
         urls: DiscoverAndExpand | ExpandFromDecisions | PinOverride = PinOverride(url)
     elif discover:
         urls = DiscoverAndExpand()
     else:
-        urls = ExpandFromDecisions()
+        urls = ExpandFromDecisions(decisions or DecisionSet.from_items([]))
     return PdfRun(provider=provider, slugs=_slugs(slugs), force=force, urls=urls)
 
 
@@ -429,7 +430,7 @@ def test_direct_mode_never_calls_discover(monkeypatch, tmp_path) -> None:
     run_pipeline(DirectRun(slugs=None, force=False))
 
 
-def test_no_discover_fetches_working_tree_url(monkeypatch, tmp_path) -> None:
+def test_empty_decisions_fetches_working_tree_url(monkeypatch, tmp_path) -> None:
     registry = [_pdf_entry("hamilton-pool", OLD_URL)]
     state = _stub_extract_pipeline(monkeypatch, tmp_path, registry)
 
@@ -452,12 +453,25 @@ def test_url_override_skips_discover_and_does_not_rewrite_registry(monkeypatch, 
         raise AssertionError("discover_all must not run with --url")
 
     monkeypatch.setattr("schedules.pipeline.discover_all", boom)
+    (tmp_path / "discovery-decisions.json").write_text(
+        json.dumps(
+            [
+                {
+                    "slug": "garfield-pool",
+                    "action": "flag",
+                    "reason": "stale",
+                    "blocking": True,
+                }
+            ]
+        )
+    )
 
     exit_code, _, results = run_pipeline(
         _pdf_run(slugs=["garfield-pool"], url=FLYER_URL),
     )
 
     assert exit_code == 0
+    assert results[0].review_notes == []
     assert state["discover_calls"] == 0
     assert state["fetched"] == [("garfield-pool", FLYER_URL)]
     assert [entry.pdf_url for entry in state["registry"]] == before
@@ -881,7 +895,12 @@ def test_discovery_notes_attach_to_skipped_and_aborted(monkeypatch, tmp_path) ->
         _fake_discover(state, tmp_path=tmp_path),
     )
 
-    exit_code, _, results = run_pipeline(_pdf_run(slugs=["hamilton-pool"]))
+    exit_code, _, results = run_pipeline(
+        _pdf_run(
+            slugs=["hamilton-pool"],
+            decisions=DecisionSet.load(tmp_path / "discovery-decisions.json"),
+        )
+    )
 
     assert isinstance(results[0], Aborted)
     assert any(note.kind == "discovery_flagged" for note in results[0].review_notes)

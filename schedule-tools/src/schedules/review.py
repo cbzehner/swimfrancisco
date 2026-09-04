@@ -104,6 +104,11 @@ class ReviewCandidate:
     payload: Mapping[str, object] = field(default_factory=dict, compare=False)
     source_url: str = ""
     view_id: int | None = None
+    extracted_at: str = ""
+
+    @property
+    def recency_key(self) -> tuple[str, str, str]:
+        return (self.fetch_date, self.extracted_at, self.review_dir.name)
 
 
 _PROVIDER_JSON_EXCLUDES = {"reviewed.json"}
@@ -156,6 +161,9 @@ def find_review_candidates(
             source_url = artifact.get("source_pdf_url") or artifact.get("pdf_url") or ""
             if not isinstance(source_url, str):
                 source_url = ""
+            extracted_at = artifact.get("extracted_at")
+            if not isinstance(extracted_at, str):
+                extracted_at = ""
             candidates.append(
                 ReviewCandidate(
                     slug=slug,
@@ -166,6 +174,7 @@ def find_review_candidates(
                     payload=MappingProxyType(payload),
                     source_url=source_url,
                     view_id=view_id_from_url(source_url) if source_url else None,
+                    extracted_at=extracted_at,
                 )
             )
     candidates.sort(key=lambda c: (c.fetch_date, c.slug))
@@ -177,6 +186,7 @@ def carry_forward_review(
     slug: str,
     review_dir: Path,
     pdf_sha256: str,
+    source_pdf_url: str,
     payload: dict,
     ignore_effective_start: bool,
     data_root: Path = DATA_DIR,
@@ -207,6 +217,7 @@ def carry_forward_review(
     envelope = {
         **prior_envelope,
         "pdf_sha256": pdf_sha256,
+        "source_pdf_url": source_pdf_url,
         "carried_from": relative_to_repo(prior_path),
     }
     validate_envelope(envelope)

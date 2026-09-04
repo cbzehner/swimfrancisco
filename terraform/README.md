@@ -14,7 +14,7 @@ binding. State lives in a Cloudflare R2 bucket (`swimfrancisco-tfstate`).
 3. **Create a Cloudflare API token** with:
    - Account: `Workers Scripts:Edit`, `Workers KV Storage:Edit`,
      `Workers Routes:Edit`, `Account Settings:Read`
-   - Zone: `DNS:Edit`, `Page Rules:Edit`, `Zone:Read`, scoped to
+   - Zone: `DNS:Edit`, `Single Redirect:Edit`, `Zone:Read`, scoped to
      `swimfrancisco.com`
 
    Save it as `CLOUDFLARE_API_TOKEN` in `.env`.

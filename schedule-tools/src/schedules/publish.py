@@ -874,7 +874,7 @@ def _unpublished_kept_windows(
         if view_id is None or view_id not in kept_ids:
             continue
         previous = by_id.get(view_id)
-        if previous is None or candidate.fetch_date >= previous.fetch_date:
+        if previous is None or candidate.recency_key >= previous.recency_key:
             by_id[view_id] = candidate
     return by_id
 

@@ -22,6 +22,8 @@ ViolationCode = Literal[
     "invalid_closure_time_range",
     "multi_day_closure_with_time_range",
     "invalid_schedule_effective_date",
+    "invalid_schedule_effective_end_date",
+    "invalid_schedule_effective_date_range",
 ]
 
 

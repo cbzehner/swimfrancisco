@@ -95,3 +95,14 @@ def test_latest_review_dir_returns_newest(tmp_path):
 
 def test_latest_review_dir_returns_none_when_empty(tmp_path):
     assert paths.latest_review_dir("ghost-pool", root=tmp_path) is None
+
+
+def test_latest_reviewed_dir_skips_newer_pending_capture(tmp_path):
+    slug_dir = tmp_path / "hamilton-pool"
+    slug_dir.mkdir()
+    reviewed = slug_dir / "2026-04-18-aaaaaaaaaaaa"
+    reviewed.mkdir()
+    (reviewed / "reviewed.json").write_text("{}")
+    (slug_dir / "2026-04-19-bbbbbbbbbbbb").mkdir()
+
+    assert paths.latest_reviewed_dir("hamilton-pool", root=tmp_path) == reviewed

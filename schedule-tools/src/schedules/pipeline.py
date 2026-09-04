@@ -46,7 +46,7 @@ class DiscoverAndExpand:
 
 @dataclass(frozen=True)
 class ExpandFromDecisions:
-    pass
+    decisions: DecisionSet
 
 
 @dataclass(frozen=True)
@@ -293,6 +293,7 @@ def _process_entry(
                 slug=entry.slug,
                 review_dir=reviewed_file.parent,
                 pdf_sha256=fetch_result.sha256,
+                source_pdf_url=entry.pdf_url,
                 payload=payload,
                 ignore_effective_start=False,
             )
@@ -420,6 +421,7 @@ def _process_direct_entry(
             slug=entry.slug,
             review_dir=fetch_result.path.parent,
             pdf_sha256=fetch_result.sha256,
+            source_pdf_url=entry.pdf_url,
             payload=payload,
             ignore_effective_start=True,
         )
@@ -546,6 +548,9 @@ def run_pipeline(command: RunCommand) -> tuple[int, Path, list[PoolResult]]:
 
     registry = load_registry()
     selected = select_registry_entries(registry, source_mode=source_mode, slugs=slugs)
+    decisions = DecisionSet.from_items([])
+    if isinstance(command, PdfRun) and isinstance(command.urls, ExpandFromDecisions):
+        decisions = command.urls.decisions
 
     if isinstance(command, PdfRun) and isinstance(command.urls, DiscoverAndExpand):
         rec_park = rec_park_entries(registry)
@@ -558,6 +563,7 @@ def run_pipeline(command: RunCommand) -> tuple[int, Path, list[PoolResult]]:
         if rec_park:
             # Full Rec & Park set for max_id / band; slugs limits apply.
             discover_all(rec_park, slugs=apply_slugs)
+            decisions = DecisionSet.load(TMP_DIR / "discovery-decisions.json")
         registry = load_registry()
         selected = select_registry_entries(registry, source_mode=source_mode, slugs=slugs)
 
@@ -569,7 +575,6 @@ def run_pipeline(command: RunCommand) -> tuple[int, Path, list[PoolResult]]:
         ]
 
     prompt = PROMPT_PATH.read_text().strip()
-    decisions = DecisionSet.load(TMP_DIR / "discovery-decisions.json")
     expand_hrefs = isinstance(command, PdfRun) and not isinstance(command.urls, PinOverride)
     results: list[PoolResult] = []
     for entry in selected:

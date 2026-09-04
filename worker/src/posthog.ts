@@ -9,6 +9,7 @@
 const API_HOST = "us.i.posthog.com";
 const ASSET_HOST = "us-assets.i.posthog.com";
 const PREFIX = "/ingest";
+const MAX_API_BODY_BYTES = 1024 * 1024;
 
 // The JS library (/static/*) and remote config (/array/*) are cacheable and
 // served from PostHog's asset host. Everything else is event ingestion.
@@ -33,17 +34,65 @@ async function proxyAsset(request: Request, path: string, ctx: ExecutionContext)
 // cookies to PostHog, and forward the real client IP as X-Forwarded-For so
 // PostHog's GeoIP resolves the visitor — not the Cloudflare edge that issues
 // this subrequest. Buffer the body; forwarding the raw stream can drop data.
+// Enforce the limit while reading because Content-Length can be absent or incorrect.
+async function readApiBody(request: Request): Promise<ArrayBuffer | null> {
+  const declaredLength = Number(request.headers.get("content-length"));
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_API_BODY_BYTES) {
+    if (request.body) await request.body.cancel().catch(() => undefined);
+    return null;
+  }
+  if (!request.body) return new ArrayBuffer(0);
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > MAX_API_BODY_BYTES) {
+        await reader.cancel().catch(() => undefined);
+        return null;
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const body = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return body.buffer;
+}
+
 async function proxyApi(request: Request, path: string): Promise<Response> {
   const headers = new Headers(request.headers);
   headers.delete("cookie");
+  headers.delete("content-length");
+  headers.delete("transfer-encoding");
   const clientIp = request.headers.get("CF-Connecting-IP");
   if (clientIp) headers.set("X-Forwarded-For", clientIp);
 
   const hasBody = request.method !== "GET" && request.method !== "HEAD";
+  const body = hasBody ? await readApiBody(request) : undefined;
+  if (body === null) {
+    return new Response("analytics payload too large", {
+      status: 413,
+      headers: {
+        "cache-control": "no-store",
+        "content-type": "text/plain; charset=utf-8",
+      },
+    });
+  }
   return fetch(`https://${API_HOST}${path}`, {
     method: request.method,
     headers,
-    body: hasBody ? await request.arrayBuffer() : undefined,
+    body,
   });
 }
 

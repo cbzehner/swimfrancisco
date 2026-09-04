@@ -52,15 +52,36 @@ const NULL_TEMP_FIELDS = {
 
 export type Conditions = Record<string, SpotConditions>;
 
-const FRESHNESS_CEILING_MS = 24 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const FRESHNESS_CEILING_MS = DAY_MS;
+const TEMP_SOURCE_MAX_AGE_MS: Record<TempStationType, number> = {
+  usgs: DAY_MS,
+  noaa: DAY_MS,
+  ndbc: DAY_MS,
+  erddap: DAY_MS,
+  // MUR is a daily analysed product and can arrive more than a day after
+  // the station sources. Keep it usable as the final fallback, but bounded.
+  sst: 3 * DAY_MS,
+};
+
+export function tempReadingIsFresh(
+  sourceType: TempStationType,
+  observedAt: string,
+  now: number = Date.now(),
+): boolean {
+  if (!/(?:Z|[+-]\d{2}:\d{2})$/.test(observedAt)) return false;
+  const observedAtMs = Date.parse(observedAt);
+  if (!Number.isFinite(observedAtMs)) return false;
+  const ageMs = now - observedAtMs;
+  return ageMs >= 0 && ageMs < TEMP_SOURCE_MAX_AGE_MS[sourceType];
+}
 
 // Gate last-good reuse on the age of the run that actually observed the
 // value (`*_carried_since`), not on the previous assembly's `updated_at`:
 // `updated_at` resets every hourly run even when fields were copied forward,
 // so gating on it alone would let a week-old reading look one hour old
 // forever. Both timestamps are proper UTC ISO (set by `assembleAndPersist`),
-// safe to parse regardless of whether individual upstream timestamps are
-// zoneless (NOAA) or UTC (NDBC).
+// safe to parse independently of individual observation timestamps.
 export function withinFreshnessCeiling(sinceIso: string, now: number = Date.now()): boolean {
   const ts = Date.parse(sinceIso);
   if (!Number.isFinite(ts)) return false;
@@ -98,6 +119,7 @@ export async function firstTempFromSources(
   sources: TempSource[],
   fetchers: Record<TempStationType, TempFetcher> = TEMP_FETCHERS,
   cache?: Map<string, Promise<TempReading | null>>,
+  now: number = Date.now(),
 ): Promise<{ reading: TempReading; sourceType: TempStationType } | null> {
   for (const source of sources) {
     const key = `${source.type}:${source.id}`;
@@ -108,7 +130,9 @@ export async function firstTempFromSources(
         cache?.set(key, pending);
       }
       const reading = await pending;
-      if (reading) return { reading, sourceType: source.type };
+      if (reading && tempReadingIsFresh(source.type, reading.observedAt, now)) {
+        return { reading, sourceType: source.type };
+      }
     } catch (err) {
       console.error(`Temp source ${source.type}:${source.id} failed for ${slug}:`, err);
     }
@@ -171,6 +195,9 @@ export function coalesceTemp(
   if (fresh !== null) return { state: "fresh", value: fresh };
   const fallback = tempFromPrevious(previous);
   if (fallback && previous) {
+    if (!tempReadingIsFresh(fallback.temp_station_type, fallback.temp_observed_at, now)) {
+      return { state: "unavailable" };
+    }
     // Records written before carried-since tracking lack the field entirely.
     const carriedSince = previous.temp_carried_since ?? previous.updated_at;
     if (withinFreshnessCeiling(carriedSince, now)) {
@@ -216,12 +243,13 @@ async function assembleSpot(
   updatedAt: string,
   previous: SpotConditions | null,
 ): Promise<SpotConditions> {
+  const updatedAtMs = Date.parse(updatedAt);
   const [tempResult, tideFromApi] = await Promise.all([
-    firstTempFromSources(spot.slug, spot.tempSources, TEMP_FETCHERS, tempCache),
+    firstTempFromSources(spot.slug, spot.tempSources, TEMP_FETCHERS, tempCache, updatedAtMs),
     getOrFetchTide(tideCache, spot.tideStationId),
   ]);
-  const temp = flattenObservation(coalesceTemp(tempFromReading(tempResult), previous));
-  const tide = flattenObservation(coalesceTide(tideFromApi, previous));
+  const temp = flattenObservation(coalesceTemp(tempFromReading(tempResult), previous, updatedAtMs));
+  const tide = flattenObservation(coalesceTide(tideFromApi, previous, updatedAtMs));
 
   return {
     slug: spot.slug,
@@ -248,11 +276,7 @@ export async function assembleAndPersist(kv: KVNamespace): Promise<Conditions> {
 
   const next: Conditions = Object.fromEntries(records.map((r) => [r.slug, r]));
 
-  try {
-    await writeConditions(kv, next);
-  } catch (err) {
-    console.error("KV write failed:", err);
-  }
+  await writeConditions(kv, next);
 
   return next;
 }

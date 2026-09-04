@@ -31,6 +31,7 @@ from .registry import load_registry
 from .review import (
     DecisionSet,
     FinalizeError,
+    ReviewCandidate,
     draft_envelope,
     finalize_draft,
     find_review_candidates,
@@ -102,7 +103,7 @@ class ReviewApp:
             by_slug.setdefault(candidate.slug, []).append(candidate)
         selected = []
         for slug, items in by_slug.items():
-            items = sorted(items, key=lambda item: (item.fetch_date, item.review_dir.name))
+            items = sorted(items, key=lambda item: item.recency_key)
             if slug in sequential:
                 decision = decisions.get(slug)
                 kept = kept_grid_ids(decision)
@@ -145,10 +146,14 @@ class ReviewApp:
         candidate = self.candidate(slug, sha12=sha12)
         if candidate is None:
             raise LookupError(_pending_error(slug, sha12))
+        return self._review_candidate(candidate)
+
+    def _review_candidate(self, candidate: ReviewCandidate) -> dict:
+        slug = candidate.slug
         public = {
             field.name: getattr(candidate, field.name)
             for field in fields(candidate)
-            if field.name not in {"payload", "source_url", "view_id"}
+            if field.name not in {"payload", "source_url", "view_id", "extracted_at"}
         }
         return {
             "candidate": {
@@ -192,7 +197,11 @@ class ReviewApp:
         if entry is None:
             raise LookupError(f"Unknown registry slug: {slug}.")
         if entry.source_kind == "sfrecpark_pdf":
-            urls = PinOverride(override_url) if override_url else ExpandFromDecisions()
+            urls = (
+                PinOverride(override_url)
+                if override_url
+                else ExpandFromDecisions(self._decisions())
+            )
             command = PdfRun(
                 provider=parse_provider(os.getenv("SCHEDULES_PROVIDER", "gemini")),
                 slugs=(slug,),
@@ -204,17 +213,17 @@ class ReviewApp:
         exit_code, _, results = run_pipeline(command)
         if exit_code != 0:
             raise RuntimeError(str(results[0]))
-        if sha12 is None:
-            return self.review(slug)
         refreshed = [
             item
-            for item in self.candidates()
-            if item.slug == slug and (item.source_url or None) == override_url
+            for item in find_review_candidates(data_root=self.data_root)
+            if item.slug == slug
+            and item.pdf_sha256 == live
+            and (override_url is None or (item.source_url or None) == override_url)
         ]
         if not refreshed:
             raise LookupError(_pending_error(slug, sha12))
-        latest = max(refreshed, key=lambda item: (item.fetch_date, item.review_dir.name))
-        return self.review(slug, sha12=latest.pdf_sha256[:12])
+        latest = max(refreshed, key=lambda item: item.recency_key)
+        return self._review_candidate(latest)
 
     def save(self, slug: str, envelope: dict, source_identity: str) -> Path:
         if slug in self._sequential_slug_set():
@@ -222,7 +231,15 @@ class ReviewApp:
                 "sequential_incomplete",
                 f"{slug} requires save-sequential",
             )
-        candidate = self.candidate(slug)
+        envelope_sha = envelope.get("pdf_sha256")
+        candidate = next(
+            (
+                item
+                for item in find_review_candidates(data_root=self.data_root)
+                if item.slug == slug and item.pdf_sha256 == envelope_sha
+            ),
+            None,
+        )
         if candidate is None:
             raise LookupError(f"No pending review for {slug}.")
         if envelope.get("slug") != slug or envelope.get("pdf_sha256") != candidate.pdf_sha256:

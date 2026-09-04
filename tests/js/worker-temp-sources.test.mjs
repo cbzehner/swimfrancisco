@@ -115,6 +115,8 @@ const READING = {
   observedAt: "2026-07-19T21:00:00.000-08:00",
 };
 
+const NOW = Date.parse("2026-07-19T22:00:00.000-08:00");
+
 function fetchers(overrides) {
   return {
     usgs: async () => null,
@@ -131,12 +133,18 @@ test("firstTempFromSources returns the first usable reading with its source type
     { type: "usgs", id: "374938122251801" },
     { type: "noaa", id: "9414863" },
   ];
-  const result = await firstTempFromSources("aquatic-park", chain, fetchers({
-    usgs: async () => READING,
-    noaa: async () => {
-      throw new Error("must not be called");
-    },
-  }));
+  const result = await firstTempFromSources(
+    "aquatic-park",
+    chain,
+    fetchers({
+      usgs: async () => READING,
+      noaa: async () => {
+        throw new Error("must not be called");
+      },
+    }),
+    undefined,
+    NOW,
+  );
   assert.equal(result.reading, READING);
   assert.equal(result.sourceType, "usgs");
 });
@@ -149,24 +157,30 @@ test("firstTempFromSources falls through nulls and thrown errors in order", asyn
     { type: "erddap", id: "c" },
     { type: "sst", id: "d" },
   ];
-  const result = await firstTempFromSources("aquatic-park", chain, fetchers({
-    usgs: async () => {
-      calls.push("usgs");
-      throw new Error("decommissioned");
-    },
-    noaa: async () => {
-      calls.push("noaa");
-      return null;
-    },
-    sst: async () => {
-      calls.push("sst");
-      return READING;
-    },
-    erddap: async () => {
-      calls.push("erddap");
-      return null;
-    },
-  }));
+  const result = await firstTempFromSources(
+    "aquatic-park",
+    chain,
+    fetchers({
+      usgs: async () => {
+        calls.push("usgs");
+        throw new Error("decommissioned");
+      },
+      noaa: async () => {
+        calls.push("noaa");
+        return null;
+      },
+      sst: async () => {
+        calls.push("sst");
+        return READING;
+      },
+      erddap: async () => {
+        calls.push("erddap");
+        return null;
+      },
+    }),
+    undefined,
+    NOW,
+  );
   assert.deepEqual(calls, ["usgs", "noaa", "erddap", "sst"]);
   assert.equal(result.sourceType, "sst");
 });
@@ -176,7 +190,7 @@ test("firstTempFromSources returns null when every source fails", async () => {
     { type: "usgs", id: "a" },
     { type: "sst", id: "d" },
   ];
-  assert.equal(await firstTempFromSources("aquatic-park", chain, fetchers({})), null);
+  assert.equal(await firstTempFromSources("aquatic-park", chain, fetchers({}), undefined, NOW), null);
 });
 
 test("firstTempFromSources shares one in-flight request per source across spots", async () => {
@@ -190,10 +204,33 @@ test("firstTempFromSources shares one in-flight request per source across spots"
     },
   });
   const [first, second] = await Promise.all([
-    firstTempFromSources("aquatic-park", shared, sharedFetchers, cache),
-    firstTempFromSources("crissy-field", shared, sharedFetchers, cache),
+    firstTempFromSources("aquatic-park", shared, sharedFetchers, cache, NOW),
+    firstTempFromSources("crissy-field", shared, sharedFetchers, cache, NOW),
   ]);
   assert.equal(usgsCalls, 1);
   assert.equal(first.reading, READING);
   assert.equal(second.reading, READING);
+});
+
+test("firstTempFromSources skips an old NDBC reading and accepts a daily SST fallback", async () => {
+  const chain = [
+    { type: "ndbc", id: "46237" },
+    { type: "sst", id: "37.78,-122.55" },
+  ];
+  const oldNdbc = { ...READING, stationId: "46237", observedAt: new Date(NOW - 25 * 60 * 60 * 1000).toISOString() };
+  const dailySst = { ...READING, stationId: "37.78,-122.55", observedAt: new Date(NOW - 48 * 60 * 60 * 1000).toISOString() };
+
+  const result = await firstTempFromSources(
+    "baker-beach",
+    chain,
+    fetchers({
+      ndbc: async () => oldNdbc,
+      sst: async () => dailySst,
+    }),
+    undefined,
+    NOW,
+  );
+
+  assert.equal(result.sourceType, "sst");
+  assert.equal(result.reading, dailySst);
 });

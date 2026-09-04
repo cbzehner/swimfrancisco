@@ -55,6 +55,25 @@ def test_validate_envelope_rejects_bad_time_format():
         validate_envelope(envelope)
 
 
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("reviewed_at", "2026-99-99"),
+        ("effective_start", "2026-02-30"),
+        ("effective_end", "2026-99-99"),
+    ],
+)
+def test_validate_envelope_rejects_impossible_dates(field, value):
+    envelope = _valid_envelope()
+    if field == "reviewed_at":
+        envelope[field] = value
+    else:
+        envelope["payload"][field] = value
+
+    with pytest.raises(EnvelopeValidationError):
+        validate_envelope(envelope)
+
+
 def test_validate_envelope_rejects_extra_top_level():
     envelope = _valid_envelope()
     envelope["bogus_field"] = True

@@ -114,7 +114,7 @@ function pick(extra, keys) {
   );
 }
 
-function buildSpotRecord(front, body, label) {
+export function buildSpotRecord(front, body, label) {
   const extra = front.extra || {};
   const slug = front.slug;
   const type = extra.type;

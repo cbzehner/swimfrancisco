@@ -41,17 +41,17 @@ sources = ["Memorial Day"]
 [[closure_reason]]
 code = "juneteenth"
 translation_key = "reason_juneteenth"
-sources = ["Juneteenth"]
+sources = ["Juneteenth", "observance of Juneteenth", "All city pools will be closed on June 19 in observance of Juneteenth"]
 
 [[closure_reason]]
 code = "independence_day"
 translation_key = "reason_independence_day"
-sources = ["Independence Day"]
+sources = ["Independence Day", "Observing Independence Day", "closed on July 4 for Independence Day"]
 
 [[closure_reason]]
 code = "holiday_closure"
 translation_key = "reason_holiday_closure"
-sources = ["Holiday Closure"]
+sources = ["Holiday Closure", "Holiday Closures", "Holiday"]
 
 [[closure_reason]]
 code = "in_service_training"
@@ -60,6 +60,9 @@ sources = [
   "In Service Training",
   "Inservice Training",
   "Inservice Training Closure",
+  "In-Service Training",
+  "Inservice trainings",
+  "Aq. In-Service Training",
 ]
 
 [[closure_reason]]
@@ -75,12 +78,95 @@ sources = ["Department Training"]
 [[closure_reason]]
 code = "aquatics_training"
 translation_key = "reason_aquatics_training"
-sources = ["Aquatics In Service Training"]
+sources = [
+  "Aquatics In Service Training",
+  "Aquatic division training",
+  "Aquatics division training",
+  "Aquatics Division Training",
+  "Aquatic Division Training",
+  "Aquatics in-service training",
+  "Aquatics Division training",
+]
 
 [[closure_reason]]
 code = "staff_training"
 translation_key = "reason_staff_training"
-sources = ["Staff training"]
+sources = ["Staff training", "Staff Training", "staff training"]
+
+[[closure_reason]]
+code = "training"
+translation_key = "reason_training"
+sources = ["Training", "Training Closures"]
+
+[[closure_reason]]
+code = "maintenance"
+translation_key = "reason_maintenance"
+sources = ["maintenance", "Maintenance"]
+
+[[closure_reason]]
+code = "annual_maintenance"
+translation_key = "reason_annual_maintenance"
+sources = ["Annual maintenance", "annual maintenance"]
+
+[[closure_reason]]
+code = "garfield_maintenance"
+translation_key = "reason_garfield_maintenance"
+sources = ["Garfield Pool Maintenance Closure 8-14_9-7 2026"]
+
+[[closure_reason]]
+code = "holiday_hours"
+translation_key = "reason_holiday_hours"
+sources = ["Holiday Hours"]
+
+[[closure_reason]]
+code = "labor_day"
+translation_key = "reason_labor_day"
+sources = ["Labor Day"]
+
+[[closure_reason]]
+code = "thanksgiving"
+translation_key = "reason_thanksgiving"
+sources = ["Thanksgiving"]
+
+[[closure_reason]]
+code = "christmas_eve"
+translation_key = "reason_christmas_eve"
+sources = ["Christmas Eve"]
+
+[[closure_reason]]
+code = "new_years_eve"
+translation_key = "reason_new_years_eve"
+sources = ["New Year’s Eve"]
+
+[[closure_reason]]
+code = "new_years_day"
+translation_key = "reason_new_years_day"
+sources = ["New Year’s Day"]
+
+[[closure_reason]]
+code = "martin_luther_king_day"
+translation_key = "reason_martin_luther_king_day"
+sources = ["Martin Luther King Jr. Day"]
+
+[[closure_reason]]
+code = "easter_sunday"
+translation_key = "reason_easter_sunday"
+sources = ["Easter Sunday"]
+
+[[closure_reason]]
+code = "lunar_new_year"
+translation_key = "reason_lunar_new_year"
+sources = ["Lunar New Year"]
+
+[[closure_reason]]
+code = "veterans_day"
+translation_key = "reason_veterans_day"
+sources = ["Veterans Day", "Veteran’s Day"]
+
+[[closure_reason]]
+code = "indigenous_peoples_day"
+translation_key = "reason_indigenous_peoples_day"
+sources = ["Indigenous Peoples Day", "Indigenous People’s Day", "Indigenous peoples day"]
 
 [[closure_reason]]
 code = "in_service_pool_closed_9_1"

@@ -4,7 +4,7 @@
 // `sf:filters-applied`. No client-side view toggling — the VIEW BOARD link
 // is a plain <a href="/"> and the browser handles navigation.
 
-import { readNumberAttribute } from "./helpers/board.mjs";
+import { OPEN_STATUSES, readNumberAttribute } from "./helpers/board.mjs";
 import { pacificWallClockDate } from "./helpers/pacific.mjs";
 import { formatTideSummary } from "./helpers/tide.mjs";
 import { statusLabel, t } from "./helpers/i18n.mjs";
@@ -128,7 +128,7 @@ function createPopupHTML(spot) {
 }
 
 function createMarkerIcon(L, spot) {
-  const isOpen = spot.status === "OPEN";
+  const isOpen = OPEN_STATUSES.has(spot.status);
   const cls =
     spot.type === "open_water"
       ? "sf-marker sf-marker-open-water"
@@ -147,11 +147,26 @@ function createMarkerIcon(L, spot) {
 // lost (e.g. nearby beaches relative to a pool).
 const FOCUS_ZOOM = 15;
 
-function renderMarkers(L, map, layer, spots) {
-  layer.clearLayers();
+function renderMarkers(L, map, layer, markers, spots) {
+  const visibleSlugs = new Set(spots.map((spot) => spot.slug));
+  for (const [slug, entry] of markers) {
+    if (visibleSlugs.has(slug)) continue;
+    layer.removeLayer(entry.marker);
+    markers.delete(slug);
+  }
   spots.forEach((spot) => {
-    const marker = L.marker([spot.lat, spot.lng], { icon: createMarkerIcon(L, spot) });
-    marker.bindPopup(createPopupHTML(spot));
+    const icon = createMarkerIcon(L, spot);
+    const popupHTML = createPopupHTML(spot);
+    const existing = markers.get(spot.slug);
+    if (existing) {
+      if (existing.iconClass !== icon.options.className) existing.marker.setIcon(icon);
+      if (existing.popupHTML !== popupHTML) existing.marker.setPopupContent(popupHTML);
+      existing.iconClass = icon.options.className;
+      existing.popupHTML = popupHTML;
+      return;
+    }
+    const marker = L.marker([spot.lat, spot.lng], { icon });
+    marker.bindPopup(popupHTML);
     marker.on("click", () => {
       const targetZoom = Math.max(map.getZoom(), FOCUS_ZOOM);
       // Honor prefers-reduced-motion (WCAG 2.3.3) — a 600ms animated pan
@@ -168,6 +183,7 @@ function renderMarkers(L, map, layer, spots) {
       marker.getElement()?.focus();
     });
     layer.addLayer(marker);
+    markers.set(spot.slug, { marker, iconClass: icon.options.className, popupHTML });
   });
 }
 
@@ -193,7 +209,8 @@ async function init() {
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
   }).addTo(map);
   const markerLayer = L.layerGroup().addTo(map);
-  const refresh = () => renderMarkers(L, map, markerLayer, collectVisibleSpots());
+  const markers = new Map();
+  const refresh = () => renderMarkers(L, map, markerLayer, markers, collectVisibleSpots());
   refresh();
 
   // The map is lazy-loaded only when someone opens /map/, so a successful

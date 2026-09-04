@@ -123,6 +123,7 @@ export default {
     ctx.waitUntil(
       assembleAndPersist(env.CONDITIONS).catch((err) => {
         console.error("assembleAndPersist failed:", err);
+        throw err;
       }),
     );
 
@@ -130,6 +131,7 @@ export default {
       ctx.waitUntil(
         triggerRebuild(env.WORKERS_BUILDS_DEPLOY_HOOK, event.scheduledTime).catch((err) => {
           console.error("triggerRebuild failed:", err);
+          throw err;
         }),
       );
     }
