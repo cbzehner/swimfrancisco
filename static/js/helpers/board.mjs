@@ -245,6 +245,14 @@ export function readScheduleAttribute(element) {
   }
 }
 
+// Parse a numeric data-* attribute; null when absent or non-finite.
+export function readNumberAttribute(element, attr) {
+  const raw = element.getAttribute(attr);
+  if (!raw) return null;
+  const value = Number(raw);
+  return Number.isFinite(value) ? value : null;
+}
+
 // Return the active closure (if any) covering `now`.
 export function findActiveClosure(closures, now) {
   if (!Array.isArray(closures) || closures.length === 0) return null;
