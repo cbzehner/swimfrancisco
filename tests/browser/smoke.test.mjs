@@ -168,3 +168,28 @@ test("[webkit/320px] language switcher labels stay horizontal", async (t) => {
   assert.ok(box, "zh-Hant link must render");
   assert.ok(box.height < 30, `CJK label is stacking vertically (height ${box.height}px)`);
 });
+
+test("[webkit/320px] conditions and filters remain visible and legible", async (t) => {
+  const { page } = await boardPage(t, "webkit", {
+    viewport: { width: 320, height: 700 },
+    isMobile: true,
+    hasTouch: true,
+  });
+  const layout = await page.evaluate(() => {
+    const strip = document.querySelector(".bulletin-strip");
+    const stripCells = [...strip.children].map((cell) => cell.getBoundingClientRect());
+    const filterButtons = [...document.querySelectorAll(".filters button")];
+    return {
+      stripFits: strip.scrollWidth <= strip.clientWidth,
+      stripRows: new Set(stripCells.map((cell) => Math.round(cell.top))).size,
+      filterRows: new Set(filterButtons.map((button) => Math.round(button.getBoundingClientRect().top))).size,
+      filterFontSizes: filterButtons.map((button) => Number.parseFloat(getComputedStyle(button).fontSize)),
+      statusSubFontSize: Number.parseFloat(getComputedStyle(document.querySelector(".status-sub")).fontSize),
+    };
+  });
+  assert.equal(layout.stripFits, true, "conditions strip must fit without horizontal scrolling");
+  assert.equal(layout.stripRows, 2, "conditions strip must show two rows");
+  assert.equal(layout.filterRows, 2, "filters must show two rows");
+  assert.ok(layout.filterFontSizes.every((size) => size >= 10.5), "filter labels must remain readable");
+  assert.ok(layout.statusSubFontSize >= 11, "next-status text must remain readable");
+});
