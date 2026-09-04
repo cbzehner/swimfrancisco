@@ -350,7 +350,7 @@ jobs:
           extract did not run."
           EXISTING=$(gh issue list --state open --label schedules-extract-blocked \
             --json number,title,author \
-            --jq '.[] | select(.title=="schedules-extract blocked" and .author.login=="github-actions[bot]") | .number' \
+            --jq '.[] | select(.title=="schedules-extract blocked" and .author.is_bot) | .number' \
             | head -1)
           if [ -n "${EXISTING}" ]; then
             gh issue comment "${EXISTING}" --body "${BODY}"
@@ -368,7 +368,7 @@ jobs:
           set -euo pipefail
           NUMBERS=$(gh issue list --state open --label schedules-extract-blocked \
             --json number,title,author \
-            --jq '.[] | select(.title=="schedules-extract blocked" and .author.login=="github-actions[bot]") | .number')
+            --jq '.[] | select(.title=="schedules-extract blocked" and .author.is_bot) | .number')
           for n in ${NUMBERS}; do
             gh issue close "${n}" --comment "Token preflight succeeded. extract ran. This issue means extract did not run, not that a later step failed."
           done
@@ -393,7 +393,7 @@ jobs:
           ${PUBLISHED_SLUGS}"
           EXISTING=$(gh issue list --state open --label schedules-published \
             --json number,title,author \
-            --jq '.[] | select(.title=="schedules published" and .author.login=="github-actions[bot]") | .number' \
+            --jq '.[] | select(.title=="schedules published" and .author.is_bot) | .number' \
             | head -1)
           if [ -n "${EXISTING}" ]; then
             gh issue comment "${EXISTING}" --body "${BODY}"
@@ -420,7 +420,7 @@ jobs:
           TODAY=$(printf '%s\n' "${FLAGGED_SET}" | sed '/^$/d' | sort -u)
           EXISTING=$(gh issue list --state all --label schedules-flagged \
             --json number,title,author,state \
-            --jq '.[] | select(.title=="schedules flagged" and .author.login=="github-actions[bot]") | "\(.number) \(.state)"' \
+            --jq '.[] | select(.title=="schedules flagged" and .author.is_bot) | "\(.number) \(.state)"' \
             | head -1)
           ISSUE_NUMBER=""
           ISSUE_STATE=""
@@ -434,10 +434,12 @@ jobs:
             fi
             exit 0
           fi
+          # Previous flagged set lives in the marker of the latest bot post:
+          # the newest bot comment, or the issue body when there are none.
           LAST=""
           if [ -n "${ISSUE_NUMBER}" ]; then
-            LAST=$(gh issue view "${ISSUE_NUMBER}" --comments --json comments \
-              --jq '[.comments[] | select(.author.login=="github-actions[bot]")] | last | .body' \
+            LAST=$(gh issue view "${ISSUE_NUMBER}" --json body,comments \
+              --jq '([.body] + [.comments[] | select(.author.is_bot) | .body]) | last' \
               || true)
           fi
           PREV=$(printf '%s\n' "${LAST}" | sed -n 's/^<!-- flagged_set: \(.*\) -->$/\1/p' | tr ',' '\n' | sed '/^$/d' | sort -u)
