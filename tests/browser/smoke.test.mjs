@@ -129,6 +129,13 @@ for (const engine of ["webkit", "chromium"]) {
       assert.ok(map && map.height > 300, `map must have usable height, got ${map?.height}px`);
       assert.ok(map.y + map.height <= viewport.height + 1, "map bottom must fit below the site header");
       assert.ok(map.width >= viewport.width - 2, "map must fill the viewport width");
+      if (viewport.width <= 640) {
+        const navigation = await page.locator(".site-header-actions").boundingBox();
+        assert.ok(map.y + map.height <= navigation.y + 1, "map must not overlap the bottom navigation");
+        assert.ok(navigation.y + navigation.height <= viewport.height + 1, "bottom navigation must fit the viewport");
+      }
+      const attribution = await page.locator(".leaflet-control-attribution").boundingBox();
+      assert.ok(attribution.y + attribution.height <= map.y + map.height + 1, "map attribution must remain visible");
 
       const markerIndex = await page.locator(".sf-marker").evaluateAll((markers) => markers.findIndex((marker) => {
         const box = marker.getBoundingClientRect();
@@ -141,6 +148,8 @@ for (const engine of ["webkit", "chromium"]) {
       assert.match(await page.locator(".sf-map-popup-title").getAttribute("href"), /\/spots\/[^/]+\//);
       await page.evaluate(() => document.dispatchEvent(new CustomEvent("sf:conditions-loaded")));
       assert.equal(await page.locator(".sf-map-popup").isVisible(), true);
+      await page.locator(`.site-nav-link[data-target-path="${baseURL}/"]`).click();
+      await page.waitForURL(`${baseURL}/`);
       assert.deepEqual(errors, []);
     });
   }
