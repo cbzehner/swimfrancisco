@@ -50,6 +50,11 @@ _CROSS_MONTH_RE = re.compile(
 _SAME_MONTH_RE = re.compile(
     rf"(?i){_MONTH_TOKEN}\s*(\d{{1,2}})\s*[–—-]\s*(\d{{1,2}})"
 )
+# Spring 2026 page-1 style (Mission, North Beach): 05/12/2026 - 06/06/2026.
+# Four-digit years only, so "Closed 6/6/26 9am-1pm" cannot match.
+_NUMERIC_RANGE_RE = re.compile(
+    r"(?<!\d)(\d{1,2})/(\d{1,2})/(20\d{2})\s*(?:to|[–—-])\s*(\d{1,2})/(\d{1,2})/(20\d{2})(?!\d)"
+)
 _PAGE1_LINE_LIMIT = 40
 
 
@@ -108,6 +113,14 @@ def _parse_window_text(text: str | None, year_default: int) -> tuple[date, date]
     if not text:
         return None
     hits: list[tuple[int, date, date]] = []
+    for match in _NUMERIC_RANGE_RE.finditer(text):
+        try:
+            start = date(int(match.group(3)), int(match.group(1)), int(match.group(2)))
+            end = date(int(match.group(6)), int(match.group(4)), int(match.group(5)))
+        except ValueError:
+            continue
+        if end >= start:
+            hits.append((match.start(), start, end))
     for match in _MD_RANGE_RE.finditer(text):
         parsed = _dates_from_match(
             match,
