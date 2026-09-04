@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from schedules.reviewed_snapshots import load_reviewed_snapshot_from_path
+from schedules.reviewed_snapshots import canonicalize_payload, load_reviewed_snapshot_from_path
 from schedules.validate import validate
 
 
@@ -49,9 +49,6 @@ def test_load_reviewed_snapshot_from_path_rejects_invalid_envelope(tmp_path):
     path.write_text("{}")
     with pytest.raises(ValueError):
         load_reviewed_snapshot_from_path(path, expected_slug="hamilton-pool")
-
-
-from schedules.reviewed_snapshots import canonicalize_payload
 
 
 def test_canonicalize_payload_sorts_sessions():
