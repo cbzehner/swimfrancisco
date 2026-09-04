@@ -794,7 +794,7 @@ table.board tr[data-type="open_water"] [data-cell="status"] {
   margin-top: 5px;
   font-family: var(--mono);
   color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -1434,7 +1434,7 @@ table.weekly-grid tr { display: contents; }
 .condition-label,
 .condition-slab dt {
   margin: 0;
-  color: rgba(241, 230, 207, 0.72);
+  color: rgba(241, 230, 207, 0.8);
   font-family: var(--mono);
   font-size: 10.5px;
   letter-spacing: 0.18em;
@@ -1802,8 +1802,8 @@ body.map-page .site-footer {
   }
   .filters {
     grid-area: filters;
-    display: flex;
-    flex-wrap: nowrap;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 4px;
   }
   .control-label { display: none; }
@@ -1825,11 +1825,10 @@ body.map-page .site-footer {
     justify-content: center;
   }
   .filters button {
-    flex: 0 1 auto;
     justify-content: center;
     min-width: 0;
     padding: 6px 5px;
-    font-size: 9px;
+    font-size: 10.5px;
     letter-spacing: 0.035em;
     white-space: nowrap;
   }
@@ -1844,25 +1843,26 @@ body.map-page .site-footer {
     gap: 3px;
   }
   .bulletin-strip {
-    display: flex;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  .bulletin-strip::-webkit-scrollbar {
-    width: 0;
-    height: 0;
-    display: none;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .bulletin-strip > div,
   .bulletin-strip > div:nth-child(3n),
   .bulletin-strip > div:nth-child(2n),
   .bulletin-strip > div:nth-child(n+3) {
-    flex: 0 0 auto;
-    border-top: 0;
+    min-width: 0;
     border-right: 1px solid var(--rule);
-    padding: 8px 12px;
+    padding: 8px;
     font-size: 9.5px;
+  }
+  .bulletin-strip > div:nth-child(n+4) {
+    border-top: 1px solid var(--rule);
+  }
+  .bulletin-strip .k,
+  .bulletin-strip .v {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
   }
   .bulletin-strip > div:last-child {
