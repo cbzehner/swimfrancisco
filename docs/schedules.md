@@ -323,11 +323,11 @@ Do not gate on "require improvement" against a CI-attested fall grid.
 
 ## Auto-extract workflow
 
-The `.github/workflows/schedules-extract.yml` action runs daily at
-09:00 PT and on `workflow_dispatch`. It discovers Rec & Park PDF URLs
+The `.github/workflows/schedules-extract.yml` action runs weekly on
+Mondays at 09:00 PT and on `workflow_dispatch`. It discovers Rec & Park PDF URLs
 first (`schedules discover` writes `registry.toml`), then runs direct
 extraction once, then processes the PDF sources once with Gemini
-(`extract --provider gemini --no-discover`). There is no daily Anthropic
+(`extract --provider gemini --no-discover`). There is no weekly Anthropic
 step; bakeoff stays local (`schedules debug bakeoff`). Each pass has a
 distinct report; the run summary and uploaded
 `schedule-extraction-reports` artifact retain all reports that were produced,
@@ -343,7 +343,7 @@ updates when that PR merges.
 
 If `data/`, `registry.toml`, `content/spots/`, or `quarantine.toml`
 changed, the action commits to the rolling `auto/schedules-extract`
-branch and opens or refreshes its PR. Daily extract refreshes that PR;
+branch and opens or refreshes its PR. Scheduled extract refreshes that PR;
 closing it without merging reopens on the next run that still sees a
 diff against `main`. Auto-merge keys on `publish-pending` exit 0. FLAG
 notes do not hostage unique-grid pools. Kill switch:

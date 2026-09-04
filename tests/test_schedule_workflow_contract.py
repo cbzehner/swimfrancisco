@@ -305,4 +305,4 @@ def test_public_repo_safety_schedule_and_dispatch_only() -> None:
     assert "workflow_dispatch" in on_block
     assert "schedule:" in on_block
     assert "pull_request" not in on_block
-    assert "cron: '0 16 * * *'" in on_block
+    assert "cron: '0 16 * * 1'" in on_block

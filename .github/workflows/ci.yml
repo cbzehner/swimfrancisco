@@ -33,13 +33,27 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: schedule-tools/uv.lock
+
+      - name: Cache just + zola
+        id: bin-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/bin
+          key: bins-just-zola-0.22.1-${{ runner.os }}
+
+      - name: Put cached bins on PATH
+        run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Install just
+        if: steps.bin-cache.outputs.cache-hit != 'true'
         run: curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to "$HOME/.local/bin"
 
       - name: Install zola
+        if: steps.bin-cache.outputs.cache-hit != 'true'
         # Pinned to the version devenv provides locally.
         run: |
           curl -sL https://github.com/getzola/zola/releases/download/v0.22.1/zola-v0.22.1-x86_64-unknown-linux-gnu.tar.gz \
@@ -51,8 +65,24 @@ jobs:
       - name: Sync schedule-tools deps
         run: uv --project schedule-tools sync
 
+      - name: Resolve Playwright version
+        id: playwright
+        run: echo "version=$(node -p "require('playwright-core/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+
       - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: node node_modules/playwright-core/cli.js install --with-deps webkit chromium
+
+      - name: Install Playwright OS deps
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: node node_modules/playwright-core/cli.js install-deps webkit chromium
 
       - name: Run full verification
         run: just check

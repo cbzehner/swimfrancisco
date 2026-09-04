@@ -239,7 +239,7 @@ See `docs/schedules.md`.
 
 - **On push to `main`:** Cloudflare Workers Builds runs the Zola build and deploys the Worker/static assets together
 - **Daily:** the hourly Worker cron also triggers a Workers Builds deploy hook on the tick at 00:00 PT so date-sensitive HTML stays current
-- **Schedules:** daily GitHub Action (`schedules-extract.yml`) refreshes one rolling auto PR; it auto-merges when every change was CI-attested, otherwise it is labeled `needs-schedule-review`
+- **Schedules:** weekly GitHub Action (`schedules-extract.yml`, Mondays) refreshes one rolling auto PR; it auto-merges when every change was CI-attested, otherwise it is labeled `needs-schedule-review`. `workflow_dispatch` still runs on demand.
 
 ## Future (not v1)
 
