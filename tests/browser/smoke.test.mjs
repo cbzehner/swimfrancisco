@@ -113,6 +113,47 @@ async function fixturePage(t, engineName, html) {
 }
 
 for (const engine of ["webkit", "chromium"]) {
+  for (const viewport of [{ width: 1280, height: 900 }, { width: 320, height: 700 }]) {
+    test(`[${engine}/${viewport.width}px] real map fills the viewport and markers open popups`, async (t) => {
+      const context = await browsers[engine].newContext({ viewport, reducedMotion: "reduce" });
+      t.after(() => context.close());
+      const page = await context.newPage();
+      const errors = [];
+      page.on("pageerror", (error) => errors.push(error.message));
+      await page.route("https://*.basemaps.cartocdn.com/**", (route) => route.abort());
+      await page.route("**/api/conditions", (route) => route.fulfill({ json: {} }));
+      await page.goto(`${baseURL}/map/`, { waitUntil: "networkidle" });
+      await page.locator(".sf-marker").first().waitFor();
+
+      const map = await page.locator("#map-view").boundingBox();
+      assert.ok(map && map.height > 300, `map must have usable height, got ${map?.height}px`);
+      assert.ok(map.y + map.height <= viewport.height + 1, "map bottom must fit below the site header");
+      assert.ok(map.width >= viewport.width - 2, "map must fill the viewport width");
+      if (viewport.width <= 640) {
+        const navigation = await page.locator(".site-header-actions").boundingBox();
+        assert.ok(map.y + map.height <= navigation.y + 1, "map must not overlap the bottom navigation");
+        assert.ok(navigation.y + navigation.height <= viewport.height + 1, "bottom navigation must fit the viewport");
+      }
+      const attribution = await page.locator(".leaflet-control-attribution").boundingBox();
+      assert.ok(attribution.y + attribution.height <= map.y + map.height + 1, "map attribution must remain visible");
+
+      const markerIndex = await page.locator(".sf-marker").evaluateAll((markers) => markers.findIndex((marker) => {
+        const box = marker.getBoundingClientRect();
+        const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+        return hit && marker.contains(hit);
+      }));
+      assert.ok(markerIndex >= 0, "at least one real marker must receive pointer input");
+      await page.locator(".sf-marker").nth(markerIndex).click();
+      await page.locator(".sf-map-popup").waitFor({ state: "visible" });
+      assert.match(await page.locator(".sf-map-popup-title").getAttribute("href"), /\/spots\/[^/]+\//);
+      await page.evaluate(() => document.dispatchEvent(new CustomEvent("sf:conditions-loaded")));
+      assert.equal(await page.locator(".sf-map-popup").isVisible(), true);
+      await page.locator(`.site-nav-link[data-target-path="${baseURL}/"]`).click();
+      await page.waitForURL(`${baseURL}/`);
+      assert.deepEqual(errors, []);
+    });
+  }
+
   test(`[${engine}] detail restores today's sessions after a partial closure`, async (t) => {
     const schedule = {
       sessions: [{ day: "thursday", type: "lap_swim", start: "11:00", end: "15:00" }],

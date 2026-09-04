@@ -1503,12 +1503,16 @@ table.weekly-grid tr { display: contents; }
 
 body.map-page {
   overflow: hidden;
+  height: 100svh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 body.map-page main {
   max-width: none;
-  height: 100svh;
+  margin: 0;
+  min-height: 0;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   border-left: 0;
   border-right: 0;
 }
@@ -1654,9 +1658,26 @@ body.map-page .site-footer {
   body { padding-bottom: calc(58px + env(safe-area-inset-bottom)); }
   body.map-page {
     padding-bottom: 0;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+  body.map-page .site-header,
+  body.map-page .site-header-row {
+    display: contents;
+  }
+  body.map-page .site-title {
+    grid-row: 1;
+    display: flex;
+    align-items: center;
+    min-height: 59px;
+    padding: 0 14px;
+    border-bottom: 3px solid var(--ink);
   }
   body.map-page main {
-    height: calc(100svh - 58px - env(safe-area-inset-bottom));
+    grid-row: 2;
+  }
+  body.map-page .site-header-actions {
+    position: static;
+    grid-row: 3;
   }
   main {
     border-left: 0;
