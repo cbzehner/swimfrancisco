@@ -8,24 +8,16 @@ import { parse } from "smol-toml";
 
 const LOCALES_PATH = join(dirname(fileURLToPath(import.meta.url)), "../../i18n/locales.toml");
 
-export const FRONTMATTER_RE = /^\+\+\+\n([\s\S]*?)\n\+\+\+\n?/;
+const FRONTMATTER_RE = /^\+\+\+\n([\s\S]*?)\n\+\+\+\n?/;
 
 const TEMP_SOURCE_TYPES = ["usgs", "noaa", "ndbc", "erddap", "sst"];
 
 // Splits already-read text into parsed TOML front matter and the remaining
-// body text (untrimmed). `missingMessage` lets callers preserve their own
-// wording for the "no front matter found" error.
-export function splitFrontMatter(text, label, { missingMessage } = {}) {
+// body text (untrimmed).
+export function splitFrontMatter(text, label) {
   const match = FRONTMATTER_RE.exec(text);
-  if (!match) throw new Error(missingMessage ?? `${label}: missing TOML frontmatter`);
+  if (!match) throw new Error(`${label}: missing TOML frontmatter`);
   return { front: parse(match[1]), body: text.slice(match[0].length) };
-}
-
-// Reads a spot markdown file from disk and splits its front matter.
-export async function readSpotFrontmatter(filePath, { label = filePath, missingMessage } = {}) {
-  const text = await readFile(filePath, "utf8");
-  const { front, body } = splitFrontMatter(text, label, { missingMessage });
-  return { front, body, text };
 }
 
 export function parseOpenWaterStations(extra, label) {
@@ -72,7 +64,7 @@ export async function listCanonicalSpotFiles(spotsDir) {
   const seenSlugs = new Set();
   for (const fileName of entries) {
     const filePath = join(spotsDir, fileName);
-    const { front, body, text } = await readSpotFrontmatter(filePath);
+    const { front, body } = splitFrontMatter(await readFile(filePath, "utf8"), filePath);
     const stem = fileName.replace(/\.md$/, "");
     if (front.slug !== stem) {
       throw new Error(`${filePath}: canonical spot slug must match filename (${stem})`);
@@ -81,7 +73,7 @@ export async function listCanonicalSpotFiles(spotsDir) {
       throw new Error(`${filePath}: duplicate canonical slug ${front.slug}`);
     }
     seenSlugs.add(front.slug);
-    files.push({ fileName, filePath, front, body, text });
+    files.push({ fileName, filePath, front, body });
   }
   return files;
 }

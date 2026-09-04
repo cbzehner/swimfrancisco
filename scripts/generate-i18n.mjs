@@ -49,9 +49,7 @@ function tomlText(object) {
 }
 
 function parseFrontMatter(text, file) {
-  const { front, body } = splitFrontMatter(text, file, {
-    missingMessage: `${file} is missing TOML front matter`,
-  });
+  const { front, body } = splitFrontMatter(text, file);
   return { front, body: body.trim() };
 }
 
