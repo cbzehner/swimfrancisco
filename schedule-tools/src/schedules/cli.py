@@ -341,10 +341,11 @@ def benchmark_command(attempt: Path, reference_id: str) -> None:
 
 @cli.command("benchmark-prepare")
 @click.option("--poppler", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path))
-def benchmark_prepare_command(poppler: Path) -> None:
-    """Prepare label-free development inputs in a fresh temporary directory. No model calls."""
+@click.option("--comparison", default="development", type=click.Choice(["development", "finalists"]))
+def benchmark_prepare_command(poppler: Path, comparison: str) -> None:
+    """Prepare label-free comparison inputs in a fresh temporary directory. No model calls."""
     try:
-        root = prepare_benchmark(REPO_ROOT / "tests/fixtures/schedule-benchmark.json", REPO_ROOT, poppler)
+        root = prepare_benchmark(REPO_ROOT / "tests/fixtures/schedule-benchmark.json", REPO_ROOT, poppler, comparison)
     except (OSError, ValueError) as exc:
         raise click.ClickException(str(exc)) from exc
     click.echo(str(root))

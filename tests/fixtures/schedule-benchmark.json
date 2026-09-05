@@ -25,8 +25,221 @@
     {"id":"grok-4.6","harness":"grok","model":"grok-4.6","effort":"medium"},
     {"id":"composer","harness":"pi-cursor","model":"composer-2.5","effort":null},
     {"id":"production-baseline","harness":"gemini","model":"gemini-3.1-flash-lite-preview","effort":null},
-    {"id":"spark","harness":"codex","model":"gpt-5.3-codex-spark","effort":"medium"}
+    {"id":"spark","harness":"codex","model":"gpt-5.3-codex-spark","effort":"medium"},
+    {"id":"luna-pi","harness":"pi-codex","model":"gpt-5.6-luna","effort":"medium"},
+    {"id":"grok-cursor","harness":"pi-cursor","model":"cursor-grok-4.6-medium","effort":"medium"}
   ],
+  "comparisons": {
+    "development": {
+      "candidates": [
+        {
+          "id": "astra",
+          "tracks": [
+            "text",
+            "image"
+          ]
+        },
+        {
+          "id": "sol",
+          "tracks": [
+            "text",
+            "image"
+          ]
+        },
+        {
+          "id": "terra",
+          "tracks": [
+            "text",
+            "image"
+          ]
+        },
+        {
+          "id": "luna",
+          "tracks": [
+            "text",
+            "image"
+          ]
+        },
+        {
+          "id": "gpt-5.5",
+          "tracks": [
+            "text",
+            "image"
+          ]
+        },
+        {
+          "id": "gpt-mini",
+          "tracks": [
+            "text",
+            "image"
+          ]
+        },
+        {
+          "id": "gpt-nano",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "opus",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "sonnet",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "fable",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "fable-5.1",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "haiku",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "flash-3.8",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "flash-3.7",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "gemini-pro",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "flash-lite-3.1",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "flash-lite-3.5",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "kimi",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "glm",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "grok-4.5",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "grok-4.6",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "composer",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "production-baseline",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "spark",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "luna-pi",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "grok-cursor",
+          "tracks": [
+            "text"
+          ]
+        }
+      ],
+      "references": [
+        "north-beach-expired",
+        "hamilton-fall",
+        "balboa-fall",
+        "balboa-interim"
+      ],
+      "repetitions": 1,
+      "prompt_addendum": ""
+    },
+    "finalists": {
+      "candidates": [
+        {
+          "id": "astra",
+          "tracks": [
+            "image"
+          ]
+        },
+        {
+          "id": "grok-cursor",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "gpt-5.5",
+          "tracks": [
+            "text"
+          ]
+        },
+        {
+          "id": "flash-3.8",
+          "tracks": [
+            "text"
+          ]
+        }
+      ],
+      "references": [
+        "rossi-spring",
+        "mlk-fall",
+        "garfield-maintenance"
+      ],
+      "repetitions": 3,
+      "prompt_addendum": "\nSource-kind exception to the swim_schedule rule above: if the source is only a closure notice with no weekly swim grid, set schedule_basis to temporarily_closed, emit no sessions, and use the explicit closure period for effective_start and effective_end. An expected reopening date is not a weekly schedule and does not prove reopening occurred.\n"
+    }
+  },
   "documents": [
     {
       "id": "north-beach-expired",
@@ -205,21 +418,361 @@
     },
     {
       "id": "rossi-spring",
-      "split": "reserved",
+      "split": "finalist",
       "source_pdf": "data/rossi-pool/2026-04-19-f580f358615e/source.pdf",
-      "source_sha256": "f580f358615eb222d31249ebe28d5a67fe9d7aa473493559754696849d8c798f"
+      "source_sha256": "f580f358615eb222d31249ebe28d5a67fe9d7aa473493559754696849d8c798f",
+      "review": "agent_visual; 2026-09-05; full page 1 rendered at 150 DPI with Poppler; rows, dates and notes checked before model calls; human transcription sign-off pending",
+      "as_of": "2026-09-04",
+      "unresolved": [
+        "Closures are unscored: the Thursday lap cell spans 12:30-15:30 and says closed every third Thursday, but the facility note gives 11:00-14:00 on 3/19, 4/16 and 5/21. The listed 6/19 holiday is outside the schedule window.",
+        "Literal-label policy approved by user on 2026-09-05. All parenthetical pool allocations on this PDF are numeric lane counts, so pool is absent. Session notes and evidence are not quality-scored."
+      ],
+      "expected": {
+        "effective_start": "2026-03-15",
+        "effective_end": "2026-06-04",
+        "schedule_basis": "swim_schedule",
+        "sessions": [
+          {
+            "day": "sunday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "08:30"
+          },
+          {
+            "day": "sunday",
+            "type": "family_swim",
+            "start": "12:30",
+            "end": "14:00"
+          },
+          {
+            "day": "sunday",
+            "type": "family_swim",
+            "start": "14:30",
+            "end": "15:30"
+          },
+          {
+            "day": "monday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "10:00"
+          },
+          {
+            "day": "monday",
+            "type": "senior_swim",
+            "start": "11:45",
+            "end": "13:00"
+          },
+          {
+            "day": "monday",
+            "type": "lap_swim",
+            "start": "13:30",
+            "end": "15:30"
+          },
+          {
+            "day": "monday",
+            "type": "lap_swim",
+            "start": "18:15",
+            "end": "19:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "10:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "senior_swim",
+            "start": "10:15",
+            "end": "12:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "12:30",
+            "end": "15:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "family_swim",
+            "start": "18:15",
+            "end": "19:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "18:15",
+            "end": "19:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "senior_swim",
+            "start": "09:00",
+            "end": "10:45"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "11:00",
+            "end": "13:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "14:00",
+            "end": "15:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "14:00",
+            "end": "15:30"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "10:00"
+          },
+          {
+            "day": "thursday",
+            "type": "senior_swim",
+            "start": "10:15",
+            "end": "11:45"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "12:30",
+            "end": "15:30"
+          },
+          {
+            "day": "thursday",
+            "type": "family_swim",
+            "start": "18:15",
+            "end": "19:30"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "18:15",
+            "end": "19:30"
+          }
+        ]
+      }
     },
     {
       "id": "mlk-fall",
-      "split": "reserved",
+      "split": "finalist",
       "source_pdf": "data/martin-luther-king-jr-pool/2026-08-20-838c12e25ad1/source.pdf",
-      "source_sha256": "838c12e25ad10207558e0a5c7e72d84aa3a2eaa0cc974be92e82e46e3acf4b72"
+      "source_sha256": "838c12e25ad10207558e0a5c7e72d84aa3a2eaa0cc974be92e82e46e3acf4b72",
+      "review": "agent_visual; 2026-09-05; full page 1 rendered at 150 DPI with Poppler; rows, dates and notes checked before model calls; human transcription sign-off pending",
+      "as_of": "2026-09-04",
+      "unresolved": [
+        "Closures are unscored: the 8/22 training closure has no hours; 8/27 and 9/24 cancellations are printed in selected cells without an explicit whole-facility closure window.",
+        "Literal-label policy approved by user on 2026-09-05. Preserve the composite pool label '4 & shallow'; numeric-only lane counts are not pool labels. Session notes and evidence are not quality-scored."
+      ],
+      "expected": {
+        "effective_start": "2026-08-18",
+        "effective_end": "2026-09-26",
+        "schedule_basis": "swim_schedule",
+        "sessions": [
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "09:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "senior_swim",
+            "start": "09:00",
+            "end": "12:00",
+            "pool": "4 & shallow"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "09:00",
+            "end": "12:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "family_swim",
+            "start": "12:30",
+            "end": "15:30",
+            "pool": "shallow"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "12:30",
+            "end": "15:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "15:30",
+            "end": "17:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "18:00",
+            "end": "19:00"
+          },
+          {
+            "day": "wednesday",
+            "type": "senior_swim",
+            "start": "09:00",
+            "end": "10:30",
+            "pool": "4 & shallow"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "09:00",
+            "end": "12:00"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "12:30",
+            "end": "15:30",
+            "pool": "shallow"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "12:30",
+            "end": "15:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "15:30",
+            "end": "17:30"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "09:00"
+          },
+          {
+            "day": "thursday",
+            "type": "senior_swim",
+            "start": "09:00",
+            "end": "12:00",
+            "pool": "4 & shallow"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "09:00",
+            "end": "12:00"
+          },
+          {
+            "day": "thursday",
+            "type": "family_swim",
+            "start": "12:30",
+            "end": "15:30",
+            "pool": "shallow"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "12:30",
+            "end": "15:30"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "15:30",
+            "end": "17:30"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "18:00",
+            "end": "19:00"
+          },
+          {
+            "day": "friday",
+            "type": "senior_swim",
+            "start": "09:00",
+            "end": "10:30",
+            "pool": "4 & shallow"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "09:00",
+            "end": "12:00"
+          },
+          {
+            "day": "friday",
+            "type": "family_swim",
+            "start": "12:30",
+            "end": "15:30",
+            "pool": "shallow"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "12:30",
+            "end": "15:30"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "15:30",
+            "end": "17:30"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "07:00",
+            "end": "08:30"
+          },
+          {
+            "day": "saturday",
+            "type": "family_swim",
+            "start": "13:30",
+            "end": "15:00"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "15:30",
+            "end": "17:00"
+          }
+        ]
+      }
     },
     {
       "id": "garfield-maintenance",
-      "split": "reserved",
+      "split": "finalist",
       "source_pdf": "data/garfield-pool/2026-08-20-241f3a02fd75/source.pdf",
-      "source_sha256": "241f3a02fd75bed284f548b2979c63af97e7399d53a1b5cd7ab6a3601df2f4b8"
+      "source_sha256": "241f3a02fd75bed284f548b2979c63af97e7399d53a1b5cd7ab6a3601df2f4b8",
+      "review": "agent_visual; 2026-09-05; full page 1 rendered at 150 DPI with Poppler; rows, dates and notes checked before model calls; human transcription sign-off pending",
+      "as_of": "2026-09-04",
+      "unresolved": [
+        "The notice expects reopening on 2026-09-08, but it gives no weekly sessions and does not verify that reopening occurred. The closure interval is inclusive through 2026-09-07. Closure reason wording is not quality-scored."
+      ],
+      "expected": {
+        "effective_start": "2026-08-14",
+        "effective_end": "2026-09-07",
+        "schedule_basis": "temporarily_closed",
+        "sessions": [],
+        "closures": [
+          {
+            "start": "2026-08-14",
+            "end": "2026-09-07",
+            "reason": "Maintenance"
+          }
+        ]
+      }
     }
   ]
 }

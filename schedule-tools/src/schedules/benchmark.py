@@ -49,12 +49,29 @@ def benchmark_models(manifest: Path) -> list[dict]:
     return models
 
 
-def prepare_benchmark(manifest: Path, repo_root: Path, poppler: Path) -> Path:
-    """Render development inputs outside the repository, with no expected answers."""
+def benchmark_comparison(manifest: Path, name: str, repo_root: Path) -> tuple[dict, list[dict], list[dict]]:
     data = json.loads(manifest.read_text())
-    models = benchmark_models(manifest)
-    references = [load_benchmark_reference(manifest, item["id"], repo_root=repo_root)
-                  for item in data["documents"] if item["split"] == "development"]
+    plan = data["comparisons"][name]
+    catalog = {model["id"]: model for model in benchmark_models(manifest)}
+    identifiers = [item["id"] for item in plan["candidates"]]
+    if len(identifiers) != len(set(identifiers)) or len(plan["references"]) != len(set(plan["references"])):
+        raise ValueError("Comparison candidates and references must be unique.")
+    if type(plan["repetitions"]) is not int or not 1 <= plan["repetitions"] <= 10:
+        raise ValueError("Comparison repetitions must be between 1 and 10.")
+    for item in plan["candidates"]:
+        model = catalog[item["id"]]
+        if not item["tracks"] or len(set(item["tracks"])) != len(item["tracks"]) or set(item["tracks"]) - {"text", "image"}:
+            raise ValueError("Comparison has invalid input tracks.")
+        if "image" in item["tracks"] and (model["harness"] != "codex" or model["model"] == "gpt-5.3-codex-spark"):
+            raise ValueError("Image track is not supported by this harness.")
+    references = [load_benchmark_reference(manifest, identifier, repo_root=repo_root) for identifier in plan["references"]]
+    return plan, [catalog[identifier] for identifier in identifiers], references
+
+
+def prepare_benchmark(manifest: Path, repo_root: Path, poppler: Path, comparison: str = "development") -> Path:
+    """Render the selected comparison outside the repository, with no expected answers."""
+    data = json.loads(manifest.read_text())
+    plan, models, references = benchmark_comparison(manifest, comparison, repo_root)
     for name in ("pdftotext", "pdftoppm"):
         if not (poppler / name).is_file():
             raise ValueError(f"Poppler directory is missing {name}.")
@@ -67,6 +84,7 @@ def prepare_benchmark(manifest: Path, repo_root: Path, poppler: Path) -> Path:
         "Preserve printed pool-section codes in lowercase without expanding the legend "
         "or splitting a shared-pool slot. Numeric lane counts are not pool sections.\n"
     )
+    prompt += plan["prompt_addendum"]
     (root / "prompt.txt").write_text(prompt)
     (root / "schema.json").write_text(json.dumps(EXTRACTION_SCHEMA, indent=2))
     inputs = []
@@ -87,7 +105,7 @@ def prepare_benchmark(manifest: Path, repo_root: Path, poppler: Path) -> Path:
     renderer = subprocess.run([str(poppler / "pdftoppm"), "-v"], capture_output=True,
                               text=True, check=True, timeout=10)
     (root / "inputs.json").write_text(json.dumps({
-        "as_of": data["as_of"], "models": models, "inputs": inputs,
+        "as_of": data["as_of"], "comparison": comparison, "plan": plan, "models": models, "inputs": inputs,
         "renderer": renderer.stderr.strip(), "dpi": 150,
         "prompt_sha256": hashlib.sha256((root / "prompt.txt").read_bytes()).hexdigest(),
         "schema_sha256": hashlib.sha256((root / "schema.json").read_bytes()).hexdigest(),
@@ -252,17 +270,16 @@ def check_model(model: dict, root: Path, pi_extension: Path | None, timeout: int
 
 def load_prepared_inputs(root: Path, manifest: Path, repo_root: Path) -> tuple[dict, list[dict]]:
     frozen = json.loads((root / "inputs.json").read_text())
-    if frozen["models"] != benchmark_models(manifest):
+    plan, models, references = benchmark_comparison(manifest, frozen["comparison"], repo_root)
+    if frozen["models"] != models or frozen["plan"] != plan:
         raise ValueError("Prepared model matrix differs from the current manifest.")
     for name, suffix in (("prompt", "txt"), ("schema", "json")):
         if hashlib.sha256((root / f"{name}.{suffix}").read_bytes()).hexdigest() != frozen[f"{name}_sha256"]:
             raise ValueError(f"Prepared {name} hash changed.")
     if json.loads((root / "schema.json").read_text()) != EXTRACTION_SCHEMA:
         raise ValueError("Prepared extraction schema differs from the scorer schema.")
-    references = [load_benchmark_reference(manifest, item["id"], repo_root=repo_root)
-                  for item in json.loads(manifest.read_text())["documents"] if item["split"] == "development"]
     if sorted(item["source_sha256"] for item in frozen["inputs"]) != sorted(item["source_sha256"] for item in references):
-        raise ValueError("Prepared inputs must contain exactly the development documents.")
+        raise ValueError("Prepared inputs must contain exactly the selected comparison documents.")
     for item in frozen["inputs"]:
         prefix = item["source_sha256"][:12]
         if {str(path.relative_to(root)) for path in (root / prefix).iterdir()} != set(item["files"]):
@@ -278,15 +295,15 @@ def load_prepared_inputs(root: Path, manifest: Path, repo_root: Path) -> tuple[d
     return frozen, references
 
 
-def benchmark_jobs(models: list[dict], references: list[dict]) -> list[tuple[dict, dict, str]]:
-    jobs = [(model, reference, "text") for model in models for reference in references]
-    jobs += [(model, reference, "image") for model in models for reference in references
-             if model["harness"] == "codex" and model["model"] != "gpt-5.3-codex-spark"]
-    comparisons = [
-        {"id": "luna-pi", "harness": "pi-codex", "model": "gpt-5.6-luna", "effort": "medium"},
-        {"id": "grok-cursor", "harness": "pi-cursor", "model": "cursor-grok-4.6-medium", "effort": "medium"},
-    ]
-    return jobs + [(model, reference, "text") for model in comparisons for reference in references]
+def benchmark_jobs(models: list[dict], references: list[dict], plan: dict) -> list[tuple[dict, dict, str, int]]:
+    catalog = {model["id"]: model for model in models}
+    return [(catalog[item["id"]], reference, track, repetition)
+            for repetition in range(1, plan["repetitions"] + 1) for reference in references
+            for item in plan["candidates"] for track in item["tracks"]]
+
+
+def attempt_directory(output: Path, row: dict) -> Path:
+    return output / row["id"] / row["track"] / row["source_sha256"][:12] / f"repeat-{row['repetition']}"
 
 
 def extraction_request(inputs: Path, source_sha256: str, track: str) -> tuple[str, tuple[Path, ...]]:
@@ -298,9 +315,9 @@ def extraction_request(inputs: Path, source_sha256: str, track: str) -> tuple[st
     return prompt, images
 
 
-def extraction_attempt(model: dict, reference: dict, track: str, inputs: Path,
+def extraction_attempt(model: dict, reference: dict, track: str, repetition: int, inputs: Path,
                        output: Path, pi_extension: Path, timeout: int) -> dict:
-    directory = output / model["id"] / track / reference["source_sha256"][:12]
+    directory = attempt_directory(output, model | {"track": track, "repetition": repetition, "source_sha256": reference["source_sha256"]})
     directory.mkdir(parents=True, exist_ok=False)
     prompt, images = extraction_request(inputs, reference["source_sha256"], track)
     (directory / "request.txt").write_text(prompt)
@@ -310,7 +327,7 @@ def extraction_attempt(model: dict, reference: dict, track: str, inputs: Path,
     environment = os.environ | {"PI_SUBAGENT_CHILD": "1", "PI_CURSOR_PROVIDER_DEBUG": "0"}
     started = time.monotonic()
     attempt = model | {
-        "transport": model["harness"], "reference": reference["id"], "track": track,
+        "transport": model["harness"], "reference": reference["id"], "track": track, "repetition": repetition,
         "source_sha256": reference["source_sha256"], "timed_out": False, "exit_code": None,
         "payload": None, "cost_usd": None, "resolved_model": None, "runner_retries": 0,
         "request_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
@@ -350,9 +367,9 @@ def benchmark_report(results: list[dict]) -> str:
     groups = {}
     for result in results:
         groups.setdefault((result["id"], result["track"]), []).append(result)
-    lines = ["# Development PDF benchmark", "",
+    lines = ["# PDF benchmark", "",
              "One run per cell. Agent-checked references; human review pending. "
-             "Closure accuracy is scored only for North Beach. Costs are not verified billing data.", "",
+             "Closure accuracy is scored only where the reference has explicit closure labels. Costs are not verified billing data.", "",
              "F1 includes day, type, time and literal pool label. No aggregate F1 is shown for incomplete groups.", "",
              "| Candidate | Track | Scored | Session F1 | Exact session grids | Exact date windows | Checked fields match | Mean seconds |",
              "| --- | --- | --- | --- | --- | --- | --- | --- |"]
@@ -437,11 +454,11 @@ def write_benchmark_diagnostics(output: Path, manifest: Path, repo_root: Path) -
     diagnostics = []
     groups = {}
     for result in results:
-        row = {key: result[key] for key in ("id", "model", "harness", "track", "reference")}
+        row = {key: result[key] for key in ("id", "model", "harness", "track", "reference", "repetition")}
         row["strict_status"] = result["score"]["status"]
         row["score"] = result["score"]
         if row["strict_status"] == "schema_invalid":
-            directory = output / result["id"] / result["track"] / result["source_sha256"][:12]
+            directory = attempt_directory(output, result)
             payload = diagnostic_response((directory / "stdout.log").read_text(), directory / "answer.json")
             reference = load_benchmark_reference(manifest, result["reference"], repo_root=repo_root)
             row["score"] = score_benchmark_run(reference, result | {"payload": payload})
@@ -488,7 +505,7 @@ def run_benchmark(inputs: Path, output: Path, manifest: Path, repo_root: Path,
         raise ValueError("Missing Pi multi-account extension.")
     if set(blocked) - {model["id"] for model in frozen["models"]}:
         raise ValueError("Unknown blocked candidate.")
-    jobs = benchmark_jobs(frozen["models"], references)
+    jobs = benchmark_jobs(frozen["models"], references, frozen["plan"])
     output.mkdir(parents=True, exist_ok=False)
     (output / "run.json").write_text(json.dumps({
         "inputs": str(inputs), "frozen": frozen, "blocked_candidates": blocked,
@@ -500,12 +517,12 @@ def run_benchmark(inputs: Path, output: Path, manifest: Path, repo_root: Path,
     }, indent=2))
     results = []
     pending = []
-    for model, reference, track in jobs:
+    for model, reference, track, repetition in jobs:
         if model["id"] in blocked:
-            results.append(model | {"reference": reference["id"], "track": track,
+            results.append(model | {"reference": reference["id"], "track": track, "repetition": repetition,
                                     "score": {"status": "blocked_auth"}})
         else:
-            pending.append((model, reference, track))
+            pending.append((model, reference, track, repetition))
     codex = [job for job in pending if job[0]["harness"] == "codex"]
     lanes = [codex[::2], codex[1::2],
              [job for job in pending if job[0]["harness"].startswith("pi-")],
@@ -513,10 +530,10 @@ def run_benchmark(inputs: Path, output: Path, manifest: Path, repo_root: Path,
 
     def run_lane(lane):
         completed = []
-        for model, reference, track in lane:
-            result = extraction_attempt(model, reference, track, inputs, output, pi_extension, timeout)
+        for model, reference, track, repetition in lane:
+            result = extraction_attempt(model, reference, track, repetition, inputs, output, pi_extension, timeout)
             completed.append(result)
-            progress(f"{model['id']} / {track} / {reference['id']}: {result['score']['status']} ({result['elapsed_seconds']}s)")
+            progress(f"{model['id']} / {track} / {reference['id']} / repeat {repetition}: {result['score']['status']} ({result['elapsed_seconds']}s)")
         return completed
 
     with ThreadPoolExecutor(max_workers=4) as executor:
@@ -530,7 +547,7 @@ def run_benchmark(inputs: Path, output: Path, manifest: Path, repo_root: Path,
 
 def benchmark_environment(jobs: list[tuple], pi_extension: Path) -> dict:
     """Record tool versions, never auth, environment variables, or account configuration."""
-    executables = {model["harness"].split("-")[0] for model, _, _ in jobs}
+    executables = {model["harness"].split("-")[0] for model, _, _, _ in jobs}
     versions = {}
     for executable in sorted(executables):
         try:
@@ -552,9 +569,9 @@ def benchmark_implementation(repo_root: Path) -> dict[str, str]:
 
 
 def validate_benchmark_cases(results: list[dict], run: dict, references: list[dict]) -> None:
-    planned = {(model["id"], reference["id"], track): model
-               for model, reference, track in benchmark_jobs(run["frozen"]["models"], references)}
-    actual = [(row["id"], row["reference"], row["track"]) for row in results]
+    planned = {(model["id"], reference["id"], track, repetition): model
+               for model, reference, track, repetition in benchmark_jobs(run["frozen"]["models"], references, run["frozen"]["plan"])}
+    actual = [(row["id"], row["reference"], row["track"], row["repetition"]) for row in results]
     if set(run["blocked_candidates"]) - {key[0] for key in planned}:
         raise ValueError("Unknown blocked candidate in archived run.")
     if len(actual) != len(set(actual)) or set(actual) != set(planned) or len(actual) != run["planned_cells"]:
@@ -594,11 +611,11 @@ def archive_benchmark(inputs: Path, results_dir: Path, output: Path, manifest: P
         raise ValueError("Run inputs or references differ from the archive sources.")
     results = json.loads((results_dir / "results.json").read_text())
     validate_benchmark_cases(results, run, references)
-    attempts = {results_dir / row["id"] / row["track"] / row["source_sha256"][:12] / "attempt.json"
+    attempts = {attempt_directory(results_dir, row) / "attempt.json"
                 for row in results if row["score"]["status"] != "blocked_auth"}
     if set(results_dir.rglob("attempt.json")) != attempts:
         raise ValueError("Raw attempt files differ from the recorded case list.")
-    fields = ("id", "model", "harness", "effort", "transport", "reference", "track", "source_sha256",
+    fields = ("id", "model", "harness", "effort", "transport", "reference", "track", "repetition", "source_sha256",
               "timed_out", "exit_code", "payload", "cost_usd", "resolved_model", "runner_retries",
               "request_sha256", "image_sha256", "started_at", "elapsed_seconds", "reported_models",
               "provider_error", "error_type", "score")
@@ -606,7 +623,7 @@ def archive_benchmark(inputs: Path, results_dir: Path, output: Path, manifest: P
     for result in results:
         row = {key: result[key] for key in fields if key in result}
         if row["score"]["status"] != "blocked_auth":
-            directory = results_dir / row["id"] / row["track"] / row["source_sha256"][:12]
+            directory = attempt_directory(results_dir, row)
             if json.loads((directory / "attempt.json").read_text()) != result:
                 raise ValueError("Attempt file differs from aggregate results.")
             request = (directory / "request.txt").read_bytes()
@@ -659,7 +676,7 @@ def verify_benchmark_replay(root: Path, repo_root: Path) -> None:
     if run["reference_manifest_sha256"] != hashlib.sha256(manifest.read_bytes()).hexdigest():
         raise ValueError("Archived reference manifest hash changed.")
     for item in json.loads(manifest.read_text())["documents"]:
-        if item["split"] != "development":
+        if item["id"] not in run["frozen"]["plan"]["references"]:
             continue
         if not re.fullmatch(r"[a-f0-9]{64}", item["source_sha256"]):
             raise ValueError("Invalid archived source hash.")
@@ -686,7 +703,7 @@ def verify_benchmark_replay(root: Path, repo_root: Path) -> None:
         if replay_attempt(by_id[row["reference"]], row) != row["score"]:
             raise ValueError(f"Replayed score differs: {row['id']} / {row['track']} / {row['reference']}.")
         if row["score"]["status"] == "schema_invalid":
-            directory = root / row["id"] / row["track"] / row["source_sha256"][:12]
+            directory = attempt_directory(root, row)
             directory.mkdir(parents=True)
             (directory / "stdout.log").write_text(json.dumps({"response": row["final_response"]}))
     if benchmark_report(results) != (root / "report.md").read_text():

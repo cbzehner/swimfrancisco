@@ -414,8 +414,9 @@ unresolved closures and independent human review still prevent a model decision.
 ### CLI model comparison (2026-09-04)
 
 Keep production unchanged until reference review and scored trials are complete.
-The `models` array in `tests/fixtures/schedule-benchmark.json` is the executable
-candidate list: 22 candidates plus the exact production baseline and Codex Spark.
+The `models` array in `tests/fixtures/schedule-benchmark.json` records 22 primary
+candidates, the exact production baseline, Codex Spark, and two named
+cross-harness comparisons. The `comparisons` map selects their tracks and cases.
 Use existing CLI authentication first; new API keys are not required for preparation.
 
 | Candidates | Primary route | Initial effort |
@@ -708,13 +709,118 @@ Source pages: [Hamilton fall](../data/hamilton-pool/2026-08-20-c8e193806d9e/sour
 Full-page visual review on September 5 confirmed these unresolved questions;
 it did not create a human attestation.
 
-Review action: approve or amend these rules, then review and freeze references
-for Rossi spring, MLK fall, and Garfield maintenance. Those PDFs remain reserved
-and unexamined for this comparison. The four proposed finalists are Astra
-images, Grok 4.6 / Cursor text, GPT-5.5 text, and Gemini 3.8 Flash text. Three
-runs per finalist per reserved PDF would make 36 calls. Freeze the revised
-reference set, prompt, criteria, and candidate matrix before those calls; the
-current runner deliberately rejects reserved documents.
+The user approved these rules on September 5. The reference transcriptions
+remain agent-checked rather than human-attested.
+
+### Finalist comparison specification (2026-09-05)
+
+Candidate selection preceded inspection of the three reserved sources. Their
+full pages were then reviewed and references frozen before any finalist calls:
+
+| Source | Checked sessions | Effective window | Closure scoring |
+| --- | --- | --- | --- |
+| Rossi spring | 21 | March 15–June 4, 2026 | Unscored: cell cancellations conflict with the facility training hours; one listed holiday falls outside the window. |
+| MLK fall | 27 | August 18–September 26, 2026 | Unscored: training hours and the scope of selected-cell cancellations are not fully specified. |
+| Garfield maintenance | 0 | August 14–September 7, 2026 | One all-day maintenance interval. Expected reopening September 8 does not prove a weekly schedule or actual reopening. |
+
+The literal-label rule keeps MLK's composite `4 & shallow` and `shallow` labels,
+but omits purely numeric lane counts. Rossi has no pool labels under that rule.
+The evaluation date remains September 4, as in the development comparison.
+Session notes and evidence text are not quality-scored. No publication reads
+these benchmark references.
+
+The manifest now explicitly defines `development` and `finalists` comparisons,
+including source IDs, input tracks and repetitions. The historical development
+ZIP remains unchanged and must be replayed from commit `d14a21d`; current code
+does not silently migrate its old case layout.
+
+Finalists: Astra medium on images; Grok 4.6 medium through Pi / Cursor on text;
+GPT-5.5 medium on text; Gemini 3.8 Flash low through Pi / Cursor on text. Each
+receives each source three times in fresh CLI sessions: 36 calls total, nine
+per candidate. Repetition is part of case identity and its output path. Calls
+are ordered by repetition, document and candidate before assignment to the
+existing lanes. There are no additional preflight inference calls, retries or
+model substitutions. The timeout stays 180 seconds per call. CLI-internal
+retries and server caching remain outside the runner's control.
+
+One generic prompt correction was necessary before freezing inputs: the old
+prompt unconditionally demanded `swim_schedule`, even for a closure-only
+notice. The finalist addendum instead requires `temporarily_closed`, no
+invented sessions, and the explicit closure period for that source type. This
+addendum applies to every finalist and contains no source-specific facts.
+Because source inspection informed this change, this is a prospective
+finalist test, not an untouched holdout test of the September 4 prompt. Do not
+tune the prompt or references after observing finalist responses.
+
+The schema and strict-versus-unwrapped diagnostic remain unchanged. Native
+schema enforcement stays disabled. Check each repetition separately; do not
+count three repetitions as three independent documents. An empty-session
+closure notice must not hide grid errors in pooled session metrics.
+
+```sh
+uv --project schedule-tools run --locked schedules benchmark-prepare \
+  --comparison finalists --poppler /path/to/poppler/bin
+uv --project schedule-tools run --locked schedules benchmark-run \
+  --inputs /path/to/prepared-inputs --output tmp/pdf-finalists-results \
+  --pi-extension /path/to/installed/pi-multi-account/index.ts --timeout 180
+```
+
+Archive the complete run with `benchmark-archive` under a separately named
+`benchmarks/pdf/finalists-2026-09-05.zip`; never replace the development archive.
+
+### Finalist comparison results (2026-09-05)
+
+All 36 CLI calls completed without timeouts or execution errors. Twenty-six
+returned schema-valid strict JSON. Ten failed the strict contract because of
+framing; each contained one complete schema-valid object in the separate
+diagnostic. No output values were repaired. The runner, references and prompt
+hashes remained unchanged from launch through archival.
+
+| Candidate | Strict JSON | Checked matches after diagnostic | Rossi matches | MLK matches | Garfield matches | Mean grid seconds |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| GPT-5.5 text | 9/9 | 8/9 | 3/3 | 2/3 | 3/3 | 41.5 |
+| Grok 4.6 / Cursor text | 8/9 | 8/9 | 3/3 | 2/3 | 3/3 | 85.2 |
+| Astra images | 9/9 | 6/9 | 3/3 | 0/3 | 3/3 | 64.7 |
+| Gemini 3.8 Flash / Cursor text | 0/9 | 7/9 | 3/3 | 1/3 | 3/3 | 12.6 |
+
+Grid timing covers Rossi and MLK only, six calls per candidate. The much simpler
+closure notice took 2.9–9.2 seconds and would make pooled latency look better.
+Mean times across all nine calls were 30.0, 59.6, 46.0 and 9.5 seconds respectively.
+These are wall-clock CLI measurements under the recorded concurrency, not API
+latency or verified billing data. Codex was 0.153.4 in this run versus 0.153.2 in
+the September 4 preflight; Pi remained 0.84.4. The archive records this run's
+Python, machine, CLI versions and extension entry-file hash.
+
+All diagnostic-valid responses preserved session days, types, times and counts,
+all effective dates, and the closure-only source classification. The remaining
+scored differences were MLK's four composite pool labels: `shallow` instead of
+the frozen `4 & shallow`. Astra shortened them in all three repetitions; GPT-5.5
+in repetition 2; Grok in repetition 1; Flash in repetitions 1 and 2. These are
+literal-label failures, not missing whole sessions, and were not normalized
+away. Grok's repetition 3 on MLK matched the checked data but wrapped its JSON;
+all nine Flash responses had framing. Three repeated calls are not three new
+source documents, and unresolved Rossi/MLK closures remain unscored.
+
+GPT-5.5 text is the first candidate for production API confirmation: it combined
+strict JSON reliability with the best observed literal accuracy and lower grid
+latency than Astra or Grok here. Flash remains the fast comparator if its API
+offers the exact model and an enforceable output schema. This is not a final
+production choice: GPT-5.5 missed a Balboa interim session in the development
+run, and the new source-kind prompt differs from that run. Do not discard that
+earlier failure. Confirm API behavior and cost before changing production.
+
+Portable results: [finalists-2026-09-05.zip](../benchmarks/pdf/finalists-2026-09-05.zip).
+Replay the archive from its containing commit:
+
+```sh
+uv --project schedule-tools run --locked schedules benchmark-replay \
+  benchmarks/pdf/finalists-2026-09-05.zip --output tmp/pdf-finalists-replay
+```
+
+The ZIP contains all 36 final responses, strict and diagnostic reports,
+repetitions, frozen inputs and references. Raw events stay in the ignored
+`tmp/pdf-finalists-results/` working copy. The September 4 archive remains
+byte-identical and replays from `d14a21d`, with no compatibility conversion.
 
 ## Auto-extract workflow
 

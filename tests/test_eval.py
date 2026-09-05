@@ -13,7 +13,7 @@ from schedules.eval import collect_pool_evals, load_benchmark_reference, render_
 from schedules.paths import REPO_ROOT
 
 
-BENCHMARK_ARCHIVE = REPO_ROOT / "benchmarks/pdf/development-2026-09-04.zip"
+BENCHMARK_ARCHIVE = REPO_ROOT / "benchmarks/pdf/finalists-2026-09-05.zip"
 
 
 def _write_review(
@@ -222,9 +222,11 @@ def test_benchmark_reference_rejects_changed_pdf(tmp_path):
         load_benchmark_reference(manifest, reference["id"], repo_root=tmp_path)
 
 
-def test_reserved_document_cannot_be_scored():
+def test_reserved_document_cannot_be_scored(tmp_path):
+    manifest = tmp_path / "reserved.json"
+    manifest.write_text(json.dumps({"documents": [{"id": "unreviewed", "split": "reserved"}]}))
     with pytest.raises(ValueError, match="reserved"):
-        _reference("rossi-spring")
+        load_benchmark_reference(manifest, "unreviewed", repo_root=tmp_path)
 
 
 def test_benchmark_marks_unresolved_closures_unscored():
@@ -263,7 +265,7 @@ def test_benchmark_expiry_uses_inclusive_dates(as_of, status):
 def test_benchmark_model_matrix_and_no_tool_commands(tmp_path):
     from schedules.benchmark import benchmark_models, harness_command, CHECK_PROMPT, CHECK_SCHEMA
     models = benchmark_models(REPO_ROOT / "tests/fixtures/schedule-benchmark.json")
-    assert len(models) == 24
+    assert len(models) == 26
     extension = tmp_path / "extension.ts"
     extension.touch()
     for model in models:
@@ -367,16 +369,66 @@ def test_benchmark_preparation_has_no_reference_answers_or_reserved_sources(tmp_
 
 
 def test_benchmark_jobs_include_every_document_and_comparison():
-    from schedules.benchmark import benchmark_models, benchmark_jobs
+    from schedules.benchmark import benchmark_comparison, benchmark_jobs
     manifest = REPO_ROOT / "tests/fixtures/schedule-benchmark.json"
-    references = [_reference(item["id"]) for item in json.loads(manifest.read_text())["documents"]
-                  if item["split"] == "development"]
-    jobs = benchmark_jobs(benchmark_models(manifest), references)
+    plan, models, references = benchmark_comparison(manifest, "development", REPO_ROOT)
+    jobs = benchmark_jobs(models, references, plan)
     assert len(jobs) == 128
-    assert sum(track == "image" for _, _, track in jobs) == 24
-    assert sum(model["id"] == "haiku" for model, _, _ in jobs) == 4
-    assert sum(model["id"] in {"luna-pi", "grok-cursor"} for model, _, _ in jobs) == 8
-    assert len({(model["id"], reference["id"], track) for model, reference, track in jobs}) == 128
+    assert sum(track == "image" for _, _, track, _ in jobs) == 24
+    assert sum(model["id"] == "haiku" for model, _, _, _ in jobs) == 4
+    assert sum(model["id"] in {"luna-pi", "grok-cursor"} for model, _, _, _ in jobs) == 8
+    assert len({(model["id"], reference["id"], track, repetition) for model, reference, track, repetition in jobs}) == 128
+
+
+def test_finalist_comparison_has_exact_tracks_and_three_repetitions():
+    from schedules.benchmark import benchmark_comparison, benchmark_jobs
+    plan, models, references = benchmark_comparison(REPO_ROOT / "tests/fixtures/schedule-benchmark.json", "finalists", REPO_ROOT)
+    jobs = benchmark_jobs(models, references, plan)
+    assert len(jobs) == 36
+    assert {reference["id"] for reference in references} == {"rossi-spring", "mlk-fall", "garfield-maintenance"}
+    assert sum(track == "image" for _, _, track, _ in jobs) == 9
+    assert {model["id"] for model, _, track, _ in jobs if track == "image"} == {"astra"}
+    assert {repetition for _, _, _, repetition in jobs} == {1, 2, 3}
+    assert len({(model["id"], reference["id"], track, repetition) for model, reference, track, repetition in jobs}) == 36
+
+
+@pytest.mark.parametrize("change", ["repetitions", "duplicate", "image_transport"])
+def test_finalist_comparison_rejects_invalid_plan(tmp_path, change):
+    from schedules.benchmark import benchmark_comparison
+    data = json.loads((REPO_ROOT / "tests/fixtures/schedule-benchmark.json").read_text())
+    plan = data["comparisons"]["finalists"]
+    if change == "repetitions":
+        plan["repetitions"] = 0
+    elif change == "duplicate":
+        plan["candidates"].append(plan["candidates"][0])
+    else:
+        plan["candidates"][1]["tracks"] = ["image"]
+    manifest = tmp_path / "invalid.json"
+    manifest.write_text(json.dumps(data))
+    with pytest.raises(ValueError):
+        benchmark_comparison(manifest, "finalists", REPO_ROOT)
+
+
+def test_historical_archive_is_immutable_and_requires_its_original_revision(tmp_path):
+    from schedules.benchmark import replay_benchmark
+    archive = REPO_ROOT / "benchmarks/pdf/development-2026-09-04.zip"
+    assert hashlib.sha256(archive.read_bytes()).hexdigest() == "b0e6ad57bbd0d8a2c8802f1ae71719d189e41670967f1604ec9531fabed9ac50"
+    with pytest.raises(ValueError, match="implementation changed"):
+        replay_benchmark(archive, tmp_path / "historical", REPO_ROOT)
+    assert not (tmp_path / "historical").exists()
+
+
+@pytest.mark.parametrize("reference_id, count", [("rossi-spring", 21), ("mlk-fall", 27), ("garfield-maintenance", 0)])
+def test_finalist_references_match_checked_counts_and_closure_policy(reference_id, count):
+    reference = _reference(reference_id)
+    attempt = _attempt(reference) | {"payload": reference["expected"] | {"closures": reference["expected"].get("closures", [])}}
+    score = score_benchmark_run(reference, attempt)
+    assert score["checked_fields_match"]
+    assert score["scores"]["sessions"]["expected_count"] == count
+    assert ("closures" in score["unscored_fields"]) == (reference_id != "garfield-maintenance")
+    if reference_id == "garfield-maintenance":
+        assert attempt["payload"]["schedule_basis"] == "temporarily_closed"
+        assert score["scores"]["closures"]["expected_count"] == 1
 
 
 @pytest.mark.parametrize("provider_error", [False, True])
@@ -407,7 +459,7 @@ def test_extraction_scores_only_completed_payload_and_never_sends_labels(tmp_pat
 
     monkeypatch.setattr(benchmark.subprocess, "Popen", process)
     result = benchmark.extraction_attempt({"id": "luna", "model": "gpt-5.6-luna", "harness": "codex", "effort": "medium"},
-                                         reference, "text", inputs, tmp_path / "results", tmp_path / "extension.ts", 10)
+                                         reference, "text", 1, inputs, tmp_path / "results", tmp_path / "extension.ts", 10)
     assert result["score"]["status"] == ("provider_error" if provider_error else "scored")
     assert result["exit_code"] == 0
     assert result["runner_retries"] == 0
@@ -457,9 +509,9 @@ def test_diagnostics_preserve_strict_failures_and_original_files(tmp_path):
     reference = _reference()
     payload = _attempt(reference)["payload"]
     row = _attempt(reference) | {"id": "test", "harness": "gemini", "track": "text",
-                               "reference": reference["id"], "payload": None,
+                               "reference": reference["id"], "payload": None, "repetition": 1,
                                "score": {"status": "schema_invalid"}}
-    directory = tmp_path / "test/text" / reference["source_sha256"][:12]
+    directory = tmp_path / "test/text" / reference["source_sha256"][:12] / "repeat-1"
     directory.mkdir(parents=True)
     (directory / "stdout.log").write_text(json.dumps({"response": f"```json\n{json.dumps(payload)}\n```"}))
     (tmp_path / "results.json").write_text(json.dumps([row]))
@@ -491,11 +543,10 @@ def test_benchmark_archive_replays_offline_without_original_paths(tmp_path, monk
     report = benchmark.replay_benchmark(BENCHMARK_ARCHIVE, output, checkout)
     rows = json.loads((output / "results.json").read_text())
     diagnostics = json.loads((output / "diagnostics.json").read_text())
-    assert len(rows) == len(diagnostics) == 128
-    assert sum(row["score"]["status"] == "scored" for row in rows) == 58
-    assert sum(row["score"]["status"] == "blocked_auth" for row in rows) == 4
-    assert sum(row["score"]["status"] == "scored" for row in diagnostics) == 110
-    assert "| astra | image | 4/4 | 1.0000 |" in report.read_text()
+    assert len(rows) == len(diagnostics) == 36
+    assert not any(row["score"]["status"] == "blocked_auth" for row in rows)
+    assert {row["repetition"] for row in rows} == {1, 2, 3}
+    assert "| astra | image |" in report.read_text()
     assert not list(output.rglob("stdout.log"))
     assert not (output / "data").exists()
     with zipfile.ZipFile(BENCHMARK_ARCHIVE) as archive:
@@ -558,7 +609,7 @@ def test_benchmark_replay_cli_refuses_overwrite(tmp_path):
 
 
 def test_benchmark_archive_excludes_private_cli_metadata(tmp_path):
-    from schedules.benchmark import archive_benchmark, extraction_request, replay_benchmark
+    from schedules.benchmark import archive_benchmark, attempt_directory, extraction_request, replay_benchmark
     raw = tmp_path / "raw"
     replay_benchmark(BENCHMARK_ARCHIVE, raw, REPO_ROOT)
     rows = json.loads((raw / "results.json").read_text())
@@ -566,7 +617,7 @@ def test_benchmark_archive_excludes_private_cli_metadata(tmp_path):
         row["private_account_identifier"] = "DO_NOT_ARCHIVE"
         if row["score"]["status"] == "blocked_auth":
             continue
-        directory = raw / row["id"] / row["track"] / row["source_sha256"][:12]
+        directory = attempt_directory(raw, row)
         directory.mkdir(parents=True)
         prompt, _ = extraction_request(raw / "inputs", row["source_sha256"], row["track"])
         (directory / "request.txt").write_text(prompt)
