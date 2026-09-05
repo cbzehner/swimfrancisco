@@ -63,7 +63,7 @@ function temporaryResponse(response) {
 function retryDelayMilliseconds(response, retryCount, now) {
   const retryAfter = retryAfterMilliseconds(response, now);
   if (retryAfter !== null) return retryAfter > 0 ? retryAfter : pollMilliseconds;
-  if (response?.status === 429) {
+  if (response?.status === 429 || response?.status === 403) {
     return secondaryRateLimitInitialDelayMilliseconds * 2 ** retryCount;
   }
   return pollMilliseconds;

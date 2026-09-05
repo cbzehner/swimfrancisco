@@ -165,6 +165,46 @@ test("an unknown rate limit waits at least one minute and backs off", async () =
   assert.deepEqual(check.sleeps, [60_000, 120_000]);
 });
 
+test("a rate-limited 403 without a reset time waits at least one minute", async () => {
+  const check = gate([
+    new Response(null, { status: 403, headers: { "x-ratelimit-remaining": "0" } }),
+    new Response(null, { status: 403, headers: { "x-ratelimit-remaining": "0" } }),
+    { workflow_runs: [successfulRun] },
+  ]);
+  await check.run();
+  assert.deepEqual(check.sleeps, [60_000, 120_000]);
+});
+
+test("Retry-After dates are honored without exceeding the deadline", async () => {
+  const retryAt = gate([
+    new Response(null, { status: 429, headers: { "retry-after": new Date(90_000).toUTCString() } }),
+    { workflow_runs: [successfulRun] },
+  ]);
+  await retryAt.run();
+  assert.deepEqual(retryAt.sleeps, [90_000]);
+
+  const beyondDeadline = gate([
+    new Response(null, { status: 429, headers: { "retry-after": "3600" } }),
+    { workflow_runs: [successfulRun] },
+  ]);
+  await assert.rejects(beyondDeadline.run(), /Timed out/);
+  assert.deepEqual(beyondDeadline.sleeps, [600_000]);
+  assert.equal(beyondDeadline.requests.length, 1);
+});
+
+test("a temporary network failure can recover on the next attempt", async () => {
+  let attempts = 0;
+  const check = gate([], {
+    fetch: async () => {
+      if (++attempts === 1) throw new DOMException("request timed out", "TimeoutError");
+      return Response.json({ workflow_runs: [successfulRun] });
+    },
+  });
+  assert.deepEqual(await check.run(), successfulRun);
+  assert.deepEqual(check.sleeps, [30_000]);
+  assert.equal(attempts, 2);
+});
+
 test("permanent API failures and invalid JSON fail without retrying", async () => {
   for (const status of [400, 401, 403, 404, 422]) {
     const check = gate([new Response("do not expose this body", { status })]);
