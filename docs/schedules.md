@@ -329,18 +329,27 @@ Do not gate on "require improvement" against a CI-attested fall grid.
 ### Checked PDF benchmark
 
 `tests/fixtures/schedule-benchmark.json` holds source hashes and visual
-transcriptions for Hamilton fall, Balboa fall, and Balboa interim. These are
+transcriptions for North Beach summer, Hamilton fall, Balboa fall, and Balboa interim. These are
 agent-checked development references, **not human attestations**. They contain
-67 weekly sessions and the three effective windows. They never replace
+97 weekly sessions and four effective windows. They never replace
 `reviewed.json`, and no publication command reads them. Human sign-off is pending.
 
-The three documents were checked as full pages with Poppler. Do not use macOS
+The four documents were checked as full pages with Poppler. Do not use macOS
 Quick Look thumbnails as reference images: the previous Balboa interim thumbnail
 omitted early sessions and clipped text. Preserve the PDF bytes; models that
 need images must receive every page rendered consistently, with renderer,
 resolution, and input hashes recorded for the run.
 
-The PDFs contain unresolved closure wording. Hamilton's cell cancellations
+North Beach's June 9-August 15, 2026 schedule is an expired-source case, with a
+fixed evaluation date of September 4. Keep all 30 historical sessions and the
+printed end date; do not extend the window or claim that the facility is closed.
+Its two holiday closures are scored. The benchmark preserves its printed pool
+codes (`c`, `w`, `w/t`, `c/w/t`) in lowercase, without splitting shared slots.
+The benchmark-only prompt states this rule; production extraction is unchanged.
+The scorer also derives `window_status` from extracted dates. This is a
+deterministic check, not an extra model-generated field or a live-site test.
+
+The other PDFs contain unresolved closure wording. Hamilton's cell cancellations
 conflict with its facility-wide training hours. Balboa lists training without
 closure hours and dates outside the interim window. The manifest records these
 questions. Closure correctness is **unscored**, not assumed correct. Pool labels
@@ -402,56 +411,310 @@ or new API measurements. Hamilton's Gemini error moves Wednesday's 06:30 swim
 to Tuesday. These are session-only scores on agent-checked development labels;
 unresolved closures and independent human review still prevent a model decision.
 
-### Model comparison plan (2026-09-04)
+### CLI model comparison (2026-09-04)
 
-Keep production on its current model until the checked references, trial budget,
-and results have been reviewed. No paid calls are part of benchmark preparation.
+Keep production unchanged until reference review and scored trials are complete.
+The `models` array in `tests/fixtures/schedule-benchmark.json` is the executable
+candidate list: 22 candidates plus the exact production baseline and Codex Spark.
+Use existing CLI authentication first; new API keys are not required for preparation.
 
-| Candidate | Test route | Initial effort |
+| Candidates | Primary route | Initial effort |
 | --- | --- | --- |
-| Current Gemini 3.1 Flash-Lite preview | Existing Gemini API, unchanged baseline | Current configuration |
-| Gemini 3.5 Flash-Lite | Gemini API | Record documented default |
-| GPT-5.6 Luna | OpenAI Responses API with PDF input | Medium |
-| Gemini 3.8 Flash | Gemini API | Low |
-| Claude Sonnet 5 | Anthropic API | Medium |
-| Grok 4.6 | xAI API | Low |
-| Kimi K3 | Cursor, explicit model selection | High if exposed |
-| GLM 5.2 | Cursor, explicit model selection | High if exposed |
+| GPT-6 Astra; GPT-5.6 Sol, Terra, Luna; GPT-5.5; GPT-5.4 Mini | Codex | Medium |
+| GPT-5.4 Nano | Pi / Cursor | Medium |
+| Claude Opus 5, Sonnet 5, Fable 5, Fable 5.1 | Pi / Cursor | Medium |
+| Claude Haiku 4.5 | Pi / Anthropic OAuth | Default; login refresh needed |
+| Gemini 3.8 Flash, 3.7 Flash | Pi / Cursor | Low |
+| Gemini 3.1 Pro | Pi / Cursor | Default |
+| Gemini 3.1 Flash-Lite, 3.5 Flash-Lite | Gemini CLI | Default |
+| Kimi K3 | Pi / Cursor | Low; High in the effort comparison |
+| GLM 5.2 | Pi / Cursor | High |
+| Grok 4.5, 4.6 | Grok CLI | Medium |
+| Composer 2.5 | Pi / Cursor | Default |
+| Production `gemini-3.1-flash-lite-preview` | Gemini CLI | Default; API baseline configuration remains separate |
+| GPT-5.3 Codex Spark | Codex, text track only | Medium |
 
-These are candidates, not availability or accuracy claims. Before paid trials,
-verify exact model IDs, supported effort controls, account access, and output
-constraints. Do not substitute Cursor Auto for a named model. Record requested
-and resolved model IDs when exposed; mark an unverified resolved ID as unknown.
+Authenticated catalogs list seven selectable Codex models, 211 Cursor variants,
+and two native Grok models. Pi's offline list is not the live catalog. Cursor's
+raw IDs encode effort: use `kimi-k3-low`, `glm-5.2-high`, and the other exact IDs
+in the manifest, with Pi thinking set to `off` to prevent a second suffix. This
+does not turn off the reasoning selected by the raw Cursor ID. Bare family IDs
+can fail at cold startup before asynchronous catalog discovery finishes.
 
-[Cursor's published benchmark](https://cursor.com/evals) includes Kimi K3 and
-GLM 5.2. It does not establish this account's enabled models or PDF accuracy.
-[Kimi K3 supports native image input](https://platform.kimi.ai/docs/guide/kimi-k3-quickstart),
-whereas [GLM 5.2 documents text-only input](https://docs.z.ai/guides/llm/glm-5.2).
-Test the actual Cursor document/image-reading route before extraction. If Cursor
-uses a separate image-reading model or tool, report the combined system and its
-total cost separately from direct vision models. Do not attribute the helper's
-vision performance to GLM. Unavailable image access is an unsupported-input
-result, not a zero-quality extraction. Local Cursor Agent/account access remains
-unverified; do not invoke the unrelated `agent` binary or install a new CLI as
-part of an offline replay.
+Text/JSON readiness checks succeeded for all candidates except Haiku. Both the
+native Claude access token and Pi's Anthropic refresh token expired. Haiku needs
+a new sign-in, not an API key. Native Grok reported `grok-4.5-build` and
+`grok-4.6-build`; these are not silently equated with a production xAI endpoint.
+Readiness means a tiny JSON response succeeded, not that schedule extraction is
+accurate. Backend identity remains unknown when the transport does not expose it.
+All six image-capable Codex models also read North Beach's pool name and year
+correctly from the rendered page, using medium effort and no shell tools. This
+establishes image access, not full-grid accuracy.
+The Luna/Pi-Codex and Grok-4.6/Pi-Cursor comparison routes also passed the tiny
+text/JSON check. Their extraction comparisons are separate matrix entries.
 
-Proposed paid sequence, subject to a separate budget approval:
+The installed Pi Cursor bridge drops non-text content in `textContent()`;
+reading an image through a tool does not avoid that conversion. All Cursor
+candidates therefore use the common `pdftotext -layout` track for this harness.
+This is a transport limit, not a claim that Kimi or Claude lack native vision.
+GLM's documented native input is also text-only. Do not modify the installed
+provider or add an image-reading model as an implicit benchmark fallback.
 
-1. One capability check per route on a development PDF. Verify document access,
-   model identity, structured output, and cost reporting. No web search or
-   access to reference labels, prior answers, or the repository by model agents.
-2. One extraction per eligible candidate on each development PDF. Keep the
-   extraction prompt and schema fixed. Record failures, total elapsed time,
-   retries, token usage, actual cost when available, and unresolved fields.
-3. Freeze the finalists and prompt before evaluating reserved documents. Use
-   repeated runs there to measure variability. Promote only after human review
-   of wrong-day, missed-session, date-window, and closure errors. Choose the
-   cheapest candidate that meets the correctness requirements, not the highest
-   average score on three familiar PDFs.
+Prepare frozen, label-free development inputs without model calls:
 
-Subscription access is not a zero-cost assumption: [Cursor usage](https://cursor.com/docs/models-and-pricing)
-draws from plan pools and may incur on-demand charges. Report unavailable cost
-data as unknown, never zero. Set the call count and spending limit before running.
+```sh
+uv --project schedule-tools run schedules benchmark-prepare --poppler /path/to/poppler/bin
+```
+
+This creates a fresh temporary directory outside the repository. It contains
+the four PDFs, layout text, every page rendered at 150 DPI, a shared prompt and
+schema, file hashes, renderer version, and model matrix. Paths use source hashes,
+not labels such as "expired". It contains no expected answers, old extractions,
+review envelopes, or reserved PDFs. Preparation never overwrites an existing run.
+
+Check one candidate (one real CLI request; uses account quota):
+
+```sh
+uv --project schedule-tools run schedules benchmark-check \
+  --candidate kimi --output /path/to/fresh-check-directory \
+  --pi-extension /path/to/installed/pi-multi-account/index.ts
+```
+
+`--pi-extension` is required only for Pi routes. Checks disable model tools,
+except Gemini which uses a deny-all admin tool policy with read-only plan mode.
+Keep Gemini's ambient credentials available: do not add `--sandbox`. Pi loads
+only the specified provider extension with `PI_SUBAGENT_CHILD=1`, which disables
+its model switching and automatic continuation. Checks have a 60-second default
+deadline and terminate their process group on timeout. They save local logs and
+exit nonzero on failure, including provider errors hidden behind CLI exit zero.
+Costs and resolved model IDs remain null when not verified; adapter estimates
+are not billing records. These commands prepare inputs and test access; they do
+not execute or score the extraction matrix.
+
+Scored run specification:
+
+```sh
+uv --project schedule-tools run schedules benchmark-run \
+  --inputs /path/to/prepared-inputs --output /path/to/new-results \
+  --pi-extension /path/to/installed/pi-multi-account/index.ts \
+  --blocked-candidate haiku --timeout 180
+```
+
+Omit `--blocked-candidate haiku` after its login is restored. The runner refuses
+an existing output directory, changed input hashes, extra input files, changed
+model entries, or reserved documents. It uses four execution lanes: two Codex
+lanes, one serial Pi lane, and one for the other CLIs. Only the runner reads the
+reference labels. Each model receives the fixed prompt, schema and source text
+or page images, with no model tools enabled (Gemini uses a deny-all tool policy).
+
+All scored routes receive the schema in the prompt; native schema-constrained
+output is not enabled for this comparison. JSON fences or explanatory prose
+fail the strict output contract and remain visible as failures. Any later
+format-unwrapped diagnostic must remain separate from these strict results.
+`write_benchmark_diagnostics` performs that offline diagnostic after a run. It
+accepts only one complete extraction object, validates it against the unchanged
+schema, and never repairs values or rescues execution failures. Its separate
+report categorizes pool-label-only differences without removing pool identity
+from F1. Strict attempt files and the strict report remain unchanged.
+
+The runner makes no retries or model substitutions. A deadline ends the child
+process group. CLI-internal retries may still occur and are not claimed to be
+zero. Every finished attempt saves its request, raw logs, final payload, usage
+reports, hashes, execution status, and score. Pi usage is marked as an adapter
+estimate, not billing data. `report.md` and `results.json` collect all cells,
+including authentication-blocked entries. A complete run exits zero even when
+cells fail; inspect the report, not just the process exit code.
+
+1. Run every text-ready entry on all four development documents: 96 cells when
+   all 24 entries are ready. Keep blocked cells in the report. Use identical
+   text, prompt, and schema. Models must not read references or repository files.
+2. Keep direct image runs separate from text runs. The six image-capable Codex
+   entries add 24 cells; Spark and this Cursor adapter are not image candidates.
+   Freeze input hashes before a run; do not change the prompt between models.
+3. Compare a shared OpenAI model through Codex and Pi, and Grok 4.6 through native
+   Grok and Cursor. Record harness differences rather than treating routes as
+   duplicate measurements. Check higher efforts only after the broad comparison.
+4. Freeze finalists before reserved-document tests. Review reference labels and
+   unresolved closures, then repeat finalist runs to measure variability. Confirm
+   the chosen production API model and cost separately before any model change.
+
+Subscription usage is not assumed free. CLI checks report unknown actual cost as
+unknown. Scored runs must retain failures, requested/reported model identity,
+effort, input type, elapsed time, retries, usage, and available billing data.
+
+### Development comparison results (2026-09-04)
+
+The local run recorded all 128 planned cells: 124 extraction calls and four
+Haiku cells blocked by expired authentication. Strict results contain 58
+schema-valid outputs, 54 schema-invalid outputs, eight execution failures,
+and four timeouts. The separate diagnostic recovered 52 complete, schema-valid
+objects from wrapped responses without changing any values or strict scores.
+
+| Candidate and input | Observed result across four documents | Mean seconds per call |
+| --- | --- | --- |
+| Astra medium, Codex images | All checked fields matched on 4/4 documents; all 97 sessions exact | 62.2 |
+| Grok 4.6 medium, Pi / Cursor text | All checked fields matched on 4/4 documents; all 97 sessions exact | 97.5 |
+| GPT-5.5 medium, Codex text | 3/4 checked matches; one omitted Balboa interim session | 41.3 |
+| GPT-5.5 medium, Codex images | 3/4 checked matches; one incorrect pool label | 43.3 |
+| Gemini 3.8 Flash low, Pi / Cursor text | Diagnostic: six pool-label differences; no other missing or extra session rows | 14.0 |
+| Gemini 3.1 Pro, Pi / Cursor text | Diagnostic: one pool-label difference; no other missing or extra session rows | 72.6 |
+| Kimi K3 low, Pi / Cursor text | Diagnostic: 36 pool-label differences and one omitted Hamilton session | 14.6 |
+| GLM 5.2 high, Pi / Cursor text | Diagnostic: 3/4 schema-valid objects; six pool-label differences and two extra rows in those three | 39.6 |
+
+All four outputs from each diagnostic-only candidate above failed the strict
+JSON contract. Kimi preserved North Beach's 30 sessions and dates but expanded
+all printed pool codes. Its zero literal session score on that document does
+not mean it lost the schedule. GLM's Balboa fall object added an unsupported
+`evidence` field to closures and remained schema-invalid. The earlier summary
+incorrectly blamed its `start` and `end` field names; those names are valid.
+
+Opus 5, Fable 5, and Gemini 3.7 Flash also preserved all session days, types, and
+times after unwrapping; each had five pool-label differences. Spark, Nano,
+Composer, and the Flash-Lite routes had errors beyond pool labels. The exact
+production model ID, called through Gemini CLI, had eight missing and five
+extra rows beyond six pool-label pairs. This is not a production API measurement.
+
+Two Mini text cases and two Sonnet cases timed out at 180 seconds. All eight
+native Grok calls stopped at the CLI turn limit, so they have no extraction
+quality score. One additional Grok 4.6 North Beach control with native JSON
+schema enabled also stopped at that limit; it is separate from the matrix.
+That control used the same frozen text request, medium effort, plan mode,
+disabled tools, and `--max-turns 1`, adding `--json-schema` with the frozen
+schema. It exited 1 after 8.769 seconds with `max turns reached`; no extraction
+quality score was assigned.
+Luna's text session F1 was 0.8958 through Codex and 0.9231 through Pi. One sample
+per document cannot establish that the harness caused this difference.
+
+The portable evidence archive is
+[`benchmarks/pdf/development-2026-09-04.zip`](../benchmarks/pdf/development-2026-09-04.zip).
+It contains all 128 cells, final response text, frozen inputs, the reference
+manifest, and both reports. Raw CLI events, stderr, local paths, and account
+configuration are not committed. The larger git-ignored working copy remains
+at `tmp/pdf-benchmark-2026-09-04/`, including the separate Grok control. Original
+Pi attempt usage lists include repeated streaming snapshots; the portable
+archive recomputes usage from final events only. Usage remains an estimate,
+not an invoice. The extra Grok control has no quality score and is not one of
+the 128 archived matrix cells.
+
+Next comparison: review the pool-label convention and unresolved closures with
+a human, freeze finalists, then test reserved documents and repeat runs.
+Astra images and Grok / Cursor text are the observed accuracy finalists;
+GPT-5.5 text and Gemini 3.8 Flash text merit the speed comparison. Kimi's higher
+effort remains untested. Confirm API behavior, native output constraints, and
+cost before selecting a production model. This run changed no production
+configuration or published schedules, and it did not use reserved documents.
+
+### Preserve, replay, and rerun a benchmark
+
+Offline replay means reproducing the saved scores exactly, without model calls.
+A rerun means sending the same inputs through the same specified method again.
+It can produce different answers: CLI model aliases, services, account access,
+and tool behavior can change. Requested IDs are not proof of immutable backend
+snapshots. This distinction follows the [evaluation guidance on fixed criteria,
+datasets, and repeated evaluation](https://developers.openai.com/api/docs/guides/evaluation-best-practices).
+
+The ZIP contains:
+
+- The exact four PDFs, layout text, 150-DPI page images, shared prompt, schema,
+  renderer version, input hashes, and fixed evaluation date.
+- The unchanged reference manifest, all requested models and efforts, transport,
+  failure status, final response text including JSON framing, parsed payloads,
+  strict scores, separate diagnostic scores, timing, and available usage reports.
+- A checksum for each file and archive-time hashes of the Python implementation,
+  schemas, package definition, and `uv.lock`. The containing Git commit preserves
+  that implementation. Replay does not execute code from inside the ZIP.
+
+The historical run did not capture a full runtime environment or a source
+revision before execution. Its archived `environment` is explicitly null;
+archive-time source hashes are not presented as run-time provenance. The
+preflight recorded Codex 0.153.2, Pi 0.84.4, Gemini 0.46.0, and Grok 1.0.13
+(build `5e9a58528b76`). New runs capture Python, system and machine type,
+CLI versions, the Pi extension entry-file hash, and implementation hashes
+before extraction. This does not snapshot provider services or all CLI
+dependencies. No credentials or account settings belong in an archive.
+
+From the Git revision that contains this archive, install the locked Python
+dependencies and replay it into a **new** output directory:
+
+```sh
+uv --project schedule-tools sync --locked
+uv --project schedule-tools run --locked schedules benchmark-replay \
+  benchmarks/pdf/development-2026-09-04.zip --output tmp/pdf-benchmark-replay
+```
+
+Replay validates checksums, exact case coverage, requested identity and effort,
+source and request hashes, the schema, and implementation hashes. It reconstructs
+the strict payload from final response text and compares every score and both
+reports. Failures stay failures; wrapped JSON stays a strict failure. No login,
+model CLI, Poppler installation, or original temporary directory is needed for
+replay. Dependency installation may need network access; replay itself does not.
+
+If the implementation has changed, replay stops. Use the commit that introduced
+the immutable archive, not an edited reference or a silently updated scorer:
+
+```sh
+git log --diff-filter=A --format=%H -- benchmarks/pdf/development-2026-09-04.zip
+```
+
+Check out that revision in a separate checkout if the current worktree is dirty.
+Do not replace this historical archive when changing labels or methodology.
+Create a separately named run and state its changes before comparing results.
+
+For a new paid run of the historical development matrix, use the restored
+inputs. Authenticate the same CLI routes first and check their current access.
+Record blocked candidates explicitly; do not substitute model IDs:
+
+```sh
+uv --project schedule-tools run --locked schedules benchmark-run \
+  --inputs tmp/pdf-benchmark-replay/inputs --output tmp/pdf-benchmark-rerun \
+  --pi-extension /path/to/installed/pi-multi-account/index.ts \
+  --blocked-candidate haiku --timeout 180
+```
+
+The command writes both reports after all calls finish. It does not retry or
+resume an interrupted run; partial raw attempts remain available locally.
+Archive a complete run into a new, descriptive filename:
+
+```sh
+uv --project schedule-tools run --locked schedules benchmark-archive \
+  --inputs tmp/pdf-benchmark-replay/inputs --results tmp/pdf-benchmark-rerun \
+  --output benchmarks/pdf/development-YYYY-MM-DD.zip
+```
+
+Archival checks every raw attempt against the result list, verifies an offline
+replay, and refuses to overwrite an existing ZIP. Review the exported final
+responses for sensitive content before committing them; excluding CLI metadata
+cannot guarantee that a model never put sensitive text in its answer. Commit
+the ZIP, methodology changes, references, implementation and lockfile together.
+A local commit is not a remote backup until pushed. Automated tests replay the
+historical archive with process execution forbidden and test damaged evidence,
+missing/duplicate cells, changed identities, score drift and unsafe ZIP paths.
+
+### Reference decisions before the finalist comparison
+
+The September 4 archive is frozen. The following are proposed rules for the
+next comparison, not edits to historical labels or human sign-off:
+
+| Decision | Source evidence | Proposed rule |
+| --- | --- | --- |
+| Pool labels | Hamilton uses `2 lanes + small pool` and `waterslide`; Balboa uses `main pool only` and `small/main`. | Keep the documented literal-label convention for this comparison. Keep standalone numeric lane counts out of pool identity. Do not split a shared slot into inferred pools. |
+| Hamilton training closures | Thursday cells cancel sessions spanning 11:00–12:30 and 13:00–15:00 on 8/27, 9/24 and 10/22. The facility note gives 12:00–14:00. | Mark the conflicting hours as unresolved. Do not select one interpretation as ground truth without source confirmation. |
+| Balboa training closures | Saturday training dates have no hours. The interim PDF also lists holidays outside its August window. | Do not invent all-day closures or remove printed facts silently. Keep these closure checks unscored until their scope is agreed. |
+| Expired sources | A printed end date bounds a schedule, not the facility's operating status. | Preserve sessions and dates; derive expiry separately. |
+
+Source pages: [Hamilton fall](../data/hamilton-pool/2026-08-20-c8e193806d9e/source.pdf),
+[Balboa fall](../data/balboa-pool/2026-08-20-d6f218710372/source.pdf), and
+[Balboa interim](../data/balboa-pool/2026-08-20-d20965597a7a/source.pdf), page 1 of each.
+Full-page visual review on September 5 confirmed these unresolved questions;
+it did not create a human attestation.
+
+Review action: approve or amend these rules, then review and freeze references
+for Rossi spring, MLK fall, and Garfield maintenance. Those PDFs remain reserved
+and unexamined for this comparison. The four proposed finalists are Astra
+images, Grok 4.6 / Cursor text, GPT-5.5 text, and Gemini 3.8 Flash text. Three
+runs per finalist per reserved PDF would make 36 calls. Freeze the revised
+reference set, prompt, criteria, and candidate matrix before those calls; the
+current runner deliberately rejects reserved documents.
 
 ## Auto-extract workflow
 

@@ -15,7 +15,7 @@ import json
 from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
 import jsonschema
@@ -78,6 +78,8 @@ def load_benchmark_reference(path: Path, reference_id: str, *, repo_root: Path) 
     rows = [RowKey.from_session(row) for row in expected["sessions"]]
     if len(rows) != len(set(rows)):
         raise ValueError("Benchmark reference contains duplicate sessions.")
+    if "as_of" in reference:
+        date.fromisoformat(reference["as_of"])
     return reference
 
 
@@ -133,6 +135,13 @@ def score_benchmark_run(reference: dict, run: dict) -> dict:
         if field in expected:
             scores[field] = {"expected": expected[field], "actual": payload.get(field),
                              "match": expected[field] == payload.get(field)}
+    if "as_of" in reference:
+        expected_status = benchmark_window_status(expected, reference["as_of"])
+        actual_status = benchmark_window_status(payload, reference["as_of"])
+        scores["window_status"] = {
+            "as_of": reference["as_of"], "expected": expected_status,
+            "actual": actual_status, "match": expected_status == actual_status,
+        }
     fields_by_rows = {
         "sessions": ("day", "type", "start", "end", "pool"),
         "closures": ("start", "end", "start_time", "end_time"),
@@ -148,6 +157,17 @@ def score_benchmark_run(reference: dict, run: dict) -> dict:
             for score in scores.values()
         ),
     }
+
+
+def benchmark_window_status(payload: dict, as_of: str) -> str:
+    """Classify extracted dates, not whether the facility itself is open."""
+    today = date.fromisoformat(as_of)
+    if date.fromisoformat(payload["effective_start"]) > today:
+        return "future"
+    end = payload.get("effective_end")
+    if end is None:
+        return "unknown_end"
+    return "expired" if date.fromisoformat(end) < today else "within_window"
 
 
 @dataclass(frozen=True)

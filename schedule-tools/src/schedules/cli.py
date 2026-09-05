@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import json
 import os
+import zipfile
 from pathlib import Path
 import click
 
 from .discover import DiscoverError, discover_all, rec_park_entries
+from .benchmark import archive_benchmark, benchmark_models, check_model, prepare_benchmark, replay_benchmark, run_benchmark
 from .models import PoolResult
 from .paths import (
     CONTENT_SPOTS_DIR,
@@ -335,6 +337,80 @@ def benchmark_command(attempt: Path, reference_id: str) -> None:
     except (OSError, ValueError, KeyError) as exc:
         raise click.ClickException(str(exc)) from exc
     click.echo(json.dumps(result, indent=2))
+
+
+@cli.command("benchmark-prepare")
+@click.option("--poppler", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path))
+def benchmark_prepare_command(poppler: Path) -> None:
+    """Prepare label-free development inputs in a fresh temporary directory. No model calls."""
+    try:
+        root = prepare_benchmark(REPO_ROOT / "tests/fixtures/schedule-benchmark.json", REPO_ROOT, poppler)
+    except (OSError, ValueError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(str(root))
+
+
+@cli.command("benchmark-check")
+@click.option("--candidate", required=True, help="Exact candidate ID from the benchmark manifest.")
+@click.option("--output", required=True, type=click.Path(file_okay=False, path_type=Path))
+@click.option("--pi-extension", type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--timeout", default=60, type=click.IntRange(1, 180))
+def benchmark_check_command(candidate: str, output: Path, pi_extension: Path | None, timeout: int) -> None:
+    """Make ONE CLI inference call to check text/JSON readiness. Uses account quota."""
+    try:
+        models = benchmark_models(REPO_ROOT / "tests/fixtures/schedule-benchmark.json")
+        matches = [model for model in models if model["id"] == candidate]
+        if not matches:
+            raise ValueError("Unknown benchmark candidate.")
+        result = check_model(matches[0], output.resolve(), pi_extension, timeout)
+    except (OSError, ValueError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(json.dumps(result, indent=2))
+    if result["status"] != "text_ready":
+        raise click.exceptions.Exit(1)
+
+
+@cli.command("benchmark-run")
+@click.option("--inputs", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--output", required=True, type=click.Path(file_okay=False, path_type=Path))
+@click.option("--pi-extension", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--blocked-candidate", multiple=True, help="Record an authentication-blocked candidate without calling it.")
+@click.option("--timeout", default=180, type=click.IntRange(1, 300))
+def benchmark_run_command(inputs: Path, output: Path, pi_extension: Path,
+                          blocked_candidate: tuple[str, ...], timeout: int) -> None:
+    """Run and score the frozen development matrix. Uses CLI account quota; never publishes."""
+    try:
+        results = run_benchmark(inputs.resolve(), output.resolve(),
+                                REPO_ROOT / "tests/fixtures/schedule-benchmark.json", REPO_ROOT,
+                                pi_extension.resolve(), blocked_candidate, timeout, progress=click.echo)
+    except (OSError, ValueError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(f"Recorded {len(results)} cells. Report: {output / 'report.md'}")
+
+
+@cli.command("benchmark-archive")
+@click.option("--inputs", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--results", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--output", required=True, type=click.Path(dir_okay=False, path_type=Path))
+def benchmark_archive_command(inputs: Path, results: Path, output: Path) -> None:
+    """Preserve frozen inputs, final responses and scores in a new ZIP. No model calls."""
+    try:
+        archive_benchmark(inputs, results, output, REPO_ROOT / "tests/fixtures/schedule-benchmark.json", REPO_ROOT)
+    except (OSError, ValueError, KeyError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(f"Verified and archived benchmark: {output}")
+
+
+@cli.command("benchmark-replay")
+@click.argument("archive", type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--output", required=True, type=click.Path(file_okay=False, path_type=Path))
+def benchmark_replay_command(archive: Path, output: Path) -> None:
+    """Verify checksums and reproduce all recorded scores offline. Never calls models."""
+    try:
+        report = replay_benchmark(archive, output, REPO_ROOT)
+    except (OSError, ValueError, KeyError, zipfile.BadZipFile) as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(f"Verified all archived cells and reproduced both reports: {report}")
 
 
 @cli.group()
