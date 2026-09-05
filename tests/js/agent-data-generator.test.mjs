@@ -169,3 +169,34 @@ test("build metadata generator writes a production smoke marker", async () => {
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test("main Workers Builds metadata requires the checked out commit", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "swimfrancisco-build-"));
+  const expectedCommit = "a".repeat(40);
+  try {
+    await assert.rejects(generateBuildMetadata({
+      outputDir: dir,
+      gitCommit: expectedCommit,
+      environment: {
+        WORKERS_CI: "1",
+        WORKERS_CI_BRANCH: "main",
+        WORKERS_CI_COMMIT_SHA: expectedCommit,
+      },
+      readHead: async () => "b".repeat(40),
+    }), /does not match git HEAD/);
+
+    const metadata = await generateBuildMetadata({
+      outputDir: dir,
+      gitCommit: "b".repeat(40),
+      environment: {
+        WORKERS_CI: "1",
+        WORKERS_CI_BRANCH: "main",
+        WORKERS_CI_COMMIT_SHA: expectedCommit,
+      },
+      readHead: async () => expectedCommit,
+    });
+    assert.equal(metadata.git_commit, expectedCommit);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});

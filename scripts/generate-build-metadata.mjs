@@ -22,15 +22,31 @@ async function gitValue(args) {
   return stdout.trim();
 }
 
+function expectedMainCommit(environment) {
+  if (environment.WORKERS_CI !== "1" || environment.WORKERS_CI_BRANCH !== "main") return null;
+  const commit = environment.WORKERS_CI_COMMIT_SHA;
+  if (!/^[a-f\d]{40}$/i.test(commit || "")) {
+    throw new Error("Workers Builds requires a full WORKERS_CI_COMMIT_SHA for main");
+  }
+  return commit.toLowerCase();
+}
+
 export async function generateBuildMetadata({
   outputDir = defaultOutputDir,
   generatedAt = new Date().toISOString(),
   gitCommit = null,
+  environment = process.env,
+  readHead = () => gitValue(["rev-parse", "HEAD"]),
 } = {}) {
+  const expectedCommit = expectedMainCommit(environment);
+  const head = expectedCommit || !gitCommit ? (await readHead()).trim().toLowerCase() : null;
+  if (expectedCommit && head.toLowerCase() !== expectedCommit) {
+    throw new Error("WORKERS_CI_COMMIT_SHA does not match git HEAD");
+  }
   const metadata = {
     site: "Swim Francisco",
     generated_at: generatedAt,
-    git_commit: gitCommit || await gitValue(["rev-parse", "HEAD"]),
+    git_commit: expectedCommit || gitCommit || head,
     build_command: "npm run build",
   };
 
