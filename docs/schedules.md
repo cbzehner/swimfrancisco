@@ -317,13 +317,141 @@ just schedules-eval --all-dirs    # include historical review dirs (default: lat
 
 The eval reads existing per-review artifacts — no API calls. Quality baseline
 is same-dir provider JSON vs a human Save or omitted `attested_by` (legacy).
-CI-attested dirs are not same-dir truth and are never scored CI vs CI. When
-the latest dir is `attested_by: ci` with no `carried_from`, eval may look
+CI-attested dirs, including carried CI attestations, are not same-dir truth
+and are never scored CI vs CI. Copying an approval does not change its origin.
+When the latest dir is `attested_by: ci`, eval may look
 back to an older human envelope and list that pair in a **seasonal-delta**
 table only. Seasonal-delta F1 is not the quality aggregate.
 
 Run before and after any prompt or schema tweak as an observational check.
 Do not gate on "require improvement" against a CI-attested fall grid.
+
+### Checked PDF benchmark
+
+`tests/fixtures/schedule-benchmark.json` holds source hashes and visual
+transcriptions for Hamilton fall, Balboa fall, and Balboa interim. These are
+agent-checked development references, **not human attestations**. They contain
+67 weekly sessions and the three effective windows. They never replace
+`reviewed.json`, and no publication command reads them. Human sign-off is pending.
+
+The three documents were checked as full pages with Poppler. Do not use macOS
+Quick Look thumbnails as reference images: the previous Balboa interim thumbnail
+omitted early sessions and clipped text. Preserve the PDF bytes; models that
+need images must receive every page rendered consistently, with renderer,
+resolution, and input hashes recorded for the run.
+
+The PDFs contain unresolved closure wording. Hamilton's cell cancellations
+conflict with its facility-wide training hours. Balboa lists training without
+closure hours and dates outside the interim window. The manifest records these
+questions. Closure correctness is **unscored**, not assumed correct. Pool labels
+follow the current prompt literally; lane counts alone are not pool sections.
+Do not normalize away pool identity to improve scores.
+
+Rossi spring, MLK fall, and Garfield maintenance are reserved for the next
+comparison. They have no benchmark labels yet. Do not use them for prompt
+tuning; check and freeze their references before the final comparison. This is
+a prospective split for this work, not a claim that these historical files
+have never appeared in older experiments. Koret's canonical XLSX source stays
+in its direct-extraction tests, outside the Rec & Park PDF model comparison.
+
+Score one recorded attempt without API calls or writes:
+
+```sh
+uv --project schedule-tools run schedules benchmark tmp/attempt.json --reference hamilton-fall
+```
+
+The attempt is a JSON object with `model` (exact requested ID), `transport`
+(for example `openai-api` or `cursor-cli`), `source_sha256`, `exit_code`,
+`timed_out` (boolean), and `payload` (decoded final extraction object).
+A timeout can have a null exit code. Other completed attempts require an
+integer exit code. Missing transport, missing identity, and mismatched source
+hashes are errors. Record failed attempts too; do not omit them from a matrix.
+
+The scorer reports execution errors and timeouts without quality scores. Only
+successful attempts with schema-valid payloads get field scores. Session
+identity includes day, type, start, end, and pool; duplicates count as extras.
+Dates are checked separately. Closure scoring, once references are resolved,
+compares dates and partial-day times, not the wording of `reason`. It compares
+literal entries, not merged date intervals. `checked_fields_match` only covers
+the named checks; it is not a publication approval or an overall quality score.
+The command exits zero after reporting a scored mismatch or failed attempt;
+read `status` and the scores, not just the command exit code.
+
+The old ignored `tmp/research-eval/run.py` and its report are historical evidence,
+not the supported benchmark. Its six Codex runs exited before extraction with
+`No prompt provided via stdin.`; they are execution failures, not schema failures.
+Its Hamilton reference was CI-attested and encoded numeric lane counts as pool
+sections. Preserve those raw records, but do not use that report to select a model.
+Any future CLI runner must test argument construction without model calls first.
+For Codex, pass the prompt through stdin with the explicit `-` positional argument
+after `--`, so the variadic `--image` option cannot consume it; capture the final
+answer separately from event logs. Check the installed executable and its help
+before invoking it. On the reviewed host, `agent` resolves to Grok, not Cursor.
+
+Offline replay on 2026-09-04, using the saved final payloads and exit codes
+(no new model calls):
+
+| Historical cell | Hamilton session F1 | Balboa fall session F1 | Balboa interim session F1 |
+| --- | --- | --- | --- |
+| `gemini-37flash-low` | 0.9565 | 1.0000 | 1.0000 |
+| `claude-sonnet-med` | 1.0000 | 1.0000 | 1.0000 |
+| `codex-sol-high` | Execution failure | Execution failure | Execution failure |
+
+These cell labels describe the old CLI experiment, not current model snapshots
+or new API measurements. Hamilton's Gemini error moves Wednesday's 06:30 swim
+to Tuesday. These are session-only scores on agent-checked development labels;
+unresolved closures and independent human review still prevent a model decision.
+
+### Model comparison plan (2026-09-04)
+
+Keep production on its current model until the checked references, trial budget,
+and results have been reviewed. No paid calls are part of benchmark preparation.
+
+| Candidate | Test route | Initial effort |
+| --- | --- | --- |
+| Current Gemini 3.1 Flash-Lite preview | Existing Gemini API, unchanged baseline | Current configuration |
+| Gemini 3.5 Flash-Lite | Gemini API | Record documented default |
+| GPT-5.6 Luna | OpenAI Responses API with PDF input | Medium |
+| Gemini 3.8 Flash | Gemini API | Low |
+| Claude Sonnet 5 | Anthropic API | Medium |
+| Grok 4.6 | xAI API | Low |
+| Kimi K3 | Cursor, explicit model selection | High if exposed |
+| GLM 5.2 | Cursor, explicit model selection | High if exposed |
+
+These are candidates, not availability or accuracy claims. Before paid trials,
+verify exact model IDs, supported effort controls, account access, and output
+constraints. Do not substitute Cursor Auto for a named model. Record requested
+and resolved model IDs when exposed; mark an unverified resolved ID as unknown.
+
+[Cursor's published benchmark](https://cursor.com/evals) includes Kimi K3 and
+GLM 5.2. It does not establish this account's enabled models or PDF accuracy.
+[Kimi K3 supports native image input](https://platform.kimi.ai/docs/guide/kimi-k3-quickstart),
+whereas [GLM 5.2 documents text-only input](https://docs.z.ai/guides/llm/glm-5.2).
+Test the actual Cursor document/image-reading route before extraction. If Cursor
+uses a separate image-reading model or tool, report the combined system and its
+total cost separately from direct vision models. Do not attribute the helper's
+vision performance to GLM. Unavailable image access is an unsupported-input
+result, not a zero-quality extraction. Local Cursor Agent/account access remains
+unverified; do not invoke the unrelated `agent` binary or install a new CLI as
+part of an offline replay.
+
+Proposed paid sequence, subject to a separate budget approval:
+
+1. One capability check per route on a development PDF. Verify document access,
+   model identity, structured output, and cost reporting. No web search or
+   access to reference labels, prior answers, or the repository by model agents.
+2. One extraction per eligible candidate on each development PDF. Keep the
+   extraction prompt and schema fixed. Record failures, total elapsed time,
+   retries, token usage, actual cost when available, and unresolved fields.
+3. Freeze the finalists and prompt before evaluating reserved documents. Use
+   repeated runs there to measure variability. Promote only after human review
+   of wrong-day, missed-session, date-window, and closure errors. Choose the
+   cheapest candidate that meets the correctness requirements, not the highest
+   average score on three familiar PDFs.
+
+Subscription access is not a zero-cost assumption: [Cursor usage](https://cursor.com/docs/models-and-pricing)
+draws from plan pools and may incur on-demand charges. Report unavailable cost
+data as unknown, never zero. Set the call count and spending limit before running.
 
 ## Auto-extract workflow
 

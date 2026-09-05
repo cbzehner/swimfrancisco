@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
 import click
 
 from .discover import DiscoverError, discover_all, rec_park_entries
@@ -10,11 +11,12 @@ from .paths import (
     CONTENT_SPOTS_DIR,
     DATA_DIR,
     TMP_DIR,
+    REPO_ROOT,
     latest_reviewed_dir,
 )
 from .publish import publish_pending_all
 from .registry import load_registry
-from .eval import collect_pool_evals, render_report, write_report
+from .eval import collect_pool_evals, load_benchmark_reference, render_report, score_benchmark_run, write_report
 from .pipeline import (
     BakeoffRun,
     DirectRun,
@@ -315,6 +317,24 @@ def eval_command(stdout: bool, all_dirs: bool) -> None:
         return
     path = write_report(evals)
     click.echo(f"Wrote {path}")
+
+
+@cli.command("benchmark")
+@click.argument("attempt", type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--reference", "reference_id", required=True, help="Checked development document ID.")
+def benchmark_command(attempt: Path, reference_id: str) -> None:
+    """Score one recorded attempt against checked PDF facts. No API calls or writes."""
+    try:
+        reference = load_benchmark_reference(
+            REPO_ROOT / "tests/fixtures/schedule-benchmark.json", reference_id, repo_root=REPO_ROOT,
+        )
+        run = json.loads(attempt.read_text())
+        if not isinstance(run, dict):
+            raise ValueError("Benchmark attempt must be an object.")
+        result = score_benchmark_run(reference, run)
+    except (OSError, ValueError, KeyError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(json.dumps(result, indent=2))
 
 
 @cli.group()
