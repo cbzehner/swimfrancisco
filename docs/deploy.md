@@ -101,11 +101,25 @@ gate, so CI can finish its own build. Non-production branch previews also
 skip the gate. The existing dashboard build command needs no change.
 
 The gate reads the public GitHub Actions API. A failed or cancelled run,
-API error, or timeout stops the build before deployment. Retry the build
-after CI passes or API access recovers. An optional build `GITHUB_TOKEN`
-with Actions read access can avoid unauthenticated rate limits. Daily
-rebuilds reuse the successful result for their commit; if that run has
-expired from GitHub's retention, rerun CI before retrying the build.
+malformed response, permanent API error, or timeout stops the build before
+deployment. It retries temporary network and timeout errors and HTTP 408,
+429, and 5xx responses within the same ten-minute, 21-request limit. For a
+rate limit it obeys `Retry-After` or the rate-limit reset time; an unknown
+rate limit waits at least one minute and backs off. An optional build
+`GITHUB_TOKEN` with Actions read access can avoid unauthenticated rate
+limits. Daily rebuilds reuse the successful result for their commit; if that
+run has expired from GitHub's retention, rerun CI before retrying the build.
+
+The gate checks `git HEAD` again after every wait and immediately before it
+accepts CI. The final build-metadata step also requires `git HEAD` to match
+`WORKERS_CI_COMMIT_SHA` for a main Workers Build. This stops a checkout that
+changes while the build waits from being marked as the CI-verified commit.
+
+For a manual production deploy, use a clean, isolated checkout at the exact
+commit to deploy. Do not edit, commit, or switch that checkout while the
+build runs. These `HEAD` checks do not freeze files: uncommitted changes in
+the checkout can still change generated output. They also cannot prove that
+an external build system did not change files after the metadata check.
 
 Click Deploy. The first build should succeed now that `worker/wrangler.toml`
 has real KV IDs and the `swimfrancisco` script name.
