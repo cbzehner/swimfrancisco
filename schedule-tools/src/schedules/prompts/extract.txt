@@ -9,6 +9,7 @@ Sessions:
 - Preserve every distinct day, program, time, and pool allocation. Never duplicate a session. Never copy times from an adjacent cell or substitute the outer time range for a program's shorter range.
 - Use 24-hour HH:MM. Use 23:59 for an end at midnight.
 - Copy the complete printed pool allocation to pool_label_raw. Preserve qualifiers, combined labels, and short codes verbatim. Do not lowercase, expand codes, or remove words. Use null when there is no allocation or only a numeric lane count.
+- A pool allocation identifies a physical pool, section, or printed pool code. A program name followed by a lane count is not a pool allocation. Do not copy program names or footnote marks into pool_label_raw. When shared programs have only numeric lane counts, use null for each program. Retain a lane count only when the printed allocation combines it with a named physical section, such as "4 & shallow".
 - Copy evidence verbatim from the session's visible text; join wrapped lines with one space. Put a session-specific caveat in notes. Use the rendered page when extracted text contains overlapping or broken characters.
 
 Dates and closures:

@@ -43,6 +43,12 @@ def test_prompt_forbids_timed_sfusd_rows_in_closures() -> None:
     ), "prompt is missing the explicit guard against timed school bookings in closures"
 
 
+def test_prompt_distinguishes_physical_pool_labels_from_program_lane_counts() -> None:
+    prompt = PROMPT_PATH.read_text()
+    assert "A program name followed by a lane count is not a pool allocation" in prompt
+    assert "When shared programs have only numeric lane counts, use null for each program" in prompt
+
+
 def test_closures_have_optional_partial_day_time_fields() -> None:
     props = _closure_properties()
     assert "start_time" in props, "closures lost the v2 partial-day start_time field"

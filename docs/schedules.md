@@ -1121,6 +1121,38 @@ Run historical API comparisons from their recorded source revision. Their
 archives and reference results remain unchanged; the current API command fully
 uses the production request contract.
 
+### Source-inventory results (2026-09-05)
+
+**Decision: do not enable publication yet.** The production-request repeat
+matched 18/21 references. Balboa interim passed all three times with its rendered
+page, but Rossi failed all three. Six shared-program sessions per Rossi response
+copied program names and numeric lane counts into the pool-label field. All
+other session fields and all printed windows matched. The independent source
+check rejected every incorrect candidate; it accepted the other 18 results.
+No requests failed, timed out, or retried.
+
+Estimated API cost was $2.023499 including readiness, from reported usage rather
+than invoices. The conservative ledger charged $2.240075, leaving $3.102034 of
+the original approval available for further checks. Total call latency was
+472.191 seconds. The next repeat clarifies the existing distinction between
+physical pool labels and program names with lane counts. It must not alter
+reference answers, normalization, or exact-match acceptance.
+
+Portable evidence: [source-inventory-2026-09-05.zip](../benchmarks/pdf/source-inventory-2026-09-05.zip).
+SHA-256: `daa9543d0511a940cbb52c7627ba37c9b92567443b950c31a2c8be53d2b3a3e9`.
+Exact replay source: `4ea39ba`. Runtime and archive-time implementation hashes
+match. Offline replay reproduced the requests, source checks, scores, reports,
+and per-request budget accounting. The failed Rossi responses remain unchanged.
+
+The physical-pool-label repeat changes only the prompt's label-scope rule:
+program names, footnotes, and numeric-only lane assignments are not physical
+pool labels. It keeps the same seven documents, three repetitions, model,
+renderer, normalization, source checks, and reference answers. Prepare a new
+`source-inventory` input directory and use `tmp/pdf-physical-label-results` with
+`--budget-usd 3.102034`. Preserve it as a separate
+`physical-pool-labels-2026-09-05.zip` archive. This allowance is the remainder of
+the original $10, not new spending permission.
+
 ## Auto-extract workflow
 
 The `.github/workflows/schedules-extract.yml` action runs weekly on
