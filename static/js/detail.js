@@ -1,8 +1,7 @@
 // Swim Francisco pool detail page.
 // Reads the schedule embedded in .detail-root[data-schedule], hydrates the
-// status slab, and decorates the today block. Pure computation lives in
-// ./helpers/board.mjs (exercised by node:test). Today's column marker is
-// server-rendered by the daily rebuild.
+// status slab, today's sessions, and the current weekday marker. Pure
+// computation lives in ./helpers/board.mjs (exercised by node:test).
 
 import {
   computeAccessStatus,
@@ -10,11 +9,13 @@ import {
   formatHHMM,
   parseHHMM,
   readScheduleAttribute,
+  resolveActiveSchedule,
   scheduleHasAccessHours,
   scheduleHasSessions,
 } from "./helpers/board.mjs";
 import {
   closureReasonLabel,
+  dayFullLabel,
   dayShortLabel,
   formatLocalizedISODate,
   programLabel,
@@ -23,6 +24,7 @@ import {
   t,
 } from "./helpers/i18n.mjs";
 import { pacificWallClockDate } from "./helpers/pacific.mjs";
+import { isDropInType } from "./helpers/programs.mjs";
 import { capture } from "./helpers/analytics.mjs";
 
 function formatClosureSuffix(result) {
@@ -93,7 +95,7 @@ function presentDetail(schedule, now) {
     status: result.status,
     statusText: statusLabel(result.status),
     nextText: statusNextLabel(result),
-    today: "keep",
+    today: "hide",
   };
 }
 
@@ -106,46 +108,44 @@ function applyStatusSlab(root, schedule, now) {
   return view;
 }
 
-function decorateTodayBlock(root, now, view) {
+function renderTodayBlock(root, schedule, now, view, day) {
   const block = root.querySelector(".today-block");
   if (!block) return;
-  block.hidden = view.today === "hide";
+  const active = resolveActiveSchedule(schedule, now);
+  const sessions = (active?.sessions || [])
+    .filter((session) => session.day === day && isDropInType(session.type))
+    .map((session) => ({ ...session, start: parseHHMM(session.start), end: parseHHMM(session.end) }))
+    .filter(({ start, end }) => start !== null && end !== null && end > start)
+    .sort((left, right) => left.start - right.start);
+  block.dataset.day = day;
+  block.hidden = view.today === "hide" || sessions.length === 0;
+  const list = block.querySelector(".today-block-list");
+  list.replaceChildren();
   if (block.hidden) return;
-  if (view.today === "keep") return;
-
-  const rows = block.querySelectorAll(".today-block-list li");
-  if (rows.length === 0) return;
-
+  const heading = block.querySelector(".today-block-heading");
+  if (heading) heading.textContent = `${t("today_caps", "TODAY")} · ${dayFullLabel(day)}`;
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  const parsedRows = Array.from(rows, (row) => {
-    const start = parseHHMM(row.getAttribute("data-start"));
-    const end = parseHHMM(row.getAttribute("data-end"));
-    return { row, start, end };
-  });
-
-  const nextRow = parsedRows.find(({ start, end }) => (
-    start !== null && end !== null && start > nowMinutes
-  ))?.row || null;
-
-  for (const { row, start, end } of parsedRows) {
-    if (start === null || end === null) continue;
-    const timeEl = row.querySelector(".time");
-    const labelEl = row.querySelector(".row-label");
-    if (!timeEl || !labelEl) continue;
-
-    // Stash the server-rendered label once so re-running on the minute tick
-    // can clear a NOW/NEXT marker that no longer applies.
-    if (labelEl.dataset.baseLabel === undefined) {
-      labelEl.dataset.baseLabel = labelEl.textContent;
+  const nextSession = sessions.find(({ start }) => start > nowMinutes);
+  for (const session of sessions) {
+    const { start, end, type } = session;
+    const row = document.createElement("li");
+    row.dataset.start = formatHHMM(start);
+    row.dataset.end = formatHHMM(end);
+    row.dataset.program = type;
+    const label = start <= nowMinutes && nowMinutes < end
+      ? t("status_now", "NOW")
+      : session === nextSession ? t("next", "NEXT") : "";
+    for (const [className, text] of [
+      ["time", `${formatHHMM(start)}–${formatHHMM(end)}`],
+      ["program", programLabel(type)],
+      ["row-label", label],
+    ]) {
+      const span = document.createElement("span");
+      span.className = className;
+      span.textContent = text;
+      row.append(span);
     }
-
-    if (start <= nowMinutes && nowMinutes < end) {
-      labelEl.textContent = t("status_now", "NOW");
-    } else if (row === nextRow) {
-      labelEl.textContent = t("next", "NEXT");
-    } else {
-      labelEl.textContent = labelEl.dataset.baseLabel;
-    }
+    list.append(row);
   }
 }
 
@@ -153,8 +153,13 @@ const REFRESH_INTERVAL_MS = 60_000;
 
 function refresh(root, schedule) {
   const now = pacificWallClockDate();
+  const day = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"][now.getDay()];
   const result = applyStatusSlab(root, schedule, now);
-  decorateTodayBlock(root, now, result);
+  renderTodayBlock(root, schedule, now, result, day);
+  for (const cell of root.querySelectorAll(".weekly-grid [data-day]")) {
+    if (cell.dataset.day === day) cell.dataset.today = "true";
+    else delete cell.dataset.today;
+  }
 }
 
 function init() {
@@ -163,12 +168,9 @@ function init() {
   const schedule = readScheduleAttribute(root);
   if (!schedule) return;
   // Every SF pool is in Pacific — reason about time in PT regardless of the
-  // visitor's browser timezone, so the server-rendered today block and the
-  // client-side "NOW" marker agree for non-PT visitors.
+  // visitor's browser timezone or the date this static page was built.
   refresh(root, schedule);
-  // Intra-day refresh: keep the status slab and NOW/NEXT markers honest in
-  // a long-lived tab. Day tick-over is server-rendered by the 00:00 PT
-  // rebuild; the client owns only minute-level updates within the day.
+  // Refresh the date as well as the time in long-lived and restored tabs.
   setInterval(() => refresh(root, schedule), REFRESH_INTERVAL_MS);
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) refresh(root, schedule);

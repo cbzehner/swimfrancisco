@@ -38,6 +38,19 @@ export function dayShortLabel(day) {
   return key ? t(key, day.slice(0, 3).toUpperCase()) : String(day || "").toUpperCase();
 }
 
+export function dayFullLabel(day) {
+  const key = {
+    monday: "day_monday",
+    tuesday: "day_tuesday",
+    wednesday: "day_wednesday",
+    thursday: "day_thursday",
+    friday: "day_friday",
+    saturday: "day_saturday",
+    sunday: "day_sunday",
+  }[day];
+  return key ? t(key, day.toUpperCase()) : String(day || "").toUpperCase();
+}
+
 function activeLanguage() {
   return globalThis.window?.SWIMFRANCISCO_LANG || "en";
 }

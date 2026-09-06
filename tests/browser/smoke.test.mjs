@@ -98,13 +98,13 @@ async function boardPage(t, engineName, contextOptions = {}) {
   return { page, errors };
 }
 
-async function fixturePage(t, engineName, html) {
-  const context = await browsers[engineName].newContext();
+async function fixturePage(t, engineName, html, { time = "2026-09-24T18:59:00Z", timezoneId } = {}) {
+  const context = await browsers[engineName].newContext({ timezoneId });
   t.after(() => context.close());
   const page = await context.newPage();
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.clock.install({ time: new Date("2026-09-24T18:58:00Z") });
-  await page.clock.pauseAt(new Date("2026-09-24T18:59:00Z"));
+  await page.clock.install({ time: new Date(new Date(time).getTime() - 60_000) });
+  await page.clock.pauseAt(new Date(time));
   await page.route("**/fixture", (route) => route.fulfill({
     contentType: "text/html",
     body: `<!doctype html><html><head><meta charset="utf-8"></head><body>${html}</body></html>`,
@@ -202,6 +202,91 @@ for (const engine of ["webkit", "chromium"]) {
     assert.equal(await page.locator(".today-block").isVisible(), true);
     assert.match(await page.locator('[data-field="status"]').textContent(), /UNTIL 15:00/);
     assert.equal(await page.locator(".row-label").textContent(), "NOW");
+  });
+
+  test(`[${engine}] detail replaces stale today rows and rolls over at Pacific midnight`, async (t) => {
+    const schedule = { schedules: [
+      {
+        effective_start: "2026-09-01", effective_end: "2026-09-05",
+        sessions: [
+          { day: "friday", type: "lap_swim", start: "07:30", end: "09:00" },
+          { day: "saturday", type: "family_swim", start: "14:00", end: "15:30" },
+          { day: "saturday", type: "lap_swim", start: "11:30", end: "12:45" },
+          { day: "saturday", type: "lessons", start: "09:00", end: "11:00" },
+        ],
+      },
+      {
+        effective_start: "2026-09-07", effective_end: "2026-09-30",
+        sessions: [{ day: "monday", type: "senior_swim", start: "10:00", end: "11:00" }],
+      },
+    ] };
+    const page = await fixturePage(t, engine, `
+      <div class="detail-root" data-schedule='${JSON.stringify(schedule)}'>
+        <span data-field="status"></span><span data-field="next"></span>
+        <section class="today-block" data-day="thursday">
+          <p class="today-block-heading">TODAY · THURSDAY</p>
+          <ul class="today-block-list"><li>stale Thursday sessions</li></ul>
+        </section>
+        <table class="weekly-grid"><thead><tr>
+          <th data-day="thursday" data-today="true">THU</th>
+          <th data-day="friday">FRI</th><th data-day="saturday">SAT</th>
+        </tr></thead><tbody><tr>
+          <td data-day="thursday" data-today="true"></td>
+          <td data-day="friday"></td><td data-day="saturday"></td>
+        </tr></tbody></table>
+      </div><script type="module" src="/js/detail.js"></script>`, {
+      time: "2026-09-05T06:59:00Z", timezoneId: "Asia/Tokyo",
+    });
+    const errors = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.goto(`${baseURL}/fixture`);
+    assert.equal(await page.locator(".today-block-heading").textContent(), "TODAY · FRIDAY");
+    assert.deepEqual(await page.locator(".today-block .time").allTextContents(), ["07:30–09:00"]);
+    assert.deepEqual(await page.locator('[data-today="true"]').evaluateAll((cells) => cells.map((cell) => cell.dataset.day)), ["friday", "friday"]);
+
+    await page.clock.fastForward(60_000);
+    assert.equal(await page.locator(".today-block-heading").textContent(), "TODAY · SATURDAY");
+    assert.deepEqual(await page.locator(".today-block .time").allTextContents(), ["11:30–12:45", "14:00–15:30"]);
+    assert.deepEqual(await page.locator(".row-label").allTextContents(), ["NEXT", ""]);
+    assert.deepEqual(await page.locator('[data-today="true"]').evaluateAll((cells) => cells.map((cell) => cell.dataset.day)), ["saturday", "saturday"]);
+
+    await page.clock.fastForward(24 * 60 * 60_000);
+    assert.equal(await page.locator(".today-block").isHidden(), true, "a gap after the old schedule expires must not show its rows");
+    assert.equal(await page.locator('[data-today="true"]').count(), 0, "a day absent from the grid must clear the old highlight");
+
+    await page.clock.fastForward(24 * 60 * 60_000);
+    assert.equal(await page.locator(".today-block-heading").textContent(), "TODAY · MONDAY");
+    assert.deepEqual(await page.locator(".today-block .time").allTextContents(), ["10:00–11:00"]);
+    assert.equal(await page.locator(".today-block").isVisible(), true, "a new schedule window must supply today's rows");
+
+    await page.clock.setSystemTime(new Date("2026-09-06T03:54:00Z"));
+    await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+    assert.equal(await page.locator(".today-block-heading").textContent(), "TODAY · SATURDAY", "restoring a tab must refresh the date without waiting for the timer");
+    assert.deepEqual(await page.locator(".today-block .time").allTextContents(), ["11:30–12:45", "14:00–15:30"]);
+    assert.deepEqual(errors, []);
+  });
+
+  test(`[${engine}] Mission detail shows Saturday in Pacific time even when the visitor is on Sunday`, async (t) => {
+    const context = await browsers[engine].newContext({ timezoneId: "Asia/Tokyo" });
+    t.after(() => context.close());
+    const page = await context.newPage();
+    await page.clock.setFixedTime(new Date("2026-09-06T03:54:00Z"));
+    await page.goto(`${baseURL}/spots/mission-community-pool/`);
+    assert.equal(await page.locator(".today-block-heading").textContent(), "TODAY · SATURDAY");
+    assert.deepEqual(await page.locator(".today-block .time").allTextContents(), ["11:30–12:45", "14:00–15:30", "16:00–17:30"]);
+    assert.equal(await page.locator('.weekly-grid-dayhead[data-today="true"]').getAttribute("data-day"), "saturday");
+    assert.equal(await page.locator('[data-day="friday"][data-today="true"]').count(), 0);
+    await page.goto(`${baseURL}/es/spots/mission-community-pool/`);
+    assert.equal(await page.locator(".today-block-heading").textContent(), "HOY · SÁBADO");
+    assert.deepEqual(await page.locator(".today-block .program").allTextContents(), ["CARRIL", "FAMILIA", "CARRIL"]);
+
+    const withoutScripts = await browsers[engine].newContext({ javaScriptEnabled: false });
+    t.after(() => withoutScripts.close());
+    const staticPage = await withoutScripts.newPage();
+    await staticPage.goto(`${baseURL}/spots/mission-community-pool/`);
+    assert.equal(await staticPage.locator(".today-block").isHidden(), true, "static HTML must not claim the build weekday is today");
+    assert.equal(await staticPage.locator('[data-today="true"]').count(), 0);
+    assert.equal(await staticPage.locator("table.weekly-grid").isVisible(), true, "the weekly timetable must remain available without scripts");
   });
 
   test(`[${engine}] detail conditions retry, refresh, and clear withdrawn readings`, async (t) => {
