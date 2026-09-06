@@ -10,6 +10,14 @@ const timeoutMilliseconds = 10 * 60_000;
 const pollMilliseconds = 30_000;
 const secondaryRateLimitInitialDelayMilliseconds = 60_000;
 const workflowStatuses = new Set(["queued", "in_progress", "completed", "waiting", "requested", "pending"]);
+const automationBranch = /^auto\/schedules\/\d+-\d+-[12]$/;
+
+export function generatedSchedulePath(path) {
+  return /^(?:data\/(?:bulletin|dynamic-labels)\.json|data\/i18n\/(?:en|es|fi|fil|vi|zh-Hant)\.json)$/.test(path)
+    || /^schedule-tools\/src\/schedules\/(?:registry|quarantine)\.toml$/.test(path)
+    || /^content\/spots\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\.(?:es|fi|fil|vi|zh-Hant))?\.md$/.test(path)
+    || /^data\/[a-z0-9]+(?:-[a-z0-9]+)*\/\d{4}-\d{2}-\d{2}-[a-f\d]{12}\/(?:source\.(?:pdf|html|csv|xlsx|sha256)|reviewed\.json|openai-gpt-5\.5-2026-04-23\.json|direct-[a-z0-9-]+\.json)$/.test(path);
+}
 
 function buildCommit(environment, readHead) {
   if (environment.WORKERS_CI !== "1") return null;
@@ -78,7 +86,9 @@ function validRun(run) {
     && (run.conclusion === null || typeof run.conclusion === "string");
 }
 
-export async function checkBuildCI({
+export async function waitForCommitCI({
+  commit,
+  branch,
   environment = process.env,
   readHead = () => execFileSync("git", ["rev-parse", "HEAD"], { cwd: repoRoot, encoding: "utf8" }),
   fetch = globalThis.fetch,
@@ -86,14 +96,14 @@ export async function checkBuildCI({
   sleep = delay,
   log = console.log,
 } = {}) {
-  const commit = buildCommit(environment, readHead);
-  if (!commit) {
-    log("CI deployment gate skipped outside main Workers Builds.");
-    return null;
+  if (!/^[a-f\d]{40}$/.test(commit || "") ||
+      !(branch === "main" || automationBranch.test(branch || ""))) {
+    throw new Error("CI lookup requires an exact commit and supported publication branch");
   }
+  assertHeadMatches(commit, readHead);
 
   const url = new URL(workflowURL);
-  url.search = new URLSearchParams({ head_sha: commit, branch: "main", event: "push", per_page: "1" });
+  url.search = new URLSearchParams({ head_sha: commit, branch, event: "push", per_page: "1" });
   const headers = {
     accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": "2026-03-10",
@@ -146,7 +156,7 @@ export async function checkBuildCI({
     const run = data.workflow_runs[0];
     if (data.workflow_runs.length > 0) {
       if (!validRun(run)) throw new Error("GitHub CI lookup returned invalid workflow runs");
-      if (run.head_sha !== commit || run.head_branch !== "main" || run.event !== "push") {
+      if (run.head_sha !== commit || run.head_branch !== branch || run.event !== "push") {
         throw new Error("GitHub CI run does not match the main push commit being built");
       }
       if (run.status === "completed") {
@@ -167,8 +177,69 @@ export async function checkBuildCI({
   throw new Error(`Timed out waiting for successful CI on ${commit} after ten minutes`);
 }
 
+export async function checkBuildCI(options = {}) {
+  const environment = options.environment || process.env;
+  const readHead = options.readHead || (() => execFileSync("git", ["rev-parse", "HEAD"], { cwd: repoRoot, encoding: "utf8" }));
+  const commit = buildCommit(environment, readHead);
+  if (!commit) {
+    (options.log || console.log)("CI deployment gate skipped outside main Workers Builds.");
+    return null;
+  }
+  return waitForCommitCI({ ...options, environment, readHead, commit, branch: "main" });
+}
+
+export async function promoteScheduleCommit({
+  base,
+  branch,
+  environment = process.env,
+  git = (args) => execFileSync("git", args, { cwd: repoRoot, encoding: "utf8", timeout: 60_000 }),
+  waitForCI = waitForCommitCI,
+} = {}) {
+  if (!/^[a-f\d]{40}$/.test(base || "") || !automationBranch.test(branch || "")) {
+    throw new Error("Promotion requires the base commit and a run-specific automation branch");
+  }
+  const commit = git(["rev-parse", "HEAD"]).trim();
+  if (!/^[a-f\d]{40}$/.test(commit) || git(["rev-list", "--parents", "-n", "1", commit]).trim() !== `${commit} ${base}`) {
+    throw new Error("Promotion requires exactly one generated commit above the recorded main head");
+  }
+  if (git(["status", "--porcelain", "--untracked-files=no"]).trim()) throw new Error("Promotion requires a clean tracked worktree");
+  const paths = git(["diff", "--name-only", "-z", base, commit]).split("\0").filter(Boolean);
+  if (!paths.length || paths.some((path) => !generatedSchedulePath(path))) throw new Error("Promotion contains unexpected generated paths");
+  for (const path of paths) {
+    const entry = git(["ls-tree", "-z", commit, "--", path]);
+    if (!/^100644 blob [a-f\d]{40}\t[^\0]+\0$/.test(entry)) throw new Error("Promotion only permits regular generated files, without deletions");
+  }
+  const readRemote = (ref) => git(["ls-remote", "--heads", "origin", `refs/heads/${ref}`]).trim().split(/\s/)[0];
+  const existing = readRemote(branch);
+  if (existing && existing !== commit) throw new Error("Automation branch already points to another commit");
+  git(["push", "--porcelain", "origin", `${commit}:refs/heads/${branch}`]);
+  const check = await waitForCI({ commit, branch, environment, readHead: () => git(["rev-parse", "HEAD"]) });
+  if (!check || check.head_sha !== commit || check.head_branch !== branch || check.event !== "push"
+      || check.status !== "completed" || check.conclusion !== "success") throw new Error("Promotion requires successful CI for its exact commit");
+  assertHeadMatches(commit, () => git(["rev-parse", "HEAD"]));
+  const currentMain = readRemote("main");
+  if (currentMain !== base) return { status: "stale", commit, main: currentMain, check_url: check.html_url || null };
+  try {
+    git(["push", "--porcelain", "origin", `${commit}:refs/heads/main`]);
+  } catch {
+    const currentMain = readRemote("main");
+    if (currentMain !== commit) {
+      if (currentMain !== base) return { status: "stale", commit, main: currentMain, check_url: check.html_url || null };
+      throw new Error("Main promotion failed; branch protection or the publication token rejected the push");
+    }
+  }
+  if (readRemote("main") !== commit) throw new Error("Main advanced after promotion; publication requires a new revision check");
+  return { status: "promoted", commit, check_url: check.html_url || null };
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  checkBuildCI().catch((error) => {
+  const action = process.argv[2] === "promote"
+    ? promoteScheduleCommit({ base: process.argv[3], branch: process.argv[4] }).then((result) => {
+      console.log(JSON.stringify(result));
+      if (result.status === "stale") process.exitCode = 2;
+    })
+    : checkBuildCI();
+  action.catch((error) => {
     console.error(error.message);
     process.exitCode = 1;
   });

@@ -7,6 +7,8 @@ import hashlib
 import json
 import math
 import os
+import re
+import subprocess
 import time
 from dataclasses import asdict
 from io import BytesIO
@@ -221,6 +223,123 @@ class SpendBudget:
 
         if self._update(update):
             raise ValueError("API response violates its price reservation; stop paid calls")
+
+
+class MonthlySpendBudget:
+    branch = "refs/heads/schedule-budget"
+
+    def __init__(self, repo_root: Path, limit_usd: float):
+        if not math.isfinite(limit_usd) or limit_usd <= 0:
+            raise ValueError("An approved positive monthly API budget is required")
+        self.repo_root = repo_root
+        self.limit = math.floor(limit_usd * 1_000_000)
+
+    def _git(self, *args: str, input: str | None = None, missing_ok: bool = False) -> str:
+        result = subprocess.run(["git", "-c", "user.name=Schedule automation", "-c", "user.email=schedules@users.noreply.github.com", *args],
+                                cwd=self.repo_root, input=input, capture_output=True, text=True, timeout=60)
+        if missing_ok and result.returncode == 2:
+            return ""
+        if result.returncode:
+            raise ValueError("Durable budget Git operation failed; no paid call is authorized")
+        return result.stdout.strip()
+
+    def _load(self) -> tuple[str | None, dict]:
+        remote = self._git("ls-remote", "--exit-code", "--heads", "origin", self.branch, missing_ok=True)
+        if not remote:
+            raise ValueError("Durable budget branch is missing; explicit initialization is required")
+        parent = remote.split()[0]
+        if not re.fullmatch(r"[a-f0-9]{40}", parent):
+            raise ValueError("Invalid durable budget revision")
+        self._git("fetch", "--no-tags", "--no-write-fetch-head", "origin", parent)
+        state = json.loads(self._git("show", f"{parent}:budget.json"))
+        if not isinstance(state, dict) or not isinstance(state.get("months"), dict) or type(state.get("blocked")) is not bool:
+            raise ValueError("Invalid durable budget state")
+        for month, period in state["months"].items():
+            if not re.fullmatch(r"20\d{2}-(?:0[1-9]|1[0-2])", month) or not isinstance(period, dict):
+                raise ValueError("Invalid budget month")
+            if type(period.get("limit_microusd")) is not int or period["limit_microusd"] <= 0 or not isinstance(period.get("runs"), dict):
+                raise ValueError("Invalid monthly limit or runs")
+            for item in period["runs"].values():
+                if not isinstance(item, dict) or any(type(item.get(field)) is not int or item[field] < 0
+                                                    for field in ("reserved_microusd", "charged_microusd")):
+                    raise ValueError("Invalid monthly charges")
+                if item.get("status") not in {"reserved", "settled", "blocked"}:
+                    raise ValueError("Invalid monthly run status")
+                if item["reserved_microusd"] <= 0 or (item["status"] == "reserved" and item["charged_microusd"] != item["reserved_microusd"]):
+                    raise ValueError("Invalid unsettled monthly reservation")
+                if item["charged_microusd"] > item["reserved_microusd"] and not state["blocked"]:
+                    raise ValueError("Run charge exceeds its reservation")
+            if sum(item["charged_microusd"] for item in period["runs"].values()) > period["limit_microusd"] and not state["blocked"]:
+                raise ValueError("Monthly charges exceed the approved limit")
+        return parent, state
+
+    def _save(self, parent: str | None, state: dict, message: str) -> None:
+        blob = self._git("hash-object", "-w", "--stdin", input=json.dumps(state, indent=2) + "\n")
+        tree = self._git("mktree", input=f"100644 blob {blob}\tbudget.json\n")
+        parents = ("-p", parent) if parent else ()
+        commit = self._git("commit-tree", tree, *parents, "-m", message)
+        self._git("push", "--porcelain", "origin", f"{commit}:{self.branch}")
+
+    def initialize(self) -> None:
+        if self._git("ls-remote", "--exit-code", "--heads", "origin", self.branch, missing_ok=True):
+            raise ValueError("Durable budget already exists; it must not be reset")
+        self._save(None, {"months": {}, "blocked": False}, "Initialize schedule API budget accounting")
+
+    def reserve(self, month: str, run_id: str, run_limit_usd: float = 1.0) -> dict:
+        if not re.fullmatch(r"20\d{2}-(?:0[1-9]|1[0-2])", month) or not re.fullmatch(r"\d+-\d+", run_id):
+            raise ValueError("Budget reservation requires a calendar month and Actions run/attempt ID")
+        if not math.isfinite(run_limit_usd) or run_limit_usd <= 0:
+            raise ValueError("An explicit positive run limit is required")
+        parent, state = self._load()
+        if state["blocked"]:
+            raise ValueError("Durable budget is blocked after an accounting error")
+        period = state["months"].setdefault(month, {"limit_microusd": self.limit, "runs": {}})
+        if period["limit_microusd"] != self.limit:
+            raise ValueError("Monthly approval differs from the recorded limit")
+        if run_id in period["runs"]:
+            raise ValueError("This run already has a durable reservation; do not reset it")
+        remaining = self.limit - sum(item["charged_microusd"] for item in period["runs"].values())
+        allowance = min(remaining, math.floor(run_limit_usd * 1_000_000))
+        if allowance <= 0:
+            raise ValueError("Monthly API budget exhausted")
+        period["runs"][run_id] = {"reserved_microusd": allowance, "charged_microusd": allowance, "status": "reserved"}
+        self._save(parent, state, f"Reserve schedule API allowance for {month} run {run_id}")
+        return {"month": month, "run_id": run_id, "limit_microusd": allowance}
+
+    def settle(self, receipt: dict, local_ledger: Path) -> None:
+        parent, state = self._load()
+        period = state["months"][receipt["month"]]
+        item = period["runs"][receipt["run_id"]]
+        if item["status"] != "reserved" or item["reserved_microusd"] != receipt["limit_microusd"]:
+            raise ValueError("Run reservation is already settled or differs from the receipt")
+        if local_ledger.exists():
+            try:
+                ledger = json.loads(local_ledger.read_text())
+                valid = ledger["limit_microusd"] == item["reserved_microusd"] and isinstance(ledger["requests"], list)
+                valid = valid and all(
+                    isinstance(request, dict) and isinstance(request.get("id"), str) and request["id"]
+                    and type(request.get("reserved_microusd")) is int and request["reserved_microusd"] > 0
+                    and type(request.get("charged_microusd")) is int and request["charged_microusd"] >= 0
+                    and request.get("status") in {"reserved", "completed", "execution_error", "timeout", "launch_error"}
+                    and (request["status"] != "reserved" or request["charged_microusd"] == request["reserved_microusd"])
+                    for request in ledger["requests"]
+                )
+                if not valid:
+                    raise ValueError("Invalid run ledger")
+                if len({request["id"] for request in ledger["requests"]}) != len(ledger["requests"]):
+                    raise ValueError("Duplicate run request IDs")
+                charge = sum(request["charged_microusd"] for request in ledger["requests"])
+                if ledger.get("blocked") or charge > item["reserved_microusd"] or any(
+                    request["charged_microusd"] > request["reserved_microusd"] for request in ledger["requests"]
+                ):
+                    state["blocked"] = True
+                item["charged_microusd"] = charge
+            except (KeyError, TypeError, ValueError):
+                state["blocked"] = True
+        item["status"] = "blocked" if state["blocked"] else "settled"
+        self._save(parent, state, f"Settle schedule API allowance for run {receipt['run_id']}")
+        if state["blocked"]:
+            raise ValueError("Durable budget blocked after invalid run accounting")
 
 
 def budgeted_call(request: dict, directory: Path, timeout: int, budget: SpendBudget) -> dict:

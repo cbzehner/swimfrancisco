@@ -4,6 +4,7 @@ import json
 import os
 import zipfile
 from pathlib import Path
+from datetime import datetime, timezone
 import click
 
 from .discover import DiscoverError, discover_all, rec_park_entries
@@ -34,6 +35,7 @@ from .report import result_counts
 from .project import ProjectError, project as _project
 from .review import DecisionSet
 from .review_server import ReviewApp, serve_review_app
+from .providers.openai_provider import MonthlySpendBudget, SpendBudget
 
 
 def _default_provider() -> str:
@@ -43,6 +45,46 @@ def _default_provider() -> str:
 @click.group()
 def cli() -> None:
     """Pool schedule extraction tools."""
+
+
+@cli.group("budget")
+def budget_command() -> None:
+    """Durable API accounting; never grants permission to enable automation."""
+
+
+def _monthly_budget() -> MonthlySpendBudget:
+    try:
+        return MonthlySpendBudget(REPO_ROOT, float(os.environ.get("SCHEDULES_MONTHLY_BUDGET_USD", "0")))
+    except ValueError as error:
+        raise click.ClickException(str(error)) from error
+
+
+@budget_command.command("initialize")
+def budget_initialize_command() -> None:
+    """Create the separate accounting branch once, after operator approval."""
+    _monthly_budget().initialize()
+
+
+@budget_command.command("reserve")
+@click.option("--run-id", required=True)
+@click.option("--output", type=click.Path(path_type=Path), required=True)
+def budget_reserve_command(run_id: str, output: Path) -> None:
+    """Reserve at most $1 for this run before creating its local request ledger."""
+    if output.exists() and any(output.iterdir()):
+        raise click.ClickException("Budget output directory must be empty")
+    receipt = _monthly_budget().reserve(datetime.now(timezone.utc).strftime("%Y-%m"), run_id)
+    output.mkdir(parents=True, exist_ok=True)
+    (output / "reservation.json").write_text(json.dumps(receipt, indent=2) + "\n")
+    SpendBudget(output / "budget.json", receipt["limit_microusd"] / 1_000_000)._update(lambda _: None)
+    click.echo(json.dumps(receipt))
+
+
+@budget_command.command("settle")
+@click.option("--directory", type=click.Path(path_type=Path, exists=True), required=True)
+def budget_settle_command(directory: Path) -> None:
+    """Settle conservative run charges; missing usage keeps its reservation."""
+    receipt = json.loads((directory / "reservation.json").read_text())
+    _monthly_budget().settle(receipt, directory / "budget.json")
 
 
 def _parse_slugs(only: str | None) -> list[str] | None:

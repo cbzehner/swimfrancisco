@@ -1,7 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, symlinkSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
-import { checkBuildCI } from "../../scripts/check-build-ci.mjs";
+import { checkBuildCI, generatedSchedulePath, promoteScheduleCommit, waitForCommitCI } from "../../scripts/check-build-ci.mjs";
 
 const commit = "a".repeat(40);
 const environment = { WORKERS_CI: "1", WORKERS_CI_BRANCH: "main", WORKERS_CI_COMMIT_SHA: commit };
@@ -280,9 +284,8 @@ test("a checkout change after waiting for CI stops the build", async () => {
 });
 
 test("a checkout change before CI approval stops the build", async () => {
-  let reads = 0;
   const check = gate([{ workflow_runs: [successfulRun] }], {
-    readHead: () => ++reads === 1 ? commit : "b".repeat(40),
+    readHead: () => check.requests.length ? "b".repeat(40) : commit,
   });
   await assert.rejects(check.run(), /does not match git HEAD/);
   assert.equal(check.requests.length, 1);
@@ -307,3 +310,122 @@ test("an optional GitHub token only authenticates the read request", async () =>
   assert.equal(check.requests[0].options.headers.authorization, "Bearer test-token");
   assert.equal(check.requests[0].options.method, undefined);
 });
+
+test("automation CI lookup pins the temporary branch and never accepts main's run", async () => {
+  const branch = "auto/schedules/123-1-1";
+  for (const returnedBranch of [branch, "main"]) {
+    const options = {
+      commit, branch, environment: {}, readHead: () => commit, log: () => {},
+      fetch: async (url) => {
+        assert.equal(url.searchParams.get("head_sha"), commit);
+        assert.equal(url.searchParams.get("branch"), branch);
+        return Response.json({ workflow_runs: [{ ...successfulRun, head_branch: returnedBranch }] });
+      },
+    };
+    if (returnedBranch === branch) assert.equal((await waitForCommitCI(options)).conclusion, "success");
+    else await assert.rejects(waitForCommitCI(options), /does not match/);
+  }
+});
+
+test("generated path allowlist excludes credentials, source code, and unexpected artifact names", () => {
+  for (const path of [
+    "content/spots/mission-community-pool.md", "content/spots/mission-community-pool.zh-Hant.md",
+    "data/bulletin.json", "data/i18n/en.json", "schedule-tools/src/schedules/registry.toml",
+    "data/mission-community-pool/2026-09-02-67f2a420e8fc/source.pdf",
+    "data/mission-community-pool/2026-09-02-67f2a420e8fc/openai-gpt-5.5-2026-04-23.json",
+  ]) assert.equal(generatedSchedulePath(path), true, path);
+  for (const path of [
+    ".env", ".github/workflows/ci.yml", "schedule-tools/src/schedules/publish.py",
+    "content/spots/../../.env", "content/spots/pool.md\n", "data/i18n/private.json",
+    "data/pool/2026-09-02-67f2a420e8fc/request.json", "data/pool/2026-09-02-67f2a420e8fc/gemini-model.json",
+  ]) assert.equal(generatedSchedulePath(path), false, path);
+});
+
+function promotionRepository(t, { path = "content/spots/test-pool.md", symlink = false } = {}) {
+  const directory = mkdtempSync(join(tmpdir(), "swim-promotion-test-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const remote = join(directory, "origin.git");
+  const work = join(directory, "work");
+  const command = (cwd, args) => execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  command(directory, ["init", "--bare", "--initial-branch=main", remote]);
+  command(directory, ["clone", remote, work]);
+  const git = (args) => command(work, args);
+  git(["config", "user.name", "Schedule test"]);
+  git(["config", "user.email", "test@example.invalid"]);
+  writeFileSync(join(work, "seed.txt"), "baseline\n");
+  git(["add", "seed.txt"]);
+  git(["commit", "-m", "Baseline"]);
+  git(["push", "origin", "main"]);
+  const base = git(["rev-parse", "HEAD"]).trim();
+  mkdirSync(join(work, "content/spots"), { recursive: true });
+  if (symlink) symlinkSync("../../seed.txt", join(work, path));
+  else writeFileSync(join(work, path), "generated schedule\n");
+  git(["add", path]);
+  git(["commit", "-m", "Accepted schedule"]);
+  const candidate = git(["rev-parse", "HEAD"]).trim();
+  const branch = "auto/schedules/123-1-1";
+  const remoteHead = (ref = "main") => command(remote, ["rev-parse", `refs/heads/${ref}`]).trim();
+  const advanceMain = () => {
+    const other = join(directory, "other");
+    command(directory, ["clone", remote, other]);
+    command(other, ["config", "user.name", "Concurrent author"]);
+    command(other, ["config", "user.email", "other@example.invalid"]);
+    writeFileSync(join(other, "user-change.txt"), "preserve me\n");
+    command(other, ["add", "user-change.txt"]);
+    command(other, ["commit", "-m", "Concurrent change"]);
+    command(other, ["push", "origin", "main"]);
+    return remoteHead();
+  };
+  return { base, candidate, branch, git, remoteHead, advanceMain,
+    options: { base, branch, git, environment: {}, waitForCI: async ({ commit, branch }) => {
+      assert.equal(remoteHead(branch), commit);
+      assert.equal(remoteHead(), base);
+      return { ...successfulRun, head_sha: commit, head_branch: branch, html_url: "https://example.invalid/check" };
+    } },
+  };
+}
+
+test("promotion checks the exact temporary-branch commit before fast-forwarding main", async (t) => {
+  const repository = promotionRepository(t);
+  const result = await promoteScheduleCommit(repository.options);
+  assert.equal(result.status, "promoted");
+  assert.equal(result.commit, repository.candidate);
+  assert.equal(repository.remoteHead(), repository.candidate);
+  assert.equal(result.check_url, "https://example.invalid/check");
+});
+
+test("failed CI never updates main", async (t) => {
+  const repository = promotionRepository(t);
+  await assert.rejects(promoteScheduleCommit({ ...repository.options, waitForCI: async () => {
+    throw new Error("CI failed");
+  } }), /CI failed/);
+  assert.equal(repository.remoteHead(), repository.base);
+});
+
+for (const race of ["during checks", "during push"]) {
+  test(`a concurrent main update ${race} is preserved and requires rebuilding`, async (t) => {
+    const repository = promotionRepository(t);
+    let newMain;
+    const result = await promoteScheduleCommit({ ...repository.options,
+      waitForCI: async (options) => {
+        const check = await repository.options.waitForCI(options);
+        if (race === "during checks") newMain = repository.advanceMain();
+        return check;
+      },
+      git: (args) => {
+        if (race === "during push" && args[0] === "push" && args.at(-1).endsWith(":refs/heads/main")) newMain = repository.advanceMain();
+        return repository.git(args);
+      },
+    });
+    assert.equal(result.status, "stale");
+    assert.equal(repository.remoteHead(), newMain);
+  });
+}
+
+for (const options of [{ path: ".env" }, { symlink: true }]) {
+  test(`promotion rejects unsafe generated changes: ${JSON.stringify(options)}`, async (t) => {
+    const repository = promotionRepository(t, options);
+    await assert.rejects(promoteScheduleCommit(repository.options), /unexpected generated paths|regular generated files/);
+    assert.equal(repository.remoteHead(), repository.base);
+  });
+}

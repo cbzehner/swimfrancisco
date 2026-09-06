@@ -7,7 +7,7 @@ name: ci
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'auto/schedules/**']
   pull_request:
 
 permissions:

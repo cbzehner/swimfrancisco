@@ -15,6 +15,7 @@ unavailability. These tests guard the v2 boundaries.
 from __future__ import annotations
 
 import json
+import subprocess
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
@@ -171,6 +172,115 @@ def test_concurrent_api_requests_cannot_overbook_budget(tmp_path) -> None:
         identifiers = list(workers.map(reserve, range(8)))
     assert sum(identifier is not None for identifier in identifiers) == 1
     assert len(json.loads(path.read_text())["requests"]) == 1
+
+
+@pytest.fixture
+def monthly_budget(tmp_path):
+    remote = tmp_path / "origin.git"
+    repo = tmp_path / "repo"
+    def git(*args, cwd=tmp_path):
+        return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, check=True).stdout.strip()
+    git("init", "--bare", "--initial-branch=main", str(remote))
+    git("clone", str(remote), str(repo))
+    git("config", "user.name", "Budget test", cwd=repo)
+    git("config", "user.email", "test@example.invalid", cwd=repo)
+    (repo / "baseline.txt").write_text("baseline\n")
+    git("add", "baseline.txt", cwd=repo)
+    git("commit", "-m", "Baseline", cwd=repo)
+    git("push", "origin", "main", cwd=repo)
+    budget = openai_provider.MonthlySpendBudget(repo, 1)
+    return budget, git, remote
+
+
+def test_monthly_accounting_requires_explicit_initialization(monthly_budget):
+    budget, git, remote = monthly_budget
+    with pytest.raises(ValueError, match="initialization"):
+        budget.reserve("2026-09", "1-1")
+    budget.initialize()
+    with pytest.raises(ValueError, match="must not be reset"):
+        budget.initialize()
+    before = git("rev-parse", "HEAD", cwd=budget.repo_root)
+    receipt = budget.reserve("2026-09", "1-1")
+    assert receipt["limit_microusd"] == 1_000_000
+    assert git("rev-parse", "HEAD", cwd=budget.repo_root) == before
+    assert git("status", "--porcelain", cwd=budget.repo_root) == ""
+    assert git("rev-parse", "refs/heads/main", cwd=remote) == before
+
+
+def test_monthly_budget_retains_interrupted_runs_and_survives_new_instances(monthly_budget):
+    budget, _, _ = monthly_budget
+    budget.initialize()
+    receipt = budget.reserve("2026-09", "1-1")
+    restarted = openai_provider.MonthlySpendBudget(budget.repo_root, 1)
+    with pytest.raises(ValueError, match="exhausted"):
+        restarted.reserve("2026-09", "2-1")
+    with pytest.raises(ValueError, match="already has"):
+        restarted.reserve("2026-09", "1-1")
+    restarted.settle(receipt, budget.repo_root / "missing-run-ledger.json")
+    assert restarted._load()[1]["months"]["2026-09"]["runs"]["1-1"]["charged_microusd"] == 1_000_000
+    assert restarted.reserve("2026-10", "3-1")["limit_microusd"] == 1_000_000
+    assert set(restarted._load()[1]["months"]) == {"2026-09", "2026-10"}
+
+
+def test_monthly_settlement_releases_only_recorded_unspent_allowance(monthly_budget, tmp_path):
+    budget, _, _ = monthly_budget
+    budget.initialize()
+    receipt = budget.reserve("2026-09", "1-1")
+    ledger = tmp_path / "run.json"
+    ledger.write_text(json.dumps({"limit_microusd": 1_000_000, "requests": [
+        {"id": "request", "reserved_microusd": 300_000, "charged_microusd": 250_000, "status": "completed"},
+    ]}))
+    budget.settle(receipt, ledger)
+    with pytest.raises(ValueError, match="already settled"):
+        budget.settle(receipt, ledger)
+    assert budget.reserve("2026-09", "2-1")["limit_microusd"] == 750_000
+    with pytest.raises(ValueError, match="exhausted"):
+        budget.reserve("2026-09", "3-1")
+
+
+@pytest.mark.parametrize("ledger", [
+    {"limit_microusd": 1_000_000, "requests": [{"charged_microusd": -1}]},
+    {"limit_microusd": 1_000_000, "requests": [{"charged_microusd": 2_000_000}]},
+    {"limit_microusd": 1_000_000, "requests": [], "blocked": True},
+    {"limit_microusd": 10_000_000, "requests": []},
+    {"limit_microusd": 1_000_000, "requests": ["malformed"]},
+    {"limit_microusd": 1_000_000, "requests": [{"id": "request", "reserved_microusd": 300_000, "charged_microusd": 0, "status": "reserved"}]},
+])
+def test_invalid_run_accounting_blocks_later_months(monthly_budget, tmp_path, ledger):
+    budget, _, _ = monthly_budget
+    budget.initialize()
+    receipt = budget.reserve("2026-09", "1-1")
+    path = tmp_path / "run.json"
+    path.write_text(json.dumps(ledger))
+    with pytest.raises(ValueError, match="blocked"):
+        budget.settle(receipt, path)
+    with pytest.raises(ValueError, match="blocked"):
+        budget.reserve("2026-10", "2-1")
+
+
+def test_monthly_approval_cannot_silently_reset_existing_limit(monthly_budget):
+    budget, _, _ = monthly_budget
+    budget.initialize()
+    budget.reserve("2026-09", "1-1", 0.5)
+    changed = openai_provider.MonthlySpendBudget(budget.repo_root, 10)
+    with pytest.raises(ValueError, match="differs"):
+        changed.reserve("2026-09", "2-1")
+
+
+def test_concurrent_budget_writers_cannot_both_reserve_the_last_allowance(monthly_budget, monkeypatch):
+    budget, _, _ = monthly_budget
+    budget.initialize()
+    competing = openai_provider.MonthlySpendBudget(budget.repo_root, 1)
+    original_save = budget._save
+
+    def race(parent, state, message):
+        competing.reserve("2026-09", "2-1")
+        original_save(parent, state, message)
+
+    monkeypatch.setattr(budget, "_save", race)
+    with pytest.raises(ValueError, match="no paid call is authorized"):
+        budget.reserve("2026-09", "1-1")
+    assert set(competing._load()[1]["months"]["2026-09"]["runs"]) == {"2-1"}
 
 
 def test_ambiguous_source_requires_original_image_and_reserves_its_cost() -> None:

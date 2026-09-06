@@ -74,6 +74,43 @@ blocks later calls. This local ledger does not yet establish a monthly limit
 across separate Actions runs. Recurring OpenAI automation remains disabled until
 the operator approves that limit and durable accounting is connected.
 
+The durable accounting implementation stores one `budget.json` on the separate
+`schedule-budget` branch. That branch stores accounting only; it cannot publish
+site content and does not match the CI publication-branch pattern. An operator
+must initialize it once, after approving `SCHEDULES_MONTHLY_BUDGET_USD`. A missing
+branch blocks later reservations rather than creating a fresh allowance.
+Each UTC calendar month records its approved limit. Each Actions run/attempt
+reserves at most $1, or the smaller remaining allowance, before model calls.
+The request ledger enforces that run allowance. Settlement releases only the
+unused amount established by a valid ledger. Interrupted runs retain their
+reservation; invalid accounting blocks subsequent paid runs. A changed monthly
+limit cannot silently reset the current month's ledger.
+
+All accounting updates use ordinary fast-forward Git pushes. Competing writers
+cannot both reserve the same remaining funds. Local tests exercise that race,
+process restart, missing accounting, month rollover, and malformed run ledgers.
+No remote accounting branch has been created and the workflow does not yet call
+these commands:
+
+```sh
+just schedules budget initialize
+just schedules budget reserve --run-id ACTIONS_RUN_ID-ACTIONS_RUN_ATTEMPT --output tmp/api-budget
+just schedules budget settle --directory tmp/api-budget
+```
+
+`scripts/check-build-ci.mjs` now shares its exact-commit CI lookup between the
+main deployment gate and temporary branches named
+`auto/schedules/<run>-<attempt>-<build>`. CI accepts that branch prefix. Its
+`promote BASE BRANCH` command requires one generated commit above the recorded
+main head, an explicit file allowlist, regular files, and a clean tracked tree.
+It pushes the temporary branch, waits for that branch's successful CI run, and
+fast-forwards main only if main still equals the recorded base. Stale heads
+return exit code 2 so the workflow can rebuild and recheck. Failed checks,
+unexpected paths, symlinks, and concurrent main updates never authorize a main
+push. Tests use local bare repositories; they do not replace a hosted CI and
+deployment trial. Workflow integration still must validate paths before commit,
+bound rebuilds, and report success only after live verification.
+
 The API adapter and the benchmark share the same transport and pricing code.
 Historical CLI/API comparisons use their archived prompts so a production
 prompt change cannot silently change an earlier experiment's contract. New
