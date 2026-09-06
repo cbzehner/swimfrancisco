@@ -2,7 +2,7 @@
 
 **Author:** TBD
 **Date:** 2026-08-20
-**Status:** Weekly checks and $20/month approved; reference sign-off and hosted trial pending
+**Status:** Reference spot-check approved; extraction-only trial complete; cutover held after Cloudflare deployment failure, automation disabled
 **Audience:** Operators of the schedule extract/review pipeline
 
 ---
@@ -266,8 +266,9 @@ independent source verification; the legacy grounding percentage cannot approve
 an update. Manual human repair remains explicit. The runner, durable accounting,
 checked promotion, and live browser verification are connected but not enabled.
 Production credentials are configured, and the operator approved $20/month.
-Human reference sign-off and a hosted extraction/publication trial remain release
-requirements. See the
+The operator confirmed the North Beach summer and Garfield maintenance samples
+on 2026-09-06; other reference transcriptions remain agent-checked. Hosted
+extraction/publication trials remain release requirements. See the
 enablement checklist in `docs/schedules.md`.
 
 References: [protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches),

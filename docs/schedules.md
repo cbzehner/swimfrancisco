@@ -332,7 +332,9 @@ Do not gate on "require improvement" against a CI-attested fall grid.
 transcriptions for North Beach summer, Hamilton fall, Balboa fall, and Balboa interim. These are
 agent-checked development references, **not human attestations**. They contain
 97 weekly sessions and four effective windows. They never replace
-`reviewed.json`, and no publication command reads them. Human sign-off is pending.
+`reviewed.json`, and no publication command reads them. On 2026-09-06 the operator
+confirmed the North Beach summer sample and the separate Garfield maintenance
+sample. Other reference transcriptions remain agent-checked, not human-approved.
 
 The four documents were checked as full pages with Poppler. Do not use macOS
 Quick Look thumbnails as reference images: the previous Balboa interim thumbnail
@@ -1181,7 +1183,8 @@ source checks, scores, and conservative budget accounting offline.
 
 The original $10 approval has $0.658269 left after conservative accounting.
 Total estimated API cost across the five API comparisons is $8.913187, not an
-invoice total. No recurring monthly allowance has been approved.
+invoice total. No recurring monthly allowance had been approved at the time of
+these benchmark runs; the later automation allowance is recorded below.
 
 Portable evidence:
 
@@ -1192,8 +1195,10 @@ Portable evidence:
 
 ## Autonomous extraction and publication
 
-The weekly workflow is implemented but remains disabled pending reference review
-and a hosted trial. The operator approved a $20/month API ceiling on 2026-09-06;
+The operator confirmed the North Beach summer and Garfield maintenance reference
+samples on 2026-09-06 and approved the hosted cutover trials. Automation was
+disabled again after the publication trial's Cloudflare deployment failed.
+The operator approved a $20/month API ceiling on 2026-09-06;
 this is a limit, not a spending target. It replaces the Gemini/PR workflow;
 verified updates do not use a rolling publication PR. Unclear closure notices
 use a separate draft review PR, as approved on 2026-09-06.
@@ -1209,6 +1214,46 @@ $4–$5 per calendar month, with additional room under the $20 ceiling for trial
 and manual reruns. Unchanged source/configuration pairs reuse cached extraction
 without model calls. Failed or interrupted requests can retain their maximum
 reservation, so the accounting total can exceed the eventual API invoice.
+
+### Cost evidence and proposed allowance change (2026-09-06)
+
+The extraction-only hosted trial `34049718694` made no API requests and settled
+at $0. All ten PDF inputs were held by source closure checks; this is not a
+measurement of successful extraction cost or proof of hosted API access.
+
+The pinned-model physical-pool-label benchmark contains 18 schedule calls and
+three closure-flyer calls. Schedule calls cost $0.067072–$0.161904 each from
+reported usage, including reasoning and cached-input discounts. Their
+conservative pre-request reservations were $0.330165–$0.397480. The three
+closure-flyer calls cost $0.013755–$0.014835 each. These are API estimates, not
+invoice totals. The stored $5/million input, $0.50/million cached input, and
+$30/million output rates still match [official standard pricing](https://developers.openai.com/api/docs/pricing)
+checked on 2026-09-06. No model or request limit changed for cutover.
+
+Ten similar newly changed schedules would therefore cost roughly $0.67–$1.62
+without retries, while two attempts per document would reserve roughly
+$6.60–$7.95 in total. These are planning examples, not measured production
+workloads. Unchanged cached inputs and sources held before extraction cost $0
+in model calls. Four or five weeks of checks do not imply four or five complete
+re-extractions.
+
+Recompute the per-document benchmark estimates without model calls:
+
+```sh
+unzip -p benchmarks/pdf/physical-pool-labels-2026-09-05.zip results.json |
+  jq 'group_by(.reference) | map({reference: .[0].reference,
+    calls: length, min_usd: (map(.cost_usd) | min),
+    max_usd: (map(.cost_usd) | max),
+    reserve_usd: ((map(.reserved_microusd) | max) / 1000000)})'
+```
+
+Recommendation, not implemented: replace the fixed $1 run allowance with the
+sum of conservative request estimates for eligible uncached PDFs, including
+the permitted transient retry, bounded by the remaining $20 monthly allowance.
+Report expected cost separately from reserved cost, and release unused
+reservations only after valid usage settlement. Keep holds, request limits,
+and monthly accounting intact. The $1 cutover limit remains until this change
+is approved and tested.
 
 ### Run contract
 
@@ -1277,9 +1322,11 @@ before enabling runs:
 
 - `SCHEDULES_MONTHLY_BUDGET_USD=20` is configured in GitHub, matching the approved recurring ceiling.
   The original $10 benchmark trial remains a separate historical allowance.
-- Complete the required human reference review. Agent visual checks are not
-  human sign-off. Ambiguous closure scope remains a hold until its policy is
-  explicitly approved and tested.
+- The operator confirmed a limited human reference spot-check on 2026-09-06:
+  North Beach summer (June 9–August 15, 30 weekly sessions, June 19 and July 4
+  closures) and Garfield maintenance (August 14–September 7, no sessions).
+  This does not attest the other reference answers or the Garfield fall grid.
+  Ambiguous closure scope remains a hold and produces a draft review PR.
 - Store `OPENAI_API_KEY` and a repository-scoped `SCHEDULES_BOT_TOKEN` as Actions
   secrets. The publication token needs Contents read/write and must trigger CI;
   the built-in Actions token is not its publication fallback. The workflow uses
@@ -1294,6 +1341,35 @@ before enabling runs:
   CI, main promotion, and the exact live deployment before declaring autonomy.
 
 ### Evidence and recovery
+
+The [extraction-only cutover trial](https://github.com/cbzehner/swimfrancisco/actions/runs/34049718694)
+completed on 2026-09-06 with no API requests and a settled $0 charge. It held
+ten PDF inputs for closure review and skipped North Beach's split PDFs. Direct
+sources returned one successful extraction, seven unchanged results, and seven
+failures (six HTTP 403 responses and one missing expected page marker).
+
+The [publication cutover trial](https://github.com/cbzehner/swimfrancisco/actions/runs/34059756714)
+passed [candidate CI](https://github.com/cbzehner/swimfrancisco/actions/runs/34059851327)
+and pushed `3dcd27bbaecf72081b1fb976cf43c53d11975af3` directly to main.
+[Main CI](https://github.com/cbzehner/swimfrancisco/actions/runs/34060044948) also
+passed. Its generated changes updated source captures and registry metadata,
+not published swimming hours. Cloudflare build
+`df74342f-f9f0-4edc-b255-03b765b98050` failed; production still served `8ba8e46`
+when the failure was checked. This is not a successful autonomous publication.
+`SCHEDULES_AUTOMATION_ENABLED` was set back to `false`. The available local
+Cloudflare OAuth credential could not read build logs (HTTP 403), so the build
+failure's cause requires log access; do not assume a cause from its duration.
+
+The publication runner reached its bounded live-verification timeout and
+recorded `status=failed`, with no confirmed live updates. It made no model
+requests and settled at $0, leaving the full $20 monthly allowance available.
+The separate closure-review and operator-report jobs both succeeded. Draft PRs
+#95–#104 contain only `closure-review.md`; their source PDFs were already in
+the repository. A local replay against the retained publication evidence reused
+all ten PRs without changing any PR head or main. The current failure is tracked
+in [operator issue #94](https://github.com/cbzehner/swimfrancisco/issues/94).
+After repairing deployment, repeat the checked publication trial and verify
+the exact live revision before leaving weekly automation enabled.
 
 Each run retains `tmp/automation/result.json`, per-build discovery and publication
 reports, source PDFs, provider artifacts, accepted snapshots, and sanitized
