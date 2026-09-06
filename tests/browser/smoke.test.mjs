@@ -18,11 +18,14 @@ import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createServer } from "node:http";
-import { mkdtempSync, readFileSync, rmSync, existsSync, statSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync, existsSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, extname, resolve } from "node:path";
 
 import { webkit, chromium, devices } from "playwright-core";
+import { verifyPoolPage } from "../../scripts/smoke-production.mjs";
+import { buildSpotRecord } from "../../scripts/generate-agent-data.mjs";
+import { splitFrontMatter } from "../../scripts/lib/spot-frontmatter.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..", "..");
 const MIME = {
@@ -113,6 +116,28 @@ async function fixturePage(t, engineName, html, { time = "2026-09-24T18:59:00Z",
 }
 
 for (const engine of ["webkit", "chromium"]) {
+  test(`[${engine}] production browser verifier checks every pool against canonical content`, async (t) => {
+    const context = await browsers[engine].newContext({ timezoneId: "Asia/Tokyo" });
+    t.after(() => context.close());
+    const page = await context.newPage();
+    const instant = new Date("2026-09-06T03:54:00Z");
+    await page.clock.setFixedTime(instant);
+    for (const name of readdirSync(join(ROOT, "content/spots")).filter((name) => /^[a-z0-9-]+\.md$/.test(name))) {
+      const path = join(ROOT, "content/spots", name);
+      const { front, body } = splitFrontMatter(readFileSync(path, "utf8"), path);
+      const expected = buildSpotRecord(front, body, path);
+      if (expected.type !== "pool") continue;
+      await page.goto(`${baseURL}/spots/${expected.slug}/`);
+      await verifyPoolPage(page, expected, instant);
+    }
+    const path = join(ROOT, "content/spots/mission-community-pool.md");
+    const { front, body } = splitFrontMatter(readFileSync(path, "utf8"), path);
+    const expected = buildSpotRecord(front, body, path);
+    await page.goto(`${baseURL}/spots/${expected.slug}/`);
+    await page.locator(".today-block").evaluate((block) => { block.dataset.day = "friday"; });
+    await assert.rejects(verifyPoolPage(page, expected, instant), /wrong Pacific weekday/);
+  });
+
   for (const viewport of [{ width: 1280, height: 900 }, { width: 320, height: 700 }]) {
     test(`[${engine}/${viewport.width}px] real map fills the viewport and markers open popups`, async (t) => {
       const context = await browsers[engine].newContext({ viewport, reducedMotion: "reduce" });

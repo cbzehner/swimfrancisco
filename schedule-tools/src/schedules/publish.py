@@ -14,7 +14,7 @@ from .discover import view_id_from_url
 from .fetch import fetch_pdf
 from .grounding import source_publication_coverage
 from .merge import _split_frontmatter, read_schedule_snapshot
-from .models import GroundingSummary, SourceStatus
+from .models import SourceStatus
 from .paths import (
     CONTENT_SPOTS_DIR,
     DATA_DIR,
@@ -24,7 +24,6 @@ from .paths import (
     all_review_dirs,
     parse_review_dir_name,
 )
-from .pipeline import GROUNDING_MIN_RATIO
 from .providers.openai_provider import verify_artifact
 from .registry import load_registry
 from .review import (
@@ -176,7 +175,6 @@ def publish_eligible(
     *,
     candidate: ReviewCandidate,
     payload: dict,
-    grounding: GroundingSummary | None,
     prior_sessions_count: int,
     latest_effective_start: str | None,
     source_kind: str,
@@ -187,7 +185,7 @@ def publish_eligible(
     source_pdf_path: Path | None,
     kill_switch: bool = False,
     require_unique_pin: bool = False,
-    require_grounding: bool = True,
+    attested_by: str = "ci",
     pin_url: str | None = None,
     source_pdf_url: str | None = None,
     decision: dict | None = None,
@@ -229,26 +227,22 @@ def publish_eligible(
         first = result.violations[0]
         return _refuse(first.code if first.code else "validate_failed", first.message)
 
+    grid = _source_pdf_gate(source_pdf_path)
+    if not grid.ok:
+        return grid
+
     artifact = json.loads(_pick_provider_artifact(candidate.review_dir).read_text())
-    if require_grounding and artifact.get("provider") == "openai":
+    if attested_by != "human":
+        if artifact.get("provider") != "openai":
+            return _refuse("unsupported_provider", "Automatic PDF publication requires the production OpenAI artifact")
+        if artifact.get("payload") != payload:
+            return _refuse("source_coverage_failed", "Candidate differs from the extraction artifact")
         try:
             coverage = verify_artifact(artifact, source_pdf_path.read_bytes(), PROMPT_PATH.read_text()) if source_pdf_path else None
         except Exception as error:  # Malformed PDF or artifact must hold this pool, not bypass the gate.
             return _refuse("source_coverage_failed", str(error))
         if not coverage or not coverage["ok"]:
             return _refuse("source_coverage_failed", "Extraction differs from the independent source inventory")
-    elif require_grounding:
-        if grounding is None:
-            return _refuse("grounding_unavailable", "provider JSON is missing a grounding key")
-        if grounding.ratio < GROUNDING_MIN_RATIO:
-            return _refuse(
-                "grounding_coverage_low",
-                f"grounding ratio {grounding.ratio:.2f} is below {GROUNDING_MIN_RATIO}",
-            )
-
-    grid = _source_pdf_gate(source_pdf_path)
-    if not grid.ok:
-        return grid
 
     basis = payload.get("schedule_basis")
     if basis not in _AUTO_PUBLISHABLE_BASES:
@@ -568,15 +562,9 @@ def _publish_unique_grid(
     if entry is None:
         raise PublishRefuse("not_rec_park", f"{candidate.slug} is not in the registry")
 
-    try:
-        artifact = json.loads(_pick_provider_artifact(candidate.review_dir).read_text())
-    except (OSError, json.JSONDecodeError, FileNotFoundError) as exc:
-        raise PublishRefuse("identity_mismatch", "no provider JSON in review dir") from exc
-
     decision = decisions.get(candidate.slug)
     source_pdf_url = candidate.source_url or None
     payload = dict(candidate.payload)
-    grounding = _grounding_from_artifact(artifact)
     md_path = content_spots_dir / f"{candidate.slug}.md"
     tables = _schedule_tables(md_path)
     prior_sessions_count = 0
@@ -588,7 +576,6 @@ def _publish_unique_grid(
     eligibility = publish_eligible(
         candidate=candidate,
         payload=payload,
-        grounding=grounding,
         prior_sessions_count=prior_sessions_count,
         latest_effective_start=latest_effective_start(md_path),
         source_kind=entry.source_kind,
@@ -622,7 +609,6 @@ def publish_sequential_slug(
     quarantined_shas: frozenset[str],
     entries: dict,
     attested_by: str = "ci",
-    require_grounding: bool = True,
     envelopes: dict[str, dict] | None = None,
     data_root: Path | None = None,
     blocking_slugs: frozenset[str] = frozenset(),
@@ -709,17 +695,12 @@ def publish_sequential_slug(
 
     prepared: list[tuple[ReviewCandidate, dict, Eligibility]] = []
     for candidate in ordered:
-        try:
-            artifact = json.loads(_pick_provider_artifact(candidate.review_dir).read_text())
-        except (OSError, json.JSONDecodeError, FileNotFoundError):
-            artifact = {}
         payload = dict(candidate.payload)
         source_pdf_url = candidate.source_url or None
         source_pdf_path = candidate.source_path if candidate.source_path.exists() else None
         eligibility = publish_eligible(
             candidate=candidate,
             payload=payload,
-            grounding=_grounding_from_artifact(artifact),
             prior_sessions_count=prior_sessions_count,
             latest_effective_start=frozen_latest,
             source_kind=entry.source_kind,
@@ -729,7 +710,7 @@ def publish_sequential_slug(
             has_prior_schedule_window=len(tables) > 0,
             source_pdf_path=source_pdf_path,
             require_unique_pin=False,
-            require_grounding=require_grounding,
+            attested_by=attested_by,
             pin_url=entry.pdf_url,
             source_pdf_url=source_pdf_url,
             decision=decision,
@@ -857,18 +838,6 @@ def _publish_closure_for_decision(
         attested_at=attested_at,
         quarantined_shas=quarantined_shas,
         data_root=data_root,
-    )
-
-
-def _grounding_from_artifact(artifact: dict) -> GroundingSummary | None:
-    if "grounding" not in artifact:
-        return None
-    raw = artifact.get("grounding")
-    if not isinstance(raw, dict):
-        return None
-    return GroundingSummary(
-        grounded_count=int(raw.get("grounded_count") or 0),
-        total=int(raw.get("total") or 0),
     )
 
 

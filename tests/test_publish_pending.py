@@ -11,7 +11,7 @@ from click.testing import CliRunner
 
 from schedules.cli import cli
 from schedules.fetch import FetchResult
-from schedules.models import GroundingSummary, PoolEntry
+from schedules.models import PoolEntry
 from schedules.publish import (
     Eligibility,
     latest_effective_start,
@@ -59,10 +59,6 @@ def _payload(
     }
 
 
-def _grounding(grounded: int, total: int) -> GroundingSummary:
-    return GroundingSummary(grounded_count=grounded, total=total)
-
-
 def _entry(slug: str = "hamilton-pool", *, kind: str = "sfrecpark_pdf", status: str = "published") -> PoolEntry:
     return PoolEntry(
         slug=slug,
@@ -79,7 +75,7 @@ def _write_candidate(
     sha: str = SHA,
     *,
     payload: dict | None = None,
-    grounding: dict | None | object = Ellipsis,
+    source_verified: bool = True,
     source_pdf: bool = True,
     fetch_date: str = "2026-08-19",
     source_pdf_url: str = "https://sfrecpark.org/DocumentCenter/View/29800",
@@ -88,16 +84,13 @@ def _write_candidate(
     review_dir = data / slug / f"{fetch_date}-{sha[:12]}"
     review_dir.mkdir(parents=True, exist_ok=True)
     artifact: dict = {
+        "provider": "openai",
+        "test_source_verified": source_verified,
         "pdf_sha256": sha,
         "source_pdf_url": source_pdf_url,
         "payload": payload,
     }
-    if grounding is Ellipsis:
-        n = len(payload.get("sessions") or [])
-        artifact["grounding"] = {"grounded_count": n, "total": n, "ratio": 1.0}
-    elif grounding is not None:
-        artifact["grounding"] = grounding
-    (review_dir / "gemini-model.json").write_text(json.dumps(artifact))
+    (review_dir / "openai-fixture.json").write_text(json.dumps(artifact))
     source_path = review_dir / "source.pdf"
     if source_pdf:
         source_path.write_bytes(b"%PDF-1.4\n%%EOF\n")
@@ -152,11 +145,10 @@ def _seed_content(
 
 
 def _kwargs(candidate: ReviewCandidate, **overrides) -> dict:
-    payload = json.loads((candidate.review_dir / "gemini-model.json").read_text())["payload"]
+    payload = json.loads((candidate.review_dir / "openai-fixture.json").read_text())["payload"]
     defaults = {
         "candidate": candidate,
         "payload": payload,
-        "grounding": _grounding(5, 5),
         "prior_sessions_count": 5,
         "latest_effective_start": "2026-03-17",
         "source_kind": "sfrecpark_pdf",
@@ -186,6 +178,7 @@ def iso(tmp_path, monkeypatch) -> SimpleNamespace:
     monkeypatch.setattr("schedules.publish.extract_page_texts", lambda _bytes: ["Monday"])
     monkeypatch.setattr("schedules.publish.load_registry", lambda: [_entry()])
     monkeypatch.setattr("schedules.publish.load_quarantine", lambda: frozenset())
+    monkeypatch.setattr("schedules.publish.verify_artifact", lambda artifact, *_: {"ok": artifact.get("test_source_verified", False)})
     return SimpleNamespace(data=data, content=content, tmp=tmp)
 
 
@@ -196,20 +189,23 @@ def test_unique_grid_eligible(iso):
     assert result.code is None
 
 
-def test_grounding_0_89_refuses(iso):
-    candidate = _write_candidate(iso.data)
-    result = publish_eligible(**_kwargs(candidate, grounding=_grounding(89, 100)))
+def test_incomplete_source_refuses(iso):
+    candidate = _write_candidate(iso.data, source_verified=False)
+    result = publish_eligible(**_kwargs(candidate))
     assert result.ok is False
-    assert result.code == "grounding_coverage_low"
+    assert result.code == "source_coverage_failed"
 
 
-def test_grounding_0_90_eligible(iso):
+def test_legacy_provider_refuses_even_with_perfect_grounding(iso):
     candidate = _write_candidate(iso.data)
-    result = publish_eligible(**_kwargs(candidate, grounding=_grounding(90, 100)))
-    assert result.ok is True
+    path = candidate.review_dir / "openai-fixture.json"
+    artifact = json.loads(path.read_text())
+    artifact.update(provider="gemini", grounding={"ratio": 1.0, "total": 5, "grounded_count": 5})
+    path.write_text(json.dumps(artifact))
+    assert publish_eligible(**_kwargs(candidate)).code == "unsupported_provider"
 
 
-def test_grounding_total_zero_eligible(iso):
+def test_verified_closure_without_sessions_eligible(iso):
     payload = _payload(n=0, basis="temporarily_closed") | {
         "closures": [{"start": "2026-08-18", "end": "2026-12-12", "reason": "Maintenance"}],
     }
@@ -218,16 +214,18 @@ def test_grounding_total_zero_eligible(iso):
         **_kwargs(
             candidate,
             payload=payload,
-            grounding=_grounding(0, 0),
         )
     )
     assert result.ok is True
 
 
-def test_missing_grounding_refuses(iso):
+def test_missing_source_evidence_refuses(iso, monkeypatch):
     candidate = _write_candidate(iso.data)
-    result = publish_eligible(**_kwargs(candidate, grounding=None))
-    assert result.code == "grounding_unavailable"
+    def missing(*args, **kwargs):
+        raise ValueError("Missing evidence")
+    monkeypatch.setattr("schedules.publish.verify_artifact", missing)
+    result = publish_eligible(**_kwargs(candidate))
+    assert result.code == "source_coverage_failed"
 
 
 def test_drop_to_zero_catastrophic_unless_temporarily_closed(iso):
@@ -238,15 +236,14 @@ def test_drop_to_zero_catastrophic_unless_temporarily_closed(iso):
     dropped = publish_eligible(**_kwargs(candidate, payload=empty, prior_sessions_count=8))
     assert dropped.code == "sessions_dropped_to_zero"
     assert validate(empty, prior_sessions_count=8).catastrophic is True
-    allowed = publish_eligible(
-        **_kwargs(candidate, payload=closed, prior_sessions_count=8, grounding=_grounding(0, 0))
-    )
+    candidate = _write_candidate(iso.data, payload=closed)
+    allowed = publish_eligible(**_kwargs(candidate, prior_sessions_count=8))
     assert allowed.ok is True
 
 
 def test_closure_without_dates_refuses_even_with_perfect_grounding(iso):
     candidate = _write_candidate(iso.data, payload=_payload(n=0, basis="temporarily_closed"))
-    result = publish_eligible(**_kwargs(candidate, grounding=_grounding(0, 0)))
+    result = publish_eligible(**_kwargs(candidate))
     assert result.code == "closure_notice_missing_dates"
 
 
@@ -262,7 +259,7 @@ def test_duplicate_sessions_refuse_even_with_perfect_grounding(iso):
     payload = _payload()
     payload["sessions"].append(payload["sessions"][0].copy())
     candidate = _write_candidate(iso.data, payload=payload)
-    assert publish_eligible(**_kwargs(candidate, grounding=_grounding(6, 6))).code == "duplicate_session"
+    assert publish_eligible(**_kwargs(candidate)).code == "duplicate_session"
 
 
 def test_too_few_refuses(iso):
@@ -325,8 +322,8 @@ def test_no_merge_baseline_refuses(iso):
 
 
 def test_effective_start_regressed_uses_max_window_not_active(iso):
-    candidate = _write_candidate(iso.data)
     payload = _payload(start="2026-04-01")
+    candidate = _write_candidate(iso.data, payload=payload)
     result = publish_eligible(
         **_kwargs(candidate, payload=payload, latest_effective_start="2026-08-18")
     )
@@ -334,12 +331,17 @@ def test_effective_start_regressed_uses_max_window_not_active(iso):
 
 
 def test_session_count_shift_is_eligible(iso):
-    candidate = _write_candidate(iso.data)
     payload = _payload(n=7)
+    candidate = _write_candidate(iso.data, payload=payload)
     result = publish_eligible(
-        **_kwargs(candidate, payload=payload, prior_sessions_count=5, grounding=_grounding(7, 7))
+        **_kwargs(candidate, payload=payload, prior_sessions_count=5)
     )
     assert result.ok is True
+
+
+def test_payload_cannot_differ_from_verified_artifact(iso):
+    candidate = _write_candidate(iso.data)
+    assert publish_eligible(**_kwargs(candidate, payload=_payload(n=6))).code == "source_coverage_failed"
 
 
 def test_identity_mismatch_provider_sha(iso):
@@ -753,10 +755,10 @@ def test_unique_grid_refuses_not_current_pin(iso):
     ).exists()
 
 
-def test_grounding_0_89_does_not_write(iso):
+def test_incomplete_source_does_not_write(iso):
     _write_candidate(
         iso.data,
-        grounding={"grounded_count": 89, "total": 100, "ratio": 0.89},
+        source_verified=False,
     )
     _seed_content(iso.content, "hamilton-pool")
     count, report = publish_pending_all(
@@ -764,7 +766,7 @@ def test_grounding_0_89_does_not_write(iso):
     )
     assert count == 0
     refused = json.loads(report.with_name("publish-pending.json").read_text())["refused"]
-    assert refused[0]["code"] == "grounding_coverage_low"
+    assert refused[0]["code"] == "source_coverage_failed"
     assert not (iso.data / "hamilton-pool" / f"2026-08-19-{SHA[:12]}" / "reviewed.json").exists()
 
 
@@ -902,7 +904,7 @@ def test_sequential_sitting_does_not_refuse_not_current_pin(iso, monkeypatch):
     assert 'effective_start = "2026-08-29"' in rendered
 
 
-def test_sequential_partial_grounding_writes_nothing(iso, monkeypatch):
+def test_sequential_incomplete_source_writes_nothing(iso, monkeypatch):
     _write_candidate(
         iso.data,
         slug="sava-pool",
@@ -915,7 +917,7 @@ def test_sequential_partial_grounding_writes_nothing(iso, monkeypatch):
         slug="sava-pool",
         sha=SHA2,
         payload=_payload(n=5, start="2026-08-29", end="2026-12-12"),
-        grounding={"grounded_count": 89, "total": 100, "ratio": 0.89},
+        source_verified=False,
         source_pdf_url=SAVA_FALL2,
         fetch_date="2026-08-20",
     )
@@ -931,7 +933,7 @@ def test_sequential_partial_grounding_writes_nothing(iso, monkeypatch):
     assert count == 0
     refused = json.loads(report.with_name("publish-pending.json").read_text())["refused"]
     assert refused[0]["code"] == "sequential_partial"
-    assert "grounding_coverage_low" in (refused[0].get("code", "") + report.read_text())
+    assert "source_coverage_failed" in (refused[0].get("code", "") + report.read_text())
     assert not (
         iso.data / "sava-pool" / f"2026-08-19-{SHA[:12]}" / "reviewed.json"
     ).exists()

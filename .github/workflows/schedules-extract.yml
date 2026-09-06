@@ -1,110 +1,54 @@
 name: schedules-extract
 
-# Discovers Rec & Park PDF URLs, extracts artifacts, then
-# `schedules publish-pending` attests eligible unique session grids
-# (`reviewed.json` with `attested_by: ci`) and projects `content/spots/`.
-# This workflow does edit `content/spots/` via publish-pending. Extract
-# itself still does not write content. FLAG URL choice is not auto-adopted.
-# Unique-grid pools auto-merge on green `check`.
-#
-# Kill switch: repo variable `SCHEDULES_AUTO_PROJECT=false` (or
-# workflow_dispatch `auto_project=false`) skips publish-pending; the PR
-# is left open with `needs-schedule-review`. Default is on (unset ≠ false).
-# Do not pass `--url` or `--adopt` on extract/discover invocations.
-#
-# Prerequisites: a SCHEDULES_BOT_TOKEN secret (fine-grained PAT,
-# contents+pull-requests read/write — PRs made with the default Actions
-# token never trigger the ci workflow), repo setting "Allow auto-merge",
-# and a branch protection rule on main requiring the `check` status.
-#
-# Public-repo safety: only `schedule` and `workflow_dispatch` triggers
-# (forks cannot trigger workflows that need our secrets). No
-# pull_request_target. Permissions are job-level so pager jobs cannot
-# write contents or pull requests.
-
 on:
   schedule:
-    # Weekly Monday 16:00 UTC = 09:00 PT. Keeps free-tier Actions minutes
-    # under the personal allowance; workflow_dispatch still runs on demand.
-    # Cache-hit weeks with no registry change produce no diff and stop at
-    # the detect step.
-    - cron: '0 16 * * 1'
+    - cron: '0 16 * * *'
   workflow_dispatch:
     inputs:
-      auto_project:
-        description: "Run publish-pending (set false to extract-only)"
+      mode:
+        description: "Extract only, or publish independently verified changes"
         type: choice
-        options: ["true", "false"]
-        default: "true"
+        options: [extract-only, publish]
+        default: extract-only
+
+permissions: {}
 
 concurrency:
   group: schedules-extract
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  ensure-labels:
-    runs-on: ubuntu-latest
-    permissions:
-      issues: write
-    steps:
-      - name: Ensure review and pager labels
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          gh label create needs-schedule-review --force \
-            --color B60205 --description "Schedule extract PR needs a human"
-          gh label create schedules-extract-blocked --force \
-            --color B60205 --description "schedules-extract did not run"
-          gh label create schedules-published --force \
-            --color 0E8A16 --description "CI auto-published Rec & Park grids"
-          gh label create schedules-flagged --force \
-            --color FBCA04 --description "Discover FLAG or publish-pending refuse"
-
   extract:
-    needs: ensure-labels
+    if: github.ref == 'refs/heads/main' && vars.SCHEDULES_AUTOMATION_ENABLED == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 110
     permissions:
       contents: write
-      pull-requests: write
+      actions: read
     env:
-      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-    outputs:
-      preflight_outcome: ${{ steps.token-preflight.outcome }}
-      publish_pending_outcome: ${{ steps.publish-pending.outcome }}
-      flagged_computed: ${{ steps.pager-outputs.outputs.flagged_computed }}
-      flagged_set: ${{ steps.pager-outputs.outputs.flagged_set }}
-      published_slugs: ${{ steps.pager-outputs.outputs.published_slugs }}
-      bulletin_label: ${{ steps.pager-outputs.outputs.bulletin_label }}
-      pr_number: ${{ steps.pager-outputs.outputs.pr_number }}
+      SCHEDULES_AUTOMATION_ENABLED: ${{ vars.SCHEDULES_AUTOMATION_ENABLED }}
+      SCHEDULES_MONTHLY_BUDGET_USD: ${{ vars.SCHEDULES_MONTHLY_BUDGET_USD }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      GITHUB_TOKEN: ${{ github.token }}
     steps:
-      - name: Verify CI-capable publication token
-        id: token-preflight
+      - name: Require an approved budget and CI-capable token
         env:
           SCHEDULES_BOT_TOKEN: ${{ secrets.SCHEDULES_BOT_TOKEN }}
         run: |
-          set -euo pipefail
-          if [ -z "${SCHEDULES_BOT_TOKEN}" ]; then
-            echo "::error::SCHEDULES_BOT_TOKEN is empty."
-            exit 1
-          fi
-          git ls-remote --exit-code \
-            "https://x-access-token:${SCHEDULES_BOT_TOKEN}@github.com/cbzehner/swimfrancisco.git" \
-            HEAD >/dev/null
+          test -n "$SCHEDULES_BOT_TOKEN"
+          test -n "$OPENAI_API_KEY"
+          test -n "$SCHEDULES_MONTHLY_BUDGET_USD"
 
       - uses: actions/checkout@v4
         with:
-          # Pushes and PRs made with the default Actions token do not
-          # trigger other workflows; the PAT makes CI run on the PR.
+          ref: main
+          fetch-depth: 0
           token: ${{ secrets.SCHEDULES_BOT_TOKEN }}
 
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-
-      - name: Install npm dependencies
-        run: npm ci --omit=dev
 
       - uses: actions/setup-python@v5
         with:
@@ -115,363 +59,94 @@ jobs:
           enable-cache: true
           cache-dependency-glob: schedule-tools/uv.lock
 
-      - name: Sync schedule-tools deps
-        run: uv --project schedule-tools sync
+      - run: npm ci
+      - run: uv --project schedule-tools sync --locked
+      - name: Install live browser checks
+        run: node node_modules/playwright-core/cli.js install --with-deps webkit chromium
 
-      - name: Discover Rec & Park PDF URLs
-        id: discover
-        run: uv --project schedule-tools run schedules discover
-
-      - name: Extract direct sources (no content writes)
-        id: extract-direct
-        run: uv --project schedule-tools run schedules extract --direct
-        continue-on-error: true
-
-      - name: Extract PDF sources with Gemini (no content writes)
-        id: extract-gemini
-        # `extract` never writes content/spots/*.md. Provider artifacts under
-        # data/<slug>/.../ ARE written, but only when the cache check fails
-        # (PDF sha changed, or prompt/schema sha changed, or no cached
-        # artifact exists). No --force: pools with fresh artifacts produce
-        # no diff at all. --no-discover: CI discover already wrote the
-        # registry; extract must not be a second writer.
-        run: uv --project schedule-tools run schedules extract --provider gemini --no-discover
-
-      - name: Publish pending unique Rec & Park grids
-        id: publish-pending
-        if: always() && steps.token-preflight.outcome == 'success' && vars.SCHEDULES_AUTO_PROJECT != 'false' && (github.event_name != 'workflow_dispatch' || inputs.auto_project != 'false')
-        run: uv --project schedule-tools run schedules publish-pending
-
-      - name: Run eval against committed reviewed.json
-        if: always() && steps.token-preflight.outcome == 'success'
-        run: uv --project schedule-tools run schedules eval --stdout > tmp/eval.md
-        continue-on-error: true
-
-      - name: Regenerate bulletin fingerprint
-        if: always() && steps.token-preflight.outcome == 'success'
-        # Auto-publish and carried attestations add reviewed.json files; the
-        # bulletin fingerprint/count must track the reviewed set.
-        run: node scripts/generate-bulletin.mjs
-
-      - name: Regenerate i18n artifacts
-        if: always() && steps.token-preflight.outcome == 'success'
-        # `just check` runs `generate-i18n.mjs check`. project() writes English
-        # spots in a slightly different TOML shape; without this step the
-        # rolling PR fails CI and auto-merge never deploys.
-        run: node scripts/generate-i18n.mjs generate
-
-      - name: Publish extraction evidence
-        if: always()
+      - name: Reserve monthly spend before any model call
+        id: reserve
         env:
-          PREFLIGHT_OUTCOME: ${{ steps.token-preflight.outcome }}
-          DISCOVER_OUTCOME: ${{ steps.discover.outcome }}
-          DIRECT_OUTCOME: ${{ steps.extract-direct.outcome }}
-          GEMINI_OUTCOME: ${{ steps.extract-gemini.outcome }}
-          PUBLISH_OUTCOME: ${{ steps.publish-pending.outcome }}
+          RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
         run: |
-          set -euo pipefail
-          failed=0
-          for pass in discover direct gemini; do
-            outcome_var=$(printf '%s_OUTCOME' "${pass^^}")
-            outcome=${!outcome_var:-not-run}
-            if [ "${outcome}" = failure ]; then
-              failed=$((failed + 1))
-            fi
-          done
-          if [ "${PREFLIGHT_OUTCOME}" != success ]; then
-            echo "## Schedule extraction: blocked before extraction" >> "$GITHUB_STEP_SUMMARY"
-            echo "CI-capable publication-token preflight did not pass; no extraction or publication was attempted." >> "$GITHUB_STEP_SUMMARY"
-          elif [ "${failed}" -gt 0 ]; then
-            echo "## Schedule extraction: partial success" >> "$GITHUB_STEP_SUMMARY"
-            echo "${failed} extraction pass(es) failed; inspect the failed pass and report details below." >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "## Schedule extraction: success" >> "$GITHUB_STEP_SUMMARY"
-          fi
-          for pass in discover direct gemini; do
-            outcome_var=$(printf '%s_OUTCOME' "${pass^^}")
-            outcome=${!outcome_var:-not-run}
-            echo "- ${pass}: ${outcome}" >> "$GITHUB_STEP_SUMMARY"
-          done
-          echo "- publish-pending: ${PUBLISH_OUTCOME:-not-run}" >> "$GITHUB_STEP_SUMMARY"
-          for report in tmp/discovery-report.md tmp/extraction-report-direct.md tmp/extraction-report-gemini.md tmp/publish-pending-report.md; do
-            if [ -f "${report}" ]; then
-              echo "## ${report}" >> "$GITHUB_STEP_SUMMARY"
-              cat "${report}" >> "$GITHUB_STEP_SUMMARY"
-            else
-              echo "### ${report}" >> "$GITHUB_STEP_SUMMARY"
-              echo "Report was not produced." >> "$GITHUB_STEP_SUMMARY"
-            fi
-          done
+          uv --project schedule-tools run --locked schedules budget reserve --run-id "$RUN_ID" --output tmp/api-budget
+          node --input-type=module -e '
+            import { readFileSync, appendFileSync } from "node:fs";
+            import { resolve } from "node:path";
+            const receipt = JSON.parse(readFileSync("tmp/api-budget/reservation.json", "utf8"));
+            appendFileSync(process.env.GITHUB_ENV,
+              "SCHEDULES_API_BUDGET_FILE=" + resolve("tmp/api-budget/budget.json") + "\n" +
+              "SCHEDULES_API_BUDGET_USD=" + receipt.limit_microusd / 1000000 + "\n");
+          '
 
-      - name: Upload extraction reports
+      - name: Extract and check publication
+        env:
+          RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+          RUN_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'publish' }}
+        run: uv --project schedule-tools run --locked schedules automate --mode "$RUN_MODE" --run-id "$RUN_ID"
+
+      - name: Settle charges, keeping reservations for missing usage
+        if: always() && steps.reserve.outcome == 'success'
+        run: uv --project schedule-tools run --locked schedules budget settle --directory tmp/api-budget
+
+      - name: Preserve source evidence and publication receipts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: schedule-extraction-reports
+          name: schedule-automation-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            tmp/extraction-report-*.md
-            tmp/discovery-report.md
-            tmp/publish-pending-report.md
+            tmp/automation/
+            tmp/api-budget/reservation.json
+            tmp/api-budget/budget.json
+          retention-days: 90
           if-no-files-found: warn
 
-      - name: Detect new or changed artifacts
-        id: detect
-        if: always() && steps.token-preflight.outcome == 'success'
-        run: |
-          git add data/ schedule-tools/src/schedules/registry.toml content/spots/ schedule-tools/src/schedules/quarantine.toml
-          if git diff --staged --quiet; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "No changes detected; nothing to PR."
-          elif git diff --staged --name-only | grep -qE 'registry.toml|content/spots/|quarantine.toml'; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-            git diff --staged --stat | head -50
-          elif ! uv --project schedule-tools run schedules has-meaningful-staged-data-changes; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "Only metadata-only data changes detected; nothing to PR."
-            git diff --staged --stat | head -50
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-            git diff --staged --stat | head -50
-          fi
-
-      - name: Open or update PR
-        id: open-pr
-        if: always() && steps.token-preflight.outcome == 'success' && steps.detect.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.SCHEDULES_BOT_TOKEN }}
-        run: |
-          set -euo pipefail
-          DATE=$(date +%Y-%m-%d)
-          # One rolling branch: scheduled runs refresh the same PR instead
-          # of piling up parallel week-stamped PRs.
-          BRANCH="auto/schedules-extract"
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          # Always create the branch fresh from current HEAD with the
-          # staged data/, registry.toml, and content/spots/ changes.
-          # Force-push overwrites any prior content; the PR body gets
-          # updated below to reflect the latest state.
-          git checkout -B "${BRANCH}"
-
-          # Generate the PR body BEFORE committing — pr-summary reads
-          # `git diff --staged` to identify what changed, and committing
-          # would clear the index.
-          BODY_FILE=$(mktemp)
-          uv --project schedule-tools run schedules pr-summary > "${BODY_FILE}"
-
-          git commit -m "chore(schedules): auto-extract ${DATE}"
-          git push --force origin "${BRANCH}"
-
-          if EXISTING=$(gh pr list --head "${BRANCH}" --json number --jq '.[0].number') && [ -n "${EXISTING}" ]; then
-            PR_NUMBER="${EXISTING}"
-            gh pr edit "${PR_NUMBER}" \
-              --title "chore(schedules): auto-extract ${DATE}" \
-              --body-file "${BODY_FILE}"
-            echo "Updated existing PR #${PR_NUMBER}"
-          else
-            gh pr create \
-              --head "${BRANCH}" \
-              --base main \
-              --title "chore(schedules): auto-extract ${DATE}" \
-              --body-file "${BODY_FILE}"
-            PR_NUMBER=$(gh pr list --head "${BRANCH}" --json number --jq '.[0].number')
-          fi
-          echo "pr_number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
-
-          if [ "${{ steps.publish-pending.outcome }}" = "success" ]; then
-            gh pr merge "${PR_NUMBER}" --auto --squash \
-              || echo "::notice::auto-merge unavailable; PR #${PR_NUMBER} left open for manual merge"
-          else
-            gh pr edit "${PR_NUMBER}" --add-label "needs-schedule-review"
-            echo "publish-pending did not succeed; not auto-merging."
-          fi
-
-      - name: Set pager outputs
-        id: pager-outputs
-        if: always() && steps.token-preflight.outcome == 'success'
-        env:
-          PR_NUMBER: ${{ steps.open-pr.outputs.pr_number }}
-        run: |
-          set -euo pipefail
-          python_out=$(uv --project schedule-tools run python -c '
-          import json
-          from pathlib import Path
-          from schedules.paths import TMP_DIR
-          from schedules.publish import pager_job_payload
-          payload = pager_job_payload(TMP_DIR)
-          bulletin = Path("data/bulletin.json")
-          label = ""
-          if bulletin.is_file():
-              try:
-                  label = str(json.loads(bulletin.read_text()).get("label") or "")
-              except (OSError, json.JSONDecodeError):
-                  label = ""
-          payload["bulletin_label"] = label
-          print(json.dumps(payload))
-          ')
-          flagged_computed=$(printf '%s' "${python_out}" | python -c 'import json,sys; print("true" if json.load(sys.stdin)["flagged_computed"] else "false")')
-          flagged_set=$(printf '%s' "${python_out}" | python -c 'import json,sys; print("\n".join(json.load(sys.stdin)["flagged_set"]))')
-          published_slugs=$(printf '%s' "${python_out}" | python -c 'import json,sys; print("\n".join(json.load(sys.stdin)["published_slugs"]))')
-          bulletin_label=$(printf '%s' "${python_out}" | python -c 'import json,sys; print(json.load(sys.stdin).get("bulletin_label") or "")')
-          echo "flagged_computed=${flagged_computed}" >> "$GITHUB_OUTPUT"
-          echo "bulletin_label=${bulletin_label}" >> "$GITHUB_OUTPUT"
-          echo "pr_number=${PR_NUMBER:-}" >> "$GITHUB_OUTPUT"
-          {
-            echo "flagged_set<<EOF"
-            printf '%s\n' "${flagged_set}"
-            echo "EOF"
-            echo "published_slugs<<EOF"
-            printf '%s\n' "${published_slugs}"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-
-  page-schedules-extract:
+  report:
     needs: extract
-    if: always()
+    if: always() && needs.extract.result != 'skipped'
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       issues: write
-    env:
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
     steps:
-      - name: File schedules-extract blocked issue
-        if: needs.extract.outputs.preflight_outcome == 'failure'
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: schedule-automation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: evidence
+
+      - name: Update one deduplicated operator issue
+        uses: actions/github-script@v7
         env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          BODY="Token preflight failed.
-
-          Run: ${RUN_URL}
-
-          SCHEDULES_BOT_TOKEN was empty, or git ls-remote of the PAT failed (expired or missing Contents access).
-
-          extract did not run."
-          EXISTING=$(gh issue list --state open --label schedules-extract-blocked \
-            --json number,title,author \
-            --jq '.[] | select(.title=="schedules-extract blocked" and .author.is_bot) | .number' \
-            | head -1)
-          if [ -n "${EXISTING}" ]; then
-            gh issue comment "${EXISTING}" --body "${BODY}"
-          else
-            gh issue create --title "schedules-extract blocked" \
-              --label schedules-extract-blocked --body "${BODY}"
-          fi
-
-      - name: Close schedules-extract blocked issue
-        if: needs.extract.outputs.preflight_outcome == 'success'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          NUMBERS=$(gh issue list --state open --label schedules-extract-blocked \
-            --json number,title,author \
-            --jq '.[] | select(.title=="schedules-extract blocked" and .author.is_bot) | .number')
-          for n in ${NUMBERS}; do
-            gh issue close "${n}" --comment "Token preflight succeeded. extract ran. This issue means extract did not run, not that a later step failed."
-          done
-
-      - name: Comment schedules published
-        if: needs.extract.outputs.preflight_outcome == 'success' && needs.extract.outputs.published_slugs != ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          PUBLISHED_SLUGS: ${{ needs.extract.outputs.published_slugs }}
-          PR_NUMBER: ${{ needs.extract.outputs.pr_number }}
-          BULLETIN_LABEL: ${{ needs.extract.outputs.bulletin_label }}
-        run: |
-          set -euo pipefail
-          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          BODY="Published Rec & Park pools.
-
-          Run: ${RUN_URL}
-          PR: ${PR_NUMBER:-none}
-          Bulletin: ${BULLETIN_LABEL:-unknown}
-
-          ${PUBLISHED_SLUGS}"
-          EXISTING=$(gh issue list --state open --label schedules-published \
-            --json number,title,author \
-            --jq '.[] | select(.title=="schedules published" and .author.is_bot) | .number' \
-            | head -1)
-          if [ -n "${EXISTING}" ]; then
-            gh issue comment "${EXISTING}" --body "${BODY}"
-          else
-            gh issue create --title "schedules published" \
-              --label schedules-published --body "${BODY}"
-          fi
-
-      - name: Comment or close schedules flagged
-        if: needs.extract.outputs.preflight_outcome == 'success'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          FLAGGED_COMPUTED: ${{ needs.extract.outputs.flagged_computed }}
-          FLAGGED_SET: ${{ needs.extract.outputs.flagged_set }}
-          PR_NUMBER: ${{ needs.extract.outputs.pr_number }}
-        run: |
-          set -euo pipefail
-          if [ "${FLAGGED_COMPUTED}" != "true" ]; then
-            echo "flagged_computed is not true; not commenting or closing."
-            exit 0
-          fi
-          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          TODAY=$(printf '%s\n' "${FLAGGED_SET}" | sed '/^$/d' | sort -u)
-          EXISTING=$(gh issue list --state all --label schedules-flagged \
-            --json number,title,author,state \
-            --jq '.[] | select(.title=="schedules flagged" and .author.is_bot) | "\(.number) \(.state)"' \
-            | head -1)
-          ISSUE_NUMBER=""
-          ISSUE_STATE=""
-          if [ -n "${EXISTING}" ]; then
-            ISSUE_NUMBER=${EXISTING%% *}
-            ISSUE_STATE=${EXISTING#* }
-          fi
-          if [ -z "${TODAY}" ]; then
-            if [ -n "${ISSUE_NUMBER}" ] && [ "${ISSUE_STATE}" = "OPEN" ]; then
-              gh issue close "${ISSUE_NUMBER}" --comment "flagged_set empty. Discover and publish-pending report no Rec & Park FLAGs or unique-grid/closure refuses."
-            fi
-            exit 0
-          fi
-          # Previous flagged set lives in the marker of the latest bot post:
-          # the newest bot comment, or the issue body when there are none.
-          LAST=""
-          if [ -n "${ISSUE_NUMBER}" ]; then
-            LAST=$(gh issue view "${ISSUE_NUMBER}" --json body,comments \
-              --jq '([.body] + [.comments[] | select(.author.is_bot) | .body]) | last' \
-              || true)
-          fi
-          PREV=$(printf '%s\n' "${LAST}" | sed -n 's/^<!-- flagged_set: \(.*\) -->$/\1/p' | tr ',' '\n' | sed '/^$/d' | sort -u)
-          TODAY_CSV=$(printf '%s\n' "${TODAY}" | paste -sd, -)
-          BODY="schedules flagged
-
-          Run: ${RUN_URL}
-          PR: ${PR_NUMBER:-none}
-
-          ${TODAY}
-
-          <!-- flagged_set: ${TODAY_CSV} -->"
-          SHOULD_COMMENT=0
-          if [ "${TODAY}" != "${PREV}" ]; then
-            SHOULD_COMMENT=1
-          elif [ -n "${PR_NUMBER}" ]; then
-            SHOULD_COMMENT=1
-          fi
-          if [ "${SHOULD_COMMENT}" -eq 0 ]; then
-            echo "flagged_set unchanged and no PR; staying silent."
-            exit 0
-          fi
-          if [ -n "${ISSUE_NUMBER}" ]; then
-            if [ "${ISSUE_STATE}" != "OPEN" ]; then
-              gh issue reopen "${ISSUE_NUMBER}"
-            fi
-            gh issue comment "${ISSUE_NUMBER}" --body "${BODY}"
-          else
-            gh issue create --title "schedules flagged" \
-              --label schedules-flagged --body "${BODY}"
-          fi
+          EXTRACT_RESULT: ${{ needs.extract.result }}
+        with:
+          script: |
+            const fs = require('node:fs');
+            let result = {};
+            try { result = JSON.parse(fs.readFileSync('evidence/automation/result.json', 'utf8')); } catch {}
+            const builds = result.builds || [];
+            const last = builds.at(-1) || {};
+            const flags = last.decisions?.flagged_set || [];
+            const commandFailures = Object.entries(last.commands || {}).filter(([, exit]) => exit !== 0).map(([name]) => name);
+            const failed = process.env.EXTRACT_RESULT !== 'success' || result.status === 'failed' || !result.status;
+            const needsAttention = failed || flags.length || commandFailures.length;
+            const marker = '<!-- schedule-automation-status -->';
+            const { owner, repo } = context.repo;
+            const issues = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: 'open', creator: 'github-actions[bot]', per_page: 100 });
+            const issue = issues.find(item => !item.pull_request && item.body?.includes(marker));
+            if (!needsAttention) {
+              if (issue) await github.rest.issues.update({ owner, repo, issue_number: issue.number, state: 'closed' });
+              return;
+            }
+            const fingerprint = JSON.stringify({ failed, flags: [...flags].sort(), commandFailures: commandFailures.sort() });
+            const statusMarker = '<!-- state:' + Buffer.from(fingerprint).toString('base64') + ' -->';
+            if (issue?.body?.includes(statusMarker)) return;
+            const runUrl = context.serverUrl + '/' + owner + '/' + repo + '/actions/runs/' + context.runId;
+            const body = [marker, statusMarker, 'Schedule automation needs attention.',
+              '', 'Status: ' + (result.status || process.env.EXTRACT_RESULT),
+              'Held pools: ' + (flags.join(', ') || 'see run evidence'),
+              'Failed extraction commands: ' + (commandFailures.join(', ') || 'none'),
+              'Confirmed live updates: ' + (result.status === 'published' ? result.published_slugs.join(', ') || 'none' : 'none'),
+              '', '[Run and retained evidence](' + runUrl + ')'].join('\n');
+            if (issue) await github.rest.issues.update({ owner, repo, issue_number: issue.number, body });
+            else await github.rest.issues.create({ owner, repo, title: 'Schedule automation needs attention', body });

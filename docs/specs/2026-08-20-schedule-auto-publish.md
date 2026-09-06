@@ -2,7 +2,7 @@
 
 **Author:** TBD
 **Date:** 2026-08-20
-**Status:** Hands-off publication approach approved 2026-09-05; cutover pending
+**Status:** Hands-off implementation present; operator approval and hosted trial pending
 **Audience:** Operators of the schedule extract/review pipeline
 
 ---
@@ -70,9 +70,9 @@ transient HTTP errors retry. Authentication and quota failures do not retry.
 A local locked ledger reserves the maximum request cost before sending it.
 Missing usage keeps that reservation; reported usage settles at the full input
 rate, without relying on cache discounts. A pricing or accounting mismatch
-blocks later calls. This local ledger does not yet establish a monthly limit
-across separate Actions runs. Recurring OpenAI automation remains disabled until
-the operator approves that limit and durable accounting is connected.
+blocks later calls. The workflow connects this request ledger to durable monthly
+accounting across Actions runs. Recurring OpenAI automation remains disabled
+until the operator approves that limit and completes the enablement checklist.
 
 The durable accounting implementation stores one `budget.json` on the separate
 `schedule-budget` branch. That branch stores accounting only; it cannot publish
@@ -89,8 +89,8 @@ limit cannot silently reset the current month's ledger.
 All accounting updates use ordinary fast-forward Git pushes. Competing writers
 cannot both reserve the same remaining funds. Local tests exercise that race,
 process restart, missing accounting, month rollover, and malformed run ledgers.
-No remote accounting branch has been created and the workflow does not yet call
-these commands:
+No remote accounting branch has been created. The workflow calls reserve and
+settle; initialization remains an explicit one-time operator action:
 
 ```sh
 just schedules budget initialize
@@ -108,8 +108,8 @@ fast-forwards main only if main still equals the recorded base. Stale heads
 return exit code 2 so the workflow can rebuild and recheck. Failed checks,
 unexpected paths, symlinks, and concurrent main updates never authorize a main
 push. Tests use local bare repositories; they do not replace a hosted CI and
-deployment trial. Workflow integration still must validate paths before commit,
-bound rebuilds, and report success only after live verification.
+deployment trial. The integrated runner validates paths before commit, limits
+rebuilds to two checked candidates, and reports success only after live verification.
 
 The API adapter and the benchmark share the same transport and pricing code.
 Historical CLI/API comparisons use their archived prompts so a production
@@ -249,11 +249,14 @@ allow at most five redirects. Permanent HTTP failures and invalid PDFs do not
 retry. The fetch path uses [HTTPX streaming](https://www.python-httpx.org/quickstart/#streaming-responses)
 to enforce the byte limit before buffering the complete response.
 
-The existing weekly Gemini/PR workflow has not been replaced. The new checks in
-the OpenAI path do not harden that legacy provider's session publication gate.
-Workflow replacement, durable monthly accounting, production credentials,
-checked promotion, and live validation remain release work. Do not enable the
-new direct-main path by changing only its provider name.
+The daily OpenAI/direct-main workflow replaces the weekly Gemini/PR workflow.
+Automatic PDF session publication now requires the production artifact and
+independent source verification; the legacy grounding percentage cannot approve
+an update. Manual human repair remains explicit. The runner, durable accounting,
+checked promotion, and live browser verification are connected but not enabled.
+Production credentials, recurring spend approval, human reference sign-off, and
+a hosted extraction/publication trial remain release requirements. See the
+enablement checklist in `docs/schedules.md`.
 
 References: [protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches),
 [workflow triggers](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow).

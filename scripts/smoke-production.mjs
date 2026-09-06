@@ -6,6 +6,9 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { buildSpotRecord } from "./generate-agent-data.mjs";
 import { splitFrontMatter } from "./lib/spot-frontmatter.mjs";
+import { computeDetailStatus, resolveActiveSchedule, scheduleHasAccessHours, scheduleHasSessions } from "../static/js/helpers/board.mjs";
+import { pacificWallClockDate } from "../static/js/helpers/pacific.mjs";
+import { isDropInType } from "../static/js/helpers/programs.mjs";
 
 const execFileAsync = promisify(execFile);
 const defaultBaseUrl = "https://swimfrancisco.com";
@@ -20,6 +23,12 @@ function parseArgs(argv) {
     commit: { kind: "git-head" },
   };
   for (const arg of argv) {
+    if (arg === "--browser") {
+      if (seen.has(arg)) throw new Error("duplicate --browser");
+      seen.add(arg);
+      options.browser = true;
+      continue;
+    }
     if (arg === "--skip-commit") {
       if (seen.has("commit")) throw new Error("conflicting commit options");
       seen.add("commit");
@@ -97,6 +106,64 @@ export async function verifySpotRecords(index, expected, loadSpot) {
   }
 }
 
+export async function verifyPoolPage(page, expected, instant) {
+  await page.waitForFunction(() => document.querySelector(".today-block")?.dataset.day);
+  const actual = await page.locator(".detail-root").evaluate((root) => ({
+    schedule: JSON.parse(root.dataset.schedule),
+    day: root.querySelector(".today-block").dataset.day,
+    hidden: root.querySelector(".today-block").hidden,
+    heading: root.querySelector(".today-block-heading").textContent,
+    rows: [...root.querySelectorAll(".today-block-list li")].map((row) => ({
+      start: row.dataset.start, end: row.dataset.end, type: row.dataset.program,
+    })),
+    window: root.querySelector("[data-schedule-window]")?.dataset.scheduleWindow,
+    highlightedDays: [...root.querySelectorAll('.weekly-grid [data-today="true"]')].map((cell) => cell.dataset.day),
+  }));
+  const schedule = JSON.parse(JSON.stringify({ schedules: expected.pool.schedules || [] }));
+  assert(isDeepStrictEqual(actual.schedule, schedule), `${expected.slug} page embeds stale schedule data`);
+  const now = pacificWallClockDate(instant);
+  const day = new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", weekday: "long" }).format(instant).toLowerCase();
+  assert(actual.day === day, `${expected.slug} Today block uses the wrong Pacific weekday`);
+  assert(actual.highlightedDays.every((value) => value === day), `${expected.slug} highlights the wrong weekday`);
+  const active = resolveActiveSchedule(schedule, now);
+  if (active) assert(actual.window === `${active.effective_start || ""}/${active.effective_end || ""}`, `${expected.slug} displays the wrong weekly window`);
+  const accessOnly = !scheduleHasSessions(schedule, now) && scheduleHasAccessHours(schedule, now);
+  const hide = accessOnly || ["CLOSED_TODAY", "NOT_VERIFIED", "NO_DROPIN_WEEK", "NO_DROPIN_TODAY"].includes(computeDetailStatus(schedule, now).kind);
+  const rows = hide ? [] : (active?.sessions || [])
+    .filter((session) => session.day === day && isDropInType(session.type))
+    .map(({ start, end, type }) => ({ start, end, type })).sort((a, b) => a.start.localeCompare(b.start));
+  assert(actual.hidden === (rows.length === 0), `${expected.slug} Today visibility is incorrect`);
+  assert(isDeepStrictEqual(actual.rows, rows), `${expected.slug} Today rows differ from the expected schedule`);
+  if (rows.length) assert(actual.heading.toLowerCase().includes(day), `${expected.slug} Today heading has the wrong day`);
+}
+
+async function verifyLiveBrowsers(baseUrl, expected) {
+  const { webkit, chromium } = await import("playwright-core");
+  for (const engine of [webkit, chromium]) {
+    const browser = await engine.launch();
+    try {
+      const context = await browser.newContext({ timezoneId: "Asia/Tokyo" });
+      const page = await context.newPage();
+      page.setDefaultTimeout(15_000);
+      const errors = [];
+      page.on("pageerror", (error) => errors.push(error.message));
+      const instant = new Date();
+      await page.clock.setFixedTime(instant);
+      for (const spot of expected.filter((spot) => spot.type === "pool")) {
+        const response = await page.goto(new URL(`/spots/${spot.slug}/`, baseUrl).href, { waitUntil: "load" });
+        assert(response?.ok(), `${spot.slug} pool page failed to load`);
+        await verifyPoolPage(page, spot, instant);
+      }
+      const response = await page.goto(new URL("/map/", baseUrl).href, { waitUntil: "load" });
+      assert(response?.ok(), "Map page failed to load");
+      await page.waitForFunction(() => [...document.querySelectorAll("img.leaflet-tile")].some((tile) => tile.complete && tile.naturalWidth > 0));
+      assert(errors.length === 0, `Live browser reported ${errors.length} JavaScript errors`);
+    } finally {
+      await browser.close();
+    }
+  }
+}
+
 async function fetchJson(baseUrl, path) {
   const url = new URL(path, baseUrl);
   const response = await fetch(url, { signal: AbortSignal.timeout(15_000) });
@@ -129,7 +196,7 @@ export function assertConditionsFresh(conditions) {
 }
 
 async function main() {
-  const { baseUrl, maxGeneratedAgeHours, commit } = parseArgs(process.argv.slice(2));
+  const { baseUrl, maxGeneratedAgeHours, commit, browser } = parseArgs(process.argv.slice(2));
   const expectedCommit = commit.kind === "skip"
     ? null
     : commit.kind === "exact"
@@ -170,6 +237,8 @@ async function main() {
   assert(aquaticPark?.water_temp_f != null, "Aquatic Park temperature is missing");
   assert(aquaticPark.temp_stale === false, "Aquatic Park temperature is marked stale");
   assert(aquaticPark.tide_stale === false, "Aquatic Park tide is marked stale");
+
+  if (browser) await verifyLiveBrowsers(baseUrl, expected);
 
   console.log(`Production smoke passed for ${baseUrl}: ${contentCommit}, all ${expected.length} canonical spots`);
 }

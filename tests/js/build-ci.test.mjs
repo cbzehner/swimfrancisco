@@ -5,7 +5,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync, symlinkSync } from "node
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { checkBuildCI, generatedSchedulePath, promoteScheduleCommit, waitForCommitCI } from "../../scripts/check-build-ci.mjs";
+import { checkBuildCI, generatedSchedulePath, promoteScheduleCommit, stageScheduleChanges, waitForCommitCI } from "../../scripts/check-build-ci.mjs";
 
 const commit = "a".repeat(40);
 const environment = { WORKERS_CI: "1", WORKERS_CI_BRANCH: "main", WORKERS_CI_COMMIT_SHA: commit };
@@ -376,7 +376,7 @@ function promotionRepository(t, { path = "content/spots/test-pool.md", symlink =
     command(other, ["push", "origin", "main"]);
     return remoteHead();
   };
-  return { base, candidate, branch, git, remoteHead, advanceMain,
+  return { work, base, candidate, branch, git, remoteHead, advanceMain,
     options: { base, branch, git, environment: {}, waitForCI: async ({ commit, branch }) => {
       assert.equal(remoteHead(branch), commit);
       assert.equal(remoteHead(), base);
@@ -384,6 +384,39 @@ function promotionRepository(t, { path = "content/spots/test-pool.md", symlink =
     } },
   };
 }
+
+test("stage rejects unexpected paths before changing the index", (t) => {
+  const repository = promotionRepository(t);
+  writeFileSync(join(repository.work, ".env"), "do not publish\n");
+  writeFileSync(join(repository.work, "content/spots/test-pool.md"), "updated\n");
+  assert.throws(() => stageScheduleChanges(repository), /Unexpected/);
+  assert.equal(repository.git(["diff", "--cached", "--name-only"]), "");
+});
+
+test("stage recognizes direct clock metadata without suppressing real source changes", (t) => {
+  const repository = promotionRepository(t);
+  const path = "data/test-pool/2026-09-02-67f2a420e8fc/direct-test.json";
+  mkdirSync(join(repository.work, "data/test-pool/2026-09-02-67f2a420e8fc"), { recursive: true });
+  const artifact = { provider: "direct", extracted_at: "yesterday", payload: { effective_start: "2026-09-01", sessions: [] } };
+  writeFileSync(join(repository.work, path), JSON.stringify(artifact));
+  repository.git(["add", path]);
+  repository.git(["commit", "-m", "Direct capture"]);
+  writeFileSync(join(repository.work, path), JSON.stringify({ ...artifact, extracted_at: "today", payload: { ...artifact.payload, effective_start: "2026-09-02" } }));
+  assert.equal(stageScheduleChanges(repository).changed, false);
+  writeFileSync(join(repository.work, path), JSON.stringify({ ...artifact, payload: { ...artifact.payload, sessions: [{ day: "monday" }] } }));
+  assert.equal(stageScheduleChanges(repository).changed, true);
+});
+
+test("stage treats PDF dates as facts, not direct-source clock metadata", (t) => {
+  const repository = promotionRepository(t);
+  const path = "data/test-pool/2026-09-02-67f2a420e8fc/openai-gpt-5.5-2026-04-23.json";
+  mkdirSync(join(repository.work, "data/test-pool/2026-09-02-67f2a420e8fc"), { recursive: true });
+  writeFileSync(join(repository.work, path), JSON.stringify({ provider: "openai", payload: { effective_start: "2026-09-01" } }));
+  repository.git(["add", path]);
+  repository.git(["commit", "-m", "PDF capture"]);
+  writeFileSync(join(repository.work, path), JSON.stringify({ provider: "openai", payload: { effective_start: "2026-09-02" } }));
+  assert.equal(stageScheduleChanges(repository).changed, true);
+});
 
 test("promotion checks the exact temporary-branch commit before fast-forwarding main", async (t) => {
   const repository = promotionRepository(t);

@@ -307,7 +307,6 @@ class ReviewApp:
             quarantined_shas=load_quarantine(),
             entries=entries,
             attested_by="human",
-            require_grounding=False,
             envelopes=envelopes,
             data_root=self.data_root,
         )

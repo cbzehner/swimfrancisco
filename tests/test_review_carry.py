@@ -8,7 +8,6 @@ import json
 from pathlib import Path
 
 from schedules.envelope import validate_envelope
-from schedules.pr_summary import _has_pending_run, _render_lead
 from schedules.review import carry_forward_review
 
 _OLD_SHA = "a" * 64
@@ -199,37 +198,3 @@ def test_carried_snapshot_can_seed_the_next_carry(tmp_path):
     assert envelope["pdf_sha256"] == third_sha
     assert envelope["source_pdf_url"] == "https://example.com/z.pdf"
     assert envelope["reviewed_at"] == "2026-07-06"
-
-
-def test_pending_run_detection_uses_reviewed_presence(tmp_path):
-    _seed_reviewed(tmp_path, "carried-pool", "2026-07-13", _NEW_SHA, _payload())
-    pending_dir = tmp_path / "pending-pool" / f"2026-07-13-{_OLD_SHA[:12]}"
-    pending_dir.mkdir(parents=True)
-
-    carried_run = f"2026-07-13-{_NEW_SHA[:12]}"
-    pending_run = f"2026-07-13-{_OLD_SHA[:12]}"
-    assert not _has_pending_run("carried-pool", {carried_run: []}, tmp_path)
-    assert _has_pending_run("pending-pool", {pending_run: []}, tmp_path)
-
-
-def test_lead_distinguishes_pending_from_carried():
-    changed = {"a-pool": {"2026-07-13-bbbbbbbbbbbb": [("gemini.json", "A")]}}
-    all_carried = "\n".join(_render_lead(changed, [], ["a-pool", "b-pool"], 3))
-    assert "No human review needed" in all_carried
-    assert "auto-merges" in all_carried
-    assert "attestation was carried" in all_carried
-    assert "unverified projection" not in all_carried
-
-    mixed = "\n".join(
-        _render_lead(
-            {},
-            ["a-pool"],
-            ["b-pool"],
-            3,
-            show_checklist=True,
-        )
-    )
-    assert "just schedules-review" in mixed
-    assert "needs a human review" not in mixed
-    assert "The live site stays on the last reviewed window until this PR merges." not in mixed
-    assert "unverified projection" not in mixed

@@ -1190,133 +1190,95 @@ Portable evidence:
 - [mission-holdout-2026-09-05.zip](../benchmarks/pdf/mission-holdout-2026-09-05.zip),
   SHA-256 `8656d13e551772e03ea601a992b427f9ea44f7b2de76e24573f25ffa0e992178`.
 
-## Auto-extract workflow
+## Autonomous extraction and publication
 
-The `.github/workflows/schedules-extract.yml` action runs weekly on
-Mondays at 09:00 PT and on `workflow_dispatch`. It discovers Rec & Park PDF URLs
-first (`schedules discover` writes `registry.toml`), then runs direct
-extraction once, then processes the PDF sources once with Gemini
-(`extract --provider gemini --no-discover`). There is no weekly Anthropic
-step; bakeoff stays local (`schedules debug bakeoff`). Each pass has a
-distinct report; the run summary and uploaded
-`schedule-extraction-reports` artifact retain all reports that were produced,
-including `tmp/discovery-report.md` and partial-success failure details.
-Provider artifacts under `data/<slug>/<date>-<sha12>/` get written, and
-the pipeline carries attestation forward (writes `reviewed.json` with
-`carried_from`) for pools whose payload matches the last attested one.
-`schedules publish-pending` then attests eligible unique Rec & Park grids
-and date-disjoint sequential sittings (`attested_by: ci`) and projects
-`content/spots/`. Sequential extract fetches one href per collapsed
-window; the workflow does not pass `--url` or `--adopt`. The live site
-updates when that PR merges.
+The daily workflow is implemented but remains disabled pending operator approval
+of recurring API spend and reference review. It replaces the weekly Gemini/PR
+workflow; there is no rolling publication PR.
 
-If `data/`, `registry.toml`, `content/spots/`, or `quarantine.toml`
-changed, the action commits to the rolling `auto/schedules-extract`
-branch and opens or refreshes its PR. Scheduled extract refreshes that PR;
-closing it without merging reopens on the next run that still sees a
-diff against `main`. Auto-merge keys on `publish-pending` exit 0. FLAG
-notes do not hostage unique-grid pools. Kill switch:
-`SCHEDULES_AUTO_PROJECT=false` (or `workflow_dispatch` `auto_project=false`)
-skips publish-pending and leaves the PR open with `needs-schedule-review`.
+The schedule is 16:00 UTC each day (09:00 Pacific daylight time, 08:00 standard
+time). Manual runs default to `extract-only`. Both modes require
+`SCHEDULES_AUTOMATION_ENABLED=true`; unset means disabled.
 
-Operator signal for FLAG and unique-grid/closure/sequential refuses is
-the rolling GitHub issue `schedules flagged`, not a merge veto.
-Successful auto-publish comments `schedules published`. After this slice
-the `schedules flagged` set is: Rossi leaves on unique-grid publish;
-Sava leaves if both windows pass; MLK and Balboa stay on
-`sequential_partial` (`grounding_coverage_low`) until human Save-all of
-both windows or `--force` re-extract; North Beach stays until a combined
-PDF. A kept sequential window that has already ended counts as covered,
-so a late re-export of a past window does not refuse forever.
+### Run contract
 
-Before checkout, the workflow requires `SCHEDULES_BOT_TOKEN`. Provision a
-repository-scoped fine-grained PAT limited to `cbzehner/swimfrancisco` with
-Contents read/write and Pull requests read/write permissions, then store it as
-that exact Actions secret. The workflow fails with guidance and does not
-publish when it is absent; it never falls back to `github.token`,
-`GITHUB_TOKEN`, or another credential. The PAT should expire within 90 days
-and be rotated through the same Operator-supervised account-settings flow.
-The other prerequisites are the repo setting "Allow auto-merge" and a branch
-protection rule on `main` requiring the `check` status.
+1. Reserve at most $1 from the approved UTC calendar-month allowance on the
+   separate `schedule-budget` accounting branch. Missing accounting stops the
+   run. The local request ledger reserves worst-case cost before each API call.
+2. Fetch current main into an isolated worktree. Discover once, run structured
+   sources, then run the pinned OpenAI provider without a second discovery.
+   Cache reuse requires matching source bytes and the full extraction configuration.
+3. In `extract-only` mode, retain evidence and stop without projecting content,
+   committing, or pushing a candidate. Accounting updates still occur.
+4. In `publish` mode, independently verify source sessions, dates, and closures.
+   Hold unclear pools and retain prior valid data; never extend expired hours.
+   Non-production PDF artifacts cannot use the old percentage-based grounding
+   check to obtain automatic approval. Human review remains an explicit repair path.
+5. Validate the generated-file allowlist before staging and committing. Direct
+   source changes to capture time and clock-derived start alone do not create
+   content commits. PDF dates remain substantive facts.
+6. Push one generated commit to `auto/schedules/<run>-<attempt>-<build>`, wait for
+   its exact successful CI run, and fast-forward main only if its head still
+   matches the recorded base. No PR and no force push. If main moves, rebuild
+   once in a new worktree. Reuse only source/extraction cache files, not previous
+   publication decisions or concurrently edited files.
+7. Verify the deployed commit, all canonical spot records, live conditions, and
+   all pool pages in WebKit and Chromium. The browser checks use a non-Pacific
+   visitor timezone, check Today rows and weekly windows, and require map tiles
+   to load. A watermark does not fail the map check. Stop after twenty minutes
+   if deployment cannot be verified. Only then report a live publication.
+8. Settle valid request charges. Canceled runs and missing usage retain their
+   reservations; malformed accounting blocks further paid execution.
 
-To provision `SCHEDULES_BOT_TOKEN`:
+The content-writing job cannot write issues. A separate read-only-evidence job
+updates one operator issue when failures or held pools change. It closes that
+issue after a clean run. Repeated identical failures do not create new issues
+or comments. A pushed commit without a verified deployment is not a success.
 
-1. In GitHub account settings, create a fine-grained PAT owned by `cbzehner`,
-   limited to `cbzehner/swimfrancisco`, with only Contents and Pull requests
-   read/write permissions and an expiration no later than 90 days.
-2. Store it as the repository Actions secret named `SCHEDULES_BOT_TOKEN`.
-   Do not paste the token into chat, commit it, or put it in shell history.
-3. Confirm the secret exists by name and update time. GitHub does not expose
-   the stored value. Do not reuse a broad GitHub CLI OAuth token for Actions
-   publication.
+### Enablement checklist
 
-Happy-path unique grids and sequential windows auto-merge. Reviewer flow
-is debug / FLAG / sequential grounding repair:
+These are operator actions, not commands already executed:
 
-```
-git fetch origin && git checkout auto/schedules-extract
-just schedules-review          # Save-all sequential cards, or FLAG adopt
-just release                   # bulletin only if reviewed payloads changed
-git add content/spots data schedule-tools/src/schedules/registry.toml
-git commit -m "review Rec & Park schedules"
-# merge this PR; do not open a second one
-```
+- Approve the recurring monthly API limit separately from the original $10
+  benchmark trial. Set `SCHEDULES_MONTHLY_BUDGET_USD` to that approved amount.
+- Complete the required human reference review. Agent visual checks are not
+  human sign-off. Ambiguous closure scope remains a hold until its policy is
+  explicitly approved and tested.
+- Store `OPENAI_API_KEY` and a repository-scoped `SCHEDULES_BOT_TOKEN` as Actions
+  secrets. The publication token needs Contents read/write and must trigger CI;
+  the built-in Actions token is not its publication fallback. The workflow uses
+  the built-in token only for read-only CI lookups.
+- Keep main's required `check` status, strict updates, administrator enforcement,
+  and no force pushes. PR creation or auto-merge settings are no longer needed.
+- Initialize accounting exactly once after approval, using
+  `SCHEDULES_MONTHLY_BUDGET_USD=<approved amount> just schedules budget initialize`.
+  Missing accounting in later runs must be repaired, not reset.
+- Set `SCHEDULES_AUTOMATION_ENABLED=true`, dispatch an `extract-only` trial, inspect
+  its evidence and charges, then run a checked publication trial. Confirm hosted
+  CI, main promotion, and the exact live deployment before declaring autonomy.
 
-If the queue is empty, `schedules-review` prints `nothing to review`.
-That is expected after CI attested unique-grid or sequential dirs. Do
-not `--adopt` a sequential Fall 1 to fill the queue. Garfield 29799 stays
-hidden until `--adopt`. After the review-queue cut-over, FLAG captures
-on `main` (Balboa / MLK `sequential_partial`) appear without a
-git-changed-dir gate.
+### Evidence and recovery
 
-### Repair sitting
+Each run retains `tmp/automation/result.json`, per-build discovery and publication
+reports, source PDFs, provider artifacts, accepted snapshots, and sanitized
+budget ledgers as a GitHub artifact for 90 days. The receipt records base and
+candidate commits, changed paths, CI URL, outcomes, and confirmed live updates.
+Historical benchmark ZIPs remain committed with hashes and pinned replay
+instructions above. Run artifacts exclude credentials and raw transport logs.
 
-The review UI will not open an already-attested dir.
+Set `SCHEDULES_AUTOMATION_ENABLED=false` to stop future runs. This does not cancel
+a run already started: cancel that run separately when needed. Its full spend
+reservation remains conservative. `SCHEDULES_AUTO_PROJECT=false` also rejects
+local publication mode.
 
-1. Kill switch: `SCHEDULES_AUTO_PROJECT=false`.
-2. Dashboard tourniquet if the live board is wrong right now.
-3. Prefer a per-pool content revert (delete that `[[extra.schedules]]`
-   table; leave `reviewed.json`) so the next cron does not republish.
-   A squash revert of `data/` requires a `[[quarantine]]` row for that
-   `pdf_sha256` in the same sitting. A sequential sitting needs a row
-   for **each** shipped SHA.
-4. Confirm candidate state: `schedules pending-reviews` lists the slug
-   **only if** `reviewed.json` is gone.
-5. Human Save of a corrected payload (`attested_by: human`) overrides
-   quarantine. Sequential repair is Save-all of every unpublished kept
-   window, minus the 0.9 grounding floor (Balboa 0.61 / MLK 0.11). Do
-   not Save one sequential window. `publish-pending` still refuses the
-   sha until the row is deleted.
-6. Clear the kill switch after `main` has the revert (and quarantine
-   row, if required).
-
-Public-repo safety: the workflow has no `pull_request` or
-`pull_request_target` triggers, only `schedule` and `workflow_dispatch`.
-Forks cannot run it. `concurrency.cancel-in-progress` caps cost at one
-extraction at a time.
-
-Required repo secrets: `GOOGLE_API_KEY` and the CI-capable
-`SCHEDULES_BOT_TOKEN` described above. `ANTHROPIC_API_KEY` is a local
-bakeoff secret, not a CI requirement. Set monthly budget caps on
-`GOOGLE_API_KEY` and, when used locally, `ANTHROPIC_API_KEY`.
-
-Required repo settings: Settings → Actions → General →
-- Workflow permissions: **Read and write permissions**
-- **Allow GitHub Actions to create and approve pull requests: ENABLED**
-
-GitHub bundles create + approve into a single toggle. Do not require
-reviews on `main`: the publication token opens PRs as the Operator, so a
-required approval would deadlock quiet-week auto-merge. The merge gate is
-the required `check` status, enforced for administrators. The bot can
-open a PR; it cannot land on `main` until CI is green.
+For incorrect published data, keep automation disabled, inspect the retained
+source and receipt, and prepare a scoped corrective commit. Quarantine each
+incorrect PDF SHA so a later run cannot automatically accept it again. Use
+`just schedules-review` for explicit human correction; save all related
+sequential windows together. Test and verify the corrective deployment before
+enabling automation again. Do not reset main or erase accounting to recover.
 
 ## Future
 
-Semantic XLSX fingerprinting remains a separate provenance-design follow-up.
-This workflow continues to use the existing source-byte identity and does not
-implement canonicalization or semantic identity.
-
-Unique Rec & Park table grids and date-disjoint sequential windows
-already auto-publish via `publish-pending`. Remaining later work is
-split-PDF extract (North Beach Cool/Warm), not a second human gate on
-unique grids or sequential sittings.
+Semantic XLSX fingerprinting remains separate work. This workflow uses existing
+source-byte identity and does not introduce semantic identity or canonicalization.

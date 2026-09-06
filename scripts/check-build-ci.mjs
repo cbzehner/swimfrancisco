@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { execFileSync } from "node:child_process";
+import { isDeepStrictEqual } from "node:util";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -17,6 +18,37 @@ export function generatedSchedulePath(path) {
     || /^schedule-tools\/src\/schedules\/(?:registry|quarantine)\.toml$/.test(path)
     || /^content\/spots\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\.(?:es|fi|fil|vi|zh-Hant))?\.md$/.test(path)
     || /^data\/[a-z0-9]+(?:-[a-z0-9]+)*\/\d{4}-\d{2}-\d{2}-[a-f\d]{12}\/(?:source\.(?:pdf|html|csv|xlsx|sha256)|reviewed\.json|openai-gpt-5\.5-2026-04-23\.json|direct-[a-z0-9-]+\.json)$/.test(path);
+}
+
+export function stageScheduleChanges({ git = (args) => execFileSync("git", args, { cwd: repoRoot, encoding: "utf8" }) } = {}) {
+  const paths = [...new Set([
+    ...git(["ls-files", "--modified", "--others", "--deleted", "--exclude-standard", "-z"]).split("\0"),
+    ...git(["diff", "--cached", "--name-only", "-z"]).split("\0"),
+  ].filter(Boolean))];
+  if (paths.some((path) => !generatedSchedulePath(path))) throw new Error("Unexpected generated paths; nothing may be committed");
+  if (!paths.length) return { changed: false, paths: [] };
+  git(["add", "--", ...paths]);
+  for (const path of paths) {
+    if (!/^100644 [a-f\d]{40} 0\t[^\0]+\0$/.test(git(["ls-files", "--stage", "-z", "--", path]))) {
+      throw new Error("Staging only permits regular generated files, without deletions");
+    }
+  }
+  const changed = paths.some((path) => {
+    if (!/\/direct-[a-z0-9-]+\.json$/.test(path)) return true;
+    try {
+      const semantic = (text) => {
+        const value = JSON.parse(text);
+        if (value.provider !== "direct" || !value.payload) throw new Error("Not a direct extraction");
+        const { extracted_at, payload, ...rest } = value;
+        const { effective_start, ...facts } = payload;
+        return { ...rest, payload: facts };
+      };
+      return !isDeepStrictEqual(semantic(git(["show", `HEAD:${path}`])), semantic(git(["show", `:${path}`])));
+    } catch {
+      return true;
+    }
+  });
+  return { changed, paths };
 }
 
 function buildCommit(environment, readHead) {
@@ -233,7 +265,9 @@ export async function promoteScheduleCommit({
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const action = process.argv[2] === "promote"
+  const action = process.argv[2] === "stage"
+    ? Promise.resolve().then(() => console.log(JSON.stringify(stageScheduleChanges())))
+    : process.argv[2] === "promote"
     ? promoteScheduleCommit({ base: process.argv[3], branch: process.argv[4] }).then((result) => {
       console.log(JSON.stringify(result));
       if (result.status === "stale") process.exitCode = 2;

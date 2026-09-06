@@ -30,7 +30,7 @@ from .pipeline import (
     parse_provider,
     run_pipeline,
 )
-from .pr_summary import render_pr_body, staged_data_has_meaningful_changes
+from .automation import automate
 from .report import result_counts
 from .project import ProjectError, project as _project
 from .review import DecisionSet
@@ -39,7 +39,7 @@ from .providers.openai_provider import MonthlySpendBudget, SpendBudget
 
 
 def _default_provider() -> str:
-    return os.getenv("SCHEDULES_PROVIDER", "gemini")
+    return os.getenv("SCHEDULES_PROVIDER", "openai")
 
 
 @click.group()
@@ -314,26 +314,15 @@ def pending_reviews_command() -> None:
         click.echo(review["slug"])
 
 
-@cli.command("pr-summary")
-def pr_summary_command() -> None:
-    """Print a PR-optimized summary of currently-staged data/ changes.
-
-    Designed for the auto-extract workflow: highlights pools whose artifact
-    files changed, one-liners every other pool, and appends `tmp/eval.md`
-    if present. Shells out to `git diff --staged` so it must run after
-    `git add data/` and before commit.
-    """
-    click.echo(render_pr_body())
-
-
-@cli.command("has-meaningful-staged-data-changes")
-def has_meaningful_staged_data_changes_command() -> None:
-    """Exit 0 when staged data changes should open a schedule PR."""
-    if staged_data_has_meaningful_changes():
-        click.echo("meaningful staged data changes detected")
-        raise SystemExit(0)
-    click.echo("only metadata-only staged data changes detected")
-    raise SystemExit(1)
+@cli.command("automate")
+@click.option("--mode", type=click.Choice(["extract-only", "publish"]), default="extract-only")
+@click.option("--run-id", required=True)
+def automate_command(mode: str, run_id: str) -> None:
+    """Run bounded extraction and checked publication in isolated worktrees."""
+    try:
+        click.echo(json.dumps(automate(REPO_ROOT, mode=mode, run_id=run_id)))
+    except Exception as error:
+        raise click.ClickException(f"Automation stopped ({type(error).__name__}); inspect its evidence") from error
 
 
 @cli.command("eval")
