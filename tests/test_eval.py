@@ -79,8 +79,12 @@ def api_inputs(tmp_path):
                     target.write_bytes(archive.read("inputs/" + path))
             for path in ("prompt.txt", "schema.json"):
                 (root / path).write_bytes(archive.read("inputs/" + path))
-    plan, models, _ = benchmark_comparison(REPO_ROOT / "tests/fixtures/schedule-benchmark.json", "api-confirmation", REPO_ROOT)
-    frozen |= {"comparison": "api-confirmation", "plan": plan, "models": models, "inputs": sources}
+    plan, models, _ = benchmark_comparison(REPO_ROOT / "tests/fixtures/schedule-benchmark.json", "literal-pool-labels", REPO_ROOT)
+    prompt = (root / "prompt.txt").read_text()
+    prompt = prompt.removesuffix(frozen["plan"]["prompt_addendum"]) + plan["prompt_addendum"]
+    (root / "prompt.txt").write_text(prompt)
+    frozen |= {"comparison": "literal-pool-labels", "plan": plan, "models": models, "inputs": sources,
+               "prompt_sha256": hashlib.sha256((root / "prompt.txt").read_bytes()).hexdigest()}
     (root / "inputs.json").write_text(json.dumps(frozen))
     return root
 
@@ -100,6 +104,46 @@ def _api_response(payload):
             "output": [{"type": "message", "status": "completed", "content": [
                 {"type": "output_text", "text": json.dumps(payload)}]}],
             "usage": {"input_tokens": 100, "output_tokens": 50, "input_tokens_details": {"cached_tokens": 20}}}
+
+
+@pytest.mark.parametrize("label, normalized", [
+    (None, None), ("(Main Pool Only)", "main only"),
+    ("2 lanes + Small Pool", "2 lanes + small"), ("4 & shallow", "4 & shallow"),
+    (" W ", "w"), ("  Therapy   Pool ", "therapy"), ("Whirlpool", "whirlpool"),
+    ("Pool", None),
+])
+def test_pool_label_normalization_preserves_source_facts(label, normalized):
+    import jsonschema
+    from schedules.schema import EXTRACTION_SCHEMA, SOURCE_FACTS_SCHEMA, pool_label_payload
+
+    facts = copy.deepcopy(_attempt(_reference())["payload"])
+    facts["sessions"] = [facts["sessions"][0] | {"pool_label_raw": label}]
+    facts["sessions"][0].pop("pool", None)
+    original = copy.deepcopy(facts)
+    jsonschema.validate(facts, SOURCE_FACTS_SCHEMA)
+    payload = pool_label_payload(facts)
+    jsonschema.validate(payload, EXTRACTION_SCHEMA)
+    assert facts == original
+    assert "pool_label_raw" not in payload["sessions"][0]
+    assert payload["sessions"][0].get("pool") == normalized
+    assert "pool_label_raw" not in EXTRACTION_SCHEMA["properties"]["sessions"]["items"]["properties"]
+
+
+def test_source_facts_require_literal_label_and_reject_normalized_field():
+    from schedules.benchmark import api_response_result
+    from schedules.schema import SOURCE_FACTS_SCHEMA
+
+    facts = copy.deepcopy(_attempt(_reference())["payload"])
+    facts["sessions"] = [facts["sessions"][0] | {"pool_label_raw": None}]
+    facts["sessions"][0].pop("pool", None)
+    native = _nullable_api_payload(facts, SOURCE_FACTS_SCHEMA)
+    result = api_response_result(_api_response(native), SOURCE_FACTS_SCHEMA)
+    assert result["transport_valid"] and result["payload"] == facts
+    native["sessions"][0]["pool"] = "main"
+    assert not api_response_result(_api_response(native), SOURCE_FACTS_SCHEMA)["transport_valid"]
+    native["sessions"][0].pop("pool")
+    native["sessions"][0].pop("pool_label_raw")
+    assert not api_response_result(_api_response(native), SOURCE_FACTS_SCHEMA)["transport_valid"]
 
 
 def test_api_schema_mapping_is_explicit_and_does_not_repair_values():
@@ -192,14 +236,21 @@ def test_api_readiness_failure_stops_without_retry_or_secret_logs(api_inputs, tm
 
 def test_api_run_archives_and_replays_requests_responses_and_budget(api_inputs, tmp_path, monkeypatch):
     import schedules.benchmark as benchmark
-    from schedules.schema import EXTRACTION_SCHEMA
+    from schedules.schema import SOURCE_FACTS_SCHEMA
 
     monkeypatch.setenv("OPENAI_API_KEY", "DO_NOT_ARCHIVE")
     manifest = REPO_ROOT / "tests/fixtures/schedule-benchmark.json"
     _, references = benchmark.load_prepared_inputs(api_inputs, manifest, REPO_ROOT)
-    payloads = {benchmark.extraction_request(api_inputs, reference["source_sha256"], "text", native_schema=True)[0]:
-                _nullable_api_payload(reference["expected"] | {"closures": reference["expected"].get("closures", [])}, EXTRACTION_SCHEMA)
-                for reference in references}
+    payloads = {}
+    for reference in references:
+        facts = copy.deepcopy(reference["expected"])
+        facts.setdefault("closures", [])
+        facts["sessions"] = [
+            {key: value for key, value in row.items() if key != "pool"} | {"pool_label_raw": row.get("pool")}
+            for row in facts["sessions"]
+        ]
+        prompt = benchmark.extraction_request(api_inputs, reference["source_sha256"], "text", native_schema=True)[0]
+        payloads[prompt] = _nullable_api_payload(facts, SOURCE_FACTS_SCHEMA)
     real_client = benchmark.httpx.Client
     calls = []
 

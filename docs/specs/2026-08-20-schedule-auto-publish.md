@@ -19,6 +19,13 @@ or permanent alternative publication path.
 - **Source facts:** what an official document explicitly states, including its
   dates, pool labels, sessions, and closures. An expired document remains evidence
   of a historical schedule, not evidence that the facility has closed.
+- **Raw pool label:** the complete printed allocation for a session, stored as
+  `pool_label_raw`, or null if absent or only a numeric lane count. The model
+  copies it without shortening qualifiers or expanding source codes.
+- **Normalized pool label:** `pool`, derived in code by removing enclosing
+  parentheses and the standalone word `pool`, lowercasing, and collapsing
+  whitespace. Counts attached to named sections, qualifiers, punctuation, and
+  codes remain intact. This is not a resolved facility identity.
 - **Candidate:** extracted facts that have not passed the publication rules.
 - **Accepted snapshot:** a candidate that passed those rules. Acceptance by CI is
   not a claim that a human checked the document.

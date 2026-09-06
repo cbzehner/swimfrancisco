@@ -341,7 +341,7 @@ def benchmark_command(attempt: Path, reference_id: str) -> None:
 
 @cli.command("benchmark-prepare")
 @click.option("--poppler", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--comparison", default="development", type=click.Choice(["development", "finalists", "api-confirmation"]))
+@click.option("--comparison", default="development", type=click.Choice(["development", "finalists", "literal-pool-labels"]))
 def benchmark_prepare_command(poppler: Path, comparison: str) -> None:
     """Prepare label-free comparison inputs in a fresh temporary directory. No model calls."""
     try:

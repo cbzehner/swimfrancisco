@@ -23,7 +23,7 @@ import httpx
 import jsonschema
 
 from .eval import load_benchmark_reference, prf1, score_benchmark_run
-from .schema import EXTRACTION_SCHEMA
+from .schema import EXTRACTION_SCHEMA, SOURCE_FACTS_SCHEMA, pool_label_payload
 
 
 CHECK_PAYLOAD = {"check": "schedule-benchmark", "sum": 42}
@@ -439,15 +439,15 @@ def run_api_benchmark(inputs: Path, output: Path, manifest: Path, repo_root: Pat
     frozen, references = load_prepared_inputs(inputs, manifest, repo_root)
     if not math.isfinite(budget_usd) or not 0 < budget_usd <= 10:
         raise ValueError("API benchmark budget must be positive and at most $10.")
-    if frozen["comparison"] != "api-confirmation" or frozen["models"] != [
+    if frozen["comparison"] != "literal-pool-labels" or frozen["models"] != [
         {"id": "gpt-5.5-api", "harness": "openai-api", "model": API_MODEL, "effort": "medium"}
     ]:
-        raise ValueError("API benchmark requires the frozen GPT-5.5 confirmation comparison.")
+        raise ValueError("API benchmark requires the frozen literal-pool-labels comparison.")
     if not os.environ.get("OPENAI_API_KEY", "").strip():
         raise ValueError("OPENAI_API_KEY is not set; load the ignored .env before running.")
     jobs = benchmark_jobs(frozen["models"], references, frozen["plan"])
     readiness_request = api_request(CHECK_PROMPT, CHECK_SCHEMA, max_output_tokens=1024)
-    requests = [api_request(extraction_request(inputs, reference["source_sha256"], track, native_schema=True)[0], EXTRACTION_SCHEMA)
+    requests = [api_request(extraction_request(inputs, reference["source_sha256"], track, native_schema=True)[0], SOURCE_FACTS_SCHEMA)
                 for _, reference, track, _ in jobs]
     reserved = sum(api_reservation_microusd(request) for request in [readiness_request, *requests])
     if reserved > budget_usd * 1_000_000:
@@ -484,8 +484,11 @@ def run_api_benchmark(inputs: Path, output: Path, manifest: Path, repo_root: Pat
             "request_sha256": hashlib.sha256(request["input"].encode()).hexdigest(), "image_sha256": [],
         }
         attempt |= call_benchmark_api(request, directory, timeout)
-        attempt |= (api_response_result(attempt["api_response"], EXTRACTION_SCHEMA) if attempt["api_response"] else
+        attempt |= (api_response_result(attempt["api_response"], SOURCE_FACTS_SCHEMA) if attempt["api_response"] else
                     {"payload": None, "final_response": None, "resolved_model": None, "transport_valid": False})
+        attempt["source_facts"] = attempt["payload"]
+        if attempt["payload"] is not None:
+            attempt["payload"] = pool_label_payload(attempt["payload"])
         if attempt["resolved_model"] not in {None, API_MODEL}:
             attempt["status"] = "provider_error"
         attempt["provider_error"] = attempt["status"] == "provider_error"
@@ -782,7 +785,11 @@ def replay_attempt(reference: dict, row: dict) -> dict:
     if row["exit_code"] != 0:
         return {"status": "execution_error"}
     if row["harness"] == "openai-api":
-        parsed = api_response_result(row["api_response"], EXTRACTION_SCHEMA)
+        parsed = api_response_result(row["api_response"], SOURCE_FACTS_SCHEMA)
+        if parsed["payload"] != row["source_facts"]:
+            raise ValueError("API response does not reproduce the recorded source facts.")
+        if parsed["payload"] is not None:
+            parsed["payload"] = pool_label_payload(parsed["payload"])
         if parsed["resolved_model"] != API_MODEL:
             parsed["status"] = "provider_error"
         if any(parsed[field] != row[field] for field in ("payload", "final_response", "resolved_model", "transport_valid")):
@@ -822,7 +829,7 @@ def archive_benchmark(inputs: Path, results_dir: Path, output: Path, manifest: P
               "timed_out", "exit_code", "payload", "cost_usd", "resolved_model", "runner_retries",
               "request_sha256", "image_sha256", "started_at", "elapsed_seconds", "reported_models",
               "provider_error", "error_type", "score", "api_request", "api_response", "transport_valid",
-              "response_status", "http_status", "reserved_microusd")
+              "response_status", "http_status", "reserved_microusd", "source_facts")
     portable = []
     for result in results:
         row = {key: result[key] for key in fields if key in result}
@@ -911,7 +918,7 @@ def verify_benchmark_replay(root: Path, repo_root: Path) -> None:
                 raise ValueError("Archived cell source differs from its reference.")
             prompt, images = extraction_request(root / "inputs", reference["source_sha256"], row["track"],
                                                 native_schema=row["harness"] == "openai-api")
-            if row["harness"] == "openai-api" and row["api_request"] != api_request(prompt, EXTRACTION_SCHEMA):
+            if row["harness"] == "openai-api" and row["api_request"] != api_request(prompt, SOURCE_FACTS_SCHEMA):
                 raise ValueError("Archived API request differs from the frozen configuration.")
             if (hashlib.sha256(prompt.encode()).hexdigest() != row["request_sha256"] or
                     [hashlib.sha256(path.read_bytes()).hexdigest() for path in images] != row["image_sha256"]):

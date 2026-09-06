@@ -205,11 +205,11 @@
       "repetitions": 1,
       "prompt_addendum": ""
     },
-    "api-confirmation": {
+    "literal-pool-labels": {
       "candidates": [{"id": "gpt-5.5-api", "tracks": ["text"]}],
       "references": ["north-beach-expired", "hamilton-fall", "balboa-fall", "balboa-interim", "rossi-spring", "mlk-fall", "garfield-maintenance"],
       "repetitions": 3,
-      "prompt_addendum": "\nSource-kind exception to the swim_schedule rule above: if the source is only a closure notice with no weekly swim grid, set schedule_basis to temporarily_closed, emit no sessions, and use the explicit closure period for effective_start and effective_end. An expected reopening date is not a weekly schedule and does not prove reopening occurred.\n"
+      "prompt_addendum": "\nSource-kind exception to the swim_schedule rule above: if the source is only a closure notice with no weekly swim grid, set schedule_basis to temporarily_closed, emit no sessions, and use the explicit closure period for effective_start and effective_end. An expected reopening date is not a weekly schedule and does not prove reopening occurred.\n\nPool-label extraction replaces the pool-field instructions above. Return pool_label_raw, not pool. Copy the complete printed pool allocation for the session verbatim. Preserve original case, words, qualifiers, punctuation, conjunctions and combined lane/section labels. Do not simplify or interpret the label and do not expand legend codes. Omit enclosing parentheses if they merely delimit the label. A standalone numeric lane count is not a pool label: use null. If a label combines a lane count with a named pool section, copy the entire label, including the count. Use null when no pool label is printed. Code, not the model, will derive the normalized pool field.\n"
     },
     "finalists": {
       "candidates": [

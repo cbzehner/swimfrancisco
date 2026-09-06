@@ -758,6 +758,7 @@ count three repetitions as three independent documents. An empty-session
 closure notice must not hide grid errors in pooled session metrics.
 
 ```sh
+# Historical API-confirmation commands: use source revision d52e022.
 uv --project schedule-tools run --locked schedules benchmark-prepare \
   --comparison finalists --poppler /path/to/poppler/bin
 uv --project schedule-tools run --locked schedules benchmark-run \
@@ -980,6 +981,38 @@ That is a proposed cause of these differences, not a demonstrated fix. Preserve
 raw labels, apply explicit source-backed normalization in code, then repeat a
 new frozen comparison. Keep the current production provider and PR publication
 workflow until the remaining acceptance checks pass.
+
+### Literal pool-label comparison
+
+The approved repeat changes only the pool-label extraction contract. The model
+returns required `pool_label_raw` (a complete printed label or null) instead of
+`pool`. Code strips enclosing parentheses, lowercases text, removes the standalone
+word `pool`, and collapses whitespace. It preserves qualifiers, combined lane and
+section labels, punctuation, and unexpanded codes. It does not use case-specific
+aliases or the expected answers. Raw facts and the derived payload both remain
+in the evidence archive, and replay checks both.
+
+Keep the same model snapshot, reasoning effort, token limit, seven documents,
+three repetitions, date rules, references, and exact-match acceptance rule. This
+is a targeted regression comparison after observing failures, not a new holdout.
+The earlier API archive requires source revision `d52e022` for exact replay;
+current code fully uses the raw-label contract for API benchmarking.
+
+The repeat reserves at most $7.65 before making any request. Together with the
+initial run's estimated $2.341085, that stays below the original approved $10.
+Use fresh output paths; preserve earlier evidence unchanged.
+
+```sh
+uv --project schedule-tools run --locked schedules benchmark-prepare \
+  --comparison literal-pool-labels --poppler /path/to/poppler/bin
+just schedules benchmark-api-run --inputs /path/printed/by/prepare \
+  --output tmp/pdf-literal-label-results --budget-usd 7.65
+uv --project schedule-tools run --locked schedules benchmark-archive \
+  --inputs /path/printed/by/prepare --results tmp/pdf-literal-label-results \
+  --output benchmarks/pdf/literal-pool-labels-2026-09-05.zip
+uv --project schedule-tools run --locked schedules benchmark-replay \
+  benchmarks/pdf/literal-pool-labels-2026-09-05.zip --output tmp/pdf-literal-label-replay
+```
 
 ## Auto-extract workflow
 
