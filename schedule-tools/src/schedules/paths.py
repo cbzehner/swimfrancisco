@@ -11,6 +11,7 @@ CONTENT_SPOTS_DIR = REPO_ROOT / "content" / "spots"
 DATA_DIR = REPO_ROOT / "data"
 TMP_DIR = REPO_ROOT / "tmp"
 REPORT_PATHS = {
+    "openai": TMP_DIR / "extraction-report-openai.md",
     "direct": TMP_DIR / "extraction-report-direct.md",
     "gemini": TMP_DIR / "extraction-report-gemini.md",
     "anthropic": TMP_DIR / "extraction-report-anthropic.md",

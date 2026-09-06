@@ -216,7 +216,8 @@ def test_each_source_mode_processes_its_partition_exactly_once(monkeypatch, tmp_
 
 
 def test_source_modes_have_distinct_report_paths() -> None:
-    assert len(set(REPORT_PATHS.values())) == 3
+    assert len(set(REPORT_PATHS.values())) == 4
+    assert REPORT_PATHS["openai"].name == "extraction-report-openai.md"
     assert REPORT_PATHS["direct"].name == "extraction-report-direct.md"
     assert REPORT_PATHS["gemini"].name == "extraction-report-gemini.md"
     assert REPORT_PATHS["anthropic"].name == "extraction-report-anthropic.md"

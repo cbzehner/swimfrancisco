@@ -204,7 +204,7 @@ def test_api_closure_pairs_are_checked_after_null_mapping():
 def test_api_budget_failure_makes_no_calls(api_inputs, tmp_path, monkeypatch, budget):
     import schedules.benchmark as benchmark
     monkeypatch.setenv("OPENAI_API_KEY", "not-a-real-key")
-    monkeypatch.setattr(benchmark, "call_benchmark_api", lambda *args: pytest.fail("Budget guard made a paid call"))
+    monkeypatch.setattr(benchmark, "call_api", lambda *args: pytest.fail("Budget guard made a paid call"))
     output = tmp_path / "results"
     with pytest.raises(ValueError, match="budget|reservation"):
         benchmark.run_api_benchmark(api_inputs, output, REPO_ROOT / "tests/fixtures/schedule-benchmark.json", REPO_ROOT, budget, 10)

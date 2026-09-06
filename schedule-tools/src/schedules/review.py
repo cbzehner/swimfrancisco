@@ -253,11 +253,11 @@ def _source_path(review_dir: Path) -> Path:
     return review_dir / "source.pdf"
 
 
-_PROVIDER_PREFERENCE = ("gemini", "anthropic")
+_PROVIDER_PREFERENCE = ("openai", "gemini", "anthropic")
 
 
 def _pick_provider_artifact(review_dir: Path) -> Path:
-    """Return the provider artifact to seed from. gemini → anthropic → newest mtime."""
+    """Prefer the production provider, then manual comparators, then newest mtime."""
     provider_paths: dict[str, list[Path]] = {}
     for path in _provider_json_paths(review_dir):
         provider = path.name.split("-", 1)[0]

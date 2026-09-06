@@ -11,6 +11,10 @@ DAY_ORDER = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday",
 
 
 ViolationCode = Literal[
+    "closure_notice_missing_dates",
+    "closure_notice_has_open_hours",
+    "duplicate_session",
+    "source_coverage_failed",
     "sessions_dropped_to_zero",
     "too_few_weekly_sessions",
     "invalid_session_time_range",
@@ -133,6 +137,7 @@ class ProviderResult:
     payload: ExtractedPayload
     model: str
     usage: dict[str, Any]
+    details: dict[str, Any] = field(default_factory=dict)
 
     @property
     def cost_estimate(self) -> str:

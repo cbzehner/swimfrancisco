@@ -24,6 +24,11 @@ import jsonschema
 
 from .eval import load_benchmark_reference, prf1, score_benchmark_run
 from .schema import EXTRACTION_SCHEMA, SOURCE_FACTS_SCHEMA, pool_label_payload
+from .providers.openai_provider import (
+    API_MODEL, API_ENDPOINT, API_MAX_OUTPUT_TOKENS, API_PRICING,
+    api_transport_schema, api_payload, api_request, api_reservation_microusd,
+    api_response_result, call_api,
+)
 
 
 CHECK_PAYLOAD = {"check": "schedule-benchmark", "sum": 42}
@@ -36,17 +41,11 @@ CHECK_SCHEMA = {
     "properties": {"check": {"type": "string"}, "sum": {"type": "integer"}},
     "required": ["check", "sum"],
 }
-
-API_MODEL = "gpt-5.5-2026-04-23"
-API_ENDPOINT = "https://api.openai.com/v1/responses"
-API_MAX_OUTPUT_TOKENS = 8192
-API_PRICING = {
-    "checked_at": "2026-09-05",
-    "source": "https://developers.openai.com/api/docs/models/gpt-5.5",
-    "input_usd_per_million": 5, "cached_input_usd_per_million": 0.5,
-    "output_usd_per_million": 30, "service_tier": "default",
+_BASELINE_PROMPT_ARCHIVES = {
+    "development": "development-2026-09-04.zip",
+    "finalists": "finalists-2026-09-05.zip",
+    "literal-pool-labels": "literal-pool-labels-2026-09-05.zip",
 }
-
 
 def benchmark_models(manifest: Path) -> list[dict]:
     models = json.loads(manifest.read_text())["models"]
@@ -90,15 +89,8 @@ def prepare_benchmark(manifest: Path, repo_root: Path, poppler: Path, comparison
         if not (poppler / name).is_file():
             raise ValueError(f"Poppler directory is missing {name}.")
     root = Path(tempfile.mkdtemp(prefix="swimfrancisco-benchmark-"))
-    prompt = (repo_root / "schedule-tools/src/schedules/prompts/extract.txt").read_text()
-    prompt += (
-        f"\nBenchmark reference date: {data['as_of']}. Extract the printed schedule even "
-        "if it has expired. Never extend its dates or discard its historical sessions. "
-        "An expired schedule does not prove that the facility is closed. "
-        "Preserve printed pool-section codes in lowercase without expanding the legend "
-        "or splitting a shared-pool slot. Numeric lane counts are not pool sections.\n"
-    )
-    prompt += plan["prompt_addendum"]
+    with zipfile.ZipFile(repo_root / "benchmarks/pdf" / _BASELINE_PROMPT_ARCHIVES[comparison]) as archive:
+        prompt = archive.read("inputs/prompt.txt").decode()
     (root / "prompt.txt").write_text(prompt)
     (root / "schema.json").write_text(json.dumps(EXTRACTION_SCHEMA, indent=2))
     inputs = []
@@ -331,108 +323,6 @@ def extraction_request(inputs: Path, source_sha256: str, track: str, *, native_s
     return prompt, images
 
 
-def api_transport_schema(schema: dict) -> dict:
-    """Require nullable optional fields; enforce dependentRequired after mapping."""
-    result = {key: value for key, value in schema.items() if key != "dependentRequired"}
-    if "enum" in result and "type" not in result:
-        if not all(isinstance(value, str) for value in result["enum"]):
-            raise ValueError("API schema only supports string enums without explicit types.")
-        result["type"] = "string"
-    if "properties" in schema:
-        required = schema.get("required", [])
-        result["properties"] = {
-            name: api_transport_schema(child) if name in required else
-            {"anyOf": [api_transport_schema(child), {"type": "null"}]}
-            for name, child in schema["properties"].items()
-        }
-        result["required"] = list(schema["properties"])
-        result["additionalProperties"] = False
-    if "items" in schema:
-        result["items"] = api_transport_schema(schema["items"])
-    return result
-
-
-def api_payload(value, schema: dict):
-    """Remove only optional nulls. Never repair content or remove unknown fields."""
-    if isinstance(value, dict):
-        properties = schema.get("properties", {})
-        return {name: api_payload(child, properties.get(name, {})) for name, child in value.items()
-                if not (name in properties and name not in schema.get("required", []) and child is None)}
-    if isinstance(value, list):
-        return [api_payload(child, schema.get("items", {})) for child in value]
-    return value
-
-
-def api_request(prompt: str, schema: dict, *, max_output_tokens: int = API_MAX_OUTPUT_TOKENS) -> dict:
-    return {
-        "model": API_MODEL, "input": prompt, "reasoning": {"effort": "medium"},
-        "text": {"format": {"type": "json_schema", "name": "schedule_extraction",
-                            "strict": True, "schema": api_transport_schema(schema)}},
-        "max_output_tokens": max_output_tokens, "store": False, "tools": [],
-        "service_tier": "default", "truncation": "disabled",
-    }
-
-
-def api_reservation_microusd(request: dict) -> int:
-    # UTF-8 byte count over the entire body plus framing is a conservative token bound.
-    input_bound = len(json.dumps(request, ensure_ascii=False).encode()) + 4096
-    if input_bound > 200_000:
-        raise ValueError("API benchmark input exceeds the short-context price reservation.")
-    return input_bound * 5 + request["max_output_tokens"] * 30
-
-
-def api_response_result(response: dict, schema: dict) -> dict:
-    result = {"payload": None, "final_response": None, "response_status": response.get("status"),
-              "resolved_model": response.get("model"), "transport_valid": False}
-    if response.get("status") != "completed":
-        return result | {"status": "provider_error"}
-    messages = [item for item in response.get("output", []) if item.get("type") == "message"]
-    content = [part for item in messages for part in item.get("content", [])]
-    if any(part.get("type") == "refusal" for part in content):
-        return result | {"status": "provider_error"}
-    texts = [part.get("text") for part in content if part.get("type") == "output_text"]
-    if len(messages) != 1 or messages[0].get("status") != "completed" or len(texts) != 1:
-        return result | {"status": "provider_error"}
-    result["final_response"] = texts[0]
-    try:
-        value = json.loads(texts[0])
-        jsonschema.Draft202012Validator(api_transport_schema(schema), format_checker=jsonschema.FormatChecker()).validate(value)
-    except (ValueError, TypeError, jsonschema.ValidationError):
-        return result | {"status": "transport_invalid"}
-    return result | {"status": "completed", "transport_valid": True, "payload": api_payload(value, schema)}
-
-
-def call_benchmark_api(request: dict, directory: Path, timeout: int) -> dict:
-    """One paid request, no retries, redirects, proxies, or credential-bearing logs."""
-    directory.mkdir(parents=True, exist_ok=False)
-    (directory / "request.json").write_text(json.dumps(request, indent=2))
-    started = time.monotonic()
-    result = {"api_response": None, "http_status": None, "timed_out": False, "exit_code": None,
-              "reserved_microusd": api_reservation_microusd(request), "cost_usd": None,
-              "runner_retries": 0, "status": "launch_error"}
-    try:
-        with httpx.Client(timeout=timeout, trust_env=False, follow_redirects=False) as client:
-            response = client.post(API_ENDPOINT, json=request,
-                                   headers={"Authorization": "Bearer " + os.environ["OPENAI_API_KEY"]})
-        result["http_status"] = response.status_code
-        result["exit_code"] = 0 if response.is_success else 1
-        result["status"] = "completed" if response.is_success else "execution_error"
-        if response.is_success:
-            body = response.json()
-            (directory / "response.json").write_text(json.dumps(body, indent=2))
-            result["api_response"] = {key: body.get(key) for key in
-                                      ("status", "model", "output", "usage", "incomplete_details", "service_tier")}
-            usage = body.get("usage") or {}
-            if type(usage.get("input_tokens")) is int and type(usage.get("output_tokens")) is int:
-                cached = (usage.get("input_tokens_details") or {}).get("cached_tokens", 0)
-                result["cost_usd"] = ((usage["input_tokens"] - cached) * 5 + cached * 0.5 + usage["output_tokens"] * 30) / 1_000_000
-    except httpx.TimeoutException:
-        result |= {"timed_out": True, "status": "timeout"}
-    except (httpx.HTTPError, ValueError, KeyError) as error:
-        result |= {"error_type": type(error).__name__, "status": "execution_error", "exit_code": 1}
-    result["elapsed_seconds"] = round(time.monotonic() - started, 3)
-    return result
-
 
 def run_api_benchmark(inputs: Path, output: Path, manifest: Path, repo_root: Path,
                       budget_usd: float, timeout: int, progress=print) -> list[dict]:
@@ -467,7 +357,7 @@ def run_api_benchmark(inputs: Path, output: Path, manifest: Path, repo_root: Pat
     }
     (output / "run.json").write_text(json.dumps(run, indent=2))
     progress(f"Reserved ${reserved / 1_000_000:.4f} of ${budget_usd:.2f}; sequential requests, no retries.")
-    readiness = call_benchmark_api(readiness_request, output / "readiness", timeout)
+    readiness = call_api(readiness_request, output / "readiness", timeout)
     parsed = api_response_result(readiness["api_response"], CHECK_SCHEMA) if readiness["api_response"] else {}
     readiness["parsed"] = parsed
     (output / "readiness.json").write_text(json.dumps(readiness, indent=2))
@@ -483,7 +373,7 @@ def run_api_benchmark(inputs: Path, output: Path, manifest: Path, repo_root: Pat
             "source_sha256": reference["source_sha256"], "started_at": datetime.now(timezone.utc).isoformat(),
             "request_sha256": hashlib.sha256(request["input"].encode()).hexdigest(), "image_sha256": [],
         }
-        attempt |= call_benchmark_api(request, directory, timeout)
+        attempt |= call_api(request, directory, timeout)
         attempt |= (api_response_result(attempt["api_response"], SOURCE_FACTS_SCHEMA) if attempt["api_response"] else
                     {"payload": None, "final_response": None, "resolved_model": None, "transport_valid": False})
         attempt["source_facts"] = attempt["payload"]

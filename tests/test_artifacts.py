@@ -1,5 +1,6 @@
 import hashlib
 import json
+import pytest
 
 from schedules.artifacts import find_review_dir_for_sha, save_artifact_bundle, skip_if_fresh
 from schedules.paths import artifact_path
@@ -85,6 +86,18 @@ def test_skip_if_fresh_false_when_missing(tmp_path):
         schema={"x": 1},
         root=tmp_path,
     )
+
+
+@pytest.mark.parametrize("changed", [None, "model", "prompt", "schema", "parser", "renderer", "reasoning", "max_output_tokens"])
+def test_extraction_cache_requires_exact_configuration(tmp_path, changed):
+    configuration = {key: "original" for key in ("model", "prompt", "schema", "parser", "renderer", "reasoning", "max_output_tokens")}
+    _call_save(tmp_path, prompt="P", schema={"x": 1}, details={"configuration": configuration})
+    requested = configuration if changed is None else configuration | {changed: "changed"}
+    assert skip_if_fresh(
+        slug="hamilton-pool", date="2026-04-19", pdf_sha256="a" * 64,
+        provider="gemini", model="gemini-3.1-flash-lite-preview", prompt="P",
+        schema={"x": 1}, root=tmp_path, configuration=requested,
+    ) is (changed is None)
 
 
 def test_find_review_dir_sidecar_hit_skips_pdf_hash(tmp_path, monkeypatch):

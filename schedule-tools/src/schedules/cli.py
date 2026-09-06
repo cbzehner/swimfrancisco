@@ -77,7 +77,7 @@ def _summary_line(results: list[PoolResult]) -> str:
 )
 @click.option(
     "--provider",
-    type=click.Choice(["anthropic", "gemini"]),
+    type=click.Choice(["openai", "anthropic", "gemini"]),
     help="Process only configured sfrecpark_pdf sources with this provider.",
 )
 @click.option("--force", is_flag=True, help="Re-fetch PDFs and bypass the unchanged shortcut.")
@@ -443,13 +443,13 @@ def debug() -> None:
 )
 @click.option(
     "--provider",
-    type=click.Choice(["anthropic", "gemini"]),
+    type=click.Choice(["openai", "anthropic", "gemini"]),
     default=_default_provider(),
     show_default="env SCHEDULES_PROVIDER or gemini",
 )
 @click.option(
     "--compare-with",
-    type=click.Choice(["anthropic", "gemini"]),
+    type=click.Choice(["openai", "anthropic", "gemini"]),
     required=True,
     help="Second provider to run against the same PDFs and diff.",
 )

@@ -8,7 +8,8 @@ from dataclasses import dataclass
 from ._time import printed_time_range
 from .models import GroundingResult, SessionGrounding
 from .schema import pool_label_payload
-from .signals import PdfSource, SourceCell, TIME_RANGE_RE, program_types
+from .signals import DAY_TOKEN_RE, PdfSource, SourceCell, TIME_RANGE_RE, program_types
+from .window_dates import parse_window_dates
 
 
 @dataclass(frozen=True)
@@ -82,6 +83,20 @@ def source_coverage(source: PdfSource, payload: dict, *, visual_pages: frozenset
             "extra": [list(key) for key in (actual - expected).elements()],
             "session_cells": [indexed.get(tuple(session.get(field) for field in ("day", "type", "start", "end", "pool")))
                               for session in payload.get("sessions", [])]}
+
+
+def source_window_coverage(source: PdfSource, payload: dict) -> dict:
+    header = []
+    for line in source.text.split("\n\nPAGE 2\n", 1)[0].splitlines():
+        if len({match[0].lower() for match in DAY_TOKEN_RE.finditer(line)}) >= 3:
+            break
+        header.append(line)
+    window = parse_window_dates(page_text="\n".join(header), anchor_text=None, filename=None, year_default=0)
+    expected = [day.isoformat() for day in window] if window else None
+    actual = [payload.get("effective_start"), payload.get("effective_end")]
+    return {"ok": expected is not None and expected == actual,
+            "expected": expected, "actual": actual,
+            "issues": [] if expected == actual else ["source_window_mismatch" if expected else "source_window_unavailable"]}
 
 TYPE_TOKENS: dict[str, tuple[str, ...]] = {
     "lap_swim": ("lap",),

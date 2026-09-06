@@ -18,11 +18,13 @@ from .paths import (
     CONTENT_SPOTS_DIR,
     DATA_DIR,
     PACKAGE_ROOT,
+    PROMPT_PATH,
     TMP_DIR,
     all_review_dirs,
     parse_review_dir_name,
 )
 from .pipeline import GROUNDING_MIN_RATIO
+from .providers.openai_provider import verify_artifact
 from .registry import load_registry
 from .review import (
     DecisionSet,
@@ -226,7 +228,15 @@ def publish_eligible(
         first = result.violations[0]
         return _refuse(first.code if first.code else "validate_failed", first.message)
 
-    if require_grounding:
+    artifact = json.loads(_pick_provider_artifact(candidate.review_dir).read_text())
+    if require_grounding and artifact.get("provider") == "openai":
+        try:
+            coverage = verify_artifact(artifact, source_pdf_path.read_bytes(), PROMPT_PATH.read_text()) if source_pdf_path else None
+        except Exception as error:  # Malformed PDF or artifact must hold this pool, not bypass the gate.
+            return _refuse("source_coverage_failed", str(error))
+        if not coverage or not coverage["ok"]:
+            return _refuse("source_coverage_failed", "Extraction differs from the independent source inventory")
+    elif require_grounding:
         if grounding is None:
             return _refuse("grounding_unavailable", "provider JSON is missing a grounding key")
         if grounding.ratio < GROUNDING_MIN_RATIO:

@@ -88,6 +88,7 @@ def save_artifact_bundle(
     usage: dict,
     cost_estimate: str,
     grounding: GroundingResult | None = None,
+    details: dict | None = None,
     root: Path = DATA_DIR,
 ) -> dict[str, str]:
     target = artifact_path(slug, date, pdf_sha256, provider, model, root=root)
@@ -122,6 +123,8 @@ def save_artifact_bundle(
                 for entry in grounding.sessions
             ],
         }
+    if details is not None:
+        provider_payload["details"] = details
     target.write_text(json.dumps(provider_payload, indent=2, sort_keys=True) + "\n")
 
     return {provider: relative_to_repo(target)}
@@ -136,6 +139,7 @@ def skip_if_fresh(
     model: str,
     prompt: str,
     schema: dict,
+    configuration: dict | None = None,
     root: Path = DATA_DIR,
 ) -> bool:
     """Return True iff a cached provider JSON exists and its hashes match."""
@@ -149,4 +153,5 @@ def skip_if_fresh(
     return (
         data.get("prompt_sha256") == _sha256_text(prompt)
         and data.get("schema_sha256") == _sha256_json(schema)
+        and (configuration is None or data.get("details", {}).get("configuration") == configuration)
     )

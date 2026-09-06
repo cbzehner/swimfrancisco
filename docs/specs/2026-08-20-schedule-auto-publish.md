@@ -64,6 +64,29 @@ were omitted. Missing-session coverage remains a required cutover check.
 
 ### Checked direct-main publication
 
+The production API adapter now uses the pinned GPT-5.5 snapshot, medium reasoning,
+native strict output, and at most two attempts. Only timeouts and selected
+transient HTTP errors retry. Authentication and quota failures do not retry.
+A local locked ledger reserves the maximum request cost before sending it.
+Missing usage keeps that reservation; reported usage settles at the full input
+rate, without relying on cache discounts. A pricing or accounting mismatch
+blocks later calls. This local ledger does not yet establish a monthly limit
+across separate Actions runs. Recurring paid automation remains disabled until
+the operator approves that limit and durable accounting is connected.
+
+The API adapter and the benchmark share the same transport and pricing code.
+Historical CLI/API comparisons use their archived prompts so a production
+prompt change cannot silently change an earlier experiment's contract. New
+production-request comparisons must freeze the current source inventory and
+conditional image inputs separately.
+
+Cached production extraction requires the source hash and the exact model,
+prompt, schema, parser, normalization, renderer, and output-limit configuration.
+Publication rechecks the source facts, PDF hash, and rendered evidence. The
+printed window must match both extracted dates; a missing year cannot borrow
+the current year or a year from a holiday note. Closure completeness still needs
+its own acceptance checks and is not established by session or window coverage.
+
 Run source discovery daily. Keep unchanged runs free of model calls and content
 commits unless a configuration or publication-state change requires work.
 

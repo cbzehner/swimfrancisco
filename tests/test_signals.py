@@ -7,7 +7,8 @@ import pytest
 
 from schedules._time import printed_time_range
 from schedules.eval import load_benchmark_reference
-from schedules.grounding import source_coverage
+from schedules.grounding import source_coverage, source_window_coverage
+from schedules.signals import PdfSource
 from schedules.paths import REPO_ROOT
 from schedules.signals import inspect_pdf_source, program_types
 
@@ -59,6 +60,22 @@ def test_broken_text_requires_a_visual_input(source_reference):
         assert any(issue.endswith(":unbalanced_text") for issue in source.issues)
         assert not source_coverage(source, reference["expected"])["ok"]
         assert source_coverage(source, reference["expected"], visual_pages=frozenset({1}))["ok"]
+
+
+def test_printed_window_matches_reference_and_rejects_date_changes(source_reference):
+    source, reference = source_reference
+    payload = reference["expected"]
+    assert source_window_coverage(source, payload)["ok"]
+    for field in ("effective_start", "effective_end"):
+        assert not source_window_coverage(source, payload | {field: "2099-01-01"})["ok"]
+        assert not source_window_coverage(source, payload | {field: None})["ok"]
+
+
+def test_printed_window_does_not_borrow_year_from_a_holiday_note():
+    text = "Schedule June 9-August 15\nTUESDAY WEDNESDAY THURSDAY\nClosed July 4, 2026"
+    source = PdfSource(text, (), (), 1)
+    payload = {"effective_start": "2026-06-09", "effective_end": "2026-08-15"}
+    assert not source_window_coverage(source, payload)["ok"]
 
 
 @pytest.mark.parametrize("start,end,expected", [
