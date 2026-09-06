@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import httpx
 import pytest
+from io import BytesIO
 from pypdf import PdfWriter
 
 from schedules.fetch import FetchError, fetch_pdf
@@ -17,23 +18,13 @@ def _make_pdf_bytes(tmp_path):
 
 
 def _fake_client_factory(pdf_bytes, counter):
-    class FakeClient:
-        def __init__(self, *args, **kwargs):
-            pass
-        def __enter__(self):
-            return self
-        def __exit__(self, exc_type, exc, tb):
-            return False
-        def get(self, url):
-            counter["count"] += 1
-            request = httpx.Request("GET", url)
-            return httpx.Response(
-                200,
-                content=pdf_bytes,
-                headers={"Content-Type": "application/pdf"},
-                request=request,
-            )
-    return FakeClient
+    client = httpx.Client
+
+    def handler(request):
+        counter["count"] += 1
+        return httpx.Response(200, stream=httpx.ByteStream(pdf_bytes), headers={"Content-Type": "application/pdf"})
+
+    return lambda *args, **kwargs: client(*args, transport=httpx.MockTransport(handler), **kwargs)
 
 
 def test_fetch_pdf_does_not_write_unreadable_payload(tmp_path, monkeypatch):
@@ -160,3 +151,53 @@ def test_fetch_pdf_collision_regardless_of_sort_order(tmp_path, monkeypatch):
     monkeypatch.setattr("schedules.fetch.httpx.Client", _fake_client_factory(pdf_bytes, counter))
     with pytest.raises(FetchError, match="prefix collision"):
         fetch_pdf("test-pool", "http://example.test/x.pdf", cache_root=tmp_path)
+
+
+@pytest.mark.parametrize("status, expected_calls", [(404, 1), (403, 1), (429, 1), (500, 3), (503, 3)])
+def test_fetch_retries_only_transient_http_errors(tmp_path, monkeypatch, status, expected_calls):
+    client = httpx.Client
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(status)
+
+    monkeypatch.setattr("schedules.fetch.httpx.Client", lambda **kwargs: client(transport=httpx.MockTransport(handler), **kwargs))
+    monkeypatch.setattr("schedules.fetch.time.sleep", lambda _: None)
+    with pytest.raises(FetchError):
+        fetch_pdf("test-pool", "https://example.test/source.pdf", cache_root=tmp_path)
+    assert len(calls) == expected_calls
+    assert not list(tmp_path.glob("**/source.pdf"))
+
+
+@pytest.mark.parametrize("headers", [{"content-length": "1000"}, {"content-length": "1"}, {}, {"content-encoding": "gzip"}])
+def test_fetch_bounds_actual_bytes_as_well_as_declared_size(tmp_path, monkeypatch, headers):
+    client = httpx.Client
+    monkeypatch.setattr("schedules.fetch.MAX_PDF_BYTES", 100)
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        assert request.headers["accept-encoding"] == "identity"
+        return httpx.Response(200, stream=httpx.ByteStream(b"x" * 200), headers=headers)
+
+    monkeypatch.setattr("schedules.fetch.httpx.Client", lambda **kwargs: client(transport=httpx.MockTransport(handler), **kwargs))
+    with pytest.raises(FetchError, match="source limit|content encoding"):
+        fetch_pdf("test-pool", "https://example.test/source.pdf", cache_root=tmp_path)
+    assert len(calls) == 1
+    assert not list(tmp_path.glob("**/source.pdf"))
+
+
+@pytest.mark.parametrize("pages,width,height", [(13, 72, 72), (1, 2001, 72), (1, 72, 2001)])
+def test_oversized_pdf_is_rejected_before_caching(tmp_path, monkeypatch, pages, width, height):
+    writer = PdfWriter()
+    for _ in range(pages):
+        writer.add_blank_page(width=width, height=height)
+    stream = BytesIO()
+    writer.write(stream)
+    counter = {"count": 0}
+    monkeypatch.setattr("schedules.fetch.httpx.Client", _fake_client_factory(stream.getvalue(), counter))
+    with pytest.raises(FetchError, match="source limit|dimensions"):
+        fetch_pdf("test-pool", "https://example.test/source.pdf", cache_root=tmp_path)
+    assert counter["count"] == 1
+    assert not list(tmp_path.glob("**/source.pdf"))

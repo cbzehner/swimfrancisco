@@ -12,6 +12,7 @@ from ._time import pacific_today
 from .artifacts import PrefixCollisionError, find_review_dir_for_sha
 from .models import FetchResult
 from .paths import DATA_DIR, review_dir as make_review_dir
+from .signals import MAX_PDF_BYTES, MAX_PDF_PAGES, MAX_PAGE_POINTS
 
 
 class FetchError(RuntimeError):
@@ -31,12 +32,25 @@ def fetch_pdf(
     slug_dir.mkdir(parents=True, exist_ok=True)
 
     last_error: Exception | None = None
-    with httpx.Client(follow_redirects=True, timeout=timeout) as client:
+    with httpx.Client(follow_redirects=True, max_redirects=5, timeout=timeout,
+                      headers={"Accept-Encoding": "identity"}) as client:
         for attempt in range(retries + 1):
             try:
-                response = client.get(url)
-                response.raise_for_status()
-                payload = response.content
+                with client.stream("GET", url) as response:
+                    response.raise_for_status()
+                    if response.headers.get("content-encoding", "identity").lower() != "identity":
+                        raise FetchError("PDF server returned an unsupported content encoding")
+                    length = response.headers.get("content-length")
+                    if length is not None and (not length.isdecimal() or int(length) > MAX_PDF_BYTES):
+                        raise FetchError("PDF exceeds the 25 MiB source limit or has an invalid length")
+                    chunks = []
+                    size = 0
+                    for chunk in response.iter_raw(chunk_size=64 * 1024):
+                        size += len(chunk)
+                        if size > MAX_PDF_BYTES:
+                            raise FetchError("PDF exceeds the 25 MiB source limit")
+                        chunks.append(chunk)
+                    payload = b"".join(chunks)
                 sha256 = hashlib.sha256(payload).hexdigest()
 
                 # A matching sha always reuses the existing review dir, even under `force`:
@@ -76,10 +90,13 @@ def fetch_pdf(
                     page_count=page_count,
                 )
             except FetchError:
-                raise  # don't retry prefix collisions
-            except Exception as exc:  # noqa: BLE001
+                raise
+            except httpx.HTTPError as exc:
                 last_error = exc
-                if attempt >= retries:
+                transient = isinstance(exc, (httpx.TimeoutException, httpx.NetworkError)) or (
+                    isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code in {408, 500, 502, 503, 504}
+                )
+                if not transient or attempt >= retries:
                     break
                 time.sleep(0.25 * (attempt + 1))
 
@@ -99,4 +116,9 @@ def _count_pdf_pages(payload: bytes) -> int:
 
     if page_count <= 0:
         raise FetchError("Downloaded PDF contains zero pages.")
+    if page_count > MAX_PDF_PAGES:
+        raise FetchError("PDF exceeds the 12-page source limit")
+    for page in reader.pages:
+        if not (0 < page.mediabox.width <= MAX_PAGE_POINTS and 0 < page.mediabox.height <= MAX_PAGE_POINTS):
+            raise FetchError("PDF page exceeds the supported dimensions")
     return page_count

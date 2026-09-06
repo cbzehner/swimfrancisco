@@ -32,7 +32,7 @@ from .providers.openai_provider import (
     extraction_configuration, render_source_pages, source_request, visual_page_numbers,
 )
 from .signals import inspect_pdf_source
-from .grounding import source_coverage, source_window_coverage
+from .grounding import source_closure_coverage, source_coverage, source_window_coverage
 
 
 CHECK_PAYLOAD = {"check": "schedule-benchmark", "sum": 42}
@@ -439,6 +439,7 @@ def run_api_benchmark(inputs: Path, output: Path, manifest: Path, repo_root: Pat
             attempt["payload"] = pool_label_payload(attempt["payload"])
             attempt["source_coverage"] = source_coverage(source, attempt["payload"], visual_pages=pages)
             attempt["source_window"] = source_window_coverage(source, attempt["payload"])
+            attempt["source_closures"] = source_closure_coverage(source, attempt["payload"])
         if attempt["resolved_model"] not in {None, API_MODEL}:
             attempt["status"] = "provider_error"
         attempt["provider_error"] = attempt["status"] == "provider_error"
@@ -780,7 +781,7 @@ def archive_benchmark(inputs: Path, results_dir: Path, output: Path, manifest: P
               "request_sha256", "image_sha256", "started_at", "elapsed_seconds", "reported_models",
               "provider_error", "error_type", "score", "api_request", "api_response", "transport_valid",
               "response_status", "http_status", "reserved_microusd", "source_facts",
-              "source_coverage", "source_window", "reservation_id")
+              "source_coverage", "source_window", "source_closures", "reservation_id")
     portable = []
     for result in results:
         row = {key: result[key] for key in fields if key in result}
@@ -880,7 +881,8 @@ def verify_benchmark_replay(root: Path, repo_root: Path) -> None:
                 images = tuple(root / "inputs" / reference["source_sha256"][:12] / f"page-{number}.png" for number in sorted(pages))
                 if row["payload"] is not None and (
                     row["source_coverage"] != source_coverage(source, row["payload"], visual_pages=pages) or
-                    row["source_window"] != source_window_coverage(source, row["payload"])
+                    row["source_window"] != source_window_coverage(source, row["payload"]) or
+                    row["source_closures"] != source_closure_coverage(source, row["payload"])
                 ):
                     raise ValueError("Archived source coverage does not reproduce")
             else:

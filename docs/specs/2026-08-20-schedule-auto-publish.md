@@ -71,7 +71,7 @@ A local locked ledger reserves the maximum request cost before sending it.
 Missing usage keeps that reservation; reported usage settles at the full input
 rate, without relying on cache discounts. A pricing or accounting mismatch
 blocks later calls. This local ledger does not yet establish a monthly limit
-across separate Actions runs. Recurring paid automation remains disabled until
+across separate Actions runs. Recurring OpenAI automation remains disabled until
 the operator approves that limit and durable accounting is connected.
 
 The API adapter and the benchmark share the same transport and pricing code.
@@ -84,8 +84,8 @@ Cached production extraction requires the source hash and the exact model,
 prompt, schema, parser, normalization, renderer, and output-limit configuration.
 Publication rechecks the source facts, PDF hash, and rendered evidence. The
 printed window must match both extracted dates; a missing year cannot borrow
-the current year or a year from a holiday note. Closure completeness still needs
-its own acceptance checks and is not established by session or window coverage.
+the current year or a year from a holiday note. The closure inventory below adds
+a separate check; session and window coverage do not establish closure completeness.
 
 Run source discovery daily. Keep unchanged runs free of model calls and content
 commits unless a configuration or publication-state change requires work.
@@ -175,6 +175,48 @@ The regression corpus contains 145 sessions. Mutation tests remove every row
 and alter its day, program, start, end, and pool; all must fail coverage. These
 tests establish behavior on the known corpus, not universal PDF support. Fresh
 documents and a human reference check remain release checks.
+
+### Closure inventory and source limits
+
+The clarified-label repeat omitted North Beach's July 4 closure in one response.
+Its sessions and window still matched. The new publication check rejects that
+unchanged archived response and catches removed, duplicated, shifted, or
+incorrectly timed closure entries.
+
+The parser separates the right-hand Notes column by PDF coordinates and retains
+closure-related notices. Closure words elsewhere in a grid hold the source:
+the pipeline does not yet have an approved rule for resolving a session-cell
+cancellation against a narrower facility-wide closure. A closure-only page must
+establish its own dates; a link title alone cannot authorize publication.
+
+Supported facility notices include explicit numeric or named dates, inclusive
+date ranges, one shared time range, and numbered weekday recurrences within the
+printed schedule window. Unparsed numbers, conflicting dates, uncertain scope,
+multiple time ranges, and bare training mentions hold the update. This is a
+bounded parser, not universal natural-language support. It compares closure
+dates and hours; it does not claim to verify free-text reason paraphrases.
+Production rejects unresolved notices before spending on an extraction call.
+Benchmark runs still measure their candidates and preserve the closure check
+separately; a scored benchmark result does not authorize publication.
+
+Mission's fresh holdout matched all reference fields three times. Its cell
+caveat still holds production until the operator decides how to resolve it.
+Other unresolved benchmark references remain unchanged and unapproved. No model
+response, successful test, or CI attestation replaces that domain decision or a
+human reference check.
+
+PDF input is limited to 25 MiB, 12 pages, and 2,000 points per page dimension.
+Rendered evidence is limited to 20 million pixels per batch. Downloads request
+identity encoding, reject other encodings, enforce actual streamed bytes, and
+allow at most five redirects. Permanent HTTP failures and invalid PDFs do not
+retry. The fetch path uses [HTTPX streaming](https://www.python-httpx.org/quickstart/#streaming-responses)
+to enforce the byte limit before buffering the complete response.
+
+The existing weekly Gemini/PR workflow has not been replaced. The new checks in
+the OpenAI path do not harden that legacy provider's session publication gate.
+Workflow replacement, durable monthly accounting, production credentials,
+checked promotion, and live validation remain release work. Do not enable the
+new direct-main path by changing only its provider name.
 
 References: [protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches),
 [workflow triggers](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow).

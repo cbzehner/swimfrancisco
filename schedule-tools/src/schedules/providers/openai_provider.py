@@ -19,10 +19,10 @@ import httpx
 import jsonschema
 import pdfplumber
 
-from ..grounding import source_coverage, source_slots, source_window_coverage
+from ..grounding import source_closure_coverage, source_coverage, source_publication_coverage, source_slots, source_window_coverage
 from ..models import ProviderResult
 from ..schema import SOURCE_FACTS_SCHEMA, pool_label_payload
-from ..signals import PdfSource, inspect_pdf_source
+from ..signals import MAX_PAGE_POINTS, MAX_PDF_BYTES, MAX_PDF_PAGES, PdfSource, inspect_pdf_source
 
 
 API_MODEL = "gpt-5.5-2026-04-23"
@@ -246,8 +246,17 @@ def extraction_configuration(prompt: str) -> dict:
 def render_source_pages(pdf_bytes: bytes, pages: frozenset[int]) -> dict[int, bytes]:
     if not pages:
         return {}
+    if len(pdf_bytes) > MAX_PDF_BYTES:
+        raise ValueError("PDF exceeds the 25 MiB source limit")
     images = {}
     with pdfplumber.open(BytesIO(pdf_bytes)) as document:
+        if not 1 <= len(document.pages) <= MAX_PDF_PAGES or any(number < 1 or number > len(document.pages) for number in pages):
+            raise ValueError("Rendered page is outside the supported source document")
+        selected = [document.pages[number - 1] for number in sorted(pages)]
+        if any(not (0 < page.width <= MAX_PAGE_POINTS and 0 < page.height <= MAX_PAGE_POINTS) for page in selected):
+            raise ValueError("PDF page exceeds the supported dimensions")
+        if sum(page.width * page.height * (150 / 72) ** 2 for page in selected) > 20_000_000:
+            raise ValueError("Rendered PDF exceeds the 20 megapixel evidence limit")
         for number in sorted(pages):
             image = document.pages[number - 1].to_image(resolution=150).original
             stream = BytesIO()
@@ -303,9 +312,7 @@ def verify_artifact(artifact: dict, pdf_bytes: bytes, prompt: str) -> dict:
     hashes = {str(number): hashlib.sha256(data).hexdigest() for number, data in images.items()}
     if hashes != details.get("image_sha256"):
         raise ValueError("Rendered evidence differs from the extraction input")
-    coverage = source_coverage(source, artifact["payload"], visual_pages=pages)
-    window = source_window_coverage(source, artifact["payload"])
-    return coverage | {"ok": coverage["ok"] and window["ok"], "window": window}
+    return source_publication_coverage(source, artifact["payload"], visual_pages=pages)
 
 
 def extract(pdf_bytes: bytes, prompt: str, schema: dict) -> ProviderResult:
@@ -316,6 +323,10 @@ def extract(pdf_bytes: bytes, prompt: str, schema: dict) -> ProviderResult:
         raise ValueError("SCHEDULES_API_BUDGET_FILE is required")
     budget = SpendBudget(Path(budget_path), float(os.environ.get("SCHEDULES_API_BUDGET_USD", "0")))
     source = inspect_pdf_source(pdf_bytes)
+    closure_issues = [issue for issue in source_closure_coverage(source, {})["issues"]
+                      if issue != "source_closure_mismatch"]
+    if closure_issues:
+        raise ValueError("Unresolved source closures: " + ", ".join(closure_issues))
     visual_pages = visual_page_numbers(source)
     images = render_source_pages(pdf_bytes, visual_pages)
     request = source_request(source, prompt, images)
@@ -337,6 +348,7 @@ def extract(pdf_bytes: bytes, prompt: str, schema: dict) -> ProviderResult:
     return ProviderResult(payload=payload, model=API_MODEL, usage=result["api_response"].get("usage") or {}, details={
         "source_facts": facts, "source_inventory": asdict(source), "source_coverage": coverage,
         "source_window": source_window_coverage(source, payload),
+        "source_closures": source_closure_coverage(source, payload),
         "visual_pages": sorted(visual_pages),
         "image_sha256": {str(number): hashlib.sha256(data).hexdigest() for number, data in images.items()},
         "request_sha256": hashlib.sha256(json.dumps(request, sort_keys=True).encode()).hexdigest(),

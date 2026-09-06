@@ -2,13 +2,14 @@ from schedules.signals import analyze_page_texts, source_notes_for_signals
 
 import copy
 import json
+import zipfile
 
 import pytest
 
 from schedules._time import printed_time_range
 from schedules.eval import load_benchmark_reference
-from schedules.grounding import source_coverage, source_window_coverage
-from schedules.signals import PdfSource
+from schedules.grounding import source_closure_coverage, source_coverage, source_publication_coverage, source_window_coverage
+from schedules.signals import PdfSource, SourceNotice
 from schedules.paths import REPO_ROOT
 from schedules.signals import inspect_pdf_source, program_types
 
@@ -73,7 +74,7 @@ def test_printed_window_matches_reference_and_rejects_date_changes(source_refere
 
 def test_printed_window_does_not_borrow_year_from_a_holiday_note():
     text = "Schedule June 9-August 15\nTUESDAY WEDNESDAY THURSDAY\nClosed July 4, 2026"
-    source = PdfSource(text, (), (), 1)
+    source = PdfSource(text, (), (), 1, ())
     payload = {"effective_start": "2026-06-09", "effective_end": "2026-08-15"}
     assert not source_window_coverage(source, payload)["ok"]
 
@@ -94,6 +95,87 @@ def test_coffman_ambiguous_closure_block_is_held_before_model_call():
     assert any(issue.endswith(":unknown_program") for issue in source.issues)
     with pytest.raises(ValueError, match="Unsupported PDF source"):
         source_request(source, "extract", {})
+
+
+@pytest.mark.parametrize("reference_id", ["north-beach-expired", "garfield-maintenance"])
+def test_closure_inventory_rejects_each_omission_and_change(reference_id):
+    reference = load_benchmark_reference(MANIFEST, reference_id, repo_root=REPO_ROOT)
+    source = inspect_pdf_source((REPO_ROOT / reference["source_pdf"]).read_bytes())
+    assert source_closure_coverage(source, reference["expected"])["ok"]
+    for index in range(len(reference["expected"]["closures"])):
+        for damage in ("missing", "duplicate", "start", "end", "time"):
+            payload = copy.deepcopy(reference["expected"])
+            row = payload["closures"][index]
+            if damage == "missing":
+                payload["closures"].pop(index)
+            elif damage == "duplicate":
+                payload["closures"].append(copy.deepcopy(row))
+            elif damage == "time":
+                row.update(start_time="12:00", end_time="14:00")
+            else:
+                row[damage] = "2099-01-01"
+            assert not source_publication_coverage(source, payload)["ok"], (index, damage)
+
+
+def test_archived_missing_holiday_is_rejected_without_changing_benchmark_answers():
+    with zipfile.ZipFile(REPO_ROOT / "benchmarks/pdf/physical-pool-labels-2026-09-05.zip") as archive:
+        rows = json.loads(archive.read("results.json"))
+    row = next(row for row in rows if row["reference"] == "north-beach-expired" and row["repetition"] == 2)
+    reference = load_benchmark_reference(MANIFEST, row["reference"], repo_root=REPO_ROOT)
+    source = inspect_pdf_source((REPO_ROOT / reference["source_pdf"]).read_bytes())
+    assert source_coverage(source, row["payload"])["ok"]
+    result = source_publication_coverage(source, row["payload"])
+    assert not result["ok"]
+    assert result["closures"]["missing"] == [["2026-07-04", "2026-07-04", None, None]]
+
+
+@pytest.mark.parametrize("reference_id", ["hamilton-fall", "balboa-fall", "balboa-interim", "rossi-spring", "mlk-fall", "mission-fall-holdout"])
+def test_unresolved_cell_closures_remain_held(reference_id):
+    reference = load_benchmark_reference(MANIFEST, reference_id, repo_root=REPO_ROOT)
+    source = inspect_pdf_source((REPO_ROOT / reference["source_pdf"]).read_bytes())
+    result = source_closure_coverage(source, reference["expected"])
+    assert not result["ok"]
+    assert any("unresolved_closure_scope" in issue for issue in result["issues"])
+
+
+def _notice_source(text, window="August 18-December 12, 2026"):
+    return PdfSource(f"Schedule {window}", (), (), 1, (SourceNotice("test-notice", text, True),))
+
+
+@pytest.mark.parametrize("text, expected", [
+    ("All pools will be closed on 8/22/26 and 12/12/26 from 8:30 am – 12:30pm for training",
+     [["2026-08-22", "2026-08-22", "08:30", "12:30"], ["2026-12-12", "2026-12-12", "08:30", "12:30"]]),
+    ("Pool will be closed for maintenance from 11/23 to 11/29/26",
+     [["2026-11-23", "2026-11-29", None, None]]),
+    ("All pools will be closed every 4th Thursday of the month from 12p-2p for training",
+     [[day, day, "12:00", "14:00"] for day in ["2026-08-27", "2026-09-24", "2026-10-22", "2026-11-26"]]),
+])
+def test_independent_notice_dates_and_times(text, expected):
+    source = _notice_source(text)
+    assert source_closure_coverage(source, {})["expected"] == expected
+    closures = [dict(zip(("start", "end", "start_time", "end_time"), row)) for row in expected]
+    assert source_closure_coverage(source, {"closures": closures})["ok"]
+    assert not source_closure_coverage(source, {"closures": closures[:-1]})["ok"]
+    for row in closures:
+        if row["start_time"]:
+            row["start_time"] = None
+            row["end_time"] = None
+            assert not source_closure_coverage(source, {"closures": closures})["ok"]
+
+
+@pytest.mark.parametrize("text", [
+    "Training August 22", "Pool may be closed September 7", "Small pool will be closed September 7",
+    "Pool will be closed until September 7", "Pool will be closed November 26 and 27",
+    "Pool will be closed September 7 morning", "Pool will be closed September 7 after lunch",
+    "Pool will be closed 8/22 9am-11am and 12/12 10am-2pm",
+    "Pool will be closed every fourth Thursday", "Pool will be closed every 4th Thursday of the month",
+    "Pool will be closed every 4th Thursday of the month from 12p-2p (8/27)",
+    "Pool will be closed from 11/23 to 11/29/26 from 9am-11am",
+])
+def test_unclear_notice_is_never_silently_accepted(text):
+    result = source_closure_coverage(_notice_source(text), {})
+    assert not result["ok"]
+    assert any(issue.startswith("test-notice:") for issue in result["issues"])
 
 
 @pytest.mark.parametrize("start,end,expected", [

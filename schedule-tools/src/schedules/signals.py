@@ -20,6 +20,10 @@ _PROGRAM_RE = re.compile(
 )
 _CLOCK = r"(?:\d{1,2}(?::\d{2})?\s*(?:[ap]\.?m\.?)?|noon|midnight)"
 TIME_RANGE_RE = re.compile(rf"(?<![\d/:])(?P<start>{_CLOCK})\s*[-–—]\s*(?P<end>{_CLOCK})(?![\d/])", re.IGNORECASE)
+CLOSURE_TOKEN_RE = re.compile(r"\b(?:closed|closures?|closing|cancel\w*|unavailable|training\w*|maintenance|holidays?)\b", re.IGNORECASE)
+MAX_PDF_BYTES = 25 * 1024 * 1024
+MAX_PDF_PAGES = 12
+MAX_PAGE_POINTS = 2000
 
 
 @dataclass(frozen=True)
@@ -32,11 +36,19 @@ class SourceCell:
 
 
 @dataclass(frozen=True)
+class SourceNotice:
+    id: str
+    text: str
+    facility: bool
+
+
+@dataclass(frozen=True)
 class PdfSource:
     text: str
     cells: tuple[SourceCell, ...]
     issues: tuple[str, ...]
     page_count: int
+    notices: tuple[SourceNotice, ...]
 
 
 def program_types(text: str) -> tuple[str, ...]:
@@ -135,20 +147,49 @@ def _program_row_cells(page) -> list[SourceCell] | None:
     return cells
 
 
+def _closure_notices(page, header: list[dict]) -> list[SourceNotice]:
+    words = page.extract_words()
+    markers = [word for word in words if CLOSURE_TOKEN_RE.search(word["text"])]
+    if not markers:
+        return []
+    if not header:
+        return [SourceNotice(f"p{page.page_number}-notice", page.extract_text() or "", True)]
+    headings = [word for word in words if word["text"].lower() == "notes:"
+                and word["x0"] > header[-1]["x1"]]
+    if len(headings) != 1:
+        return [SourceNotice(f"p{page.page_number}-unresolved-notice", page.extract_text() or "", False)]
+    heading = headings[0]
+    left, top = max(0, heading["x0"] - 4), heading["bottom"]
+    text = page.crop((left, top, page.width, page.height)).extract_text() or ""
+    blocks = re.split(r"[•●]|\bPool Info:", text)
+    notices = [SourceNotice(f"p{page.page_number}-notice-{index}", block.strip(), True)
+               for index, block in enumerate(blocks) if CLOSURE_TOKEN_RE.search(block)]
+    for index, word in enumerate(markers):
+        if word["x0"] < left or word["top"] < top:
+            notices.append(SourceNotice(f"p{page.page_number}-unresolved-{index}", word["text"], False))
+    return notices
+
+
 def inspect_pdf_source(pdf_bytes: bytes) -> PdfSource:
+    if len(pdf_bytes) > MAX_PDF_BYTES:
+        raise ValueError("PDF exceeds the 25 MiB source limit")
     cells = []
     issues = []
     page_texts = []
+    notices = []
     with pdfplumber.open(BytesIO(pdf_bytes)) as document:
-        if not 1 <= len(document.pages) <= 12:
+        if not 1 <= len(document.pages) <= MAX_PDF_PAGES:
             raise ValueError("PDF must have between 1 and 12 pages")
         for page in document.pages:
+            if not (0 < page.width <= MAX_PAGE_POINTS and 0 < page.height <= MAX_PAGE_POINTS):
+                raise ValueError("PDF page exceeds the supported dimensions")
             text = page.extract_text() or ""
             page_texts.append(f"PAGE {page.page_number}\n{text}")
             if not text.strip():
                 issues.append(f"page_{page.page_number}:no_text")
                 continue
             header = _weekday_header(page)
+            notices.extend(_closure_notices(page, header))
             if not header:
                 if TIME_RANGE_RE.search(text) and program_types(text):
                     issues.append(f"page_{page.page_number}:unsupported_grid")
@@ -166,7 +207,7 @@ def inspect_pdf_source(pdf_bytes: bytes) -> PdfSource:
                     cell.text, re.IGNORECASE,
                 ):
                     issues.append(f"{cell.id}:unknown_program")
-        return PdfSource("\n\n".join(page_texts), tuple(cells), tuple(issues), len(document.pages))
+        return PdfSource("\n\n".join(page_texts), tuple(cells), tuple(issues), len(document.pages), tuple(notices))
 
 
 def extract_page_texts(pdf_bytes: bytes) -> list[str]:

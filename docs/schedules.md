@@ -1155,7 +1155,7 @@ the original $10, not new spending permission.
 
 ### Physical pool labels and Mission holdout results (2026-09-05)
 
-**Decision: keep automatic publication disabled.** The clarified-label repeat
+**Decision: do not enable the new direct-main publisher.** The clarified-label repeat
 matched all checked fields in 19/21 runs and exact session grids in 20/21.
 One Balboa interim response wrote `small//main` instead of `small/main` for
 two shared-program rows. The source session check rejected it. One North Beach

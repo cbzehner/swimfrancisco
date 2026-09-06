@@ -18,7 +18,7 @@ from .discover import (
     rec_park_entries,
 )
 from .fetch import fetch_pdf
-from .grounding import grounding_from_text, normalize_pdf_text, source_coverage, source_window_coverage
+from .grounding import grounding_from_text, normalize_pdf_text, source_publication_coverage
 from .merge import read_schedule_snapshot
 from .models import Aborted, Extracted, GroundingResult, PoolEntry, PoolResult, ReviewNote, Skipped, Unchanged, Violation
 from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH, REPORT_PATHS, TMP_DIR, artifact_path, reviewed_path
@@ -280,9 +280,7 @@ def _process_entry(
         coverage = None
         if provider == "openai":
             source = inspect_pdf_source(fetch_result.bytes)
-            coverage = source_coverage(source, payload, visual_pages=frozenset(details.get("visual_pages", [])))
-            window = source_window_coverage(source, payload)
-            coverage = coverage | {"ok": coverage["ok"] and window["ok"], "window": window}
+            coverage = source_publication_coverage(source, payload, visual_pages=frozenset(details.get("visual_pages", [])))
         if coverage is not None:
             details = details | {"source_coverage": coverage}
 

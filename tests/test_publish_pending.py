@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from datetime import date
 from pathlib import Path
 from types import SimpleNamespace
@@ -474,18 +475,19 @@ def _flyer(*, view_id: int = 29808, source: str = "table", text: str | None = No
     }
 
 
-def test_closure_window_from_anchor_text(iso, monkeypatch):
-    flyer_sha = "c" * 64
+def test_closure_window_from_anchor_text_matches_source_pdf(iso, monkeypatch):
+    source_bytes = (Path(__file__).parents[1] / "data/garfield-pool/2026-08-20-241f3a02fd75/source.pdf").read_bytes()
+    flyer_sha = hashlib.sha256(source_bytes).hexdigest()
     flyer_dir = iso.data / "garfield-pool" / f"2026-08-20-{flyer_sha[:12]}"
     flyer_dir.mkdir(parents=True)
     source = flyer_dir / "source.pdf"
-    source.write_bytes(b"%PDF-flyer\n")
+    source.write_bytes(source_bytes)
     fetched_urls: list[str] = []
 
     def fake_fetch(slug, url, **_kwargs):
         fetched_urls.append(url)
         return FetchResult(
-            path=source, sha256=flyer_sha, bytes=b"%PDF-flyer\n", from_cache=False, page_count=1
+            path=source, sha256=flyer_sha, bytes=source_bytes, from_cache=False, page_count=1
         )
 
     monkeypatch.setattr("schedules.publish.fetch_pdf", fake_fetch)
@@ -554,6 +556,28 @@ def test_closure_zero_table_flyers_does_not_fetch(iso, monkeypatch):
     assert count == 0
     refused = json.loads(report.with_name("publish-pending.json").read_text())["refused"]
     assert refused == [{"slug": "garfield-pool", "code": "closure_notice_missing"}]
+
+
+@pytest.mark.parametrize("source_bytes", [None, b"not a PDF"])
+def test_closure_flyer_cannot_publish_from_title_alone(iso, monkeypatch, source_bytes):
+    from schedules.publish import PublishRefuse, publish_closure_notice
+
+    if source_bytes is None:
+        source_bytes = (Path(__file__).parents[1] / "data/garfield-pool/2026-08-20-241f3a02fd75/source.pdf").read_bytes()
+    source = iso.data / "source.pdf"
+    source.write_bytes(source_bytes)
+    monkeypatch.setattr("schedules.publish.fetch_pdf", lambda *args, **kwargs: FetchResult(
+        path=source, sha256=hashlib.sha256(source_bytes).hexdigest(), bytes=source_bytes, from_cache=False, page_count=1,
+    ))
+    _seed_content(iso.content, "garfield-pool")
+    before = (iso.content / "garfield-pool.md").read_bytes()
+    with pytest.raises(PublishRefuse, match="printed PDF|pdf|PDF") as error:
+        publish_closure_notice(slug="garfield-pool", flyer=_flyer(text="Maintenance Closure 8-14_9-8 2026"),
+                               content_spots_dir=iso.content, attested_at=date(2026, 8, 20),
+                               quarantined_shas=frozenset(), data_root=iso.data)
+    assert error.value.code == "source_coverage_failed"
+    assert (iso.content / "garfield-pool.md").read_bytes() == before
+    assert not list(iso.data.glob("**/reviewed.json"))
 
 
 def test_closure_two_table_flyers_does_not_fetch(iso, monkeypatch):

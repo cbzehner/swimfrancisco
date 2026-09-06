@@ -175,7 +175,7 @@ def test_concurrent_api_requests_cannot_overbook_budget(tmp_path) -> None:
 
 def test_ambiguous_source_requires_original_image_and_reserves_its_cost() -> None:
     cell = SourceCell("p1-c1-b1", 1, "monday", "Family Swim 3:30pm-5:30pm (s (small pool)", (0, 0, 100, 100))
-    source = PdfSource("schedule", (cell,), ("p1-c1-b1:unbalanced_text",), 1)
+    source = PdfSource("schedule", (cell,), ("p1-c1-b1:unbalanced_text",), 1, ())
     with pytest.raises(ValueError, match="rendered page"):
         openai_provider.source_request(source, "extract", {})
     request = openai_provider.source_request(source, "extract", {1: b"image-bytes"})
@@ -188,6 +188,44 @@ def test_ambiguous_source_requires_original_image_and_reserves_its_cost() -> Non
         openai_provider.api_reservation_microusd(request)
 
 
+def test_unresolved_closure_scope_stops_before_spend(tmp_path, monkeypatch):
+    from schedules.paths import REPO_ROOT
+
+    monkeypatch.setenv("OPENAI_API_KEY", "unit-test-not-a-key")
+    monkeypatch.setenv("SCHEDULES_API_BUDGET_FILE", str(tmp_path / "budget.json"))
+    monkeypatch.setenv("SCHEDULES_API_BUDGET_USD", "1")
+
+    def unexpected_call(*args, **kwargs):
+        pytest.fail("An unresolved source reached the paid API")
+
+    monkeypatch.setattr(openai_provider, "budgeted_call", unexpected_call)
+    pdf = REPO_ROOT / "data/mission-community-pool/2026-09-02-67f2a420e8fc/source.pdf"
+    with pytest.raises(ValueError, match="Unresolved source closures"):
+        openai_provider.extract(pdf.read_bytes(), PROMPT_PATH.read_text(), EXTRACTION_SCHEMA)
+    assert not (tmp_path / "budget.json").exists()
+
+
+@pytest.mark.parametrize("pages,selected", [(0, {1}), (13, {1}), (1, {0}), (1, {2})])
+def test_render_rejects_unsupported_page_selection_before_decoding(monkeypatch, pages, selected):
+    from contextlib import nullcontext
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(openai_provider.pdfplumber, "open", lambda _: nullcontext(SimpleNamespace(pages=[None] * pages)))
+    with pytest.raises(ValueError, match="outside the supported source"):
+        openai_provider.render_source_pages(b"pdf", frozenset(selected))
+
+
+@pytest.mark.parametrize("width,height,count", [(2001, 500, 1), (500, 2001, 1), (2000, 2000, 2)])
+def test_render_rejects_oversized_evidence_before_decoding(monkeypatch, width, height, count):
+    from contextlib import nullcontext
+    from types import SimpleNamespace
+
+    document = SimpleNamespace(pages=[SimpleNamespace(width=width, height=height)] * count)
+    monkeypatch.setattr(openai_provider.pdfplumber, "open", lambda _: nullcontext(document))
+    with pytest.raises(ValueError, match="dimensions|megapixel"):
+        openai_provider.render_source_pages(b"pdf", frozenset(range(1, count + 1)))
+
+
 @pytest.mark.parametrize("http_status,timed_out,expected_calls", [
     (500, False, 2), (503, False, 2), (408, False, 2), (None, True, 2),
     (401, False, 1), (403, False, 1), (429, False, 1), (400, False, 1),
@@ -197,7 +235,7 @@ def test_production_retry_is_bounded_and_reserves_each_attempt(tmp_path, monkeyp
     monkeypatch.setenv("OPENAI_API_KEY", "unit-test-not-a-key")
     monkeypatch.setenv("SCHEDULES_API_BUDGET_FILE", str(path))
     monkeypatch.setenv("SCHEDULES_API_BUDGET_USD", "2")
-    source = PdfSource("Schedule August 11-August 29, 2026", (), (), 1)
+    source = PdfSource("Schedule August 11-August 29, 2026", (), (), 1, ())
     monkeypatch.setattr(openai_provider, "inspect_pdf_source", lambda _: source)
     monkeypatch.setattr(openai_provider, "time", type("Clock", (), {"sleep": staticmethod(lambda _: None)}))
     calls = []
@@ -223,7 +261,7 @@ def test_production_maps_raw_labels_and_preserves_failed_coverage(tmp_path, monk
     monkeypatch.setenv("SCHEDULES_API_BUDGET_FILE", str(tmp_path / "budget.json"))
     monkeypatch.setenv("SCHEDULES_API_BUDGET_USD", "1")
     cell = SourceCell("p1-c1-b1", 1, "monday", "Family Swim 3:30pm-5:30pm (small pool)", (0, 0, 100, 100))
-    source = PdfSource("Schedule August 11-August 29, 2026", (cell,), (), 1)
+    source = PdfSource("Schedule August 11-August 29, 2026", (cell,), (), 1, ())
     monkeypatch.setattr(openai_provider, "inspect_pdf_source", lambda _: source)
     facts = {"effective_start": "2026-08-11", "effective_end": "2026-08-29", "schedule_basis": "swim_schedule",
              "sessions": [{"day": "monday", "type": "family_swim", "start": "15:30", "end": "17:30",

@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import re
+import calendar
 from collections.abc import Iterable
 from collections import Counter
 from dataclasses import dataclass
+from datetime import date, timedelta
 
 from ._time import printed_time_range
 from .models import GroundingResult, SessionGrounding
 from .schema import pool_label_payload
-from .signals import DAY_TOKEN_RE, PdfSource, SourceCell, TIME_RANGE_RE, program_types
+from .signals import DAY_TOKEN_RE, PdfSource, SourceCell, SourceNotice, TIME_RANGE_RE, program_types
 from .window_dates import parse_window_dates
 
 
@@ -85,18 +87,127 @@ def source_coverage(source: PdfSource, payload: dict, *, visual_pages: frozenset
                               for session in payload.get("sessions", [])]}
 
 
-def source_window_coverage(source: PdfSource, payload: dict) -> dict:
+def source_window(source: PdfSource) -> tuple[date, date] | None:
     header = []
     for line in source.text.split("\n\nPAGE 2\n", 1)[0].splitlines():
         if len({match[0].lower() for match in DAY_TOKEN_RE.finditer(line)}) >= 3:
             break
         header.append(line)
-    window = parse_window_dates(page_text="\n".join(header), anchor_text=None, filename=None, year_default=0)
+    return parse_window_dates(page_text="\n".join(header), anchor_text=None, filename=None, year_default=0)
+
+
+def source_window_coverage(source: PdfSource, payload: dict) -> dict:
+    window = source_window(source)
     expected = [day.isoformat() for day in window] if window else None
     actual = [payload.get("effective_start"), payload.get("effective_end")]
     return {"ok": expected is not None and expected == actual,
             "expected": expected, "actual": actual,
             "issues": [] if expected == actual else ["source_window_mismatch" if expected else "source_window_unavailable"]}
+
+
+_MONTH_NUMBERS = {name.lower(): number for number in range(1, 13)
+                  for name in (calendar.month_name[number], calendar.month_abbr[number])} | {"sept": 9}
+_NOTICE_DATE_RE = re.compile(
+    r"(?<![\d/])(?P<month>\d{1,2})/(?P<day>\d{1,2})(?:/(?P<year>20\d{2}|\d{2}))?(?![\d/])|"
+    r"\b(?P<name>" + "|".join(sorted(_MONTH_NUMBERS, key=len, reverse=True)) + r")\.?\s+"
+    r"(?P<named_day>\d{1,2})(?:st|nd|rd|th)?(?:,?\s+(?P<named_year>20\d{2}))?\b", re.IGNORECASE,
+)
+_RECURRENCE_RE = re.compile(r"\bevery\s+([1-5])(?:st|nd|rd|th)\s+"
+                            r"(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+of\s+the\s+month\b", re.IGNORECASE)
+
+
+def _notice_closures(notice: SourceNotice, window: tuple[date, date]) -> list[tuple]:
+    if not notice.facility:
+        raise ValueError("unresolved_closure_scope")
+    text = " ".join(notice.text.split())
+    if not re.search(r"\b(?:will be closed|pool(?:s)? closed|(?:holiday|training) closures)\b", text, re.IGNORECASE):
+        raise ValueError("unresolved_closure_notice")
+    if re.search(r"\b(?:small|main|warm|cool|therapy)\s+pool\b|\b(?:may|might|possibly|except|unless)\b", text, re.IGNORECASE):
+        raise ValueError("unresolved_closure_scope")
+    text = re.split(r"\breopen\b", text, maxsplit=1, flags=re.IGNORECASE)[0]
+    recurrence = _RECURRENCE_RE.search(text)
+    if recurrence:
+        text = text[:recurrence.start()] + " " * len(recurrence[0]) + text[recurrence.end():]
+    matches = list(_NOTICE_DATE_RE.finditer(text))
+    days = []
+    for match in matches:
+        explicit_year = match["year"] or match["named_year"]
+        if explicit_year is None and window[0].year != window[1].year:
+            raise ValueError("ambiguous_closure_year")
+        year = int(explicit_year) if explicit_year else window[0].year
+        if year < 100:
+            year += 2000
+        month = int(match["month"]) if match["month"] else _MONTH_NUMBERS[match["name"].lower()]
+        days.append(date(year, month, int(match["day"] or match["named_day"])))
+    intervals = []
+    index = 0
+    while index < len(days):
+        end_index = index
+        if index + 1 < len(days) and re.fullmatch(r"\s*(?:to|[-–—])\s*", text[matches[index].end():matches[index + 1].start()], re.IGNORECASE):
+            end_index += 1
+        if days[end_index] < days[index]:
+            raise ValueError("reversed_closure_dates")
+        intervals.append((days[index], days[end_index]))
+        index = end_index + 1
+    for match in reversed(matches):
+        text = text[:match.start()] + " " * len(match[0]) + text[match.end():]
+    text = re.sub(r"(?<=\d)([ap])\b", r"\1m", text, flags=re.IGNORECASE)
+    times = list(TIME_RANGE_RE.finditer(text))
+    if len(times) > 1:
+        raise ValueError("ambiguous_closure_times")
+    clock = printed_time_range(times[0]["start"], times[0]["end"]) if times else (None, None)
+    if times:
+        text = text[:times[0].start()] + text[times[0].end():]
+    if re.search(r"\d|\b(?:every|until|through|morning|afternoon|evening|night|early|late|before|after)\b", text, re.IGNORECASE):
+        raise ValueError("unparsed_closure_condition")
+    if recurrence:
+        if not times or (window[1] - window[0]).days > 370:
+            raise ValueError("unresolved_recurring_closure")
+        weekday = [day.lower() for day in calendar.day_name].index(recurrence[2].lower())
+        occurrences = []
+        current = window[0]
+        while current <= window[1]:
+            if current.weekday() == weekday and (current.day - 1) // 7 + 1 == int(recurrence[1]):
+                occurrences.append((current, current))
+            current += timedelta(days=1)
+        if intervals and intervals != occurrences:
+            raise ValueError("conflicting_recurring_closure_dates")
+        intervals = occurrences
+    if not intervals:
+        raise ValueError("closure_dates_unavailable")
+    if times and any(start != end for start, end in intervals):
+        raise ValueError("unsupported_multiday_closure_times")
+    return [(start.isoformat(), end.isoformat(), *clock) for start, end in intervals]
+
+
+def source_closure_coverage(source: PdfSource, payload: dict) -> dict:
+    window = source_window(source)
+    issues = []
+    expected = []
+    if window is None:
+        issues.append("source_window_unavailable")
+    else:
+        for notice in source.notices:
+            try:
+                expected.extend(_notice_closures(notice, window))
+            except ValueError as error:
+                issues.append(f"{notice.id}:{error}")
+    expected_counts = Counter(expected)
+    actual = Counter(tuple(closure.get(field) for field in ("start", "end", "start_time", "end_time"))
+                     for closure in payload.get("closures", []))
+    if expected_counts != actual:
+        issues.append("source_closure_mismatch")
+    return {"ok": not issues, "issues": issues, "expected": [list(item) for item in expected],
+            "missing": [list(item) for item in (expected_counts - actual).elements()],
+            "extra": [list(item) for item in (actual - expected_counts).elements()]}
+
+
+def source_publication_coverage(source: PdfSource, payload: dict, *, visual_pages: frozenset[int] = frozenset()) -> dict:
+    sessions = source_coverage(source, payload, visual_pages=visual_pages)
+    window = source_window_coverage(source, payload)
+    closures = source_closure_coverage(source, payload)
+    return sessions | {"ok": sessions["ok"] and window["ok"] and closures["ok"],
+                       "window": window, "closures": closures}
 
 TYPE_TOKENS: dict[str, tuple[str, ...]] = {
     "lap_swim": ("lap",),

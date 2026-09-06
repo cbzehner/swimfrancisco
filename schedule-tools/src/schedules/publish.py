@@ -12,6 +12,7 @@ import tomlkit
 from ._time import pacific_today
 from .discover import view_id_from_url
 from .fetch import fetch_pdf
+from .grounding import source_publication_coverage
 from .merge import _split_frontmatter, read_schedule_snapshot
 from .models import GroundingSummary, SourceStatus
 from .paths import (
@@ -36,7 +37,7 @@ from .review import (
     find_review_candidates,
     kept_grid_ids,
 )
-from .signals import analyze_page_texts, extract_page_texts
+from .signals import analyze_page_texts, extract_page_texts, inspect_pdf_source
 from .validate import validate
 from .window_dates import parse_window_dates, windows_disjoint
 
@@ -397,6 +398,12 @@ def publish_closure_notice(
     }
     if payload["sessions"]:
         raise PublishRefuse("flyer_emitted_sessions", "closure payload has sessions")
+    try:
+        coverage = source_publication_coverage(inspect_pdf_source(fetched.bytes), payload)
+    except Exception as error:
+        raise PublishRefuse("source_coverage_failed", str(error)) from error
+    if not coverage["ok"]:
+        raise PublishRefuse("source_coverage_failed", "Closure title differs from the printed PDF or its scope is unresolved")
 
     envelope = {
         "slug": slug,
