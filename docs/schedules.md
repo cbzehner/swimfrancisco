@@ -1192,13 +1192,22 @@ Portable evidence:
 
 ## Autonomous extraction and publication
 
-The daily workflow is implemented but remains disabled pending operator approval
-of recurring API spend and reference review. It replaces the weekly Gemini/PR
-workflow; there is no rolling publication PR.
+The weekly workflow is implemented but remains disabled pending reference review
+and a hosted trial. The operator approved a $20/month API ceiling on 2026-09-06;
+this is a limit, not a spending target. It replaces the Gemini/PR workflow;
+there is no rolling publication PR.
 
-The schedule is 16:00 UTC each day (09:00 Pacific daylight time, 08:00 standard
-time). Manual runs default to `extract-only`. Both modes require
+The schedule is Monday at 16:00 UTC (09:00 Pacific daylight time, 08:00 standard
+time). Weekly discovery checks for upcoming schedules before the current window
+ends. A late change can take up to seven days to appear; manual runs remain
+available. Manual runs default to `extract-only`. Both modes require
 `SCHEDULES_AUTOMATION_ENABLED=true`; unset means disabled.
+
+Keep the $1 per-run limit. Four or five scheduled runs therefore reserve at most
+$4–$5 per calendar month, with additional room under the $20 ceiling for trials
+and manual reruns. Unchanged source/configuration pairs reuse cached extraction
+without model calls. Failed or interrupted requests can retain their maximum
+reservation, so the accounting total can exceed the eventual API invoice.
 
 ### Run contract
 
@@ -1237,10 +1246,11 @@ or comments. A pushed commit without a verified deployment is not a success.
 
 ### Enablement checklist
 
-These are operator actions, not commands already executed:
+Budget approval and accounting setup are complete. Finish the remaining checks
+before enabling runs:
 
-- Approve the recurring monthly API limit separately from the original $10
-  benchmark trial. Set `SCHEDULES_MONTHLY_BUDGET_USD` to that approved amount.
+- `SCHEDULES_MONTHLY_BUDGET_USD=20` is configured in GitHub, matching the approved recurring ceiling.
+  The original $10 benchmark trial remains a separate historical allowance.
 - Complete the required human reference review. Agent visual checks are not
   human sign-off. Ambiguous closure scope remains a hold until its policy is
   explicitly approved and tested.
@@ -1250,8 +1260,7 @@ These are operator actions, not commands already executed:
   the built-in token only for read-only CI lookups.
 - Keep main's required `check` status, strict updates, administrator enforcement,
   and no force pushes. PR creation or auto-merge settings are no longer needed.
-- Initialize accounting exactly once after approval, using
-  `SCHEDULES_MONTHLY_BUDGET_USD=<approved amount> just schedules budget initialize`.
+- Accounting was initialized on 2026-09-06. Do not initialize it again.
   Missing accounting in later runs must be repaired, not reset.
 - Set `SCHEDULES_AUTOMATION_ENABLED=true`, dispatch an `extract-only` trial, inspect
   its evidence and charges, then run a checked publication trial. Confirm hosted

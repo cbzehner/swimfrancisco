@@ -2,7 +2,7 @@
 
 **Author:** TBD
 **Date:** 2026-08-20
-**Status:** Hands-off implementation present; operator approval and hosted trial pending
+**Status:** Weekly checks and $20/month approved; reference sign-off and hosted trial pending
 **Audience:** Operators of the schedule extract/review pipeline
 
 ---
@@ -89,8 +89,9 @@ limit cannot silently reset the current month's ledger.
 All accounting updates use ordinary fast-forward Git pushes. Competing writers
 cannot both reserve the same remaining funds. Local tests exercise that race,
 process restart, missing accounting, month rollover, and malformed run ledgers.
-No remote accounting branch has been created. The workflow calls reserve and
-settle; initialization remains an explicit one-time operator action:
+The remote accounting branch was initialized on 2026-09-06 after the operator
+approved $20/month. GitHub has that ceiling configured and automation explicitly
+disabled. The workflow calls reserve and settle; do not repeat initialization:
 
 ```sh
 just schedules budget initialize
@@ -124,7 +125,9 @@ printed window must match both extracted dates; a missing year cannot borrow
 the current year or a year from a holiday note. The closure inventory below adds
 a separate check; session and window coverage do not establish closure completeness.
 
-Run source discovery daily. Keep unchanged runs free of model calls and content
+Run source discovery weekly on Monday at 16:00 UTC, as approved on 2026-09-06.
+Keep the $1 per-run allowance inside the approved $20/calendar-month API ceiling;
+the ceiling is not a spending target. Keep unchanged runs free of model calls and content
 commits unless a configuration or publication-state change requires work.
 
 1. Build accepted changes against the current `main` commit. Keep source evidence
@@ -249,13 +252,14 @@ allow at most five redirects. Permanent HTTP failures and invalid PDFs do not
 retry. The fetch path uses [HTTPX streaming](https://www.python-httpx.org/quickstart/#streaming-responses)
 to enforce the byte limit before buffering the complete response.
 
-The daily OpenAI/direct-main workflow replaces the weekly Gemini/PR workflow.
+The weekly OpenAI/direct-main workflow replaces the Gemini/PR workflow.
 Automatic PDF session publication now requires the production artifact and
 independent source verification; the legacy grounding percentage cannot approve
 an update. Manual human repair remains explicit. The runner, durable accounting,
 checked promotion, and live browser verification are connected but not enabled.
-Production credentials, recurring spend approval, human reference sign-off, and
-a hosted extraction/publication trial remain release requirements. See the
+Production credentials are configured, and the operator approved $20/month.
+Human reference sign-off and a hosted extraction/publication trial remain release
+requirements. See the
 enablement checklist in `docs/schedules.md`.
 
 References: [protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches),

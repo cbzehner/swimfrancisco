@@ -3,8 +3,8 @@ from pathlib import Path
 WORKFLOW = (Path(__file__).parents[1] / ".github/workflows/schedules-extract.yml").read_text()
 
 
-def test_daily_disabled_by_default_and_serialized():
-    assert "cron: '0 16 * * *'" in WORKFLOW
+def test_weekly_disabled_by_default_and_serialized():
+    assert "cron: '0 16 * * 1'" in WORKFLOW
     assert "vars.SCHEDULES_AUTOMATION_ENABLED == 'true'" in WORKFLOW
     assert "github.ref == 'refs/heads/main'" in WORKFLOW
     assert "cancel-in-progress: false" in WORKFLOW
