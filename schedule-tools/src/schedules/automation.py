@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import re
 import shutil
@@ -43,7 +44,7 @@ def copy_extraction_cache(previous: Path, current: Path, previous_base: str, com
 def save_evidence(root: Path, destination: Path) -> None:
     destination.mkdir(parents=True, exist_ok=True)
     for name in ("discovery-decisions.json", "discovery-report.md", "publish-pending.json", "publish-pending-report.md",
-                 "extraction-report-direct.md", "extraction-report-openai.md"):
+                 "extraction-report-direct.md", "extraction-report-openai.md", "extraction-report-openai.json"):
         source = root / "tmp" / name
         if source.is_file():
             shutil.copyfile(source, destination / name)
@@ -74,6 +75,96 @@ def wait_for_deployment(root: Path, commit: str, command=run_command, *, sleep=t
         if remaining > 0:
             sleep(min(20, remaining))
     raise RuntimeError("Live deployment did not verify within twenty minutes; commit is not reported as published")
+
+
+def closure_review_document(review: dict) -> str:
+    notices = json.dumps({"issues": review["issues"], "notices": review["notices"]}, ensure_ascii=False, indent=2)
+    fence = "`" * (max([len(value) for value in re.findall(r"`+", notices)] + [2]) + 1)
+    return (
+        f"# Closure review: {review['slug']}\n\n"
+        f"Source SHA-256: `{review['source_sha256']}`\n\n"
+        "[Source PDF](source.pdf)\n\n"
+        "This draft contains evidence only. It does not change published hours.\n"
+        "Merging this note alone does not approve or resolve the closure.\n\n"
+        "- [ ] Confirm closure dates, times, and affected programs against the official source.\n"
+        "- [ ] If unclear, obtain clarification; do not infer all-day or facility-wide closure.\n"
+        "- [ ] Add a corrected human-reviewed snapshot and content changes, then run the full checks.\n"
+        "- [ ] Verify the live result after merging, or close this PR with a reason.\n\n"
+        f"## Source notices and unresolved checks\n\n{fence}json\n{notices}\n{fence}\n"
+    )
+
+
+def open_closure_review_prs(root: Path, evidence: Path, command=run_command) -> list[dict]:
+    result = json.loads((evidence / "result.json").read_text())
+    if result.get("mode") != "publish":
+        return []
+    builds = result.get("builds") or []
+    if not builds:
+        return []
+    published: list[dict] = []
+    seen: set[tuple[str, str]] = set()
+    for review in builds[-1].get("closure_reviews", []):
+        slug, digest = review.get("slug", ""), review.get("source_sha256", "")
+        relative = Path(review.get("source_path", ""))
+        if (not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug)
+                or not re.fullmatch(r"[a-f0-9]{64}", digest)
+                or not re.fullmatch(rf"data/{re.escape(slug)}/\d{{4}}-\d{{2}}-\d{{2}}-{digest[:12]}/source\.pdf", relative.as_posix())
+                or not isinstance(review.get("issues"), list) or not review["issues"]
+                or not isinstance(review.get("notices"), list) or not review["notices"]):
+            raise ValueError("Invalid closure review evidence")
+        key = (slug, digest)
+        if key in seen:
+            continue
+        seen.add(key)
+        source = evidence / f"build-{len(builds)}" / relative
+        if not source.resolve().is_relative_to(evidence.resolve()) or source.is_symlink():
+            raise ValueError("Closure source escapes retained evidence")
+        source_bytes = source.read_bytes()
+        if hashlib.sha256(source_bytes).hexdigest() != digest:
+            raise ValueError("Closure source does not match its recorded hash")
+        branch = f"review/closures/{slug}-{digest[:12]}"
+        existing = json.loads(checked(["gh", "pr", "list", "--head", branch, "--base", "main", "--state", "all",
+                                       "--json", "url,state"], root, command))
+        if existing:
+            published.append({"slug": slug, "source_sha256": digest, **existing[0]})
+            continue
+        remote = checked(["git", "ls-remote", "--heads", "origin", f"refs/heads/{branch}"], root, command)
+        if remote:
+            raise RuntimeError("Closure review branch exists without a PR; preserve it for operator recovery")
+        checked(["git", "fetch", "--no-tags", "origin", "main"], root, command)
+        base = checked(["git", "rev-parse", "FETCH_HEAD"], root, command)
+        worktree = Path(tempfile.mkdtemp(prefix="swimfrancisco-closure-review-")) / "checkout"
+        checked(["git", "worktree", "add", "--detach", str(worktree), base], root, command)
+        target = worktree / relative
+        if not target.resolve().is_relative_to(worktree.resolve()) or target.is_symlink():
+            raise ValueError("Closure target escapes the review worktree")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if target.exists() and target.read_bytes() != source_bytes:
+            raise ValueError("Existing source differs; refusing to overwrite it")
+        target.write_bytes(source_bytes)
+        note = target.with_name("closure-review.md")
+        if note.exists() or note.is_symlink():
+            raise ValueError("Closure review note already exists; preserve the operator's work")
+        note.write_text(closure_review_document(review))
+        paths = [relative.as_posix(), note.relative_to(worktree).as_posix()]
+        checked(["git", "add", "--", *paths], worktree, command)
+        staged = checked(["git", "diff", "--cached", "--name-only"], worktree, command).splitlines()
+        if not staged or not set(staged).issubset(paths):
+            raise ValueError("Closure PR may contain only its source PDF and review note")
+        checked(["git", "-c", "user.name=Schedule automation", "-c", "user.email=schedules@swimfrancisco.com",
+                 "commit", "-m", f"Review unclear closure notice for {slug}"], worktree, command)
+        checked(["git", "push", "origin", f"HEAD:refs/heads/{branch}"], worktree, command)
+        repository = checked(["gh", "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"], root, command)
+        if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
+            raise ValueError("Invalid repository identity")
+        body = worktree / "tmp/closure-pr-body.md"
+        body.parent.mkdir(exist_ok=True)
+        body.write_text(note.read_text().replace("[Source PDF](source.pdf)",
+                        f"[Source PDF](https://github.com/{repository}/blob/{branch}/{relative.as_posix()})"))
+        url = checked(["gh", "pr", "create", "--draft", "--base", "main", "--head", branch,
+                       "--title", f"Review unclear closure notice: {slug}", "--body-file", str(body)], worktree, command)
+        published.append({"slug": slug, "source_sha256": digest, "url": url, "state": "OPEN"})
+    return published
 
 
 def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=wait_for_deployment) -> dict:
@@ -124,10 +215,15 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
                     build["commands"][name] = result.returncode
                     if required and result.returncode:
                         raise RuntimeError(f"{name} failed; no publication is allowed")
+                closure_report = worktree / "tmp/extraction-report-openai.json"
+                build["closure_reviews"] = json.loads(closure_report.read_text())["closure_reviews"] if closure_report.exists() else []
+                save_state()
                 if mode == "extract-only":
                     state["status"] = "extracted"
                     return state
                 checked(schedules + ["publish-pending"], worktree, command)
+                publication = json.loads((worktree / "tmp/publish-pending.json").read_text())
+                build["closure_reviews"].extend(item["closure_review"] for item in publication.get("refused", []) if item.get("closure_review"))
                 build["decisions"] = pager_job_payload(worktree / "tmp")
                 checked(["node", "scripts/generate-bulletin.mjs"], worktree, command)
                 checked(["node", "scripts/generate-i18n.mjs", "generate"], worktree, command)

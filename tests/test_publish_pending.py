@@ -606,10 +606,15 @@ def test_closure_two_table_flyers_does_not_fetch(iso, monkeypatch):
     assert refused[0]["code"] == "closure_notice_not_unique"
 
 
-def test_closure_unparseable_title_does_not_fetch(iso, monkeypatch):
+def test_closure_unparseable_title_retains_evidence_for_a_review_pr(iso, monkeypatch):
+    source_bytes = (Path(__file__).parents[1] / "data/garfield-pool/2026-08-20-241f3a02fd75/source.pdf").read_bytes()
+    digest = hashlib.sha256(source_bytes).hexdigest()
+    source = iso.data / "garfield-pool" / f"2026-08-20-{digest[:12]}" / "source.pdf"
+    source.parent.mkdir(parents=True)
+    source.write_bytes(source_bytes)
     monkeypatch.setattr(
         "schedules.publish.fetch_pdf",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("must not fetch")),
+        lambda *_args, **_kwargs: FetchResult(path=source, bytes=source_bytes, sha256=digest, from_cache=False, page_count=1),
     )
     monkeypatch.setattr("schedules.publish.load_registry", lambda: [_entry("garfield-pool")])
     _seed_content(iso.content, "garfield-pool")
@@ -622,6 +627,8 @@ def test_closure_unparseable_title_does_not_fetch(iso, monkeypatch):
     assert count == 0
     refused = json.loads(report.with_name("publish-pending.json").read_text())["refused"]
     assert refused[0]["code"] == "closure_dates_unparsed"
+    assert refused[0]["closure_review"]["source_sha256"] == digest
+    assert refused[0]["closure_review"]["notices"]
     assert not (iso.content / "garfield-pool.md").read_text().count("temporarily_closed")
 
 

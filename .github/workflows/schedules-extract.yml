@@ -101,8 +101,42 @@ jobs:
           retention-days: 90
           if-no-files-found: warn
 
-  report:
+  review-closures:
     needs: extract
+    if: always() && needs.extract.result != 'skipped'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ secrets.SCHEDULES_BOT_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.SCHEDULES_BOT_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: schedule-automation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: evidence
+      - name: Open deduplicated draft closure reviews
+        run: uv --project schedule-tools run --locked schedules closure-prs --evidence evidence/automation
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: closure-review-receipts-${{ github.run_id }}-${{ github.run_attempt }}
+          path: evidence/automation/closure-prs.json
+          retention-days: 90
+          if-no-files-found: warn
+
+  report:
+    needs: [extract, review-closures]
     if: always() && needs.extract.result != 'skipped'
     runs-on: ubuntu-latest
     permissions:
@@ -119,6 +153,7 @@ jobs:
         uses: actions/github-script@v7
         env:
           EXTRACT_RESULT: ${{ needs.extract.result }}
+          CLOSURE_REVIEW_RESULT: ${{ needs.review-closures.result }}
         with:
           script: |
             const fs = require('node:fs');
@@ -128,7 +163,7 @@ jobs:
             const last = builds.at(-1) || {};
             const flags = last.decisions?.flagged_set || [];
             const commandFailures = Object.entries(last.commands || {}).filter(([, exit]) => exit !== 0).map(([name]) => name);
-            const failed = process.env.EXTRACT_RESULT !== 'success' || result.status === 'failed' || !result.status;
+            const failed = process.env.EXTRACT_RESULT !== 'success' || process.env.CLOSURE_REVIEW_RESULT === 'failure' || result.status === 'failed' || !result.status;
             const needsAttention = failed || flags.length || commandFailures.length;
             const marker = '<!-- schedule-automation-status -->';
             const { owner, repo } = context.repo;

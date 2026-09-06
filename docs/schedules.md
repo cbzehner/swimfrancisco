@@ -1195,7 +1195,8 @@ Portable evidence:
 The weekly workflow is implemented but remains disabled pending reference review
 and a hosted trial. The operator approved a $20/month API ceiling on 2026-09-06;
 this is a limit, not a spending target. It replaces the Gemini/PR workflow;
-there is no rolling publication PR.
+verified updates do not use a rolling publication PR. Unclear closure notices
+use a separate draft review PR, as approved on 2026-09-06.
 
 The schedule is Monday at 16:00 UTC (09:00 Pacific daylight time, 08:00 standard
 time). Weekly discovery checks for upcoming schedules before the current window
@@ -1244,6 +1245,31 @@ updates one operator issue when failures or held pools change. It closes that
 issue after a clean run. Repeated identical failures do not create new issues
 or comments. A pushed commit without a verified deployment is not a success.
 
+### Closure review PRs
+
+An unclear PDF closure stops that pool before a paid model call when possible.
+The extraction report preserves the source hash, notice text, and unresolved
+checks even when no model artifact exists. Closure-flyer source mismatches also
+enter the review queue. Verified updates for other pools still use checked
+direct-main publication.
+
+A separate job opens a draft PR on `review/closures/<pool>-<PDF hash prefix>`.
+Its generated diff contains only the source PDF and `closure-review.md`, never
+guessed closure hours, a CI attestation, or projected content. The PR includes
+the source evidence and a checklist for a human correction. It never auto-merges.
+Merging the evidence note alone does not resolve a closure or approve hours.
+
+The full PDF hash is checked before any write. An existing open, closed, or
+merged PR for the same pool/source is reused rather than reopened. New PDF bytes
+create a new review. Existing review branches without a PR are preserved for
+operator recovery; automation does not force-push over reviewer edits. Close an
+unresolvable PR with a reason, or add a corrected human-reviewed snapshot and
+content changes before merging. Other failures remain in the operator issue.
+
+Extraction-only trials do not open PRs. The PR job has no OpenAI key and cannot
+make extraction calls. Its separate GitHub token needs Pull requests read/write
+as well as Contents read/write. PR receipts are retained with the run evidence.
+
 ### Enablement checklist
 
 Budget approval and accounting setup are complete. Finish the remaining checks
@@ -1259,7 +1285,8 @@ before enabling runs:
   the built-in Actions token is not its publication fallback. The workflow uses
   the built-in token only for read-only CI lookups.
 - Keep main's required `check` status, strict updates, administrator enforcement,
-  and no force pushes. PR creation or auto-merge settings are no longer needed.
+  and no force pushes. Permit the publication token to create closure-review PRs;
+  auto-merge is not used.
 - Accounting was initialized on 2026-09-06. Do not initialize it again.
   Missing accounting in later runs must be repaired, not reset.
 - Set `SCHEDULES_AUTOMATION_ENABLED=true`, dispatch an `extract-only` trial, inspect

@@ -130,6 +130,16 @@ class TestComputeExitCode:
         assert compute_exit_code([]) == 0
 
 
+def test_report_preserves_structured_closure_holds_without_error_logs(tmp_path):
+    review = {"slug": "test-pool", "source_sha256": "a" * 64, "issues": ["unresolved_closure_scope"], "notices": []}
+    result = replace(_failed("test-pool"), closure_review=review, error="private transport details")
+    report = tmp_path / "extraction-report-openai.md"
+    write_report([result, _failed("other-pool")], report)
+    payload = json.loads(report.with_suffix(".json").read_text())
+    assert payload == {"closure_reviews": [review]}
+    assert "private transport details" not in report.with_suffix(".json").read_text()
+
+
 def _entry(slug: str, source_kind: str) -> PoolEntry:
     return PoolEntry(
         slug=slug,

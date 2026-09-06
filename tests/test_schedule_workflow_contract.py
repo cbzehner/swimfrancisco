@@ -12,8 +12,9 @@ def test_weekly_disabled_by_default_and_serialized():
     assert "pull_request_target" not in WORKFLOW
 
 
-def test_split_permissions_without_pr_publication():
-    extract, report = WORKFLOW.split("\n  report:", 1)
+def test_split_permissions_with_closure_only_review_job():
+    extract, rest = WORKFLOW.split("\n  review-closures:", 1)
+    reviews, report = rest.split("\n  report:", 1)
     assert "permissions: {}" in extract
     assert "contents: write" in extract
     assert "actions: read" in extract
@@ -21,8 +22,12 @@ def test_split_permissions_without_pr_publication():
     assert "issues: write" in report
     assert "contents: write" not in report
     assert "actions/checkout" not in report
-    assert "pull-requests:" not in WORKFLOW
-    assert "gh pr" not in WORKFLOW
+    assert "pull-requests:" not in extract
+    assert "pull-requests:" not in report
+    assert "pull-requests: write" in reviews
+    assert "schedules closure-prs" in reviews
+    assert "OPENAI_API_KEY" not in reviews
+    assert "needs: [extract, review-closures]" in report
     assert "--force" not in WORKFLOW
     assert "token: ${{ secrets.SCHEDULES_BOT_TOKEN }}" in extract
 

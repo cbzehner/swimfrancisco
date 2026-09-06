@@ -14,6 +14,13 @@ sections record the original implementation and its rationale, not the target
 workflow. Keep Python and GitHub Actions; do not add an agent framework, service,
 or permanent alternative publication path.
 
+On 2026-09-06 the operator approved draft PRs specifically for unclear closure
+notices. This is an exception-review path, not a second automatic publisher.
+Verified changes continue directly to main after exact-commit CI. Closure PRs
+contain source evidence and a review checklist, never inferred hours; only a
+human correction can supply a reviewed snapshot and content changes. Reuse the
+same pool/source PR and preserve reviewer edits. Do not auto-merge these PRs.
+
 ### Terms
 
 - **Source facts:** what an official document explicitly states, including its
@@ -134,7 +141,8 @@ commits unless a configuration or publication-state change requires work.
    and failure records for held pools, but do not overwrite their accepted hours.
 2. Enforce an explicit generated-file allowlist. Reject unexpected staged paths.
 3. Commit to a run-specific automation branch and run the full `check` workflow on
-   that exact commit. Do not open a PR.
+   that exact commit. Do not open a PR for verified updates. Unclear closure
+   sources instead get a separate evidence-only draft PR for human review.
 4. After checks pass, fast-forward `main` to that commit. Never force-push `main`.
    If its head changed, rebuild and recheck against the new head, with a bounded
    retry count. Serialize publication attempts.

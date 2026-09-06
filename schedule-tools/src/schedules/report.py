@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from .discover import view_id_from_url
@@ -56,6 +57,10 @@ def write_report(results: list[PoolResult], path: Path) -> Path:
     )
 
     path.write_text("\n".join(lines))
+    path.with_suffix(".json").write_text(json.dumps({
+        "closure_reviews": [result.closure_review for result in results
+                            if isinstance(result, Aborted) and result.closure_review is not None],
+    }, indent=2) + "\n")
     return path
 
 

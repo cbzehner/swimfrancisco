@@ -30,7 +30,7 @@ from .pipeline import (
     parse_provider,
     run_pipeline,
 )
-from .automation import automate
+from .automation import automate, open_closure_review_prs
 from .report import result_counts
 from .project import ProjectError, project as _project
 from .review import DecisionSet
@@ -323,6 +323,18 @@ def automate_command(mode: str, run_id: str) -> None:
         click.echo(json.dumps(automate(REPO_ROOT, mode=mode, run_id=run_id)))
     except Exception as error:
         raise click.ClickException(f"Automation stopped ({type(error).__name__}); inspect its evidence") from error
+
+
+@cli.command("closure-prs")
+@click.option("--evidence", type=click.Path(path_type=Path, exists=True), required=True)
+def closure_prs_command(evidence: Path) -> None:
+    """Open draft, evidence-only PRs for unclear closures; never publish hours."""
+    try:
+        result = open_closure_review_prs(REPO_ROOT, evidence.resolve())
+        (evidence / "closure-prs.json").write_text(json.dumps(result, indent=2) + "\n")
+        click.echo(json.dumps(result))
+    except Exception as error:
+        raise click.ClickException(f"Closure PR creation stopped ({type(error).__name__}); existing branches were preserved") from error
 
 
 @cli.command("eval")

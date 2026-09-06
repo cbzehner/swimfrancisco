@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 import tomllib
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import date
 from pathlib import Path
 
@@ -54,9 +54,10 @@ class Eligibility:
 class PublishRefuse(Exception):
     """Per-pool auto-publish refuse; command continues."""
 
-    def __init__(self, code: str, message: str) -> None:
+    def __init__(self, code: str, message: str, *, closure_review: dict | None = None) -> None:
         self.code = code
         self.message = message
+        self.closure_review = closure_review
         super().__init__(message)
 
 
@@ -358,7 +359,22 @@ def publish_closure_notice(
     """Fetch flyer URL, parse dates, project temporarily_closed. No registry write."""
     parsed = parse_closure_dates(flyer.get("filename"), flyer.get("anchor_text"))
     if parsed is None:
-        raise PublishRefuse("closure_dates_unparsed", "could not parse closure dates")
+        href = flyer.get("href")
+        review = None
+        if isinstance(href, str) and href:
+            fetched = fetch_pdf(slug, href, cache_root=data_root)
+            if fetched.sha256 in quarantined_shas:
+                raise PublishRefuse("quarantined", "Closure source is quarantined")
+            source = inspect_pdf_source(fetched.bytes)
+            review = {
+                "slug": slug,
+                "source_path": f"data/{slug}/{fetched.path.parent.name}/source.pdf",
+                "source_sha256": fetched.sha256,
+                "issues": ["closure_dates_unparsed"],
+                "notices": [asdict(notice) for notice in source.notices] or
+                           [{"id": "title", "text": flyer.get("anchor_text") or flyer.get("filename") or "Undated closure", "facility": False}],
+            }
+        raise PublishRefuse("closure_dates_unparsed", "could not parse closure dates", closure_review=review)
     start, end = parsed
 
     md_path = content_spots_dir / f"{slug}.md"
@@ -393,11 +409,20 @@ def publish_closure_notice(
     if payload["sessions"]:
         raise PublishRefuse("flyer_emitted_sessions", "closure payload has sessions")
     try:
-        coverage = source_publication_coverage(inspect_pdf_source(fetched.bytes), payload)
+        source = inspect_pdf_source(fetched.bytes)
+        coverage = source_publication_coverage(source, payload)
     except Exception as error:
         raise PublishRefuse("source_coverage_failed", str(error)) from error
     if not coverage["ok"]:
-        raise PublishRefuse("source_coverage_failed", "Closure title differs from the printed PDF or its scope is unresolved")
+        raise PublishRefuse("source_coverage_failed", "Closure title differs from the printed PDF or its scope is unresolved",
+                            closure_review={
+                                "slug": slug,
+                                "source_path": f"data/{slug}/{fetched.path.parent.name}/source.pdf",
+                                "source_sha256": fetched.sha256,
+                                "issues": coverage["closures"]["issues"] or ["closure_source_mismatch"],
+                                "notices": [asdict(notice) for notice in source.notices] or
+                                           [{"id": "title", "text": title, "facility": False}],
+                            })
 
     envelope = {
         "slug": slug,
@@ -525,7 +550,8 @@ def publish_pending_all(
                 data_root=data_root,
             )
         except PublishRefuse as exc:
-            refused.append({"slug": slug, "code": exc.code, "message": exc.message})
+            refused.append({"slug": slug, "code": exc.code, "message": exc.message,
+                            **({"closure_review": exc.closure_review} if exc.closure_review else {})})
             continue
         except FinalizeError as exc:
             refused.append(
@@ -910,7 +936,9 @@ def _write_reports(
             {
                 "published": published,
                 "refused": [
-                    {"slug": item["slug"], "code": item["code"]} for item in refused
+                    {"slug": item["slug"], "code": item["code"],
+                     **({"closure_review": item["closure_review"]} if item.get("closure_review") else {})}
+                    for item in refused
                 ],
                 "closure": closure,
                 "windows": windows,

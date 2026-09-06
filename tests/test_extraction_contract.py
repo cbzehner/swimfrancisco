@@ -310,8 +310,10 @@ def test_unresolved_closure_scope_stops_before_spend(tmp_path, monkeypatch):
 
     monkeypatch.setattr(openai_provider, "budgeted_call", unexpected_call)
     pdf = REPO_ROOT / "data/mission-community-pool/2026-09-02-67f2a420e8fc/source.pdf"
-    with pytest.raises(ValueError, match="Unresolved source closures"):
+    with pytest.raises(openai_provider.ClosureReviewRequired, match="Unresolved source closures") as held:
         openai_provider.extract(pdf.read_bytes(), PROMPT_PATH.read_text(), EXTRACTION_SCHEMA)
+    assert held.value.issues
+    assert all(set(notice) == {"id", "text", "facility"} for notice in held.value.notices)
     assert not (tmp_path / "budget.json").exists()
 
 

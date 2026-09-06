@@ -434,6 +434,13 @@ def verify_artifact(artifact: dict, pdf_bytes: bytes, prompt: str) -> dict:
     return source_publication_coverage(source, artifact["payload"], visual_pages=pages)
 
 
+class ClosureReviewRequired(ValueError):
+    def __init__(self, source: PdfSource, issues: list[str]):
+        self.issues = issues
+        self.notices = [asdict(notice) for notice in source.notices]
+        super().__init__("Unresolved source closures: " + ", ".join(issues))
+
+
 def extract(pdf_bytes: bytes, prompt: str, schema: dict) -> ProviderResult:
     if not os.environ.get("OPENAI_API_KEY", "").strip():
         raise ValueError("OPENAI_API_KEY is not configured")
@@ -445,6 +452,8 @@ def extract(pdf_bytes: bytes, prompt: str, schema: dict) -> ProviderResult:
     closure_issues = [issue for issue in source_closure_coverage(source, {})["issues"]
                       if issue != "source_closure_mismatch"]
     if closure_issues:
+        if any(":" in issue for issue in closure_issues):
+            raise ClosureReviewRequired(source, closure_issues)
         raise ValueError("Unresolved source closures: " + ", ".join(closure_issues))
     visual_pages = visual_page_numbers(source)
     images = render_source_pages(pdf_bytes, visual_pages)

@@ -25,7 +25,7 @@ from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH, REPORT_PATHS, TMP_DIR, artifa
 from .providers import extract as extract_with_provider
 from .providers.anthropic_provider import DEFAULT_MODEL as ANTHROPIC_DEFAULT_MODEL
 from .providers.gemini_provider import DEFAULT_MODEL as GEMINI_DEFAULT_MODEL
-from .providers.openai_provider import API_MODEL, extraction_configuration, verify_artifact
+from .providers.openai_provider import API_MODEL, ClosureReviewRequired, extraction_configuration, verify_artifact
 from .registry import load_registry
 from .review import DecisionSet, carry_forward_review, parse_view_id
 from .reviewed_snapshots import load_reviewed_snapshot_from_path
@@ -392,6 +392,13 @@ def _process_entry(
     except Exception as exc:  # noqa: BLE001
         return Aborted(
             **_identity_kwargs(entry),
+            closure_review={
+                "slug": entry.slug,
+                "source_path": f"data/{entry.slug}/{fetch_result.path.parent.name}/source.pdf",
+                "source_sha256": fetch_result.sha256,
+                "issues": exc.issues,
+                "notices": exc.notices,
+            } if isinstance(exc, ClosureReviewRequired) else None,
             error=f"{type(exc).__name__}: {exc}\n{traceback.format_exc()}",
             prior_sessions_count=len(prior_snapshot["sessions"]),
             prior_closures_count=len(prior_snapshot["closures"]),
