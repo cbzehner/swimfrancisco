@@ -1153,6 +1153,43 @@ renderer, normalization, source checks, and reference answers. Prepare a new
 `physical-pool-labels-2026-09-05.zip` archive. This allowance is the remainder of
 the original $10, not new spending permission.
 
+### Physical pool labels and Mission holdout results (2026-09-05)
+
+**Decision: keep automatic publication disabled.** The clarified-label repeat
+matched all checked fields in 19/21 runs and exact session grids in 20/21.
+One Balboa interim response wrote `small//main` instead of `small/main` for
+two shared-program rows. The source session check rejected it. One North Beach
+response omitted the July 4 closure while passing both session and window
+checks. This is a concrete false acceptance: those checks alone do not establish
+closure completeness. Do not repair either response or weaken exact matching.
+All three Rossi responses now matched. No request failed or retried.
+
+The separate Mission holdout matched all 25 sessions, five facility closures,
+and its date window in all three runs. The reference was frozen before calls;
+it is agent-checked, not human-approved. The untimed Thursday cell caveat and
+the narrower facility closure notice still need an approved interpretation
+before publication. Passing this holdout does not resolve that policy question.
+
+Both runs used source revision `1ecf4a1`, unchanged model configuration, and
+the production request. Archive replay verified input hashes, requests,
+source checks, scores, and conservative budget accounting offline.
+
+| Run | Estimated API cost, including readiness | Conservative ledger charge | Call seconds, including readiness |
+| --- | --- | --- | --- |
+| Physical pool labels, 21 calls | $2.010941 | $2.197565 | 449.539 |
+| Mission holdout, three calls | $0.220856 | $0.246200 | 49.742 |
+
+The original $10 approval has $0.658269 left after conservative accounting.
+Total estimated API cost across the five API comparisons is $8.913187, not an
+invoice total. No recurring monthly allowance has been approved.
+
+Portable evidence:
+
+- [physical-pool-labels-2026-09-05.zip](../benchmarks/pdf/physical-pool-labels-2026-09-05.zip),
+  SHA-256 `58bb90ccbd6f8f278744f6d6c919f7ceba6e85690a0f97c64a2b4a9b31b0090b`.
+- [mission-holdout-2026-09-05.zip](../benchmarks/pdf/mission-holdout-2026-09-05.zip),
+  SHA-256 `8656d13e551772e03ea601a992b427f9ea44f7b2de76e24573f25ffa0e992178`.
+
 ## Auto-extract workflow
 
 The `.github/workflows/schedules-extract.yml` action runs weekly on

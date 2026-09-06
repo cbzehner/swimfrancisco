@@ -47,6 +47,8 @@ def replay_fixture_archive(tmp_path):
     ("api-confirmation-2026-09-05.zip", "67767c80b0afe9908ae527b51ad59889ef2bba0bd4d610b84507f462151c78da"),
     ("literal-pool-labels-2026-09-05.zip", "1358cde019fcfb23cc9b76e70f724c80e82fc2276de8c416e676f6ba842bb07c"),
     ("source-inventory-2026-09-05.zip", "daa9543d0511a940cbb52c7627ba37c9b92567443b950c31a2c8be53d2b3a3e9"),
+    ("physical-pool-labels-2026-09-05.zip", "58bb90ccbd6f8f278744f6d6c919f7ceba6e85690a0f97c64a2b4a9b31b0090b"),
+    ("mission-holdout-2026-09-05.zip", "8656d13e551772e03ea601a992b427f9ea44f7b2de76e24573f25ffa0e992178"),
 ])
 def test_historical_benchmark_archive_remains_pinned_to_its_source_revision(tmp_path, filename, digest):
     from schedules.benchmark import benchmark_implementation, replay_benchmark
