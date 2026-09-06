@@ -2,8 +2,86 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
+from collections import Counter
+from dataclasses import dataclass
 
+from ._time import printed_time_range
 from .models import GroundingResult, SessionGrounding
+from .schema import pool_label_payload
+from .signals import PdfSource, SourceCell, TIME_RANGE_RE, program_types
+
+
+@dataclass(frozen=True)
+class SourceSlot:
+    cell: SourceCell
+    type: str
+    start: str
+    end: str
+    pool: str | None
+
+    @property
+    def key(self) -> tuple:
+        return self.cell.day, self.type, self.start, self.end, self.pool
+
+
+def _cell_pool(cell: SourceCell, time_match) -> str | None:
+    labels = [label.strip() for label in re.findall(r"\(([^()]*)\)", cell.text)]
+    labels = [label for label in labels if not re.fullmatch(r"\d+\s*(?:lanes?)?", label, re.IGNORECASE)
+              and not re.search(r"\b(?:closed|until)\b|\d+/\d+", label, re.IGNORECASE)]
+    tail = cell.text[time_match.end():].strip()
+    if re.fullmatch(r"[A-Z](?:/[A-Z])*", tail):
+        labels.append(tail)
+    normalized = {pool_label_payload({"sessions": [{"pool_label_raw": label}]})["sessions"][0].get("pool")
+                  for label in labels}
+    normalized.discard(None)
+    if len(normalized) > 1:
+        raise ValueError(f"{cell.id}:ambiguous_pool_allocation")
+    return next(iter(normalized), None)
+
+
+def source_slots(source: PdfSource) -> tuple[SourceSlot, ...]:
+    slots = []
+    for cell in source.cells:
+        types = program_types(cell.text)
+        if not types:
+            continue
+        ranges = list(TIME_RANGE_RE.finditer(cell.text))
+        if len(ranges) != 1:
+            raise ValueError(f"{cell.id}:ambiguous_program_times")
+        time_match = ranges[0]
+        start, end = printed_time_range(time_match["start"], time_match["end"])
+        pool = _cell_pool(cell, time_match)
+        for kind in types:
+            override = re.search(r"\blap\s+(?:swim\s+)?until\s+(\d{1,2}(?::\d{2})?\s*[ap]m)", cell.text, re.IGNORECASE)
+            slot_end = printed_time_range(time_match["start"], override[1])[1] if kind == "lap_swim" and override else end
+            slots.append(SourceSlot(cell, kind, start, slot_end, pool))
+    keys = [slot.key for slot in slots]
+    if len(keys) != len(set(keys)):
+        raise ValueError("duplicate_source_slots")
+    return tuple(slots)
+
+
+def source_coverage(source: PdfSource, payload: dict, *, visual_pages: frozenset[int] = frozenset()) -> dict:
+    issues = [issue for issue in source.issues
+              if not (issue.endswith(":unbalanced_text") and
+                      any(cell.id == issue.split(":")[0] and cell.page in visual_pages for cell in source.cells))]
+    try:
+        slots = source_slots(source)
+    except ValueError as error:
+        return {"ok": False, "issues": [*issues, str(error)], "expected_count": None, "session_cells": []}
+    expected = Counter(slot.key for slot in slots)
+    actual = Counter(tuple(session.get(field) for field in ("day", "type", "start", "end", "pool"))
+                     for session in payload.get("sessions", []))
+    if expected != actual:
+        issues.append("source_session_mismatch")
+    if not source.cells and payload.get("schedule_basis") != "temporarily_closed":
+        issues.append("source_inventory_unavailable")
+    indexed = {slot.key: slot.cell.id for slot in slots}
+    return {"ok": not issues, "issues": issues, "expected_count": len(slots),
+            "missing": [list(key) for key in (expected - actual).elements()],
+            "extra": [list(key) for key in (actual - expected).elements()],
+            "session_cells": [indexed.get(tuple(session.get(field) for field in ("day", "type", "start", "end", "pool")))
+                              for session in payload.get("sessions", [])]}
 
 TYPE_TOKENS: dict[str, tuple[str, ...]] = {
     "lap_swim": ("lap",),

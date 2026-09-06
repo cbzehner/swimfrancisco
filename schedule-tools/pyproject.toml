@@ -15,6 +15,7 @@ dependencies = [
   "httpx",
   "jsonschema",
   "openpyxl",
+  "pdfplumber",
   "pypdf",
   "pytest",
   "tomlkit",

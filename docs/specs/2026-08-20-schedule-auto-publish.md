@@ -27,6 +27,12 @@ or permanent alternative publication path.
   whitespace. Counts attached to named sections, qualifiers, punctuation, and
   codes remain intact. This is not a resolved facility identity.
 - **Candidate:** extracted facts that have not passed the publication rules.
+- **Source cell:** a program block located by PDF coordinates under a weekday
+  header, or one time entry in a program-oriented table row. It exists before
+  model extraction and retains its page, bounds, weekday, and printed text.
+- **Source coverage:** exact agreement between the supported source cells and
+  candidate sessions, including programs, times, and pool allocations. Unknown
+  layouts or program blocks cannot establish coverage.
 - **Accepted snapshot:** a candidate that passed those rules. Acceptance by CI is
   not a claim that a human checked the document.
 - **Published schedule:** accepted data that the live site serves and that the
@@ -126,6 +132,26 @@ in provider artifacts. Cache identity must cover the model, prompt, transport
 schema, text extraction settings, and normalization rules. An accepted snapshot
 can remain the publication baseline without hiding a requested configuration
 re-evaluation. Finish these checks before replacing the provider and workflow.
+
+### Source-cell implementation
+
+The implementation uses PDF coordinates to separate weekday columns and program
+blocks. Program-oriented tables supply one cell per printed time range. This
+inventory does not use model output or reference answers. It checks the complete
+session multiset, not just returned evidence lines. Supported time syntax includes
+shared meridiems (`7-8 AM`), noon, midnight, and an explicit lap-only end time.
+Named pool labels retain qualifiers; standalone lane counts are not pool labels.
+
+Unknown grids, unknown programs, ambiguous allocations or times, and duplicate
+source slots hold the update. Unbalanced source text requires a rendered-page
+input; the response still must agree with the independently parsed source slots.
+Images do not waive coverage. Scanned documents without a supported text
+inventory remain held, even if a model could guess their sessions.
+
+The regression corpus contains 145 sessions. Mutation tests remove every row
+and alter its day, program, start, end, and pool; all must fail coverage. These
+tests establish behavior on the known corpus, not universal PDF support. Fresh
+documents and a human reference check remain release checks.
 
 References: [protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches),
 [workflow triggers](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow).
