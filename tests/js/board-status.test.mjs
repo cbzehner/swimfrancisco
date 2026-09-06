@@ -646,9 +646,7 @@ test("computeAccessWindowAvailability returns a placeholder for non-window horiz
   assert.deepEqual(result, boardShape({ status: PLACEHOLDER, next: PLACEHOLDER, sortRank: 3 }));
 });
 
-test("computeDetailStatus treats pre-season as a synthetic closure", () => {
-  // Pre-season collapses into the same CLOSED_TODAY shape used for repair
-  // shutdowns and holidays; the closure reason carries the transition copy.
+test("computeDetailStatus does not claim closure before the verified schedule starts", () => {
   const schedule = {
     sessions: [{ day: "tuesday", type: "lap_swim", start: "07:30", end: "09:30" }],
     closures: [],
@@ -657,12 +655,12 @@ test("computeDetailStatus treats pre-season as a synthetic closure", () => {
   };
   const before = new Date("2026-05-05T15:00:00");
   const result = computeDetailStatus(schedule, before);
-  assert.equal(result.kind, "CLOSED_TODAY");
+  assert.equal(result.kind, "NOT_VERIFIED");
   assert.equal(result.closureKind, "PRE_SEASON");
   assert.match(result.closureReason, /Schedule starts/);
 });
 
-test("computeDetailStatus treats post-season as a synthetic closure", () => {
+test("computeDetailStatus does not claim closure after the verified schedule ends", () => {
   const schedule = {
     sessions: [{ day: "tuesday", type: "lap_swim", start: "07:30", end: "09:30" }],
     closures: [],
@@ -671,7 +669,7 @@ test("computeDetailStatus treats post-season as a synthetic closure", () => {
   };
   const after = new Date("2026-06-09T08:00:00");
   const result = computeDetailStatus(schedule, after);
-  assert.equal(result.kind, "CLOSED_TODAY");
+  assert.equal(result.kind, "NOT_VERIFIED");
   assert.equal(result.closureKind, "POST_SEASON");
   assert.match(result.closureReason, /Schedule ended/);
   // Post-season has no known reopen, so we don't compute a nextDropIn.
@@ -687,7 +685,7 @@ test("computeStatus dashboard line for pre-season points at schedule start", () 
   };
   const before = new Date("2026-05-05T15:00:00");
   const { status, next, nextKind, nextArgs } = computeStatus(schedule, before);
-  assert.equal(status, "CLOSED");
+  assert.equal(status, "CHECK");
   assert.equal(next, "Schedule starts May 12, 2026");
   assert.equal(nextKind, "schedule_starts");
   assert.deepEqual(nextArgs, { iso: "2026-05-12" });
@@ -715,7 +713,7 @@ test("computeStatus dashboard line for post-season uses 'Schedule ended'", () =>
   };
   const after = new Date("2026-06-09T08:00:00");
   const { status, next, nextKind, nextArgs } = computeStatus(schedule, after);
-  assert.equal(status, "CLOSED");
+  assert.equal(status, "CHECK");
   assert.equal(next, "Schedule ended Jun 6, 2026");
   assert.equal(nextKind, "schedule_ended");
   assert.deepEqual(nextArgs, { iso: "2026-06-06" });
@@ -793,7 +791,7 @@ test("computeStatus surfaces 'Schedule not yet verified' on bare schedules", () 
   const empty = { sessions: [], closures: [] };
   const t = new Date("2026-05-05T15:00:00");
   const { status, next } = computeStatus(empty, t);
-  assert.equal(status, "CLOSED");
+  assert.equal(status, "CHECK");
   assert.equal(next, "Schedule not yet verified");
 });
 
@@ -863,7 +861,7 @@ test("queued schedule keeps North Beach current schedule active on June 6", () =
 test("queued schedule surfaces start date during gap before summer schedule", () => {
   const gap = new Date("2026-06-07T10:00:00");
   const status = computeStatus(NORTH_BEACH_TRANSITION_SCHEDULE, gap);
-  assert.equal(status.status, "CLOSED");
+  assert.equal(status.status, "CHECK");
   assert.equal(status.next, "Schedule starts Jun 9, 2026");
   assert.equal(status.nextKind, "schedule_starts");
   assert.deepEqual(status.nextArgs, { iso: "2026-06-09" });
@@ -876,6 +874,21 @@ test("queued schedule becomes active on its effective date", () => {
   const status = computeStatus(NORTH_BEACH_TRANSITION_SCHEDULE, startDay);
   assert.equal(status.status, "OPEN");
   assert.equal(status.next, "Closes 08:00");
+});
+
+test("expired access and plan-ahead windows do not imply a facility closure", () => {
+  const schedule = {
+    effective_start: "2026-05-12", effective_end: "2026-06-06", closures: [],
+    sessions: [{ day: "tuesday", type: "lap_swim", start: "07:30", end: "09:30" }],
+    access_hours: [{ day: "tuesday", start: "07:30", end: "09:30", label: "Public access" }],
+  };
+  const now = new Date("2026-06-09T08:00:00");
+  const horizon = { kind: "window", date: "2026-06-09", start: 8 * 60, end: 9 * 60 };
+  for (const result of [computeAccessStatus(schedule, now), computeWindowAvailability(schedule, horizon), computeAccessWindowAvailability(schedule, horizon)]) {
+    assert.equal(result.status, "CHECK");
+    assert.equal(result.nextKind, "schedule_ended");
+    assert.deepEqual(result.nextArgs, { iso: "2026-06-06" });
+  }
 });
 
 // computeStatusRunKey backs the memoization in status.js's applyStatuses:

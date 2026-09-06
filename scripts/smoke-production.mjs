@@ -67,12 +67,34 @@ async function expectedSpotRecord(slug, commit) {
   return buildSpotRecord(front, body, file);
 }
 
+async function expectedSpotRecords(commit) {
+  const { stdout } = await execFileAsync("git", ["ls-tree", "-r", "--name-only", commit, "--", "content/spots/"], { cwd: repoRoot });
+  const slugs = stdout.split("\n").flatMap((path) => {
+    const match = /^content\/spots\/([a-z0-9-]+)\.md$/.exec(path);
+    return match ? [match[1]] : [];
+  });
+  assert(slugs.length > 0, "expected commit has no canonical spots");
+  return Promise.all(slugs.map((slug) => expectedSpotRecord(slug, commit)));
+}
+
 export function assertSpotMatchesContent(actual, expected) {
   const { generated_at, ...record } = actual;
   assert(
     isDeepStrictEqual(record, JSON.parse(JSON.stringify(expected))),
     `${expected.slug} deployed data does not match the expected commit's content`,
   );
+}
+
+export async function verifySpotRecords(index, expected, loadSpot) {
+  const actualSlugs = index.spots?.map((spot) => spot.slug).sort();
+  const expectedSlugs = expected.map((spot) => spot.slug).sort();
+  assert(expected.length > 0 && isDeepStrictEqual(actualSlugs, expectedSlugs),
+    "deployed index does not contain exactly the expected canonical spots");
+  for (let offset = 0; offset < expected.length; offset += 5) {
+    await Promise.all(expected.slice(offset, offset + 5).map(async (spot) => {
+      assertSpotMatchesContent(await loadSpot(spot.slug), spot);
+    }));
+  }
 }
 
 async function fetchJson(baseUrl, path) {
@@ -119,11 +141,9 @@ async function main() {
     "--max-generated-age-hours must be a positive number",
   );
 
-  const [build, index, ocean, northBeach, conditions, mapConfig] = await Promise.all([
+  const [build, index, conditions, mapConfig] = await Promise.all([
     fetchJson(baseUrl, "/agent/build.json"),
     fetchJson(baseUrl, "/agent/index.json"),
-    fetchJson(baseUrl, "/agent/spots/24-hour-fitness-ocean.json"),
-    fetchJson(baseUrl, "/agent/spots/north-beach-pool.json"),
     fetchJson(baseUrl, "/api/conditions"),
     fetchJson(baseUrl, "/api/map-config"),
   ]);
@@ -140,23 +160,10 @@ async function main() {
   }
 
   assertFreshIso("agent index generated_at", index.generated_at, maxGeneratedAgeHours);
-  assert(
-    index.spots?.some((spot) => spot.slug === "24-hour-fitness-ocean"),
-    "agent index is missing 24 Hour Fitness Ocean",
-  );
-  assert(
-    index.spots?.some((spot) => spot.slug === "north-beach-pool"),
-    "agent index is missing North Beach Pool",
-  );
-
   assert(typeof build.git_commit === "string" && /^[0-9a-f]{40}$/.test(build.git_commit), "build marker has no valid git commit");
   const contentCommit = expectedCommit || await resolveCommit(build.git_commit);
-  const [expectedOcean, expectedNorthBeach] = await Promise.all([
-    expectedSpotRecord("24-hour-fitness-ocean", contentCommit),
-    expectedSpotRecord("north-beach-pool", contentCommit),
-  ]);
-  assertSpotMatchesContent(ocean, expectedOcean);
-  assertSpotMatchesContent(northBeach, expectedNorthBeach);
+  const expected = await expectedSpotRecords(contentCommit);
+  await verifySpotRecords(index, expected, (slug) => fetchJson(baseUrl, `/agent/spots/${slug}.json`));
 
   const aquaticPark = conditions["aquatic-park"];
   assertConditionsFresh(conditions);
@@ -164,7 +171,7 @@ async function main() {
   assert(aquaticPark.temp_stale === false, "Aquatic Park temperature is marked stale");
   assert(aquaticPark.tide_stale === false, "Aquatic Park tide is marked stale");
 
-  console.log(`Production smoke passed for ${baseUrl}`);
+  console.log(`Production smoke passed for ${baseUrl}: ${contentCommit}, all ${expected.length} canonical spots`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

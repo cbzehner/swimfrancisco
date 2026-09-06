@@ -66,6 +66,7 @@ function formatStatusLine(result) {
 }
 
 function formatNextLine(result) {
+  if (result.kind === "NOT_VERIFIED" && result.closureTransitionDate) return formatClosureSuffix(result);
   if (!result.nextDropIn) return "—";
   const program = programLabel(result.nextDropIn.program);
   const day = dayShortLabel(result.nextDropIn.day);
@@ -151,8 +152,47 @@ function renderTodayBlock(root, schedule, now, view, day) {
 
 const REFRESH_INTERVAL_MS = 60_000;
 
+function selectScheduleWindow(root, active) {
+  const current = root.querySelector("[data-schedule-window]");
+  const key = `${active?.effective_start || ""}/${active?.effective_end || ""}`;
+  if (!current || current.dataset.scheduleWindow === key) return;
+  const templates = [...root.querySelectorAll("template[data-schedule-window-template]")];
+  const selected = templates.find((template) => template.dataset.scheduleWindowTemplate === key);
+  if (!selected) return;
+  current.replaceWith(selected.content.firstElementChild.cloneNode(true));
+  if (!templates.some((template) => template.dataset.scheduleWindowTemplate === current.dataset.scheduleWindow)) {
+    const previous = document.createElement("template");
+    previous.dataset.scheduleWindowTemplate = current.dataset.scheduleWindow;
+    previous.content.append(current);
+    root.append(previous);
+  }
+}
+
+function refreshWindowDates(root, active, now) {
+  const isoDate = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  const today = isoDate(now);
+  const windowEnd = new Date(now);
+  windowEnd.setDate(windowEnd.getDate() + 14);
+  for (const section of root.querySelectorAll("[data-dated-notices]")) {
+    for (const notice of section.querySelectorAll("[data-notice-start]")) {
+      const { noticeStart: start, noticeEnd: end } = notice.dataset;
+      notice.hidden = start > isoDate(windowEnd) || end < today
+        || end < (active?.effective_start || "0001-01-01") || start > (active?.effective_end || "9999-12-31");
+    }
+    section.hidden = ![...section.children].some((notice) => !notice.hidden);
+  }
+  const effective = root.querySelector(".meta-effective");
+  if (effective && active?.effective_start) {
+    effective.textContent = `${t("schedule_effective_from", "Schedule effective from")} ${formatLocalizedISODate(active.effective_start)}`
+      + (active.effective_end ? ` ${t("to", "to")} ${formatLocalizedISODate(active.effective_end)}` : "");
+  }
+}
+
 function refresh(root, schedule) {
   const now = pacificWallClockDate();
+  const active = resolveActiveSchedule(schedule, now);
+  selectScheduleWindow(root, active);
+  refreshWindowDates(root, active, now);
   const day = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"][now.getDay()];
   const result = applyStatusSlab(root, schedule, now);
   renderTodayBlock(root, schedule, now, result, day);

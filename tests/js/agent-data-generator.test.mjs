@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 
 import { generateAgentData, normalizeIsoDate } from "../../scripts/generate-agent-data.mjs";
 import { generateBuildMetadata } from "../../scripts/generate-build-metadata.mjs";
-import { assertConditionsFresh, assertSpotMatchesContent } from "../../scripts/smoke-production.mjs";
+import { assertConditionsFresh, assertSpotMatchesContent, verifySpotRecords } from "../../scripts/smoke-production.mjs";
 import { listCanonicalSpotFiles } from "../../scripts/lib/spot-frontmatter.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -134,6 +134,36 @@ test("production smoke accepts the expected season and rejects older content", (
     ...expected,
     pool: { schedules: [{ effective_start: "2026-08-11", effective_end: "2026-08-29" }] },
   }, expected), /north-beach-pool deployed data does not match/);
+});
+
+test("production smoke checks every spot and bounds concurrent requests", async () => {
+  const expected = Array.from({ length: 13 }, (_, index) => ({ slug: `pool-${index}`, pool: { schedules: [] } }));
+  const index = { spots: expected };
+  const visited = [];
+  let active = 0;
+  let peak = 0;
+  await verifySpotRecords(index, expected, async (slug) => {
+    active += 1;
+    peak = Math.max(peak, active);
+    visited.push(slug);
+    await new Promise((resolve) => setImmediate(resolve));
+    active -= 1;
+    return expected.find((spot) => spot.slug === slug);
+  });
+  assert.deepEqual(visited.sort(), expected.map((spot) => spot.slug).sort());
+  assert.equal(peak, 5);
+  await assert.rejects(verifySpotRecords(index, expected, async (slug) => (
+    slug === "pool-12" ? { slug, pool: { schedules: [{ effective_end: "2020-01-01" }] } }
+      : expected.find((spot) => spot.slug === slug)
+  )), /pool-12 deployed data does not match/);
+});
+
+test("production smoke rejects missing, duplicate, extra, or empty spot indexes", async () => {
+  const expected = [{ slug: "mission-pool" }, { slug: "hamilton-pool" }];
+  for (const spots of [[], expected.slice(1), [...expected, expected[0]], [...expected, { slug: "unexpected-pool" }]]) {
+    await assert.rejects(verifySpotRecords({ spots }, expected, () => assert.fail("Index must fail before fetching details")), /exactly the expected/);
+  }
+  await assert.rejects(verifySpotRecords({ spots: [] }, [], () => {}), /exactly the expected/);
 });
 
 test("production smoke rejects old observations even when the latest assembly labels them fresh", () => {

@@ -314,7 +314,7 @@
       <section class="status-slab">
         <div class="status-slab-row">
           <span class="status-slab-label">{{ trans(key='status', lang=lang) }}</span>
-          <span class="status-slab-value" data-field="status">{% if schedule_phase == "upcoming" or schedule_phase == "expired" %}{{ trans(key='status_closed_today', lang=lang) }}{% else %}—{% endif %}</span>
+          <span class="status-slab-value" data-field="status">{% if schedule_phase == "upcoming" or schedule_phase == "expired" %}{{ trans(key='status_not_verified', lang=lang) }}{% else %}—{% endif %}</span>
         </div>
         <div class="status-slab-row">
           <span class="status-slab-label">{{ trans(key='next', lang=lang) }}</span>
@@ -329,6 +329,22 @@
         <ul class="today-block-list"></ul>
       </section>
 
+      {% set selected_start = effective_start %}
+      {% set selected_end = effective_end %}
+      {% for window_schedule in schedules %}
+      {% set_global sessions = window_schedule.sessions | default(value=[]) %}
+      {% set_global access_hours = window_schedule.access_hours | default(value=[]) %}
+      {% set_global access_exceptions = window_schedule.access_exceptions | default(value=[]) %}
+      {% set_global closures = window_schedule.closures | default(value=[]) %}
+      {% set_global effective_start = window_schedule.effective_start | default(value="") %}
+      {% set_global effective_end = window_schedule.effective_end | default(value="") %}
+      {% set_global schedule_basis = window_schedule.schedule_basis | default(value="") %}
+      {% set_global effective_start_i = 0 %}
+      {% set_global effective_end_i = 99991231 %}
+      {% if effective_start %}{% set_global effective_start_i = effective_start | replace(from="-", to="") | int %}{% endif %}
+      {% if effective_end %}{% set_global effective_end_i = effective_end | replace(from="-", to="") | int %}{% endif %}
+      {% if effective_start != selected_start or effective_end != selected_end %}<template data-schedule-window-template="{{ effective_start }}/{{ effective_end }}">{% endif %}
+      <div data-schedule-window="{{ effective_start }}/{{ effective_end }}">
       {% set day_order = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] %}
       {% set day_labels = [trans(key='day_monday_short', lang=lang), trans(key='day_tuesday_short', lang=lang), trans(key='day_wednesday_short', lang=lang), trans(key='day_thursday_short', lang=lang), trans(key='day_friday_short', lang=lang), trans(key='day_saturday_short', lang=lang), trans(key='day_sunday_short', lang=lang)] %}
       {% set lap_sessions = sessions | filter(attribute="type", value="lap_swim") %}
@@ -338,9 +354,9 @@
       {% set family_count = family_sessions | length %}
       {% set senior_count = senior_sessions | length %}
       {% set drop_in_count = lap_count + family_count + senior_count %}
-      {% set display_day_order = [] %}
-      {% set display_day_labels = [] %}
-      {% set omitted_day_order = [] %}
+      {% set_global display_day_order = [] %}
+      {% set_global display_day_labels = [] %}
+      {% set_global omitted_day_order = [] %}
       {% for day in day_order %}
         {% set day_lap_sessions = lap_sessions | filter(attribute="day", value=day) %}
         {% set day_family_sessions = family_sessions | filter(attribute="day", value=day) %}
@@ -488,7 +504,7 @@
       {% set window_end_iso = (today_ts + 1209600) | date(format="%Y-%m-%d", timezone="America/Los_Angeles") %}
       {% set today_i = today_iso | replace(from="-", to="") | int %}
       {% set window_end_i = window_end_iso | replace(from="-", to="") | int %}
-      {% set upcoming_closures = [] %}
+      {% set_global upcoming_closures = [] %}
       {% for c in closures %}
         {% set c_start_i = c.start | replace(from="-", to="") | int %}
         {% set c_end_i = c.end | replace(from="-", to="") | int %}
@@ -497,10 +513,10 @@
         {% endif %}
       {% endfor %}
 
-      {% if upcoming_closures | length > 0 %}
-        <section class="closure-banners" aria-label="{{ trans(key='upcoming_closures', lang=lang) }}">
-          {% for c in upcoming_closures %}
-            <div class="closure-banner">
+      {% if closures | length > 0 %}
+        <section class="closure-banners" data-dated-notices aria-label="{{ trans(key='upcoming_closures', lang=lang) }}"{% if upcoming_closures | length == 0 %} hidden{% endif %}>
+          {% for c in closures %}
+            <div class="closure-banner" data-notice-start="{{ c.start }}" data-notice-end="{{ c.end }}"{% if c not in upcoming_closures %} hidden{% endif %}>
               <span class="closure-banner-date">
                 {% if c.start == c.end %}
                   {{ self::format_iso_date(iso=c.start, active_lang=lang, with_year=false) }}{% if c.start_time and c.end_time %} {{ c.start_time }}–{{ c.end_time }}{% endif %}
@@ -514,7 +530,7 @@
           {% endfor %}
         </section>
       {% endif %}
-      {% set upcoming_access_exceptions = [] %}
+      {% set_global upcoming_access_exceptions = [] %}
       {% for e in access_exceptions %}
         {% set e_date_i = e.date | replace(from="-", to="") | int %}
         {% if e_date_i <= window_end_i and e_date_i >= today_i and e_date_i >= effective_start_i and e_date_i <= effective_end_i %}
@@ -522,10 +538,10 @@
         {% endif %}
       {% endfor %}
 
-      {% if upcoming_access_exceptions | length > 0 %}
-        <section class="closure-banners" aria-label="{{ trans(key='upcoming_access_changes', lang=lang) }}">
-          {% for e in upcoming_access_exceptions %}
-            <div class="closure-banner">
+      {% if access_exceptions | length > 0 %}
+        <section class="closure-banners" data-dated-notices aria-label="{{ trans(key='upcoming_access_changes', lang=lang) }}"{% if upcoming_access_exceptions | length == 0 %} hidden{% endif %}>
+          {% for e in access_exceptions %}
+            <div class="closure-banner" data-notice-start="{{ e.date }}" data-notice-end="{{ e.date }}"{% if e not in upcoming_access_exceptions %} hidden{% endif %}>
               <span class="closure-banner-date">{{ self::format_iso_date(iso=e.date, active_lang=lang, with_year=false) }} {{ e.start }}–{{ e.end }}</span>
               <span class="closure-banner-zone">{{ self::access_window_label(label=e.label, active_lang=lang) | upper }}</span>
               <span class="closure-banner-reason">{{ self::closure_reason(reason=e.reason, reason_code=e.reason_code | default(value=""), active_lang=lang) }}</span>
@@ -533,6 +549,12 @@
           {% endfor %}
         </section>
       {% endif %}
+      </div>
+      {% if effective_start != selected_start or effective_end != selected_end %}</template>{% endif %}
+      {% endfor %}
+      {% set_global effective_start = selected_start %}
+      {% set_global effective_end = selected_end %}
+      {% if schedules | length == 0 %}<p class="fallback">{{ trans(key='schedule_not_verified_sentence', lang=lang) }}</p>{% endif %}
       {% if page.content %}
         <section class="description">
           {{ page.content | safe }}

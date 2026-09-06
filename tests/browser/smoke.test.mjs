@@ -227,6 +227,7 @@ for (const engine of ["webkit", "chromium"]) {
           <p class="today-block-heading">TODAY · THURSDAY</p>
           <ul class="today-block-list"><li>stale Thursday sessions</li></ul>
         </section>
+        <div data-schedule-window="2026-09-01/2026-09-05">
         <table class="weekly-grid"><thead><tr>
           <th data-day="thursday" data-today="true">THU</th>
           <th data-day="friday">FRI</th><th data-day="saturday">SAT</th>
@@ -234,6 +235,16 @@ for (const engine of ["webkit", "chromium"]) {
           <td data-day="thursday" data-today="true"></td>
           <td data-day="friday"></td><td data-day="saturday"></td>
         </tr></tbody></table>
+        <section data-dated-notices><div data-notice-start="2026-09-04" data-notice-end="2026-09-04">Old notice</div></section>
+        </div>
+        <template data-schedule-window-template="2026-09-07/2026-09-30">
+          <div data-schedule-window="2026-09-07/2026-09-30">
+            <table class="weekly-grid"><thead><tr><th data-day="monday">MON</th></tr></thead>
+              <tbody><tr><td data-day="monday">10:00–11:00</td></tr></tbody></table>
+            <section data-dated-notices><div data-notice-start="2026-09-08" data-notice-end="2026-09-08">New notice</div></section>
+          </div>
+        </template>
+        <p class="meta-effective">Stale window dates</p>
       </div><script type="module" src="/js/detail.js"></script>`, {
       time: "2026-09-05T06:59:00Z", timezoneId: "Asia/Tokyo",
     });
@@ -252,6 +263,11 @@ for (const engine of ["webkit", "chromium"]) {
 
     await page.clock.fastForward(24 * 60 * 60_000);
     assert.equal(await page.locator(".today-block").isHidden(), true, "a gap after the old schedule expires must not show its rows");
+    assert.equal(await page.locator("[data-schedule-window]").getAttribute("data-schedule-window"), "2026-09-07/2026-09-30");
+    assert.equal(await page.locator(".weekly-grid td").textContent(), "10:00–11:00", "the weekly grid must change with the selected window");
+    assert.equal(await page.locator("[data-notice-start]").textContent(), "New notice");
+    assert.match(await page.locator(".meta-effective").textContent(), /Sep 7, 2026.*Sep 30, 2026/i);
+    assert.doesNotMatch(await page.locator('[data-field="status"]').textContent(), /CLOSED/);
     assert.equal(await page.locator('[data-today="true"]').count(), 0, "a day absent from the grid must clear the old highlight");
 
     await page.clock.fastForward(24 * 60 * 60_000);
@@ -263,6 +279,8 @@ for (const engine of ["webkit", "chromium"]) {
     await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
     assert.equal(await page.locator(".today-block-heading").textContent(), "TODAY · SATURDAY", "restoring a tab must refresh the date without waiting for the timer");
     assert.deepEqual(await page.locator(".today-block .time").allTextContents(), ["11:30–12:45", "14:00–15:30"]);
+    assert.equal(await page.locator("[data-schedule-window]").getAttribute("data-schedule-window"), "2026-09-01/2026-09-05");
+    assert.equal(await page.locator("[data-dated-notices]").isHidden(), true, "yesterday's notice must disappear when a tab is restored");
     assert.deepEqual(errors, []);
   });
 

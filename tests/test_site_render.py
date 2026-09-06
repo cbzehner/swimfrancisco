@@ -606,8 +606,9 @@ def test_expected_banner_labels_flag_only_active_window_closures() -> None:
 def test_closure_banners_match_active_schedule_window(built_site: Path) -> None:
     """Pin the template's upcoming-closure banners to the frontmatter data.
 
-    The template renders closure and access-exception banners only for the
-    active schedule and only inside [today, today+14d]. Recompute that
+    The template shows closure and access-exception banners only for the
+    active schedule and only inside [today, today+14d]. Other windows stay
+    inside inert templates; later notices stay hidden until a refresh. Recompute that
     selection in Python for every spot and require the rendered banners to
     match exactly: in-window closures must render, and closures from
     expired or upcoming-but-inactive schedules must never leak. (An earlier
@@ -630,13 +631,15 @@ def test_closure_banners_match_active_schedule_window(built_site: Path) -> None:
         frontmatter, _ = _markdown_frontmatter_and_body(spot_md)
         schedules = frontmatter.get("extra", {}).get("schedules") or []
         expected = _expected_banner_date_labels(schedules, today_iso, window_end_iso)
+        active_html = re.sub(r"<template\b[^>]*>.*?</template>", "", page.read_text(), flags=re.S)
         rendered = [
             " ".join(label.split())
-            for label in re.findall(
-                r'<span class="?closure-banner-date"?>(.*?)</span>',
-                page.read_text(),
+            for attributes, label in re.findall(
+                r'<div\b([^>]*\bdata-notice-start\b[^>]*)>\s*<span class="?closure-banner-date"?>(.*?)</span>',
+                active_html,
                 flags=re.S,
             )
+            if not re.search(r"\shidden(?:\s|=|$)", attributes)
         ]
         assert sorted(rendered) == sorted(expected), spot_md.stem
 

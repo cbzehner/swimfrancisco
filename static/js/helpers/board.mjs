@@ -514,16 +514,8 @@ export function findNextDropIn(schedule, now, allowedTypes = null) {
   };
 }
 
-// A schedule's effective window is itself a closure. Pre-season and
-// post-season become synthetic closure entries so the rest of the system
-// (status copy, dashboard "next" line, detail-page suppression) treats them
-// uniformly with explicit closures like Memorial Day or a repair shutdown.
-//
-// PRE_SEASON range:  far past → schedule_effective_start - 1
-// POST_SEASON range: effective_end + 1 → far future
-//
-// Synthetic closures carry a `kind` so callers that want to distinguish
-// data-driven gaps from explicit closures still can.
+// Block availability outside the verified date window. These internal
+// boundaries must display as unverified, not as facility closures.
 function derivedClosures(schedule) {
   const out = [];
   const start = schedule.effective_start || null;
@@ -549,6 +541,10 @@ function derivedClosures(schedule) {
     });
   }
   return out;
+}
+
+function isScheduleBoundary(closure) {
+  return closure?.kind === "PRE_SEASON" || closure?.kind === "POST_SEASON";
 }
 
 function shiftISODate(iso, delta) {
@@ -610,11 +606,11 @@ export function computeStatus(schedule, now, allowedTypes = null) {
   const activeClosure = findActiveClosure(closures, now);
   if (activeClosure) {
     const { nextKind, nextArgs } = closureNext(activeClosure);
-    return statusResult("CLOSED", closureCopy(activeClosure), nextKind, nextArgs, { openOffset });
+    return statusResult(isScheduleBoundary(activeClosure) ? "CHECK" : "CLOSED", closureCopy(activeClosure), nextKind, nextArgs, { openOffset });
   }
 
   if (sessions.length === 0) {
-    return statusResult("CLOSED", "Schedule not yet verified", "not_verified", {}, { openOffset });
+    return statusResult("CHECK", "Schedule not yet verified", "not_verified", {}, { openOffset });
   }
 
   const todayKey = DAY_KEYS[now.getDay()];
@@ -659,7 +655,7 @@ export function computeAccessStatus(schedule, now) {
   const activeClosure = findActiveClosure(closures, now);
   if (activeClosure) {
     const { nextKind, nextArgs } = closureNext(activeClosure);
-    return statusResult("CLOSED", closureCopy(activeClosure), nextKind, nextArgs);
+    return statusResult(isScheduleBoundary(activeClosure) ? "CHECK" : "CLOSED", closureCopy(activeClosure), nextKind, nextArgs);
   }
 
   const current = currentWindows(accessWindowsForDate(schedule, now), closures, now)[0];
@@ -739,6 +735,10 @@ export function computeWindowAvailability(schedule, horizon, allowedTypes = null
   const closures = allClosures(schedule);
   const blockingClosure = findBlockingWindowClosure(closures, horizon.date, horizon.start, horizon.end);
 
+  if (isScheduleBoundary(blockingClosure)) {
+    return boardResult({ status: "CHECK", next: closureCopy(blockingClosure), ...closureNext(blockingClosure),
+      sortRank: 4, openOffset: 4, bestWindow: null });
+  }
   if (blockingClosure) {
     return boardResult({
       status: "CLOSED",
@@ -824,6 +824,10 @@ export function computeAccessWindowAvailability(schedule, horizon) {
   }
   const closures = allClosures(schedule);
   const blockingClosure = findBlockingWindowClosure(closures, horizon.date, horizon.start, horizon.end);
+  if (isScheduleBoundary(blockingClosure)) {
+    return boardResult({ status: "CHECK", next: closureCopy(blockingClosure), ...closureNext(blockingClosure),
+      sortRank: 4, openOffset: 4 });
+  }
   if (blockingClosure) {
     return boardResult({ status: "CLOSED", next: PLACEHOLDER, sortRank: 4, openOffset: 4 });
   }
@@ -937,16 +941,15 @@ export function computeDetailStatus(schedule, now) {
   if (!schedule || typeof schedule !== "object") return { ...EMPTY_DETAIL };
 
   const sessions = Array.isArray(schedule.sessions) ? schedule.sessions : [];
-  // Pre-season and post-season are synthetic closures so the detail page
-  // collapses them into the same CLOSED_TODAY rendering used for repair
-  // shutdowns and holiday closures.
+  // Date boundaries prevent stale hours from opening the pool, but do not
+  // establish a facility closure.
   const closures = allClosures(schedule);
 
   const activeClosure = findActiveClosure(closures, now);
   if (activeClosure) {
     return {
       ...EMPTY_DETAIL,
-      kind: "CLOSED_TODAY",
+      kind: isScheduleBoundary(activeClosure) ? "NOT_VERIFIED" : "CLOSED_TODAY",
       closureReason: typeof activeClosure.reason === "string" ? activeClosure.reason : null,
       closureReasonCode: typeof activeClosure.reason_code === "string" ? activeClosure.reason_code : null,
       closureKind: typeof activeClosure.kind === "string" ? activeClosure.kind : null,
