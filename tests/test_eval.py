@@ -45,6 +45,7 @@ def replay_fixture_archive(tmp_path):
 @pytest.mark.parametrize("filename, digest", [
     ("finalists-2026-09-05.zip", "896aaf49a086c755cd86aad29215808563316a97b4071f753f0214ecae84231a"),
     ("api-confirmation-2026-09-05.zip", "67767c80b0afe9908ae527b51ad59889ef2bba0bd4d610b84507f462151c78da"),
+    ("literal-pool-labels-2026-09-05.zip", "1358cde019fcfb23cc9b76e70f724c80e82fc2276de8c416e676f6ba842bb07c"),
 ])
 def test_historical_benchmark_archive_remains_pinned_to_its_source_revision(tmp_path, filename, digest):
     from schedules.benchmark import benchmark_implementation, replay_benchmark

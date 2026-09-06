@@ -103,6 +103,30 @@ revision before attempting any recovery; do not revert unrelated commits.
 Initial rule changes are not a claim that the whole cutover is ready. API access,
 missing-session checks, workflow replacement, and live verification remain gates.
 
+### Extraction integration checks
+
+Read-only checks during the literal-label repeat confirmed two remaining gaps:
+
+- Removing one session from the first Hamilton result changes 23 rows to 22.
+  `validate(..., prior_sessions_count=23)` still passes, and the existing
+  grounding ratio stays at 1.0. Grounding means that returned evidence appears
+  in the source; it does not establish that extraction included every session.
+  The cutover must include a missing-row test that does not use benchmark
+  reference answers as a production check.
+- The first North Beach result matches all scored reference fields, but its
+  existing grounding ratio is 0.8. Five failures involve printed ranges such
+  as `7-8 AM` and `12-1 PM`; `_start_variants` does not recognize the omitted
+  start meridiem. Another evidence line differs between Poppler layout text
+  and production's pypdf text order. Extraction and evidence checks must share
+  the same source representation. Do not lower the grounding threshold to
+  conceal these differences.
+
+Production also needs the benchmark's request contract and raw facts preserved
+in provider artifacts. Cache identity must cover the model, prompt, transport
+schema, text extraction settings, and normalization rules. An accepted snapshot
+can remain the publication baseline without hiding a requested configuration
+re-evaluation. Finish these checks before replacing the provider and workflow.
+
 References: [protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches),
 [workflow triggers](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow).
 

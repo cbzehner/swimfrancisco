@@ -1014,6 +1014,65 @@ uv --project schedule-tools run --locked schedules benchmark-replay \
   benchmarks/pdf/literal-pool-labels-2026-09-05.zip --output tmp/pdf-literal-label-replay
 ```
 
+### Literal pool-label results (2026-09-05)
+
+**Decision: retain the raw-label separation, but do not switch production yet.**
+Checked matches increased from 14/21 to 19/21. The old label-shortening failures
+did not recur. Two new literal-label differences remain on Balboa interim's
+overlapping text, so the unchanged all-repetitions acceptance rule is not met.
+
+| Source | Checked matches | Mean seconds |
+| --- | --- | --- |
+| North Beach expired summer | 3/3 | 32.7 |
+| Hamilton fall | 3/3 | 28.4 |
+| Balboa fall | 3/3 | 33.7 |
+| Balboa interim | 1/3 | 31.1 |
+| Rossi spring | 3/3 | 27.3 |
+| MLK fall | 3/3 | 34.1 |
+| Garfield maintenance | 3/3 | 2.8 |
+
+All 21 calls completed without errors, timeouts, or retries and reported the
+pinned model. Native responses and derived payloads were schema-valid. All 435
+session rows had correct days, types, times, and counts when pool labels were
+excluded. All date windows, source classifications, and nine scored closure
+entries matched. Closures on the other five sources remain unscored. Literal
+session F1 was 0.9954, with two label differences and no other missing or extra
+rows. Mean grid latency was 31.2 seconds; all-call mean was 27.2 seconds.
+
+In repetitions 2 and 3, Balboa interim's Wednesday 15:30–17:30 family session
+returned `pool_label_raw: "s (small pool"`, derived as `pool: "s (small"` instead
+of `small`. The frozen Poppler layout text contains `(s (small pool)`; the
+rendered page shows `(small pool)`. A read-only check after the calls also found
+the extra fragment in pypdf layout output, but not in pypdf plain or Poppler raw
+output. Those representations were not substituted into this run. The evidence
+supports a source-text problem, not another shortened qualifier. Do not add a
+case-specific replacement or change the reference. The next extraction design
+needs a source-quality check and visual verification or a held update when text
+and layout are unclear. That fallback has not yet been benchmarked.
+
+Extraction used 73,794 input tokens (45,312 cached) and 71,694 output tokens,
+including reasoning. Estimated extraction cost was $2.315886; readiness added
+$0.000920, totaling **$2.316806**. The full reservation was $7.480710 against a
+$7.65 cap. Combined estimated cost for both API comparisons is **$4.657891** of
+the approved $10. These estimates use reported usage, not invoice data. Calls
+took 572.7 seconds in total, including readiness.
+
+Portable evidence: [literal-pool-labels-2026-09-05.zip](../benchmarks/pdf/literal-pool-labels-2026-09-05.zip)
+(4,099,124 bytes; 33 members).
+SHA-256: `1358cde019fcfb23cc9b76e70f724c80e82fc2276de8c416e676f6ba842bb07c`.
+Exact replay source: `c143d64a623f8d93ed3ce58491469edfbe089d87`.
+Runtime and archive-time implementation hashes match. Offline replay reproduced
+every score and both reports. The archive preserves raw facts, derived payloads,
+request schemas, final responses, usage, budget, sources, and unchanged
+references. Credential, local-path, and opaque-reasoning scans passed. Earlier
+archives remain unchanged. Local raw logs are in ignored
+`tmp/pdf-literal-label-results/`.
+
+This known regression set remains agent-checked, not human-attested. Passing its
+labels would not establish source completeness. The production integration gaps,
+including a demonstrated undetected missing row, are recorded in
+[the publication spec](specs/2026-08-20-schedule-auto-publish.md#extraction-integration-checks).
+
 ## Auto-extract workflow
 
 The `.github/workflows/schedules-extract.yml` action runs weekly on
