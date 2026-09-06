@@ -822,6 +822,165 @@ repetitions, frozen inputs and references. Raw events stay in the ignored
 `tmp/pdf-finalists-results/` working copy. The September 4 archive remains
 byte-identical and replays from `d14a21d`, with no compatibility conversion.
 
+### Production API confirmation method
+
+Keep production on its current provider until this check completes. The initial
+candidate is `gpt-5.5`, text input, medium reasoning, through the OpenAI Responses
+API with native strict structured output. Do not substitute a newer model or
+assume that a CLI alias identifies the same backend snapshot. Record the requested
+model and the model reported by the API separately.
+
+Use all seven checked documents: North Beach expired summer, Hamilton fall,
+Balboa fall, Balboa interim, Rossi spring, MLK fall, and Garfield maintenance.
+Make three independent calls per document (21 extraction calls), plus one small
+readiness call. Reuse the frozen reference date, literal-label rules, and generic
+closure-only instruction from the finalist comparison for every document. The
+earlier Balboa omission remains a regression case. These are known regression
+documents, not a new holdout set. Keep unresolved closures unscored; report that
+limitation, and do not treat it as publication approval for those closures.
+
+Before paid calls:
+
+- Set `OPENAI_API_KEY` in the ignored root `.env` or the shell, never in a prompt,
+  committed file, or benchmark artifact. Do not use CLI subscription credentials
+  as a production API key.
+- Confirm a user-approved spend limit. Freeze token limits and reserve a
+  conservative maximum cost before each request. Count a timed-out request as
+  potentially billed; do not retry paid benchmark cells silently.
+- Preserve the API request body, source text, source hashes, prompt, schema,
+  normalization rules, reference labels, dependency versions, and code revision.
+- Use a separate API comparison, not a replacement for either CLI archive.
+
+The current extraction schema has optional fields. OpenAI strict output requires
+every property to be required, with nullable values to represent absence. Freeze
+an explicit transport schema and null-to-absence mapping before the run. Preserve
+the untouched API response, validate its strict contract first, then score the
+mapped payload against the existing reference schema. Do not repair labels,
+times, dates, missing rows, or JSON framing. This is a declared transport change,
+not a claim that the API used an identical CLI request.
+
+Record each response's completion status, refusal/incomplete result, usage,
+latency, reported model, and estimated cost from the dated official pricing.
+Keep billing estimates distinct from an invoice. Run sequentially for a simple
+cost limit and report grid latency separately from closure-notice latency.
+Confirm the exact Flash API model and access before adding it as a comparator;
+do not silently substitute another Flash model.
+
+Production selection requires correct session counts, days, types, times, dates,
+source classification, and literal pool labels across all scored repetitions.
+No refusal or incomplete response may become a publishable payload. Archive and
+replay the results offline before selection. Any mismatch needs a recorded
+decision and another frozen run; do not tune references after seeing results.
+Passing this small regression set still does not prove completeness on unseen
+documents, so publication checks remain mandatory.
+
+The API runner is available as `benchmark-api-run`. The frozen comparison uses
+the documented snapshot `gpt-5.5-2026-04-23`, medium reasoning, no tools, no stored
+Responses state, and the standard service tier. Extraction requests allow 8,192
+output tokens, including reasoning; the readiness request allows 1,024. Each
+request has a 240-second network timeout and no automatic retries.
+
+Before the first call, the runner reserves the entire matrix at $5 per million
+input tokens and $30 per million output tokens. The input reservation counts every
+UTF-8 byte of the complete request as a token and adds 4,096 framing tokens. It
+rejects large inputs that could use long-context pricing. For these seven sources,
+the full reservation is $7.393455. Timeouts never release their reservation.
+Reported usage estimates account for the $0.50 cached-input rate; the reservation
+does not rely on cache savings. Recheck official prices before a future paid run.
+
+The native schema also omits unsupported `dependentRequired` constraints. The
+original schema checks paired closure-time fields after null-to-absence mapping.
+Raw successful API bodies stay in ignored logs; the portable archive retains
+output, completion status, model, usage, and incomplete details without account
+metadata. Invalid native responses are not rescued by the CLI framing diagnostic.
+
+```sh
+uv --project schedule-tools run --locked schedules benchmark-prepare \
+  --comparison api-confirmation --poppler /path/to/poppler/bin
+just schedules benchmark-api-run --inputs /path/printed/by/prepare \
+  --output tmp/pdf-api-results --budget-usd 10
+uv --project schedule-tools run --locked schedules benchmark-archive \
+  --inputs /path/printed/by/prepare --results tmp/pdf-api-results \
+  --output benchmarks/pdf/api-confirmation-2026-09-05.zip
+uv --project schedule-tools run --locked schedules benchmark-replay \
+  benchmarks/pdf/api-confirmation-2026-09-05.zip --output tmp/pdf-api-replay
+```
+
+Use new output directories and archive names on later runs. Never overwrite an
+earlier comparison. A failed readiness call stops before extraction and leaves
+its result in the output directory. The base Git commit and runtime source hashes
+are recorded; exact replay requires the source revision containing those hashes,
+not merely the base commit if the run used local changes.
+
+The first paid run is recorded below. The publication contract and
+remaining cutover gates are in
+[the auto-publish spec](specs/2026-08-20-schedule-auto-publish.md#approved-hands-off-publication-contract-2026-09-05).
+
+Official references, checked 2026-09-05:
+[GPT-5.5](https://developers.openai.com/api/docs/models/gpt-5.5),
+[structured output requirements and limitations](https://developers.openai.com/api/docs/guides/structured-outputs).
+
+### Production API confirmation results (2026-09-05)
+
+**Decision: do not switch production yet.** The API works with the pinned model
+and native structured output, but the candidate does not pass the frozen
+literal-label acceptance rule. Do not relax the references to make this run pass.
+
+All 21 extraction calls completed with valid native output and valid mapped
+payloads. No request timed out, failed, or retried. Every response reported
+`gpt-5.5-2026-04-23`. All 435 session rows across the repetitions had correct days,
+types, times, and counts when pool labels were excluded. Every effective date
+window and source classification matched. North Beach's expired schedule remained
+historical, and Garfield remained a closure notice with no invented weekly hours.
+The nine scored closure entries across those two sources also matched. Closures
+on the other five sources remain unscored, not confirmed correct.
+
+| Source | Checked matches | Mean seconds | Remaining difference |
+| --- | --- | --- | --- |
+| North Beach expired summer | 3/3 | 37.7 | None |
+| Hamilton fall | 1/3 | 37.3 | Four labels shortened from `2 lanes + small` to `small` in repetitions 2 and 3. |
+| Balboa fall | 3/3 | 38.2 | None |
+| Balboa interim | 1/3 | 31.1 | One label shortened from `main only` to `main` in repetitions 1 and 3. |
+| Rossi spring | 3/3 | 25.4 | None |
+| MLK fall | 0/3 | 48.5 | Four labels shortened from `4 & shallow` to `shallow` in every repetition. |
+| Garfield maintenance | 3/3 | 3.1 | None |
+
+Total checked matches: **14/21**. Literal session F1: **0.9494**, with 22
+pool-label differences and no other missing or extra rows. Mean grid latency was
+36.4 seconds across 18 calls; including the closure notice lowers the mean to
+31.6 seconds. The earlier CLI omission on Balboa interim did not recur here, but
+this small, known regression corpus does not establish reliability on new PDFs.
+The references are agent-checked, not human-attested.
+
+Reported extraction usage was 70,665 input tokens (42,240 cached) and 72,564 output
+tokens, including reasoning. Estimated extraction cost was **$2.340165**. The
+readiness call added **$0.000920**, for **$2.341085 total**, below the approved $10
+limit and the $7.393455 full-run reservation. These are estimates from reported
+usage and the frozen price table, not an invoice. API calls took about 11.1
+minutes in total, including readiness.
+
+Portable evidence: [api-confirmation-2026-09-05.zip](../benchmarks/pdf/api-confirmation-2026-09-05.zip)
+(4,084,036 bytes; 33 members).
+SHA-256: `67767c80b0afe9908ae527b51ad59889ef2bba0bd4d610b84507f462151c78da`.
+Offline replay reproduced both reports and every score. The archive contains the
+request bodies, transport schemas, final responses, usage, budget reservation,
+source files, references, and runtime/archive-time implementation hashes. The
+local raw logs remain in ignored `tmp/pdf-api-results/`.
+
+After the calls finished, the export filter was tightened to remove opaque
+encrypted reasoning and API output item IDs from the portable response copies.
+No request, final answer, normalization rule, reference, or score changed. This
+explains the difference between runtime and archive-time source hashes. The raw
+responses remain local. Credential and local-path scans of the portable ZIP
+passed. Both earlier CLI archives remain byte-identical.
+
+The next extraction change should separate verbatim pool labels from derived pool
+identity. The current field asks the model to both preserve and interpret labels.
+That is a proposed cause of these differences, not a demonstrated fix. Preserve
+raw labels, apply explicit source-backed normalization in code, then repeat a
+new frozen comparison. Keep the current production provider and PR publication
+workflow until the remaining acceptance checks pass.
+
 ## Auto-extract workflow
 
 The `.github/workflows/schedules-extract.yml` action runs weekly on

@@ -16,6 +16,219 @@ from schedules.paths import REPO_ROOT
 BENCHMARK_ARCHIVE = REPO_ROOT / "benchmarks/pdf/finalists-2026-09-05.zip"
 
 
+@pytest.fixture
+def replay_fixture_archive(tmp_path):
+    """Synthetic current-code fixture, not a replacement for historical evidence."""
+    from schedules.benchmark import benchmark_implementation
+
+    with zipfile.ZipFile(BENCHMARK_ARCHIVE) as archive:
+        files = {name: archive.read(name) for name in archive.namelist()}
+    implementation = benchmark_implementation(REPO_ROOT)
+    metadata = json.loads(files["archive.json"])
+    run = json.loads(files["run.json"])
+    files["reference-manifest.json"] = (REPO_ROOT / "tests/fixtures/schedule-benchmark.json").read_bytes()
+    run["reference_manifest_sha256"] = hashlib.sha256(files["reference-manifest.json"]).hexdigest()
+    run["implementation_sha256"] = implementation
+    files["run.json"] = json.dumps(run).encode()
+    metadata["implementation_sha256"] = implementation
+    metadata["implementation_capture"] = "Synthetic test fixture for current code; not historical replay."
+    metadata["files"]["run.json"] = hashlib.sha256(files["run.json"]).hexdigest()
+    metadata["files"]["reference-manifest.json"] = run["reference_manifest_sha256"]
+    files["archive.json"] = json.dumps(metadata).encode()
+    path = tmp_path / "replay-fixture.zip"
+    with zipfile.ZipFile(path, "x") as archive:
+        for name, content in files.items():
+            archive.writestr(name, content)
+    return path
+
+
+@pytest.mark.parametrize("filename, digest", [
+    ("finalists-2026-09-05.zip", "896aaf49a086c755cd86aad29215808563316a97b4071f753f0214ecae84231a"),
+    ("api-confirmation-2026-09-05.zip", "67767c80b0afe9908ae527b51ad59889ef2bba0bd4d610b84507f462151c78da"),
+])
+def test_historical_benchmark_archive_remains_pinned_to_its_source_revision(tmp_path, filename, digest):
+    from schedules.benchmark import benchmark_implementation, replay_benchmark
+
+    archive_path = REPO_ROOT / "benchmarks/pdf" / filename
+    assert hashlib.sha256(archive_path.read_bytes()).hexdigest() == digest
+    with zipfile.ZipFile(archive_path) as archive:
+        implementation = json.loads(archive.read("archive.json"))["implementation_sha256"]
+    if implementation != benchmark_implementation(REPO_ROOT):
+        with pytest.raises(ValueError, match="implementation changed"):
+            replay_benchmark(archive_path, tmp_path / "historical", REPO_ROOT)
+        assert not (tmp_path / "historical").exists()
+    else:
+        replay_benchmark(archive_path, tmp_path / "historical", REPO_ROOT)
+
+
+@pytest.fixture
+def api_inputs(tmp_path):
+    from schedules.benchmark import benchmark_comparison
+
+    root = tmp_path / "api-inputs"
+    root.mkdir()
+    sources = []
+    for name in ("development-2026-09-04.zip", "finalists-2026-09-05.zip"):
+        with zipfile.ZipFile(REPO_ROOT / "benchmarks/pdf" / name) as archive:
+            frozen = json.loads(archive.read("inputs/inputs.json"))
+            sources.extend(frozen["inputs"])
+            for item in frozen["inputs"]:
+                for path in item["files"]:
+                    target = root / path
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(archive.read("inputs/" + path))
+            for path in ("prompt.txt", "schema.json"):
+                (root / path).write_bytes(archive.read("inputs/" + path))
+    plan, models, _ = benchmark_comparison(REPO_ROOT / "tests/fixtures/schedule-benchmark.json", "api-confirmation", REPO_ROOT)
+    frozen |= {"comparison": "api-confirmation", "plan": plan, "models": models, "inputs": sources}
+    (root / "inputs.json").write_text(json.dumps(frozen))
+    return root
+
+
+def _nullable_api_payload(value, schema):
+    if isinstance(value, dict):
+        return {name: _nullable_api_payload(value[name], child) if name in value else None
+                for name, child in schema["properties"].items()}
+    if isinstance(value, list):
+        return [_nullable_api_payload(child, schema["items"]) for child in value]
+    return value
+
+
+def _api_response(payload):
+    from schedules.benchmark import API_MODEL
+    return {"model": API_MODEL, "status": "completed", "service_tier": "default",
+            "output": [{"type": "message", "status": "completed", "content": [
+                {"type": "output_text", "text": json.dumps(payload)}]}],
+            "usage": {"input_tokens": 100, "output_tokens": 50, "input_tokens_details": {"cached_tokens": 20}}}
+
+
+def test_api_schema_mapping_is_explicit_and_does_not_repair_values():
+    import jsonschema
+    from schedules.benchmark import api_transport_schema, api_payload, api_response_result
+    from schedules.schema import EXTRACTION_SCHEMA
+
+    original = copy.deepcopy(EXTRACTION_SCHEMA)
+    source = _attempt(_reference())["payload"]
+    native = _nullable_api_payload(source, EXTRACTION_SCHEMA)
+    schema = api_transport_schema(EXTRACTION_SCHEMA)
+    jsonschema.Draft202012Validator.check_schema(schema)
+    jsonschema.validate(native, schema)
+    assert EXTRACTION_SCHEMA == original
+    assert api_payload(native, EXTRACTION_SCHEMA) == source
+    result = api_response_result(_api_response(native), EXTRACTION_SCHEMA)
+    assert result["transport_valid"] and result["payload"] == source
+    native["sessions"][0]["pool"] = "wrong literal label"
+    assert api_response_result(_api_response(native), EXTRACTION_SCHEMA)["payload"]["sessions"][0]["pool"] == "wrong literal label"
+    native["sessions"][0]["start"] = "25:00"
+    assert api_response_result(_api_response(native), EXTRACTION_SCHEMA)["status"] == "transport_invalid"
+
+
+@pytest.mark.parametrize("damage", ["incomplete", "refusal", "two_messages", "framing", "missing_field"])
+def test_api_response_never_rescues_failed_or_invalid_output(damage):
+    from schedules.benchmark import api_response_result, CHECK_SCHEMA, CHECK_PAYLOAD
+
+    response = _api_response(CHECK_PAYLOAD)
+    if damage == "incomplete":
+        response["status"] = "incomplete"
+    elif damage == "refusal":
+        response["output"][0]["content"].append({"type": "refusal", "refusal": "No"})
+    elif damage == "two_messages":
+        response["output"].append(copy.deepcopy(response["output"][0]))
+    elif damage == "framing":
+        response["output"][0]["content"][0]["text"] = "```json\n" + json.dumps(CHECK_PAYLOAD) + "\n```"
+    else:
+        response = _api_response({"check": "schedule-benchmark"})
+    result = api_response_result(response, CHECK_SCHEMA)
+    assert result["payload"] is None and not result["transport_valid"]
+    assert result["status"] in {"provider_error", "transport_invalid"}
+
+
+def test_api_closure_pairs_are_checked_after_null_mapping():
+    from schedules.benchmark import api_response_result
+    from schedules.schema import EXTRACTION_SCHEMA
+
+    reference = _reference("garfield-maintenance")
+    payload = copy.deepcopy(reference["expected"])
+    payload["closures"][0]["start_time"] = "12:00"
+    result = api_response_result(_api_response(_nullable_api_payload(payload, EXTRACTION_SCHEMA)), EXTRACTION_SCHEMA)
+    assert result["transport_valid"]
+    assert score_benchmark_run(reference, _attempt(reference) | {"payload": result["payload"]})["status"] == "schema_invalid"
+
+
+@pytest.mark.parametrize("budget", [0, -1, 11, float("nan"), float("inf"), 0.01])
+def test_api_budget_failure_makes_no_calls(api_inputs, tmp_path, monkeypatch, budget):
+    import schedules.benchmark as benchmark
+    monkeypatch.setenv("OPENAI_API_KEY", "not-a-real-key")
+    monkeypatch.setattr(benchmark, "call_benchmark_api", lambda *args: pytest.fail("Budget guard made a paid call"))
+    output = tmp_path / "results"
+    with pytest.raises(ValueError, match="budget|reservation"):
+        benchmark.run_api_benchmark(api_inputs, output, REPO_ROOT / "tests/fixtures/schedule-benchmark.json", REPO_ROOT, budget, 10)
+    assert not output.exists()
+
+
+@pytest.mark.parametrize("failure", [401, 429, "timeout"])
+def test_api_readiness_failure_stops_without_retry_or_secret_logs(api_inputs, tmp_path, monkeypatch, failure):
+    import schedules.benchmark as benchmark
+
+    monkeypatch.setenv("OPENAI_API_KEY", "DO_NOT_PERSIST")
+    real_client = benchmark.httpx.Client
+    calls = []
+
+    def respond(request):
+        calls.append(request)
+        if failure == "timeout":
+            raise benchmark.httpx.ReadTimeout("DO_NOT_PERSIST")
+        return benchmark.httpx.Response(failure, json={"error": {"message": "DO_NOT_PERSIST"}})
+
+    monkeypatch.setattr(benchmark.httpx, "Client", lambda **kwargs: real_client(
+        **kwargs, transport=benchmark.httpx.MockTransport(respond)))
+    output = tmp_path / "failed"
+    with pytest.raises(ValueError, match="readiness failed"):
+        benchmark.run_api_benchmark(api_inputs, output, REPO_ROOT / "tests/fixtures/schedule-benchmark.json", REPO_ROOT, 10, 10)
+    assert len(calls) == 1
+    assert not (output / "results.json").exists()
+    assert all(b"DO_NOT_PERSIST" not in path.read_bytes() for path in output.rglob("*") if path.is_file())
+
+
+def test_api_run_archives_and_replays_requests_responses_and_budget(api_inputs, tmp_path, monkeypatch):
+    import schedules.benchmark as benchmark
+    from schedules.schema import EXTRACTION_SCHEMA
+
+    monkeypatch.setenv("OPENAI_API_KEY", "DO_NOT_ARCHIVE")
+    manifest = REPO_ROOT / "tests/fixtures/schedule-benchmark.json"
+    _, references = benchmark.load_prepared_inputs(api_inputs, manifest, REPO_ROOT)
+    payloads = {benchmark.extraction_request(api_inputs, reference["source_sha256"], "text", native_schema=True)[0]:
+                _nullable_api_payload(reference["expected"] | {"closures": reference["expected"].get("closures", [])}, EXTRACTION_SCHEMA)
+                for reference in references}
+    real_client = benchmark.httpx.Client
+    calls = []
+
+    def respond(request):
+        body = json.loads(request.content)
+        calls.append(body)
+        assert request.url == benchmark.API_ENDPOINT
+        assert request.headers["Authorization"] == "Bearer DO_NOT_ARCHIVE"
+        assert body["tools"] == [] and body["store"] is False and body["service_tier"] == "default"
+        payload = benchmark.CHECK_PAYLOAD if body["input"] == benchmark.CHECK_PROMPT else payloads[body["input"]]
+        response = _api_response(payload) | {"private_metadata": "DO_NOT_ARCHIVE"}
+        response["output"].insert(0, {"type": "reasoning", "encrypted_content": "DO_NOT_ARCHIVE"})
+        return benchmark.httpx.Response(200, json=response)
+
+    monkeypatch.setattr(benchmark.httpx, "Client", lambda **kwargs: real_client(
+        **kwargs, transport=benchmark.httpx.MockTransport(respond)))
+    output = tmp_path / "api-results"
+    rows = benchmark.run_api_benchmark(api_inputs, output, manifest, REPO_ROOT, 10, 10, progress=lambda _: None)
+    assert len(calls) == 22 and len(rows) == 21
+    assert all(row["score"]["checked_fields_match"] for row in rows)
+    assert all(row["cost_usd"] == 0.00191 for row in rows)
+    exported = tmp_path / "api.zip"
+    benchmark.archive_benchmark(api_inputs, output, exported, manifest, REPO_ROOT)
+    with zipfile.ZipFile(exported) as archive:
+        assert all(b"DO_NOT_ARCHIVE" not in archive.read(name) for name in archive.namelist())
+    monkeypatch.setattr(benchmark.httpx, "Client", lambda **kwargs: pytest.fail("Replay made a network call"))
+    benchmark.replay_benchmark(exported, tmp_path / "api-replayed", REPO_ROOT)
+
+
 def _write_review(
     data_root: Path,
     slug: str,
@@ -265,10 +478,12 @@ def test_benchmark_expiry_uses_inclusive_dates(as_of, status):
 def test_benchmark_model_matrix_and_no_tool_commands(tmp_path):
     from schedules.benchmark import benchmark_models, harness_command, CHECK_PROMPT, CHECK_SCHEMA
     models = benchmark_models(REPO_ROOT / "tests/fixtures/schedule-benchmark.json")
-    assert len(models) == 26
+    assert len(models) == 27
     extension = tmp_path / "extension.ts"
     extension.touch()
     for model in models:
+        if model["harness"] == "openai-api":
+            continue
         command = harness_command(model, tmp_path, extension, CHECK_PROMPT, CHECK_SCHEMA)
         assert command[command.index("--model") + 1] == model["model"]
         assert "--fallback-model" not in command
@@ -525,7 +740,7 @@ def test_diagnostics_preserve_strict_failures_and_original_files(tmp_path):
     assert "| test | text | 0/1 | 1/1 |" in report.read_text()
 
 
-def test_benchmark_archive_replays_offline_without_original_paths(tmp_path, monkeypatch):
+def test_benchmark_archive_replays_offline_without_original_paths(tmp_path, monkeypatch, replay_fixture_archive):
     import schedules.benchmark as benchmark
 
     def forbidden(*args, **kwargs):
@@ -540,7 +755,7 @@ def test_benchmark_archive_replays_offline_without_original_paths(tmp_path, monk
         shutil.copyfile(REPO_ROOT / name, path)
     assert not (checkout / "data").exists()
     output = tmp_path / "replayed"
-    report = benchmark.replay_benchmark(BENCHMARK_ARCHIVE, output, checkout)
+    report = benchmark.replay_benchmark(replay_fixture_archive, output, checkout)
     rows = json.loads((output / "results.json").read_text())
     diagnostics = json.loads((output / "diagnostics.json").read_text())
     assert len(rows) == len(diagnostics) == 36
@@ -560,9 +775,9 @@ def test_benchmark_archive_replays_offline_without_original_paths(tmp_path, monk
     ("score", "Replayed score differs"), ("request", "request differs"),
     ("traversal", "Unsafe archive"), ("implementation", "implementation changed"),
 ])
-def test_benchmark_replay_rejects_damaged_evidence(tmp_path, damage, message):
+def test_benchmark_replay_rejects_damaged_evidence(tmp_path, damage, message, replay_fixture_archive):
     from schedules.benchmark import replay_benchmark
-    with zipfile.ZipFile(BENCHMARK_ARCHIVE) as archive:
+    with zipfile.ZipFile(replay_fixture_archive) as archive:
         files = {name: archive.read(name) for name in archive.namelist()}
     metadata = json.loads(files["archive.json"])
     rows = json.loads(files["results.json"])
@@ -608,10 +823,10 @@ def test_benchmark_replay_cli_refuses_overwrite(tmp_path):
     assert marker.read_text() == "user data"
 
 
-def test_benchmark_archive_excludes_private_cli_metadata(tmp_path):
+def test_benchmark_archive_excludes_private_cli_metadata(tmp_path, replay_fixture_archive):
     from schedules.benchmark import archive_benchmark, attempt_directory, extraction_request, replay_benchmark
     raw = tmp_path / "raw"
-    replay_benchmark(BENCHMARK_ARCHIVE, raw, REPO_ROOT)
+    replay_benchmark(replay_fixture_archive, raw, REPO_ROOT)
     rows = json.loads((raw / "results.json").read_text())
     for row in rows:
         row["private_account_identifier"] = "DO_NOT_ARCHIVE"

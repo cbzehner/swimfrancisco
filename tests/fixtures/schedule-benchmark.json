@@ -27,7 +27,8 @@
     {"id":"production-baseline","harness":"gemini","model":"gemini-3.1-flash-lite-preview","effort":null},
     {"id":"spark","harness":"codex","model":"gpt-5.3-codex-spark","effort":"medium"},
     {"id":"luna-pi","harness":"pi-codex","model":"gpt-5.6-luna","effort":"medium"},
-    {"id":"grok-cursor","harness":"pi-cursor","model":"cursor-grok-4.6-medium","effort":"medium"}
+    {"id":"grok-cursor","harness":"pi-cursor","model":"cursor-grok-4.6-medium","effort":"medium"},
+    {"id":"gpt-5.5-api","harness":"openai-api","model":"gpt-5.5-2026-04-23","effort":"medium"}
   ],
   "comparisons": {
     "development": {
@@ -203,6 +204,12 @@
       ],
       "repetitions": 1,
       "prompt_addendum": ""
+    },
+    "api-confirmation": {
+      "candidates": [{"id": "gpt-5.5-api", "tracks": ["text"]}],
+      "references": ["north-beach-expired", "hamilton-fall", "balboa-fall", "balboa-interim", "rossi-spring", "mlk-fall", "garfield-maintenance"],
+      "repetitions": 3,
+      "prompt_addendum": "\nSource-kind exception to the swim_schedule rule above: if the source is only a closure notice with no weekly swim grid, set schedule_basis to temporarily_closed, emit no sessions, and use the explicit closure period for effective_start and effective_end. An expected reopening date is not a weekly schedule and does not prove reopening occurred.\n"
     },
     "finalists": {
       "candidates": [

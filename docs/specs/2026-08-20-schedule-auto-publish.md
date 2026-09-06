@@ -2,10 +2,104 @@
 
 **Author:** TBD
 **Date:** 2026-08-20
-**Status:** Draft
+**Status:** Hands-off publication approach approved 2026-09-05; cutover pending
 **Audience:** Operators of the schedule extract/review pipeline
 
 ---
+
+## Approved hands-off publication contract (2026-09-05)
+
+This section supersedes the PR-based publication design below. The remaining
+sections record the original implementation and its rationale, not the target
+workflow. Keep Python and GitHub Actions; do not add an agent framework, service,
+or permanent alternative publication path.
+
+### Terms
+
+- **Source facts:** what an official document explicitly states, including its
+  dates, pool labels, sessions, and closures. An expired document remains evidence
+  of a historical schedule, not evidence that the facility has closed.
+- **Candidate:** extracted facts that have not passed the publication rules.
+- **Accepted snapshot:** a candidate that passed those rules. Acceptance by CI is
+  not a claim that a human checked the document.
+- **Published schedule:** accepted data that the live site serves and that the
+  deployment check has verified. Writing local content or pushing a commit does
+  not establish publication.
+- **Held update:** a candidate that the pipeline does not publish because the
+  source or extraction is unclear or invalid. Other pools can still update.
+
+### Source and publication rules
+
+| Source or result | Required action |
+| --- | --- |
+| Same source and extraction configuration | Reuse extraction; still evaluate date validity. |
+| Valid, supported new schedule | Accept and publish the applicable dated window. |
+| Transient network or model failure | Retry a bounded number of times; record every attempt. |
+| Conflicting documents or unsupported extraction | Hold this pool's update and report the reason. |
+| Prior schedule still valid | Retain it when a replacement fails. |
+| Prior schedule expired | Show schedule unavailable; never extend old hours. |
+| Explicit closure-only notice | Require a dated closure and no sessions or access windows. |
+| Expected reopening date without a new grid | Do not invent weekly hours or claim confirmed reopening. |
+
+Keep direct parsing for structured sources. PDF extraction must preserve literal
+pool labels and supporting source locations. Code, not the model, selects the
+applicable window and applies publication rules. Reject duplicate session tuples
+without collapsing distinct pools, programs, or time ranges. Reject malformed
+rows without crashing validation. A schema-valid response is not proof of
+factual accuracy, and matching extracted evidence does not prove that no rows
+were omitted. Missing-session coverage remains a required cutover check.
+
+### Checked direct-main publication
+
+Run source discovery daily. Keep unchanged runs free of model calls and content
+commits unless a configuration or publication-state change requires work.
+
+1. Build accepted changes against the current `main` commit. Keep source evidence
+   and failure records for held pools, but do not overwrite their accepted hours.
+2. Enforce an explicit generated-file allowlist. Reject unexpected staged paths.
+3. Commit to a run-specific automation branch and run the full `check` workflow on
+   that exact commit. Do not open a PR.
+4. After checks pass, fast-forward `main` to that commit. Never force-push `main`.
+   If its head changed, rebuild and recheck against the new head, with a bounded
+   retry count. Serialize publication attempts.
+5. Wait for deployment, verify the exact commit and changed pools' served data,
+   and run the live browser checks. Only then report publication success.
+6. Retain source hashes, model and extraction configuration, raw results,
+   validation decisions, check/deploy URLs, and the published commit ID. Keep
+   credentials and account metadata out of those records.
+
+The repository settings checked on 2026-09-05 require the GitHub Actions `check`
+status, apply that rule to administrators, and disallow force pushes. They do not
+require PR review. Preserve those protections. The temporary branch exists only
+to obtain checks before promotion; it is not a review queue. Use the existing
+CI-capable bot token initially. A default `GITHUB_TOKEN` push does not trigger the
+normal push CI workflow. Token replacement is a separate operational decision.
+
+Keep a kill switch and a deduplicated failure report. A failed deployment must
+not report success or automatically restore expired hours. Check the deployed
+revision before attempting any recovery; do not revert unrelated commits.
+
+### Implementation order and acceptance
+
+- **Publication rules:** implement contradiction and duplicate checks with
+  regression tests; preserve inclusive expiry dates and pool-level isolation.
+- **Production API confirmation:** use the preserved benchmark methodology in
+  `docs/schedules.md`. Confirm GPT-5.5 through the real API before changing the
+  production provider. CLI results do not establish API behavior or billing.
+- **Extraction simplification:** separate source facts from publication policy;
+  keep source/configuration caching and bounded failure handling.
+- **Direct-main promotion:** replace rolling PR creation and auto-merge completely
+  after API confirmation. Test stale heads, failed checks, and unexpected paths.
+- **Live verification:** test expiry, explicit closure, held updates, partial
+  success, failed deployments, and the success report on the deployed revision.
+
+Initial rule changes are not a claim that the whole cutover is ready. API access,
+missing-session checks, workflow replacement, and live verification remain gates.
+
+References: [protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches),
+[workflow triggers](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow).
+
+## Original PR-based design
 
 ## Overview
 

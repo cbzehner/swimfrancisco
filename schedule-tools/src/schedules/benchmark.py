@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import platform
 import re
@@ -17,6 +18,9 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
+
+import httpx
+import jsonschema
 
 from .eval import load_benchmark_reference, prf1, score_benchmark_run
 from .schema import EXTRACTION_SCHEMA
@@ -33,6 +37,16 @@ CHECK_SCHEMA = {
     "required": ["check", "sum"],
 }
 
+API_MODEL = "gpt-5.5-2026-04-23"
+API_ENDPOINT = "https://api.openai.com/v1/responses"
+API_MAX_OUTPUT_TOKENS = 8192
+API_PRICING = {
+    "checked_at": "2026-09-05",
+    "source": "https://developers.openai.com/api/docs/models/gpt-5.5",
+    "input_usd_per_million": 5, "cached_input_usd_per_million": 0.5,
+    "output_usd_per_million": 30, "service_tier": "default",
+}
+
 
 def benchmark_models(manifest: Path) -> list[dict]:
     models = json.loads(manifest.read_text())["models"]
@@ -42,7 +56,7 @@ def benchmark_models(manifest: Path) -> list[dict]:
     for model in models:
         if not re.fullmatch(r"[a-z0-9][a-z0-9.-]*", model["id"]):
             raise ValueError("Benchmark model IDs must be safe directory names.")
-        if model["harness"] not in {"codex", "pi-cursor", "pi-anthropic", "pi-codex", "claude", "gemini", "grok"}:
+        if model["harness"] not in {"codex", "pi-cursor", "pi-anthropic", "pi-codex", "claude", "gemini", "grok", "openai-api"}:
             raise ValueError("Unknown benchmark harness.")
         if not isinstance(model["model"], str) or not model["model"].strip():
             raise ValueError("Benchmark requires an explicit model.")
@@ -306,13 +320,188 @@ def attempt_directory(output: Path, row: dict) -> Path:
     return output / row["id"] / row["track"] / row["source_sha256"][:12] / f"repeat-{row['repetition']}"
 
 
-def extraction_request(inputs: Path, source_sha256: str, track: str) -> tuple[str, tuple[Path, ...]]:
+def extraction_request(inputs: Path, source_sha256: str, track: str, *, native_schema: bool = False) -> tuple[str, tuple[Path, ...]]:
     source = inputs / source_sha256[:12]
     images = tuple(sorted(source.glob("page-*.png"))) if track == "image" else ()
-    prompt = (inputs / "prompt.txt").read_text() + "\nJSON schema:\n" + (inputs / "schema.json").read_text()
+    prompt = (inputs / "prompt.txt").read_text()
+    prompt += ("\nUse null for absent optional fields required by the transport schema.\n" if native_schema else
+               "\nJSON schema:\n" + (inputs / "schema.json").read_text())
     prompt += ("\nRead all attached page images.\n" if images else
                "\nPDF text extracted with pdftotext -layout:\n" + (source / "source.txt").read_text())
     return prompt, images
+
+
+def api_transport_schema(schema: dict) -> dict:
+    """Require nullable optional fields; enforce dependentRequired after mapping."""
+    result = {key: value for key, value in schema.items() if key != "dependentRequired"}
+    if "enum" in result and "type" not in result:
+        if not all(isinstance(value, str) for value in result["enum"]):
+            raise ValueError("API schema only supports string enums without explicit types.")
+        result["type"] = "string"
+    if "properties" in schema:
+        required = schema.get("required", [])
+        result["properties"] = {
+            name: api_transport_schema(child) if name in required else
+            {"anyOf": [api_transport_schema(child), {"type": "null"}]}
+            for name, child in schema["properties"].items()
+        }
+        result["required"] = list(schema["properties"])
+        result["additionalProperties"] = False
+    if "items" in schema:
+        result["items"] = api_transport_schema(schema["items"])
+    return result
+
+
+def api_payload(value, schema: dict):
+    """Remove only optional nulls. Never repair content or remove unknown fields."""
+    if isinstance(value, dict):
+        properties = schema.get("properties", {})
+        return {name: api_payload(child, properties.get(name, {})) for name, child in value.items()
+                if not (name in properties and name not in schema.get("required", []) and child is None)}
+    if isinstance(value, list):
+        return [api_payload(child, schema.get("items", {})) for child in value]
+    return value
+
+
+def api_request(prompt: str, schema: dict, *, max_output_tokens: int = API_MAX_OUTPUT_TOKENS) -> dict:
+    return {
+        "model": API_MODEL, "input": prompt, "reasoning": {"effort": "medium"},
+        "text": {"format": {"type": "json_schema", "name": "schedule_extraction",
+                            "strict": True, "schema": api_transport_schema(schema)}},
+        "max_output_tokens": max_output_tokens, "store": False, "tools": [],
+        "service_tier": "default", "truncation": "disabled",
+    }
+
+
+def api_reservation_microusd(request: dict) -> int:
+    # UTF-8 byte count over the entire body plus framing is a conservative token bound.
+    input_bound = len(json.dumps(request, ensure_ascii=False).encode()) + 4096
+    if input_bound > 200_000:
+        raise ValueError("API benchmark input exceeds the short-context price reservation.")
+    return input_bound * 5 + request["max_output_tokens"] * 30
+
+
+def api_response_result(response: dict, schema: dict) -> dict:
+    result = {"payload": None, "final_response": None, "response_status": response.get("status"),
+              "resolved_model": response.get("model"), "transport_valid": False}
+    if response.get("status") != "completed":
+        return result | {"status": "provider_error"}
+    messages = [item for item in response.get("output", []) if item.get("type") == "message"]
+    content = [part for item in messages for part in item.get("content", [])]
+    if any(part.get("type") == "refusal" for part in content):
+        return result | {"status": "provider_error"}
+    texts = [part.get("text") for part in content if part.get("type") == "output_text"]
+    if len(messages) != 1 or messages[0].get("status") != "completed" or len(texts) != 1:
+        return result | {"status": "provider_error"}
+    result["final_response"] = texts[0]
+    try:
+        value = json.loads(texts[0])
+        jsonschema.Draft202012Validator(api_transport_schema(schema), format_checker=jsonschema.FormatChecker()).validate(value)
+    except (ValueError, TypeError, jsonschema.ValidationError):
+        return result | {"status": "transport_invalid"}
+    return result | {"status": "completed", "transport_valid": True, "payload": api_payload(value, schema)}
+
+
+def call_benchmark_api(request: dict, directory: Path, timeout: int) -> dict:
+    """One paid request, no retries, redirects, proxies, or credential-bearing logs."""
+    directory.mkdir(parents=True, exist_ok=False)
+    (directory / "request.json").write_text(json.dumps(request, indent=2))
+    started = time.monotonic()
+    result = {"api_response": None, "http_status": None, "timed_out": False, "exit_code": None,
+              "reserved_microusd": api_reservation_microusd(request), "cost_usd": None,
+              "runner_retries": 0, "status": "launch_error"}
+    try:
+        with httpx.Client(timeout=timeout, trust_env=False, follow_redirects=False) as client:
+            response = client.post(API_ENDPOINT, json=request,
+                                   headers={"Authorization": "Bearer " + os.environ["OPENAI_API_KEY"]})
+        result["http_status"] = response.status_code
+        result["exit_code"] = 0 if response.is_success else 1
+        result["status"] = "completed" if response.is_success else "execution_error"
+        if response.is_success:
+            body = response.json()
+            (directory / "response.json").write_text(json.dumps(body, indent=2))
+            result["api_response"] = {key: body.get(key) for key in
+                                      ("status", "model", "output", "usage", "incomplete_details", "service_tier")}
+            usage = body.get("usage") or {}
+            if type(usage.get("input_tokens")) is int and type(usage.get("output_tokens")) is int:
+                cached = (usage.get("input_tokens_details") or {}).get("cached_tokens", 0)
+                result["cost_usd"] = ((usage["input_tokens"] - cached) * 5 + cached * 0.5 + usage["output_tokens"] * 30) / 1_000_000
+    except httpx.TimeoutException:
+        result |= {"timed_out": True, "status": "timeout"}
+    except (httpx.HTTPError, ValueError, KeyError) as error:
+        result |= {"error_type": type(error).__name__, "status": "execution_error", "exit_code": 1}
+    result["elapsed_seconds"] = round(time.monotonic() - started, 3)
+    return result
+
+
+def run_api_benchmark(inputs: Path, output: Path, manifest: Path, repo_root: Path,
+                      budget_usd: float, timeout: int, progress=print) -> list[dict]:
+    frozen, references = load_prepared_inputs(inputs, manifest, repo_root)
+    if not math.isfinite(budget_usd) or not 0 < budget_usd <= 10:
+        raise ValueError("API benchmark budget must be positive and at most $10.")
+    if frozen["comparison"] != "api-confirmation" or frozen["models"] != [
+        {"id": "gpt-5.5-api", "harness": "openai-api", "model": API_MODEL, "effort": "medium"}
+    ]:
+        raise ValueError("API benchmark requires the frozen GPT-5.5 confirmation comparison.")
+    if not os.environ.get("OPENAI_API_KEY", "").strip():
+        raise ValueError("OPENAI_API_KEY is not set; load the ignored .env before running.")
+    jobs = benchmark_jobs(frozen["models"], references, frozen["plan"])
+    readiness_request = api_request(CHECK_PROMPT, CHECK_SCHEMA, max_output_tokens=1024)
+    requests = [api_request(extraction_request(inputs, reference["source_sha256"], track, native_schema=True)[0], EXTRACTION_SCHEMA)
+                for _, reference, track, _ in jobs]
+    reserved = sum(api_reservation_microusd(request) for request in [readiness_request, *requests])
+    if reserved > budget_usd * 1_000_000:
+        raise ValueError(f"Full-run reservation ${reserved / 1_000_000:.4f} exceeds the approved budget; no calls made.")
+    output.mkdir(parents=True, exist_ok=False)
+    implementation = benchmark_implementation(repo_root)
+    run = {
+        "frozen": frozen, "blocked_candidates": [], "reference_manifest_sha256": hashlib.sha256(manifest.read_bytes()).hexdigest(),
+        "timeout_seconds": timeout, "output_control": "native_strict_schema", "planned_cells": len(jobs),
+        "started_at": datetime.now(timezone.utc).isoformat(), "implementation_sha256": implementation,
+        "base_git_commit": subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo_root, check=True,
+                                          capture_output=True, text=True).stdout.strip(),
+        "source_capture": "Runtime source hashes are authoritative; the base commit may have local changes.",
+        "environment": {"python": platform.python_version(), "httpx": httpx.__version__, "system": platform.system()},
+        "api_budget": {"limit_usd": budget_usd, "reserved_microusd": reserved, "pricing": API_PRICING,
+                       "policy": "Reserve every request at its maximum; never reclaim timeout or failure reservations."},
+    }
+    (output / "run.json").write_text(json.dumps(run, indent=2))
+    progress(f"Reserved ${reserved / 1_000_000:.4f} of ${budget_usd:.2f}; sequential requests, no retries.")
+    readiness = call_benchmark_api(readiness_request, output / "readiness", timeout)
+    parsed = api_response_result(readiness["api_response"], CHECK_SCHEMA) if readiness["api_response"] else {}
+    readiness["parsed"] = parsed
+    (output / "readiness.json").write_text(json.dumps(readiness, indent=2))
+    if parsed.get("payload") != CHECK_PAYLOAD or parsed.get("resolved_model") != API_MODEL:
+        raise ValueError("API readiness failed; result saved locally. No extraction calls made.")
+    results = []
+    for (model, reference, track, repetition), request in zip(jobs, requests):
+        if benchmark_implementation(repo_root) != implementation or hashlib.sha256(manifest.read_bytes()).hexdigest() != run["reference_manifest_sha256"]:
+            raise ValueError("Benchmark code or manifest changed during the run; stopped before the next call.")
+        directory = attempt_directory(output, model | {"track": track, "repetition": repetition, "source_sha256": reference["source_sha256"]})
+        attempt = model | {
+            "transport": "openai-api", "reference": reference["id"], "track": track, "repetition": repetition,
+            "source_sha256": reference["source_sha256"], "started_at": datetime.now(timezone.utc).isoformat(),
+            "request_sha256": hashlib.sha256(request["input"].encode()).hexdigest(), "image_sha256": [],
+        }
+        attempt |= call_benchmark_api(request, directory, timeout)
+        attempt |= (api_response_result(attempt["api_response"], EXTRACTION_SCHEMA) if attempt["api_response"] else
+                    {"payload": None, "final_response": None, "resolved_model": None, "transport_valid": False})
+        if attempt["resolved_model"] not in {None, API_MODEL}:
+            attempt["status"] = "provider_error"
+        attempt["provider_error"] = attempt["status"] == "provider_error"
+        attempt["api_request"] = request
+        attempt["score"] = score_benchmark_run(reference, attempt) if attempt["status"] == "completed" else {"status": attempt["status"]}
+        (directory / "request.txt").write_text(request["input"])
+        (directory / "stdout.log").write_text(json.dumps({"response": attempt["final_response"]}))
+        (directory / "attempt.json").write_text(json.dumps(attempt, indent=2))
+        results.append(attempt)
+        (output / "results.json").write_text(json.dumps(results, indent=2))
+        (output / "report.md").write_text(benchmark_report(results))
+        progress(f"{reference['id']} / repeat {repetition}: {attempt['score']['status']} ({attempt['elapsed_seconds']}s)")
+        if attempt["http_status"] in {401, 403, 429} or attempt["resolved_model"] not in {None, API_MODEL}:
+            raise ValueError("API access, quota, or model identity changed; stopped with partial results.")
+    write_benchmark_diagnostics(output, manifest, repo_root)
+    return results
 
 
 def extraction_attempt(model: dict, reference: dict, track: str, repetition: int, inputs: Path,
@@ -457,7 +646,7 @@ def write_benchmark_diagnostics(output: Path, manifest: Path, repo_root: Path) -
         row = {key: result[key] for key in ("id", "model", "harness", "track", "reference", "repetition")}
         row["strict_status"] = result["score"]["status"]
         row["score"] = result["score"]
-        if row["strict_status"] == "schema_invalid":
+        if row["strict_status"] == "schema_invalid" and result["harness"] != "openai-api":
             directory = attempt_directory(output, result)
             payload = diagnostic_response((directory / "stdout.log").read_text(), directory / "answer.json")
             reference = load_benchmark_reference(manifest, result["reference"], repo_root=repo_root)
@@ -592,6 +781,13 @@ def replay_attempt(reference: dict, row: dict) -> dict:
         return {"status": "launch_error"}
     if row["exit_code"] != 0:
         return {"status": "execution_error"}
+    if row["harness"] == "openai-api":
+        parsed = api_response_result(row["api_response"], EXTRACTION_SCHEMA)
+        if parsed["resolved_model"] != API_MODEL:
+            parsed["status"] = "provider_error"
+        if any(parsed[field] != row[field] for field in ("payload", "final_response", "resolved_model", "transport_valid")):
+            raise ValueError("API response does not reproduce the recorded payload.")
+        return score_benchmark_run(reference, row) if parsed["status"] == "completed" else {"status": parsed["status"]}
     if row.get("provider_error"):
         return {"status": "provider_error"}
     try:
@@ -601,6 +797,13 @@ def replay_attempt(reference: dict, row: dict) -> dict:
     if payload != row["payload"]:
         raise ValueError("Final response does not reproduce the recorded strict payload.")
     return score_benchmark_run(reference, row | {"payload": payload})
+
+
+def portable_api_response(response: dict) -> dict:
+    return response | {"output": [
+        {"type": "message", "status": item.get("status"), "content": item.get("content", [])}
+        for item in response.get("output", []) if item.get("type") == "message"
+    ]}
 
 
 def archive_benchmark(inputs: Path, results_dir: Path, output: Path, manifest: Path, repo_root: Path) -> Path:
@@ -618,7 +821,8 @@ def archive_benchmark(inputs: Path, results_dir: Path, output: Path, manifest: P
     fields = ("id", "model", "harness", "effort", "transport", "reference", "track", "repetition", "source_sha256",
               "timed_out", "exit_code", "payload", "cost_usd", "resolved_model", "runner_retries",
               "request_sha256", "image_sha256", "started_at", "elapsed_seconds", "reported_models",
-              "provider_error", "error_type", "score")
+              "provider_error", "error_type", "score", "api_request", "api_response", "transport_valid",
+              "response_status", "http_status", "reserved_microusd")
     portable = []
     for result in results:
         row = {key: result[key] for key in fields if key in result}
@@ -632,14 +836,22 @@ def archive_benchmark(inputs: Path, results_dir: Path, output: Path, manifest: P
             stdout = (directory / "stdout.log").read_text()
             row["final_response"] = final_response_text(stdout, directory / "answer.json")
             row["usage_reports"] = final_usage_reports(response_events(stdout), row["harness"])
+            if row.get("api_response"):
+                row["api_response"] = portable_api_response(row["api_response"])
         portable.append(row)
     run_fields = ("frozen", "blocked_candidates", "reference_manifest_sha256", "timeout_seconds",
-                  "output_control", "planned_cells", "started_at", "implementation_sha256")
+                  "output_control", "planned_cells", "started_at", "implementation_sha256", "api_budget",
+                  "base_git_commit", "source_capture")
     files = {"reference-manifest.json": manifest.read_bytes(),
              "run.json": json.dumps({key: run[key] for key in run_fields if key in run}
                                     | {"environment": run.get("environment")}, indent=2).encode(),
              "results.json": json.dumps(portable, indent=2).encode(),
              "report.md": (results_dir / "report.md").read_bytes()}
+    if run["output_control"] == "native_strict_schema":
+        readiness = json.loads((results_dir / "readiness.json").read_text())
+        readiness["api_response"] = portable_api_response(readiness["api_response"])
+        files["readiness.json"] = json.dumps(readiness, indent=2).encode()
+        files["readiness-request.json"] = (results_dir / "readiness/request.json").read_bytes()
     names = ["inputs.json", "prompt.txt", "schema.json"]
     names += [name for source in frozen["inputs"] for name in source["files"]]
     files.update({f"inputs/{name}": (inputs / name).read_bytes() for name in names})
@@ -648,7 +860,8 @@ def archive_benchmark(inputs: Path, results_dir: Path, output: Path, manifest: P
     metadata = {"format": "swimfrancisco-pdf-benchmark", "archived_at": datetime.now(timezone.utc).isoformat(),
                 "implementation_sha256": benchmark_implementation(repo_root),
                 "implementation_capture": "Archive-time source and dependency hashes, not a claim of run-time capture.",
-                "excluded": ["raw CLI events", "stderr", "account configuration", "local absolute paths"],
+                "excluded": ["raw CLI events", "stderr", "account configuration", "local absolute paths",
+                             "encrypted reasoning state", "API output item IDs"],
                 "files": {name: hashlib.sha256(content).hexdigest() for name, content in files.items()}}
     files["archive.json"] = json.dumps(metadata, indent=2).encode()
     with tempfile.TemporaryDirectory(prefix="swimfrancisco-archive-check-") as temporary:
@@ -696,16 +909,31 @@ def verify_benchmark_replay(root: Path, repo_root: Path) -> None:
             reference = by_id[row["reference"]]
             if row["source_sha256"] != reference["source_sha256"]:
                 raise ValueError("Archived cell source differs from its reference.")
-            prompt, images = extraction_request(root / "inputs", reference["source_sha256"], row["track"])
+            prompt, images = extraction_request(root / "inputs", reference["source_sha256"], row["track"],
+                                                native_schema=row["harness"] == "openai-api")
+            if row["harness"] == "openai-api" and row["api_request"] != api_request(prompt, EXTRACTION_SCHEMA):
+                raise ValueError("Archived API request differs from the frozen configuration.")
             if (hashlib.sha256(prompt.encode()).hexdigest() != row["request_sha256"] or
                     [hashlib.sha256(path.read_bytes()).hexdigest() for path in images] != row["image_sha256"]):
                 raise ValueError("Archived cell request differs from the frozen inputs.")
         if replay_attempt(by_id[row["reference"]], row) != row["score"]:
             raise ValueError(f"Replayed score differs: {row['id']} / {row['track']} / {row['reference']}.")
-        if row["score"]["status"] == "schema_invalid":
+        if row["score"]["status"] == "schema_invalid" and row["harness"] != "openai-api":
             directory = attempt_directory(root, row)
             directory.mkdir(parents=True)
             (directory / "stdout.log").write_text(json.dumps({"response": row["final_response"]}))
+    if run["output_control"] == "native_strict_schema":
+        readiness_request = json.loads((root / "readiness-request.json").read_text())
+        readiness = json.loads((root / "readiness.json").read_text())
+        if readiness_request != api_request(CHECK_PROMPT, CHECK_SCHEMA, max_output_tokens=1024):
+            raise ValueError("Archived readiness request changed.")
+        parsed = api_response_result(readiness["api_response"], CHECK_SCHEMA)
+        if parsed != readiness["parsed"] or parsed["payload"] != CHECK_PAYLOAD or parsed["resolved_model"] != API_MODEL:
+            raise ValueError("Archived API readiness response changed.")
+        reserved = api_reservation_microusd(readiness_request) + sum(api_reservation_microusd(row["api_request"]) for row in results)
+        if (run["api_budget"]["pricing"] != API_PRICING or reserved != run["api_budget"]["reserved_microusd"] or
+                not reserved <= run["api_budget"]["limit_usd"] * 1_000_000 <= 10_000_000):
+            raise ValueError("Archived API budget differs from its frozen reservation.")
     if benchmark_report(results) != (root / "report.md").read_text():
         raise ValueError("Replayed strict report differs from the archived report.")
     expected = {name: (root / name).read_bytes() for name in ("diagnostics.json", "diagnostics.md")}

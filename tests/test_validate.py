@@ -1,3 +1,5 @@
+import pytest
+
 from schedules.validate import validate
 
 
@@ -92,6 +94,78 @@ def test_validate_temporarily_closed_empty_sessions_not_catastrophic_with_prior(
     assert result.catastrophic is False
     assert not any(v.code == "sessions_dropped_to_zero" for v in result.violations)
     assert result.ok
+
+
+def test_validate_rejects_closure_classification_without_a_dated_closure():
+    result = validate({
+        "effective_start": "2026-08-14",
+        "schedule_basis": "temporarily_closed",
+        "sessions": [],
+        "closures": [],
+    })
+
+    assert not result.ok
+    assert any(v.code == "closure_notice_missing_dates" for v in result.violations)
+
+
+@pytest.mark.parametrize("field, rows", [
+    ("sessions", [{"day": "monday", "type": "lap_swim", "start": "06:00", "end": "07:00"}]),
+    ("access_hours", [{"day": "monday", "start": "06:00", "end": "07:00", "label": "Pool hours"}]),
+    ("access_exceptions", [{"date": "2026-08-15", "start": "06:00", "end": "07:00",
+                            "label": "Pool hours", "reason": "Special hours"}]),
+])
+def test_validate_rejects_open_hours_in_a_closure_only_notice(field, rows):
+    result = validate({
+        "effective_start": "2026-08-14",
+        "effective_end": "2026-09-07",
+        "schedule_basis": "temporarily_closed",
+        "sessions": [],
+        "closures": [{"start": "2026-08-14", "end": "2026-09-07", "reason": "Maintenance"}],
+        field: rows,
+    })
+
+    assert not result.ok
+    assert any(v.code == "closure_notice_has_open_hours" for v in result.violations)
+
+
+def test_validate_rejects_duplicate_sessions_even_with_different_evidence():
+    sessions = _five_weekday_sessions()
+    result = validate({
+        "effective_start": "2026-08-14",
+        "schedule_basis": "swim_schedule",
+        "sessions": sessions + [sessions[0] | {"evidence": "Another line", "notes": "Repeated row"}],
+        "closures": [],
+    })
+
+    assert not result.ok
+    assert any(v.code == "duplicate_session" for v in result.violations)
+
+
+def test_validate_preserves_shared_slots_for_distinct_pools_or_programs():
+    sessions = _five_weekday_sessions()
+    result = validate({
+        "effective_start": "2026-08-14",
+        "schedule_basis": "swim_schedule",
+        "sessions": sessions + [sessions[0] | {"pool": "shallow"}, sessions[0] | {"type": "family_swim"}],
+        "closures": [],
+    })
+
+    assert result.ok
+
+
+@pytest.mark.parametrize("field", ["sessions", "closures", "access_hours", "access_exceptions"])
+@pytest.mark.parametrize("row", [None, "not a row", 42, []])
+def test_validate_reports_malformed_rows_without_raising(field, row):
+    result = validate({
+        "effective_start": "2026-08-14",
+        "schedule_basis": "swim_schedule",
+        "sessions": _five_weekday_sessions(),
+        "closures": [],
+        field: [row],
+    })
+
+    assert not result.ok
+    assert any(v.code == "schema_violation" for v in result.violations)
 
 
 def test_validate_rejects_unknown_schedule_basis_value():

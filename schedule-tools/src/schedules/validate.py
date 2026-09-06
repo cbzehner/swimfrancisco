@@ -32,6 +32,18 @@ def validate(payload: dict, *, prior_sessions_count: int | None = None) -> Valid
     catastrophic = False
     schedule_basis = payload.get("schedule_basis")
 
+    if schedule_basis == "temporarily_closed":
+        if not closures:
+            violations.append(Violation(
+                code="closure_notice_missing_dates",
+                message="temporarily_closed requires an explicit dated closure",
+            ))
+        if sessions or access_hours or access_exceptions:
+            violations.append(Violation(
+                code="closure_notice_has_open_hours",
+                message="temporarily_closed must not contain sessions or access windows",
+            ))
+
     if (
         prior_sessions_count
         and len(sessions) == 0
@@ -49,7 +61,18 @@ def validate(payload: dict, *, prior_sessions_count: int | None = None) -> Valid
             message="fewer than 5 weekly sessions extracted",
         ))
 
+    session_keys: set[tuple[str | None, ...]] = set()
     for index, session in enumerate(sessions, start=1):
+        if not isinstance(session, dict):
+            continue
+        key = tuple(session.get(field) for field in ("day", "type", "start", "end", "pool"))
+        if all(value is None or isinstance(value, str) for value in key):
+            if key in session_keys:
+                violations.append(Violation(
+                    code="duplicate_session",
+                    message=f"session #{index} repeats the same day, type, time range, and pool",
+                ))
+            session_keys.add(key)
         start = session.get("start")
         end = session.get("end")
         if not isinstance(start, str) or not isinstance(end, str) or start >= end:
@@ -59,6 +82,8 @@ def validate(payload: dict, *, prior_sessions_count: int | None = None) -> Valid
             ))
 
     for index, access_hour in enumerate(access_hours, start=1):
+        if not isinstance(access_hour, dict):
+            continue
         start = access_hour.get("start")
         end = access_hour.get("end")
         if not isinstance(start, str) or not isinstance(end, str) or start >= end:
@@ -68,6 +93,8 @@ def validate(payload: dict, *, prior_sessions_count: int | None = None) -> Valid
             ))
 
     for index, access_exception in enumerate(access_exceptions, start=1):
+        if not isinstance(access_exception, dict):
+            continue
         exception_date = access_exception.get("date")
         try:
             if not isinstance(exception_date, str):
@@ -88,6 +115,8 @@ def validate(payload: dict, *, prior_sessions_count: int | None = None) -> Valid
             ))
 
     for index, closure in enumerate(closures, start=1):
+        if not isinstance(closure, dict):
+            continue
         start = closure.get("start")
         end = closure.get("end")
         try:

@@ -209,11 +209,14 @@ def test_grounding_0_90_eligible(iso):
 
 
 def test_grounding_total_zero_eligible(iso):
-    candidate = _write_candidate(iso.data, payload=_payload(n=0, basis="temporarily_closed"))
+    payload = _payload(n=0, basis="temporarily_closed") | {
+        "closures": [{"start": "2026-08-18", "end": "2026-12-12", "reason": "Maintenance"}],
+    }
+    candidate = _write_candidate(iso.data, payload=payload)
     result = publish_eligible(
         **_kwargs(
             candidate,
-            payload=_payload(n=0, basis="temporarily_closed"),
+            payload=payload,
             grounding=_grounding(0, 0),
         )
     )
@@ -229,7 +232,8 @@ def test_missing_grounding_refuses(iso):
 def test_drop_to_zero_catastrophic_unless_temporarily_closed(iso):
     candidate = _write_candidate(iso.data)
     empty = {**_payload(n=0), "schedule_basis": "swim_schedule"}
-    closed = {**_payload(n=0), "schedule_basis": "temporarily_closed"}
+    closed = {**_payload(n=0), "schedule_basis": "temporarily_closed",
+              "closures": [{"start": "2026-08-18", "end": "2026-12-12", "reason": "Maintenance"}]}
     dropped = publish_eligible(**_kwargs(candidate, payload=empty, prior_sessions_count=8))
     assert dropped.code == "sessions_dropped_to_zero"
     assert validate(empty, prior_sessions_count=8).catastrophic is True
@@ -237,6 +241,27 @@ def test_drop_to_zero_catastrophic_unless_temporarily_closed(iso):
         **_kwargs(candidate, payload=closed, prior_sessions_count=8, grounding=_grounding(0, 0))
     )
     assert allowed.ok is True
+
+
+def test_closure_without_dates_refuses_even_with_perfect_grounding(iso):
+    candidate = _write_candidate(iso.data, payload=_payload(n=0, basis="temporarily_closed"))
+    result = publish_eligible(**_kwargs(candidate, grounding=_grounding(0, 0)))
+    assert result.code == "closure_notice_missing_dates"
+
+
+def test_closure_with_invented_sessions_refuses(iso):
+    payload = _payload(basis="temporarily_closed") | {
+        "closures": [{"start": "2026-08-18", "end": "2026-12-12", "reason": "Maintenance"}],
+    }
+    candidate = _write_candidate(iso.data, payload=payload)
+    assert publish_eligible(**_kwargs(candidate)).code == "closure_notice_has_open_hours"
+
+
+def test_duplicate_sessions_refuse_even_with_perfect_grounding(iso):
+    payload = _payload()
+    payload["sessions"].append(payload["sessions"][0].copy())
+    candidate = _write_candidate(iso.data, payload=payload)
+    assert publish_eligible(**_kwargs(candidate, grounding=_grounding(6, 6))).code == "duplicate_session"
 
 
 def test_too_few_refuses(iso):

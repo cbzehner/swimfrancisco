@@ -179,6 +179,9 @@ def test_finalize_drop_to_zero_fails_unless_temporarily_closed(tmp_path):
     assert reviewed.exists()
 
     envelope["payload"]["schedule_basis"] = "temporarily_closed"
+    envelope["payload"]["closures"] = [
+        {"start": "2026-08-14", "end": "2026-09-07", "reason": "Maintenance"},
+    ]
     reviewed.write_text(json.dumps(envelope))
     result = finalize_draft(reviewed_json_path=reviewed, content_spots_dir=content)
     assert result == reviewed
