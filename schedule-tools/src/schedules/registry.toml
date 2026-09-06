@@ -13,7 +13,7 @@ slug = "garfield-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/29799"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Garfield-Pool-214"
 notes = """
-discover: 2026-09-04 adopt band_session_grid band_session_grid id=29799:session_grid:persisted id=29808:closure_notice:table
+discover: 2026-09-06 unchanged current_session_grid band_session_grid id=29799:session_grid:persisted id=29808:closure_notice:table
 """
 
 [[pool]]
