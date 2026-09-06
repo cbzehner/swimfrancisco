@@ -78,6 +78,24 @@ def test_printed_window_does_not_borrow_year_from_a_holiday_note():
     assert not source_window_coverage(source, payload)["ok"]
 
 
+def test_mission_holdout_matches_frozen_visual_transcription():
+    reference = load_benchmark_reference(MANIFEST, "mission-fall-holdout", repo_root=REPO_ROOT)
+    source = inspect_pdf_source((REPO_ROOT / reference["source_pdf"]).read_bytes())
+    assert source_coverage(source, reference["expected"])["ok"]
+    assert source_window_coverage(source, reference["expected"])["ok"]
+    assert len(reference["expected"]["sessions"]) == 25
+    assert len(reference["expected"]["closures"]) == 5
+
+
+def test_coffman_ambiguous_closure_block_is_held_before_model_call():
+    from schedules.providers.openai_provider import source_request
+
+    source = inspect_pdf_source((REPO_ROOT / "data/coffman-pool/2026-08-20-0345cb25881b/source.pdf").read_bytes())
+    assert any(issue.endswith(":unknown_program") for issue in source.issues)
+    with pytest.raises(ValueError, match="Unsupported PDF source"):
+        source_request(source, "extract", {})
+
+
 @pytest.mark.parametrize("start,end,expected", [
     ("7", "8 AM", ("07:00", "08:00")),
     ("10:15", "1:00 PM", ("10:15", "13:00")),

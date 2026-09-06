@@ -340,9 +340,9 @@ def benchmark_command(attempt: Path, reference_id: str) -> None:
 
 
 @cli.command("benchmark-prepare")
-@click.option("--poppler", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--comparison", default="development", type=click.Choice(["development", "finalists", "literal-pool-labels"]))
-def benchmark_prepare_command(poppler: Path, comparison: str) -> None:
+@click.option("--poppler", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--comparison", default="source-inventory", type=click.Choice(["source-inventory", "source-holdout", "development", "finalists", "literal-pool-labels"]))
+def benchmark_prepare_command(poppler: Path | None, comparison: str) -> None:
     """Prepare label-free comparison inputs in a fresh temporary directory. No model calls."""
     try:
         root = prepare_benchmark(REPO_ROOT / "tests/fixtures/schedule-benchmark.json", REPO_ROOT, poppler, comparison)
@@ -395,7 +395,7 @@ def benchmark_run_command(inputs: Path, output: Path, pi_extension: Path,
 @click.option("--budget-usd", required=True, type=click.FloatRange(min=0, max=10, min_open=True))
 @click.option("--timeout", default=240, type=click.IntRange(1, 300))
 def benchmark_api_run_command(inputs: Path, output: Path, budget_usd: float, timeout: int) -> None:
-    """Run the frozen API comparison with a prepaid maximum reservation. Never publishes."""
+    """Run the frozen API comparison with a maximum reservation before each call. Never publishes."""
     try:
         results = run_api_benchmark(inputs.resolve(), output.resolve(),
                                     REPO_ROOT / "tests/fixtures/schedule-benchmark.json", REPO_ROOT,

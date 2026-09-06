@@ -31,6 +31,18 @@
     {"id":"gpt-5.5-api","harness":"openai-api","model":"gpt-5.5-2026-04-23","effort":"medium"}
   ],
   "comparisons": {
+    "source-holdout": {
+      "candidates": [{"id": "gpt-5.5-api", "tracks": ["source"]}],
+      "references": ["mission-fall-holdout"],
+      "repetitions": 3,
+      "prompt_addendum": ""
+    },
+    "source-inventory": {
+      "candidates": [{"id": "gpt-5.5-api", "tracks": ["source"]}],
+      "references": ["north-beach-expired", "hamilton-fall", "balboa-fall", "balboa-interim", "rossi-spring", "mlk-fall", "garfield-maintenance"],
+      "repetitions": 3,
+      "prompt_addendum": ""
+    },
     "development": {
       "candidates": [
         {
@@ -248,6 +260,207 @@
     }
   },
   "documents": [
+    {
+      "id": "mission-fall-holdout",
+      "split": "holdout",
+      "source_pdf": "data/mission-community-pool/2026-09-02-67f2a420e8fc/source.pdf",
+      "source_sha256": "67f2a420e8fc7957ece8b02acfcbf574249473f759eafb123e17c6ed0cebd2b4",
+      "review": "agent_visual; 2026-09-05; full page rendered with Poppler, all 25 sessions and five closures transcribed before any model calls; human sign-off pending",
+      "as_of": "2026-09-05",
+      "unresolved": [
+        "The Thursday session caveat must not become an all-day closure. The explicit facility notice establishes 12:00-14:00 closures on August 27 and September 24."
+      ],
+      "expected": {
+        "effective_start": "2026-08-18",
+        "effective_end": "2026-10-17",
+        "schedule_basis": "swim_schedule",
+        "sessions": [
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "09:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "senior_swim",
+            "start": "09:15",
+            "end": "11:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "11:15",
+            "end": "13:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "14:00",
+            "end": "15:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "family_swim",
+            "start": "15:45",
+            "end": "17:15"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "17:45",
+            "end": "19:00"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "09:00"
+          },
+          {
+            "day": "wednesday",
+            "type": "senior_swim",
+            "start": "09:15",
+            "end": "11:00"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "11:30",
+            "end": "13:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "14:30",
+            "end": "16:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "17:00",
+            "end": "19:00"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "09:00"
+          },
+          {
+            "day": "thursday",
+            "type": "senior_swim",
+            "start": "09:15",
+            "end": "11:00"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "11:15",
+            "end": "13:30"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "14:00",
+            "end": "15:30"
+          },
+          {
+            "day": "thursday",
+            "type": "family_swim",
+            "start": "15:45",
+            "end": "17:15"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "17:45",
+            "end": "19:00"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "09:00"
+          },
+          {
+            "day": "friday",
+            "type": "senior_swim",
+            "start": "09:15",
+            "end": "11:00"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "11:30",
+            "end": "13:30"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "14:30",
+            "end": "16:30"
+          },
+          {
+            "day": "friday",
+            "type": "family_swim",
+            "start": "17:00",
+            "end": "19:00"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "11:30",
+            "end": "12:45"
+          },
+          {
+            "day": "saturday",
+            "type": "family_swim",
+            "start": "14:00",
+            "end": "15:30"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "16:00",
+            "end": "17:30"
+          }
+        ],
+        "closures": [
+          {
+            "start": "2026-09-07",
+            "end": "2026-09-07",
+            "reason": "Labor Day"
+          },
+          {
+            "start": "2026-10-12",
+            "end": "2026-10-12",
+            "reason": "Indigenous People's Day"
+          },
+          {
+            "start": "2026-08-22",
+            "end": "2026-08-22",
+            "start_time": "09:00",
+            "end_time": "11:00",
+            "reason": "Staff training"
+          },
+          {
+            "start": "2026-08-27",
+            "end": "2026-08-27",
+            "start_time": "12:00",
+            "end_time": "14:00",
+            "reason": "Aquatic Division Training"
+          },
+          {
+            "start": "2026-09-24",
+            "end": "2026-09-24",
+            "start_time": "12:00",
+            "end_time": "14:00",
+            "reason": "Aquatic Division Training"
+          }
+        ]
+      }
+    },
     {
       "id": "north-beach-expired",
       "split": "development",

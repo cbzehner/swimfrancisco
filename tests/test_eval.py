@@ -61,33 +61,12 @@ def test_historical_benchmark_archive_remains_pinned_to_its_source_revision(tmp_
     else:
         replay_benchmark(archive_path, tmp_path / "historical", REPO_ROOT)
 
+@pytest.fixture(scope="module")
+def api_inputs():
+    from schedules.benchmark import prepare_benchmark
 
-@pytest.fixture
-def api_inputs(tmp_path):
-    from schedules.benchmark import benchmark_comparison
-
-    root = tmp_path / "api-inputs"
-    root.mkdir()
-    sources = []
-    for name in ("development-2026-09-04.zip", "finalists-2026-09-05.zip"):
-        with zipfile.ZipFile(REPO_ROOT / "benchmarks/pdf" / name) as archive:
-            frozen = json.loads(archive.read("inputs/inputs.json"))
-            sources.extend(frozen["inputs"])
-            for item in frozen["inputs"]:
-                for path in item["files"]:
-                    target = root / path
-                    target.parent.mkdir(parents=True, exist_ok=True)
-                    target.write_bytes(archive.read("inputs/" + path))
-            for path in ("prompt.txt", "schema.json"):
-                (root / path).write_bytes(archive.read("inputs/" + path))
-    plan, models, _ = benchmark_comparison(REPO_ROOT / "tests/fixtures/schedule-benchmark.json", "literal-pool-labels", REPO_ROOT)
-    prompt = (root / "prompt.txt").read_text()
-    prompt = prompt.removesuffix(frozen["plan"]["prompt_addendum"]) + plan["prompt_addendum"]
-    (root / "prompt.txt").write_text(prompt)
-    frozen |= {"comparison": "literal-pool-labels", "plan": plan, "models": models, "inputs": sources,
-               "prompt_sha256": hashlib.sha256((root / "prompt.txt").read_bytes()).hexdigest()}
-    (root / "inputs.json").write_text(json.dumps(frozen))
-    return root
+    return prepare_benchmark(REPO_ROOT / "tests/fixtures/schedule-benchmark.json",
+                             REPO_ROOT, None, "source-inventory")
 
 
 def _nullable_api_payload(value, schema):
@@ -204,7 +183,7 @@ def test_api_closure_pairs_are_checked_after_null_mapping():
 def test_api_budget_failure_makes_no_calls(api_inputs, tmp_path, monkeypatch, budget):
     import schedules.benchmark as benchmark
     monkeypatch.setenv("OPENAI_API_KEY", "not-a-real-key")
-    monkeypatch.setattr(benchmark, "call_api", lambda *args: pytest.fail("Budget guard made a paid call"))
+    monkeypatch.setattr(benchmark, "budgeted_call", lambda *args: pytest.fail("Budget guard made a paid call"))
     output = tmp_path / "results"
     with pytest.raises(ValueError, match="budget|reservation"):
         benchmark.run_api_benchmark(api_inputs, output, REPO_ROOT / "tests/fixtures/schedule-benchmark.json", REPO_ROOT, budget, 10)
@@ -250,8 +229,8 @@ def test_api_run_archives_and_replays_requests_responses_and_budget(api_inputs, 
             {key: value for key, value in row.items() if key != "pool"} | {"pool_label_raw": row.get("pool")}
             for row in facts["sessions"]
         ]
-        prompt = benchmark.extraction_request(api_inputs, reference["source_sha256"], "text", native_schema=True)[0]
-        payloads[prompt] = _nullable_api_payload(facts, SOURCE_FACTS_SCHEMA)
+        request = benchmark.prepared_source_request(api_inputs, reference["source_sha256"])
+        payloads[json.dumps(request, sort_keys=True)] = _nullable_api_payload(facts, SOURCE_FACTS_SCHEMA)
     real_client = benchmark.httpx.Client
     calls = []
 
@@ -261,7 +240,7 @@ def test_api_run_archives_and_replays_requests_responses_and_budget(api_inputs, 
         assert request.url == benchmark.API_ENDPOINT
         assert request.headers["Authorization"] == "Bearer DO_NOT_ARCHIVE"
         assert body["tools"] == [] and body["store"] is False and body["service_tier"] == "default"
-        payload = benchmark.CHECK_PAYLOAD if body["input"] == benchmark.CHECK_PROMPT else payloads[body["input"]]
+        payload = benchmark.CHECK_PAYLOAD if body["input"] == benchmark.CHECK_PROMPT else payloads[json.dumps(body, sort_keys=True)]
         response = _api_response(payload) | {"private_metadata": "DO_NOT_ARCHIVE"}
         response["output"].insert(0, {"type": "reasoning", "encrypted_content": "DO_NOT_ARCHIVE"})
         return benchmark.httpx.Response(200, json=response)
@@ -272,6 +251,7 @@ def test_api_run_archives_and_replays_requests_responses_and_budget(api_inputs, 
     rows = benchmark.run_api_benchmark(api_inputs, output, manifest, REPO_ROOT, 10, 10, progress=lambda _: None)
     assert len(calls) == 22 and len(rows) == 21
     assert all(row["score"]["checked_fields_match"] for row in rows)
+    assert all(row["source_coverage"]["ok"] and row["source_window"]["ok"] for row in rows)
     assert all(row["cost_usd"] == 0.00191 for row in rows)
     exported = tmp_path / "api.zip"
     benchmark.archive_benchmark(api_inputs, output, exported, manifest, REPO_ROOT)

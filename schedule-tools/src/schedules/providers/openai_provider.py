@@ -227,7 +227,7 @@ def budgeted_call(request: dict, directory: Path, timeout: int, budget: SpendBud
     identifier = budget.reserve(request)
     result = call_api(request, directory, timeout)
     budget.settle(identifier, result)
-    return result
+    return result | {"reservation_id": identifier}
 
 
 def extraction_configuration(prompt: str) -> dict:

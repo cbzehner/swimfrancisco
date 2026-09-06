@@ -60,7 +60,7 @@ def load_benchmark_reference(path: Path, reference_id: str, *, repo_root: Path) 
     if len(matches) != 1:
         raise ValueError("Benchmark reference must identify exactly one document.")
     reference = matches[0]
-    if reference["split"] not in {"development", "finalist"} or not reference.get("expected"):
+    if reference["split"] not in {"development", "finalist", "holdout"} or not reference.get("expected"):
         raise ValueError("This document is reserved or has no checked reference yet.")
     source = (repo_root / reference["source_pdf"]).resolve()
     if not source.is_relative_to(repo_root.resolve()):

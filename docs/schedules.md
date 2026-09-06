@@ -1073,6 +1073,54 @@ labels would not establish source completeness. The production integration gaps,
 including a demonstrated undetected missing row, are recorded in
 [the publication spec](specs/2026-08-20-schedule-auto-publish.md#extraction-integration-checks).
 
+### Production source-inventory comparison
+
+The current API runner tests the production request, not the historical Poppler
+text request. It freezes the current prompt, coordinate-based source inventory,
+pinned PDFium renderer, strict raw-label schema, model snapshot, medium effort,
+and 8,192-token output limit. It attaches only pages flagged for broken text;
+the other rendered pages remain in the archive for inspection, not model input.
+Each response records independent session coverage and printed-window checks in
+addition to the unchanged reference scores. Replay rebuilds the request and
+source checks and verifies image bytes, raw facts, scores, and spending records.
+
+`source-inventory` repeats the same seven known documents three times. It is a
+regression set, not a holdout. `source-holdout` tests Mission's September 2 PDF
+three times. Its 25 sessions and five facility closures were transcribed from
+the rendered page before model calls. Neither set has human attestation.
+Coffman's fall PDF is a separate preflight refusal test: an ambiguous closure
+block stops extraction before a model call. Do not weaken that refusal to make
+the benchmark look complete, or turn its session caveat into an all-day closure.
+
+The spending policy now uses the production ledger: reserve each request's
+maximum cost before sending it, then settle trustworthy reported usage at full
+input rates. Missing usage keeps the maximum reservation. Calls run sequentially
+with no benchmark retries. The command stops before a request that cannot fit
+the remaining limit, preserving partial local results. This is a budget-policy
+change, not a change to reference answers or exact-match acceptance.
+
+The two earlier API runs used an estimated $4.657891 of the approved $10. The
+source-inventory repeat may use at most the remaining $5.342109. Any later
+holdout run must subtract this repeat's ledger charges first; it does not get
+a second $5.342109 allowance. Recurring automation has no approved monthly
+allowance yet.
+
+```sh
+uv --project schedule-tools run --locked schedules benchmark-prepare \
+  --comparison source-inventory
+just schedules benchmark-api-run --inputs /path/printed/by/prepare \
+  --output tmp/pdf-source-inventory-results --budget-usd 5.342109
+uv --project schedule-tools run --locked schedules benchmark-archive \
+  --inputs /path/printed/by/prepare --results tmp/pdf-source-inventory-results \
+  --output benchmarks/pdf/source-inventory-2026-09-05.zip
+uv --project schedule-tools run --locked schedules benchmark-replay \
+  benchmarks/pdf/source-inventory-2026-09-05.zip --output tmp/pdf-source-inventory-replay
+```
+
+Run historical API comparisons from their recorded source revision. Their
+archives and reference results remain unchanged; the current API command fully
+uses the production request contract.
+
 ## Auto-extract workflow
 
 The `.github/workflows/schedules-extract.yml` action runs weekly on

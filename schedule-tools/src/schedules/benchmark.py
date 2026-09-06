@@ -17,6 +17,7 @@ import zipfile
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
+from dataclasses import asdict
 from pathlib import Path, PurePosixPath
 
 import httpx
@@ -27,8 +28,11 @@ from .schema import EXTRACTION_SCHEMA, SOURCE_FACTS_SCHEMA, pool_label_payload
 from .providers.openai_provider import (
     API_MODEL, API_ENDPOINT, API_MAX_OUTPUT_TOKENS, API_PRICING,
     api_transport_schema, api_payload, api_request, api_reservation_microusd,
-    api_response_result, call_api,
+    api_response_result, call_api, budgeted_call, SpendBudget,
+    extraction_configuration, render_source_pages, source_request, visual_page_numbers,
 )
+from .signals import inspect_pdf_source
+from .grounding import source_coverage, source_window_coverage
 
 
 CHECK_PAYLOAD = {"check": "schedule-benchmark", "sum": 42}
@@ -73,20 +77,24 @@ def benchmark_comparison(manifest: Path, name: str, repo_root: Path) -> tuple[di
         raise ValueError("Comparison repetitions must be between 1 and 10.")
     for item in plan["candidates"]:
         model = catalog[item["id"]]
-        if not item["tracks"] or len(set(item["tracks"])) != len(item["tracks"]) or set(item["tracks"]) - {"text", "image"}:
+        if not item["tracks"] or len(set(item["tracks"])) != len(item["tracks"]) or set(item["tracks"]) - {"text", "image", "source"}:
             raise ValueError("Comparison has invalid input tracks.")
+        if "source" in item["tracks"] and model["harness"] != "openai-api":
+            raise ValueError("Source-inventory track requires the production API adapter.")
         if "image" in item["tracks"] and (model["harness"] != "codex" or model["model"] == "gpt-5.3-codex-spark"):
             raise ValueError("Image track is not supported by this harness.")
     references = [load_benchmark_reference(manifest, identifier, repo_root=repo_root) for identifier in plan["references"]]
     return plan, [catalog[identifier] for identifier in identifiers], references
 
 
-def prepare_benchmark(manifest: Path, repo_root: Path, poppler: Path, comparison: str = "development") -> Path:
+def prepare_benchmark(manifest: Path, repo_root: Path, poppler: Path | None, comparison: str = "development") -> Path:
     """Render the selected comparison outside the repository, with no expected answers."""
     data = json.loads(manifest.read_text())
     plan, models, references = benchmark_comparison(manifest, comparison, repo_root)
+    if comparison in {"source-inventory", "source-holdout"}:
+        return prepare_source_benchmark(data, plan, models, references, repo_root, comparison)
     for name in ("pdftotext", "pdftoppm"):
-        if not (poppler / name).is_file():
+        if poppler is None or not (poppler / name).is_file():
             raise ValueError(f"Poppler directory is missing {name}.")
     root = Path(tempfile.mkdtemp(prefix="swimfrancisco-benchmark-"))
     with zipfile.ZipFile(repo_root / "benchmarks/pdf" / _BASELINE_PROMPT_ARCHIVES[comparison]) as archive:
@@ -117,6 +125,49 @@ def prepare_benchmark(manifest: Path, repo_root: Path, poppler: Path, comparison
         "schema_sha256": hashlib.sha256((root / "schema.json").read_bytes()).hexdigest(),
     }, indent=2))
     return root
+
+
+def prepare_source_benchmark(data: dict, plan: dict, models: list, references: list, repo_root: Path, comparison: str) -> Path:
+    root = Path(tempfile.mkdtemp(prefix="swimfrancisco-benchmark-"))
+    prompt = (repo_root / "schedule-tools/src/schedules/prompts/extract.txt").read_text()
+    (root / "prompt.txt").write_text(prompt)
+    (root / "schema.json").write_text(json.dumps(EXTRACTION_SCHEMA, indent=2))
+    inputs = []
+    for reference in references:
+        directory = root / reference["source_sha256"][:12]
+        directory.mkdir()
+        pdf_bytes = (repo_root / reference["source_pdf"]).read_bytes()
+        source = inspect_pdf_source(pdf_bytes)
+        (directory / "source.pdf").write_bytes(pdf_bytes)
+        (directory / "source.txt").write_text(source.text)
+        (directory / "source-inventory.json").write_text(json.dumps(asdict(source), indent=2))
+        for number, image in render_source_pages(pdf_bytes, frozenset(range(1, source.page_count + 1))).items():
+            (directory / f"page-{number}.png").write_bytes(image)
+        prepared_source_request(root, reference["source_sha256"])
+        inputs.append({"source_sha256": reference["source_sha256"], "files": {
+            str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(directory.iterdir())
+        }})
+    (root / "inputs.json").write_text(json.dumps({
+        "as_of": data["as_of"], "comparison": comparison, "plan": plan, "models": models, "inputs": inputs,
+        "renderer": "pdfplumber/PDFium", "dpi": 150, "configuration": extraction_configuration(prompt),
+        "prompt_sha256": hashlib.sha256((root / "prompt.txt").read_bytes()).hexdigest(),
+        "schema_sha256": hashlib.sha256((root / "schema.json").read_bytes()).hexdigest(),
+    }, indent=2))
+    return root
+
+
+def prepared_source_request(inputs: Path, source_sha256: str) -> dict:
+    directory = inputs / source_sha256[:12]
+    pdf_bytes = (directory / "source.pdf").read_bytes()
+    if hashlib.sha256(pdf_bytes).hexdigest() != source_sha256:
+        raise ValueError("Prepared PDF does not match the reference source hash")
+    source = inspect_pdf_source(pdf_bytes)
+    if json.loads(json.dumps(asdict(source))) != json.loads((directory / "source-inventory.json").read_text()):
+        raise ValueError("Prepared source inventory differs from the production parser")
+    images = {number: (directory / f"page-{number}.png").read_bytes() for number in visual_page_numbers(source)}
+    if images != render_source_pages(pdf_bytes, visual_page_numbers(source)):
+        raise ValueError("Prepared visual evidence differs from the production renderer")
+    return source_request(source, (inputs / "prompt.txt").read_text(), images)
 
 
 def harness_command(model: dict, directory: Path, pi_extension: Path | None,
@@ -329,19 +380,21 @@ def run_api_benchmark(inputs: Path, output: Path, manifest: Path, repo_root: Pat
     frozen, references = load_prepared_inputs(inputs, manifest, repo_root)
     if not math.isfinite(budget_usd) or not 0 < budget_usd <= 10:
         raise ValueError("API benchmark budget must be positive and at most $10.")
-    if frozen["comparison"] != "literal-pool-labels" or frozen["models"] != [
+    if frozen["comparison"] not in {"source-inventory", "source-holdout"} or frozen["models"] != [
         {"id": "gpt-5.5-api", "harness": "openai-api", "model": API_MODEL, "effort": "medium"}
     ]:
-        raise ValueError("API benchmark requires the frozen literal-pool-labels comparison.")
+        raise ValueError("API benchmark requires the frozen source-inventory comparison.")
+    if frozen.get("configuration") != extraction_configuration((inputs / "prompt.txt").read_text()):
+        raise ValueError("Production extraction configuration changed after input preparation")
     if not os.environ.get("OPENAI_API_KEY", "").strip():
         raise ValueError("OPENAI_API_KEY is not set; load the ignored .env before running.")
     jobs = benchmark_jobs(frozen["models"], references, frozen["plan"])
     readiness_request = api_request(CHECK_PROMPT, CHECK_SCHEMA, max_output_tokens=1024)
-    requests = [api_request(extraction_request(inputs, reference["source_sha256"], track, native_schema=True)[0], SOURCE_FACTS_SCHEMA)
+    requests = [prepared_source_request(inputs, reference["source_sha256"])
                 for _, reference, track, _ in jobs]
     reserved = sum(api_reservation_microusd(request) for request in [readiness_request, *requests])
-    if reserved > budget_usd * 1_000_000:
-        raise ValueError(f"Full-run reservation ${reserved / 1_000_000:.4f} exceeds the approved budget; no calls made.")
+    if api_reservation_microusd(readiness_request) + max(map(api_reservation_microusd, requests)) > budget_usd * 1_000_000:
+        raise ValueError("API budget cannot reserve readiness and one extraction; no calls made.")
     output.mkdir(parents=True, exist_ok=False)
     implementation = benchmark_implementation(repo_root)
     run = {
@@ -352,12 +405,13 @@ def run_api_benchmark(inputs: Path, output: Path, manifest: Path, repo_root: Pat
                                           capture_output=True, text=True).stdout.strip(),
         "source_capture": "Runtime source hashes are authoritative; the base commit may have local changes.",
         "environment": {"python": platform.python_version(), "httpx": httpx.__version__, "system": platform.system()},
-        "api_budget": {"limit_usd": budget_usd, "reserved_microusd": reserved, "pricing": API_PRICING,
-                       "policy": "Reserve every request at its maximum; never reclaim timeout or failure reservations."},
+        "api_budget": {"limit_usd": budget_usd, "maximum_matrix_microusd": reserved, "pricing": API_PRICING,
+                       "policy": "Reserve each request before sending; settle verified usage at full input rates; retain reservations without usage."},
     }
     (output / "run.json").write_text(json.dumps(run, indent=2))
-    progress(f"Reserved ${reserved / 1_000_000:.4f} of ${budget_usd:.2f}; sequential requests, no retries.")
-    readiness = call_api(readiness_request, output / "readiness", timeout)
+    progress(f"Budget ${budget_usd:.6f}; per-request maximum reservation, sequential requests, no retries.")
+    budget = SpendBudget(output / "budget.json", budget_usd)
+    readiness = budgeted_call(readiness_request, output / "readiness", timeout, budget)
     parsed = api_response_result(readiness["api_response"], CHECK_SCHEMA) if readiness["api_response"] else {}
     readiness["parsed"] = parsed
     (output / "readiness.json").write_text(json.dumps(readiness, indent=2))
@@ -368,23 +422,29 @@ def run_api_benchmark(inputs: Path, output: Path, manifest: Path, repo_root: Pat
         if benchmark_implementation(repo_root) != implementation or hashlib.sha256(manifest.read_bytes()).hexdigest() != run["reference_manifest_sha256"]:
             raise ValueError("Benchmark code or manifest changed during the run; stopped before the next call.")
         directory = attempt_directory(output, model | {"track": track, "repetition": repetition, "source_sha256": reference["source_sha256"]})
+        request_text = json.dumps(request, sort_keys=True)
+        source = inspect_pdf_source((inputs / reference["source_sha256"][:12] / "source.pdf").read_bytes())
+        pages = visual_page_numbers(source)
         attempt = model | {
             "transport": "openai-api", "reference": reference["id"], "track": track, "repetition": repetition,
             "source_sha256": reference["source_sha256"], "started_at": datetime.now(timezone.utc).isoformat(),
-            "request_sha256": hashlib.sha256(request["input"].encode()).hexdigest(), "image_sha256": [],
+            "request_sha256": hashlib.sha256(request_text.encode()).hexdigest(),
+            "image_sha256": [hashlib.sha256((inputs / reference["source_sha256"][:12] / f"page-{number}.png").read_bytes()).hexdigest() for number in sorted(pages)],
         }
-        attempt |= call_api(request, directory, timeout)
+        attempt |= budgeted_call(request, directory, timeout, budget)
         attempt |= (api_response_result(attempt["api_response"], SOURCE_FACTS_SCHEMA) if attempt["api_response"] else
                     {"payload": None, "final_response": None, "resolved_model": None, "transport_valid": False})
         attempt["source_facts"] = attempt["payload"]
         if attempt["payload"] is not None:
             attempt["payload"] = pool_label_payload(attempt["payload"])
+            attempt["source_coverage"] = source_coverage(source, attempt["payload"], visual_pages=pages)
+            attempt["source_window"] = source_window_coverage(source, attempt["payload"])
         if attempt["resolved_model"] not in {None, API_MODEL}:
             attempt["status"] = "provider_error"
         attempt["provider_error"] = attempt["status"] == "provider_error"
         attempt["api_request"] = request
         attempt["score"] = score_benchmark_run(reference, attempt) if attempt["status"] == "completed" else {"status": attempt["status"]}
-        (directory / "request.txt").write_text(request["input"])
+        (directory / "request.txt").write_text(request_text)
         (directory / "stdout.log").write_text(json.dumps({"response": attempt["final_response"]}))
         (directory / "attempt.json").write_text(json.dumps(attempt, indent=2))
         results.append(attempt)
@@ -719,7 +779,8 @@ def archive_benchmark(inputs: Path, results_dir: Path, output: Path, manifest: P
               "timed_out", "exit_code", "payload", "cost_usd", "resolved_model", "runner_retries",
               "request_sha256", "image_sha256", "started_at", "elapsed_seconds", "reported_models",
               "provider_error", "error_type", "score", "api_request", "api_response", "transport_valid",
-              "response_status", "http_status", "reserved_microusd", "source_facts")
+              "response_status", "http_status", "reserved_microusd", "source_facts",
+              "source_coverage", "source_window", "reservation_id")
     portable = []
     for result in results:
         row = {key: result[key] for key in fields if key in result}
@@ -749,6 +810,7 @@ def archive_benchmark(inputs: Path, results_dir: Path, output: Path, manifest: P
         readiness["api_response"] = portable_api_response(readiness["api_response"])
         files["readiness.json"] = json.dumps(readiness, indent=2).encode()
         files["readiness-request.json"] = (results_dir / "readiness/request.json").read_bytes()
+        files["budget.json"] = (results_dir / "budget.json").read_bytes()
     names = ["inputs.json", "prompt.txt", "schema.json"]
     names += [name for source in frozen["inputs"] for name in source["files"]]
     files.update({f"inputs/{name}": (inputs / name).read_bytes() for name in names})
@@ -798,6 +860,8 @@ def verify_benchmark_replay(root: Path, repo_root: Path) -> None:
     frozen, references = load_prepared_inputs(root / "inputs", manifest, root)
     if run["frozen"] != frozen:
         raise ValueError("Archived input specification differs from the run.")
+    if run["output_control"] == "native_strict_schema" and frozen.get("configuration") != extraction_configuration((root / "inputs/prompt.txt").read_text()):
+        raise ValueError("Archived production configuration differs from the replay environment")
     results = json.loads((root / "results.json").read_text())
     validate_benchmark_cases(results, run, references)
     by_id = {reference["id"]: reference for reference in references}
@@ -806,10 +870,21 @@ def verify_benchmark_replay(root: Path, repo_root: Path) -> None:
             reference = by_id[row["reference"]]
             if row["source_sha256"] != reference["source_sha256"]:
                 raise ValueError("Archived cell source differs from its reference.")
-            prompt, images = extraction_request(root / "inputs", reference["source_sha256"], row["track"],
-                                                native_schema=row["harness"] == "openai-api")
-            if row["harness"] == "openai-api" and row["api_request"] != api_request(prompt, SOURCE_FACTS_SCHEMA):
-                raise ValueError("Archived API request differs from the frozen configuration.")
+            if row["harness"] == "openai-api":
+                request = prepared_source_request(root / "inputs", reference["source_sha256"])
+                if row["api_request"] != request:
+                    raise ValueError("Archived API request differs from the frozen configuration.")
+                prompt = json.dumps(request, sort_keys=True)
+                source = inspect_pdf_source((root / "inputs" / reference["source_sha256"][:12] / "source.pdf").read_bytes())
+                pages = visual_page_numbers(source)
+                images = tuple(root / "inputs" / reference["source_sha256"][:12] / f"page-{number}.png" for number in sorted(pages))
+                if row["payload"] is not None and (
+                    row["source_coverage"] != source_coverage(source, row["payload"], visual_pages=pages) or
+                    row["source_window"] != source_window_coverage(source, row["payload"])
+                ):
+                    raise ValueError("Archived source coverage does not reproduce")
+            else:
+                prompt, images = extraction_request(root / "inputs", reference["source_sha256"], row["track"])
             if (hashlib.sha256(prompt.encode()).hexdigest() != row["request_sha256"] or
                     [hashlib.sha256(path.read_bytes()).hexdigest() for path in images] != row["image_sha256"]):
                 raise ValueError("Archived cell request differs from the frozen inputs.")
@@ -828,9 +903,24 @@ def verify_benchmark_replay(root: Path, repo_root: Path) -> None:
         if parsed != readiness["parsed"] or parsed["payload"] != CHECK_PAYLOAD or parsed["resolved_model"] != API_MODEL:
             raise ValueError("Archived API readiness response changed.")
         reserved = api_reservation_microusd(readiness_request) + sum(api_reservation_microusd(row["api_request"]) for row in results)
-        if (run["api_budget"]["pricing"] != API_PRICING or reserved != run["api_budget"]["reserved_microusd"] or
-                not reserved <= run["api_budget"]["limit_usd"] * 1_000_000 <= 10_000_000):
+        ledger = json.loads((root / "budget.json").read_text())
+        if (run["api_budget"]["pricing"] != API_PRICING or reserved != run["api_budget"]["maximum_matrix_microusd"] or
+                ledger["limit_microusd"] != math.floor(run["api_budget"]["limit_usd"] * 1_000_000) or
+                not 0 < ledger["limit_microusd"] <= 10_000_000 or ledger.get("blocked")):
             raise ValueError("Archived API budget differs from its frozen reservation.")
+        calls = [readiness, *results]
+        if [item["id"] for item in ledger["requests"]] != [row["reservation_id"] for row in calls]:
+            raise ValueError("API budget ledger differs from the recorded calls")
+        charged_so_far = 0
+        for item, row in zip(ledger["requests"], calls):
+            usage = (row.get("api_response") or {}).get("usage") or {}
+            counts = (usage.get("input_tokens"), usage.get("output_tokens"))
+            charged = counts[0] * 5 + counts[1] * 30 if all(type(count) is int and count >= 0 for count in counts) else row["reserved_microusd"]
+            if item["reserved_microusd"] != row["reserved_microusd"] or item["charged_microusd"] != charged:
+                raise ValueError("API budget charge does not reproduce from usage")
+            if charged_so_far + item["reserved_microusd"] > ledger["limit_microusd"]:
+                raise ValueError("An API request exceeded the remaining budget")
+            charged_so_far += charged
     if benchmark_report(results) != (root / "report.md").read_text():
         raise ValueError("Replayed strict report differs from the archived report.")
     expected = {name: (root / name).read_bytes() for name in ("diagnostics.json", "diagnostics.md")}
