@@ -94,6 +94,8 @@ class ClassifiedDocument:
     window_start: date | None = None
     window_end: date | None = None
     window_source: WindowSource | None = None
+    pool_identity: str | None = None
+    pdf_sha256: str | None = None
 
 
 @dataclass(frozen=True)
@@ -182,6 +184,7 @@ def classify_pdf(
         source=source,
         grid_confirmed=grid_confirmed,
         page_text=page_text,
+        pdf_bytes=pdf_bytes,
     )
 
 
@@ -231,6 +234,19 @@ def choose_roll(
             extra_candidates=extra,
             blocking=blocking,
         )
+
+    if entry.slug == "north-beach-pool" and table_splits:
+        pair = sorted(table_splits, key=lambda item: item.pool_identity or "")
+        valid = (len(pair) == 2 and {item.pool_identity for item in pair} == {"cool", "warm"}
+                 and len({item.link.view_id for item in pair}) == 2
+                 and all(item.grid_confirmed and item.window_source == "page-1" for item in pair)
+                 and pair[0].window_start is not None and pair[0].window_end is not None
+                 and (pair[0].window_start, pair[0].window_end) == (pair[1].window_start, pair[1].window_end)
+                 and pair[0].window_end >= pacific_today()
+                 and not table_grids and not table_notices)
+        if valid:
+            return decide("adopt", "north_beach_pair", kind="split_part", blocking=False)
+        return decide("flag", "incomplete_or_conflicting_pair", kind="split_part", blocking=True)
 
     if entry.source_status != "published":
         reason = "split_part" if table_splits else "unpublished"
@@ -561,7 +577,8 @@ def discover_all(
         current_ids = {
             view_id
             for entry in selected
-            if (view_id := view_id_from_url(entry.pdf_url)) is not None
+            for url in ([source.url for source in entry.pool_sources] or [entry.pdf_url])
+            if (view_id := view_id_from_url(url)) is not None
         }
         if adopt is not None and adopt[0] in selected_slugs:
             current_ids.add(adopt[1])
@@ -919,7 +936,8 @@ def _max_pdf_view_id(entries: list[PoolEntry]) -> int | None:
     ids = [
         view_id
         for entry in entries
-        if (view_id := view_id_from_url(entry.pdf_url)) is not None
+        for url in ([source.url for source in entry.pool_sources] or [entry.pdf_url])
+        if (view_id := view_id_from_url(url)) is not None
     ]
     return max(ids) if ids else None
 
@@ -1111,7 +1129,16 @@ def _pool_block_span(text: str, slug: str) -> tuple[int, int]:
 
 def _apply_decision_to_block(block: str, decision: DiscoverDecision) -> str:
     updated = block
+    if decision.reason == "north_beach_pair" and not decision.blocking:
+        sources = sorted((item for item in decision.candidates if item.kind == "split_part" and item.source == "table"), key=lambda item: item.pool_identity)
+        assignment = "pool_sources = [" + ", ".join(
+            '{ pool = "' + item.pool_identity + '", url = "' + item.link.href + '" }' for item in sources) + "]"
+        updated = re.sub(r"^(?:pdf_url|pool_sources)\s*=[^\n]*\n", "", updated, flags=re.MULTILINE)
+        updated = re.sub(r'^(slug\s*=.*)$', lambda match: match[0] + "\n" + assignment, updated, count=1, flags=re.MULTILINE)
+        updated = _ensure_source_status(updated, "published", insert=True)
     if decision.action == "adopt" and decision.new_url:
+        if decision.kind == "session_grid" and re.search(r"^pool_sources\s*=", updated, re.MULTILINE):
+            updated = re.sub(r"^pool_sources\s*=[^\n]*", lambda _: f'pdf_url = "{decision.new_url}"', updated, flags=re.MULTILINE)
         updated = _replace_quoted_field(updated, "pdf_url", decision.new_url)
         if decision.kind == "session_grid":
             updated = _ensure_source_status(updated, "published", insert=False)
@@ -1392,6 +1419,7 @@ def _classified_with_window(
     source: CandidateSource,
     page_text: str = "",
     grid_confirmed: bool | None = None,
+    pdf_bytes: bytes | None = None,
 ) -> ClassifiedDocument:
     window = parse_window_with_source(
         page_text=page_text,
@@ -1399,7 +1427,11 @@ def _classified_with_window(
         filename=filename,
         year_default=pacific_today().year,
     )
+    import hashlib
+    from .signals import north_beach_pool_identity
     return ClassifiedDocument(
+        pool_identity=north_beach_pool_identity(page_text),
+        pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest() if pdf_bytes else None,
         link=link,
         kind=kind,
         filename=filename,
@@ -1447,6 +1479,10 @@ def _classified_to_json(item: ClassifiedDocument) -> dict:
         "source": item.source,
         "window_start": _iso_or_none(item.window_start),
         "window_end": _iso_or_none(item.window_end),
+        "pool_identity": item.pool_identity,
+        "pdf_sha256": item.pdf_sha256,
+        "window_source": item.window_source,
+        "grid_confirmed": item.grid_confirmed,
     }
 
 

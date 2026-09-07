@@ -92,6 +92,12 @@ class Violation:
 
 
 @dataclass(frozen=True)
+class PoolSource:
+    pool: Literal["cool", "warm"]
+    url: str
+
+
+@dataclass(frozen=True)
 class PoolEntry:
     slug: str
     pdf_url: str
@@ -99,6 +105,7 @@ class PoolEntry:
     source_status: SourceStatus = "published"
     source_kind: SourceKind = "sfrecpark_pdf"
     notes: str | None = None
+    pool_sources: tuple[PoolSource, ...] = ()
 
 
 @dataclass(frozen=True)

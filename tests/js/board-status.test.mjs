@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 
 import {
   computeStatus,
+  sessionsForDate,
   computeAccessStatus,
   computeAccessWindowAvailability,
   computeDetailStatus,
@@ -981,4 +982,30 @@ test("queued reopening schedule handles Sava repair closure through June 8", () 
   const reopened = computeStatus(schedule, new Date("2026-06-09T07:00:00"));
   assert.equal(reopened.status, "OPEN");
   assert.equal(reopened.next, "Closes 10:30");
+});
+
+
+test("paired pools preserve simultaneous sessions, exclusion dates, and closure scope", () => {
+  const schedule = {
+    effective_start: "2026-09-01", effective_end: "2026-12-12",
+    sessions: [
+      { day: "thursday", type: "lap_swim", start: "11:00", end: "14:00", physical_pool: "cool", excluded_dates: ["2026-09-24"] },
+      { day: "thursday", type: "lap_swim", start: "11:15", end: "14:00", physical_pool: "warm", excluded_dates: ["2026-09-24"] },
+      { day: "thursday", type: "lap_swim", start: "14:15", end: "15:15", physical_pool: "cool" },
+      { day: "thursday", type: "lap_swim", start: "14:15", end: "15:15", physical_pool: "warm" },
+    ],
+    closures: [{ start: "2026-09-24", end: "2026-09-24", start_time: "12:00", end_time: "14:00", reason: "Training" }],
+  };
+  assert.equal(computeStatus(schedule, new Date("2026-09-24T11:30:00")).status, "CLOSED");
+  assert.equal(computeDetailStatus(schedule, new Date("2026-09-24T11:30:00")).kind, "CLOSED_HOURS");
+  assert.equal(computeStatus(schedule, new Date("2026-09-24T12:30:00")).status, "CLOSED");
+  assert.equal(sessionsForDate(schedule, new Date("2026-09-24T14:30:00")).length, 2);
+  const partial = { ...schedule, closures: [{ start: "2026-09-24", end: "2026-09-24", physical_pool: "cool", reason: "Cool closed" }] };
+  assert.equal(computeStatus(partial, new Date("2026-09-24T14:30:00")).status, "OPEN");
+  assert.equal(computeDetailStatus(partial, new Date("2026-09-24T14:30:00")).kind, "OPEN");
+  assert.deepEqual(sessionsForDate(partial, new Date("2026-09-24T14:30:00")).map((session) => session.physical_pool), ["warm"]);
+  assert.equal(computeStatus(partial, new Date("2026-12-13T14:30:00")).status, "CHECK");
+  assert.equal(computeStatus(partial, new Date("2026-08-31T14:30:00")).status, "CHECK");
+  const horizon = { kind: "window", date: "2026-09-24", day: "thursday", start: 14 * 60, end: 16 * 60 };
+  assert.equal(computeWindowAvailability(partial, horizon).status, "AVAILABLE");
 });

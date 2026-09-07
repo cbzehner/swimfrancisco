@@ -33,7 +33,8 @@ EXTRACTION_SCHEMA = load_extraction_schema()
 def source_facts_schema() -> dict:
     schema = copy.deepcopy(EXTRACTION_SCHEMA)
     session = schema["properties"]["sessions"]["items"]
-    del session["properties"]["pool"]
+    for field in ("pool", "physical_pool", "source_sha256", "source_cell"):
+        del session["properties"][field]
     session["properties"]["pool_label_raw"] = {
         "type": ["string", "null"], "minLength": 1,
         "description": "Verbatim complete pool allocation printed for this session, including qualifiers and combined lane/section labels. Do not simplify, lowercase, expand codes, or remove words. Null if no label or only a numeric lane count.",

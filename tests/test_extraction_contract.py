@@ -313,7 +313,7 @@ def test_unresolved_closure_scope_stops_before_spend(tmp_path, monkeypatch):
     with pytest.raises(openai_provider.ClosureReviewRequired, match="Unresolved source closures") as held:
         openai_provider.extract(pdf.read_bytes(), PROMPT_PATH.read_text(), EXTRACTION_SCHEMA)
     assert held.value.issues
-    assert all(set(notice) == {"id", "text", "facility"} for notice in held.value.notices)
+    assert all({"id", "text", "facility"}.issubset(notice) for notice in held.value.notices)
     assert not (tmp_path / "budget.json").exists()
 
 
@@ -377,7 +377,7 @@ def test_production_maps_raw_labels_and_preserves_failed_coverage(tmp_path, monk
     monkeypatch.setattr(openai_provider, "inspect_pdf_source", lambda _: source)
     facts = {"effective_start": "2026-08-11", "effective_end": "2026-08-29", "schedule_basis": "swim_schedule",
              "sessions": [{"day": "monday", "type": "family_swim", "start": "15:30", "end": "17:30",
-                           "pool_label_raw": "Wrong Pool", "evidence": cell.text, "notes": None}],
+                           "pool_label_raw": "Wrong Pool", "evidence": cell.text, "notes": None, "excluded_dates": None}],
              "closures": [], "access_hours": None, "access_exceptions": None}
 
     def call(request, *args):
@@ -395,3 +395,97 @@ def test_production_maps_raw_labels_and_preserves_failed_coverage(tmp_path, monk
     assert not result.details["source_coverage"]["ok"]
     assert result.details["source_window"]["ok"]
     assert result.details["final_response"] == json.dumps(facts)
+
+
+
+def test_north_beach_originals_pass_independent_coverage(north_beach_pair):
+    entry, components = north_beach_pair
+    for component, count in zip(components, (15, 20), strict=True):
+        artifact = component["artifact"]
+        assert len(artifact["payload"]["sessions"]) == count
+        assert openai_provider.verify_artifact(artifact, component["document"], PROMPT_PATH.read_text())["ok"]
+
+
+@pytest.mark.parametrize("member", [0, 1])
+@pytest.mark.parametrize("damage", ["omission", "duplicate", "exclusion", "window", "closure", "configuration"])
+def test_north_beach_each_original_rejects_bad_model_output(north_beach_pair, member, damage):
+    import copy
+    from schedules.schema import pool_label_payload
+    _, components = north_beach_pair
+    component = components[member]
+    artifact = copy.deepcopy(component["artifact"])
+    facts = artifact["details"]["source_facts"]
+    if damage == "omission":
+        facts["sessions"].pop()
+    elif damage == "duplicate":
+        facts["sessions"].append(facts["sessions"][0])
+    elif damage == "exclusion":
+        next(row for row in facts["sessions"] if row.get("excluded_dates"))["excluded_dates"] = []
+    elif damage == "window":
+        facts["effective_end"] = "2026-12-13"
+    elif damage == "closure":
+        facts["closures"].pop()
+    else:
+        artifact["details"]["configuration"]["reasoning"] = "low"
+    artifact["payload"] = pool_label_payload(facts)
+    if damage == "configuration":
+        with pytest.raises(ValueError, match="stale"):
+            openai_provider.verify_artifact(artifact, component["document"], PROMPT_PATH.read_text())
+    else:
+        assert not openai_provider.verify_artifact(artifact, component["document"], PROMPT_PATH.read_text())["ok"]
+
+
+
+def test_paired_pool_closure_never_becomes_facility_wide(north_beach_pair):
+    from dataclasses import replace
+    from schedules.signals import inspect_pdf_source, SourceNotice
+    from schedules.grounding import source_closure_coverage
+    _, components = north_beach_pair
+    source = inspect_pdf_source(components[1]["document"])
+    source = replace(source, notices=(SourceNotice("p1-notice", "Warm Pool will be CLOSED on September 24 from 12pm-2pm", True, physical_pool="warm"),))
+    closure = {"start": "2026-09-24", "end": "2026-09-24", "start_time": "12:00", "end_time": "14:00", "reason": "Training"}
+    assert not source_closure_coverage(source, {"closures": [closure]})["ok"]
+    assert source_closure_coverage(source, {"closures": [closure | {"physical_pool": "warm"}]})["ok"]
+    assert not source_closure_coverage(source, {"closures": [closure | {"physical_pool": "cool"}]})["ok"]
+
+
+def test_session_exclusions_resolve_year_rollover_without_guessing(monkeypatch):
+    from datetime import date
+    from schedules import grounding
+    from schedules.signals import SourceNotice
+    cell = SourceCell("p1-c1-b1", 1, "thursday", "Lap Swim 11am-2pm (CLOSED 12/31 & 1/7)", (0, 0, 100, 100))
+    source = PdfSource("North Beach Pool", (cell,), (), 1, (SourceNotice("p1-exclusion", cell.text, False, session_cell=cell.id),))
+    monkeypatch.setattr(grounding, "source_window", lambda _: (date(2026, 12, 1), date(2027, 1, 31)))
+    assert grounding.source_excluded_dates(source) == {cell.id: ["2026-12-31", "2027-01-07"]}
+    monkeypatch.setattr(grounding, "source_window", lambda _: (date(2026, 12, 1), date(2028, 1, 31)))
+    with pytest.raises(ValueError, match="ambiguous_exclusion_date"):
+        grounding.source_excluded_dates(source)
+
+
+
+@pytest.mark.parametrize("member", [0, 1])
+def test_paired_original_uses_production_request_with_mocked_model_response(tmp_path, north_beach_pair, monkeypatch, member):
+    from schedules.schema import SOURCE_FACTS_SCHEMA
+    _, components = north_beach_pair
+    component = components[member]
+    monkeypatch.setenv("OPENAI_API_KEY", "unit-test-not-a-key")
+    monkeypatch.setenv("SCHEDULES_API_BUDGET_FILE", str(tmp_path / "budget.json"))
+    monkeypatch.setenv("SCHEDULES_API_BUDGET_USD", "1")
+    def transport(value, schema):
+        if isinstance(value, dict):
+            return {key: transport(value.get(key), child) for key, child in schema["properties"].items()}
+        if isinstance(value, list):
+            return [transport(item, schema["items"]) for item in value]
+        return value
+    response = transport(component["artifact"]["details"]["source_facts"], SOURCE_FACTS_SCHEMA)
+    def call(request, *args):
+        assert request["model"] == "gpt-5.5-2026-04-23"
+        assert request["reasoning"] == {"effort": "medium"}
+        assert "uniqueItems" not in json.dumps(request["text"]["format"]["schema"])
+        assert "whole-session cancellations" in request["input"]
+        return _usage_result(status="completed", output=[{"type": "message", "status": "completed", "role": "assistant",
+                "content": [{"type": "output_text", "text": json.dumps(response)}]}]) | {"http_status": 200, "timed_out": False}
+    monkeypatch.setattr(openai_provider, "call_api", call)
+    result = openai_provider.extract(component["document"], PROMPT_PATH.read_text().strip(), EXTRACTION_SCHEMA)
+    assert result.payload == component["artifact"]["payload"]
+    assert result.details["source_coverage"]["ok"] and result.details["source_closures"]["ok"]

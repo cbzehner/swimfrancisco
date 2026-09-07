@@ -207,6 +207,28 @@ for (const engine of ["webkit", "chromium"]) {
     }
   });
 
+  test(`[${engine}] paired Today rows preserve pool identity and exclusions in Pacific time`, async (t) => {
+    const schedule = {
+      effective_start: "2026-09-01", effective_end: "2026-12-12",
+      sessions: [
+        { day: "thursday", type: "lap_swim", start: "11:00", end: "14:00", physical_pool: "cool", excluded_dates: ["2026-09-24"] },
+        { day: "thursday", type: "lap_swim", start: "11:15", end: "14:00", physical_pool: "warm", excluded_dates: ["2026-09-24"] },
+        ...["cool", "warm"].map((physical_pool) => ({ day: "thursday", type: "lap_swim", start: "14:15", end: "15:15", physical_pool })),
+      ], closures: [],
+    };
+    const page = await fixturePage(t, engine, `
+      <div class="detail-root" data-schedule='${JSON.stringify(schedule)}'>
+        <span data-field="status"></span><span data-field="next"></span>
+        <section class="today-block"><ul class="today-block-list"></ul></section>
+      </div><script type="module" src="/js/detail.js"></script>`, { timezoneId: "Asia/Tokyo" });
+    await page.goto(`${baseURL}/fixture`);
+    await page.waitForFunction(() => document.querySelectorAll(".today-block-list li").length === 2);
+    assert.deepEqual(await page.locator(".today-block-list li").evaluateAll((rows) => rows.map((row) => [row.dataset.pool, row.dataset.start])), [["cool", "14:15"], ["warm", "14:15"]]);
+    assert.doesNotMatch(await page.locator('[data-field="status"]').textContent(), /OPEN/);
+    await page.clock.fastForward(3 * 60 * 60_000);
+    assert.match(await page.locator('[data-field="status"]').textContent(), /OPEN/);
+  });
+
   test(`[${engine}] detail restores today's sessions after a partial closure`, async (t) => {
     const schedule = {
       sessions: [{ day: "thursday", type: "lap_swim", start: "11:00", end: "15:00" }],

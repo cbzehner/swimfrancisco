@@ -212,8 +212,11 @@ def publish_eligible(
         if not unique.ok:
             return unique
 
-    if candidate.pdf_sha256 in quarantined_shas:
-        return _refuse("quarantined", f"pdf_sha256 {candidate.pdf_sha256} is quarantined")
+    artifact = json.loads(_pick_provider_artifact(candidate.review_dir).read_text())
+    if any(item["sha256"] in quarantined_shas for item in artifact.get("source_bundle", [])):
+        return _refuse("quarantined", "A pool component is quarantined")
+    if candidate.source_identity in quarantined_shas:
+        return _refuse("quarantined", f"pdf_sha256 {candidate.source_identity} is quarantined")
 
     if not has_prior_schedule_window:
         return _refuse("no_merge_baseline", f"no [[extra.schedules]] window for {candidate.slug}")
@@ -228,7 +231,7 @@ def publish_eligible(
         first = result.violations[0]
         return _refuse(first.code if first.code else "validate_failed", first.message)
 
-    grid = _source_pdf_gate(source_pdf_path)
+    grid = _ok() if candidate.bundle_sha256 else _source_pdf_gate(source_pdf_path)
     if not grid.ok:
         return grid
 
@@ -239,7 +242,11 @@ def publish_eligible(
         if artifact.get("payload") != payload:
             return _refuse("source_coverage_failed", "Candidate differs from the extraction artifact")
         try:
-            coverage = verify_artifact(artifact, source_pdf_path.read_bytes(), PROMPT_PATH.read_text()) if source_pdf_path else None
+            if candidate.bundle_sha256:
+                from .artifacts import verify_pool_bundle
+                coverage = verify_pool_bundle(artifact, candidate.review_dir, PROMPT_PATH.read_text())
+            else:
+                coverage = verify_artifact(artifact, source_pdf_path.read_bytes(), PROMPT_PATH.read_text()) if source_pdf_path else None
         except Exception as error:  # Malformed PDF or artifact must hold this pool, not bypass the gate.
             return _refuse("source_coverage_failed", str(error))
         if not coverage or not coverage["ok"]:
@@ -269,6 +276,18 @@ def _unique_pin_gate(
     pin_url: str | None,
     source_pdf_url: str | None,
 ) -> Eligibility:
+    if candidate.bundle_sha256:
+        artifact = json.loads(_pick_provider_artifact(candidate.review_dir).read_text())
+        if not decision or decision.get("reason") != "north_beach_pair" or decision.get("blocking"):
+            return _refuse("paired_discovery_required", "A current complete official pair is required")
+        discovered = sorted((item.get("pool_identity"), item.get("href"), item.get("pdf_sha256"))
+                            for item in decision.get("candidates", []) if item.get("source") == "table" and item.get("kind") == "split_part")
+        members = sorted((item["pool"], item["url"], item["sha256"]) for item in artifact["source_bundle"])
+        if discovered != members:
+            return _refuse("paired_source_changed", "Bundle differs from the discovered original documents")
+        return _ok()
+    if decision and decision.get("reason") == "north_beach_pair":
+        return _refuse("paired_component", "A single component cannot publish a facility schedule")
     kept = kept_grid_ids(decision)
     if len(kept) >= 2:
         return _refuse(
@@ -287,17 +306,23 @@ def _unique_pin_gate(
 
 def _identity_gate(candidate: ReviewCandidate) -> Eligibility:
     parsed = parse_review_dir_name(candidate.review_dir.name)
-    if parsed is None or parsed[1] != candidate.pdf_sha256[:12]:
+    if parsed is None or parsed[1] != candidate.source_identity[:12]:
         return _refuse(
             "identity_mismatch",
-            f"review dir {candidate.review_dir.name} does not match sha {candidate.pdf_sha256[:12]}",
+            f"review dir {candidate.review_dir.name} does not match sha {candidate.source_identity[:12]}",
         )
     try:
         artifact = json.loads(_pick_provider_artifact(candidate.review_dir).read_text())
     except (OSError, json.JSONDecodeError, FileNotFoundError):
         return _refuse("identity_mismatch", "no provider JSON in review dir")
-    provider_sha = artifact.get("pdf_sha256")
-    if provider_sha != candidate.pdf_sha256:
+    if candidate.bundle_sha256:
+        try:
+            from .envelope import validate_envelope
+            validate_envelope(draft_envelope(candidate=candidate))
+        except Exception as error:
+            return _refuse("identity_mismatch", str(error))
+    provider_sha = artifact.get("bundle_sha256", artifact.get("pdf_sha256"))
+    if provider_sha != candidate.source_identity:
         return _refuse(
             "identity_mismatch",
             "provider pdf_sha256 does not match candidate",
@@ -335,6 +360,8 @@ def publish_candidate(
         candidate=candidate, today=attested_at, attested_by="ci"
     )
     target = candidate.review_dir / "reviewed.json"
+    md_path = content_spots_dir / f"{candidate.slug}.md"
+    backup = md_path.read_bytes()
     target.write_text(json.dumps(envelope, indent=2) + "\n")
     try:
         finalize_draft(
@@ -342,6 +369,7 @@ def publish_candidate(
             content_spots_dir=content_spots_dir,
         )
     except Exception:
+        md_path.write_bytes(backup)
         target.unlink(missing_ok=True)
         raise
     return target
@@ -483,8 +511,19 @@ def publish_pending_all(
     quarantined_shas = load_quarantine()
     entries = {entry.slug: entry for entry in load_registry()}
     candidates = find_review_candidates(data_root=data_root)
+    extraction_report = tmp_dir / "extraction-report-openai.json"
+    try:
+        ready_bundles = json.loads(extraction_report.read_text()).get("pool_bundles", {})
+    except (OSError, ValueError, AttributeError):
+        ready_bundles = {}
+    for entry in entries.values():
+        if entry.pool_sources and entry.source_status == "published" and entry.slug not in ready_bundles:
+            refused.append({"slug": entry.slug, "code": "paired_extraction_incomplete", "message": "Both components must pass in this extraction sitting"})
 
     for candidate in candidates:
+        entry = entries.get(candidate.slug)
+        if entry and entry.pool_sources and (not candidate.bundle_sha256 or ready_bundles.get(entry.slug) != candidate.bundle_sha256):
+            continue
         if candidate.slug in sequential_slugs:
             continue
         try:
@@ -589,6 +628,17 @@ def _publish_unique_grid(
         raise PublishRefuse("not_rec_park", f"{candidate.slug} is not in the registry")
 
     decision = decisions.get(candidate.slug)
+    if entry.pool_sources and not candidate.bundle_sha256:
+        raise PublishRefuse("paired_component", "A single component cannot publish")
+    if candidate.bundle_sha256:
+        identity = _identity_gate(candidate)
+        if not identity.ok:
+            raise PublishRefuse(identity.code or "identity_mismatch", identity.message)
+        artifact = json.loads(_pick_provider_artifact(candidate.review_dir).read_text())
+        if [(item.pool, item.url) for item in entry.pool_sources] != [(item["pool"], item["url"]) for item in artifact["source_bundle"]]:
+            raise PublishRefuse("paired_registry_mismatch", "Bundle does not match the registry pair")
+        if not payload_window_current(artifact["payload"], attested_at):
+            raise PublishRefuse("expired_pair", "The pair has expired; retain CHECK without extending hours")
     source_pdf_url = candidate.source_url or None
     payload = dict(candidate.payload)
     md_path = content_spots_dir / f"{candidate.slug}.md"
@@ -690,7 +740,7 @@ def publish_sequential_slug(
     payload_ranges: list[tuple[date, date]] = []
     for candidate in ordered:
         if envelopes is not None:
-            posted = envelopes.get(candidate.pdf_sha256[:12])
+            posted = envelopes.get(candidate.source_identity[:12])
             payload = (
                 posted.get("payload")
                 if isinstance(posted, dict) and isinstance(posted.get("payload"), dict)
@@ -752,7 +802,7 @@ def publish_sequential_slug(
     try:
         for candidate, payload, eligibility in prepared:
             if envelopes is not None:
-                sha12 = candidate.pdf_sha256[:12]
+                sha12 = candidate.source_identity[:12]
                 envelope = envelopes.get(sha12)
                 if envelope is None:
                     raise PublishRefuse(
@@ -802,7 +852,7 @@ def _write_posted_envelope(
     target = candidate.review_dir / "reviewed.json"
     payload = dict(envelope)
     payload["slug"] = candidate.slug
-    payload["pdf_sha256"] = candidate.pdf_sha256
+    payload["pdf_sha256"] = candidate.source_identity
     payload["reviewed_at"] = attested_at.isoformat()
     payload["attested_by"] = attested_by
     target.write_text(json.dumps(payload, indent=2) + "\n")
@@ -976,3 +1026,8 @@ def _write_reports(
         lines.append("- none")
     lines.append("")
     report_path.write_text("\n".join(lines))
+
+
+def payload_window_current(payload: dict, today: date) -> bool:
+    window = _payload_window(payload)
+    return window is not None and window[1] >= today

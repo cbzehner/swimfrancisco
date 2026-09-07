@@ -21,7 +21,7 @@ import httpx
 import jsonschema
 import pdfplumber
 
-from ..grounding import source_closure_coverage, source_coverage, source_publication_coverage, source_slots, source_window_coverage
+from ..grounding import source_excluded_dates, source_closure_coverage, source_coverage, source_publication_coverage, source_slots, source_window_coverage
 from ..models import ProviderResult
 from ..schema import SOURCE_FACTS_SCHEMA, pool_label_payload
 from ..signals import MAX_PAGE_POINTS, MAX_PDF_BYTES, MAX_PDF_PAGES, PdfSource, inspect_pdf_source
@@ -40,7 +40,7 @@ API_PRICING = {
 
 def api_transport_schema(schema: dict) -> dict:
     """Require nullable optional fields; enforce dependentRequired after mapping."""
-    result = {key: value for key, value in schema.items() if key != "dependentRequired"}
+    result = {key: value for key, value in schema.items() if key not in {"dependentRequired", "uniqueItems"}}
     if "enum" in result and "type" not in result:
         if not all(isinstance(value, str) for value in result["enum"]):
             raise ValueError("API schema only supports string enums without explicit types.")
@@ -353,10 +353,10 @@ def extraction_configuration(prompt: str) -> dict:
     package = Path(__file__).resolve().parents[1]
     return {
         "model": API_MODEL, "reasoning": "medium", "max_output_tokens": API_MAX_OUTPUT_TOKENS,
-        "prompt_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
+        "prompt_sha256": hashlib.sha256(prompt.strip().encode()).hexdigest(),
         "schema_sha256": hashlib.sha256(json.dumps(SOURCE_FACTS_SCHEMA, sort_keys=True).encode()).hexdigest(),
         "implementation_sha256": {name: hashlib.sha256((package / name).read_bytes()).hexdigest()
-                                  for name in ("signals.py", "grounding.py", "window_dates.py", "_time.py", "schema.py", "providers/openai_provider.py")},
+                                  for name in ("artifacts.py", "signals.py", "grounding.py", "window_dates.py", "_time.py", "schema.py", "providers/openai_provider.py")},
         "libraries": {name: version(name) for name in ("pdfplumber", "pdfminer-six", "pypdfium2", "pillow")},
         "render_dpi": 150, "image_detail": "original", "pricing": API_PRICING,
     }
@@ -393,7 +393,18 @@ def source_request(source: PdfSource, prompt: str, images: dict[int, bytes]) -> 
     if any(number < 1 or number > source.page_count for number in images):
         raise ValueError("Rendered page is outside the source document")
     source_slots(source)
+    source_excluded_dates(source)
     body = prompt + "\n\nPDF page text:\n" + source.text
+    from ..signals import north_beach_pool_identity
+    if north_beach_pool_identity(source.text):
+        body += ("\nThis is one physical pool document in a North Beach pair. "
+                 "The document title is the physical pool identity; do not insert it into pool_label_raw. "
+                 "Lap/Therapy in parentheses is an allocation, not a second lap_swim program beside Senior Swim. "
+                 "For a cell marked (CLOSED dates), preserve the weekly session and put those ISO dates in its excluded_dates. "
+                 "Do not replace these whole-session cancellations with the general training closure. "
+                 "Facility-wide notices still belong in closures, including the notice inside Saturday's column. "
+                 "An explicitly named Cool or Warm pool closure uses physical_pool; omit physical_pool for facility-wide notices. "
+                 "Retain each printed recurring and holiday closure even when their dates overlap.")
     body += "\n\nCoordinate-based source cells (not model output):\n" + json.dumps([
         {"id": cell.id, "page": cell.page, "day": cell.day, "text": cell.text} for cell in source.cells
     ], ensure_ascii=False)

@@ -61,6 +61,16 @@ def validate_envelope(envelope: dict) -> None:
 
     Raises EnvelopeValidationError with a human-readable message on failure.
     """
+    if "bundle_sha256" in envelope:
+        sources = envelope.get("source_bundle", [])
+        if not isinstance(sources, list) or len(sources) != 2 or [item.get("pool") for item in sources if isinstance(item, dict)] != ["cool", "warm"]:
+            raise EnvelopeValidationError("A bundle requires one Cool and one Warm source")
+        for session in envelope.get("payload", {}).get("sessions", []):
+            if not isinstance(session, dict):
+                raise EnvelopeValidationError("Invalid bundle session")
+            member = next((item for item in sources if item["pool"] == session.get("physical_pool")), None)
+            if member is None or session.get("source_sha256") != member.get("sha256") or not session.get("source_cell") or "pool_label_raw" not in session:
+                raise EnvelopeValidationError("Every bundle session requires its physical pool and original source evidence")
     try:
         jsonschema.validate(
             instance=envelope,
@@ -69,4 +79,5 @@ def validate_envelope(envelope: dict) -> None:
         )
     except jsonschema.ValidationError as exc:
         location = "/".join(str(part) for part in exc.absolute_path) or "<root>"
-        raise EnvelopeValidationError(f"{location}: {exc.message}") from exc
+        message = "; ".join(error.message for error in exc.context if error.validator == "required") or exc.message
+        raise EnvelopeValidationError(f"{location}: {message}") from exc

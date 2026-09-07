@@ -29,11 +29,31 @@ def replay_fixture_archive(tmp_path):
     files["reference-manifest.json"] = (REPO_ROOT / "tests/fixtures/schedule-benchmark.json").read_bytes()
     run["reference_manifest_sha256"] = hashlib.sha256(files["reference-manifest.json"]).hexdigest()
     run["implementation_sha256"] = implementation
+    from schedules.schema import EXTRACTION_SCHEMA
+    from schedules.benchmark import extraction_request
+    files["inputs/schema.json"] = json.dumps(EXTRACTION_SCHEMA, indent=2).encode()
+    frozen = json.loads(files["inputs/inputs.json"])
+    frozen["schema_sha256"] = hashlib.sha256(files["inputs/schema.json"]).hexdigest()
+    files["inputs/inputs.json"] = json.dumps(frozen).encode()
+    run["frozen"] = frozen
+    inputs = tmp_path / "synthetic-inputs"
+    for name, content in files.items():
+        if name.startswith("inputs/"):
+            path = inputs / name.removeprefix("inputs/")
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(content)
+    rows = json.loads(files["results.json"])
+    for row in rows:
+        if row["score"]["status"] != "blocked_auth":
+            prompt, _ = extraction_request(inputs, row["source_sha256"], row["track"])
+            row["request_sha256"] = hashlib.sha256(prompt.encode()).hexdigest()
+    files["results.json"] = json.dumps(rows, indent=2).encode()
     files["run.json"] = json.dumps(run).encode()
     metadata["implementation_sha256"] = implementation
     metadata["implementation_capture"] = "Synthetic test fixture for current code; not historical replay."
     metadata["files"]["run.json"] = hashlib.sha256(files["run.json"]).hexdigest()
     metadata["files"]["reference-manifest.json"] = run["reference_manifest_sha256"]
+    metadata["files"] = {name: hashlib.sha256(content).hexdigest() for name, content in files.items() if name != "archive.json"}
     files["archive.json"] = json.dumps(metadata).encode()
     path = tmp_path / "replay-fixture.zip"
     with zipfile.ZipFile(path, "x") as archive:
@@ -109,7 +129,7 @@ def test_pool_label_normalization_preserves_source_facts(label, normalized):
     assert facts == original
     assert "pool_label_raw" not in payload["sessions"][0]
     assert payload["sessions"][0].get("pool") == normalized
-    assert "pool_label_raw" not in EXTRACTION_SCHEMA["properties"]["sessions"]["items"]["properties"]
+    assert "pool_label_raw" in EXTRACTION_SCHEMA["properties"]["sessions"]["items"]["properties"]
 
 
 def test_source_facts_require_literal_label_and_reject_normalized_field():
@@ -799,7 +819,7 @@ def test_benchmark_archive_replays_offline_without_original_paths(tmp_path, monk
     assert "| astra | image |" in report.read_text()
     assert not list(output.rglob("stdout.log"))
     assert not (output / "data").exists()
-    with zipfile.ZipFile(BENCHMARK_ARCHIVE) as archive:
+    with zipfile.ZipFile(replay_fixture_archive) as archive:
         assert (output / "results.json").read_bytes() == archive.read("results.json")
         assert (output / "diagnostics.md").read_bytes() == archive.read("diagnostics.md")
 

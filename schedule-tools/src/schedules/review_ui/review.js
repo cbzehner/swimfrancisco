@@ -2,10 +2,10 @@ const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"
 const bases = ["swim_schedule", "pool_hours", "facility_hours", "amenity_only", "temporarily_closed", "unknown"];
 const types = ["lap_swim", "family_swim", "senior_swim"];
 const collections = {
-  sessions: { title: "Swim sessions", fields: [["day", "Day", "day"], ["type", "Classification", "type"], ["start", "Start", "time"], ["end", "End", "time"], ["pool", "Pool / zone", "text"], ["evidence", "Source evidence", "text", "wide"], ["notes", "Reviewer note", "text", "wide"]] },
+  sessions: { title: "Swim sessions", fields: [["day", "Day", "day"], ["type", "Classification", "type"], ["start", "Start", "time"], ["end", "End", "time"], ["physical_pool", "Physical pool", "text"], ["pool_label_raw", "Literal allocation", "text"], ["source_sha256", "Original source SHA-256", "text"], ["source_cell", "Source cell", "text"], ["pool", "Printed allocation", "text"], ["excluded_dates", "Excluded dates (comma separated)", "dates"], ["evidence", "Source evidence", "text", "wide"], ["notes", "Reviewer note", "text", "wide"]] },
   access_hours: { title: "Access hours", fields: [["day", "Day", "day"], ["start", "Start", "time"], ["end", "End", "time"], ["label", "Label", "text"], ["evidence", "Source evidence", "text", "wide"], ["notes", "Reviewer note", "text", "wide"]] },
   access_exceptions: { title: "Access exceptions", fields: [["date", "Date", "date"], ["start", "Start", "time"], ["end", "End", "time"], ["label", "Label", "text"], ["reason", "Reason", "text", "wide"], ["evidence", "Source evidence", "text", "wide"], ["notes", "Reviewer note", "text", "wide"]] },
-  closures: { title: "Closures", fields: [["start", "Start date", "date"], ["end", "End date", "date"], ["start_time", "Start time", "time"], ["end_time", "End time", "time"], ["reason", "Reason", "text", "wide"]] }
+  closures: { title: "Closures", fields: [["start", "Start date", "date"], ["end", "End date", "date"], ["start_time", "Start time", "time"], ["end_time", "End time", "time"], ["physical_pool", "Physical pool (empty means facility)", "text"], ["reason", "Reason", "text", "wide"]] }
 };
 const rowDefaults = {
   sessions: { day: "monday", type: "lap_swim", start: "09:00", end: "10:00" },
@@ -93,7 +93,7 @@ async function loadReview(item) {
   envelope = sequentialDrafts[itemKey(item)] || data.envelope;
   sourceKind = data.candidate.source_kind;
   sourceUrl = envelope.source_pdf_url;
-  sourceIdentity = `${slug}:${envelope.pdf_sha256}`;
+  sourceIdentity = `${slug}:${(envelope.bundle_sha256 || envelope.pdf_sha256)}`;
   verifiedSourceIdentity = null;
   $("#empty").hidden = true;
   $("#workspace").hidden = false;
@@ -262,11 +262,12 @@ function renderRow(collection, fields, row, index) {
       input.replaceChildren(...values.map(value => new Option(pretty(value), value, false, value === row[key])));
     } else {
       input = document.createElement("input");
-      input.type = kind;
+      input.type = kind === "dates" ? "text" : kind;
       input.value = row[key] || "";
     }
     input.addEventListener("input", () => {
-      if (input.value) row[key] = input.value;
+      if (input.value) row[key] = kind === "dates" ? input.value.split(",").map(value => value.trim()) : input.value;
+      else if (key === "pool_label_raw") row[key] = null;
       else delete row[key];
       $("#save-state").textContent = "Unsaved changes";
     });

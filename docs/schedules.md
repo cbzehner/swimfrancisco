@@ -150,8 +150,7 @@ Direct extractors stamp `payload.effective_start` with the fetch date, so
 that one clock-derived field is ignored in the comparison; for PDF pools
 the whole payload must match. A new Rec & Park unique-grid SHA, and a date-disjoint sequential
 sitting, is attested by `schedules publish-pending` (`attested_by: ci`)
-when the auto-publish gates pass. FLAG URL choice (Garfield band-only,
-North Beach Cool/Warm), sequential grounding repair, and a re-queued
+when the auto-publish gates pass. FLAG URL choice (Garfield band-only), sequential grounding repair, and a re-queued
 bad auto-publish still use `just schedules-review`.
 
 1. Run `just schedules-extract --direct` and, when needed, one or both PDF provider modes.
@@ -175,7 +174,7 @@ bad auto-publish still use `just schedules-review`.
 A new unique Rec & Park session-grid PDF auto-publishes when
 `publish-pending` gates pass. Date-disjoint sequential windows
 (Sava, MLK, Balboa) ingest in the same CI sitting. Identical payloads
-still carry the prior attestation. FLAG URL choice (Cool/Warm splits,
+still carry the prior attestation. FLAG URL choice (unsupported splits,
 band-only grids) stays operator work. Do not `--adopt` one sequential
 window; that is the 10-day trap.
 
@@ -200,8 +199,8 @@ per collapsed window. Discover never writes `content/spots/`.
 `publish-pending` writes eligible unique grids, sequential sittings, and
 unique table closure flyers. The live site updates when that PR merges.
 
-Happy path is cron. `--adopt` remains Garfield band-only URL confirmation
-and North Beach split confirmation. Unique-grid and sequential payload
+Happy path is cron. `--adopt` remains Garfield band-only URL confirmation.
+North Beach uses complete-pair discovery. Unique-grid and sequential payload
 change does not:
 
 - **Unique table `session_grid`.** CI auto-publishes after extract when
@@ -214,12 +213,12 @@ change does not:
   table-linked current file. Sibling IDs persist across `--adopt` and
   `max_id` jumps. Do **not** `--adopt` Fall 1 then extract that pointer
   locally. That ships one window and is the 10-day trap.
-- **Split PDFs** (North Beach Cool + Warm only). Discover flags and sets
-  `missing_current_schedule`. Do not pick a part. Extract stays skipped.
-  Discover never auto-promotes `missing_current_schedule` to `published`.
-  Only an operator `--adopt` of a classified `session_grid` (a later
-  combined whole-pool PDF) publishes. `--adopt` of a `split_part` writes
-  `pdf_url` but does not publish.
+- **North Beach Cool/Warm pair.** Discover requires exactly one table-linked
+  original for each physical pool, matching printed effective windows and
+  weekday grids. It stores `pool_sources` instead of `pdf_url`. Missing,
+  duplicate, conflicting, expired, or unsupported pairs remain blocked.
+  Other split formats remain unsupported. A single part cannot be adopted
+  as a complete facility schedule.
 - **Band-only grid** (Garfield flyer + unlinked fall grid 29799).
   Discover never puts a flyer on `pdf_url`. CI `publish-pending`
   projects a unique table `closure_notice` as `temporarily_closed`. A
@@ -247,9 +246,93 @@ or `--adopt`.
 
 Leave `official_page_url` pointed at the facility page.
 
+## North Beach paired original PDFs
+
+North Beach's supported pair contains one Cool and one Warm PDF, each linked
+from the official facility page. Printed titles establish physical identity;
+printed windows must match exactly. Discovery alone does not approve hours.
+Each original independently passes the production extraction, schema, source-cell
+completeness, dates, and closure checks. The fixed model remains
+`gpt-5.5-2026-04-23`, medium reasoning.
+
+Original captures retain `source.pdf`, `source.sha256`, and the configured OpenAI
+artifact under their own full-byte identity. A separate capture contains
+`source-bundle.json`, `openai-pool-bundle.json`, and, only after acceptance,
+`reviewed.json`. Its `bundle_sha256` covers the ordered physical identities,
+original URLs, full byte hashes, and full extraction configurations. Capture
+paths locate evidence but do not change identity. Bundle envelopes use
+`bundle_sha256` and `source_bundle`; single-document envelopes retain their
+actual `pdf_sha256` and `source_pdf_url`. The bundle is never presented as a PDF.
+
+The publisher reopens and verifies both originals and compares the bundle with
+fresh discovery and registry membership. It writes one combined dated schedule
+and one attestation, or restores both on failure. Component captures cannot
+publish individually or carry forward a facility attestation. Review shows both
+original PDFs beside one combined candidate and checks both current sources
+before saving. Unresolved closure notices remain on the draft review-PR path.
+
+Sessions retain `physical_pool` separately from the literal `pool_label_raw`
+and normalized cell allocation `pool`, plus `source_sha256` and `source_cell`.
+Thus identical times in Cool and Warm remain distinct. An explicit cell
+cancellation supplies `excluded_dates` for that session; it does not broaden a
+facility closure. Pool-specific closures affect only matching physical pools.
+The board and Today list apply exclusions and partial closures in Pacific time;
+weekly rows show the physical pool and excluded dates. Expired windows show CHECK.
+
+Unchanged originals with matching configurations reuse their extraction without
+model calls. One changed member reuses the other; the bundle is rebuilt and
+reverified. A changed prompt, schema, implementation, model configuration, or
+rendering dependency invalidates the relevant cache. The prompt is trimmed
+consistently when computing extraction configuration in both extraction and
+publication. Exclusion-date uniqueness is enforced locally; the API transport
+uses the [documented Structured Outputs subset](https://developers.openai.com/api/docs/guides/structured-outputs).
+No benchmark answer is read by production verification.
+
+### Paired-PDF validation evidence
+
+The frozen fall originals are committed under `data/north-beach-pool/`:
+
+- Cool, View 29953: `6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c`.
+- Warm, View 29954: `ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8`.
+
+Both one-page PDFs print September 1–December 12, 2026. Full-page Poppler
+renders were visually checked. Separate deterministic test transcriptions
+contain 15 Cool and 20 Warm allowed drop-in sessions. These are development
+references, not attestations. Both documents cancel their respective Thursday
+late-morning sessions on September 24 and October 22, in addition to the stated
+facility-wide training window. Maintenance is October 13–31; holidays are
+November 11 and November 26–27; December 12 training is 09:00–12:00.
+
+Regression tests use mocked model results and the frozen original bytes. They
+exercise independent omissions, identity/configuration changes, duplicate
+sessions, simultaneous physical pools, exclusions, closures, cache reuse,
+atomic publication failures, and date boundaries. Local `just check` passed:
+1,073 Python tests (55 skipped), 194 JavaScript tests, 31 browser tests across
+WebKit and Chromium, Worker type checking, localization checks, and the site
+build. The final publication/cache/review-refresh checks passed all 96 tests.
+These tests made zero model calls and spent $0.
+
+Hosted validation and spend receipts remain pending. GitHub CLI has no usable
+API authentication in this checkout's environment, so the automation pause and
+accounted hosted dispatch have not run. No new deployment is claimed. Remote
+main and live build metadata still identify
+`c929d8ab2b9815b9126f4a33fbf59b3b9c900892`; the durable ledger branch remains at
+`6073187aeb59cfe20f06495922dd1113135c5555`. North Beach's live CHECK remains
+until both production extractions pass and the accepted pair deploys.
+The baseline `node scripts/smoke-production.mjs
+--expected-commit=c929d8ab2b9815b9126f4a33fbf59b3b9c900892 --browser` passed
+for all 30 canonical locations. This verifies the existing deployment, not the
+new paired-PDF extraction.
+
+The cutover pauses scheduled automation before the shared-format commit reaches
+main. Preserve the durable budget branch, $5 monthly/$1 run limits, generated
+allowlist, stale-main protection, non-force promotion, and exact-commit CI.
+Use controlled accounted hosted validation and restore weekly operation after
+verified deployment and browser checks. A successful push is not live evidence.
+
 ## Closure Contract (v2)
 
-Closures in the extractor schema are **facility-wide**. By default they are
+Closures without `physical_pool` in the extractor schema are **facility-wide**. By default they are
 all-day. Single-day closures may carry a partial-day time window so common
 recurring sub-day events (Aquatics Division Training on the 3rd Thursday of
 each month, etc.) don't have to round up to a whole-day cancellation.
@@ -257,7 +340,7 @@ each month, etc.) don't have to round up to a whole-day cancellation.
 - Fields: `start`, `end`, `reason` (required); `start_time`, `end_time` (optional, both required together).
 - Dates are ISO (`YYYY-MM-DD`) and inclusive. Times are 24-hour `HH:MM` and the window is half-open: `[start_time, end_time)`.
 - Partial-day windows are only valid on single-day entries (`start == end`). For recurring patterns, expand to one entry per occurrence within the schedule's effective window.
-- There is no `pool` field. Pool-scoped closures remain out of scope.
+- There is no `pool` field. North Beach paired documents may use `physical_pool` (`cool` or `warm`) for an explicitly scoped closure. Omitted means facility-wide.
 - SFUSD and other timed school-only bookings are **not** closures; they are omitted from the output entirely.
 
 The pre-v2 contract was all-day-only, which over-reported "Closed for staff training 11–2" cells as full-day closures. v2 was added in 2026-05; existing all-day closures keep working unchanged (the time fields are additive).
@@ -1407,8 +1490,8 @@ Monday, September 7, 2026 at 16:00 UTC (09:00 Pacific daylight time).
 
 These trials are not evidence that every source can update without review.
 Ten city PDF inputs are held for unresolved closure checks, and North Beach's
-split PDFs remain unsupported. Discovery finds the fall Cool Pool PDF (29953)
-and Warm Pool PDF (29954), both listed for September 1–December 12, but holds
+split PDFs were unsupported during these historical trials. Discovery found the fall Cool Pool PDF (29953)
+and Warm Pool PDF (29954), both listed for September 1–December 12, but held
 them as `split_part`; the missing live North Beach schedule is a pipeline
 capability gap, not an absent official schedule. Six direct sources returned HTTP 403 in the
 recovered trial. Non-city candidates are outside the publisher's current

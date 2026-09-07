@@ -36,14 +36,11 @@ official_page_url = "https://sfrecpark.org/facilities/facility/details/Mission-C
 
 [[pool]]
 slug = "north-beach-pool"
-pdf_url = "https://sfrecpark.org/DocumentCenter/View/29778"
-official_page_url = "https://sfrecpark.org/facilities/facility/details/North-Beach-Pool-218"
-source_status = "missing_current_schedule"
-notes = """
-discover: 2026-09-01 flag split_part id=29953:split_part:table id=29954:split_part:table
+pool_sources = [{ pool = "cool", url = "https://sfrecpark.org/DocumentCenter/View/29953" }, { pool = "warm", url = "https://sfrecpark.org/DocumentCenter/View/29954" }]
 
-Official page split the current North Beach interim schedule into separate Cool Pool (29778) and Warm Pool (29779) PDFs. Current content was manually reviewed from both; automated extraction should stay skipped until split-PDF support exists.
-"""
+official_page_url = "https://sfrecpark.org/facilities/facility/details/North-Beach-Pool-218"
+source_status = "published"
+notes = "Cool and Warm originals form one schedule; validate and publish both atomically."
 
 [[pool]]
 slug = "rossi-pool"

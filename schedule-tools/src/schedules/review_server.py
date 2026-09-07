@@ -84,6 +84,8 @@ class ReviewApp:
                 continue
             decision = decisions.get(candidate.slug)
             entry = entries.get(candidate.slug)
+            if entry and entry.pool_sources and not candidate.bundle_sha256:
+                continue
             if (
                 decision is not None
                 and decision.get("reason") == "band_session_grid"
@@ -117,14 +119,14 @@ class ReviewApp:
                 priority.get(candidate.slug, 2),
                 candidate.fetch_date,
                 candidate.slug,
-                candidate.pdf_sha256[:12],
+                candidate.source_identity[:12],
             ),
         )
 
     def candidate(self, slug: str, sha12: str | None = None):
         matches = [item for item in self.candidates() if item.slug == slug]
         if sha12 is not None:
-            return next((item for item in matches if item.pdf_sha256[:12] == sha12), None)
+            return next((item for item in matches if item.source_identity[:12] == sha12), None)
         if slug in self._sequential_slug_set():
             return None
         return next(iter(matches), None)
@@ -134,7 +136,7 @@ class ReviewApp:
         return [
             {
                 "slug": candidate.slug,
-                "sha12": candidate.pdf_sha256[:12],
+                "sha12": candidate.source_identity[:12],
                 "fetch_date": candidate.fetch_date,
                 "source_kind": candidate.source_path.suffix.removeprefix("."),
                 "sequential": candidate.slug in sequential,
@@ -161,7 +163,7 @@ class ReviewApp:
                 "review_dir": str(candidate.review_dir),
                 "source_path": str(candidate.source_path),
                 "source_kind": candidate.source_path.suffix.removeprefix("."),
-                "sha12": candidate.pdf_sha256[:12],
+                "sha12": candidate.source_identity[:12],
                 "sequential": slug in self._sequential_slug_set(),
             },
             "envelope": draft_envelope(candidate=candidate),
@@ -177,7 +179,7 @@ class ReviewApp:
             else current_source_identity(slug)
         )
         return {
-            "status": "current" if identity == candidate.pdf_sha256 else "changed",
+            "status": "current" if identity == candidate.source_identity else "changed",
             "source_identity": identity,
         }
 
@@ -191,7 +193,7 @@ class ReviewApp:
             if override_url
             else current_source_identity(slug)
         )
-        if live == candidate.pdf_sha256:
+        if live == candidate.source_identity:
             return self.review(slug, sha12=sha12)
         entry = next((item for item in load_registry() if item.slug == slug), None)
         if entry is None:
@@ -203,9 +205,9 @@ class ReviewApp:
                 else ExpandFromDecisions(self._decisions())
             )
             command = PdfRun(
-                provider=parse_provider(os.getenv("SCHEDULES_PROVIDER", "gemini")),
+                provider=parse_provider("openai" if entry.pool_sources else os.getenv("SCHEDULES_PROVIDER", "gemini")),
                 slugs=(slug,),
-                force=True,
+                force=not bool(entry.pool_sources),
                 urls=urls,
             )
         else:
@@ -217,7 +219,7 @@ class ReviewApp:
             item
             for item in find_review_candidates(data_root=self.data_root)
             if item.slug == slug
-            and item.pdf_sha256 == live
+            and item.source_identity == live
             and (override_url is None or (item.source_url or None) == override_url)
         ]
         if not refreshed:
@@ -231,28 +233,34 @@ class ReviewApp:
                 "sequential_incomplete",
                 f"{slug} requires save-sequential",
             )
-        envelope_sha = envelope.get("pdf_sha256")
+        envelope_sha = envelope.get("bundle_sha256", envelope.get("pdf_sha256"))
         candidate = next(
             (
                 item
                 for item in find_review_candidates(data_root=self.data_root)
-                if item.slug == slug and item.pdf_sha256 == envelope_sha
+                if item.slug == slug and item.source_identity == envelope_sha
             ),
             None,
         )
         if candidate is None:
             raise LookupError(f"No pending review for {slug}.")
-        if envelope.get("slug") != slug or envelope.get("pdf_sha256") != candidate.pdf_sha256:
+        if envelope.get("slug") != slug or envelope.get("bundle_sha256", envelope.get("pdf_sha256")) != candidate.source_identity:
             raise FinalizeError("Review identity does not match the pending source.")
-        if source_identity != candidate.pdf_sha256 or current_source_identity(slug) != source_identity:
+        if source_identity != candidate.source_identity or current_source_identity(slug) != source_identity:
             raise FinalizeError("Official source changed after this review opened. Refresh before saving.")
 
         target = reviewed_path(
             candidate.slug,
             candidate.fetch_date,
-            candidate.pdf_sha256,
+            candidate.source_identity,
             root=self.data_root,
         )
+        if candidate.bundle_sha256:
+            original = draft_envelope(candidate=candidate)
+            if envelope.get("source_bundle") != original["source_bundle"]:
+                raise FinalizeError("Bundle sources cannot change during review")
+        md_path = self.content_spots_dir / f"{slug}.md"
+        backup = md_path.read_bytes()
         envelope = {**envelope, "attested_by": "human"}
         target.write_text(json.dumps(envelope, indent=2) + "\n")
         try:
@@ -261,6 +269,7 @@ class ReviewApp:
                 content_spots_dir=self.content_spots_dir,
             )
         except Exception:
+            md_path.write_bytes(backup)
             target.unlink(missing_ok=True)
             raise
 
@@ -271,11 +280,11 @@ class ReviewApp:
         candidate = self.candidate(slug, sha12=sha12)
         if candidate is None:
             raise LookupError(_pending_error(slug, sha12))
-        if envelope.get("slug") != slug or envelope.get("pdf_sha256") != candidate.pdf_sha256:
+        if envelope.get("slug") != slug or envelope.get("bundle_sha256", envelope.get("pdf_sha256")) != candidate.source_identity:
             raise FinalizeError("Review identity does not match the pending source.")
         url = candidate.source_url or None
         live = current_source_identity(slug, url=url) if url else current_source_identity(slug)
-        if source_identity != candidate.pdf_sha256 or live != source_identity:
+        if source_identity != candidate.source_identity or live != source_identity:
             raise FinalizeError("Official source changed after this review opened. Refresh before saving.")
 
     def save_sequential(self, slug: str, envelopes: dict[str, dict]) -> list[dict]:
@@ -290,12 +299,12 @@ class ReviewApp:
         for sha12, envelope in envelopes.items():
             if not isinstance(sha12, str) or not isinstance(envelope, dict):
                 raise ValueError("Review body must contain envelopes keyed by sha12.")
-            match = next((item for item in candidates if item.pdf_sha256[:12] == sha12), None)
-            if match is None or envelope.get("slug") != slug or envelope.get("pdf_sha256") != match.pdf_sha256:
+            match = next((item for item in candidates if item.source_identity[:12] == sha12), None)
+            if match is None or envelope.get("slug") != slug or envelope.get("bundle_sha256", envelope.get("pdf_sha256")) != match.source_identity:
                 raise FinalizeError("Review identity does not match the pending source.")
             url = match.source_url or None
             live = current_source_identity(slug, url=url) if url else current_source_identity(slug)
-            if live != match.pdf_sha256:
+            if live != match.source_identity:
                 raise FinalizeError("Official source changed after this review opened. Refresh before saving.")
         entries = {entry.slug: entry for entry in load_registry()}
         return publish_sequential_slug(
@@ -328,8 +337,19 @@ def make_handler(app: ReviewApp):
                 elif path.startswith("/source/"):
                     slug, sha12, action = _parse_review_path(path.removeprefix("/source/"))
                     candidate = app.candidate(slug, sha12=sha12)
-                    if candidate is None or action is not None:
+                    if candidate and candidate.bundle_sha256 and action in {"cool", "warm"}:
+                        member = next(item for item in json.loads(candidate.source_path.read_text()) if item["pool"] == action)
+                        self._file(candidate.review_dir.parent / member["capture"] / "source.pdf")
+                    elif candidate is None or action is not None:
                         self._json(404, {"error": "Pending review not found."})
+                    elif candidate.bundle_sha256:
+                        prefix = f"/source/{slug}/{candidate.source_identity[:12]}"
+                        body = (f'<html><body><h2>Cool Pool</h2><iframe title="Cool Pool" src="{prefix}/cool" style="width:100%;height:90vh"></iframe>'
+                                f'<h2>Warm Pool</h2><iframe title="Warm Pool" src="{prefix}/warm" style="width:100%;height:90vh"></iframe></body></html>').encode()
+                        self.send_response(200)
+                        self.send_header("Content-Type", "text/html; charset=utf-8")
+                        self.end_headers()
+                        self.wfile.write(body)
                     elif candidate.source_path.suffix == ".csv":
                         self._csv_schedule(candidate.source_path)
                     elif candidate.source_path.suffix == ".html":
@@ -640,6 +660,26 @@ def current_source_identity(slug: str, url: str | None = None) -> str:
         raise LookupError(f"Unknown registry slug: {slug}.")
     with tempfile.TemporaryDirectory(prefix="swimfrancisco-source-check-") as directory:
         cache_root = Path(directory)
+        if entry.pool_sources:
+            from .artifacts import pool_bundle_identity
+            from .providers.openai_provider import extraction_configuration
+            from .paths import PROMPT_PATH
+            from .signals import inspect_pdf_source, north_beach_pool_identity
+            from .discover import discover_facility_documents
+            import httpx
+            page = httpx.get(entry.official_page_url, follow_redirects=True, timeout=30)
+            page.raise_for_status()
+            linked = {item.href for item in discover_facility_documents(page.text)}
+            members = []
+            for source in entry.pool_sources:
+                if source.url not in linked:
+                    raise ValueError("Official page no longer links this complete pair")
+                capture = fetch_pdf(entry.slug, source.url, cache_root=cache_root)
+                if north_beach_pool_identity(inspect_pdf_source(capture.bytes).text) != source.pool:
+                    raise ValueError("Printed pool identity changed")
+                members.append({"pool": source.pool, "url": source.url, "sha256": capture.sha256,
+                                "configuration": extraction_configuration(PROMPT_PATH.read_text().strip())})
+            return pool_bundle_identity(members)
         if url is not None:
             return fetch_pdf(entry.slug, url, cache_root=cache_root).sha256
         if entry.source_kind == "sfrecpark_pdf":

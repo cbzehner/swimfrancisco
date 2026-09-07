@@ -6,9 +6,7 @@
   "type": "object",
   "required": [
     "slug",
-    "pdf_sha256",
     "reviewed_at",
-    "source_pdf_url",
     "payload"
   ],
   "additionalProperties": false,
@@ -31,7 +29,10 @@
     },
     "attested_by": {
       "type": "string",
-      "enum": ["human", "ci"],
+      "enum": [
+        "human",
+        "ci"
+      ],
       "description": "Who signed this snapshot. Omit on legacy files. Carry copies the prior value and sets carried_from."
     },
     "carried_from": {
@@ -45,7 +46,12 @@
     },
     "payload": {
       "type": "object",
-      "required": ["effective_start", "schedule_basis", "sessions", "closures"],
+      "required": [
+        "effective_start",
+        "schedule_basis",
+        "sessions",
+        "closures"
+      ],
       "additionalProperties": false,
       "properties": {
         "effective_start": {
@@ -56,11 +62,21 @@
         },
         "schedule_basis": {
           "type": "string",
-          "enum": ["swim_schedule", "pool_hours", "facility_hours", "amenity_only", "temporarily_closed", "unknown"],
+          "enum": [
+            "swim_schedule",
+            "pool_hours",
+            "facility_hours",
+            "amenity_only",
+            "temporarily_closed",
+            "unknown"
+          ],
           "description": "What the source proves: a true swim schedule, pool hours, facility hours, amenity existence, temporary closure, or unknown."
         },
         "effective_end": {
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "date",
           "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
           "description": "Optional end date of the schedule window. Null or omitted if open-ended."
@@ -68,22 +84,73 @@
         "sessions": {
           "type": "array",
           "description": "Weekly swim sessions. May be empty when access_hours carries an access-only source.",
-          "items": { "$ref": "#/$defs/session" }
+          "items": {
+            "$ref": "#/$defs/session"
+          }
         },
         "access_hours": {
           "type": "array",
           "description": "Weekly facility, member, or public day-use access windows that are not strong enough to count as swim sessions.",
-          "items": { "$ref": "#/$defs/access_hour" }
+          "items": {
+            "$ref": "#/$defs/access_hour"
+          }
         },
         "access_exceptions": {
           "type": "array",
           "description": "Date-specific access windows that override weekly access_hours, such as holiday hours.",
-          "items": { "$ref": "#/$defs/access_exception" }
+          "items": {
+            "$ref": "#/$defs/access_exception"
+          }
         },
         "closures": {
           "type": "array",
           "description": "Dated closures (holidays, training, maintenance).",
-          "items": { "$ref": "#/$defs/closure" }
+          "items": {
+            "$ref": "#/$defs/closure"
+          }
+        }
+      }
+    },
+    "bundle_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "source_bundle": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "pool",
+          "url",
+          "sha256",
+          "capture",
+          "configuration"
+        ],
+        "properties": {
+          "pool": {
+            "enum": [
+              "cool",
+              "warm"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "capture": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9a-f]{12}$"
+          },
+          "configuration": {
+            "type": "object"
+          }
         }
       }
     }
@@ -91,14 +158,31 @@
   "$defs": {
     "session": {
       "type": "object",
-      "required": ["day", "type", "start", "end"],
+      "required": [
+        "day",
+        "type",
+        "start",
+        "end"
+      ],
       "additionalProperties": false,
       "properties": {
         "day": {
-          "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+          "enum": [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday"
+          ]
         },
         "type": {
-          "enum": ["lap_swim", "family_swim", "senior_swim"],
+          "enum": [
+            "lap_swim",
+            "family_swim",
+            "senior_swim"
+          ],
           "description": "Session category. Add new values here first, then teach the template."
         },
         "start": {
@@ -122,16 +206,60 @@
         "notes": {
           "type": "string",
           "description": "Optional reviewer note. Stripped on canonicalization."
+        },
+        "physical_pool": {
+          "enum": [
+            "cool",
+            "warm"
+          ],
+          "description": "Physical North Beach pool identified by the document title, separate from its cell allocation."
+        },
+        "pool_label_raw": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Literal printed cell allocation."
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "source_cell": {
+          "type": "string",
+          "minLength": 1
+        },
+        "excluded_dates": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+          }
         }
       }
     },
     "access_hour": {
       "type": "object",
-      "required": ["day", "start", "end", "label"],
+      "required": [
+        "day",
+        "start",
+        "end",
+        "label"
+      ],
       "additionalProperties": false,
       "properties": {
         "day": {
-          "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+          "enum": [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday"
+          ]
         },
         "start": {
           "type": "string",
@@ -155,7 +283,13 @@
     },
     "access_exception": {
       "type": "object",
-      "required": ["date", "start", "end", "label", "reason"],
+      "required": [
+        "date",
+        "start",
+        "end",
+        "label",
+        "reason"
+      ],
       "additionalProperties": false,
       "properties": {
         "date": {
@@ -189,7 +323,11 @@
     },
     "closure": {
       "type": "object",
-      "required": ["start", "end", "reason"],
+      "required": [
+        "start",
+        "end",
+        "reason"
+      ],
       "additionalProperties": false,
       "properties": {
         "start": {
@@ -201,7 +339,7 @@
           "type": "string",
           "format": "date",
           "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
-          "description": "Must be ≥ start. Single-day closures use start == end."
+          "description": "Must be \u2265 start. Single-day closures use start == end."
         },
         "reason": {
           "type": "string",
@@ -216,12 +354,65 @@
           "type": "string",
           "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
           "description": "Optional 24-hour HH:MM marking the end of a partial-day closure. Must be strictly greater than start_time."
+        },
+        "physical_pool": {
+          "enum": [
+            "cool",
+            "warm"
+          ],
+          "description": "Omitted for a facility-wide closure; otherwise applies only to this physical pool."
         }
       },
       "dependentRequired": {
-        "start_time": ["end_time"],
-        "end_time": ["start_time"]
+        "start_time": [
+          "end_time"
+        ],
+        "end_time": [
+          "start_time"
+        ]
       }
     }
-  }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "pdf_sha256",
+        "source_pdf_url"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "bundle_sha256"
+            ]
+          },
+          {
+            "required": [
+              "source_bundle"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "required": [
+        "bundle_sha256",
+        "source_bundle"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "pdf_sha256"
+            ]
+          },
+          {
+            "required": [
+              "source_pdf_url"
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }

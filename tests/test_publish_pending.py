@@ -1299,3 +1299,169 @@ def test_sequential_expired_reexport_is_covered_not_refused(iso, monkeypatch):
     assert not (
         iso.data / "sava-pool" / f"2026-09-01-{SHA2[:12]}" / "reviewed.json"
     ).exists()
+
+
+
+def _frozen_pool_bundle(tmp_path, north_beach_pair):
+    from schedules.artifacts import save_pool_bundle
+    from schedules.paths import PROMPT_PATH, slugify
+    entry, components = north_beach_pair
+    paths = []
+    for component in components:
+        artifact = component["artifact"]
+        directory = tmp_path / "data" / entry.slug / ("2026-09-06-" + artifact["pdf_sha256"][:12])
+        directory.mkdir(parents=True)
+        (directory / "source.pdf").write_bytes(component["document"])
+        path = directory / ("openai-" + slugify(artifact["model"]) + ".json")
+        path.write_text(json.dumps(artifact))
+        paths.append(path)
+    bundle = save_pool_bundle(entry.slug, paths, PROMPT_PATH.read_text().strip())
+    candidate = next(item for item in find_review_candidates(data_root=tmp_path / "data") if item.bundle_sha256)
+    return entry, components, paths, bundle, candidate
+
+
+def test_pair_bundle_preserves_identity_and_simultaneous_sessions(tmp_path, north_beach_pair):
+    from schedules.artifacts import verify_pool_bundle, pool_bundle_identity
+    from schedules.paths import PROMPT_PATH
+    from schedules.review import draft_envelope
+    from schedules.envelope import validate_envelope
+    entry, components, paths, bundle, candidate = _frozen_pool_bundle(tmp_path, north_beach_pair)
+    artifact = json.loads(bundle.read_text())
+    assert verify_pool_bundle(artifact, bundle.parent, PROMPT_PATH.read_text())["ok"]
+    envelope = draft_envelope(candidate=candidate)
+    validate_envelope(envelope)
+    assert "pdf_sha256" not in envelope and "source_pdf_url" not in envelope
+    assert len(envelope["payload"]["sessions"]) == 35
+    simultaneous = [row for row in envelope["payload"]["sessions"] if row["day"] == "thursday" and row["start"] == "14:15"]
+    assert {row["physical_pool"] for row in simultaneous} == {"cool", "warm"}
+    assert len({row["source_sha256"] for row in simultaneous}) == 2
+    assert all(row["source_cell"].startswith("p1-") for row in simultaneous)
+    assert not validate(envelope["payload"] | {"sessions": envelope["payload"]["sessions"] + simultaneous[:1]}).ok
+    modified = [dict(item) for item in artifact["source_bundle"]]
+    modified[1]["sha256"] = "0" * 64
+    assert pool_bundle_identity(modified) != candidate.bundle_sha256
+
+
+@pytest.mark.parametrize("member", [0, 1])
+def test_pair_bundle_reverifies_every_original(tmp_path, north_beach_pair, member):
+    from schedules.artifacts import verify_pool_bundle
+    from schedules.paths import PROMPT_PATH
+    _, _, paths, bundle, _ = _frozen_pool_bundle(tmp_path, north_beach_pair)
+    (paths[member].parent / "source.pdf").write_bytes(b"broken")
+    with pytest.raises(Exception):
+        verify_pool_bundle(json.loads(bundle.read_text()), bundle.parent, PROMPT_PATH.read_text())
+
+
+def test_pair_publish_is_atomic_and_requires_current_discovery(tmp_path, north_beach_pair, monkeypatch):
+    from schedules import publish, discover
+    from schedules.review import DecisionSet
+    entry, components, paths, bundle, candidate = _frozen_pool_bundle(tmp_path, north_beach_pair)
+    content = tmp_path / "content"
+    content.mkdir()
+    original = Path("content/spots/north-beach-pool.md").read_bytes()
+    md = content / (entry.slug + ".md")
+    md.write_bytes(original)
+    monkeypatch.setattr(discover, "pacific_today", lambda: date(2026, 9, 6))
+    documents = [discover.classify_pdf(discover.DocumentLink(29953 + index, part["artifact"]["source_pdf_url"], "Fall"), pool_slug=entry.slug, pdf_bytes=part["document"], filename=None) for index, part in enumerate(components)]
+    decision = discover._decision_to_json(discover.choose_roll(entry, documents))
+    arguments = dict(candidate=candidate, entries={entry.slug: entry}, blocking_slugs=frozenset(), quarantined_shas=frozenset(), content_spots_dir=content, attested_at=date(2026, 9, 6), decisions=DecisionSet.from_items([decision]))
+    finalize = publish.finalize_draft
+    def fail(**kwargs):
+        md.write_text("partial")
+        raise FinalizeError("injected failure")
+    monkeypatch.setattr(publish, "finalize_draft", fail)
+    with pytest.raises(FinalizeError):
+        publish._publish_unique_grid(**arguments)
+    assert md.read_bytes() == original and not (bundle.parent / "reviewed.json").exists()
+    monkeypatch.setattr(publish, "finalize_draft", finalize)
+    with pytest.raises(publish.PublishRefuse):
+        publish._publish_unique_grid(**(arguments | {"decisions": DecisionSet.from_items([])}))
+    with pytest.raises(publish.PublishRefuse, match="expired"):
+        publish._publish_unique_grid(**(arguments | {"attested_at": date(2026, 12, 13)}))
+    publish._publish_unique_grid(**arguments)
+    assert (bundle.parent / "reviewed.json").exists()
+    assert 'physical_pool = "cool"' in md.read_text() and 'physical_pool = "warm"' in md.read_text()
+    assert '2026-12-12' in md.read_text()
+
+
+
+@pytest.mark.parametrize("damage", ["missing_sources", "invalid_json", "wrong_identity"])
+def test_malformed_pair_refuses_before_content_write(tmp_path, north_beach_pair, damage):
+    from schedules import publish
+    from schedules.review import DecisionSet
+    entry, _, _, bundle, candidate = _frozen_pool_bundle(tmp_path, north_beach_pair)
+    artifact = json.loads(bundle.read_text())
+    if damage == "missing_sources":
+        del artifact["source_bundle"]
+    elif damage == "wrong_identity":
+        artifact["bundle_sha256"] = "0" * 64
+    bundle.write_text("{" if damage == "invalid_json" else json.dumps(artifact))
+    content = tmp_path / "content"
+    content.mkdir()
+    md = content / (entry.slug + ".md")
+    original = Path("content/spots/north-beach-pool.md").read_bytes()
+    md.write_bytes(original)
+    with pytest.raises(publish.PublishRefuse):
+        publish._publish_unique_grid(
+            candidate=candidate, entries={entry.slug: entry}, blocking_slugs=frozenset(),
+            quarantined_shas=frozenset(), content_spots_dir=content,
+            attested_at=date(2026, 9, 6), decisions=DecisionSet.from_items([]),
+        )
+    assert md.read_bytes() == original
+    assert not (bundle.parent / "reviewed.json").exists()
+
+
+def test_pair_review_opens_both_originals_and_saves_one_bundle(tmp_path, north_beach_pair, monkeypatch):
+    from schedules import review_server
+    from schedules.review_server import ReviewApp
+    from schedules.review import draft_envelope
+    entry, _, _, bundle, candidate = _frozen_pool_bundle(tmp_path, north_beach_pair)
+    content = tmp_path / "content"
+    content.mkdir()
+    (content / (entry.slug + ".md")).write_bytes(Path("content/spots/north-beach-pool.md").read_bytes())
+    monkeypatch.setattr(review_server, "load_registry", lambda: [entry])
+    app = ReviewApp(data_root=tmp_path / "data", content_spots_dir=content, tmp_dir=tmp_path / "tmp")
+    assert [item.source_identity for item in app.candidates()] == [candidate.bundle_sha256]
+    monkeypatch.setattr(review_server, "current_source_identity", lambda *args, **kwargs: candidate.bundle_sha256)
+    assert app.check_source(entry.slug)["status"] == "current"
+    envelope = draft_envelope(candidate=candidate)
+    assert len(app.review(entry.slug)["envelope"]["source_bundle"]) == 2
+    app.save(entry.slug, envelope, candidate.bundle_sha256)
+    assert json.loads((bundle.parent / "reviewed.json").read_text())["attested_by"] == "human"
+    assert not app.candidates()
+
+
+def test_failed_pair_sitting_cannot_publish_an_older_pending_bundle(tmp_path, north_beach_pair, monkeypatch):
+    from schedules import publish
+    entry, _, _, bundle, _ = _frozen_pool_bundle(tmp_path, north_beach_pair)
+    content = tmp_path / "content"
+    content.mkdir()
+    md = content / (entry.slug + ".md")
+    original = Path("content/spots/north-beach-pool.md").read_bytes()
+    md.write_bytes(original)
+    report = tmp_path / "tmp"
+    report.mkdir()
+    (report / "extraction-report-openai.json").write_text('{"pool_bundles": {}}')
+    monkeypatch.setattr(publish, "load_registry", lambda: [entry])
+    monkeypatch.setattr(publish, "TMP_DIR", report)
+    monkeypatch.setattr(publish, "auto_project_enabled", lambda: True)
+    count, _ = publish.publish_pending_all(data_root=tmp_path / "data", content_spots_dir=content, today=date(2026, 9, 6))
+    assert count == 0 and md.read_bytes() == original and not (bundle.parent / "reviewed.json").exists()
+    assert json.loads((report / "publish-pending.json").read_text())["refused"][0]["code"] == "paired_extraction_incomplete"
+
+
+def test_pair_review_refresh_reuses_valid_components(tmp_path, north_beach_pair, monkeypatch):
+    from schedules import review_server
+    entry, _, _, _, candidate = _frozen_pool_bundle(tmp_path, north_beach_pair)
+    monkeypatch.setattr(review_server, "load_registry", lambda: [entry])
+    monkeypatch.setattr(review_server, "current_source_identity", lambda *args, **kwargs: "0" * 64)
+    commands = []
+    def run(command):
+        commands.append(command)
+        return 1, None, ["stopped before model call"]
+    monkeypatch.setattr(review_server, "run_pipeline", run)
+    app = review_server.ReviewApp(data_root=tmp_path / "data", tmp_dir=tmp_path / "tmp")
+    with pytest.raises(RuntimeError, match="stopped before model call"):
+        app.refresh(entry.slug, candidate.source_identity[:12])
+    assert commands[0].provider == "openai"
+    assert commands[0].force is False

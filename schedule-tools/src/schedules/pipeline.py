@@ -7,7 +7,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Literal
 
-from .artifacts import save_artifact_bundle, skip_if_fresh
+from .artifacts import save_artifact_bundle, skip_if_fresh, save_pool_bundle
 from .delta import check_delta
 from .direct_sources import extract_direct
 from .envelope import AttestationCarried, parse_attestation
@@ -21,7 +21,7 @@ from .fetch import fetch_pdf
 from .grounding import grounding_from_text, normalize_pdf_text, source_publication_coverage
 from .merge import read_schedule_snapshot
 from .models import Aborted, Extracted, GroundingResult, PoolEntry, PoolResult, ReviewNote, Skipped, Unchanged, Violation
-from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH, REPORT_PATHS, TMP_DIR, artifact_path, reviewed_path
+from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH, REPORT_PATHS, TMP_DIR, artifact_path, reviewed_path, relative_to_repo
 from .providers import extract as extract_with_provider
 from .providers.anthropic_provider import DEFAULT_MODEL as ANTHROPIC_DEFAULT_MODEL
 from .providers.gemini_provider import DEFAULT_MODEL as GEMINI_DEFAULT_MODEL
@@ -222,6 +222,11 @@ def _process_entry(
 
         # PDF fetch + path setup
         fetch_result = fetch_pdf(entry.slug, entry.pdf_url)
+        if entry.pool_sources:
+            from .signals import north_beach_pool_identity
+            expected_pool = next(source.pool for source in entry.pool_sources if source.url == entry.pdf_url)
+            if provider != "openai" or north_beach_pool_identity(inspect_pdf_source(fetch_result.bytes).text) != expected_pool:
+                raise ValueError("Paired component requires its printed pool identity and the production provider")
         date = fetch_result.path.parent.name[:10]
         reviewed_file = reviewed_path(entry.slug, date, fetch_result.sha256)
         default_model = _default_model(provider)
@@ -241,7 +246,7 @@ def _process_entry(
                 load_reviewed_snapshot_from_path(reviewed_file, expected_slug=entry.slug, expected_sha=fetch_result.sha256)["payload"]
                 == cached["payload"]
             )
-        if policy.same_dir_reviewed and reviewed_file.exists() and reviewed_reusable:
+        if policy.same_dir_reviewed and not entry.pool_sources and reviewed_file.exists() and reviewed_reusable:
             return _build_unchanged(
                 entry,
                 pdf_sha256=fetch_result.sha256,
@@ -260,7 +265,7 @@ def _process_entry(
             cached = json.loads(cached_path.read_text())
             payload = cached["payload"]
             model = cached.get("model", default_model)
-            cost_estimate = cached.get("cost_estimate", "cached")
+            cost_estimate = "cached (no model call)"
             artifact_paths = {provider: str(cached_path)}
             primary_usage: dict | None = None
             details = cached.get("details", {})
@@ -304,7 +309,7 @@ def _process_entry(
         # A payload identical to the last human-reviewed one needs no new
         # review — carry the attestation to this capture. Bakeoff runs
         # always produce a full Extracted result.
-        if policy.carry_forward and (coverage is None or coverage["ok"]):
+        if policy.carry_forward and not entry.pool_sources and (coverage is None or coverage["ok"]):
             carried = carry_forward_review(
                 slug=entry.slug,
                 review_dir=reviewed_file.parent,
@@ -538,6 +543,8 @@ def _attach_discovery_notes(
 def _session_grid_hrefs(entry: PoolEntry, decisions: DecisionSet) -> list[str]:
     """One href per [window_start, window_end]. Table id wins ties.
     Equal-range copies are omitted. pdf_url is always included."""
+    if entry.pool_sources:
+        return [source.url for source in entry.pool_sources]
     decision = decisions.get(entry.slug)
     hrefs: list[str] = []
     seen: set[str] = set()
@@ -598,6 +605,8 @@ def run_pipeline(command: RunCommand) -> tuple[int, Path, list[PoolResult]]:
 
     if isinstance(command, PdfRun) and isinstance(command.urls, PinOverride):
         target = slugs[0]
+        if any(entry.pool_sources for entry in selected):
+            raise ValueError("A paired pool cannot use a single --url override")
         selected = [
             replace(entry, pdf_url=command.urls.url) if entry.slug == target else entry
             for entry in selected
@@ -606,6 +615,7 @@ def run_pipeline(command: RunCommand) -> tuple[int, Path, list[PoolResult]]:
     prompt = PROMPT_PATH.read_text().strip()
     expand_hrefs = isinstance(command, PdfRun) and not isinstance(command.urls, PinOverride)
     results: list[PoolResult] = []
+    pool_bundles = {}
     for entry in selected:
         hrefs = [entry.pdf_url]
         if (
@@ -614,10 +624,29 @@ def run_pipeline(command: RunCommand) -> tuple[int, Path, list[PoolResult]]:
             and entry.source_status == "published"
         ):
             hrefs = _session_grid_hrefs(entry, decisions)
+        component_results = []
         for href in hrefs:
             work = entry if href == entry.pdf_url else replace(entry, pdf_url=href)
-            results.append(_process_entry(work, command=command, prompt=prompt))
+            result = _process_entry(work, command=command, prompt=prompt)
+            results.append(result)
+            component_results.append(result)
+        if entry.pool_sources and source_mode == "openai" and all(isinstance(result, (Extracted, Unchanged)) and not _failed(result) for result in component_results):
+            try:
+                bundle_path = save_pool_bundle(entry.slug, [Path(result.artifact_paths["openai"]) for result in component_results], prompt)
+                pool_bundles[entry.slug] = json.loads(bundle_path.read_text())["bundle_sha256"]
+            except Exception as error:
+                member = component_results[-1]
+                closure_review = ({"slug": entry.slug, "source_path": relative_to_repo(Path(member.artifact_paths["openai"]).parent / "source.pdf"),
+                                   "source_sha256": member.pdf_sha256, "issues": error.issues, "notices": error.notices}
+                                  if isinstance(error, ClosureReviewRequired) else None)
+                results.append(Aborted(**_identity_kwargs(entry), error=str(error), prior_sessions_count=0,
+                                       prior_closures_count=0, prior_schedule_effective=None, closure_review=closure_review))
     notes_by_slug = discovery_notes_from_decisions(decisions)
     results = [_attach_discovery_notes(result, notes_by_slug) for result in results]
     report_path = write_report(results, path=REPORT_PATHS[source_mode])
+    if source_mode == "openai":
+        report_json = report_path.with_suffix(".json")
+        summary = json.loads(report_json.read_text())
+        summary["pool_bundles"] = pool_bundles
+        report_json.write_text(json.dumps(summary, indent=2) + "\n")
     return compute_exit_code(results), report_path, results

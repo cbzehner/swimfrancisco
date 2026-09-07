@@ -259,7 +259,7 @@ export function findActiveClosure(closures, now) {
   const today = formatISODate(now);
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   for (const closure of closures) {
-    if (!closure || typeof closure !== "object") continue;
+    if (!closure || typeof closure !== "object" || closure.physical_pool) continue;
     const start = typeof closure.start === "string" ? closure.start : null;
     const end = typeof closure.end === "string" ? closure.end : null;
     if (!start || !end) continue;
@@ -357,7 +357,7 @@ function scanForNextWindow(now, closures, windowsForDate) {
     const dateISO = formatISODate(date);
 
     const candidates = windowsForDate(date)
-      .flatMap((w) => availableSegmentsAfterClosures(w.start, w.end, closures, dateISO)
+      .flatMap((w) => availableSegmentsAfterClosures(w.start, w.end, closures, dateISO, w)
         .map((segment) => ({ ...w, start: segment.start, end: segment.end })))
       .filter((w) => offset > 0 || w.start > nowMinutes)
       .sort((a, b) => a.start - b.start);
@@ -442,10 +442,12 @@ function closureOverlapsWindow(closure, dateISO, windowStart, windowEnd) {
   return closureEnd > windowStart && closureStart < windowEnd;
 }
 
-function availableSegmentsAfterClosures(start, end, closures, dateISO) {
+function availableSegmentsAfterClosures(start, end, closures, dateISO, session = {}) {
+  if (session.excluded_dates?.includes(dateISO)) return [];
   if (end <= start) return [];
   let segments = [{ start, end }];
   for (const closure of closures) {
+    if (closure.physical_pool && closure.physical_pool !== session.physical_pool) continue;
     if (!closureOverlapsWindow(closure, dateISO, start, end)) continue;
     const closureStart = parseHHMM(closure.start_time);
     const closureEnd = parseHHMM(closure.end_time);
@@ -470,7 +472,7 @@ function currentWindows(windows, closures, now) {
   const dateISO = formatISODate(now);
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   return windows.flatMap((window) => (
-    availableSegmentsAfterClosures(window.start, window.end, closures, dateISO)
+    availableSegmentsAfterClosures(window.start, window.end, closures, dateISO, window)
       .filter((segment) => segment.start <= nowMinutes && nowMinutes < segment.end)
       .map((segment) => ({ ...window, ...segment }))
   ));
@@ -501,7 +503,7 @@ export function findNextDropIn(schedule, now, allowedTypes = null) {
     const start = parseHHMM(session.start);
     const end = parseHHMM(session.end);
     if (!day || !DAY_KEYS.includes(day) || start === null || end === null || end <= start) continue;
-    normalized.push({ program: session.type, day, start, end });
+    normalized.push({ ...session, program: session.type, day, start, end });
   }
   if (normalized.length === 0) return null;
 
@@ -688,7 +690,7 @@ export function computeNextOpenOffset(schedule, now, allowedTypes = null) {
 // below via availableSegmentsAfterClosures.
 function findBlockingWindowClosure(closures, dateISO, windowStart, windowEnd) {
   return closures.find((closure) => (
-    closureOverlapsWindow(closure, dateISO, windowStart, windowEnd) &&
+    !closure.physical_pool && closureOverlapsWindow(closure, dateISO, windowStart, windowEnd) &&
     (parseHHMM(closure.start_time) === null || parseHHMM(closure.end_time) === null)
   )) ?? null;
 }
@@ -700,7 +702,7 @@ function findBlockingWindowClosure(closures, dateISO, windowStart, windowEnd) {
 // boundary check, so this also serves as the window-overlap filter.
 function windowSegmentsWithOverlap(windows, closures, dateISO, horizonStart, horizonEnd) {
   return windows
-    .flatMap((w) => availableSegmentsAfterClosures(w.start, w.end, closures, dateISO)
+    .flatMap((w) => availableSegmentsAfterClosures(w.start, w.end, closures, dateISO, w)
       .map((segment) => ({
         ...w,
         start: segment.start,
@@ -915,7 +917,7 @@ function normalizeSessions(sessions, allowedTypes = null) {
     const end = parseHHMM(session.end);
     if (!day || !DAY_KEYS.includes(day) || !type || start === null || end === null) continue;
     if (end <= start) continue;
-    out.push({ day, type, start, end });
+    out.push({ ...session, day, type, start, end });
   }
   return out;
 }
@@ -1001,4 +1003,17 @@ export function computeDetailStatus(schedule, now) {
     kind: "CLOSED_HOURS",
     nextDropIn: findNextDropIn(schedule, now),
   };
+}
+
+
+export function sessionsForDate(schedule, now) {
+  const active = resolveActiveSchedule(schedule, now);
+  if (!active) return [];
+  const dateISO = formatISODate(now);
+  const normalized = normalizeSessions(active.sessions || []).filter((session) => session.day === DAY_KEYS[now.getDay()]);
+  if (!active.sessions?.some((session) => session.physical_pool)) return normalized.sort((left, right) => left.start - right.start);
+  return normalized
+    .flatMap((session) => availableSegmentsAfterClosures(session.start, session.end, allClosures(active), dateISO, session)
+      .map((segment) => ({ ...session, ...segment })))
+    .sort((left, right) => left.start - right.start);
 }

@@ -624,7 +624,7 @@ def test_choose_roll_flags_split_and_signals_missing_status() -> None:
         ],
     )
     assert decision.action == "flag"
-    assert decision.reason == "split_part"
+    assert decision.reason == "incomplete_or_conflicting_pair"
     assert decision.blocking is True
     assert decision.new_url is None
 
@@ -2247,3 +2247,23 @@ def test_apply_discover_decision_ignores_fetch_error(tmp_path) -> None:
         ),
     )
     assert registry.read_text() == before
+
+
+
+def test_north_beach_complete_original_pair_adopts(north_beach_pair, monkeypatch):
+    from schedules import discover
+    from dataclasses import replace
+    entry, components = north_beach_pair
+    monkeypatch.setattr(discover, "pacific_today", lambda: date(2026, 9, 6))
+    documents = [discover.classify_pdf(discover.DocumentLink(29953 + index, source["artifact"]["source_pdf_url"], "Fall schedule"),
+                 pool_slug=entry.slug, pdf_bytes=source["document"], filename=None) for index, source in enumerate(components)]
+    decision = discover.choose_roll(replace(entry, source_status="missing_current_schedule"), documents)
+    assert decision.reason == "north_beach_pair" and not decision.blocking
+    assert {item.pool_identity for item in decision.candidates} == {"cool", "warm"}
+    for bad in (documents[:1], [documents[0], documents[0]], [documents[0], replace(documents[1], pool_identity="cool")],
+                [documents[0], replace(documents[1], window_end=date(2026, 12, 13))],
+                [documents[0], replace(documents[1], window_source="anchor")],
+                [documents[0], replace(documents[1], grid_confirmed=False)]):
+        assert discover.choose_roll(entry, bad).blocking
+    monkeypatch.setattr(discover, "pacific_today", lambda: date(2026, 12, 13))
+    assert discover.choose_roll(entry, documents).blocking

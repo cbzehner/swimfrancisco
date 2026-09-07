@@ -14,6 +14,7 @@ def pacific_today() -> date:
 def printed_time_range(start: str, end: str) -> tuple[str, str]:
     def clock(value: str) -> tuple[int, bool]:
         value = re.sub(r"[\s.]", "", value.lower())
+        value = re.sub(r"(?<=\d)([ap])$", r"\1m", value)
         if value in {"noon", "midnight"}:
             return (720 if value == "noon" else 0), True
         match = re.fullmatch(r"(\d{1,2})(?::(\d{2}))?([ap]m)?", value)

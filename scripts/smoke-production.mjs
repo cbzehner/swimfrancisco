@@ -6,7 +6,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { buildSpotRecord } from "./generate-agent-data.mjs";
 import { splitFrontMatter } from "./lib/spot-frontmatter.mjs";
-import { computeDetailStatus, resolveActiveSchedule, scheduleHasAccessHours, scheduleHasSessions } from "../static/js/helpers/board.mjs";
+import { computeDetailStatus, sessionsForDate, formatHHMM, resolveActiveSchedule, scheduleHasAccessHours, scheduleHasSessions } from "../static/js/helpers/board.mjs";
 import { pacificWallClockDate } from "../static/js/helpers/pacific.mjs";
 import { isDropInType } from "../static/js/helpers/programs.mjs";
 
@@ -115,6 +115,7 @@ export async function verifyPoolPage(page, expected, instant) {
     heading: root.querySelector(".today-block-heading").textContent,
     rows: [...root.querySelectorAll(".today-block-list li")].map((row) => ({
       start: row.dataset.start, end: row.dataset.end, type: row.dataset.program,
+      ...(row.dataset.pool ? { physical_pool: row.dataset.pool } : {}),
     })),
     window: root.querySelector("[data-schedule-window]")?.dataset.scheduleWindow,
     highlightedDays: [...root.querySelectorAll('.weekly-grid [data-today="true"]')].map((cell) => cell.dataset.day),
@@ -129,9 +130,9 @@ export async function verifyPoolPage(page, expected, instant) {
   if (active) assert(actual.window === `${active.effective_start || ""}/${active.effective_end || ""}`, `${expected.slug} displays the wrong weekly window`);
   const accessOnly = !scheduleHasSessions(schedule, now) && scheduleHasAccessHours(schedule, now);
   const hide = accessOnly || ["CLOSED_TODAY", "NOT_VERIFIED", "NO_DROPIN_WEEK", "NO_DROPIN_TODAY"].includes(computeDetailStatus(schedule, now).kind);
-  const rows = hide ? [] : (active?.sessions || [])
-    .filter((session) => session.day === day && isDropInType(session.type))
-    .map(({ start, end, type }) => ({ start, end, type })).sort((a, b) => a.start.localeCompare(b.start));
+  const rows = hide ? [] : sessionsForDate(schedule, now)
+    .filter((session) => isDropInType(session.type))
+    .map(({ start, end, type, physical_pool }) => ({ start: formatHHMM(start), end: formatHHMM(end), type, ...(physical_pool ? { physical_pool } : {}) }));
   assert(actual.hidden === (rows.length === 0), `${expected.slug} Today visibility is incorrect`);
   assert(isDeepStrictEqual(actual.rows, rows), `${expected.slug} Today rows differ from the expected schedule`);
   if (rows.length) assert(actual.heading.toLowerCase().includes(day), `${expected.slug} Today heading has the wrong day`);

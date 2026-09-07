@@ -12,6 +12,7 @@ import {
   resolveActiveSchedule,
   scheduleHasAccessHours,
   scheduleHasSessions,
+  sessionsForDate,
 } from "./helpers/board.mjs";
 import {
   closureReasonLabel,
@@ -112,12 +113,7 @@ function applyStatusSlab(root, schedule, now) {
 function renderTodayBlock(root, schedule, now, view, day) {
   const block = root.querySelector(".today-block");
   if (!block) return;
-  const active = resolveActiveSchedule(schedule, now);
-  const sessions = (active?.sessions || [])
-    .filter((session) => session.day === day && isDropInType(session.type))
-    .map((session) => ({ ...session, start: parseHHMM(session.start), end: parseHHMM(session.end) }))
-    .filter(({ start, end }) => start !== null && end !== null && end > start)
-    .sort((left, right) => left.start - right.start);
+  const sessions = sessionsForDate(schedule, now).filter((session) => isDropInType(session.type));
   block.dataset.day = day;
   block.hidden = view.today === "hide" || sessions.length === 0;
   const list = block.querySelector(".today-block-list");
@@ -133,12 +129,13 @@ function renderTodayBlock(root, schedule, now, view, day) {
     row.dataset.start = formatHHMM(start);
     row.dataset.end = formatHHMM(end);
     row.dataset.program = type;
+    if (session.physical_pool) row.dataset.pool = session.physical_pool;
     const label = start <= nowMinutes && nowMinutes < end
       ? t("status_now", "NOW")
       : session === nextSession ? t("next", "NEXT") : "";
     for (const [className, text] of [
       ["time", `${formatHHMM(start)}–${formatHHMM(end)}`],
-      ["program", programLabel(type)],
+      ["program", programLabel(type) + (session.physical_pool ? ` (${session.physical_pool})` : "")],
       ["row-label", label],
     ]) {
       const span = document.createElement("span");

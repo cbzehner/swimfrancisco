@@ -10,7 +10,7 @@ from datetime import date, timedelta
 from ._time import printed_time_range
 from .models import GroundingResult, SessionGrounding
 from .schema import pool_label_payload
-from .signals import DAY_TOKEN_RE, PdfSource, SourceCell, SourceNotice, TIME_RANGE_RE, program_types
+from .signals import DAY_TOKEN_RE, PdfSource, SourceCell, SourceNotice, TIME_RANGE_RE, CLOSURE_TOKEN_RE, program_types, north_beach_pool_identity
 from .window_dates import parse_window_dates
 
 
@@ -45,7 +45,7 @@ def _cell_pool(cell: SourceCell, time_match) -> str | None:
 def source_slots(source: PdfSource) -> tuple[SourceSlot, ...]:
     slots = []
     for cell in source.cells:
-        types = program_types(cell.text)
+        types = program_types(re.sub(r"\([^()]*\)", "", cell.text) if north_beach_pool_identity(source.text) else cell.text)
         if not types:
             continue
         ranges = list(TIME_RANGE_RE.finditer(cell.text))
@@ -116,13 +116,17 @@ _RECURRENCE_RE = re.compile(r"\bevery\s+([1-5])(?:st|nd|rd|th)\s+"
                             r"(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+of\s+the\s+month\b", re.IGNORECASE)
 
 
-def _notice_closures(notice: SourceNotice, window: tuple[date, date]) -> list[tuple]:
+def _notice_closures(notice: SourceNotice, window: tuple[date, date], *, paired: bool = False) -> list[tuple]:
     if not notice.facility:
         raise ValueError("unresolved_closure_scope")
     text = " ".join(notice.text.split())
+    if paired:
+        text = re.sub(r"\b(" + "|".join(_MONTH_NUMBERS) + r")\s+(\d{1,2})\s*[-–]\s*(\d{1,2})(?![\d:])\b",
+                      lambda match: f"{match[1]} {match[2]} - {match[1]} {match[3]}", text, flags=re.IGNORECASE)
     if not re.search(r"\b(?:will be closed|pool(?:s)? closed|(?:holiday|training) closures)\b", text, re.IGNORECASE):
         raise ValueError("unresolved_closure_notice")
-    if re.search(r"\b(?:small|main|warm|cool|therapy)\s+pool\b|\b(?:may|might|possibly|except|unless)\b", text, re.IGNORECASE):
+    scope_text = re.sub(r"\b" + notice.physical_pool + r" pool\b", "pool", text, flags=re.IGNORECASE) if paired and notice.physical_pool else text
+    if re.search(r"\b(?:small|main|warm|cool|therapy)\s+pool\b|\b(?:may|might|possibly|except|unless)\b", scope_text, re.IGNORECASE):
         raise ValueError("unresolved_closure_scope")
     text = re.split(r"\breopen\b", text, maxsplit=1, flags=re.IGNORECASE)[0]
     recurrence = _RECURRENCE_RE.search(text)
@@ -188,12 +192,18 @@ def source_closure_coverage(source: PdfSource, payload: dict) -> dict:
         issues.append("source_window_unavailable")
     else:
         for notice in source.notices:
+            if notice.session_cell and north_beach_pool_identity(source.text):
+                continue
             try:
-                expected.extend(_notice_closures(notice, window))
+                parsed = _notice_closures(notice, window, paired=bool(north_beach_pool_identity(source.text)))
+                expected.extend([(*item, notice.physical_pool) for item in parsed] if north_beach_pool_identity(source.text) else parsed)
             except ValueError as error:
                 issues.append(f"{notice.id}:{error}")
+    if not north_beach_pool_identity(source.text) and any(closure.get("physical_pool") for closure in payload.get("closures", [])):
+        issues.append("unsupported_pool_closure")
     expected_counts = Counter(expected)
-    actual = Counter(tuple(closure.get(field) for field in ("start", "end", "start_time", "end_time"))
+    fields = ("start", "end", "start_time", "end_time") + (("physical_pool",) if north_beach_pool_identity(source.text) else ())
+    actual = Counter(tuple(closure.get(field) for field in fields)
                      for closure in payload.get("closures", []))
     if expected_counts != actual:
         issues.append("source_closure_mismatch")
@@ -206,8 +216,9 @@ def source_publication_coverage(source: PdfSource, payload: dict, *, visual_page
     sessions = source_coverage(source, payload, visual_pages=visual_pages)
     window = source_window_coverage(source, payload)
     closures = source_closure_coverage(source, payload)
-    return sessions | {"ok": sessions["ok"] and window["ok"] and closures["ok"],
-                       "window": window, "closures": closures}
+    exclusions = source_exclusion_coverage(source, payload)
+    return sessions | {"ok": sessions["ok"] and window["ok"] and closures["ok"] and exclusions["ok"],
+                       "window": window, "closures": closures, "exclusions": exclusions}
 
 TYPE_TOKENS: dict[str, tuple[str, ...]] = {
     "lap_swim": ("lap",),
@@ -374,3 +385,46 @@ def _start_variants(start: str) -> list[str]:
     if minute == 0:
         variants.extend([f"{hour_12}{meridiem}", f"{hour_12} {meridiem}"])
     return variants
+
+
+def source_excluded_dates(source: PdfSource) -> dict[str, list[str]]:
+    window = source_window(source)
+    excluded = {}
+    for notice in source.notices:
+        if not notice.session_cell:
+            continue
+        match = re.search(r"\(CLOSED\s+(\d{1,2}/\d{1,2}(?:\s*&\s*\d{1,2}/\d{1,2})*)\)", notice.text, re.IGNORECASE)
+        if not match or not window or len(CLOSURE_TOKEN_RE.findall(notice.text)) != 1:
+            raise ValueError(f"{notice.id}:unresolved_session_exclusion")
+        dates = []
+        for part in re.split(r"\s*&\s*", match[1]):
+            month, day = map(int, part.split("/"))
+            candidates = []
+            for year in range(window[0].year, window[1].year + 1):
+                try:
+                    value = date(year, month, day)
+                except ValueError:
+                    continue
+                if window[0] <= value <= window[1]:
+                    candidates.append(value)
+            cell = next(cell for cell in source.cells if cell.id == notice.session_cell)
+            if len(candidates) != 1 or candidates[0].strftime("%A").lower() != cell.day:
+                raise ValueError(f"{notice.id}:ambiguous_exclusion_date")
+            dates.append(candidates[0].isoformat())
+        excluded[notice.session_cell] = sorted(set(dates))
+    return excluded
+
+
+def source_exclusion_coverage(source: PdfSource, payload: dict) -> dict:
+    try:
+        excluded = source_excluded_dates(source)
+        slots = {slot.key: slot.cell.id for slot in source_slots(source)}
+        issues = []
+        for session in payload.get("sessions", []):
+            key = tuple(session.get(field) for field in ("day", "type", "start", "end", "pool"))
+            expected = excluded.get(slots.get(key), [])
+            if session.get("excluded_dates", []) != expected:
+                issues.append("source_exclusion_mismatch")
+        return {"ok": not issues, "issues": issues, "expected": excluded}
+    except ValueError as error:
+        return {"ok": False, "issues": [str(error)]}

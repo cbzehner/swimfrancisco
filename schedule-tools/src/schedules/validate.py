@@ -65,7 +65,7 @@ def validate(payload: dict, *, prior_sessions_count: int | None = None) -> Valid
     for index, session in enumerate(sessions, start=1):
         if not isinstance(session, dict):
             continue
-        key = tuple(session.get(field) for field in ("day", "type", "start", "end", "pool"))
+        key = tuple(session.get(field) for field in ("day", "type", "start", "end", "pool", "physical_pool"))
         if all(value is None or isinstance(value, str) for value in key):
             if key in session_keys:
                 violations.append(Violation(
@@ -80,6 +80,17 @@ def validate(payload: dict, *, prior_sessions_count: int | None = None) -> Valid
                 code="invalid_session_time_range",
                 message=f"session #{index} has an invalid time range",
             ))
+
+    for session in sessions:
+        if not isinstance(session, dict) or not isinstance(session.get("excluded_dates", []), list):
+            continue
+        for value in session.get("excluded_dates", []):
+            try:
+                parsed = date.fromisoformat(value)
+                if parsed.strftime("%A").lower() != session.get("day") or not payload["effective_start"] <= value <= (payload.get("effective_end") or value):
+                    raise ValueError("Exclusion outside the session's dates")
+            except (ValueError, TypeError, KeyError):
+                violations.append(Violation("schema_violation", "Invalid session exclusion date"))
 
     for index, access_hour in enumerate(access_hours, start=1):
         if not isinstance(access_hour, dict):

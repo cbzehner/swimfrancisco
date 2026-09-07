@@ -105,13 +105,18 @@ class ReviewCandidate:
     source_url: str = ""
     view_id: int | None = None
     extracted_at: str = ""
+    bundle_sha256: str = ""
+
+    @property
+    def source_identity(self) -> str:
+        return self.bundle_sha256 or self.pdf_sha256
 
     @property
     def recency_key(self) -> tuple[str, str, str]:
         return (self.fetch_date, self.extracted_at, self.review_dir.name)
 
 
-_PROVIDER_JSON_EXCLUDES = {"reviewed.json"}
+_PROVIDER_JSON_EXCLUDES = {"reviewed.json", "source-bundle.json"}
 
 
 def _provider_json_paths(review_dir: Path) -> list[Path]:
@@ -153,7 +158,7 @@ def find_review_candidates(
                 continue
             if not isinstance(artifact, dict):
                 continue
-            full_sha = artifact.get("pdf_sha256")
+            full_sha = artifact.get("bundle_sha256", artifact.get("pdf_sha256"))
             if not isinstance(full_sha, str) or len(full_sha) != 64:
                 continue
             payload_raw = artifact.get("payload")
@@ -167,7 +172,8 @@ def find_review_candidates(
             candidates.append(
                 ReviewCandidate(
                     slug=slug,
-                    pdf_sha256=full_sha,
+                    pdf_sha256=artifact.get("pdf_sha256", ""),
+                    bundle_sha256=artifact.get("bundle_sha256", ""),
                     review_dir=review_dir,
                     source_path=_source_path(review_dir),
                     fetch_date=fetch_date,
@@ -246,7 +252,7 @@ def _latest_reviewed_snapshot(
 
 
 def _source_path(review_dir: Path) -> Path:
-    for name in ("source.pdf", "source.csv", "source.html"):
+    for name in ("source-bundle.json", "source.pdf", "source.csv", "source.html"):
         path = review_dir / name
         if path.exists():
             return path
@@ -286,7 +292,7 @@ def seed_draft(
     extraction, remove the file and re-run `schedules review`.
     """
     today = today or pacific_today()
-    target = reviewed_path(candidate.slug, candidate.fetch_date, candidate.pdf_sha256, root=data_root)
+    target = reviewed_path(candidate.slug, candidate.fetch_date, candidate.source_identity, root=data_root)
     if target.exists():
         return target
 
@@ -314,12 +320,13 @@ def draft_envelope(
     )
     payload = provider_payload.get("payload", {})
 
+    identity = ({"bundle_sha256": candidate.bundle_sha256, "source_bundle": provider_payload["source_bundle"]}
+                if candidate.bundle_sha256 else {"pdf_sha256": candidate.pdf_sha256, "source_pdf_url": source_pdf_url})
     return {
+        **identity,
         "slug": candidate.slug,
-        "pdf_sha256": candidate.pdf_sha256,
         "reviewed_at": today.isoformat(),
         "attested_by": attested_by,
-        "source_pdf_url": source_pdf_url,
         "payload": payload,
     }
 

@@ -933,3 +933,73 @@ def test_invalid_decisions_json_does_not_break_direct(monkeypatch, tmp_path) -> 
 
     assert exit_code == 0
     assert [result.slug for result in results] == ["direct-one"]
+
+
+
+def test_paired_extraction_reuses_unchanged_member_and_configuration(tmp_path, north_beach_pair, monkeypatch):
+    import hashlib
+    from schedules import pipeline, paths, artifacts
+    from schedules.models import ProviderResult
+    from schedules.paths import PROMPT_PATH
+    from schedules.providers.openai_provider import extraction_configuration
+    entry, components = north_beach_pair
+    root = tmp_path / "data"
+    content = tmp_path / "content"
+    content.mkdir()
+    (content / (entry.slug + ".md")).write_text(Path("content/spots/north-beach-pool.md").read_text())
+    monkeypatch.setattr(pipeline, "CONTENT_SPOTS_DIR", content)
+    monkeypatch.setattr(pipeline, "load_registry", lambda: [entry])
+    monkeypatch.setattr(pipeline, "REPORT_PATHS", {"openai": tmp_path / "report.md"})
+    monkeypatch.setattr(pipeline, "artifact_path", lambda *args: paths.artifact_path(*args, root=root))
+    monkeypatch.setattr(pipeline, "reviewed_path", lambda *args: paths.reviewed_path(*args, root=root))
+    monkeypatch.setattr(pipeline, "save_artifact_bundle", lambda **kwargs: artifacts.save_artifact_bundle(**kwargs, root=root))
+    monkeypatch.setattr(pipeline, "skip_if_fresh", lambda **kwargs: artifacts.skip_if_fresh(**kwargs, root=root))
+    documents = {part["artifact"]["source_pdf_url"]: part["document"] for part in components}
+    def fetch(slug, url):
+        document = documents[url]
+        digest = hashlib.sha256(document).hexdigest()
+        parent = paths.review_dir(slug, "2026-09-06", digest, root=root)
+        parent.mkdir(parents=True, exist_ok=True)
+        path = parent / "source.pdf"
+        path.write_bytes(document)
+        return FetchResult(path, digest, document, False, 1)
+    monkeypatch.setattr(pipeline, "fetch_pdf", fetch)
+    calls = []
+    def extract(provider, document, prompt, schema):
+        index = 0 if document.startswith(components[0]["document"]) else 1
+        calls.append(index)
+        artifact = components[index]["artifact"]
+        details = artifact["details"] | {"configuration": extraction_configuration(prompt)}
+        return ProviderResult(artifact["payload"], artifact["model"], {}, details)
+    monkeypatch.setattr(pipeline, "extract_with_provider", extract)
+    command = PdfRun("openai", (entry.slug,), False, ExpandFromDecisions(DecisionSet.from_items([])))
+    assert pipeline.run_pipeline(command)[0] == 0
+    assert calls == [0, 1]
+    assert pipeline.run_pipeline(command)[0] == 0
+    assert calls == [0, 1]
+    documents[entry.pool_sources[1].url] += b"\n% changed original bytes\n"
+    assert pipeline.run_pipeline(command)[0] == 0
+    assert calls == [0, 1, 1]
+    changed_prompt = tmp_path / "prompt.md"
+    changed_prompt.write_text(PROMPT_PATH.read_text() + "\nKeep physical pools distinct.\n")
+    monkeypatch.setattr(pipeline, "PROMPT_PATH", changed_prompt)
+    assert pipeline.run_pipeline(command)[0] == 0
+    assert calls == [0, 1, 1, 0, 1]
+    assert pipeline.run_pipeline(command)[0] == 0
+    assert calls == [0, 1, 1, 0, 1]
+    assert not list(root.glob("*/*/reviewed.json"))
+
+
+@pytest.mark.parametrize("failed_pool", ["cool", "warm"])
+def test_pair_failure_never_builds_bundle(tmp_path, north_beach_pair, monkeypatch, failed_pool):
+    from schedules import pipeline
+    entry, _ = north_beach_pair
+    monkeypatch.setattr(pipeline, "load_registry", lambda: [entry])
+    monkeypatch.setattr(pipeline, "REPORT_PATHS", {"openai": tmp_path / "report.md"})
+    def process(work, **kwargs):
+        if work.pdf_url == next(source.url for source in entry.pool_sources if source.pool == failed_pool):
+            return Aborted(entry.slug, entry.official_page_url, work.pdf_url, "published", "failed", 0, 0, None)
+        return _unchanged(entry.slug)
+    monkeypatch.setattr(pipeline, "_process_entry", process)
+    monkeypatch.setattr(pipeline, "save_pool_bundle", lambda *args: pytest.fail("incomplete bundle"))
+    assert pipeline.run_pipeline(PdfRun("openai", (entry.slug,), False, ExpandFromDecisions(DecisionSet.from_items([]))))[0] == 1

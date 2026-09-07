@@ -262,7 +262,7 @@ class _RecordSpec(NamedTuple):
 
 _SESSION_SPEC = _RecordSpec(
     required=("day", "type", "start", "end"),
-    optional=("pool", "notes"),
+    optional=("pool", "notes", "physical_pool", "excluded_dates", "pool_label_raw", "source_sha256", "source_cell"),
     sort_key=lambda item: (
         _DAY_INDEX.get(item["day"], 99),
         item["start"],
@@ -297,7 +297,7 @@ _ACCESS_EXCEPTION_SPEC = _RecordSpec(
 
 _CLOSURE_SPEC = _RecordSpec(
     required=("start", "end", "reason"),
-    optional=("start_time", "end_time"),
+    optional=("start_time", "end_time", "physical_pool"),
     sort_key=lambda item: (
         item["start"],
         item["end"],
@@ -314,7 +314,9 @@ def _normalize_records(raw_records: list[dict], spec: _RecordSpec) -> list[dict[
         item: dict[str, str] = {field: str(record[field]) for field in spec.required}
         for field in spec.optional:
             value = record.get(field)
-            if isinstance(value, str) and value.strip():
+            if field == "excluded_dates" and isinstance(value, list):
+                item[field] = list(value)
+            elif isinstance(value, str) and value.strip():
                 item[field] = value.strip()
         normalized.append(item)
     return sorted(normalized, key=spec.sort_key)

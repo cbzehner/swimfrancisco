@@ -442,7 +442,7 @@
                       {% else %}
                         {% for s in cell %}
                           <span class="weekly-grid-session">
-                            {{ s.start }}–{{ s.end }}{% if s.pool %} <span class="zone">({{ s.pool }})</span>{% endif %}
+                            {{ s.start }}–{{ s.end }}{% if s.physical_pool %} <span class="zone">{{ s.physical_pool | capitalize }}</span>{% endif %}{% if s.pool %} <span class="zone">({{ s.pool }})</span>{% endif %}{% if s.excluded_dates %} <small>{{ s.excluded_dates | join(sep=", ") }}: {{ trans(key="status_closed", lang=lang) }}</small>{% endif %}
                           </span>
                         {% endfor %}
                       {% endif %}
@@ -524,7 +524,7 @@
                   {{ self::format_iso_date(iso=c.start, active_lang=lang, with_year=false) }} – {{ self::format_iso_date(iso=c.end, active_lang=lang, with_year=false) }}
                 {% endif %}
               </span>
-              {% if c.pool %}<span class="closure-banner-zone">{{ c.pool | upper }}</span>{% endif %}
+              {% if c.physical_pool %}<span class="closure-banner-zone">{{ c.physical_pool | upper }}</span>{% endif %}
               <span class="closure-banner-reason">{{ self::closure_reason(reason=c.reason, reason_code=c.reason_code | default(value=""), active_lang=lang) }}</span>
             </div>
           {% endfor %}

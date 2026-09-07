@@ -3,7 +3,7 @@ from __future__ import annotations
 import tomllib
 from typing import get_args
 
-from .models import PoolEntry, SourceKind, SourceStatus
+from .models import PoolEntry, PoolSource, SourceKind, SourceStatus
 from .paths import CONTENT_SPOTS_DIR, REGISTRY_PATH
 
 
@@ -22,7 +22,25 @@ def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
 
     for index, raw_entry in enumerate(raw_entries, start=1):
         slug = _require_string(raw_entry, "slug", index)
-        pdf_url = _require_string(raw_entry, "pdf_url", index)
+        sources = raw_entry.get("pool_sources")
+        if sources is not None:
+            if slug != "north-beach-pool" or raw_entry.get("source_kind", "sfrecpark_pdf") != "sfrecpark_pdf":
+                raise ValueError("Paired sources are supported only for North Beach")
+            if "pdf_url" in raw_entry or not isinstance(sources, list) or len(sources) != 2:
+                raise ValueError("Use exactly two pool_sources, without a single pdf_url")
+            if any(not isinstance(item, dict) or set(item) != {"pool", "url"} for item in sources):
+                raise ValueError("Each pool source requires pool and url")
+            if {item["pool"] for item in sources} != {"cool", "warm"}:
+                raise ValueError("North Beach requires one Cool and one Warm source")
+            from .discover import view_id_from_url, absolute_view_url
+            urls = [item["url"] for item in sources]
+            if any(not isinstance(url, str) or not view_id_from_url(url) or url != absolute_view_url(view_id_from_url(url)) for url in urls) or len(set(urls)) != 2:
+                raise ValueError("Pool sources require distinct official DocumentCenter URLs")
+            pool_sources = tuple(PoolSource(**item) for item in sorted(sources, key=lambda item: item["pool"]))
+            pdf_url = ""
+        else:
+            pdf_url = _require_string(raw_entry, "pdf_url", index)
+            pool_sources = ()
         official_page_url = _require_string(raw_entry, "official_page_url", index)
         source_status = raw_entry.get("source_status", "published")
         source_kind = raw_entry.get("source_kind", "sfrecpark_pdf")
@@ -57,6 +75,7 @@ def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
                 source_status=source_status,
                 source_kind=source_kind,
                 notes=notes,
+                pool_sources=pool_sources,
             )
         )
 

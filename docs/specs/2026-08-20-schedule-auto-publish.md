@@ -21,6 +21,24 @@ contain source evidence and a review checklist, never inferred hours; only a
 human correction can supply a reviewed snapshot and content changes. Reuse the
 same pool/source PR and preserve reviewer edits. Do not auto-merge these PRs.
 
+### North Beach paired-source extension (approved September 6, 2026)
+
+Support exactly one official Cool/Warm pair with matching printed windows.
+Extract and independently verify each original, then atomically attest and
+project one combined facility schedule. Preserve original bytes, URLs, full
+hashes, source cells, literal allocation labels, and separate physical pool
+identity. Cache each component by bytes and complete extraction configuration;
+bundle identity includes both members. Missing or failed members, conflicting
+windows or closures, unsupported formats, and stale source identities hold the
+whole update. Never extend expired prior hours.
+
+Pool-specific closures and explicit whole-session exclusion dates retain their
+scope through review, projection, board status, and Pacific-time Today rows.
+Ambiguous closure wording remains a draft review PR. Single-document behavior,
+provider/model, spending limits, and checked direct-main publication remain in
+place. See `docs/schedules.md` for artifact shapes, frozen sources, tests, and
+rollout evidence. This extension does not reinstate the historical PR publisher.
+
 ### Terms
 
 - **Source facts:** what an official document explicitly states, including its

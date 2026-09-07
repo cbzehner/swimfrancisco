@@ -25,22 +25,22 @@ def load_reviewed_snapshot_from_path(
         raise ValueError(
             f"{path} envelope slug={raw['slug']!r} does not match directory slug={expected_slug!r}"
         )
-    if expected_sha is not None and raw["pdf_sha256"] != expected_sha:
+    if expected_sha is not None and raw.get("bundle_sha256", raw.get("pdf_sha256")) != expected_sha:
         raise ValueError(f"{path} envelope pdf_sha256 does not match current source")
     return raw
 
 
 _COMPARE_KEYS = {
-    "sessions": ("day", "type", "start", "end", "pool"),
+    "sessions": ("day", "type", "start", "end", "pool", "physical_pool", "excluded_dates"),
     "access_hours": ("day", "start", "end", "label"),
     "access_exceptions": ("date", "start", "end", "label", "reason"),
-    "closures": ("start", "end", "reason", "start_time", "end_time"),
+    "closures": ("start", "end", "reason", "start_time", "end_time", "physical_pool"),
 }
 
 
 def _canonical_list(items: list, keys: tuple[str, ...]) -> list[dict]:
     projected = [{key: item[key] for key in keys if key in item} for item in items]
-    projected.sort(key=lambda item: tuple(item.get(key, "") for key in keys))
+    projected.sort(key=lambda item: tuple(json.dumps(item.get(key, ""), sort_keys=True) for key in keys))
     return projected
 
 

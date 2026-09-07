@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from io import BytesIO
 
 import pdfplumber
@@ -18,7 +18,7 @@ _PROGRAM_RE = re.compile(
     r"\b(?:swim|senior|family|exercise|aerobics|rentals?|lessons?|sfusd|synchro|hockey|piranha|parent|preschool|masters?)\b",
     re.IGNORECASE,
 )
-_CLOCK = r"(?:\d{1,2}(?::\d{2})?\s*(?:[ap]\.?m\.?)?|noon|midnight)"
+_CLOCK = r"(?:\d{1,2}(?::\d{2})?\s*(?:[ap](?:\.?m\.?)?)?|noon|midnight)"
 TIME_RANGE_RE = re.compile(rf"(?<![\d/:])(?P<start>{_CLOCK})\s*[-–—]\s*(?P<end>{_CLOCK})(?![\d/])", re.IGNORECASE)
 CLOSURE_TOKEN_RE = re.compile(r"\b(?:closed|closures?|closing|cancel\w*|unavailable|training\w*|maintenance|holidays?)\b", re.IGNORECASE)
 MAX_PDF_BYTES = 25 * 1024 * 1024
@@ -40,6 +40,10 @@ class SourceNotice:
     id: str
     text: str
     facility: bool
+    page: int = 1
+    bounds: tuple[float, float, float, float] | None = None
+    physical_pool: str | None = None
+    session_cell: str | None = None
 
 
 @dataclass(frozen=True)
@@ -49,6 +53,13 @@ class PdfSource:
     issues: tuple[str, ...]
     page_count: int
     notices: tuple[SourceNotice, ...]
+
+
+
+def north_beach_pool_identity(text: str) -> str | None:
+    title = text.split("TUESDAY", 1)[0]
+    identities = re.findall(r"NORTH\s+BEACH\s+POOL\s*\((COOL|WARM)\)\s+(?:FALL|WINTER|SPRING|SUMMER|INTERIM)\s+20\d{2}\s+SCHEDULE", title, re.IGNORECASE)
+    return identities[0].lower() if len(identities) == 1 else None
 
 
 def program_types(text: str) -> tuple[str, ...]:
@@ -147,7 +158,7 @@ def _program_row_cells(page) -> list[SourceCell] | None:
     return cells
 
 
-def _closure_notices(page, header: list[dict]) -> list[SourceNotice]:
+def _closure_notices(page, header: list[dict], cells: list[SourceCell] | None = None) -> list[SourceNotice]:
     words = page.extract_words()
     markers = [word for word in words if CLOSURE_TOKEN_RE.search(word["text"])]
     if not markers:
@@ -164,7 +175,25 @@ def _closure_notices(page, header: list[dict]) -> list[SourceNotice]:
     blocks = re.split(r"[•●]|\bPool Info:", text)
     notices = [SourceNotice(f"p{page.page_number}-notice-{index}", block.strip(), True)
                for index, block in enumerate(blocks) if CLOSURE_TOKEN_RE.search(block)]
+    covered = []
+    identity = north_beach_pool_identity(page.extract_text() or "")
+    if identity:
+        scoped = []
+        for notice in notices:
+            pools = re.findall(r"\b(cool|warm) pool will be closed\b", notice.text, re.IGNORECASE)
+            scoped.append(replace(notice, physical_pool=pools[0].lower()) if len(pools) == 1 else notice)
+        notices = scoped
+    if identity and cells is not None:
+        for cell in cells:
+            if not CLOSURE_TOKEN_RE.search(cell.text):
+                continue
+            facility = bool(re.search(r"All city pools will be", cell.text, re.IGNORECASE))
+            notices.append(SourceNotice(cell.id + "-notice", cell.text, facility, cell.page, cell.bounds,
+                                        None if facility else identity, None if facility else cell.id))
+            covered.append(cell.bounds)
     for index, word in enumerate(markers):
+        if any(x0 <= word["x0"] < x1 and top <= word["top"] <= bottom for x0, top, x1, bottom in covered):
+            continue
         if word["x0"] < left or word["top"] < top:
             notices.append(SourceNotice(f"p{page.page_number}-unresolved-{index}", word["text"], False))
     return notices
@@ -189,19 +218,22 @@ def inspect_pdf_source(pdf_bytes: bytes) -> PdfSource:
                 issues.append(f"page_{page.page_number}:no_text")
                 continue
             header = _weekday_header(page)
-            notices.extend(_closure_notices(page, header))
             if not header:
+                notices.extend(_closure_notices(page, header))
                 if TIME_RANGE_RE.search(text) and program_types(text):
                     issues.append(f"page_{page.page_number}:unsupported_grid")
                 continue
             row_cells = _program_row_cells(page)
             page_cells = row_cells if row_cells is not None else _column_cells(page, header)
+            notices.extend(_closure_notices(page, header, page_cells))
             if not page_cells:
                 issues.append(f"page_{page.page_number}:empty_grid")
             cells.extend(page_cells)
             for cell in page_cells:
                 if cell.text.count("(") != cell.text.count(")"):
                     issues.append(f"{cell.id}:unbalanced_text")
+                if north_beach_pool_identity(text) and re.search(r"All city pools will be", cell.text, re.IGNORECASE):
+                    continue
                 if not program_types(cell.text) and not re.search(
                     r"\b(?:lessons?|learn|exercise|aerobics|rentals?|masters?|team|sfusd|piranha|preschool|parent|synchro|hockey)\b",
                     cell.text, re.IGNORECASE,
