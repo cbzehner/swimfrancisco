@@ -1,0 +1,543 @@
+{
+  "bundle_sha256": "e494dea3b5f825d3d9b27e2a24720ffa80971ba0c7bb0ea655f7221ccb7ee869",
+  "source_bundle": [
+    {
+      "pool": "cool",
+      "url": "https://sfrecpark.org/DocumentCenter/View/29953",
+      "sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c",
+      "capture": "2026-09-06-6c2b2e77fb23",
+      "configuration": {
+        "image_detail": "original",
+        "implementation_sha256": {
+          "_time.py": "9634c7e294caa7bddde2679e724f77d8e07fe1b99e1a1b22a1cfc00632d4dcb5",
+          "artifacts.py": "8eef018a0b2cf2006a20ce40109953e30944fa2ecd866ee3c3762f46e373a535",
+          "grounding.py": "c6cecec97ccc83fce534716aedf5232be1173dfc3c43b0dbcaac5ee44abc2443",
+          "providers/openai_provider.py": "22541217a5eca32051455d4454415adbd44f7d98746c82477adaa5e4cc2bf6b5",
+          "schema.py": "2d067de1766b58313543df4630f9e6ace4a67d48105a88ec40368397b447a7fb",
+          "signals.py": "31c3a2bfb7ea3d239c392b423fe1572f7d3cee9b01a71a9cded31cefdff72db0",
+          "window_dates.py": "ad6af1472977d18e6ec4df57c0198cb7ebb3f66ca20c0333cd57f008822259b9"
+        },
+        "libraries": {
+          "pdfminer-six": "20260107",
+          "pdfplumber": "0.11.10",
+          "pillow": "12.3.0",
+          "pypdfium2": "5.13.0"
+        },
+        "max_output_tokens": 8192,
+        "model": "gpt-5.5-2026-04-23",
+        "pricing": {
+          "cached_input_usd_per_million": 0.5,
+          "checked_at": "2026-09-05",
+          "input_usd_per_million": 5,
+          "output_usd_per_million": 30,
+          "service_tier": "default",
+          "source": "https://developers.openai.com/api/docs/models/gpt-5.5"
+        },
+        "prompt_sha256": "bc7660a8aceb19d05b6b8b01ae06ac8c125edca1ef4193d5a93b74ac8f25eb1b",
+        "reasoning": "medium",
+        "render_dpi": 150,
+        "schema_sha256": "d2839c7fa22768d3b11935bd0e7103d9424f7d0d93813349e0c63e91e7ed6629"
+      }
+    },
+    {
+      "pool": "warm",
+      "url": "https://sfrecpark.org/DocumentCenter/View/29954",
+      "sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+      "capture": "2026-09-06-ac196df42a14",
+      "configuration": {
+        "image_detail": "original",
+        "implementation_sha256": {
+          "_time.py": "9634c7e294caa7bddde2679e724f77d8e07fe1b99e1a1b22a1cfc00632d4dcb5",
+          "artifacts.py": "8eef018a0b2cf2006a20ce40109953e30944fa2ecd866ee3c3762f46e373a535",
+          "grounding.py": "c6cecec97ccc83fce534716aedf5232be1173dfc3c43b0dbcaac5ee44abc2443",
+          "providers/openai_provider.py": "22541217a5eca32051455d4454415adbd44f7d98746c82477adaa5e4cc2bf6b5",
+          "schema.py": "2d067de1766b58313543df4630f9e6ace4a67d48105a88ec40368397b447a7fb",
+          "signals.py": "31c3a2bfb7ea3d239c392b423fe1572f7d3cee9b01a71a9cded31cefdff72db0",
+          "window_dates.py": "ad6af1472977d18e6ec4df57c0198cb7ebb3f66ca20c0333cd57f008822259b9"
+        },
+        "libraries": {
+          "pdfminer-six": "20260107",
+          "pdfplumber": "0.11.10",
+          "pillow": "12.3.0",
+          "pypdfium2": "5.13.0"
+        },
+        "max_output_tokens": 8192,
+        "model": "gpt-5.5-2026-04-23",
+        "pricing": {
+          "cached_input_usd_per_million": 0.5,
+          "checked_at": "2026-09-05",
+          "input_usd_per_million": 5,
+          "output_usd_per_million": 30,
+          "service_tier": "default",
+          "source": "https://developers.openai.com/api/docs/models/gpt-5.5"
+        },
+        "prompt_sha256": "bc7660a8aceb19d05b6b8b01ae06ac8c125edca1ef4193d5a93b74ac8f25eb1b",
+        "reasoning": "medium",
+        "render_dpi": 150,
+        "schema_sha256": "d2839c7fa22768d3b11935bd0e7103d9424f7d0d93813349e0c63e91e7ed6629"
+      }
+    }
+  ],
+  "slug": "north-beach-pool",
+  "reviewed_at": "2026-09-06",
+  "attested_by": "ci",
+  "payload": {
+    "effective_start": "2026-09-01",
+    "effective_end": "2026-12-12",
+    "schedule_basis": "swim_schedule",
+    "sessions": [
+      {
+        "day": "tuesday",
+        "end": "10:15",
+        "evidence": "Lap Swim 7:30am-10:15am",
+        "start": "07:30",
+        "type": "lap_swim",
+        "physical_pool": "cool",
+        "pool_label_raw": null,
+        "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c",
+        "source_cell": "p1-c1-b1"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:00",
+        "evidence": "Lap Swim 12:30pm-3:00pm",
+        "start": "12:30",
+        "type": "lap_swim",
+        "physical_pool": "cool",
+        "pool_label_raw": null,
+        "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c",
+        "source_cell": "p1-c1-b3"
+      },
+      {
+        "day": "tuesday",
+        "end": "18:30",
+        "evidence": "Lap Swim 3:30pm- 6:30pm",
+        "start": "15:30",
+        "type": "lap_swim",
+        "physical_pool": "cool",
+        "pool_label_raw": null,
+        "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c",
+        "source_cell": "p1-c1-b4"
+      },
+      {
+        "day": "wednesday",
+        "end": "10:15",
+        "evidence": "Lap Swim 9:00am-10:15am",
+        "start": "09:00",
+        "type": "lap_swim",
+        "physical_pool": "cool",
+        "pool_label_raw": null,
+        "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c",
+        "source_cell": "p1-c2-b5"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:15",
+        "evidence": "Lap Swim 11:45am-3:15pm",
+        "start": "11:45",
+        "type": "lap_swim",
+        "physical_pool": "cool",
+        "pool_label_raw": null,
+        "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c",
+        "source_cell": "p1-c2-b7"
+      },
+      {
+        "day": "wednesday",
+        "end": "18:30",
+        "evidence": "Lap Swim 5:30pm-6:30pm",
+        "start": "17:30",
+        "type": "lap_swim",
+        "physical_pool": "cool",
+        "pool_label_raw": null,
+        "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c",
+        "source_cell": "p1-c2-b9"
+      },
+      {
+        "day": "thursday",
+        "end": "11:00",
+        "evidence": "Lap Swim 7:30am-11:00am",
+        "start": "07:30",
+        "type": "lap_swim",
+        "physical_pool": "cool",
+        "pool_label_raw": null,
+        "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c",
+        "source_cell": "p1-c3-b10"
+      },
+      {
+        "day": "thursday",
+        "end": "14:00",
+        "evidence": "Lap Swim 11:00am-2:00pm (CLOSED 9/24 & 10/22)",
+        "excluded_dates": [
+          "2026-09-24",
+          "2026-10-22"
+        ],
+        "notes": "Printed cell states CLOSED 9/24 & 10/22.",
+        "start": "11:00",
+        "type": "lap_swim",
+        "physical_pool": "cool",
+        "pool_label_raw": null,
+        "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c",
+        "source_cell": "p1-c3-b11"
+      },
+      {
+        "day": "thursday",
+        "end": "15:15",
+        "evidence": "Lap Swim 2:15pm-3:15pm",
+        "start": "14:15",
+        "type": "lap_swim",
+        "physical_pool": "cool",
+        "pool_label_raw": null,
+        "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c",
+        "source_cell": "p1-c3-b12"
+      },
+      {
+        "day": "thursday",
+        "end": "18:30",
+        "evidence": "Lap Swim 4:00pm-6:30pm",
+        "start": "16:00",
+        "type": "lap_swim",
+        "physical_pool": "cool",
+        "pool_label_raw": null,
+        "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c",
+        "source_cell": "p1-c3-b14"
+      },
+      {
+        "day": "friday",
+        "end": "10:15",
+        "evidence": "Lap Swim 9:00am- 10:15am",
+        "start": "09:00",
+        "type": "lap_swim",
+        "physical_pool": "cool",
+        "pool_label_raw": null,
+        "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c",
+        "source_cell": "p1-c4-b15"
+      },
+      {
+        "day": "friday",
+        "end": "15:15",
+        "evidence": "Lap Swim 11:45am-3:15pm",
+        "start": "11:45",
+        "type": "lap_swim",
+        "physical_pool": "cool",
+        "pool_label_raw": null,
+        "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c",
+        "source_cell": "p1-c4-b17"
+      },
+      {
+        "day": "friday",
+        "end": "19:30",
+        "evidence": "Lap Swim 5:30pm-7:30pm",
+        "start": "17:30",
+        "type": "lap_swim",
+        "physical_pool": "cool",
+        "pool_label_raw": null,
+        "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c",
+        "source_cell": "p1-c4-b19"
+      },
+      {
+        "day": "saturday",
+        "end": "13:30",
+        "evidence": "Lap Swim 12:00pm-1:30pm",
+        "start": "12:00",
+        "type": "lap_swim",
+        "physical_pool": "cool",
+        "pool_label_raw": null,
+        "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c",
+        "source_cell": "p1-c5-b22"
+      },
+      {
+        "day": "saturday",
+        "end": "16:30",
+        "evidence": "Lap Swim 1:45pm-4:30p",
+        "start": "13:45",
+        "type": "lap_swim",
+        "physical_pool": "cool",
+        "pool_label_raw": null,
+        "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c",
+        "source_cell": "p1-c5-b23"
+      },
+      {
+        "day": "tuesday",
+        "end": "09:00",
+        "evidence": "Lap Swim (Lap/ Therapy) 7:30am-9:00am",
+        "pool": "lap/ therapy",
+        "start": "07:30",
+        "type": "lap_swim",
+        "physical_pool": "warm",
+        "pool_label_raw": "(Lap/ Therapy)",
+        "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+        "source_cell": "p1-c1-b1"
+      },
+      {
+        "day": "tuesday",
+        "end": "10:15",
+        "evidence": "Senior Swim (Lap/Therapy) 9:00am-10:15am",
+        "pool": "lap/therapy",
+        "start": "09:00",
+        "type": "senior_swim",
+        "physical_pool": "warm",
+        "pool_label_raw": "(Lap/Therapy)",
+        "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+        "source_cell": "p1-c1-b2"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:00",
+        "evidence": "Lap Swim (Lap/Therapy) 12:00pm-3:00pm",
+        "pool": "lap/therapy",
+        "start": "12:00",
+        "type": "lap_swim",
+        "physical_pool": "warm",
+        "pool_label_raw": "(Lap/Therapy)",
+        "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+        "source_cell": "p1-c1-b4"
+      },
+      {
+        "day": "tuesday",
+        "end": "17:30",
+        "evidence": "Rec/Family Swim 3:30pm-5:30pm",
+        "start": "15:30",
+        "type": "family_swim",
+        "physical_pool": "warm",
+        "pool_label_raw": null,
+        "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+        "source_cell": "p1-c1-b5"
+      },
+      {
+        "day": "tuesday",
+        "end": "18:30",
+        "evidence": "Lap Swim 5:30pm-6:30pm",
+        "start": "17:30",
+        "type": "lap_swim",
+        "physical_pool": "warm",
+        "pool_label_raw": null,
+        "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+        "source_cell": "p1-c1-b6"
+      },
+      {
+        "day": "wednesday",
+        "end": "10:15",
+        "evidence": "Senior Swim (Lap/Therapy) 9:00am-10:15am",
+        "pool": "lap/therapy",
+        "start": "09:00",
+        "type": "senior_swim",
+        "physical_pool": "warm",
+        "pool_label_raw": "(Lap/Therapy)",
+        "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+        "source_cell": "p1-c2-b7"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:15",
+        "evidence": "Lap Swim (Lap/Therapy) 12:50pm-3:15pm",
+        "pool": "lap/therapy",
+        "start": "12:50",
+        "type": "lap_swim",
+        "physical_pool": "warm",
+        "pool_label_raw": "(Lap/Therapy)",
+        "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+        "source_cell": "p1-c2-b10"
+      },
+      {
+        "day": "wednesday",
+        "end": "18:30",
+        "evidence": "Rec/Family Swim 5:30pm-6:30pm",
+        "start": "17:30",
+        "type": "family_swim",
+        "physical_pool": "warm",
+        "pool_label_raw": null,
+        "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+        "source_cell": "p1-c2-b13"
+      },
+      {
+        "day": "thursday",
+        "end": "09:00",
+        "evidence": "Lap Swim (Lap/ Therapy) 7:30am-9:00am",
+        "pool": "lap/ therapy",
+        "start": "07:30",
+        "type": "lap_swim",
+        "physical_pool": "warm",
+        "pool_label_raw": "(Lap/ Therapy)",
+        "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+        "source_cell": "p1-c3-b14"
+      },
+      {
+        "day": "thursday",
+        "end": "11:00",
+        "evidence": "Senior Swim (Lap/Therapy) 9:00am-11:00am",
+        "pool": "lap/therapy",
+        "start": "09:00",
+        "type": "senior_swim",
+        "physical_pool": "warm",
+        "pool_label_raw": "(Lap/Therapy)",
+        "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+        "source_cell": "p1-c3-b15"
+      },
+      {
+        "day": "thursday",
+        "end": "14:00",
+        "evidence": "Lap Swim (Lap/Therapy) 11:15am-2:00pm (CLOSED 9/24 & 10/22)",
+        "excluded_dates": [
+          "2026-09-24",
+          "2026-10-22"
+        ],
+        "notes": "Printed cell says CLOSED 9/24 & 10/22.",
+        "pool": "lap/therapy",
+        "start": "11:15",
+        "type": "lap_swim",
+        "physical_pool": "warm",
+        "pool_label_raw": "(Lap/Therapy)",
+        "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+        "source_cell": "p1-c3-b16"
+      },
+      {
+        "day": "thursday",
+        "end": "15:15",
+        "evidence": "Lap Swim 2:15pm-3:15pm",
+        "start": "14:15",
+        "type": "lap_swim",
+        "physical_pool": "warm",
+        "pool_label_raw": null,
+        "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+        "source_cell": "p1-c3-b17"
+      },
+      {
+        "day": "thursday",
+        "end": "17:30",
+        "evidence": "Rec/Family Swim 4:00pm-5:30pm",
+        "start": "16:00",
+        "type": "family_swim",
+        "physical_pool": "warm",
+        "pool_label_raw": null,
+        "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+        "source_cell": "p1-c3-b19"
+      },
+      {
+        "day": "friday",
+        "end": "10:15",
+        "evidence": "Rec/Family Swim (1) Senior Swim (1) 9:00am-10:15am",
+        "notes": "Shared cell with Senior Swim; printed (1) is only a numeric lane count and is not used as pool allocation.",
+        "start": "09:00",
+        "type": "family_swim",
+        "physical_pool": "warm",
+        "pool_label_raw": null,
+        "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+        "source_cell": "p1-c4-b21"
+      },
+      {
+        "day": "friday",
+        "end": "10:15",
+        "evidence": "Rec/Family Swim (1) Senior Swim (1) 9:00am-10:15am",
+        "notes": "Shared cell with Rec/Family Swim; printed (1) is only a numeric lane count and is not used as pool allocation.",
+        "start": "09:00",
+        "type": "senior_swim",
+        "physical_pool": "warm",
+        "pool_label_raw": null,
+        "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+        "source_cell": "p1-c4-b21"
+      },
+      {
+        "day": "friday",
+        "end": "15:15",
+        "evidence": "Lap Swim (Lap/Therapy) 12:50pm-3:15pm",
+        "pool": "lap/therapy",
+        "start": "12:50",
+        "type": "lap_swim",
+        "physical_pool": "warm",
+        "pool_label_raw": "(Lap/Therapy)",
+        "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+        "source_cell": "p1-c4-b24"
+      },
+      {
+        "day": "friday",
+        "end": "19:00",
+        "evidence": "Rec/Family Swim 5:30pm-7:00pm",
+        "start": "17:30",
+        "type": "family_swim",
+        "physical_pool": "warm",
+        "pool_label_raw": null,
+        "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+        "source_cell": "p1-c4-b27"
+      },
+      {
+        "day": "saturday",
+        "end": "13:15",
+        "evidence": "Rec/Family Swim 12:00pm-1:15pm",
+        "start": "12:00",
+        "type": "family_swim",
+        "physical_pool": "warm",
+        "pool_label_raw": null,
+        "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+        "source_cell": "p1-c5-b32"
+      },
+      {
+        "day": "saturday",
+        "end": "15:00",
+        "evidence": "Lap Swim (Lap/Therapy) 1:45pm-3:00pm",
+        "pool": "lap/therapy",
+        "start": "13:45",
+        "type": "lap_swim",
+        "physical_pool": "warm",
+        "pool_label_raw": "(Lap/Therapy)",
+        "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+        "source_cell": "p1-c5-b33"
+      },
+      {
+        "day": "saturday",
+        "end": "17:00",
+        "evidence": "Rec/Family Swim 3:30pm-5:00pm",
+        "start": "15:30",
+        "type": "family_swim",
+        "physical_pool": "warm",
+        "pool_label_raw": null,
+        "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+        "source_cell": "p1-c5-b34"
+      }
+    ],
+    "closures": [
+      {
+        "end": "2026-10-31",
+        "reason": "ANUAL MAINTENANCE for North Beach Pool closure",
+        "start": "2026-10-13"
+      },
+      {
+        "end": "2026-09-24",
+        "end_time": "14:00",
+        "reason": "Aquatics Division Training",
+        "start": "2026-09-24",
+        "start_time": "12:00"
+      },
+      {
+        "end": "2026-10-22",
+        "end_time": "14:00",
+        "reason": "Aquatics Division Training",
+        "start": "2026-10-22",
+        "start_time": "12:00"
+      },
+      {
+        "end": "2026-11-26",
+        "end_time": "14:00",
+        "reason": "Aquatics Division Training",
+        "start": "2026-11-26",
+        "start_time": "12:00"
+      },
+      {
+        "end": "2026-11-11",
+        "reason": "Veteran's Day",
+        "start": "2026-11-11"
+      },
+      {
+        "end": "2026-11-27",
+        "reason": "Thanksgiving",
+        "start": "2026-11-26"
+      },
+      {
+        "end": "2026-12-12",
+        "end_time": "12:00",
+        "reason": "Aquatics In-service Training",
+        "start": "2026-12-12",
+        "start_time": "09:00"
+      }
+    ]
+  }
+}
