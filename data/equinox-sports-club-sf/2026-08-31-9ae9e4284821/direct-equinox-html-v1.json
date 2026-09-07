@@ -1,6 +1,6 @@
 {
   "cost_estimate": "deterministic",
-  "extracted_at": "2026-09-07T06:56:59.926363+00:00",
+  "extracted_at": "2026-09-07T19:35:36.970876+00:00",
   "model": "equinox-html-v1",
   "payload": {
     "access_exceptions": [],
@@ -56,7 +56,7 @@
       }
     ],
     "closures": [],
-    "effective_start": "2026-09-06",
+    "effective_start": "2026-09-07",
     "schedule_basis": "facility_hours",
     "sessions": []
   },
