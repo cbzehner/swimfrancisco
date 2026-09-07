@@ -19,6 +19,7 @@ import re
 import shutil
 import subprocess
 import tomllib
+from html.parser import HTMLParser
 from pathlib import Path
 
 import pytest
@@ -53,6 +54,32 @@ def built_site(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 def _read(built_site: Path, slug: str) -> str:
     return (built_site / "spots" / slug / "index.html").read_text()
+
+
+def test_schedule_attribute_round_trips_source_punctuation(tmp_path):
+    if shutil.which("zola") is None:
+        pytest.skip("zola binary not available")
+    (tmp_path / "templates/macros").mkdir(parents=True)
+    (tmp_path / "content").mkdir()
+    (tmp_path / "config.toml").write_text('base_url = "https://example.test"\n')
+    (tmp_path / "content/_index.md").write_text("+++\n+++\n")
+    shutil.copy2(ROOT / "templates/macros/schedule.html", tmp_path / "templates/macros/schedule.html")
+    (tmp_path / "templates/index.html").write_text(
+        '{% import "macros/schedule.html" as schedule %}{% set extra = load_data(path="source.json") %}'
+        '<div data-schedule=\'{{ schedule::data_schedule(extra=extra) }}\'></div>'
+    )
+    source = {"schedules": [{"closures": [{"reason": 'Veteran\'s Day & "training" <notice>'}]}]}
+    (tmp_path / "source.json").write_text(json.dumps(source))
+    result = subprocess.run(["zola", "build"], cwd=tmp_path, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    attributes = []
+    class ScheduleParser(HTMLParser):
+        def handle_starttag(self, tag, attrs):
+            if tag == "div":
+                attributes.append(dict(attrs))
+    ScheduleParser().feed((tmp_path / "public/index.html").read_text())
+    assert len(attributes) == 1 and set(attributes[0]) == {"data-schedule"}
+    assert json.loads(attributes[0]["data-schedule"]) == source
 
 
 def _json_ld_objects(rendered_html: str) -> list[dict[str, object]]:

@@ -6,5 +6,5 @@
 {% macro data_schedule(extra) -%}
   {%- set payload = extra.schedules | default(value=[]) | json_encode -%}
   {%- set rendered = '{"schedules":' ~ payload ~ '}' -%}
-  {{- rendered | safe -}}
+  {{- rendered | escape | safe -}}
 {%- endmacro data_schedule %}

@@ -350,6 +350,13 @@ the full candidate without model calls. The next hosted trial can reuse these
 unchanged, configuration-matched components. North Beach's live CHECK remains
 until that trial publishes and deploys.
 
+The full retained-data replay also exercises committed bundle byte integrity
+and rendered pages. It exposed an unescaped apostrophe in the shared
+`data-schedule` attribute. The template now HTML-escapes the JSON, preserving
+literal source punctuation after the browser decodes the attribute. A render
+regression checks apostrophes, quotes, ampersands, and angle brackets; the
+browser verifier checks both original pools in the complete candidate.
+
 The cutover pauses scheduled automation before the shared-format commit reaches
 main. Preserve the durable budget branch, $5 monthly/$1 run limits, generated
 allowlist, stale-main protection, non-force promotion, and exact-commit CI.
