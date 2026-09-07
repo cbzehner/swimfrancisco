@@ -105,9 +105,31 @@ malformed response, permanent API error, or timeout stops the build before
 deployment. It retries temporary network and timeout errors and HTTP 408,
 429, and 5xx responses within the same ten-minute, 21-request limit. For a
 rate limit it obeys `Retry-After` or the rate-limit reset time; an unknown
-rate limit waits at least one minute and backs off. An optional build
-`GITHUB_TOKEN` with Actions read access can avoid unauthenticated rate
-limits. Daily rebuilds reuse the successful result for their commit; if that
+rate limit waits at least one minute and backs off. Retry logs include the
+HTTP status and wait duration, and identify delays that reach the build
+deadline. Network failures log no underlying error details or credentials.
+
+Configure a build-only `GITHUB_TOKEN` to avoid GitHub's unauthenticated,
+shared-IP rate limit:
+
+1. Create a fine-grained GitHub personal access token restricted to
+   `cbzehner/swimfrancisco`, with **Actions: Read-only** repository permission.
+   Do not reuse a publication token with write access. Track the token's expiry
+   and replace it before it expires.
+2. In Cloudflare, open `swimfrancisco` → **Settings → Build → Build variables
+   and secrets**. Add `GITHUB_TOKEN` as a **secret** for the production build.
+   This is not a Worker runtime secret; `wrangler secret put` will not make it
+   available to the build. Do not expose it to untrusted preview builds.
+3. Retry the failed production build. Confirm `CI passed for <commit>` in its
+   logs, then verify the live build metadata matches that commit.
+
+The script permits unauthenticated requests but warns when the build token
+is missing. A retry delay can consume the entire ten-minute deadline even
+when CI has already passed; waiting longer is not a reliable substitute for
+authenticated requests. See [GitHub rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api)
+and [Cloudflare build configuration](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/).
+
+Daily rebuilds reuse the successful result for their commit; if that
 run has expired from GitHub's retention, rerun CI before retrying the build.
 
 The gate checks `git HEAD` again after every wait and immediately before it

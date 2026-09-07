@@ -142,6 +142,7 @@ export async function waitForCommitCI({
     "User-Agent": "swimfrancisco-build-ci",
   };
   if (environment.GITHUB_TOKEN) headers.authorization = `Bearer ${environment.GITHUB_TOKEN}`;
+  else log("GitHub CI lookup is unauthenticated. Configure a build-only GITHUB_TOKEN with Actions read access to avoid shared-IP rate limits.");
   const deadline = now() + timeoutMilliseconds;
   let retryCount = 0;
 
@@ -158,7 +159,7 @@ export async function waitForCommitCI({
     } catch {
       const waitMilliseconds = Math.min(pollMilliseconds, deadline - now());
       if (waitMilliseconds <= 0 || attempt === 20) break;
-      log("Waiting to retry GitHub CI lookup.");
+      log(`GitHub CI lookup encountered a network error or request timeout; retrying in ${Math.ceil(waitMilliseconds / 1_000)} seconds.`);
       await sleep(waitMilliseconds);
       assertHeadMatches(commit, readHead);
       retryCount += 1;
@@ -171,7 +172,7 @@ export async function waitForCommitCI({
       }
       const waitMilliseconds = Math.min(retryDelayMilliseconds(response, retryCount, now()), deadline - now());
       if (waitMilliseconds <= 0 || attempt === 20) break;
-      log("Waiting to retry GitHub CI lookup.");
+      log(`GitHub CI lookup returned HTTP ${response.status}; waiting ${Math.ceil(waitMilliseconds / 1_000)} seconds before retrying${waitMilliseconds >= deadline - now() ? " (the retry delay reaches the build deadline)" : ""}.`);
       await sleep(waitMilliseconds);
       assertHeadMatches(commit, readHead);
       retryCount += 1;

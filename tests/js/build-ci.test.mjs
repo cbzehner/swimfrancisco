@@ -47,6 +47,19 @@ test("the production gate requires successful CI for the exact main push commit"
   assert.equal(check.sleeps.length, 0);
 });
 
+test("CI lookup reports authentication mode without exposing the token", async () => {
+  const anonymous = gate([{ workflow_runs: [successfulRun] }]);
+  await anonymous.run();
+  assert.ok(anonymous.logs.some((message) => message.includes("unauthenticated") && message.includes("build-only GITHUB_TOKEN")));
+
+  const authenticated = gate([{ workflow_runs: [successfulRun] }], {
+    environment: { ...environment, GITHUB_TOKEN: "private-test-token" },
+  });
+  await authenticated.run();
+  assert.equal(authenticated.requests[0].options.headers.authorization, "Bearer private-test-token");
+  assert.ok(authenticated.logs.every((message) => !message.includes("private-test-token") && !message.includes("unauthenticated")));
+});
+
 test("missing and pending runs wait until the same commit passes", async () => {
   const check = gate([
     { workflow_runs: [] },
@@ -121,10 +134,12 @@ test("temporary API and network failures retry without exposing failure details"
   assert.deepEqual(await check.run(), successfulRun);
   assert.deepEqual(check.sleeps, [30_000, 30_000]);
   assert.ok(check.logs.every((message) => !message.includes("upstream diagnostic") && !message.includes("request expired")));
+  assert.ok(check.logs.some((message) => message.includes("HTTP 503") && message.includes("30 seconds")));
 
   const disconnected = gate([], { fetch: async () => { throw new Error("token=secret"); } });
   await assert.rejects(disconnected.run(), /Timed out/);
   assert.ok(disconnected.logs.every((message) => !message.includes("token=secret")));
+  assert.ok(disconnected.logs.some((message) => message.includes("network error or request timeout")));
 });
 
 test("rate-limit retries honor Retry-After and reset headers", async () => {
@@ -194,6 +209,7 @@ test("Retry-After dates are honored without exceeding the deadline", async () =>
   await assert.rejects(beyondDeadline.run(), /Timed out/);
   assert.deepEqual(beyondDeadline.sleeps, [600_000]);
   assert.equal(beyondDeadline.requests.length, 1);
+  assert.ok(beyondDeadline.logs.some((message) => message.includes("HTTP 429") && message.includes("600 seconds") && message.includes("reaches the build deadline")));
 });
 
 test("a temporary network failure can recover on the next attempt", async () => {
