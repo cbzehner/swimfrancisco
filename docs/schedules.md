@@ -312,17 +312,29 @@ WebKit and Chromium, Worker type checking, localization checks, and the site
 build. The final publication/cache/review-refresh checks passed all 96 tests.
 These tests made zero model calls and spent $0.
 
-Hosted validation and spend receipts remain pending. GitHub CLI has no usable
-API authentication in this checkout's environment, so the automation pause and
-accounted hosted dispatch have not run. No new deployment is claimed. Remote
-main and live build metadata still identify
-`c929d8ab2b9815b9126f4a33fbf59b3b9c900892`; the durable ledger branch remains at
-`6073187aeb59cfe20f06495922dd1113135c5555`. North Beach's live CHECK remains
-until both production extractions pass and the accepted pair deploys.
-The baseline `node scripts/smoke-production.mjs
---expected-commit=c929d8ab2b9815b9126f4a33fbf59b3b9c900892 --browser` passed
-for all 30 canonical locations. This verifies the existing deployment, not the
-new paired-PDF extraction.
+After API authentication was restored, scheduled automation was paused. Exact
+commit [CI](https://github.com/cbzehner/swimfrancisco/actions/runs/34089753760)
+passed with 1,074 Python tests, 55 skips, and the browser/build gates. Commit
+`70fa4a71a87f7a80ce9965a022e3e5c42ed48db1` then reached main through a non-force
+push, passed [main CI](https://github.com/cbzehner/swimfrancisco/actions/runs/34090150621),
+and appeared in live build metadata.
+
+The first [accounted trial](https://github.com/cbzehner/swimfrancisco/actions/runs/34090185656)
+made two model requests, charged $0.113035 and $0.116405, and settled at
+**$0.229440**. Both independent extractions and combined candidate publication
+passed: 15 Cool and 20 Warm sessions, September 1–December 12, seven facility
+closures, and both cell-specific exclusions. Bundle identity was
+`e494dea3b5f825d3d9b27e2a24720ffa80971ba0c7bb0ea655f7221ccb7ee869`.
+
+The run stopped before staging or main publication because the existing
+allowlist expected `openai-gpt-5.5-2026-04-23.json`, while the artifact path
+function writes `openai-gpt-5-5-2026-04-23.json`. The same mismatch excluded
+component artifacts from retained evidence and stale-main cache reuse. The
+rules now use the actual filename; a regression creates it through the
+production path function and checks all three consumers. The failed run's
+bundle and settled spend receipt are retained in its hosted artifact, but its
+missing component artifacts must not be reconstructed or accepted as a cache.
+North Beach's live CHECK remains until the corrected trial publishes and deploys.
 
 The cutover pauses scheduled automation before the shared-format commit reaches
 main. Preserve the durable budget branch, $5 monthly/$1 run limits, generated

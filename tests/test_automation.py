@@ -147,7 +147,7 @@ def test_cache_never_copies_reviewed_decisions_or_overwrites_concurrent_source_e
     capture = Path("data/test-pool/2026-09-02-67f2a420e8fc")
     (previous / capture).mkdir(parents=True)
     (current / capture).mkdir(parents=True)
-    for name in ("reviewed.json", "source.pdf", "openai-gpt-5.5-2026-04-23.json"):
+    for name in ("reviewed.json", "source.pdf", "openai-gpt-5-5-2026-04-23.json"):
         (previous / capture / name).write_text("cached")
     (current / capture / "source.pdf").write_text("concurrent edit")
     def command(args, root, **kwargs):
@@ -155,7 +155,7 @@ def test_cache_never_copies_reviewed_decisions_or_overwrites_concurrent_source_e
     copy_extraction_cache(previous, current, "a" * 40, command)
     assert not (current / capture / "reviewed.json").exists()
     assert (current / capture / "source.pdf").read_text() == "concurrent edit"
-    assert (current / capture / "openai-gpt-5.5-2026-04-23.json").read_text() == "cached"
+    assert (current / capture / "openai-gpt-5-5-2026-04-23.json").read_text() == "cached"
 
 
 def test_live_verification_retries_then_succeeds_and_checks_browsers(tmp_path):
@@ -166,6 +166,26 @@ def test_live_verification_retries_then_succeeds_and_checks_browsers(tmp_path):
     wait_for_deployment(tmp_path, "a" * 40, command, sleep=lambda seconds: clock.__setitem__(0, clock[0] + seconds), now=lambda: clock[0])
     assert len(calls) == 2
     assert "--browser" in calls[0]
+
+
+def test_production_provider_artifact_is_allowed_retained_and_reused(tmp_path):
+    from schedules.paths import artifact_path
+    from schedules.providers.openai_provider import API_MODEL
+    from schedules.automation import save_evidence
+    root, evidence, cache = (tmp_path / name for name in ("root", "evidence", "cache"))
+    artifact = artifact_path("north-beach-pool", "2026-09-06", "a" * 64, "openai", API_MODEL, root=root / "data")
+    artifact.parent.mkdir(parents=True)
+    artifact.write_text('{"provider":"openai"}')
+    relative = artifact.relative_to(root)
+    result = subprocess.run(
+        ["node", "--input-type=module", "-e", "import {generatedSchedulePath} from './scripts/check-build-ci.mjs'; if (!generatedSchedulePath(process.argv[1])) process.exit(1)", relative.as_posix()],
+        check=False, capture_output=True,
+    )
+    assert result.returncode == 0
+    save_evidence(root, evidence)
+    assert (evidence / relative).read_bytes() == artifact.read_bytes()
+    copy_extraction_cache(root, cache, "a" * 40, lambda args, cwd, **kwargs: subprocess.CompletedProcess(args, 0, "", ""))
+    assert (cache / relative).read_bytes() == artifact.read_bytes()
 
 
 def test_live_verification_timeout_never_succeeds(tmp_path):

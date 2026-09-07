@@ -348,7 +348,7 @@ test("generated path allowlist excludes credentials, source code, and unexpected
     "content/spots/mission-community-pool.md", "content/spots/mission-community-pool.zh-Hant.md",
     "data/bulletin.json", "data/i18n/en.json", "schedule-tools/src/schedules/registry.toml",
     "data/mission-community-pool/2026-09-02-67f2a420e8fc/source.pdf",
-    "data/mission-community-pool/2026-09-02-67f2a420e8fc/openai-gpt-5.5-2026-04-23.json",
+    "data/mission-community-pool/2026-09-02-67f2a420e8fc/openai-gpt-5-5-2026-04-23.json",
     "data/north-beach-pool/2026-09-06-67f2a420e8fc/source-bundle.json",
     "data/north-beach-pool/2026-09-06-67f2a420e8fc/openai-pool-bundle.json",
   ]) assert.equal(generatedSchedulePath(path), true, path);
@@ -428,7 +428,7 @@ test("stage recognizes direct clock metadata without suppressing real source cha
 
 test("stage treats PDF dates as facts, not direct-source clock metadata", (t) => {
   const repository = promotionRepository(t);
-  const path = "data/test-pool/2026-09-02-67f2a420e8fc/openai-gpt-5.5-2026-04-23.json";
+  const path = "data/test-pool/2026-09-02-67f2a420e8fc/openai-gpt-5-5-2026-04-23.json";
   mkdirSync(join(repository.work, "data/test-pool/2026-09-02-67f2a420e8fc"), { recursive: true });
   writeFileSync(join(repository.work, path), JSON.stringify({ provider: "openai", payload: { effective_start: "2026-09-01" } }));
   repository.git(["add", path]);

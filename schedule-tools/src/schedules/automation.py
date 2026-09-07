@@ -30,7 +30,7 @@ def copy_extraction_cache(previous: Path, current: Path, previous_base: str, com
     for source in (previous / "data").glob("*/*/*"):
         if source.is_symlink() or not source.is_file():
             continue
-        if not re.fullmatch(r"source\.(pdf|sha256)|openai-gpt-5\.5-2026-04-23\.json", source.name):
+        if not re.fullmatch(r"source\.(pdf|sha256)|openai-gpt-5-5-2026-04-23\.json", source.name):
             continue
         relative = source.relative_to(previous)
         target = current / relative
@@ -51,7 +51,7 @@ def save_evidence(root: Path, destination: Path) -> None:
     for source in (root / "data").glob("*/*/*"):
         if source.is_symlink() or not source.is_file():
             continue
-        if not re.fullmatch(r"source\.(pdf|html|csv|xlsx|sha256)|reviewed\.json|source-bundle\.json|openai-pool-bundle\.json|openai-gpt-5\.5-2026-04-23\.json|direct-[a-z0-9-]+\.json", source.name):
+        if not re.fullmatch(r"source\.(pdf|html|csv|xlsx|sha256)|reviewed\.json|source-bundle\.json|openai-pool-bundle\.json|openai-gpt-5-5-2026-04-23\.json|direct-[a-z0-9-]+\.json", source.name):
             continue
         target = destination / source.relative_to(root)
         target.parent.mkdir(parents=True, exist_ok=True)
