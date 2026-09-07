@@ -45,6 +45,27 @@ def test_reviewed_snapshots_exist():
 
 @pytest.mark.parametrize("path", CAPTURE_DIRS, ids=_capture_id)
 def test_capture_dir_keeps_source_bytes(path):
+    manifest = path / "source-bundle.json"
+    if manifest.exists():
+        from schedules.artifacts import pool_bundle_identity
+        from schedules.paths import parse_review_dir_name
+        sources = json.loads(manifest.read_text())
+        assert path.parent.name == "north-beach-pool"
+        assert [source["pool"] for source in sources] == ["cool", "warm"]
+        identity = pool_bundle_identity(sources)
+        assert path.name.endswith(f"-{identity[:12]}")
+        for source in sources:
+            assert parse_review_dir_name(source["capture"])
+            assert source["capture"].endswith(f'-{source["sha256"][:12]}')
+            original = path.parent / source["capture"] / "source.pdf"
+            assert hashlib.sha256(original.read_bytes()).hexdigest() == source["sha256"]
+        for artifact in path.glob("*.json"):
+            if artifact == manifest:
+                continue
+            data = json.loads(artifact.read_text())
+            assert data["bundle_sha256"] == identity
+            assert data["source_bundle"] == sources
+        return
     bodies = [path / name for name in SOURCE_BODIES if (path / name).exists()]
     assert bodies, f"{path} has no source.pdf/html/xlsx/csv — cannot backtest"
     sha_path = path / "source.sha256"

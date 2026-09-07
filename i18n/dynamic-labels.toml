@@ -85,6 +85,7 @@ sources = [
   "Aquatics Division Training",
   "Aquatic Division Training",
   "Aquatics in-service training",
+  "Aquatics In-service Training",
   "Aquatics Division training",
 ]
 
@@ -106,7 +107,7 @@ sources = ["maintenance", "Maintenance"]
 [[closure_reason]]
 code = "annual_maintenance"
 translation_key = "reason_annual_maintenance"
-sources = ["Annual maintenance", "annual maintenance"]
+sources = ["Annual maintenance", "annual maintenance", "ANUAL MAINTENANCE", "ANUAL MAINTENANCE for North Beach Pool closure", "ANNUAL MAINTENCE"]
 
 [[closure_reason]]
 code = "garfield_maintenance"
@@ -161,7 +162,7 @@ sources = ["Lunar New Year"]
 [[closure_reason]]
 code = "veterans_day"
 translation_key = "reason_veterans_day"
-sources = ["Veterans Day", "Veteran’s Day"]
+sources = ["Veterans Day", "Veteran’s Day", "Veteran's Day"]
 
 [[closure_reason]]
 code = "indigenous_peoples_day"

@@ -1,0 +1,1314 @@
+{
+  "cost_estimate": "input_tokens=4039, output_tokens=3213",
+  "details": {
+    "attempts": [
+      {
+        "cost_usd": 0.116585,
+        "elapsed_seconds": 29.544,
+        "http_status": 200,
+        "reserved_microusd": 344500,
+        "status": "completed"
+      }
+    ],
+    "configuration": {
+      "image_detail": "original",
+      "implementation_sha256": {
+        "_time.py": "9634c7e294caa7bddde2679e724f77d8e07fe1b99e1a1b22a1cfc00632d4dcb5",
+        "artifacts.py": "8eef018a0b2cf2006a20ce40109953e30944fa2ecd866ee3c3762f46e373a535",
+        "grounding.py": "c6cecec97ccc83fce534716aedf5232be1173dfc3c43b0dbcaac5ee44abc2443",
+        "providers/openai_provider.py": "22541217a5eca32051455d4454415adbd44f7d98746c82477adaa5e4cc2bf6b5",
+        "schema.py": "2d067de1766b58313543df4630f9e6ace4a67d48105a88ec40368397b447a7fb",
+        "signals.py": "31c3a2bfb7ea3d239c392b423fe1572f7d3cee9b01a71a9cded31cefdff72db0",
+        "window_dates.py": "ad6af1472977d18e6ec4df57c0198cb7ebb3f66ca20c0333cd57f008822259b9"
+      },
+      "libraries": {
+        "pdfminer-six": "20260107",
+        "pdfplumber": "0.11.10",
+        "pillow": "12.3.0",
+        "pypdfium2": "5.13.0"
+      },
+      "max_output_tokens": 8192,
+      "model": "gpt-5.5-2026-04-23",
+      "pricing": {
+        "cached_input_usd_per_million": 0.5,
+        "checked_at": "2026-09-05",
+        "input_usd_per_million": 5,
+        "output_usd_per_million": 30,
+        "service_tier": "default",
+        "source": "https://developers.openai.com/api/docs/models/gpt-5.5"
+      },
+      "prompt_sha256": "bc7660a8aceb19d05b6b8b01ae06ac8c125edca1ef4193d5a93b74ac8f25eb1b",
+      "reasoning": "medium",
+      "render_dpi": 150,
+      "schema_sha256": "d2839c7fa22768d3b11935bd0e7103d9424f7d0d93813349e0c63e91e7ed6629"
+    },
+    "final_response": "{\"effective_start\":\"2026-09-01\",\"schedule_basis\":\"swim_schedule\",\"effective_end\":\"2026-12-12\",\"sessions\":[{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"07:30\",\"end\":\"09:00\",\"evidence\":\"Lap Swim (Lap/ Therapy) 7:30am-9:00am\",\"notes\":null,\"pool_label_raw\":\"(Lap/ Therapy)\",\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"10:15\",\"evidence\":\"Senior Swim (Lap/Therapy) 9:00am-10:15am\",\"notes\":null,\"pool_label_raw\":\"(Lap/Therapy)\",\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"12:00\",\"end\":\"15:00\",\"evidence\":\"Lap Swim (Lap/Therapy) 12:00pm-3:00pm\",\"notes\":null,\"pool_label_raw\":\"(Lap/Therapy)\",\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"family_swim\",\"start\":\"15:30\",\"end\":\"17:30\",\"evidence\":\"Rec/Family Swim 3:30pm-5:30pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"17:30\",\"end\":\"18:30\",\"evidence\":\"Lap Swim 5:30pm-6:30pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"10:15\",\"evidence\":\"Senior Swim (Lap/Therapy) 9:00am-10:15am\",\"notes\":null,\"pool_label_raw\":\"(Lap/Therapy)\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"12:50\",\"end\":\"15:15\",\"evidence\":\"Lap Swim (Lap/Therapy) 12:50pm-3:15pm\",\"notes\":null,\"pool_label_raw\":\"(Lap/Therapy)\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"family_swim\",\"start\":\"17:30\",\"end\":\"18:30\",\"evidence\":\"Rec/Family Swim 5:30pm-6:30pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"07:30\",\"end\":\"09:00\",\"evidence\":\"Lap Swim (Lap/ Therapy) 7:30am-9:00am\",\"notes\":null,\"pool_label_raw\":\"(Lap/ Therapy)\",\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"11:00\",\"evidence\":\"Senior Swim (Lap/Therapy) 9:00am-11:00am\",\"notes\":null,\"pool_label_raw\":\"(Lap/Therapy)\",\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"11:15\",\"end\":\"14:00\",\"evidence\":\"Lap Swim (Lap/Therapy) 11:15am-2:00pm (CLOSED 9/24 & 10/22)\",\"notes\":\"Printed cell says CLOSED 9/24 & 10/22.\",\"pool_label_raw\":\"(Lap/Therapy)\",\"excluded_dates\":[\"2026-09-24\",\"2026-10-22\"]},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"14:15\",\"end\":\"15:15\",\"evidence\":\"Lap Swim 2:15pm-3:15pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"family_swim\",\"start\":\"16:00\",\"end\":\"17:30\",\"evidence\":\"Rec/Family Swim 4:00pm-5:30pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"family_swim\",\"start\":\"09:00\",\"end\":\"10:15\",\"evidence\":\"Rec/Family Swim (1) Senior Swim (1) 9:00am-10:15am\",\"notes\":\"Shared cell with Senior Swim; printed (1) is only a numeric lane count and is not used as pool allocation.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"10:15\",\"evidence\":\"Rec/Family Swim (1) Senior Swim (1) 9:00am-10:15am\",\"notes\":\"Shared cell with Rec/Family Swim; printed (1) is only a numeric lane count and is not used as pool allocation.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"lap_swim\",\"start\":\"12:50\",\"end\":\"15:15\",\"evidence\":\"Lap Swim (Lap/Therapy) 12:50pm-3:15pm\",\"notes\":null,\"pool_label_raw\":\"(Lap/Therapy)\",\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"family_swim\",\"start\":\"17:30\",\"end\":\"19:00\",\"evidence\":\"Rec/Family Swim 5:30pm-7:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"family_swim\",\"start\":\"12:00\",\"end\":\"13:15\",\"evidence\":\"Rec/Family Swim 12:00pm-1:15pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"lap_swim\",\"start\":\"13:45\",\"end\":\"15:00\",\"evidence\":\"Lap Swim (Lap/Therapy) 1:45pm-3:00pm\",\"notes\":null,\"pool_label_raw\":\"(Lap/Therapy)\",\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"family_swim\",\"start\":\"15:30\",\"end\":\"17:00\",\"evidence\":\"Rec/Family Swim 3:30pm-5:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null}],\"access_hours\":null,\"access_exceptions\":null,\"closures\":[{\"start\":\"2026-12-12\",\"end\":\"2026-12-12\",\"reason\":\"Aquatics In-service Training\",\"start_time\":\"09:00\",\"end_time\":\"12:00\",\"physical_pool\":null},{\"start\":\"2026-10-13\",\"end\":\"2026-10-31\",\"reason\":\"ANNUAL MAINTENCE\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-09-24\",\"end\":\"2026-09-24\",\"reason\":\"Aquatics Division Training\",\"start_time\":\"12:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-10-22\",\"end\":\"2026-10-22\",\"reason\":\"Aquatics Division Training\",\"start_time\":\"12:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-11-26\",\"end\":\"2026-11-26\",\"reason\":\"Aquatics Division Training\",\"start_time\":\"12:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-11-11\",\"end\":\"2026-11-11\",\"reason\":\"Veteran's Day\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-11-26\",\"end\":\"2026-11-27\",\"reason\":\"Thanksgiving\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null}]}",
+    "image_sha256": {},
+    "request_sha256": "a5f1a8ab901e69efef65f1f3943cee406bdeb9d9b8f530a49093cdcae7310934",
+    "response_status": "completed",
+    "source_closures": {
+      "expected": [
+        [
+          "2026-10-13",
+          "2026-10-31",
+          null,
+          null,
+          null
+        ],
+        [
+          "2026-09-24",
+          "2026-09-24",
+          "12:00",
+          "14:00",
+          null
+        ],
+        [
+          "2026-10-22",
+          "2026-10-22",
+          "12:00",
+          "14:00",
+          null
+        ],
+        [
+          "2026-11-26",
+          "2026-11-26",
+          "12:00",
+          "14:00",
+          null
+        ],
+        [
+          "2026-11-11",
+          "2026-11-11",
+          null,
+          null,
+          null
+        ],
+        [
+          "2026-11-26",
+          "2026-11-27",
+          null,
+          null,
+          null
+        ],
+        [
+          "2026-12-12",
+          "2026-12-12",
+          "09:00",
+          "12:00",
+          null
+        ]
+      ],
+      "extra": [],
+      "issues": [],
+      "missing": [],
+      "ok": true
+    },
+    "source_coverage": {
+      "closures": {
+        "expected": [
+          [
+            "2026-10-13",
+            "2026-10-31",
+            null,
+            null,
+            null
+          ],
+          [
+            "2026-09-24",
+            "2026-09-24",
+            "12:00",
+            "14:00",
+            null
+          ],
+          [
+            "2026-10-22",
+            "2026-10-22",
+            "12:00",
+            "14:00",
+            null
+          ],
+          [
+            "2026-11-26",
+            "2026-11-26",
+            "12:00",
+            "14:00",
+            null
+          ],
+          [
+            "2026-11-11",
+            "2026-11-11",
+            null,
+            null,
+            null
+          ],
+          [
+            "2026-11-26",
+            "2026-11-27",
+            null,
+            null,
+            null
+          ],
+          [
+            "2026-12-12",
+            "2026-12-12",
+            "09:00",
+            "12:00",
+            null
+          ]
+        ],
+        "extra": [],
+        "issues": [],
+        "missing": [],
+        "ok": true
+      },
+      "exclusions": {
+        "expected": {
+          "p1-c3-b16": [
+            "2026-09-24",
+            "2026-10-22"
+          ]
+        },
+        "issues": [],
+        "ok": true
+      },
+      "expected_count": 20,
+      "extra": [],
+      "issues": [],
+      "missing": [],
+      "ok": true,
+      "session_cells": [
+        "p1-c1-b1",
+        "p1-c1-b2",
+        "p1-c1-b4",
+        "p1-c1-b5",
+        "p1-c1-b6",
+        "p1-c2-b7",
+        "p1-c2-b10",
+        "p1-c2-b13",
+        "p1-c3-b14",
+        "p1-c3-b15",
+        "p1-c3-b16",
+        "p1-c3-b17",
+        "p1-c3-b19",
+        "p1-c4-b21",
+        "p1-c4-b21",
+        "p1-c4-b24",
+        "p1-c4-b27",
+        "p1-c5-b32",
+        "p1-c5-b33",
+        "p1-c5-b34"
+      ],
+      "window": {
+        "actual": [
+          "2026-09-01",
+          "2026-12-12"
+        ],
+        "expected": [
+          "2026-09-01",
+          "2026-12-12"
+        ],
+        "issues": [],
+        "ok": true
+      }
+    },
+    "source_facts": {
+      "closures": [
+        {
+          "end": "2026-12-12",
+          "end_time": "12:00",
+          "reason": "Aquatics In-service Training",
+          "start": "2026-12-12",
+          "start_time": "09:00"
+        },
+        {
+          "end": "2026-10-31",
+          "reason": "ANNUAL MAINTENCE",
+          "start": "2026-10-13"
+        },
+        {
+          "end": "2026-09-24",
+          "end_time": "14:00",
+          "reason": "Aquatics Division Training",
+          "start": "2026-09-24",
+          "start_time": "12:00"
+        },
+        {
+          "end": "2026-10-22",
+          "end_time": "14:00",
+          "reason": "Aquatics Division Training",
+          "start": "2026-10-22",
+          "start_time": "12:00"
+        },
+        {
+          "end": "2026-11-26",
+          "end_time": "14:00",
+          "reason": "Aquatics Division Training",
+          "start": "2026-11-26",
+          "start_time": "12:00"
+        },
+        {
+          "end": "2026-11-11",
+          "reason": "Veteran's Day",
+          "start": "2026-11-11"
+        },
+        {
+          "end": "2026-11-27",
+          "reason": "Thanksgiving",
+          "start": "2026-11-26"
+        }
+      ],
+      "effective_end": "2026-12-12",
+      "effective_start": "2026-09-01",
+      "schedule_basis": "swim_schedule",
+      "sessions": [
+        {
+          "day": "tuesday",
+          "end": "09:00",
+          "evidence": "Lap Swim (Lap/ Therapy) 7:30am-9:00am",
+          "pool_label_raw": "(Lap/ Therapy)",
+          "start": "07:30",
+          "type": "lap_swim"
+        },
+        {
+          "day": "tuesday",
+          "end": "10:15",
+          "evidence": "Senior Swim (Lap/Therapy) 9:00am-10:15am",
+          "pool_label_raw": "(Lap/Therapy)",
+          "start": "09:00",
+          "type": "senior_swim"
+        },
+        {
+          "day": "tuesday",
+          "end": "15:00",
+          "evidence": "Lap Swim (Lap/Therapy) 12:00pm-3:00pm",
+          "pool_label_raw": "(Lap/Therapy)",
+          "start": "12:00",
+          "type": "lap_swim"
+        },
+        {
+          "day": "tuesday",
+          "end": "17:30",
+          "evidence": "Rec/Family Swim 3:30pm-5:30pm",
+          "pool_label_raw": null,
+          "start": "15:30",
+          "type": "family_swim"
+        },
+        {
+          "day": "tuesday",
+          "end": "18:30",
+          "evidence": "Lap Swim 5:30pm-6:30pm",
+          "pool_label_raw": null,
+          "start": "17:30",
+          "type": "lap_swim"
+        },
+        {
+          "day": "wednesday",
+          "end": "10:15",
+          "evidence": "Senior Swim (Lap/Therapy) 9:00am-10:15am",
+          "pool_label_raw": "(Lap/Therapy)",
+          "start": "09:00",
+          "type": "senior_swim"
+        },
+        {
+          "day": "wednesday",
+          "end": "15:15",
+          "evidence": "Lap Swim (Lap/Therapy) 12:50pm-3:15pm",
+          "pool_label_raw": "(Lap/Therapy)",
+          "start": "12:50",
+          "type": "lap_swim"
+        },
+        {
+          "day": "wednesday",
+          "end": "18:30",
+          "evidence": "Rec/Family Swim 5:30pm-6:30pm",
+          "pool_label_raw": null,
+          "start": "17:30",
+          "type": "family_swim"
+        },
+        {
+          "day": "thursday",
+          "end": "09:00",
+          "evidence": "Lap Swim (Lap/ Therapy) 7:30am-9:00am",
+          "pool_label_raw": "(Lap/ Therapy)",
+          "start": "07:30",
+          "type": "lap_swim"
+        },
+        {
+          "day": "thursday",
+          "end": "11:00",
+          "evidence": "Senior Swim (Lap/Therapy) 9:00am-11:00am",
+          "pool_label_raw": "(Lap/Therapy)",
+          "start": "09:00",
+          "type": "senior_swim"
+        },
+        {
+          "day": "thursday",
+          "end": "14:00",
+          "evidence": "Lap Swim (Lap/Therapy) 11:15am-2:00pm (CLOSED 9/24 & 10/22)",
+          "excluded_dates": [
+            "2026-09-24",
+            "2026-10-22"
+          ],
+          "notes": "Printed cell says CLOSED 9/24 & 10/22.",
+          "pool_label_raw": "(Lap/Therapy)",
+          "start": "11:15",
+          "type": "lap_swim"
+        },
+        {
+          "day": "thursday",
+          "end": "15:15",
+          "evidence": "Lap Swim 2:15pm-3:15pm",
+          "pool_label_raw": null,
+          "start": "14:15",
+          "type": "lap_swim"
+        },
+        {
+          "day": "thursday",
+          "end": "17:30",
+          "evidence": "Rec/Family Swim 4:00pm-5:30pm",
+          "pool_label_raw": null,
+          "start": "16:00",
+          "type": "family_swim"
+        },
+        {
+          "day": "friday",
+          "end": "10:15",
+          "evidence": "Rec/Family Swim (1) Senior Swim (1) 9:00am-10:15am",
+          "notes": "Shared cell with Senior Swim; printed (1) is only a numeric lane count and is not used as pool allocation.",
+          "pool_label_raw": null,
+          "start": "09:00",
+          "type": "family_swim"
+        },
+        {
+          "day": "friday",
+          "end": "10:15",
+          "evidence": "Rec/Family Swim (1) Senior Swim (1) 9:00am-10:15am",
+          "notes": "Shared cell with Rec/Family Swim; printed (1) is only a numeric lane count and is not used as pool allocation.",
+          "pool_label_raw": null,
+          "start": "09:00",
+          "type": "senior_swim"
+        },
+        {
+          "day": "friday",
+          "end": "15:15",
+          "evidence": "Lap Swim (Lap/Therapy) 12:50pm-3:15pm",
+          "pool_label_raw": "(Lap/Therapy)",
+          "start": "12:50",
+          "type": "lap_swim"
+        },
+        {
+          "day": "friday",
+          "end": "19:00",
+          "evidence": "Rec/Family Swim 5:30pm-7:00pm",
+          "pool_label_raw": null,
+          "start": "17:30",
+          "type": "family_swim"
+        },
+        {
+          "day": "saturday",
+          "end": "13:15",
+          "evidence": "Rec/Family Swim 12:00pm-1:15pm",
+          "pool_label_raw": null,
+          "start": "12:00",
+          "type": "family_swim"
+        },
+        {
+          "day": "saturday",
+          "end": "15:00",
+          "evidence": "Lap Swim (Lap/Therapy) 1:45pm-3:00pm",
+          "pool_label_raw": "(Lap/Therapy)",
+          "start": "13:45",
+          "type": "lap_swim"
+        },
+        {
+          "day": "saturday",
+          "end": "17:00",
+          "evidence": "Rec/Family Swim 3:30pm-5:00pm",
+          "pool_label_raw": null,
+          "start": "15:30",
+          "type": "family_swim"
+        }
+      ]
+    },
+    "source_inventory": {
+      "cells": [
+        {
+          "bounds": [
+            34.22099999999999,
+            137.152,
+            178.357,
+            161.43199999999996
+          ],
+          "day": "tuesday",
+          "id": "p1-c1-b1",
+          "page": 1,
+          "text": "Lap Swim (Lap/ Therapy)\n7:30am-9:00am"
+        },
+        {
+          "bounds": [
+            34.22099999999999,
+            186.43199999999996,
+            178.357,
+            224.452
+          ],
+          "day": "tuesday",
+          "id": "p1-c1-b2",
+          "page": 1,
+          "text": "Senior Swim\n(Lap/Therapy)\n9:00am-10:15am"
+        },
+        {
+          "bounds": [
+            34.22099999999999,
+            248.202,
+            178.357,
+            272.702
+          ],
+          "day": "tuesday",
+          "id": "p1-c1-b3",
+          "page": 1,
+          "text": "SFUSD\n10:30am-11:30am"
+        },
+        {
+          "bounds": [
+            34.22099999999999,
+            291.472,
+            178.357,
+            315.972
+          ],
+          "day": "tuesday",
+          "id": "p1-c1-b4",
+          "page": 1,
+          "text": "Lap Swim (Lap/Therapy)\n12:00pm-3:00pm"
+        },
+        {
+          "bounds": [
+            34.22099999999999,
+            335.50199999999995,
+            178.357,
+            360.002
+          ],
+          "day": "tuesday",
+          "id": "p1-c1-b5",
+          "page": 1,
+          "text": "Rec/Family Swim\n3:30pm-5:30pm"
+        },
+        {
+          "bounds": [
+            34.22099999999999,
+            380.252,
+            178.357,
+            404.53200000000004
+          ],
+          "day": "tuesday",
+          "id": "p1-c1-b6",
+          "page": 1,
+          "text": "Lap Swim\n5:30pm-6:30pm"
+        },
+        {
+          "bounds": [
+            178.357,
+            185.93199999999996,
+            322.332,
+            223.702
+          ],
+          "day": "wednesday",
+          "id": "p1-c2-b7",
+          "page": 1,
+          "text": "Senior Swim\n(Lap/Therapy)\n9:00am-10:15am"
+        },
+        {
+          "bounds": [
+            178.357,
+            248.202,
+            322.332,
+            272.702
+          ],
+          "day": "wednesday",
+          "id": "p1-c2-b8",
+          "page": 1,
+          "text": "SFUSD\n10:30am-11:30am"
+        },
+        {
+          "bounds": [
+            178.357,
+            291.472,
+            322.332,
+            315.972
+          ],
+          "day": "wednesday",
+          "id": "p1-c2-b9",
+          "page": 1,
+          "text": "Self Guided Exercise\n11:45am-12:45pm"
+        },
+        {
+          "bounds": [
+            178.357,
+            335.50199999999995,
+            322.332,
+            360.002
+          ],
+          "day": "wednesday",
+          "id": "p1-c2-b10",
+          "page": 1,
+          "text": "Lap Swim (Lap/Therapy)\n12:50pm-3:15pm"
+        },
+        {
+          "bounds": [
+            178.357,
+            380.252,
+            322.332,
+            404.53200000000004
+          ],
+          "day": "wednesday",
+          "id": "p1-c2-b11",
+          "page": 1,
+          "text": "Learn to Swim *\n3:45pm-4:15pm"
+        },
+        {
+          "bounds": [
+            178.357,
+            424.78200000000004,
+            322.332,
+            449.28200000000004
+          ],
+          "day": "wednesday",
+          "id": "p1-c2-b12",
+          "page": 1,
+          "text": "Learn to Swim*\n4:30pm-5:00pm"
+        },
+        {
+          "bounds": [
+            178.357,
+            468.802,
+            322.332,
+            493.302
+          ],
+          "day": "wednesday",
+          "id": "p1-c2-b13",
+          "page": 1,
+          "text": "Rec/Family Swim\n5:30pm-6:30pm"
+        },
+        {
+          "bounds": [
+            322.332,
+            137.152,
+            466.31275000000005,
+            161.43199999999996
+          ],
+          "day": "thursday",
+          "id": "p1-c3-b14",
+          "page": 1,
+          "text": "Lap Swim (Lap/ Therapy)\n7:30am-9:00am"
+        },
+        {
+          "bounds": [
+            322.332,
+            185.93199999999996,
+            466.31275000000005,
+            223.702
+          ],
+          "day": "thursday",
+          "id": "p1-c3-b15",
+          "page": 1,
+          "text": "Senior Swim\n(Lap/Therapy)\n9:00am-11:00am"
+        },
+        {
+          "bounds": [
+            322.332,
+            241.452,
+            466.31275000000005,
+            279.222
+          ],
+          "day": "thursday",
+          "id": "p1-c3-b16",
+          "page": 1,
+          "text": "Lap Swim (Lap/Therapy)\n11:15am-2:00pm\n(CLOSED 9/24 & 10/22)"
+        },
+        {
+          "bounds": [
+            322.332,
+            291.472,
+            466.31275000000005,
+            315.972
+          ],
+          "day": "thursday",
+          "id": "p1-c3-b17",
+          "page": 1,
+          "text": "Lap Swim\n2:15pm-3:15pm"
+        },
+        {
+          "bounds": [
+            322.332,
+            328.722,
+            466.31275000000005,
+            366.752
+          ],
+          "day": "thursday",
+          "id": "p1-c3-b18",
+          "page": 1,
+          "text": "Adult Lessons*\n(Beginner/Intermediate)\n3:20pm-3:50pm"
+        },
+        {
+          "bounds": [
+            322.332,
+            380.252,
+            466.31275000000005,
+            404.53200000000004
+          ],
+          "day": "thursday",
+          "id": "p1-c3-b19",
+          "page": 1,
+          "text": "Rec/Family Swim\n4:00pm-5:30pm"
+        },
+        {
+          "bounds": [
+            322.332,
+            418.772,
+            466.31275000000005,
+            455.272
+          ],
+          "day": "thursday",
+          "id": "p1-c3-b20",
+          "page": 1,
+          "text": "Water Exercise\n(Instructor Lead, Deep End)\n5:30-6:30pm"
+        },
+        {
+          "bounds": [
+            466.31275000000005,
+            186.14999999999998,
+            610.39925,
+            222.952
+          ],
+          "day": "friday",
+          "id": "p1-c4-b21",
+          "page": 1,
+          "text": "Rec/Family Swim (1)\nSenior Swim (1)\n9:00am-10:15am"
+        },
+        {
+          "bounds": [
+            466.31275000000005,
+            248.202,
+            610.39925,
+            272.702
+          ],
+          "day": "friday",
+          "id": "p1-c4-b22",
+          "page": 1,
+          "text": "SFUSD\n10:30am-11:30am"
+        },
+        {
+          "bounds": [
+            466.31275000000005,
+            291.472,
+            610.39925,
+            315.972
+          ],
+          "day": "friday",
+          "id": "p1-c4-b23",
+          "page": 1,
+          "text": "Self Guided Exercise\n11:45am-12:45pm"
+        },
+        {
+          "bounds": [
+            466.31275000000005,
+            335.50199999999995,
+            610.39925,
+            360.002
+          ],
+          "day": "friday",
+          "id": "p1-c4-b24",
+          "page": 1,
+          "text": "Lap Swim (Lap/Therapy)\n12:50pm-3:15pm"
+        },
+        {
+          "bounds": [
+            466.31275000000005,
+            380.252,
+            610.39925,
+            404.53200000000004
+          ],
+          "day": "friday",
+          "id": "p1-c4-b25",
+          "page": 1,
+          "text": "Learn to Swim*\n3:45pm-4:15pm"
+        },
+        {
+          "bounds": [
+            466.31275000000005,
+            424.78200000000004,
+            610.39925,
+            449.28200000000004
+          ],
+          "day": "friday",
+          "id": "p1-c4-b26",
+          "page": 1,
+          "text": "Learn to Swim*\n4:30pm-5:00pm"
+        },
+        {
+          "bounds": [
+            466.31275000000005,
+            468.802,
+            610.39925,
+            493.302
+          ],
+          "day": "friday",
+          "id": "p1-c4-b27",
+          "page": 1,
+          "text": "Rec/Family Swim\n5:30pm-7:00pm"
+        },
+        {
+          "bounds": [
+            610.39925,
+            131.87,
+            754.42475,
+            166.39999999999998
+          ],
+          "day": "saturday",
+          "id": "p1-c5-b28",
+          "page": 1,
+          "text": "All city pools will be CLOSED\nDecember 12 from 9am-12pm\nfor Aquatics In-service Training"
+        },
+        {
+          "bounds": [
+            610.39925,
+            192.43199999999996,
+            754.42475,
+            216.952
+          ],
+          "day": "saturday",
+          "id": "p1-c5-b29",
+          "page": 1,
+          "text": "Learn to Swim*\n9:00am-9:30am"
+        },
+        {
+          "bounds": [
+            610.39925,
+            248.202,
+            754.42475,
+            272.702
+          ],
+          "day": "saturday",
+          "id": "p1-c5-b30",
+          "page": 1,
+          "text": "Learn to Swim*\n9:45am-10:15am"
+        },
+        {
+          "bounds": [
+            610.39925,
+            291.472,
+            754.42475,
+            315.972
+          ],
+          "day": "saturday",
+          "id": "p1-c5-b31",
+          "page": 1,
+          "text": "Preschool Lessons*\n10:30am-11:00am"
+        },
+        {
+          "bounds": [
+            610.39925,
+            335.50199999999995,
+            754.42475,
+            360.002
+          ],
+          "day": "saturday",
+          "id": "p1-c5-b32",
+          "page": 1,
+          "text": "Rec/Family Swim\n12:00pm-1:15pm"
+        },
+        {
+          "bounds": [
+            610.39925,
+            380.252,
+            754.42475,
+            404.53200000000004
+          ],
+          "day": "saturday",
+          "id": "p1-c5-b33",
+          "page": 1,
+          "text": "Lap Swim (Lap/Therapy)\n1:45pm-3:00pm"
+        },
+        {
+          "bounds": [
+            610.39925,
+            424.78200000000004,
+            754.42475,
+            449.28200000000004
+          ],
+          "day": "saturday",
+          "id": "p1-c5-b34",
+          "page": 1,
+          "text": "Rec/Family Swim\n3:30pm-5:00pm"
+        }
+      ],
+      "issues": [],
+      "notices": [
+        {
+          "bounds": null,
+          "facility": true,
+          "id": "p1-notice-1",
+          "page": 1,
+          "physical_pool": null,
+          "session_cell": null,
+          "text": "North Beach Pool will be CLOSED\nOctober 13-October 31 for\nANNUAL MAINTENCE."
+        },
+        {
+          "bounds": null,
+          "facility": true,
+          "id": "p1-notice-2",
+          "page": 1,
+          "physical_pool": null,
+          "session_cell": null,
+          "text": "All city pools will be CLOSED\nevery 4th Thursday of the month\nfrom 12p-2pm for Aquatics\nDivision Training"
+        },
+        {
+          "bounds": null,
+          "facility": true,
+          "id": "p1-notice-3",
+          "page": 1,
+          "physical_pool": null,
+          "session_cell": null,
+          "text": "All city pools will be CLOSED on\nNovember 11 for Veteran's Day,\nNovember 26-27 for Thanksgiving"
+        },
+        {
+          "bounds": [
+            322.332,
+            241.452,
+            466.31275000000005,
+            279.222
+          ],
+          "facility": false,
+          "id": "p1-c3-b16-notice",
+          "page": 1,
+          "physical_pool": "warm",
+          "session_cell": "p1-c3-b16",
+          "text": "Lap Swim (Lap/Therapy)\n11:15am-2:00pm\n(CLOSED 9/24 & 10/22)"
+        },
+        {
+          "bounds": [
+            610.39925,
+            131.87,
+            754.42475,
+            166.39999999999998
+          ],
+          "facility": true,
+          "id": "p1-c5-b28-notice",
+          "page": 1,
+          "physical_pool": null,
+          "session_cell": null,
+          "text": "All city pools will be CLOSED\nDecember 12 from 9am-12pm\nfor Aquatics In-service Training"
+        }
+      ],
+      "page_count": 1,
+      "text": "PAGE 1\nNORTH BEACH POOL (WARM) FALL 2026 SCHEDULE (SEPTEMBER 1- DECEMBER 12)\nCost:\nTUESDAY WEDNESDAY THURSDAY FRIDAY SATURDAY\n$8 adults; $2 youth\nAll city pools will be CLOSED\nLap Swim (Lap/ Therapy) Lap Swim (Lap/ Therapy) Notes:\nDecember 12 from 9am-12pm\n7:30am-9:00am 7:30am-9:00am\nfor Aquatics In-service Training\n\u2022 North Beach Pool will be CLOSED\nOctober 13-October 31 for\nSenior Swim Senior Swim Senior Swim Rec/Family Swim (1) ANNUAL MAINTENCE.\nLearn to Swim*\n(Lap/Therapy) (Lap/Therapy) (Lap/Therapy) Senior Swim (1) \u2022 All city pools will be CLOSED\n9:00am-9:30am\n9:00am-10:15am 9:00am-10:15am 9:00am-11:00am 9:00am-10:15am every 4th Thursday of the month\nfrom 12p-2pm for Aquatics\nLap Swim (Lap/Therapy) Division Training\nSFUSD SFUSD SFUSD Learn to Swim*\n11:15am-2:00pm \u2022 All city pools will be CLOSED on\n10:30am-11:30am 10:30am-11:30am 10:30am-11:30am 9:45am-10:15am\n(CLOSED 9/24 & 10/22) November 11 for Veteran's Day,\nNovember 26-27 for Thanksgiving\nLap Swim (Lap/Therapy) Self Guided Exercise Lap Swim Self Guided Exercise Preschool Lessons*\n\u2022 Children under 48\u201d must always\n12:00pm-3:00pm 11:45am-12:45pm 2:15pm-3:15pm 11:45am-12:45pm 10:30am-11:00am\nbe accompanied by an adult\nwithin arm\u2019s reach.\nAdult Lessons*\nRec/Family Swim Lap Swim (Lap/Therapy) Lap Swim (Lap/Therapy) Rec/Family Swim \u2022 Sauna use during program times\n(Beginner/Intermediate)\n3:30pm-5:30pm 12:50pm-3:15pm 12:50pm-3:15pm 12:00pm-1:15pm only. Adults only.\n3:20pm-3:50pm\n\u2022 * Learn to Swim- Pre-registration\nLap Swim Learn to Swim * Rec/Family Swim Learn to Swim* Lap Swim (Lap/Therapy) R equired- sfrecpark.org/register\n5:30pm-6:30pm 3:45pm-4:15pm 4:00pm-5:30pm 3:45pm-4:15pm 1:45pm-3:00pm \u2022 Warm Pool Temperature: 86F\nPool Info:\nWater Exercise\nLearn to Swim* Learn to Swim* Rec/Family Swim\n(Instructor Lead, Deep End)\n4:30pm-5:00pm 4:30pm-5:00pm 3:30pm-5:00pm Aquatics Supervisor\n5:30-6:30pm\nMichele Lee\nRec/Family Swim Rec/Family Swim michele.lee@sfgov.org\n5:30pm-6:30pm 5:30pm-7:00pm\n661 Lombard St\n(415) 391-0407\nsfrecpark.org"
+    },
+    "source_window": {
+      "actual": [
+        "2026-09-01",
+        "2026-12-12"
+      ],
+      "expected": [
+        "2026-09-01",
+        "2026-12-12"
+      ],
+      "issues": [],
+      "ok": true
+    },
+    "visual_pages": []
+  },
+  "extracted_at": "2026-09-07T06:35:53.882698+00:00",
+  "grounding": {
+    "grounded_count": 20,
+    "ratio": 1.0,
+    "sessions": [
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 0,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 1,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 2,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 3,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 4,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 5,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 6,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 7,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 8,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 9,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 10,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 11,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 12,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 13,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 14,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 15,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 16,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 17,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 18,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      },
+      {
+        "evidence_in_pdf": true,
+        "grounded": true,
+        "index": 19,
+        "missing_evidence": false,
+        "start_in_evidence": true,
+        "type_in_evidence": true
+      }
+    ],
+    "total": 20
+  },
+  "model": "gpt-5.5-2026-04-23",
+  "payload": {
+    "closures": [
+      {
+        "end": "2026-12-12",
+        "end_time": "12:00",
+        "reason": "Aquatics In-service Training",
+        "start": "2026-12-12",
+        "start_time": "09:00"
+      },
+      {
+        "end": "2026-10-31",
+        "reason": "ANNUAL MAINTENCE",
+        "start": "2026-10-13"
+      },
+      {
+        "end": "2026-09-24",
+        "end_time": "14:00",
+        "reason": "Aquatics Division Training",
+        "start": "2026-09-24",
+        "start_time": "12:00"
+      },
+      {
+        "end": "2026-10-22",
+        "end_time": "14:00",
+        "reason": "Aquatics Division Training",
+        "start": "2026-10-22",
+        "start_time": "12:00"
+      },
+      {
+        "end": "2026-11-26",
+        "end_time": "14:00",
+        "reason": "Aquatics Division Training",
+        "start": "2026-11-26",
+        "start_time": "12:00"
+      },
+      {
+        "end": "2026-11-11",
+        "reason": "Veteran's Day",
+        "start": "2026-11-11"
+      },
+      {
+        "end": "2026-11-27",
+        "reason": "Thanksgiving",
+        "start": "2026-11-26"
+      }
+    ],
+    "effective_end": "2026-12-12",
+    "effective_start": "2026-09-01",
+    "schedule_basis": "swim_schedule",
+    "sessions": [
+      {
+        "day": "tuesday",
+        "end": "09:00",
+        "evidence": "Lap Swim (Lap/ Therapy) 7:30am-9:00am",
+        "pool": "lap/ therapy",
+        "start": "07:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "10:15",
+        "evidence": "Senior Swim (Lap/Therapy) 9:00am-10:15am",
+        "pool": "lap/therapy",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:00",
+        "evidence": "Lap Swim (Lap/Therapy) 12:00pm-3:00pm",
+        "pool": "lap/therapy",
+        "start": "12:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "17:30",
+        "evidence": "Rec/Family Swim 3:30pm-5:30pm",
+        "start": "15:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "18:30",
+        "evidence": "Lap Swim 5:30pm-6:30pm",
+        "start": "17:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "10:15",
+        "evidence": "Senior Swim (Lap/Therapy) 9:00am-10:15am",
+        "pool": "lap/therapy",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:15",
+        "evidence": "Lap Swim (Lap/Therapy) 12:50pm-3:15pm",
+        "pool": "lap/therapy",
+        "start": "12:50",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "18:30",
+        "evidence": "Rec/Family Swim 5:30pm-6:30pm",
+        "start": "17:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "09:00",
+        "evidence": "Lap Swim (Lap/ Therapy) 7:30am-9:00am",
+        "pool": "lap/ therapy",
+        "start": "07:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "11:00",
+        "evidence": "Senior Swim (Lap/Therapy) 9:00am-11:00am",
+        "pool": "lap/therapy",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "14:00",
+        "evidence": "Lap Swim (Lap/Therapy) 11:15am-2:00pm (CLOSED 9/24 & 10/22)",
+        "excluded_dates": [
+          "2026-09-24",
+          "2026-10-22"
+        ],
+        "notes": "Printed cell says CLOSED 9/24 & 10/22.",
+        "pool": "lap/therapy",
+        "start": "11:15",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "15:15",
+        "evidence": "Lap Swim 2:15pm-3:15pm",
+        "start": "14:15",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "17:30",
+        "evidence": "Rec/Family Swim 4:00pm-5:30pm",
+        "start": "16:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "10:15",
+        "evidence": "Rec/Family Swim (1) Senior Swim (1) 9:00am-10:15am",
+        "notes": "Shared cell with Senior Swim; printed (1) is only a numeric lane count and is not used as pool allocation.",
+        "start": "09:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "10:15",
+        "evidence": "Rec/Family Swim (1) Senior Swim (1) 9:00am-10:15am",
+        "notes": "Shared cell with Rec/Family Swim; printed (1) is only a numeric lane count and is not used as pool allocation.",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "friday",
+        "end": "15:15",
+        "evidence": "Lap Swim (Lap/Therapy) 12:50pm-3:15pm",
+        "pool": "lap/therapy",
+        "start": "12:50",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "19:00",
+        "evidence": "Rec/Family Swim 5:30pm-7:00pm",
+        "start": "17:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "13:15",
+        "evidence": "Rec/Family Swim 12:00pm-1:15pm",
+        "start": "12:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "15:00",
+        "evidence": "Lap Swim (Lap/Therapy) 1:45pm-3:00pm",
+        "pool": "lap/therapy",
+        "start": "13:45",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "17:00",
+        "evidence": "Rec/Family Swim 3:30pm-5:00pm",
+        "start": "15:30",
+        "type": "family_swim"
+      }
+    ]
+  },
+  "pdf_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
+  "prompt_sha256": "bc7660a8aceb19d05b6b8b01ae06ac8c125edca1ef4193d5a93b74ac8f25eb1b",
+  "provider": "openai",
+  "schema_sha256": "bba32143ee7552457652b6c850bd5d4b137b76b69292bdb094ae027d48da3afa",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29954",
+  "usage": {
+    "input_tokens": 4039,
+    "input_tokens_details": {
+      "cache_write_tokens": 0,
+      "cached_tokens": 0
+    },
+    "output_tokens": 3213,
+    "output_tokens_details": {
+      "reasoning_tokens": 1552
+    },
+    "total_tokens": 7252
+  }
+}

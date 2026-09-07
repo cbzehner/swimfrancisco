@@ -326,15 +326,29 @@ passed: 15 Cool and 20 Warm sessions, September 1–December 12, seven facility
 closures, and both cell-specific exclusions. Bundle identity was
 `e494dea3b5f825d3d9b27e2a24720ffa80971ba0c7bb0ea655f7221ccb7ee869`.
 
-The run stopped before staging or main publication because the existing
-allowlist expected `openai-gpt-5.5-2026-04-23.json`, while the artifact path
-function writes `openai-gpt-5-5-2026-04-23.json`. The same mismatch excluded
+The run stopped before staging or main publication. Investigation exposed an
+allowlist mismatch: it expected `openai-gpt-5.5-2026-04-23.json`, while the path
+function writes `openai-gpt-5-5-2026-04-23.json`. That mismatch also excluded
 component artifacts from retained evidence and stale-main cache reuse. The
 rules now use the actual filename; a regression creates it through the
 production path function and checks all three consumers. The failed run's
 bundle and settled spend receipt are retained in its hosted artifact, but its
 missing component artifacts must not be reconstructed or accepted as a cache.
-North Beach's live CHECK remains until the corrected trial publishes and deploys.
+The second [accounted trial](https://github.com/cbzehner/swimfrancisco/actions/runs/34091343343)
+charged $0.099475 and $0.116585, settling at **$0.216060**. Total spend is
+**$0.445500**. Both extractions and the combined candidate again passed. Its
+complete component artifacts are retained and committed under the original
+captures above, without a facility attestation or manual hours patch.
+
+Local replay identified the generation failure: the localization catalog lacked
+the returned maintenance, Veterans Day, and in-service training label variants.
+The catalog now maps those literal strings to existing translations; unknown
+labels still block publication. The generated-label allowlist also now matches
+the actual `data/i18n/dynamic-labels.json` path. Replay uses the retained paid
+artifacts, rechecks both original PDFs independently, then generates and stages
+the full candidate without model calls. The next hosted trial can reuse these
+unchanged, configuration-matched components. North Beach's live CHECK remains
+until that trial publishes and deploys.
 
 The cutover pauses scheduled automation before the shared-format commit reaches
 main. Preserve the durable budget branch, $5 monthly/$1 run limits, generated

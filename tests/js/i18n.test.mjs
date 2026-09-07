@@ -1,7 +1,19 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import { closureReasonLabel, formatLocalizedISODate } from "../../static/js/helpers/i18n.mjs";
+
+test("retained North Beach extraction closure labels map to existing translations", () => {
+  const read = (path) => JSON.parse(readFileSync(new URL(`../../${path}`, import.meta.url), "utf8"));
+  const labels = read("data/i18n/dynamic-labels.json").closure_reason.by_source;
+  for (const capture of ["2026-09-06-6c2b2e77fb23", "2026-09-06-ac196df42a14"]) {
+    const artifact = read(`data/north-beach-pool/${capture}/openai-gpt-5-5-2026-04-23.json`);
+    for (const closure of artifact.payload.closures) {
+      assert.ok(labels[closure.reason]?.translation_key, closure.reason);
+    }
+  }
+});
 
 test("formatLocalizedISODate uses active page language date order", () => {
   const previousWindow = globalThis.window;

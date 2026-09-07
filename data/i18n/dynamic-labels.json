@@ -139,6 +139,7 @@
           "Aquatics Division Training",
           "Aquatic Division Training",
           "Aquatics in-service training",
+          "Aquatics In-service Training",
           "Aquatics Division training"
         ]
       },
@@ -168,7 +169,10 @@
         "translation_key": "reason_annual_maintenance",
         "sources": [
           "Annual maintenance",
-          "annual maintenance"
+          "annual maintenance",
+          "ANUAL MAINTENANCE",
+          "ANUAL MAINTENANCE for North Beach Pool closure",
+          "ANNUAL MAINTENCE"
         ]
       },
       "garfield_maintenance": {
@@ -235,7 +239,8 @@
         "translation_key": "reason_veterans_day",
         "sources": [
           "Veterans Day",
-          "Veteran’s Day"
+          "Veteran’s Day",
+          "Veteran's Day"
         ]
       },
       "indigenous_peoples_day": {
@@ -374,6 +379,10 @@
         "code": "aquatics_training",
         "translation_key": "reason_aquatics_training"
       },
+      "Aquatics In-service Training": {
+        "code": "aquatics_training",
+        "translation_key": "reason_aquatics_training"
+      },
       "Aquatics Division training": {
         "code": "aquatics_training",
         "translation_key": "reason_aquatics_training"
@@ -411,6 +420,18 @@
         "translation_key": "reason_annual_maintenance"
       },
       "annual maintenance": {
+        "code": "annual_maintenance",
+        "translation_key": "reason_annual_maintenance"
+      },
+      "ANUAL MAINTENANCE": {
+        "code": "annual_maintenance",
+        "translation_key": "reason_annual_maintenance"
+      },
+      "ANUAL MAINTENANCE for North Beach Pool closure": {
+        "code": "annual_maintenance",
+        "translation_key": "reason_annual_maintenance"
+      },
+      "ANNUAL MAINTENCE": {
         "code": "annual_maintenance",
         "translation_key": "reason_annual_maintenance"
       },
@@ -459,6 +480,10 @@
         "translation_key": "reason_veterans_day"
       },
       "Veteran’s Day": {
+        "code": "veterans_day",
+        "translation_key": "reason_veterans_day"
+      },
+      "Veteran's Day": {
         "code": "veterans_day",
         "translation_key": "reason_veterans_day"
       },
