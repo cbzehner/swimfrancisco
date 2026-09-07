@@ -2,7 +2,7 @@
 
 **Author:** TBD
 **Date:** 2026-08-20
-**Status:** Reference spot-check approved; extraction-only trial complete; cutover held after Cloudflare deployment failure, automation disabled
+**Status:** Weekly automation enabled; unattended checked publication and live verification passed; held and unsupported sources still require review
 **Audience:** Operators of the schedule extract/review pipeline
 
 ---
@@ -78,8 +78,8 @@ A local locked ledger reserves the maximum request cost before sending it.
 Missing usage keeps that reservation; reported usage settles at the full input
 rate, without relying on cache discounts. A pricing or accounting mismatch
 blocks later calls. The workflow connects this request ledger to durable monthly
-accounting across Actions runs. Recurring OpenAI automation remains disabled
-until the operator approves that limit and completes the enablement checklist.
+accounting across Actions runs. Enabled recurring automation requires an
+operator-approved limit and the completed enablement checklist.
 
 The durable accounting implementation stores one `budget.json` on the separate
 `schedule-budget` branch. That branch stores accounting only; it cannot publish
@@ -97,8 +97,11 @@ All accounting updates use ordinary fast-forward Git pushes. Competing writers
 cannot both reserve the same remaining funds. Local tests exercise that race,
 process restart, missing accounting, month rollover, and malformed run ledgers.
 The remote accounting branch was initialized on 2026-09-06 after the operator
-approved $20/month. GitHub has that ceiling configured and automation explicitly
-disabled. The workflow calls reserve and settle; do not repeat initialization:
+approved $20/month. The later cutover lowers the ceiling to $5/month based on
+measured per-document cost and expected source changes. GitHub configuration
+and September's ledger use $5; the existing settled runs and charges remain
+intact. The $1 run limit is unchanged. The workflow calls reserve and settle;
+do not repeat initialization:
 
 ```sh
 just schedules budget initialize
@@ -264,12 +267,13 @@ The weekly OpenAI/direct-main workflow replaces the Gemini/PR workflow.
 Automatic PDF session publication now requires the production artifact and
 independent source verification; the legacy grounding percentage cannot approve
 an update. Manual human repair remains explicit. The runner, durable accounting,
-checked promotion, and live browser verification are connected but not enabled.
-Production credentials are configured, and the operator approved $20/month.
+checked promotion, and live browser verification are connected.
+Production credentials are configured with a $5/month ceiling and $1 run cap.
 The operator confirmed the North Beach summer and Garfield maintenance samples
-on 2026-09-06; other reference transcriptions remain agent-checked. Hosted
-extraction/publication trials remain release requirements. See the
-enablement checklist in `docs/schedules.md`.
+on 2026-09-06; other reference transcriptions remain agent-checked. See the
+hosted trial receipts and enablement checklist in `docs/schedules.md`. Successful
+workflow runs do not approve held closure notices, unsupported split PDFs, or
+non-city/direct candidates that remain outside automatic publication scope.
 
 References: [protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches),
 [workflow triggers](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow).

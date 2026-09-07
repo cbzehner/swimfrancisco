@@ -1196,10 +1196,13 @@ Portable evidence:
 ## Autonomous extraction and publication
 
 The operator confirmed the North Beach summer and Garfield maintenance reference
-samples on 2026-09-06 and approved the hosted cutover trials. Automation was
-disabled again after the publication trial's Cloudflare deployment failed.
-The operator approved a $20/month API ceiling on 2026-09-06;
-this is a limit, not a spending target. It replaces the Gemini/PR workflow;
+samples on 2026-09-06 and approved the hosted cutover trials. The recovered
+publication trial passed after the Cloudflare build secret was configured;
+the fresh unattended confirmation passed and weekly runs are enabled. Evidence
+and remaining source exceptions are recorded under Evidence and recovery.
+The operator initially approved a $20/month API ceiling on 2026-09-06;
+the cutover uses the lower $5/month ceiling discussed that evening. This is
+a limit, not a spending target. It replaces the Gemini/PR workflow;
 verified updates do not use a rolling publication PR. Unclear closure notices
 use a separate draft review PR, as approved on 2026-09-06.
 
@@ -1209,9 +1212,9 @@ ends. A late change can take up to seven days to appear; manual runs remain
 available. Manual runs default to `extract-only`. Both modes require
 `SCHEDULES_AUTOMATION_ENABLED=true`; unset means disabled.
 
-Keep the $1 per-run limit. Four or five scheduled runs therefore reserve at most
-$4–$5 per calendar month, with additional room under the $20 ceiling for trials
-and manual reruns. Unchanged source/configuration pairs reuse cached extraction
+Keep the $1 per-run limit within the $5 monthly ceiling. Scheduled runs, trials,
+and manual reruns share the same monthly allowance; a new run does not reset it.
+Unchanged source/configuration pairs reuse cached extraction
 without model calls. Failed or interrupted requests can retain their maximum
 reservation, so the accounting total can exceed the eventual API invoice.
 
@@ -1249,7 +1252,7 @@ unzip -p benchmarks/pdf/physical-pool-labels-2026-09-05.zip results.json |
 
 Recommendation, not implemented: replace the fixed $1 run allowance with the
 sum of conservative request estimates for eligible uncached PDFs, including
-the permitted transient retry, bounded by the remaining $20 monthly allowance.
+the permitted transient retry, bounded by the remaining $5 monthly allowance.
 Report expected cost separately from reserved cost, and release unused
 reservations only after valid usage settlement. Keep holds, request limits,
 and monthly accounting intact. The $1 cutover limit remains until this change
@@ -1317,10 +1320,14 @@ as well as Contents read/write. PR receipts are retained with the run evidence.
 
 ### Enablement checklist
 
-Budget approval and accounting setup are complete. Finish the remaining checks
-before enabling runs:
+Budget approval and accounting setup are complete. Keep these requirements
+in place for enabled runs:
 
-- `SCHEDULES_MONTHLY_BUDGET_USD=20` is configured in GitHub, matching the approved recurring ceiling.
+- `SCHEDULES_MONTHLY_BUDGET_USD=5` is configured in GitHub, matching the recurring ceiling.
+  September's recorded ceiling was lowered from $20 to $5 with automation
+  paused and no active reservations. Both prior settled runs and all charges
+  were preserved in an ordinary fast-forward accounting commit; the ledger
+  was not reinitialized.
   The original $10 benchmark trial remains a separate historical allowance.
 - The operator confirmed a limited human reference spot-check on 2026-09-06:
   North Beach summer (June 9–August 15, 30 weekly sessions, June 19 and July 4
@@ -1357,8 +1364,9 @@ not published swimming hours. Cloudflare build
 `df74342f-f9f0-4edc-b255-03b765b98050` failed; production still served `8ba8e46`
 when the failure was checked. This is not a successful autonomous publication.
 `SCHEDULES_AUTOMATION_ENABLED` was set back to `false`. The available local
-Cloudflare OAuth credential could not read build logs (HTTP 403), so the build
-failure's cause requires log access; do not assume a cause from its duration.
+Cloudflare OAuth credential could not read build logs (HTTP 403). Later logs
+supplied by the operator confirmed that the GitHub CI lookup was unauthenticated
+and an HTTP 403 retry delay consumed the remaining deployment-gate deadline.
 
 The publication runner reached its bounded live-verification timeout and
 recorded `status=failed`, with no confirmed live updates. It made no model
@@ -1368,8 +1376,46 @@ The separate closure-review and operator-report jobs both succeeded. Draft PRs
 the repository. A local replay against the retained publication evidence reused
 all ten PRs without changing any PR head or main. The current failure is tracked
 in [operator issue #94](https://github.com/cbzehner/swimfrancisco/issues/94).
-After repairing deployment, repeat the checked publication trial and verify
-the exact live revision before leaving weekly automation enabled.
+The [recovered publication trial](https://github.com/cbzehner/swimfrancisco/actions/runs/34082697652)
+passed [candidate CI](https://github.com/cbzehner/swimfrancisco/actions/runs/34082900294),
+pushed `723ab1d0103402b3ae00120f8251ccd20ffee895` directly to main, and passed
+[main CI](https://github.com/cbzehner/swimfrancisco/actions/runs/34083089300).
+Its first Cloudflare build failed because `GITHUB_TOKEN` existed only as a
+Worker runtime secret. The operator added the token to **Builds → Variables
+and secrets** and retried the same commit. Cloudflare build
+`7faf256f-b6db-4a58-807b-f7c781c27342` succeeded, and the running publication
+trial verified that exact deployment before its deadline and recorded
+`status=published`. All three workflow jobs succeeded. No swimming hours
+changed: only source captures changed. There were no API requests and the
+monthly ledger settled the run at $0. Closure review reused PRs #95–#104.
+
+The [fresh unattended confirmation](https://github.com/cbzehner/swimfrancisco/actions/runs/34084043126)
+then completed without a manual deployment retry. It passed
+[candidate CI](https://github.com/cbzehner/swimfrancisco/actions/runs/34084164907),
+pushed `9cf591194aedf4a08d897359b0cc7dce4043f4f0` to main, passed
+[main CI](https://github.com/cbzehner/swimfrancisco/actions/runs/34084392269), and
+deployed through Cloudflare build `879239d4-3dc4-4a24-b2bd-3a06ead8a39c`.
+The hosted live checks verified the exact commit, all 30 canonical locations,
+pool pages, conditions freshness, and map loading in WebKit and Chromium.
+All three workflow jobs succeeded and the receipt recorded `status=published`.
+Again, source captures changed but swimming hours did not. There were no model
+requests, the run settled at $0, and its closure-PR receipt exactly matched the
+recovered trial's receipt. All ten PR heads remained unchanged. All four
+cutover runs are settled at $0; the full $5 monthly allowance is available.
+`SCHEDULES_AUTOMATION_ENABLED=true` is confirmed. The next weekly check is
+Monday, September 7, 2026 at 16:00 UTC (09:00 Pacific daylight time).
+
+These trials are not evidence that every source can update without review.
+Ten city PDF inputs are held for unresolved closure checks, and North Beach's
+split PDFs remain unsupported. Discovery finds the fall Cool Pool PDF (29953)
+and Warm Pool PDF (29954), both listed for September 1–December 12, but holds
+them as `split_part`; the missing live North Beach schedule is a pipeline
+capability gap, not an absent official schedule. Six direct sources returned HTTP 403 in the
+recovered trial. Non-city candidates are outside the publisher's current
+automatic-acceptance scope (`not_rec_park`) and need explicit human review.
+These exceptions retain prior valid data without extending expired hours.
+The operator issue and closure PRs remain open; successful workflow execution
+does not certify those held sources or demonstrate a hosted paid API call.
 
 Each run retains `tmp/automation/result.json`, per-build discovery and publication
 reports, source PDFs, provider artifacts, accepted snapshots, and sanitized
