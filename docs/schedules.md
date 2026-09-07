@@ -357,6 +357,45 @@ literal source punctuation after the browser decodes the attribute. A render
 regression checks apostrophes, quotes, ampersands, and angle brackets; the
 browser verifier checks both original pools in the complete candidate.
 
+The [cached publication trial](https://github.com/cbzehner/swimfrancisco/actions/runs/34092991204)
+then passed all three jobs. It made **zero model requests**, reused both committed
+component artifacts with matching full configurations, and published only
+North Beach's swimming hours. The combined candidate
+`1bbc755a54340eb82c3baf6083652bc02931150f` passed
+[candidate CI](https://github.com/cbzehner/swimfrancisco/actions/runs/34093141191),
+reached main through non-force promotion, passed
+[main CI](https://github.com/cbzehner/swimfrancisco/actions/runs/34093491591),
+and deployed. The hosted receipt records `status=published` and
+`published_slugs=["north-beach-pool"]`. Its budget receipt has an empty request
+list and settled at $0. The full source/configuration identities, bundle,
+attestation, and original component artifacts are committed under the captures
+above. Other generated changes contain source captures and bulletin metadata,
+not non-city schedule acceptance.
+
+An additional local `node scripts/smoke-production.mjs
+--expected-commit=1bbc755a54340eb82c3baf6083652bc02931150f --browser` passed all
+30 canonical locations. Twenty live date scenarios (ten in each of WebKit and
+Chromium, with the browser timezone set to Tokyo) checked both the board and
+North Beach detail page: September 1 opening, September 24 cell exclusions and
+simultaneous Cool/Warm sessions, October maintenance, November Pacific standard
+time, Thanksgiving, December 12 reopening after the partial closure, December
+13 expiry, and Pacific midnight rollover. Expiry shows CHECK on the board and
+an unverified schedule on the detail page; it does not extend prior hours.
+The independent visual transcription agrees with all 15 Cool and 20 Warm
+program/day/time entries, exclusions, and seven closure entries. This comparison
+is development evidence and is never an input to the production verifier.
+
+Final candidate checks passed 1,079 Python tests (55 skipped), 195 JavaScript
+tests, 31 browser tests, type checking, localization checks, and the build.
+The durable ledger records **$0.445500 total** for the two paid trials and the
+zero-call publication, leaving **$4.554500** of the approved $5 monthly ceiling.
+The $1 per-run reservation remains unchanged. After verified success,
+`SCHEDULES_AUTOMATION_ENABLED=true` was restored for Monday 16:00 UTC checks.
+Ten unresolved city closure inputs remain on their existing review-PR path;
+six direct sources still return hosted HTTP 403, and non-city publication
+remains manual. New unsupported formats or unknown display labels still hold
+publication; this result does not certify every pool as fully automated.
+
 The cutover pauses scheduled automation before the shared-format commit reaches
 main. Preserve the durable budget branch, $5 monthly/$1 run limits, generated
 allowlist, stale-main protection, non-force promotion, and exact-commit CI.
