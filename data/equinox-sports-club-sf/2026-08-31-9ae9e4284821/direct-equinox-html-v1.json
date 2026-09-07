@@ -1,6 +1,6 @@
 {
   "cost_estimate": "deterministic",
-  "extracted_at": "2026-09-06T21:02:48.694871+00:00",
+  "extracted_at": "2026-09-07T04:22:57.923660+00:00",
   "model": "equinox-html-v1",
   "payload": {
     "access_exceptions": [],
