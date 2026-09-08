@@ -1,56 +1,62 @@
 {
-  "slug": "coffman-pool",
   "pdf_sha256": "0345cb25881bf830cc0da365d669c36410bf6ac3cebcd9a83cb0910459e3e457",
-  "reviewed_at": "2026-08-20",
-  "attested_by": "ci",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29798",
+  "slug": "coffman-pool",
+  "reviewed_at": "2026-09-07",
+  "attested_by": "ci",
   "payload": {
     "closures": [
       {
         "end": "2026-08-22",
         "end_time": "13:00",
-        "reason": "In-Service Training",
+        "reason": "Closed for In-Service",
+        "reason_code": "staff_training",
+        "source_notices": [
+          {
+            "id": "p1-c5-b27-notice",
+            "text": "Closed for In-Service\nAugust 22, 9am-1pm\nDecember 12, 9am- 2pm"
+          }
+        ],
         "start": "2026-08-22",
-        "start_time": "09:00",
-        "reason_code": "in_service_training"
-      },
-      {
-        "end": "2026-12-12",
-        "end_time": "14:00",
-        "reason": "In-Service Training",
-        "start": "2026-12-12",
-        "start_time": "09:00",
-        "reason_code": "in_service_training"
-      },
-      {
-        "end": "2026-08-27",
-        "reason": "Staff Training",
-        "start": "2026-08-27",
-        "reason_code": "staff_training"
-      },
-      {
-        "end": "2026-09-24",
-        "reason": "Staff Training",
-        "start": "2026-09-24",
-        "reason_code": "staff_training"
-      },
-      {
-        "end": "2026-10-22",
-        "reason": "Staff Training",
-        "start": "2026-10-22",
-        "reason_code": "staff_training"
+        "start_time": "09:00"
       },
       {
         "end": "2026-11-11",
         "reason": "Veterans Day",
-        "start": "2026-11-11",
-        "reason_code": "veterans_day"
+        "reason_code": "holiday",
+        "source_notices": [
+          {
+            "id": "p1-notice-1",
+            "text": "All city pools will be closed on\n11/11/2026 in observance of\nVeterans Day and 11/26-27 for\nThanksgiving"
+          }
+        ],
+        "start": "2026-11-11"
       },
       {
         "end": "2026-11-27",
         "reason": "Thanksgiving",
-        "start": "2026-11-26",
-        "reason_code": "thanksgiving"
+        "reason_code": "holiday",
+        "source_notices": [
+          {
+            "id": "p1-notice-1",
+            "text": "All city pools will be closed on\n11/11/2026 in observance of\nVeterans Day and 11/26-27 for\nThanksgiving"
+          }
+        ],
+        "start": "2026-11-26"
+      },
+      {
+        "end": "2026-12-12",
+        "end_time": "14:00",
+        "reason": "Closed for In-Service",
+        "reason_code": "staff_training",
+        "source_notices": [
+          {
+            "id": "p1-c5-b27-notice",
+            "text": "Closed for In-Service\nAugust 22, 9am-1pm\nDecember 12, 9am- 2pm"
+          }
+        ],
+        "start": "2026-12-12",
+        "start_time": "09:00"
       }
     ],
     "effective_end": "2026-12-12",
@@ -82,7 +88,7 @@
         "day": "tuesday",
         "end": "16:00",
         "evidence": "Senior Swim (4 lanes; may vary) 2:00pm-4:00pm",
-        "notes": "4 lanes; may vary",
+        "notes": "Printed lane count only; no pool allocation extracted.",
         "start": "14:00",
         "type": "senior_swim"
       },
@@ -90,7 +96,7 @@
         "day": "tuesday",
         "end": "16:00",
         "evidence": "Family Swim (2 lanes) 2:00pm-4:00pm",
-        "pool": "2 lanes",
+        "notes": "Printed lane count only; no pool allocation extracted.",
         "start": "14:00",
         "type": "family_swim"
       },
@@ -98,6 +104,7 @@
         "day": "wednesday",
         "end": "10:30",
         "evidence": "Senior Swim/ Self-Guided Exercise 9:00am-10:30am",
+        "notes": "Shared cell with Self-Guided Exercise; only the senior swim program was extracted.",
         "start": "09:00",
         "type": "senior_swim"
       },
@@ -112,6 +119,7 @@
         "day": "wednesday",
         "end": "14:30",
         "evidence": "Sfusd/Rec Swim 1:30pm-2:30pm",
+        "notes": "Shared cell includes SFUSD; only the rec swim program was extracted.",
         "start": "13:30",
         "type": "family_swim"
       },
@@ -119,7 +127,7 @@
         "day": "wednesday",
         "end": "19:00",
         "evidence": "Family Swim 6:00pm-7:00pm (3 lanes)",
-        "pool": "3 lanes",
+        "notes": "Printed lane count only; no pool allocation extracted.",
         "start": "18:00",
         "type": "family_swim"
       },
@@ -127,7 +135,7 @@
         "day": "wednesday",
         "end": "19:00",
         "evidence": "Lap Swim 6:00pm-7:00pm (3 lanes)",
-        "pool": "3 lanes",
+        "notes": "Printed lane count only; no pool allocation extracted.",
         "start": "18:00",
         "type": "lap_swim"
       },
@@ -148,8 +156,13 @@
       {
         "day": "thursday",
         "end": "13:00",
-        "evidence": "Lap Swim 11:30am-1:00pm",
-        "notes": "Closed every 4th Thursday of the Month for Training 8/27, 9/24, 10/22",
+        "evidence": "Lap Swim 11:30am-1:00pm Closed every 4th Thursday of t he Month for Training 8/27, 9/24, 10/22",
+        "excluded_dates": [
+          "2026-08-27",
+          "2026-09-24",
+          "2026-10-22"
+        ],
+        "notes": "This session cell is marked closed on listed training dates.",
         "start": "11:30",
         "type": "lap_swim"
       },
@@ -157,7 +170,6 @@
         "day": "thursday",
         "end": "16:00",
         "evidence": "Lap Swim 2:30pm-4:00pm",
-        "notes": "Closed every 4th Thursday of the Month for Training 8/27, 9/24, 10/22",
         "start": "14:30",
         "type": "lap_swim"
       },
@@ -165,6 +177,7 @@
         "day": "friday",
         "end": "10:30",
         "evidence": "Senior Swim/ Self-Guided Exercise 9:00am-10:30am",
+        "notes": "Shared cell with Self-Guided Exercise; only the senior swim program was extracted.",
         "start": "09:00",
         "type": "senior_swim"
       },

@@ -520,7 +520,7 @@ type = "family_swim"
 start = "12:30"
 end = "15:30"
 pool = "shallow"
-notes = "Session cell marked CLOSED on 8/27 & 9/24."
+notes = "Closed on 8/27 & 9/24."
 excluded_dates = [ "2026-08-27", "2026-09-24" ]
 
 [[extra.schedules.sessions]]
@@ -528,7 +528,7 @@ day = "thursday"
 type = "lap_swim"
 start = "12:30"
 end = "15:30"
-notes = "Session cell marked CLOSED on 8/27 & 9/24."
+notes = "Closed on 8/27 & 9/24."
 excluded_dates = [ "2026-08-27", "2026-09-24" ]
 
 [[extra.schedules.sessions]]
@@ -617,21 +617,19 @@ text = "Holiday Closures\nSeptember 7, 2026"
 effective_start = "2026-09-29"
 schedule_basis = "swim_schedule"
 effective_end = "2026-12-12"
-last_verified_at = "2026-08-20"
+last_verified_at = "2026-09-07"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "07:30"
 end = "09:00"
-pool = "10"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "09:00"
 end = "12:00"
-pool = "4"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -652,21 +650,12 @@ day = "tuesday"
 type = "lap_swim"
 start = "12:30"
 end = "15:30"
-pool = "8"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "18:00"
 end = "19:00"
-pool = "8"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
-type = "lap_swim"
-start = "07:30"
-end = "09:00"
-pool = "10"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -680,7 +669,6 @@ day = "wednesday"
 type = "lap_swim"
 start = "09:00"
 end = "12:00"
-pool = "4"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -694,21 +682,18 @@ day = "wednesday"
 type = "lap_swim"
 start = "12:30"
 end = "15:30"
-pool = "8"
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "07:30"
 end = "09:00"
-pool = "10"
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "09:00"
 end = "12:00"
-pool = "4"
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -723,20 +708,22 @@ type = "family_swim"
 start = "12:30"
 end = "15:30"
 pool = "shallow"
+notes = "Closed on 2026-10-22 as printed."
+excluded_dates = [ "2026-10-22" ]
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "12:30"
 end = "15:30"
-pool = "8"
+notes = "Closed on 2026-10-22 as printed."
+excluded_dates = [ "2026-10-22" ]
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "18:00"
 end = "19:00"
-pool = "8"
 
 [[extra.schedules.sessions]]
 day = "friday"
@@ -750,7 +737,6 @@ day = "friday"
 type = "lap_swim"
 start = "09:00"
 end = "12:00"
-pool = "4"
 
 [[extra.schedules.sessions]]
 day = "friday"
@@ -764,58 +750,74 @@ day = "friday"
 type = "lap_swim"
 start = "12:30"
 end = "15:30"
-pool = "8"
 
 [[extra.schedules.sessions]]
 day = "saturday"
 type = "lap_swim"
 start = "07:00"
 end = "08:30"
-pool = "10"
 
 [[extra.schedules.sessions]]
 day = "saturday"
 type = "family_swim"
 start = "13:30"
 end = "15:00"
-pool = "10"
 
 [[extra.schedules.sessions]]
 day = "saturday"
 type = "lap_swim"
 start = "15:30"
 end = "17:00"
-pool = "10"
 
 [[extra.schedules.closures]]
 start = "2026-10-12"
 end = "2026-10-12"
-reason = "Holiday"
-reason_code = "holiday_closure"
+reason = "Holiday Closure"
+reason_code = "holiday"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-1"
+text = "Holiday Closures\nOctober 12, 2026\nNovember 11, 2026\nNovember 26, 2026\nNovember 27, 2026"
 
 [[extra.schedules.closures]]
 start = "2026-11-11"
 end = "2026-11-11"
-reason = "Holiday"
-reason_code = "holiday_closure"
+reason = "Holiday Closure"
+reason_code = "holiday"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-1"
+text = "Holiday Closures\nOctober 12, 2026\nNovember 11, 2026\nNovember 26, 2026\nNovember 27, 2026"
 
 [[extra.schedules.closures]]
 start = "2026-11-26"
 end = "2026-11-26"
-reason = "Holiday"
-reason_code = "holiday_closure"
+reason = "Holiday Closure"
+reason_code = "holiday"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-1"
+text = "Holiday Closures\nOctober 12, 2026\nNovember 11, 2026\nNovember 26, 2026\nNovember 27, 2026"
 
 [[extra.schedules.closures]]
 start = "2026-11-27"
 end = "2026-11-27"
-reason = "Holiday"
-reason_code = "holiday_closure"
+reason = "Holiday Closure"
+reason_code = "holiday"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-1"
+text = "Holiday Closures\nOctober 12, 2026\nNovember 11, 2026\nNovember 26, 2026\nNovember 27, 2026"
 
 [[extra.schedules.closures]]
 start = "2026-12-12"
 end = "2026-12-12"
-reason = "Training"
-reason_code = "training"
+reason = "Training Closure"
+reason_code = "staff_training"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-2"
+text = "Training Closures\nDecember 12, 2026"
 +++
 
 An indoor pool in the Bayview, featuring a 25-yard x 25-meter main pool and a separate wading pool for tots. Programs include lap swim, senior swim, and recreation swim.

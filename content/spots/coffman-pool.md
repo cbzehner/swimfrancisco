@@ -294,7 +294,7 @@ reason_code = "independence_day"
 effective_start = "2026-08-18"
 schedule_basis = "swim_schedule"
 effective_end = "2026-12-12"
-last_verified_at = "2026-08-20"
+last_verified_at = "2026-09-07"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -319,19 +319,21 @@ day = "tuesday"
 type = "family_swim"
 start = "14:00"
 end = "16:00"
-pool = "2 lanes"
+notes = "Printed lane count only; no pool allocation extracted."
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "senior_swim"
 start = "14:00"
 end = "16:00"
+notes = "Printed lane count only; no pool allocation extracted."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "senior_swim"
 start = "09:00"
 end = "10:30"
+notes = "Shared cell with Self-Guided Exercise; only the senior swim program was extracted."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -344,20 +346,21 @@ day = "wednesday"
 type = "family_swim"
 start = "13:30"
 end = "14:30"
+notes = "Shared cell includes SFUSD; only the rec swim program was extracted."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "family_swim"
 start = "18:00"
 end = "19:00"
-pool = "3 lanes"
+notes = "Printed lane count only; no pool allocation extracted."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "18:00"
 end = "19:00"
-pool = "3 lanes"
+notes = "Printed lane count only; no pool allocation extracted."
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -376,6 +379,8 @@ day = "thursday"
 type = "lap_swim"
 start = "11:30"
 end = "13:00"
+notes = "This session cell is marked closed on listed training dates."
+excluded_dates = [ "2026-08-27", "2026-09-24", "2026-10-22" ]
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -388,6 +393,7 @@ day = "friday"
 type = "senior_swim"
 start = "09:00"
 end = "10:30"
+notes = "Shared cell with Self-Guided Exercise; only the senior swim program was extracted."
 
 [[extra.schedules.sessions]]
 day = "friday"
@@ -428,48 +434,46 @@ end = "17:00"
 [[extra.schedules.closures]]
 start = "2026-08-22"
 end = "2026-08-22"
-reason = "In-Service Training"
+reason = "Closed for In-Service"
 start_time = "09:00"
 end_time = "13:00"
-reason_code = "in_service_training"
-
-[[extra.schedules.closures]]
-start = "2026-08-27"
-end = "2026-08-27"
-reason = "Staff Training"
 reason_code = "staff_training"
 
-[[extra.schedules.closures]]
-start = "2026-09-24"
-end = "2026-09-24"
-reason = "Staff Training"
-reason_code = "staff_training"
-
-[[extra.schedules.closures]]
-start = "2026-10-22"
-end = "2026-10-22"
-reason = "Staff Training"
-reason_code = "staff_training"
+[[extra.schedules.closures.source_notices]]
+id = "p1-c5-b27-notice"
+text = "Closed for In-Service\nAugust 22, 9am-1pm\nDecember 12, 9am- 2pm"
 
 [[extra.schedules.closures]]
 start = "2026-11-11"
 end = "2026-11-11"
 reason = "Veterans Day"
-reason_code = "veterans_day"
+reason_code = "holiday"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-1"
+text = "All city pools will be closed on\n11/11/2026 in observance of\nVeterans Day and 11/26-27 for\nThanksgiving"
 
 [[extra.schedules.closures]]
 start = "2026-11-26"
 end = "2026-11-27"
 reason = "Thanksgiving"
-reason_code = "thanksgiving"
+reason_code = "holiday"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-1"
+text = "All city pools will be closed on\n11/11/2026 in observance of\nVeterans Day and 11/26-27 for\nThanksgiving"
 
 [[extra.schedules.closures]]
 start = "2026-12-12"
 end = "2026-12-12"
-reason = "In-Service Training"
+reason = "Closed for In-Service"
 start_time = "09:00"
 end_time = "14:00"
-reason_code = "in_service_training"
+reason_code = "staff_training"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-c5-b27-notice"
+text = "Closed for In-Service\nAugust 22, 9am-1pm\nDecember 12, 9am- 2pm"
 +++
 
 A 10,000-square-foot indoor pool in Herz Playground at the southeastern entrance of McLaren Park, serving the Visitacion Valley neighborhood. Programs include lap swim, senior swim, recreation swim, self-guided water exercise, and lessons.

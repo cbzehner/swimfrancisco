@@ -333,7 +333,7 @@ day = "tuesday"
 type = "senior_swim"
 start = "09:15"
 end = "11:00"
-notes = "Shared cell with Parent & Tot; only Senior Swim emitted. Numeric lane count only, no pool allocation."
+notes = "Shared cell with Parent & Tot; numeric lane count only omitted from pool_label_raw."
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -400,14 +400,14 @@ day = "thursday"
 type = "senior_swim"
 start = "09:15"
 end = "11:00"
-notes = "Shared cell with Parent & Tot; only Senior Swim emitted. Numeric lane count only, no pool allocation."
+notes = "Shared cell with Parent & Tot; numeric lane count only omitted from pool_label_raw."
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "11:15"
 end = "13:30"
-notes = "Cell is marked closed every 4th Thursday of the month for training; dates taken from printed note listing 8/27 & 9/24."
+notes = "Cell is marked closed every 4th Thursday of the month for training."
 excluded_dates = [ "2026-08-27", "2026-09-24" ]
 
 [[extra.schedules.sessions]]
