@@ -8,7 +8,7 @@
     "closures": [
       {
         "end": "2026-09-07",
-        "reason": "Holiday Closures",
+        "reason": "Holiday Closure",
         "reason_code": "holiday",
         "source_notices": [
           {
@@ -20,7 +20,7 @@
       },
       {
         "end": "2026-08-22",
-        "reason": "Training Closures",
+        "reason": "Training Closure",
         "reason_code": "staff_training",
         "source_notices": [
           {
@@ -153,7 +153,7 @@
           "2026-08-27",
           "2026-09-24"
         ],
-        "notes": "Session cell marked CLOSED on 8/27 & 9/24.",
+        "notes": "Printed cell says CLOSED (8/27 & 9/24).",
         "pool": "shallow",
         "start": "12:30",
         "type": "family_swim"
@@ -166,7 +166,7 @@
           "2026-08-27",
           "2026-09-24"
         ],
-        "notes": "Session cell marked CLOSED on 8/27 & 9/24.",
+        "notes": "Printed cell says CLOSED (8/27 & 9/24).",
         "start": "12:30",
         "type": "lap_swim"
       },

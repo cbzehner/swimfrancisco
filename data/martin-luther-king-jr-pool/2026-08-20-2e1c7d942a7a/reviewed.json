@@ -174,7 +174,7 @@
         "excluded_dates": [
           "2026-10-22"
         ],
-        "notes": "CLOSED (10/22)",
+        "notes": "Session cell is marked CLOSED on 10/22.",
         "pool": "shallow",
         "start": "12:30",
         "type": "family_swim"
@@ -186,7 +186,7 @@
         "excluded_dates": [
           "2026-10-22"
         ],
-        "notes": "CLOSED (10/22)",
+        "notes": "Session cell is marked CLOSED on 10/22.",
         "start": "12:30",
         "type": "lap_swim"
       },

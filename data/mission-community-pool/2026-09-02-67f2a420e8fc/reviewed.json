@@ -81,7 +81,6 @@
         "day": "tuesday",
         "end": "09:00",
         "evidence": "Lap Swim 7:30am-9:00am",
-        "notes": "No pool allocation printed.",
         "start": "07:30",
         "type": "lap_swim"
       },
@@ -89,7 +88,7 @@
         "day": "tuesday",
         "end": "11:00",
         "evidence": "Parent & Tot (1) / Senior Swim (3) 9:15am-11:00am",
-        "notes": "Senior Swim shares the cell with Parent & Tot; numeric lane count is not a pool allocation.",
+        "notes": "Shared cell also includes Parent & Tot; only Senior Swim is emitted.",
         "start": "09:15",
         "type": "senior_swim"
       },
@@ -97,7 +96,6 @@
         "day": "tuesday",
         "end": "13:30",
         "evidence": "Lap Swim 11:15am-1:30pm",
-        "notes": "No pool allocation printed.",
         "start": "11:15",
         "type": "lap_swim"
       },
@@ -105,7 +103,6 @@
         "day": "tuesday",
         "end": "15:30",
         "evidence": "Lap Swim 2:00pm-3:30pm",
-        "notes": "No pool allocation printed.",
         "start": "14:00",
         "type": "lap_swim"
       },
@@ -113,7 +110,6 @@
         "day": "tuesday",
         "end": "17:15",
         "evidence": "Family Swim 3:45pm-5:15pm",
-        "notes": "No pool allocation printed.",
         "start": "15:45",
         "type": "family_swim"
       },
@@ -121,7 +117,6 @@
         "day": "tuesday",
         "end": "19:00",
         "evidence": "Lap Swim 5:45pm-7:00pm",
-        "notes": "No pool allocation printed.",
         "start": "17:45",
         "type": "lap_swim"
       },
@@ -129,7 +124,6 @@
         "day": "wednesday",
         "end": "09:00",
         "evidence": "Lap Swim 7:30am-9:00am",
-        "notes": "No pool allocation printed.",
         "start": "07:30",
         "type": "lap_swim"
       },
@@ -137,7 +131,6 @@
         "day": "wednesday",
         "end": "11:00",
         "evidence": "Senior / Therapy Swim 9:15am-11:00am",
-        "notes": "No pool allocation printed.",
         "start": "09:15",
         "type": "senior_swim"
       },
@@ -145,7 +138,6 @@
         "day": "wednesday",
         "end": "13:30",
         "evidence": "Lap Swim 11:30am-1:30pm",
-        "notes": "No pool allocation printed.",
         "start": "11:30",
         "type": "lap_swim"
       },
@@ -153,7 +145,6 @@
         "day": "wednesday",
         "end": "16:30",
         "evidence": "Family Swim 2:30pm-4:30pm",
-        "notes": "No pool allocation printed.",
         "start": "14:30",
         "type": "family_swim"
       },
@@ -161,7 +152,6 @@
         "day": "wednesday",
         "end": "19:00",
         "evidence": "Lap Swim 5:00pm-7:00pm --",
-        "notes": "No pool allocation printed.",
         "start": "17:00",
         "type": "lap_swim"
       },
@@ -169,7 +159,6 @@
         "day": "thursday",
         "end": "09:00",
         "evidence": "Lap Swim 7:30am-9:00am",
-        "notes": "No pool allocation printed.",
         "start": "07:30",
         "type": "lap_swim"
       },
@@ -177,7 +166,7 @@
         "day": "thursday",
         "end": "11:00",
         "evidence": "Parent & Tot (1) / Senior Swim (3) 9:15am \u2013 11:00am",
-        "notes": "Senior Swim shares the cell with Parent & Tot; numeric lane count is not a pool allocation.",
+        "notes": "Shared cell also includes Parent & Tot; only Senior Swim is emitted.",
         "start": "09:15",
         "type": "senior_swim"
       },
@@ -189,7 +178,7 @@
           "2026-08-27",
           "2026-09-24"
         ],
-        "notes": "Session cell states it is closed every 4th Thursday of the month for training.",
+        "notes": "Cell states closed every 4th Thursday of the Month for Training.",
         "start": "11:15",
         "type": "lap_swim"
       },
@@ -197,7 +186,6 @@
         "day": "thursday",
         "end": "15:30",
         "evidence": "Lap Swim 2:00pm-3:30pm",
-        "notes": "No pool allocation printed.",
         "start": "14:00",
         "type": "lap_swim"
       },
@@ -205,7 +193,6 @@
         "day": "thursday",
         "end": "17:15",
         "evidence": "Family Swim 3:45pm-5:15pm",
-        "notes": "No pool allocation printed.",
         "start": "15:45",
         "type": "family_swim"
       },
@@ -213,7 +200,6 @@
         "day": "thursday",
         "end": "19:00",
         "evidence": "Lap Swim 5:45pm-7:00pm",
-        "notes": "No pool allocation printed.",
         "start": "17:45",
         "type": "lap_swim"
       },
@@ -221,7 +207,6 @@
         "day": "friday",
         "end": "09:00",
         "evidence": "Lap Swim 7:30am-9:00am",
-        "notes": "No pool allocation printed.",
         "start": "07:30",
         "type": "lap_swim"
       },
@@ -229,7 +214,6 @@
         "day": "friday",
         "end": "11:00",
         "evidence": "Senior / Therapy Swim 9:15am-11:00am",
-        "notes": "No pool allocation printed.",
         "start": "09:15",
         "type": "senior_swim"
       },
@@ -237,7 +221,6 @@
         "day": "friday",
         "end": "13:30",
         "evidence": "Lap Swim 11:30am-1:30pm",
-        "notes": "No pool allocation printed.",
         "start": "11:30",
         "type": "lap_swim"
       },
@@ -245,7 +228,6 @@
         "day": "friday",
         "end": "16:30",
         "evidence": "Lap Swim 2:30pm-4:30pm",
-        "notes": "No pool allocation printed.",
         "start": "14:30",
         "type": "lap_swim"
       },
@@ -253,7 +235,6 @@
         "day": "friday",
         "end": "19:00",
         "evidence": "Family Swim 5:00pm-7:00pm --",
-        "notes": "No pool allocation printed.",
         "start": "17:00",
         "type": "family_swim"
       },
@@ -261,7 +242,6 @@
         "day": "saturday",
         "end": "12:45",
         "evidence": "Lap Swim 11:30am-12:45pm",
-        "notes": "No pool allocation printed.",
         "start": "11:30",
         "type": "lap_swim"
       },
@@ -269,7 +249,6 @@
         "day": "saturday",
         "end": "15:30",
         "evidence": "Family Swim 2:00pm-3:30pm",
-        "notes": "No pool allocation printed.",
         "start": "14:00",
         "type": "family_swim"
       },
@@ -277,7 +256,6 @@
         "day": "saturday",
         "end": "17:30",
         "evidence": "Lap Swim 4:00pm-5:30pm --",
-        "notes": "No pool allocation printed.",
         "start": "16:00",
         "type": "lap_swim"
       }

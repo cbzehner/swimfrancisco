@@ -520,7 +520,7 @@ type = "family_swim"
 start = "12:30"
 end = "15:30"
 pool = "shallow"
-notes = "Session cell marked CLOSED on 8/27 & 9/24."
+notes = "Printed cell says CLOSED (8/27 & 9/24)."
 excluded_dates = [ "2026-08-27", "2026-09-24" ]
 
 [[extra.schedules.sessions]]
@@ -528,7 +528,7 @@ day = "thursday"
 type = "lap_swim"
 start = "12:30"
 end = "15:30"
-notes = "Session cell marked CLOSED on 8/27 & 9/24."
+notes = "Printed cell says CLOSED (8/27 & 9/24)."
 excluded_dates = [ "2026-08-27", "2026-09-24" ]
 
 [[extra.schedules.sessions]]
@@ -596,7 +596,7 @@ end = "17:00"
 [[extra.schedules.closures]]
 start = "2026-08-22"
 end = "2026-08-22"
-reason = "Training Closures"
+reason = "Training Closure"
 reason_code = "staff_training"
 
 [[extra.schedules.closures.source_notices]]
@@ -606,7 +606,7 @@ text = "Training Closures\nAugust 22, 2026"
 [[extra.schedules.closures]]
 start = "2026-09-07"
 end = "2026-09-07"
-reason = "Holiday Closures"
+reason = "Holiday Closure"
 reason_code = "holiday"
 
 [[extra.schedules.closures.source_notices]]
@@ -708,7 +708,7 @@ type = "family_swim"
 start = "12:30"
 end = "15:30"
 pool = "shallow"
-notes = "CLOSED (10/22)"
+notes = "Session cell is marked CLOSED on 10/22."
 excluded_dates = [ "2026-10-22" ]
 
 [[extra.schedules.sessions]]
@@ -716,7 +716,7 @@ day = "thursday"
 type = "lap_swim"
 start = "12:30"
 end = "15:30"
-notes = "CLOSED (10/22)"
+notes = "Session cell is marked CLOSED on 10/22."
 excluded_dates = [ "2026-10-22" ]
 
 [[extra.schedules.sessions]]

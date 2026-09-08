@@ -1,10 +1,10 @@
 {
-  "cost_estimate": "input_tokens=3974, output_tokens=2564",
+  "cost_estimate": "input_tokens=3974, output_tokens=2581",
   "details": {
     "attempts": [
       {
-        "cost_usd": 0.09679,
-        "elapsed_seconds": 29.779,
+        "cost_usd": 0.0973,
+        "elapsed_seconds": 29.616,
         "http_status": 200,
         "reserved_microusd": 345035,
         "status": "completed"
@@ -16,7 +16,7 @@
         "_time.py": "f1efa6d6ad8330772b2fa08cca374337c238aefa03ebf39edd002f5eecab4f35",
         "artifacts.py": "be675cf6d20a5f1b73092af8ad2ef2b08e54618b19f4565220a009bce4ecee46",
         "grounding.py": "8cbb607e772769fed10b25258b7d8e017b3a6d5c1e4ad0a3a2b1d7a1f8a68fd0",
-        "providers/openai_provider.py": "53033c4960194fff1849dcfc69dd70b40e10e0f1c7522f3a1beba2cfeed4e76b",
+        "providers/openai_provider.py": "249fc978692bc9b4f86d7a5c285dea9e2643e63f0abc63f21f9c4a20d48eae56",
         "schema.py": "b4a7307f43667e00ea7408112b180aed1e48851621022eeb690a6971c87719c6",
         "signals.py": "f29c87c4cd8047a3a10402683135dfa30477d2c899984bad06134cea08fa8391",
         "window_dates.py": "ad6af1472977d18e6ec4df57c0198cb7ebb3f66ca20c0333cd57f008822259b9"
@@ -42,7 +42,7 @@
       "render_dpi": 150,
       "schema_sha256": "d2839c7fa22768d3b11935bd0e7103d9424f7d0d93813349e0c63e91e7ed6629"
     },
-    "final_response": "{\"effective_start\":\"2026-08-18\",\"schedule_basis\":\"swim_schedule\",\"effective_end\":\"2026-12-12\",\"sessions\":[{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"07:00\",\"end\":\"08:30\",\"evidence\":\"Lap Swim 7:00am-8:30am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"senior_swim\",\"start\":\"08:45\",\"end\":\"10:00\",\"evidence\":\"Senior/Therapy Swim 8:45am-10:00am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"11:30\",\"end\":\"13:00\",\"evidence\":\"Lap Swim 11:30am-1:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"senior_swim\",\"start\":\"14:00\",\"end\":\"16:00\",\"evidence\":\"Senior Swim (4 lanes; may vary) 2:00pm-4:00pm\",\"notes\":\"Printed lane count is numeric only; no pool allocation label.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"family_swim\",\"start\":\"14:00\",\"end\":\"16:00\",\"evidence\":\"Family Swim (2 lanes) 2:00pm-4:00pm\",\"notes\":\"Printed lane count is numeric only; no pool allocation label.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"10:30\",\"evidence\":\"Senior Swim/ Self-Guided Exercise 9:00am-10:30am\",\"notes\":\"Shared cell also lists Self-Guided Exercise.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"13:00\",\"evidence\":\"Lap Swim 11:00am-1:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"family_swim\",\"start\":\"13:30\",\"end\":\"14:30\",\"evidence\":\"Sfusd/Rec Swim 1:30pm-2:30pm\",\"notes\":\"Shared cell also lists Sfusd.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"family_swim\",\"start\":\"18:00\",\"end\":\"19:00\",\"evidence\":\"Family Swim 6:00pm-7:00pm (3 lanes)\",\"notes\":\"Printed lane count is numeric only; no pool allocation label.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"18:00\",\"end\":\"19:00\",\"evidence\":\"Lap Swim 6:00pm-7:00pm (3 lanes)\",\"notes\":\"Printed lane count is numeric only; no pool allocation label.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"07:00\",\"end\":\"08:30\",\"evidence\":\"Lap Swim 7:00am-8:30am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"senior_swim\",\"start\":\"08:45\",\"end\":\"10:00\",\"evidence\":\"Senior/Therapy Swim 8:45am-10:00am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"11:30\",\"end\":\"13:00\",\"evidence\":\"Lap Swim 11:30am-1:00pm Closed every 4th Thursday of t he Month for Training 8/27, 9/24, 10/22\",\"notes\":\"Session cell lists closure dates for this session.\",\"pool_label_raw\":null,\"excluded_dates\":[\"2026-08-27\",\"2026-09-24\",\"2026-10-22\"]},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"14:30\",\"end\":\"16:00\",\"evidence\":\"Lap Swim 2:30pm-4:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"10:30\",\"evidence\":\"Senior Swim/ Self-Guided Exercise 9:00am-10:30am\",\"notes\":\"Shared cell also lists Self-Guided Exercise.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"13:00\",\"evidence\":\"Lap Swim 11:00am-1:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"family_swim\",\"start\":\"14:00\",\"end\":\"15:00\",\"evidence\":\"Rec Swim 2:00pm-3:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"senior_swim\",\"start\":\"11:45\",\"end\":\"12:45\",\"evidence\":\"Senior Swim 11:45am-12:45pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"family_swim\",\"start\":\"13:00\",\"end\":\"14:00\",\"evidence\":\"Parent and Tots Family Swim 1:00pm-2:00pm\",\"notes\":\"Shared cell also lists Parent and Tots.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"family_swim\",\"start\":\"14:30\",\"end\":\"15:45\",\"evidence\":\"Family Swim 2:30pm-3:45pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"lap_swim\",\"start\":\"16:00\",\"end\":\"17:00\",\"evidence\":\"Lap Swim 4:00pm-5:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null}],\"access_hours\":null,\"access_exceptions\":null,\"closures\":[{\"start\":\"2026-08-22\",\"end\":\"2026-08-22\",\"reason\":\"Closed for In-Service\",\"start_time\":\"09:00\",\"end_time\":\"13:00\",\"physical_pool\":null},{\"start\":\"2026-12-12\",\"end\":\"2026-12-12\",\"reason\":\"Closed for In-Service\",\"start_time\":\"09:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-11-11\",\"end\":\"2026-11-11\",\"reason\":\"Veterans Day\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-11-26\",\"end\":\"2026-11-27\",\"reason\":\"Thanksgiving\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null}]}",
+    "final_response": "{\"effective_start\":\"2026-08-18\",\"schedule_basis\":\"swim_schedule\",\"effective_end\":\"2026-12-12\",\"sessions\":[{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"07:00\",\"end\":\"08:30\",\"evidence\":\"Lap Swim 7:00am-8:30am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"senior_swim\",\"start\":\"08:45\",\"end\":\"10:00\",\"evidence\":\"Senior/Therapy Swim 8:45am-10:00am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"11:30\",\"end\":\"13:00\",\"evidence\":\"Lap Swim 11:30am-1:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"senior_swim\",\"start\":\"14:00\",\"end\":\"16:00\",\"evidence\":\"Senior Swim (4 lanes; may vary) 2:00pm-4:00pm\",\"notes\":\"Lane count only; no pool allocation retained.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"family_swim\",\"start\":\"14:00\",\"end\":\"16:00\",\"evidence\":\"Family Swim (2 lanes) 2:00pm-4:00pm\",\"notes\":\"Lane count only; no pool allocation retained.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"10:30\",\"evidence\":\"Senior Swim/ Self-Guided Exercise 9:00am-10:30am\",\"notes\":\"Shared cell with Self-Guided Exercise; emitted senior swim only.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"13:00\",\"evidence\":\"Lap Swim 11:00am-1:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"family_swim\",\"start\":\"13:30\",\"end\":\"14:30\",\"evidence\":\"Sfusd/Rec Swim 1:30pm-2:30pm\",\"notes\":\"Shared SFUSD/Rec Swim cell; emitted rec swim only.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"family_swim\",\"start\":\"18:00\",\"end\":\"19:00\",\"evidence\":\"Family Swim 6:00pm-7:00pm (3 lanes)\",\"notes\":\"Lane count only; no pool allocation retained.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"18:00\",\"end\":\"19:00\",\"evidence\":\"Lap Swim 6:00pm-7:00pm (3 lanes)\",\"notes\":\"Lane count only; no pool allocation retained.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"07:00\",\"end\":\"08:30\",\"evidence\":\"Lap Swim 7:00am-8:30am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"senior_swim\",\"start\":\"08:45\",\"end\":\"10:00\",\"evidence\":\"Senior/Therapy Swim 8:45am-10:00am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"11:30\",\"end\":\"13:00\",\"evidence\":\"Lap Swim 11:30am-1:00pm Closed every 4th Thursday of t he Month for Training 8/27, 9/24, 10/22\",\"notes\":\"Session cell states closed every 4th Thursday for training on listed dates; retained weekly hours with excluded_dates.\",\"pool_label_raw\":null,\"excluded_dates\":[\"2026-08-27\",\"2026-09-24\",\"2026-10-22\"]},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"14:30\",\"end\":\"16:00\",\"evidence\":\"Lap Swim 2:30pm-4:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"10:30\",\"evidence\":\"Senior Swim/ Self-Guided Exercise 9:00am-10:30am\",\"notes\":\"Shared cell with Self-Guided Exercise; emitted senior swim only.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"13:00\",\"evidence\":\"Lap Swim 11:00am-1:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"family_swim\",\"start\":\"14:00\",\"end\":\"15:00\",\"evidence\":\"Rec Swim 2:00pm-3:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"senior_swim\",\"start\":\"11:45\",\"end\":\"12:45\",\"evidence\":\"Senior Swim 11:45am-12:45pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"family_swim\",\"start\":\"13:00\",\"end\":\"14:00\",\"evidence\":\"Parent and Tots Family Swim 1:00pm-2:00pm\",\"notes\":\"Shared cell with Parent and Tots; emitted family swim.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"family_swim\",\"start\":\"14:30\",\"end\":\"15:45\",\"evidence\":\"Family Swim 2:30pm-3:45pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"lap_swim\",\"start\":\"16:00\",\"end\":\"17:00\",\"evidence\":\"Lap Swim 4:00pm-5:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null}],\"access_hours\":null,\"access_exceptions\":null,\"closures\":[{\"start\":\"2026-08-22\",\"end\":\"2026-08-22\",\"reason\":\"Closed for In-Service\",\"start_time\":\"09:00\",\"end_time\":\"13:00\",\"physical_pool\":null},{\"start\":\"2026-12-12\",\"end\":\"2026-12-12\",\"reason\":\"Closed for In-Service\",\"start_time\":\"09:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-11-11\",\"end\":\"2026-11-11\",\"reason\":\"Veterans Day\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-11-26\",\"end\":\"2026-11-27\",\"reason\":\"Thanksgiving\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null}]}",
     "image_sha256": {},
     "request_sha256": "beaee3add85e79334841921b1d4f6fd33e7b7f668654fcc3ad2b5957aee65267",
     "response_status": "completed",
@@ -222,7 +222,7 @@
           "day": "tuesday",
           "end": "16:00",
           "evidence": "Senior Swim (4 lanes; may vary) 2:00pm-4:00pm",
-          "notes": "Printed lane count is numeric only; no pool allocation label.",
+          "notes": "Lane count only; no pool allocation retained.",
           "pool_label_raw": null,
           "start": "14:00",
           "type": "senior_swim"
@@ -231,7 +231,7 @@
           "day": "tuesday",
           "end": "16:00",
           "evidence": "Family Swim (2 lanes) 2:00pm-4:00pm",
-          "notes": "Printed lane count is numeric only; no pool allocation label.",
+          "notes": "Lane count only; no pool allocation retained.",
           "pool_label_raw": null,
           "start": "14:00",
           "type": "family_swim"
@@ -240,7 +240,7 @@
           "day": "wednesday",
           "end": "10:30",
           "evidence": "Senior Swim/ Self-Guided Exercise 9:00am-10:30am",
-          "notes": "Shared cell also lists Self-Guided Exercise.",
+          "notes": "Shared cell with Self-Guided Exercise; emitted senior swim only.",
           "pool_label_raw": null,
           "start": "09:00",
           "type": "senior_swim"
@@ -257,7 +257,7 @@
           "day": "wednesday",
           "end": "14:30",
           "evidence": "Sfusd/Rec Swim 1:30pm-2:30pm",
-          "notes": "Shared cell also lists Sfusd.",
+          "notes": "Shared SFUSD/Rec Swim cell; emitted rec swim only.",
           "pool_label_raw": null,
           "start": "13:30",
           "type": "family_swim"
@@ -266,7 +266,7 @@
           "day": "wednesday",
           "end": "19:00",
           "evidence": "Family Swim 6:00pm-7:00pm (3 lanes)",
-          "notes": "Printed lane count is numeric only; no pool allocation label.",
+          "notes": "Lane count only; no pool allocation retained.",
           "pool_label_raw": null,
           "start": "18:00",
           "type": "family_swim"
@@ -275,7 +275,7 @@
           "day": "wednesday",
           "end": "19:00",
           "evidence": "Lap Swim 6:00pm-7:00pm (3 lanes)",
-          "notes": "Printed lane count is numeric only; no pool allocation label.",
+          "notes": "Lane count only; no pool allocation retained.",
           "pool_label_raw": null,
           "start": "18:00",
           "type": "lap_swim"
@@ -305,7 +305,7 @@
             "2026-09-24",
             "2026-10-22"
           ],
-          "notes": "Session cell lists closure dates for this session.",
+          "notes": "Session cell states closed every 4th Thursday for training on listed dates; retained weekly hours with excluded_dates.",
           "pool_label_raw": null,
           "start": "11:30",
           "type": "lap_swim"
@@ -322,7 +322,7 @@
           "day": "friday",
           "end": "10:30",
           "evidence": "Senior Swim/ Self-Guided Exercise 9:00am-10:30am",
-          "notes": "Shared cell also lists Self-Guided Exercise.",
+          "notes": "Shared cell with Self-Guided Exercise; emitted senior swim only.",
           "pool_label_raw": null,
           "start": "09:00",
           "type": "senior_swim"
@@ -355,7 +355,7 @@
           "day": "saturday",
           "end": "14:00",
           "evidence": "Parent and Tots Family Swim 1:00pm-2:00pm",
-          "notes": "Shared cell also lists Parent and Tots.",
+          "notes": "Shared cell with Parent and Tots; emitted family swim.",
           "pool_label_raw": null,
           "start": "13:00",
           "type": "family_swim"
@@ -822,7 +822,7 @@
     },
     "visual_pages": []
   },
-  "extracted_at": "2026-09-08T07:11:28.050295+00:00",
+  "extracted_at": "2026-09-08T07:44:53.499441+00:00",
   "grounding": {
     "grounded_count": 21,
     "ratio": 1.0,
@@ -1083,7 +1083,7 @@
         "day": "tuesday",
         "end": "16:00",
         "evidence": "Senior Swim (4 lanes; may vary) 2:00pm-4:00pm",
-        "notes": "Printed lane count is numeric only; no pool allocation label.",
+        "notes": "Lane count only; no pool allocation retained.",
         "start": "14:00",
         "type": "senior_swim"
       },
@@ -1091,7 +1091,7 @@
         "day": "tuesday",
         "end": "16:00",
         "evidence": "Family Swim (2 lanes) 2:00pm-4:00pm",
-        "notes": "Printed lane count is numeric only; no pool allocation label.",
+        "notes": "Lane count only; no pool allocation retained.",
         "start": "14:00",
         "type": "family_swim"
       },
@@ -1099,7 +1099,7 @@
         "day": "wednesday",
         "end": "10:30",
         "evidence": "Senior Swim/ Self-Guided Exercise 9:00am-10:30am",
-        "notes": "Shared cell also lists Self-Guided Exercise.",
+        "notes": "Shared cell with Self-Guided Exercise; emitted senior swim only.",
         "start": "09:00",
         "type": "senior_swim"
       },
@@ -1114,7 +1114,7 @@
         "day": "wednesday",
         "end": "14:30",
         "evidence": "Sfusd/Rec Swim 1:30pm-2:30pm",
-        "notes": "Shared cell also lists Sfusd.",
+        "notes": "Shared SFUSD/Rec Swim cell; emitted rec swim only.",
         "start": "13:30",
         "type": "family_swim"
       },
@@ -1122,7 +1122,7 @@
         "day": "wednesday",
         "end": "19:00",
         "evidence": "Family Swim 6:00pm-7:00pm (3 lanes)",
-        "notes": "Printed lane count is numeric only; no pool allocation label.",
+        "notes": "Lane count only; no pool allocation retained.",
         "start": "18:00",
         "type": "family_swim"
       },
@@ -1130,7 +1130,7 @@
         "day": "wednesday",
         "end": "19:00",
         "evidence": "Lap Swim 6:00pm-7:00pm (3 lanes)",
-        "notes": "Printed lane count is numeric only; no pool allocation label.",
+        "notes": "Lane count only; no pool allocation retained.",
         "start": "18:00",
         "type": "lap_swim"
       },
@@ -1157,7 +1157,7 @@
           "2026-09-24",
           "2026-10-22"
         ],
-        "notes": "Session cell lists closure dates for this session.",
+        "notes": "Session cell states closed every 4th Thursday for training on listed dates; retained weekly hours with excluded_dates.",
         "start": "11:30",
         "type": "lap_swim"
       },
@@ -1172,7 +1172,7 @@
         "day": "friday",
         "end": "10:30",
         "evidence": "Senior Swim/ Self-Guided Exercise 9:00am-10:30am",
-        "notes": "Shared cell also lists Self-Guided Exercise.",
+        "notes": "Shared cell with Self-Guided Exercise; emitted senior swim only.",
         "start": "09:00",
         "type": "senior_swim"
       },
@@ -1201,7 +1201,7 @@
         "day": "saturday",
         "end": "14:00",
         "evidence": "Parent and Tots Family Swim 1:00pm-2:00pm",
-        "notes": "Shared cell also lists Parent and Tots.",
+        "notes": "Shared cell with Parent and Tots; emitted family swim.",
         "start": "13:00",
         "type": "family_swim"
       },
@@ -1232,10 +1232,10 @@
       "cache_write_tokens": 0,
       "cached_tokens": 0
     },
-    "output_tokens": 2564,
+    "output_tokens": 2581,
     "output_tokens_details": {
       "reasoning_tokens": 1034
     },
-    "total_tokens": 6538
+    "total_tokens": 6555
   }
 }

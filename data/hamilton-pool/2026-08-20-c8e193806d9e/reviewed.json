@@ -231,7 +231,7 @@
           "2026-09-24",
           "2026-10-22"
         ],
-        "notes": "Session cell marked closed on the listed dates.",
+        "notes": "Cell includes CLOSED dates; retained as session exclusions.",
         "start": "11:00",
         "type": "lap_swim"
       },
@@ -244,7 +244,7 @@
           "2026-09-24",
           "2026-10-22"
         ],
-        "notes": "Session cell marked closed on the listed dates.",
+        "notes": "Cell includes CLOSED dates; retained as session exclusions.",
         "start": "13:00",
         "type": "lap_swim"
       },
@@ -257,7 +257,7 @@
           "2026-09-24",
           "2026-10-22"
         ],
-        "notes": "Session cell marked closed on the listed dates.",
+        "notes": "Cell includes CLOSED dates; retained as session exclusions.",
         "pool": "2 lanes + small",
         "start": "13:00",
         "type": "family_swim"
