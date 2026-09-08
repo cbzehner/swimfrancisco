@@ -297,7 +297,7 @@ _ACCESS_EXCEPTION_SPEC = _RecordSpec(
 
 _CLOSURE_SPEC = _RecordSpec(
     required=("start", "end", "reason"),
-    optional=("start_time", "end_time", "physical_pool"),
+    optional=("start_time", "end_time", "physical_pool", "reason_code", "source_notices"),
     sort_key=lambda item: (
         item["start"],
         item["end"],
@@ -314,7 +314,7 @@ def _normalize_records(raw_records: list[dict], spec: _RecordSpec) -> list[dict[
         item: dict[str, str] = {field: str(record[field]) for field in spec.required}
         for field in spec.optional:
             value = record.get(field)
-            if field == "excluded_dates" and isinstance(value, list):
+            if field in {"excluded_dates", "source_notices"} and isinstance(value, list):
                 item[field] = list(value)
             elif isinstance(value, str) and value.strip():
                 item[field] = value.strip()
@@ -335,6 +335,8 @@ def _normalize_access_exceptions(raw_access_exceptions: list[dict]) -> list[dict
 
 
 def _normalize_closures(raw_closures: list[dict]) -> list[dict[str, str]]:
+    if any(not closure.get("reason_code") for closure in raw_closures):
+        raise ValueError("Closure projection requires a reviewed reason_code")
     return _normalize_records(raw_closures, _CLOSURE_SPEC)
 
 

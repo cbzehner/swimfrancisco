@@ -8,24 +8,28 @@
       {
         "end": "2026-03-19",
         "reason": "Department Training",
-        "start": "2026-03-19"
+        "start": "2026-03-19",
+        "reason_code": "department_training"
       },
       {
         "end": "2026-04-16",
         "reason": "Department Training",
-        "start": "2026-04-16"
+        "start": "2026-04-16",
+        "reason_code": "department_training"
       },
       {
         "end": "2026-05-21",
         "reason": "Department Training",
-        "start": "2026-05-21"
+        "start": "2026-05-21",
+        "reason_code": "department_training"
       },
       {
         "end": "2026-06-06",
         "reason": "Aquatics In Service Training",
         "start": "2026-06-06",
         "start_time": "08:30",
-        "end_time": "12:30"
+        "end_time": "12:30",
+        "reason_code": "aquatics_training"
       }
     ],
     "effective_start": "2026-03-17",

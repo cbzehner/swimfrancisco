@@ -11,8 +11,6 @@ from openpyxl import Workbook
 from schedules._time import pacific_today
 from schedules.direct_sources import (
     DirectSourceError,
-    _cache_text,
-    _xlsx_content_sha256,
     _extract_24_hour_fitness,
     _extract_city_sports,
     _extract_equinox,
@@ -27,39 +25,82 @@ from schedules.direct_sources import (
 )
 
 
-def test_cache_text_matches_original_response_bytes_with_crlf(tmp_path):
-    text = "first\r\nsecond\r\n"
-    sha256 = hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-    _cache_text(tmp_path, sha256, "html", text)
-    path, from_cache = _cache_text(tmp_path, sha256, "html", text)
-
-    assert path.read_bytes() == text.encode("utf-8")
-    assert from_cache is True
-
-
-def test_cache_text_can_key_dynamic_html_by_semantic_fingerprint(tmp_path):
-    sha256 = hashlib.sha256(b"same extracted hours").hexdigest()
-
-    original, _ = _cache_text(tmp_path, sha256, "html", "<p>hours</p><script>nonce-a</script>")
-    cached, from_cache = _cache_text(tmp_path, sha256, "html", "<p>hours</p><script>nonce-b</script>")
-
-    assert cached == original
-    assert from_cache is True
-    assert (cached.parent / "source.sha256").read_text().strip() == sha256
+def test_cache_bytes_preserves_encoding_and_rejects_corruption(tmp_path):
+    from schedules.direct_sources.http import _cache_bytes
+    content = b"first\r\nsecond\xff"
+    digest = hashlib.sha256(content).hexdigest()
+    path, cached = _cache_bytes(tmp_path, digest, "html", content)
+    assert not cached
+    assert path.read_bytes() == content
+    assert _cache_bytes(tmp_path, digest, "html", content) == (path, True)
+    path.write_bytes(b"corrupt")
+    with pytest.raises(DirectSourceError, match="prefix collision"):
+        _cache_bytes(tmp_path, digest, "html", content)
 
 
-def test_xlsx_identity_ignores_zip_metadata():
-    def make_xlsx(timestamp):
-        output = io.BytesIO()
-        with zipfile.ZipFile(output, "w") as archive:
-            info = zipfile.ZipInfo("xl/workbook.xml", date_time=timestamp)
-            archive.writestr(info, b"<workbook/>")
-        return output.getvalue()
+def test_cache_bytes_rejects_semantic_hash(tmp_path):
+    from schedules.direct_sources.http import _cache_bytes
+    with pytest.raises(DirectSourceError, match="source bytes"):
+        _cache_bytes(tmp_path, hashlib.sha256(b"hours").hexdigest(), "html", b"<p>hours</p>")
 
-    assert _xlsx_content_sha256(make_xlsx((2026, 7, 10, 10, 0, 0))) == _xlsx_content_sha256(
-        make_xlsx((2026, 7, 10, 11, 0, 0))
-    )
+
+@pytest.mark.parametrize("status", [401, 403, 404])
+def test_fetch_text_does_not_retry_permanent_errors(monkeypatch, status):
+    import httpx
+    from schedules.direct_sources import http
+    requests = []
+    def respond(request):
+        requests.append(request)
+        return httpx.Response(status, headers={"server": "official", "set-cookie": "private"}, text="secret body")
+    client = httpx.Client(transport=httpx.MockTransport(respond))
+    monkeypatch.setattr(http.httpx, "Client", lambda **kwargs: client)
+    with pytest.raises(DirectSourceError) as error:
+        http.fetch_text("https://example.org/pool?token=private")
+    assert len(requests) == 1
+    assert f"HTTP {status}" in str(error.value)
+    assert "official" in str(error.value)
+    assert "private" not in str(error.value)
+    assert "secret body" not in str(error.value)
+    assert error.value.__suppress_context__
+
+
+@pytest.mark.parametrize("failure", [408, 429, 500, 502, 503, 504, "timeout"])
+def test_fetch_text_retries_transient_errors_and_keeps_bytes(monkeypatch, failure):
+    import httpx
+    from schedules.direct_sources import http
+    requests = []
+    def respond(request):
+        requests.append(request)
+        if len(requests) == 1:
+            if failure == "timeout":
+                raise httpx.ReadTimeout("timeout", request=request)
+            return httpx.Response(failure)
+        return httpx.Response(200, content=b"caf\xe9\r\n", headers={"content-type": "text/html; charset=iso-8859-1"})
+    client = httpx.Client(transport=httpx.MockTransport(respond))
+    monkeypatch.setattr(http.httpx, "Client", lambda **kwargs: client)
+    sleeps = []
+    monkeypatch.setattr(http.time, "sleep", sleeps.append)
+    result = http.fetch_text("https://example.org/pool")
+    assert len(requests) == 2
+    assert sleeps == [0.25]
+    assert result.content == b"caf\xe9\r\n"
+    assert result.text == "café\r\n"
+    assert result.response_url == "https://example.org/pool"
+
+
+def test_fetch_text_transient_attempts_are_bounded(monkeypatch):
+    import httpx
+    from schedules.direct_sources import http
+    requests = []
+    def respond(request):
+        requests.append(request)
+        return httpx.Response(503)
+    client = httpx.Client(transport=httpx.MockTransport(respond))
+    monkeypatch.setattr(http.httpx, "Client", lambda **kwargs: client)
+    monkeypatch.setattr(http.time, "sleep", lambda delay: None)
+    with pytest.raises(DirectSourceError, match="HTTP 503"):
+        http.fetch_text("https://example.org/pool")
+    assert len(requests) == 3
 
 
 def test_jccsf_html_extractor_models_lap_and_family_hours():
@@ -295,7 +336,7 @@ def test_pomeroy_html_extractor_handles_table_rowspans():
         """
         <h1>Upcoming Pool Closure Dates:</h1>
         <p><span>Monday, May 25th - Memorial Day</span></p>
-        <p><span>Friday, June 19th - Juneteenth</span></p>
+        <h2>Therapeutic Swimming</h2>
         <table class="PoolSchedule">
           <thead><tr><th>Monday</th><th>Tuesday</th><th>Wednesday</th></tr></thead>
           <tbody>
@@ -323,7 +364,7 @@ def test_pomeroy_html_extractor_handles_table_rowspans():
         ("wednesday", "lap_swim", "08:00", "08:55"),
         ("wednesday", "lap_swim", "18:00", "18:55"),
     }
-    assert [closure["reason"] for closure in payload["closures"]] == ["Memorial Day", "Juneteenth"]
+    assert all(closure["reason"] == "Memorial Day" for closure in payload["closures"])
 
 
 def test_24_hour_fitness_extractor_reads_access_hours():
@@ -550,3 +591,198 @@ def test_ymca_extractor_uses_pool_hours_when_page_gives_pool_rule(monkeypatch):
         "start": "07:30",
         "end": "13:30",
     }]
+
+
+def test_koret_cache_identity_includes_original_zip_bytes(monkeypatch, tmp_path):
+    import httpx
+    from schedules.direct_sources import http
+
+    def workbook(timestamp):
+        output = io.BytesIO()
+        with zipfile.ZipFile(output, "w") as archive:
+            archive.writestr(zipfile.ZipInfo("xl/workbook.xml", date_time=timestamp), b"<workbook/>")
+        return output.getvalue()
+
+    first_bytes = workbook((2026, 7, 10, 10, 0, 0))
+    second_bytes = workbook((2026, 7, 10, 11, 0, 0))
+    current = [first_bytes]
+    def respond(request):
+        return httpx.Response(200, content=current[0] if request.url.params["format"] == "xlsx" else b"%PDF-1.4")
+
+    client_class = httpx.Client
+    monkeypatch.setattr(http.httpx, "Client", lambda **kwargs: client_class(transport=httpx.MockTransport(respond)))
+    url = "https://docs.google.com/spreadsheets/d/official/edit"
+    first = http.fetch_koret_workbook("koret-center", url, cache_root=tmp_path)
+    assert first.sha256 == hashlib.sha256(first_bytes).hexdigest()
+    assert first.path.read_bytes() == first_bytes
+    assert "format=xlsx" in first.response_url
+    assert http.fetch_koret_workbook("koret-center", url, cache_root=tmp_path).from_cache
+    current[0] = second_bytes
+    second = http.fetch_koret_workbook("koret-center", url, cache_root=tmp_path)
+    assert second.sha256 != first.sha256
+    assert not second.from_cache
+    first.path.write_bytes(b"corrupt")
+    current[0] = first_bytes
+    with pytest.raises(DirectSourceError, match="prefix collision"):
+        http.fetch_koret_workbook("koret-center", url, cache_root=tmp_path)
+
+
+def test_fetch_text_reports_sanitized_redirect_destination(monkeypatch):
+    import httpx
+    import traceback
+    from schedules.direct_sources import http
+
+    def respond(request):
+        if request.url.path == "/pool":
+            return httpx.Response(302, headers={"location": "https://official.example/denied?token=private"})
+        return httpx.Response(403, headers={"cf-mitigated": "challenge", "set-cookie": "private"}, text="private")
+
+    client = httpx.Client(transport=httpx.MockTransport(respond), follow_redirects=True)
+    monkeypatch.setattr(http.httpx, "Client", lambda **kwargs: client)
+    with pytest.raises(DirectSourceError) as error:
+        http.fetch_text("https://official.example/pool")
+    diagnostic = "".join(traceback.format_exception(error.value))
+    assert "https://official.example/denied" in diagnostic
+    assert "challenge" in diagnostic
+    assert "token=" not in str(error.value)
+    assert "private" not in str(error.value)
+    assert "HTTPStatusError" not in diagnostic
+
+
+def _pomeroy_original():
+    from pathlib import Path
+    return (Path(__file__).resolve().parents[1] / "data/pomeroy-pool/2026-08-12-5348b4b7f7e3/source.html").read_text()
+
+
+def test_pomeroy_independent_inventory_covers_original_and_expiry():
+    from schedules.direct_sources.providers.pomeroy import verify_pomeroy
+    html = _pomeroy_original()
+    observed = date(2026, 9, 7)
+    payload = _extract_pomeroy(html, observed_on=observed)
+    result = verify_pomeroy(html, payload, observed)
+    assert result["ok"], result["issues"]
+    assert len(result["cells"]) == 22
+    assert sum(cell["included"] for cell in result["cells"]) == 16
+    assert len(result["restrictions"]) == 2
+    later = date(2026, 9, 8)
+    later_payload = _extract_pomeroy(html, observed_on=later)
+    assert later_payload["closures"] == []
+    assert verify_pomeroy(html, later_payload, later)["closure_notices"][0]["date"] is None
+
+
+@pytest.mark.parametrize("change", ["omit", "duplicate", "time", "evidence", "closure"])
+def test_pomeroy_independent_inventory_rejects_payload_changes(change):
+    from schedules.direct_sources.providers.pomeroy import verify_pomeroy
+    html = _pomeroy_original()
+    observed = date(2026, 9, 7)
+    payload = _extract_pomeroy(html, observed_on=observed)
+    if change == "omit":
+        payload["sessions"].pop()
+    elif change == "duplicate":
+        payload["sessions"].append(payload["sessions"][0].copy())
+    elif change == "closure":
+        payload["closures"] = []
+    else:
+        payload["sessions"][0]["start" if change == "time" else "evidence"] = "changed"
+    assert not verify_pomeroy(html, payload, observed)["ok"]
+
+
+@pytest.mark.parametrize("old,new", [
+    ("Aquatic Exercise</span>", "Private Lessons</span>"),
+    ("Slow lap swimming only.", "Fast lap swimming allowed."),
+    ("No lanes, can be 1-on-1 with participants.", "Members only."),
+    ("Monday, September 7th - Labor Day", "Tuesday, September 7th - Labor Day"),
+    ("Monday, September 7th - Labor Day", "Closed until further notice"),
+    ("Monday, September 7th - Labor Day", "Monday, September 7th - Labor Day Pool closes at noon"),
+])
+def test_pomeroy_independent_inventory_holds_unknown_source_changes(old, new):
+    from schedules.direct_sources.providers.pomeroy import verify_pomeroy
+    html = _pomeroy_original()
+    observed = date(2026, 9, 7)
+    payload = _extract_pomeroy(html, observed_on=observed)
+    assert old in html
+    assert not verify_pomeroy(html.replace(old, new), payload, observed)["ok"]
+
+
+def test_pomeroy_inventory_holds_closure_outside_known_block():
+    from schedules.direct_sources.providers.pomeroy import verify_pomeroy
+    html = _pomeroy_original()
+    observed = date(2026, 9, 7)
+    payload = _extract_pomeroy(html, observed_on=observed)
+    assert not verify_pomeroy(html + "<p>Pool closed tomorrow</p>", payload, observed)["ok"]
+
+
+def test_pomeroy_inventory_resolves_year_rollover_without_guessing_stale_years():
+    from schedules.direct_sources.providers.pomeroy import verify_pomeroy
+    html = _pomeroy_original().replace("Monday, September 7th - Labor Day", "Friday, January 1st - New Year's Day")
+    observed = date(2026, 12, 28)
+    payload = _extract_pomeroy(html, observed_on=observed)
+    assert payload["closures"][0]["start"] == "2027-01-01"
+    assert verify_pomeroy(html, payload, observed)["ok"]
+    explicit = html.replace("January 1st -", "January 1st, 2027 -")
+    assert verify_pomeroy(explicit, payload, observed)["ok"]
+
+
+@pytest.mark.parametrize("field,value", [
+    ("excluded_dates", ["2026-09-07"]),
+    ("pool", "deep"),
+    ("physical_pool", "cool"),
+    ("source_sha256", "a" * 64),
+    ("source_cell", "p1-r1-c1"),
+    ("pool_label_raw", "Deep Pool"),
+])
+def test_pomeroy_inventory_rejects_extra_session_fields(field, value):
+    from schedules.direct_sources.providers.pomeroy import verify_pomeroy
+    html = _pomeroy_original()
+    observed = date(2026, 9, 7)
+    payload = _extract_pomeroy(html, observed_on=observed)
+    payload["sessions"][0][field] = value
+    assert not verify_pomeroy(html, payload, observed)["ok"]
+
+
+@pytest.mark.parametrize("notice", [
+    "Therapeutic swimming is by appointment only.",
+    "Advance booking compulsory",
+    "Schedule effective September 1, 2026.",
+    "Schedule valid through September 6, 2026.",
+    "Schedule valid until September 6, 2026.",
+    "Schedule ending September 6, 2026.",
+    "Schedule expires September 6, 2026.",
+])
+def test_pomeroy_inventory_holds_added_restrictions_or_effective_dates(notice):
+    from schedules.direct_sources.providers.pomeroy import verify_pomeroy
+    html = _pomeroy_original()
+    observed = date(2026, 9, 7)
+    payload = _extract_pomeroy(html, observed_on=observed)
+    assert not verify_pomeroy(html + f"<p>{notice}</p>", payload, observed)["ok"]
+
+
+def test_pomeroy_inventory_rejects_access_exceptions():
+    from schedules.direct_sources.providers.pomeroy import verify_pomeroy
+    html = _pomeroy_original()
+    observed = date(2026, 9, 7)
+    payload = _extract_pomeroy(html, observed_on=observed)
+    payload["access_exceptions"] = [{"date": "2026-09-07", "start": "10:00", "end": "11:00"}]
+    assert not verify_pomeroy(html, payload, observed)["ok"]
+
+
+@pytest.mark.parametrize("link", [
+    '<a href="/new-pool-schedule.pdf">Pool schedule</a>',
+    '<a href="/schedule.xlsx">Download</a>',
+    '<a href="/hours.pdf">Pool timetable</a>',
+    '<a href="https://docs.google.com/spreadsheets/d/official/edit">Weekly hours</a>',
+])
+def test_pomeroy_inventory_holds_separate_linked_schedule(link):
+    from schedules.direct_sources.providers.pomeroy import verify_pomeroy
+    html = _pomeroy_original()
+    observed = date(2026, 9, 7)
+    payload = _extract_pomeroy(html, observed_on=observed)
+    assert not verify_pomeroy(html + link, payload, observed)["ok"]
+
+
+def test_pomeroy_inventory_allows_application_link():
+    from schedules.direct_sources.providers.pomeroy import verify_pomeroy
+    html = _pomeroy_original()
+    observed = date(2026, 9, 7)
+    payload = _extract_pomeroy(html, observed_on=observed)
+    assert verify_pomeroy(html + '<a href="/application.pdf">Application form</a>', payload, observed)["ok"]

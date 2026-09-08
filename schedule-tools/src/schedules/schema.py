@@ -32,6 +32,9 @@ EXTRACTION_SCHEMA = load_extraction_schema()
 
 def source_facts_schema() -> dict:
     schema = copy.deepcopy(EXTRACTION_SCHEMA)
+    closure = schema["properties"]["closures"]["items"]
+    for field in ("reason_code", "source_notices"):
+        del closure["properties"][field]
     session = schema["properties"]["sessions"]["items"]
     for field in ("pool", "physical_pool", "source_sha256", "source_cell"):
         del session["properties"][field]

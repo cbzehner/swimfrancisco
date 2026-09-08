@@ -25,6 +25,7 @@ last_verified_at = "2026-06-06"
 start = "2026-04-16"
 end = "2026-06-08"
 reason = "Closed for repairs; anticipated reopening summer 2026"
+reason_code = "closed_for_repairs_summer_2026"
 
 [[extra.schedules]]
 effective_start = "2026-06-09"
@@ -157,6 +158,7 @@ end = "17:30"
 start = "2026-06-19"
 end = "2026-06-19"
 reason = "Juneteenth"
+reason_code = "juneteenth"
 
 [[extra.schedules]]
 effective_start = "2026-06-30"
@@ -276,11 +278,13 @@ end = "17:00"
 start = "2026-06-19"
 end = "2026-06-19"
 reason = "Juneteenth"
+reason_code = "juneteenth"
 
 [[extra.schedules.closures]]
 start = "2026-07-04"
 end = "2026-07-04"
 reason = "Independence Day"
+reason_code = "independence_day"
 
 [[extra.schedules]]
 effective_start = "2026-08-18"
@@ -432,6 +436,7 @@ end = "2026-08-22"
 reason = "staff training"
 start_time = "09:00"
 end_time = "11:30"
+reason_code = "staff_training"
 
 [[extra.schedules.closures]]
 start = "2026-08-27"
@@ -439,6 +444,7 @@ end = "2026-08-27"
 reason = "staff training"
 start_time = "12:00"
 end_time = "14:00"
+reason_code = "staff_training"
 
 [[extra.schedules]]
 effective_start = "2026-08-29"
@@ -565,6 +571,7 @@ end = "17:00"
 start = "2026-09-07"
 end = "2026-09-07"
 reason = "Labor Day"
+reason_code = "labor_day"
 
 [[extra.schedules.closures]]
 start = "2026-09-24"
@@ -572,11 +579,13 @@ end = "2026-09-24"
 reason = "staff training"
 start_time = "12:00"
 end_time = "14:00"
+reason_code = "staff_training"
 
 [[extra.schedules.closures]]
 start = "2026-10-12"
 end = "2026-10-12"
 reason = "Indigenous peoples day"
+reason_code = "indigenous_peoples_day"
 
 [[extra.schedules.closures]]
 start = "2026-10-22"
@@ -584,21 +593,25 @@ end = "2026-10-22"
 reason = "staff training"
 start_time = "12:00"
 end_time = "14:00"
+reason_code = "staff_training"
 
 [[extra.schedules.closures]]
 start = "2026-11-11"
 end = "2026-11-11"
 reason = "Veteran’s Day"
+reason_code = "veterans_day"
 
 [[extra.schedules.closures]]
 start = "2026-11-26"
 end = "2026-11-27"
 reason = "Thanksgiving"
+reason_code = "thanksgiving"
 
 [[extra.schedules.closures]]
 start = "2026-12-01"
 end = "2026-12-12"
 reason = "annual maintenance"
+reason_code = "annual_maintenance"
 
 [[extra.schedules.closures]]
 start = "2026-12-22"
@@ -606,6 +619,7 @@ end = "2026-12-22"
 reason = "staff training"
 start_time = "09:00"
 end_time = "11:00"
+reason_code = "staff_training"
 +++
 
 An indoor pool in the Parkside/Sunset district on 19th Avenue near Stern Grove. Programs include lap swim, senior swim, recreation swim, and lessons.

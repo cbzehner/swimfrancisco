@@ -309,7 +309,7 @@ def test_unresolved_closure_scope_stops_before_spend(tmp_path, monkeypatch):
         pytest.fail("An unresolved source reached the paid API")
 
     monkeypatch.setattr(openai_provider, "budgeted_call", unexpected_call)
-    pdf = REPO_ROOT / "data/mission-community-pool/2026-09-02-67f2a420e8fc/source.pdf"
+    pdf = REPO_ROOT / "data/balboa-pool/2026-08-20-d6f218710372/source.pdf"
     with pytest.raises(openai_provider.ClosureReviewRequired, match="Unresolved source closures") as held:
         openai_provider.extract(pdf.read_bytes(), PROMPT_PATH.read_text(), EXTRACTION_SCHEMA)
     assert held.value.issues
@@ -427,7 +427,11 @@ def test_north_beach_each_original_rejects_bad_model_output(north_beach_pair, me
         facts["closures"].pop()
     else:
         artifact["details"]["configuration"]["reasoning"] = "low"
-    artifact["payload"] = pool_label_payload(facts)
+    if damage == "closure":
+        with pytest.raises(ValueError, match="omit"):
+            openai_provider.source_fact_payload(facts, openai_provider.inspect_pdf_source(component["document"]))
+        return
+    artifact["payload"] = openai_provider.source_fact_payload(facts, openai_provider.inspect_pdf_source(component["document"]))
     if damage == "configuration":
         with pytest.raises(ValueError, match="stale"):
             openai_provider.verify_artifact(artifact, component["document"], PROMPT_PATH.read_text())
@@ -489,3 +493,23 @@ def test_paired_original_uses_production_request_with_mocked_model_response(tmp_
     result = openai_provider.extract(component["document"], PROMPT_PATH.read_text().strip(), EXTRACTION_SCHEMA)
     assert result.payload == component["artifact"]["payload"]
     assert result.details["source_coverage"]["ok"] and result.details["source_closures"]["ok"]
+
+
+def test_closure_display_code_comes_from_original_notice(north_beach_pair):
+    import copy
+    _, components = north_beach_pair
+    component = components[0]
+    artifact = copy.deepcopy(component['artifact'])
+    facts = artifact['details']['source_facts']
+    source = openai_provider.inspect_pdf_source(component['document'])
+    expected = artifact['payload']['closures'][0]
+    facts['closures'][0]['reason'] = 'A different model summary of the same closure'
+    payload = openai_provider.source_fact_payload(facts, source)
+    assert payload['closures'][0]['reason'] == facts['closures'][0]['reason']
+    assert payload['closures'][0]['reason_code'] == expected['reason_code']
+    assert payload['closures'][0]['source_notices'] == expected['source_notices']
+    artifact['payload'] = payload
+    assert openai_provider.verify_artifact(artifact, component['document'], PROMPT_PATH.read_text())['ok']
+    artifact['payload']['closures'][0]['reason_code'] = 'holiday'
+    with pytest.raises(ValueError, match='differs'):
+        openai_provider.verify_artifact(artifact, component['document'], PROMPT_PATH.read_text())

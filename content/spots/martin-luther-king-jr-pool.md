@@ -190,11 +190,13 @@ end = "17:00"
 start = "2026-04-16"
 end = "2026-04-16"
 reason = "Inservice Training Closure"
+reason_code = "in_service_training"
 
 [[extra.schedules.closures]]
 start = "2026-05-21"
 end = "2026-05-21"
 reason = "Inservice Training Closure"
+reason_code = "in_service_training"
 
 [[extra.schedules.closures]]
 start = "2026-06-06"
@@ -202,6 +204,7 @@ end = "2026-06-06"
 reason = "Inservice Training Closure"
 start_time = "07:00"
 end_time = "13:00"
+reason_code = "in_service_training"
 
 [[extra.schedules]]
 effective_start = "2026-06-09"
@@ -402,11 +405,13 @@ pool = "10"
 start = "2026-06-19"
 end = "2026-06-19"
 reason = "Juneteenth"
+reason_code = "juneteenth"
 
 [[extra.schedules.closures]]
 start = "2026-07-04"
 end = "2026-07-04"
 reason = "Independence Day"
+reason_code = "independence_day"
 
 [[extra.schedules]]
 effective_start = "2026-08-18"
@@ -597,21 +602,25 @@ pool = "10"
 start = "2026-08-22"
 end = "2026-08-22"
 reason = "Training Closures"
+reason_code = "training"
 
 [[extra.schedules.closures]]
 start = "2026-08-27"
 end = "2026-08-27"
 reason = "Maintenance"
+reason_code = "maintenance"
 
 [[extra.schedules.closures]]
 start = "2026-09-07"
 end = "2026-09-07"
 reason = "Holiday Closures"
+reason_code = "holiday_closure"
 
 [[extra.schedules.closures]]
 start = "2026-09-24"
 end = "2026-09-24"
 reason = "Maintenance"
+reason_code = "maintenance"
 
 [[extra.schedules]]
 effective_start = "2026-09-29"
@@ -791,26 +800,31 @@ pool = "10"
 start = "2026-10-12"
 end = "2026-10-12"
 reason = "Holiday"
+reason_code = "holiday_closure"
 
 [[extra.schedules.closures]]
 start = "2026-11-11"
 end = "2026-11-11"
 reason = "Holiday"
+reason_code = "holiday_closure"
 
 [[extra.schedules.closures]]
 start = "2026-11-26"
 end = "2026-11-26"
 reason = "Holiday"
+reason_code = "holiday_closure"
 
 [[extra.schedules.closures]]
 start = "2026-11-27"
 end = "2026-11-27"
 reason = "Holiday"
+reason_code = "holiday_closure"
 
 [[extra.schedules.closures]]
 start = "2026-12-12"
 end = "2026-12-12"
 reason = "Training"
+reason_code = "training"
 +++
 
 An indoor pool in the Bayview, featuring a 25-yard x 25-meter main pool and a separate wading pool for tots. Programs include lap swim, senior swim, and recreation swim.

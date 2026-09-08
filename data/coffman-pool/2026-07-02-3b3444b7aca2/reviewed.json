@@ -8,12 +8,14 @@
       {
         "end": "2026-06-19",
         "reason": "Juneteenth",
-        "start": "2026-06-19"
+        "start": "2026-06-19",
+        "reason_code": "juneteenth"
       },
       {
         "end": "2026-07-04",
         "reason": "Independence Day",
-        "start": "2026-07-04"
+        "start": "2026-07-04",
+        "reason_code": "independence_day"
       }
     ],
     "effective_end": "2026-08-15",

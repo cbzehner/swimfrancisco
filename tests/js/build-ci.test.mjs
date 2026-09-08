@@ -414,7 +414,7 @@ test("stage rejects unexpected paths before changing the index", (t) => {
   assert.equal(repository.git(["diff", "--cached", "--name-only"]), "");
 });
 
-test("stage recognizes direct clock metadata without suppressing real source changes", (t) => {
+test("stage ignores extraction timestamps but preserves direct validity changes", (t) => {
   const repository = promotionRepository(t);
   const path = "data/test-pool/2026-09-02-67f2a420e8fc/direct-test.json";
   mkdirSync(join(repository.work, "data/test-pool/2026-09-02-67f2a420e8fc"), { recursive: true });
@@ -422,8 +422,10 @@ test("stage recognizes direct clock metadata without suppressing real source cha
   writeFileSync(join(repository.work, path), JSON.stringify(artifact));
   repository.git(["add", path]);
   repository.git(["commit", "-m", "Direct capture"]);
-  writeFileSync(join(repository.work, path), JSON.stringify({ ...artifact, extracted_at: "today", payload: { ...artifact.payload, effective_start: "2026-09-02" } }));
+  writeFileSync(join(repository.work, path), JSON.stringify({ ...artifact, extracted_at: "today" }));
   assert.equal(stageScheduleChanges(repository).changed, false);
+  writeFileSync(join(repository.work, path), JSON.stringify({ ...artifact, payload: { ...artifact.payload, effective_start: "2026-09-02" } }));
+  assert.equal(stageScheduleChanges(repository).changed, true);
   writeFileSync(join(repository.work, path), JSON.stringify({ ...artifact, payload: { ...artifact.payload, sessions: [{ day: "monday" }] } }));
   assert.equal(stageScheduleChanges(repository).changed, true);
 });

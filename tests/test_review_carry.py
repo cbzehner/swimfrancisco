@@ -198,3 +198,16 @@ def test_carried_snapshot_can_seed_the_next_carry(tmp_path):
     assert envelope["pdf_sha256"] == third_sha
     assert envelope["source_pdf_url"] == "https://example.com/z.pdf"
     assert envelope["reviewed_at"] == "2026-07-06"
+
+
+def test_carry_never_overwrites_existing_review_with_older_attestation(tmp_path):
+    data_root = tmp_path / "data"
+    _seed_reviewed(data_root, "hamilton-pool", "2026-07-06", _OLD_SHA, _payload())
+    target = _seed_reviewed(data_root, "hamilton-pool", "2026-08-20", _NEW_SHA, _payload("2026-08-18"))
+    reviewed = json.loads(target.read_text()) | {"attested_by": "human"}
+    target.write_text(json.dumps(reviewed))
+    original = target.read_bytes()
+    assert carry_forward_review(slug="hamilton-pool", review_dir=target.parent,
+                                pdf_sha256=_NEW_SHA, source_pdf_url="https://example.com/x.pdf",
+                                payload=_payload(), ignore_effective_start=False, data_root=data_root) is None
+    assert target.read_bytes() == original

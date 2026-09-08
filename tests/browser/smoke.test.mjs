@@ -229,6 +229,69 @@ for (const engine of ["webkit", "chromium"]) {
     assert.match(await page.locator('[data-field="status"]').textContent(), /OPEN/);
   });
 
+  test(`[${engine}] single-document session exclusions outlast narrower facility closures`, async (t) => {
+    const schedule = {
+      effective_start: "2026-09-01", effective_end: "2026-12-12", schedule_basis: "swim_schedule",
+      sessions: [
+        { day: "thursday", type: "lap_swim", start: "11:00", end: "15:00", excluded_dates: ["2026-09-24"] },
+        { day: "thursday", type: "lap_swim", start: "16:00", end: "17:00" },
+      ],
+      closures: [{ start: "2026-09-24", end: "2026-09-24", start_time: "12:00", end_time: "14:00", reason: "Staff training", reason_code: "staff_training" }],
+    };
+    const page = await fixturePage(t, engine, `
+      <table class="board"><tbody><tr data-type="pool" data-slug="single-pool" data-schedule='${JSON.stringify(schedule)}'>
+        <td data-cell="status"></td><td data-cell="next"></td>
+      </tr></tbody></table>
+      <div class="detail-root" data-schedule='${JSON.stringify(schedule)}'>
+        <span data-field="status"></span><span data-field="next"></span>
+        <section class="today-block"><ul class="today-block-list"></ul></section>
+      </div><script type="module" src="/js/status.js"></script><script type="module" src="/js/detail.js"></script>`, {
+      time: "2026-09-24T18:30:00Z", timezoneId: "Asia/Tokyo",
+    });
+    await page.goto(`${baseURL}/fixture`);
+    const rows = () => page.locator(".today-block-list li").evaluateAll((items) => items.map((item) => [item.dataset.start, item.dataset.end]));
+    assert.deepEqual(await rows(), [["16:00", "17:00"]]);
+    assert.doesNotMatch(await page.locator('[data-field="status"]').textContent(), /OPEN/);
+    assert.notEqual(await page.locator('[data-cell="status"]').getAttribute("data-status-value"), "OPEN");
+    assert.match(await page.locator('[data-cell="next"]').textContent(), /16:00/);
+    await page.clock.fastForward(3 * 60 * 60_000);
+    assert.deepEqual(await rows(), [["16:00", "17:00"]], "the excluded session must stay absent after the facility reopens at 14:00");
+    assert.doesNotMatch(await page.locator('[data-field="status"]').textContent(), /OPEN/);
+    assert.notEqual(await page.locator('[data-cell="status"]').getAttribute("data-status-value"), "OPEN");
+    await page.clock.fastForward(90 * 60_000);
+    assert.match(await page.locator('[data-field="status"]').textContent(), /OPEN/);
+    assert.equal(await page.locator('[data-cell="status"]').getAttribute("data-status-value"), "OPEN");
+  });
+
+  test(`[${engine}] undated source freshness expires at Pacific midnight in Tokyo`, async (t) => {
+    const schedule = {
+      effective_start: "2026-09-01", effective_end: "2026-09-14", schedule_basis: "swim_schedule",
+      sessions: [
+        { day: "monday", type: "lap_swim", start: "22:00", end: "23:59" },
+        { day: "tuesday", type: "lap_swim", start: "00:00", end: "01:00" },
+      ], closures: [],
+    };
+    const page = await fixturePage(t, engine, `
+      <table class="board"><tbody><tr data-type="pool" data-slug="therapeutic-pool" data-access-mode="limited_public" data-schedule='${JSON.stringify(schedule)}'>
+        <td data-cell="status"></td><td data-cell="next"></td>
+      </tr></tbody></table>
+      <div class="detail-root" data-schedule='${JSON.stringify(schedule)}'>
+        <span data-field="status"></span><span data-field="next"></span>
+        <section class="today-block"><ul class="today-block-list"></ul></section>
+      </div><script type="module" src="/js/status.js"></script><script type="module" src="/js/detail.js"></script>`, {
+      time: "2026-09-15T06:58:00Z", timezoneId: "Asia/Tokyo",
+    });
+    await page.goto(`${baseURL}/fixture`);
+    assert.match(await page.locator('[data-field="status"]').textContent(), /OPEN/);
+    assert.notEqual(await page.locator('[data-cell="status"]').getAttribute("data-status-value"), "CHECK");
+    assert.equal(await page.locator(".today-block").isVisible(), true);
+    await page.clock.fastForward(2 * 60_000);
+    assert.equal(await page.locator('[data-cell="status"]').getAttribute("data-status-value"), "CHECK");
+    assert.match(await page.locator('[data-field="status"]').textContent(), /NOT YET VERIFIED/);
+    assert.equal(await page.locator(".today-block").isHidden(), true);
+    assert.equal(await page.locator(".today-block-list li").count(), 0, "expired prior hours must not supply Tuesday swimming");
+  });
+
   test(`[${engine}] detail restores today's sessions after a partial closure`, async (t) => {
     const schedule = {
       sessions: [{ day: "thursday", type: "lap_swim", start: "11:00", end: "15:00" }],

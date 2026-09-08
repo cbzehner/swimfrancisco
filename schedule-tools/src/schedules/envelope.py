@@ -61,6 +61,10 @@ def validate_envelope(envelope: dict) -> None:
 
     Raises EnvelopeValidationError with a human-readable message on failure.
     """
+    if "direct_source" in envelope:
+        source = envelope["direct_source"]
+        if not isinstance(source, dict) or source.get("sha256") != envelope.get("pdf_sha256") or source.get("requested_url") != envelope.get("source_pdf_url"):
+            raise EnvelopeValidationError("Direct source evidence must match the envelope identity and original URL")
     if "bundle_sha256" in envelope:
         sources = envelope.get("source_bundle", [])
         if not isinstance(sources, list) or len(sources) != 2 or [item.get("pool") for item in sources if isinstance(item, dict)] != ["cool", "warm"]:

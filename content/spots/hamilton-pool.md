@@ -163,16 +163,19 @@ end = "17:00"
 start = "2026-03-19"
 end = "2026-03-19"
 reason = "Department Training"
+reason_code = "department_training"
 
 [[extra.schedules.closures]]
 start = "2026-04-16"
 end = "2026-04-16"
 reason = "Department Training"
+reason_code = "department_training"
 
 [[extra.schedules.closures]]
 start = "2026-05-21"
 end = "2026-05-21"
 reason = "Department Training"
+reason_code = "department_training"
 
 [[extra.schedules.closures]]
 start = "2026-06-06"
@@ -180,6 +183,7 @@ end = "2026-06-06"
 reason = "Aquatics In Service Training"
 start_time = "08:30"
 end_time = "12:30"
+reason_code = "aquatics_training"
 
 [[extra.schedules]]
 effective_start = "2026-06-09"
@@ -281,11 +285,13 @@ end = "17:00"
 start = "2026-06-19"
 end = "2026-06-19"
 reason = "observance of Juneteenth"
+reason_code = "juneteenth"
 
 [[extra.schedules.closures]]
 start = "2026-07-04"
 end = "2026-07-04"
 reason = "Independence Day"
+reason_code = "independence_day"
 
 [[extra.schedules]]
 effective_start = "2026-08-18"
@@ -459,6 +465,7 @@ end = "2026-08-22"
 reason = "Aq. In-Service Training"
 start_time = "08:30"
 end_time = "12:30"
+reason_code = "in_service_training"
 
 [[extra.schedules.closures]]
 start = "2026-08-27"
@@ -466,11 +473,13 @@ end = "2026-08-27"
 reason = "Aquatics Division Training"
 start_time = "12:00"
 end_time = "14:00"
+reason_code = "aquatics_training"
 
 [[extra.schedules.closures]]
 start = "2026-09-07"
 end = "2026-09-07"
 reason = "Labor Day"
+reason_code = "labor_day"
 
 [[extra.schedules.closures]]
 start = "2026-09-24"
@@ -478,11 +487,13 @@ end = "2026-09-24"
 reason = "Aquatics Division Training"
 start_time = "12:00"
 end_time = "14:00"
+reason_code = "aquatics_training"
 
 [[extra.schedules.closures]]
 start = "2026-10-12"
 end = "2026-10-12"
 reason = "Indigenous People’s Day"
+reason_code = "indigenous_peoples_day"
 
 [[extra.schedules.closures]]
 start = "2026-10-22"
@@ -490,16 +501,19 @@ end = "2026-10-22"
 reason = "Aquatics Division Training"
 start_time = "12:00"
 end_time = "14:00"
+reason_code = "aquatics_training"
 
 [[extra.schedules.closures]]
 start = "2026-11-11"
 end = "2026-11-11"
 reason = "Veteran’s Day"
+reason_code = "veterans_day"
 
 [[extra.schedules.closures]]
 start = "2026-11-23"
 end = "2026-11-29"
 reason = "maintenance"
+reason_code = "maintenance"
 
 [[extra.schedules.closures]]
 start = "2026-12-12"
@@ -507,6 +521,7 @@ end = "2026-12-12"
 reason = "Aq. In-Service Training"
 start_time = "08:30"
 end_time = "12:30"
+reason_code = "in_service_training"
 +++
 
 A heated indoor pool at Hamilton Recreation Center on the corner of Geary and Steiner in Lower Pacific Heights. Notable for the only two indoor water slides in a San Francisco city pool. Programs include lap swim, senior swim, recreation swim, and lessons.

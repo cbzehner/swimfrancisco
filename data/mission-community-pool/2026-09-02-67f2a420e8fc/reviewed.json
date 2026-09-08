@@ -9,33 +9,38 @@
       {
         "end": "2026-09-07",
         "reason": "Labor Day",
-        "start": "2026-09-07"
+        "start": "2026-09-07",
+        "reason_code": "labor_day"
       },
       {
         "end": "2026-10-12",
-        "reason": "Indigenous People\u2019s Day",
-        "start": "2026-10-12"
+        "reason": "Indigenous People’s Day",
+        "start": "2026-10-12",
+        "reason_code": "indigenous_peoples_day"
       },
       {
         "end": "2026-08-22",
         "end_time": "11:00",
         "reason": "staff training",
         "start": "2026-08-22",
-        "start_time": "09:00"
+        "start_time": "09:00",
+        "reason_code": "staff_training"
       },
       {
         "end": "2026-08-27",
         "end_time": "14:00",
         "reason": "Aquatic Division Training",
         "start": "2026-08-27",
-        "start_time": "12:00"
+        "start_time": "12:00",
+        "reason_code": "aquatics_training"
       },
       {
         "end": "2026-09-24",
         "end_time": "14:00",
         "reason": "Aquatic Division Training",
         "start": "2026-09-24",
-        "start_time": "12:00"
+        "start_time": "12:00",
+        "reason_code": "aquatics_training"
       }
     ],
     "effective_end": "2026-10-17",
@@ -129,7 +134,7 @@
       {
         "day": "thursday",
         "end": "11:00",
-        "evidence": "Parent & Tot (1) / Senior Swim (3) 9:15am \u2013 11:00am",
+        "evidence": "Parent & Tot (1) / Senior Swim (3) 9:15am – 11:00am",
         "start": "09:15",
         "type": "senior_swim"
       },

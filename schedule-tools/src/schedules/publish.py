@@ -24,7 +24,7 @@ from .paths import (
     all_review_dirs,
     parse_review_dir_name,
 )
-from .providers.openai_provider import verify_artifact
+from .providers.openai_provider import source_fact_payload, verify_artifact
 from .registry import load_registry
 from .review import (
     DecisionSet,
@@ -190,6 +190,8 @@ def publish_eligible(
     pin_url: str | None = None,
     source_pdf_url: str | None = None,
     decision: dict | None = None,
+    direct_opt_in: bool = False,
+    today: date | None = None,
 ) -> Eligibility:
     if kill_switch:
         return _refuse("kill_switch", "SCHEDULES_AUTO_PROJECT=false")
@@ -198,7 +200,8 @@ def publish_eligible(
     if not identity.ok:
         return identity
 
-    if source_kind != "sfrecpark_pdf":
+    direct_pilot = direct_opt_in and source_kind == "pomeroy_html" and candidate.slug == "pomeroy-pool"
+    if source_kind != "sfrecpark_pdf" and not direct_pilot:
         return _refuse("not_rec_park", f"source_kind {source_kind!r} is not auto-published")
 
     if source_status == "missing_current_schedule":
@@ -207,7 +210,7 @@ def publish_eligible(
     if candidate.slug in blocking_slugs:
         return _refuse("discovery_flagged", f"{candidate.slug} is discover-blocking")
 
-    if require_unique_pin:
+    if require_unique_pin and not direct_pilot:
         unique = _unique_pin_gate(candidate, decision, pin_url, source_pdf_url)
         if not unique.ok:
             return unique
@@ -231,12 +234,22 @@ def publish_eligible(
         first = result.violations[0]
         return _refuse(first.code if first.code else "validate_failed", first.message)
 
-    grid = _ok() if candidate.bundle_sha256 else _source_pdf_gate(source_pdf_path)
+    grid = _ok() if candidate.bundle_sha256 or direct_pilot else _source_pdf_gate(source_pdf_path)
     if not grid.ok:
         return grid
 
     artifact = json.loads(_pick_provider_artifact(candidate.review_dir).read_text())
-    if attested_by != "human":
+    if direct_pilot:
+        try:
+            from .direct_sources import verify_direct_artifact
+            if artifact.get("payload") != payload or pin_url != artifact.get("details", {}).get("direct_source", {}).get("requested_url"):
+                return _refuse("source_coverage_failed", "Direct candidate differs from its pinned artifact")
+            coverage = verify_direct_artifact(artifact, candidate.source_path, today=today or pacific_today())
+            if not coverage["ok"]:
+                return _refuse("source_coverage_failed", "; ".join(coverage["issues"]))
+        except Exception as error:
+            return _refuse("source_coverage_failed", str(error))
+    elif attested_by != "human":
         if artifact.get("provider") != "openai":
             return _refuse("unsupported_provider", "Automatic PDF publication requires the production OpenAI artifact")
         if artifact.get("payload") != payload:
@@ -257,10 +270,18 @@ def publish_eligible(
         return _refuse("wrong_basis", f"schedule_basis {basis!r} is not auto-publishable")
 
     new_start = payload.get("effective_start")
+    reviewed_path = candidate.review_dir / "reviewed.json"
+    reviewed = json.loads(reviewed_path.read_text()) if reviewed_path.exists() else {}
+    refreshing_window = (
+        reviewed.get("attested_by") == "ci"
+        and reviewed.get("bundle_sha256", reviewed.get("pdf_sha256")) == candidate.source_identity
+        and all(reviewed.get("payload", {}).get(field) == payload.get(field) for field in ("effective_start", "effective_end"))
+    )
     if (
         isinstance(latest_effective_start, str)
         and isinstance(new_start, str)
         and new_start < latest_effective_start
+        and not refreshing_window
     ):
         return _refuse(
             "effective_start_regressed",
@@ -362,6 +383,7 @@ def publish_candidate(
     target = candidate.review_dir / "reviewed.json"
     md_path = content_spots_dir / f"{candidate.slug}.md"
     backup = md_path.read_bytes()
+    reviewed_backup = target.read_bytes() if target.exists() else None
     target.write_text(json.dumps(envelope, indent=2) + "\n")
     try:
         finalize_draft(
@@ -370,7 +392,10 @@ def publish_candidate(
         )
     except Exception:
         md_path.write_bytes(backup)
-        target.unlink(missing_ok=True)
+        if reviewed_backup is None:
+            target.unlink(missing_ok=True)
+        else:
+            target.write_bytes(reviewed_backup)
         raise
     return target
 
@@ -438,9 +463,10 @@ def publish_closure_notice(
         raise PublishRefuse("flyer_emitted_sessions", "closure payload has sessions")
     try:
         source = inspect_pdf_source(fetched.bytes)
+        payload = source_fact_payload(payload, source)
         coverage = source_publication_coverage(source, payload)
     except Exception as error:
-        raise PublishRefuse("source_coverage_failed", str(error)) from error
+        raise PublishRefuse("source_coverage_failed", f"Printed PDF closure verification failed: {error}") from error
     if not coverage["ok"]:
         raise PublishRefuse("source_coverage_failed", "Closure title differs from the printed PDF or its scope is unresolved",
                             closure_review={
@@ -511,17 +537,42 @@ def publish_pending_all(
     quarantined_shas = load_quarantine()
     entries = {entry.slug: entry for entry in load_registry()}
     candidates = find_review_candidates(data_root=data_root)
+    try:
+        ready_direct = json.loads((tmp_dir / "extraction-report-direct.json").read_text()).get("ready_direct", {})
+    except (OSError, ValueError, AttributeError):
+        ready_direct = {}
     extraction_report = tmp_dir / "extraction-report-openai.json"
     try:
-        ready_bundles = json.loads(extraction_report.read_text()).get("pool_bundles", {})
+        extraction = json.loads(extraction_report.read_text())
+        ready_bundles = extraction.get("pool_bundles", {})
+        ready_openai = extraction.get("ready_openai", [])
     except (OSError, ValueError, AttributeError):
         ready_bundles = {}
+        ready_openai = []
+    failed_refreshes = set()
+    for candidate in candidates:
+        if candidate.bundle_sha256 or not (candidate.review_dir / "reviewed.json").exists():
+            continue
+        path = _pick_provider_artifact(candidate.review_dir)
+        if json.loads(path.read_text()).get("provider") == "openai" and f"data/{candidate.slug}/{candidate.review_dir.name}/{path.name}" not in ready_openai:
+            failed_refreshes.add(candidate.slug)
+    blocking_slugs = blocking_slugs | frozenset(failed_refreshes)
+    for slug in sorted(failed_refreshes):
+        refused.append({"slug": slug, "code": "current_extraction_incomplete", "message": "A reviewed PDF refresh requires successful current extraction"})
     for entry in entries.values():
         if entry.pool_sources and entry.source_status == "published" and entry.slug not in ready_bundles:
             refused.append({"slug": entry.slug, "code": "paired_extraction_incomplete", "message": "Both components must pass in this extraction sitting"})
 
     for candidate in candidates:
+        if candidate.slug in failed_refreshes:
+            continue
         entry = entries.get(candidate.slug)
+        if entry and entry.auto_publish:
+            artifact_path = _pick_provider_artifact(candidate.review_dir)
+            expected = f"data/{candidate.slug}/{candidate.review_dir.name}/{artifact_path.name}"
+            if ready_direct.get(candidate.slug) != expected:
+                refused.append({"slug": candidate.slug, "code": "direct_extraction_incomplete", "message": "Current direct extraction must pass before publication"})
+                continue
         if entry and entry.pool_sources and (not candidate.bundle_sha256 or ready_bundles.get(entry.slug) != candidate.bundle_sha256):
             continue
         if candidate.slug in sequential_slugs:
@@ -552,6 +603,8 @@ def publish_pending_all(
             published.append(candidate.slug)
 
     for slug in sequential_slugs:
+        if slug in failed_refreshes:
+            continue
         decision = decisions.get(slug)
         if decision is None:
             continue
@@ -664,6 +717,8 @@ def _publish_unique_grid(
         pin_url=entry.pdf_url,
         source_pdf_url=source_pdf_url,
         decision=decision,
+        direct_opt_in=entry.auto_publish,
+        today=attested_at,
     )
     if not eligibility.ok:
         raise PublishRefuse(eligibility.code or "refused", eligibility.message)
@@ -798,6 +853,8 @@ def publish_sequential_slug(
         raise PublishRefuse("sequential_partial", failed[2].code or "refused")
 
     written: list[Path] = []
+    reviewed_backups = {candidate.review_dir / "reviewed.json": (candidate.review_dir / "reviewed.json").read_bytes()
+                        for candidate in ordered if (candidate.review_dir / "reviewed.json").exists()}
     windows: list[dict] = []
     try:
         for candidate, payload, eligibility in prepared:
@@ -836,7 +893,10 @@ def publish_sequential_slug(
         if backup is not None:
             md_path.write_text(backup)
         for path in written:
-            path.unlink(missing_ok=True)
+            if path in reviewed_backups:
+                path.write_bytes(reviewed_backups[path])
+            else:
+                path.unlink(missing_ok=True)
         raise PublishRefuse("sequential_partial", str(exc)) from exc
     return windows
 

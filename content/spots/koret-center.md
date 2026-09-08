@@ -106,6 +106,7 @@ end = "16:00"
 start = "2026-06-19"
 end = "2026-06-19"
 reason = "Juneteenth"
+reason_code = "juneteenth"
 
 [[extra.schedules]]
 closures = []

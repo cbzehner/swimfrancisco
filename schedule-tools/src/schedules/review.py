@@ -132,8 +132,9 @@ def find_review_candidates(
 ) -> list[ReviewCandidate]:
     """Return review candidates ordered by fetch date (oldest first), then slug.
 
-    A candidate is a review dir under ``data/<slug>/`` where at least one
-    ``<provider>-<model>.json`` exists AND ``reviewed.json`` does not.
+    New provider artifacts and changed current production extractions can be
+    candidates. Refreshing a city attestation requires an earlier CI review;
+    human and legacy city reviews remain authoritative.
     """
     if not data_root.is_dir():
         return []
@@ -146,8 +147,6 @@ def find_review_candidates(
         if only_slug is not None and slug != only_slug:
             continue
         for review_dir in all_review_dirs(slug, root=data_root):
-            if (review_dir / "reviewed.json").exists():
-                continue
             parsed = parse_review_dir_name(review_dir.name)
             if parsed is None:
                 continue
@@ -158,6 +157,26 @@ def find_review_candidates(
                 continue
             if not isinstance(artifact, dict):
                 continue
+            reviewed_file = review_dir / "reviewed.json"
+            if reviewed_file.exists():
+                try:
+                    reviewed = json.loads(reviewed_file.read_text())
+                except (OSError, json.JSONDecodeError):
+                    continue
+                if not isinstance(reviewed, dict):
+                    continue
+                if artifact.get("provider") == "direct" and artifact.get("details", {}).get("direct_source") and reviewed.get("attested_by") == "ci":
+                    if reviewed.get("direct_source") == artifact["details"]["direct_source"] and reviewed.get("payload") == artifact.get("payload"):
+                        continue
+                elif artifact.get("provider") == "openai" and reviewed.get("attested_by") == "ci":
+                    from .paths import PROMPT_PATH
+                    from .providers.openai_provider import API_MODEL, extraction_configuration
+                    if (artifact.get("model") != API_MODEL
+                            or artifact.get("details", {}).get("configuration") != extraction_configuration(PROMPT_PATH.read_text())
+                            or reviewed.get("payload") == artifact.get("payload")):
+                        continue
+                else:
+                    continue
             full_sha = artifact.get("bundle_sha256", artifact.get("pdf_sha256"))
             if not isinstance(full_sha, str) or len(full_sha) != 64:
                 continue
@@ -211,6 +230,8 @@ def carry_forward_review(
     ``payload.effective_start`` with the fetch date; the field is
     clock-derived there, not source-derived, so it must not block a carry.
     """
+    if (review_dir / "reviewed.json").exists():
+        return None
     prior = _latest_reviewed_snapshot(slug, exclude_dir=review_dir, data_root=data_root)
     if prior is None:
         return None
@@ -324,6 +345,8 @@ def draft_envelope(
                 if candidate.bundle_sha256 else {"pdf_sha256": candidate.pdf_sha256, "source_pdf_url": source_pdf_url})
     return {
         **identity,
+        **({"direct_source": provider_payload["details"]["direct_source"]}
+           if provider_payload.get("provider") == "direct" and provider_payload.get("details", {}).get("direct_source") else {}),
         "slug": candidate.slug,
         "reviewed_at": today.isoformat(),
         "attested_by": attested_by,

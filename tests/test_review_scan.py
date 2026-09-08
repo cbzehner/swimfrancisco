@@ -110,3 +110,42 @@ def test_find_review_candidates_skips_review_dir_without_provider_json(tmp_path)
     (review_dir / "source.pdf").write_bytes(b"%PDF-fake")
 
     assert find_review_candidates(data_root=data_root) == []
+
+
+def test_changed_current_city_extraction_requeues_only_ci_review(tmp_path):
+    from schedules.paths import PROMPT_PATH
+    from schedules.providers.openai_provider import API_MODEL, extraction_configuration
+
+    root = tmp_path / "data"
+    directory = _review_dir(root, "hamilton-pool", "2026-08-20", "a" * 64)
+    artifact_path = _write_provider_json(directory, "a" * 64, provider="openai")
+    artifact = json.loads(artifact_path.read_text())
+    artifact.update(model=API_MODEL, details={"configuration": extraction_configuration(PROMPT_PATH.read_text())})
+    artifact["payload"]["sessions"][3]["excluded_dates"] = ["2026-09-24"]
+    artifact_path.write_text(json.dumps(artifact))
+    reviewed_path = _write_reviewed(directory, "hamilton-pool", "a" * 64)
+    reviewed = json.loads(reviewed_path.read_text()) | {"attested_by": "ci"}
+    reviewed_path.write_text(json.dumps(reviewed))
+    original = reviewed_path.read_bytes()
+    candidates = find_review_candidates(data_root=root)
+    assert len(candidates) == 1
+    assert candidates[0].payload["sessions"][3]["excluded_dates"] == ["2026-09-24"]
+    assert reviewed_path.read_bytes() == original
+
+    for attestor in ("human", None):
+        reviewed["attested_by"] = attestor
+        reviewed_path.write_text(json.dumps(reviewed))
+        original = reviewed_path.read_bytes()
+        assert find_review_candidates(data_root=root) == []
+        assert reviewed_path.read_bytes() == original
+
+    reviewed["attested_by"] = "ci"
+    reviewed_path.write_text(json.dumps(reviewed))
+    artifact["details"]["configuration"]["reasoning"] = "low"
+    artifact_path.write_text(json.dumps(artifact))
+    assert find_review_candidates(data_root=root) == []
+    artifact["details"]["configuration"] = extraction_configuration(PROMPT_PATH.read_text())
+    artifact_path.write_text(json.dumps(artifact))
+    reviewed["payload"] = artifact["payload"]
+    reviewed_path.write_text(json.dumps(reviewed))
+    assert find_review_candidates(data_root=root) == []

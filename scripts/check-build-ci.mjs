@@ -39,9 +39,8 @@ export function stageScheduleChanges({ git = (args) => execFileSync("git", args,
       const semantic = (text) => {
         const value = JSON.parse(text);
         if (value.provider !== "direct" || !value.payload) throw new Error("Not a direct extraction");
-        const { extracted_at, payload, ...rest } = value;
-        const { effective_start, ...facts } = payload;
-        return { ...rest, payload: facts };
+        const { extracted_at, ...facts } = value;
+        return facts;
       };
       return !isDeepStrictEqual(semantic(git(["show", `HEAD:${path}`])), semantic(git(["show", `:${path}`])));
     } catch {

@@ -21,7 +21,7 @@ import httpx
 import jsonschema
 import pdfplumber
 
-from ..grounding import source_excluded_dates, source_closure_coverage, source_coverage, source_publication_coverage, source_slots, source_window_coverage
+from ..grounding import source_excluded_dates, source_closure_inventory, source_closure_coverage, source_coverage, source_publication_coverage, source_slots, source_window_coverage
 from ..models import ProviderResult
 from ..schema import SOURCE_FACTS_SCHEMA, pool_label_payload
 from ..signals import MAX_PAGE_POINTS, MAX_PDF_BYTES, MAX_PDF_PAGES, PdfSource, inspect_pdf_source
@@ -395,6 +395,8 @@ def source_request(source: PdfSource, prompt: str, images: dict[int, bytes]) -> 
     source_slots(source)
     source_excluded_dates(source)
     body = prompt + "\n\nPDF page text:\n" + source.text
+    if any(notice.session_cell for notice in source.notices):
+        body += "\nFor a session cell marked CLOSED on specific dates, retain its weekly hours and return excluded_dates. These are session exclusions, not facility closures."
     from ..signals import north_beach_pool_identity
     if north_beach_pool_identity(source.text):
         body += ("\nThis is one physical pool document in a North Beach pair. "
@@ -424,6 +426,24 @@ def visual_page_numbers(source: PdfSource) -> frozenset[int]:
     return frozenset(cell.page for cell in source.cells if f"{cell.id}:unbalanced_text" in source.issues)
 
 
+def source_fact_payload(facts: dict, source: PdfSource) -> dict:
+    payload = pool_label_payload(facts)
+    inventory = source_closure_inventory(source)
+    fields = ("start", "end", "start_time", "end_time", "physical_pool")
+    remaining = list(inventory)
+    closures = []
+    for closure in payload.get("closures", []):
+        matches = [item for item in remaining if all(item.get(field) == closure.get(field) for field in fields)]
+        if len(matches) != 1:
+            raise ValueError("Closure does not match one independently verified source notice")
+        item = matches[0]
+        remaining.remove(item)
+        closures.append(closure | {"reason_code": item["reason_code"], "source_notices": item["source_notices"]})
+    if remaining:
+        raise ValueError("Extracted closures omit independently verified source notices")
+    return payload | {"closures": closures}
+
+
 def verify_artifact(artifact: dict, pdf_bytes: bytes, prompt: str) -> dict:
     details = artifact.get("details", {})
     if artifact.get("pdf_sha256") != hashlib.sha256(pdf_bytes).hexdigest():
@@ -432,9 +452,9 @@ def verify_artifact(artifact: dict, pdf_bytes: bytes, prompt: str) -> dict:
         raise ValueError("Extraction configuration is stale")
     facts = details.get("source_facts")
     jsonschema.validate(facts, SOURCE_FACTS_SCHEMA)
-    if pool_label_payload(facts) != artifact.get("payload"):
-        raise ValueError("Published payload differs from the extracted source facts")
     source = inspect_pdf_source(pdf_bytes)
+    if source_fact_payload(facts, source) != artifact.get("payload"):
+        raise ValueError("Published payload differs from the extracted source facts")
     pages = visual_page_numbers(source)
     if details.get("visual_pages") != sorted(pages):
         raise ValueError("Rendered page selection does not match the source")
@@ -466,6 +486,10 @@ def extract(pdf_bytes: bytes, prompt: str, schema: dict) -> ProviderResult:
         if any(":" in issue for issue in closure_issues):
             raise ClosureReviewRequired(source, closure_issues)
         raise ValueError("Unresolved source closures: " + ", ".join(closure_issues))
+    try:
+        source_closure_inventory(source)
+    except ValueError as error:
+        raise ClosureReviewRequired(source, [str(error)]) from error
     visual_pages = visual_page_numbers(source)
     images = render_source_pages(pdf_bytes, visual_pages)
     request = source_request(source, prompt, images)
@@ -481,7 +505,7 @@ def extract(pdf_bytes: bytes, prompt: str, schema: dict) -> ProviderResult:
     if parsed.get("status") != "completed" or parsed.get("resolved_model") != API_MODEL:
         raise ValueError(f"Extraction failed: {parsed.get('status', result['status'])}; HTTP {result['http_status']}")
     facts = parsed["payload"]
-    payload = pool_label_payload(facts)
+    payload = source_fact_payload(facts, source)
     jsonschema.validate(payload, schema)
     coverage = source_coverage(source, payload, visual_pages=visual_pages)
     return ProviderResult(payload=payload, model=API_MODEL, usage=result["api_response"].get("usage") or {}, details={

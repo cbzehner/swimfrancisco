@@ -263,6 +263,7 @@ function dynamicLabelRequirements(extrasByFile) {
             kind: "closure_reason",
             source: String(window.reason),
             code: window.reason_code ? String(window.reason_code) : "",
+            coded: (schedule.closures || []).includes(window),
             file,
           });
         }
@@ -397,7 +398,9 @@ async function validateDynamicLabels({ codes, ui, dynamicLabels }) {
   const extras = await canonicalSpotExtras(codes);
   const requirements = dynamicLabelRequirements(extras);
   const missingDynamicLabels = requirements.filter(
-    (requirement) => !dynamicLabelsByKind[requirement.kind]?.by_source?.[requirement.source],
+    (requirement) => requirement.coded
+      ? !requirement.code
+      : !dynamicLabelsByKind[requirement.kind]?.by_source?.[requirement.source],
   );
   if (missingDynamicLabels.length > 0) {
     const details = missingDynamicLabels
@@ -415,7 +418,7 @@ async function validateDynamicLabels({ codes, ui, dynamicLabels }) {
     throw new Error(`i18n/dynamic-labels.toml is missing canonical display code(s): ${details}`);
   }
   const mismatchedDynamicCodes = requirements.filter((requirement) => {
-    if (!requirement.code) return false;
+    if (requirement.coded || !requirement.code) return false;
     const mapped = dynamicLabelsByKind[requirement.kind]?.by_source?.[requirement.source];
     return Boolean(mapped) && mapped.code !== requirement.code;
   });

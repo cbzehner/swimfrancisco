@@ -4,19 +4,22 @@
       {
         "end": "2026-04-16",
         "reason": "Inservice Training Closure",
-        "start": "2026-04-16"
+        "start": "2026-04-16",
+        "reason_code": "in_service_training"
       },
       {
         "end": "2026-05-21",
         "reason": "Inservice Training Closure",
-        "start": "2026-05-21"
+        "start": "2026-05-21",
+        "reason_code": "in_service_training"
       },
       {
         "end": "2026-06-06",
         "reason": "Inservice Training Closure",
         "start": "2026-06-06",
         "start_time": "07:00",
-        "end_time": "13:00"
+        "end_time": "13:00",
+        "reason_code": "in_service_training"
       }
     ],
     "effective_start": "2026-04-07",

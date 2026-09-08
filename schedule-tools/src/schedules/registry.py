@@ -45,6 +45,11 @@ def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
         source_status = raw_entry.get("source_status", "published")
         source_kind = raw_entry.get("source_kind", "sfrecpark_pdf")
         notes = raw_entry.get("notes")
+        auto_publish = raw_entry.get("auto_publish", False)
+        if not isinstance(auto_publish, bool) or (auto_publish and (slug, source_kind, pdf_url) != (
+            "pomeroy-pool", "pomeroy_html", "https://www.prrcsf.org/therapeutic-swim"
+        )):
+            raise ValueError("Direct automatic publication is limited to the approved Pomeroy source")
 
         if slug in seen_slugs:
             raise ValueError(f"Duplicate registry slug: {slug}")
@@ -74,6 +79,7 @@ def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
                 official_page_url=official_page_url,
                 source_status=source_status,
                 source_kind=source_kind,
+                auto_publish=auto_publish,
                 notes=notes,
                 pool_sources=pool_sources,
             )

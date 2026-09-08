@@ -123,11 +123,13 @@ end = "09:55"
 start = "2026-05-25"
 end = "2026-05-25"
 reason = "Memorial Day"
+reason_code = "memorial_day"
 
 [[extra.schedules.closures]]
 start = "2026-06-19"
 end = "2026-06-19"
 reason = "Juneteenth"
+reason_code = "juneteenth"
 
 [[extra.schedules]]
 effective_start = "2026-06-16"
@@ -235,11 +237,13 @@ end = "09:55"
 start = "2026-06-19"
 end = "2026-06-19"
 reason = "Juneteenth"
+reason_code = "juneteenth"
 
 [[extra.schedules.closures]]
 start = "2026-07-04"
 end = "2026-07-04"
 reason = "Observing Independence Day"
+reason_code = "independence_day"
 
 [[extra.schedules]]
 effective_start = "2026-08-12"
@@ -346,6 +350,7 @@ end = "09:55"
 start = "2026-09-07"
 end = "2026-09-07"
 reason = "Labor Day"
+reason_code = "labor_day"
 
 [[extra.pricing]]
 label = "Therapeutic swim pass"

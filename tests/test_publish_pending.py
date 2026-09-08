@@ -32,6 +32,102 @@ from schedules.validate import validate
 SHA = "a" * 64
 SHA2 = "b" * 64
 DAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+
+
+def _pomeroy_candidate(tmp_path: Path, monkeypatch):
+    from schedules.direct_sources import direct_configuration, observation_window
+    from schedules.direct_sources.providers.pomeroy import _extract_pomeroy
+    source = Path(__file__).parents[1] / "data/pomeroy-pool/2026-08-12-5348b4b7f7e3/source.html"
+    content = source.read_bytes()
+    digest = hashlib.sha256(content).hexdigest()
+    review_dir = tmp_path / "data/pomeroy-pool" / f"2026-09-07-{digest[:12]}"
+    review_dir.mkdir(parents=True)
+    (review_dir / "source.html").write_bytes(content)
+    (review_dir / "source.sha256").write_text(digest + "\n")
+    url = "https://www.prrcsf.org/therapeutic-swim"
+    payload = observation_window(_extract_pomeroy(content.decode(), observed_on=date(2026, 9, 7)), "2026-09-07")
+    artifact = {"provider": "direct", "model": "pomeroy-html-v1", "pdf_sha256": digest,
+                "source_pdf_url": url, "payload": payload, "details": {"direct_source": {
+                    "sha256": digest, "url": url, "requested_url": url, "observed_on": "2026-09-07",
+                    "freshness_days": 14, "configuration": direct_configuration()}}}
+    path = review_dir / "direct-pomeroy-html-v1.json"
+    path.write_text(json.dumps(artifact))
+    candidate = find_review_candidates(data_root=tmp_path / "data")[0]
+    return candidate, artifact, path
+
+
+def _pomeroy_eligible(candidate, artifact, **kwargs):
+    return publish_eligible(candidate=candidate, payload=artifact["payload"], prior_sessions_count=16,
+                            latest_effective_start="2026-05-17", source_kind="pomeroy_html",
+                            source_status="published", blocking_slugs=frozenset(), quarantined_shas=frozenset(),
+                            has_prior_schedule_window=True, source_pdf_path=candidate.source_path,
+                            pin_url="https://www.prrcsf.org/therapeutic-swim", **kwargs)
+
+
+def test_pomeroy_requires_opt_in_and_expires_at_pacific_observation_boundary(tmp_path, monkeypatch):
+    candidate, artifact, _ = _pomeroy_candidate(tmp_path, monkeypatch)
+    assert not _pomeroy_eligible(candidate, artifact, today=date(2026, 9, 7)).ok
+    assert _pomeroy_eligible(candidate, artifact, direct_opt_in=True, today=date(2026, 9, 20)).ok
+    assert not _pomeroy_eligible(candidate, artifact, direct_opt_in=True, today=date(2026, 9, 21)).ok
+    assert not _pomeroy_eligible(candidate, artifact, direct_opt_in=True, today=date(2026, 9, 6)).ok
+
+
+@pytest.mark.parametrize("mutation", ["configuration", "source_bytes", "original_url", "final_url", "freshness", "omission", "closure_start", "access_exception"])
+def test_pomeroy_acceptance_rejects_changed_evidence(tmp_path, monkeypatch, mutation):
+    candidate, artifact, path = _pomeroy_candidate(tmp_path, monkeypatch)
+    if mutation == "configuration":
+        artifact["details"]["direct_source"]["configuration"]["parser_sha256"] = "0" * 64
+    elif mutation == "source_bytes":
+        candidate.source_path.write_bytes(candidate.source_path.read_bytes() + b" ")
+    elif mutation == "original_url":
+        artifact["source_pdf_url"] = "https://example.org/"
+    elif mutation == "final_url":
+        artifact["details"]["direct_source"]["url"] = "https://example.org/"
+    elif mutation == "freshness":
+        artifact["payload"]["effective_end"] = "2026-09-21"
+    elif mutation == "omission":
+        artifact["payload"]["sessions"].pop()
+    elif mutation == "closure_start":
+        artifact["payload"]["closures"][0]["start"] = "2026-09-08"
+    else:
+        artifact["payload"]["access_exceptions"] = [{"date": "2026-09-08", "start": "01:00", "end": "23:00", "label": "Pool hours", "reason": "Extra", "evidence": "Extra"}]
+    path.write_text(json.dumps(artifact))
+    assert not _pomeroy_eligible(candidate, artifact, direct_opt_in=True, today=date(2026, 9, 7)).ok
+
+
+def test_pomeroy_failed_current_extraction_cannot_publish_prior_candidate(tmp_path, monkeypatch):
+    import schedules.publish as module
+    candidate, artifact, path = _pomeroy_candidate(tmp_path, monkeypatch)
+    content = tmp_path / "content"
+    content.mkdir()
+    _seed_content(content, "pomeroy-pool")
+    reports = tmp_path / "tmp"
+    reports.mkdir()
+    monkeypatch.setattr(module, "TMP_DIR", reports)
+    monkeypatch.setattr(module, "auto_project_enabled", lambda: True)
+    monkeypatch.setattr(module, "load_quarantine", lambda: frozenset())
+    entry = PoolEntry("pomeroy-pool", "https://www.prrcsf.org/therapeutic-swim", "https://www.prrcsf.org/pool", source_kind="pomeroy_html", auto_publish=True)
+    monkeypatch.setattr(module, "load_registry", lambda: [entry])
+    assert publish_pending_all(data_root=tmp_path / "data", content_spots_dir=content, today=date(2026, 9, 7))[0] == 0
+    assert not (candidate.review_dir / "reviewed.json").exists()
+    (reports / "extraction-report-direct.json").write_text(json.dumps({"ready_direct": {"pomeroy-pool": f"data/pomeroy-pool/{candidate.review_dir.name}/{path.name}"}}))
+    assert publish_pending_all(data_root=tmp_path / "data", content_spots_dir=content, today=date(2026, 9, 7))[0] == 1
+    reviewed = json.loads((candidate.review_dir / "reviewed.json").read_text())
+    assert reviewed["direct_source"] == artifact["details"]["direct_source"]
+    assert reviewed["payload"]["effective_end"] == "2026-09-20"
+
+
+def test_direct_configuration_change_requeues_review_without_destroying_it(tmp_path, monkeypatch):
+    candidate, artifact, path = _pomeroy_candidate(tmp_path, monkeypatch)
+    from schedules.review import draft_envelope
+    reviewed = draft_envelope(candidate=candidate, today=date(2026, 9, 7), attested_by="ci")
+    target = candidate.review_dir / "reviewed.json"
+    target.write_text(json.dumps(reviewed))
+    assert find_review_candidates(data_root=tmp_path / "data") == []
+    artifact["details"]["direct_source"]["configuration"]["parser_sha256"] = "0" * 64
+    path.write_text(json.dumps(artifact))
+    assert len(find_review_candidates(data_root=tmp_path / "data")) == 1
+    assert json.loads(target.read_text()) == reviewed
 SAVA_FALL1 = "https://sfrecpark.org/DocumentCenter/View/29815"
 SAVA_FALL2 = "https://sfrecpark.org/DocumentCenter/View/29805"
 
@@ -330,6 +426,18 @@ def test_effective_start_regressed_uses_max_window_not_active(iso):
     assert result.code == "effective_start_regressed"
 
 
+def test_verified_existing_window_can_refresh_beside_a_future_window(iso):
+    payload = _payload(start="2026-08-18", end="2026-09-26")
+    candidate = _write_candidate(iso.data, payload=payload)
+    reviewed = {"attested_by": "ci", "pdf_sha256": candidate.pdf_sha256, "payload": payload}
+    target = candidate.review_dir / "reviewed.json"
+    target.write_text(json.dumps(reviewed))
+    assert publish_eligible(**_kwargs(candidate, latest_effective_start="2026-09-29")).ok
+    reviewed["payload"] = dict(payload, effective_end="2026-09-25")
+    target.write_text(json.dumps(reviewed))
+    assert publish_eligible(**_kwargs(candidate, latest_effective_start="2026-09-29")).code == "effective_start_regressed"
+
+
 def test_session_count_shift_is_eligible(iso):
     payload = _payload(n=7)
     candidate = _write_candidate(iso.data, payload=payload)
@@ -411,6 +519,20 @@ def test_finalize_failure_unlinks_reviewed_json(iso, monkeypatch):
             eligibility=Eligibility(ok=True, code=None),
         )
     assert not (candidate.review_dir / "reviewed.json").exists()
+
+
+def test_reviewed_pdf_refresh_requires_current_success(iso, monkeypatch):
+    candidate = _write_candidate(iso.data)
+    _seed_content(iso.content, "hamilton-pool")
+    reviewed = candidate.review_dir / "reviewed.json"
+    original = b'{"attested_by":"ci","payload":{"sessions":[]}}\n'
+    reviewed.write_bytes(original)
+    monkeypatch.setattr("schedules.publish.find_review_candidates", lambda **kwargs: [candidate])
+    monkeypatch.setattr("schedules.publish.load_registry", lambda: [_entry()])
+    count, report = publish_pending_all(data_root=iso.data, content_spots_dir=iso.content, today=date(2026, 8, 20))
+    assert count == 0
+    assert reviewed.read_bytes() == original
+    assert json.loads(report.with_name("publish-pending.json").read_text())["refused"][0]["code"] == "current_extraction_incomplete"
 
 
 def test_second_run_has_no_candidate(iso):
@@ -1196,7 +1318,8 @@ def test_dated_sibling_grids_publish_as_sequential(iso, monkeypatch):
     assert 'effective_start = "2026-08-29"' in rendered
 
 
-def test_sequential_second_finalize_rolls_back_window_1(iso, monkeypatch):
+@pytest.mark.parametrize("existing_reviews", [False, True])
+def test_sequential_second_finalize_rolls_back_window_1(iso, monkeypatch, existing_reviews):
     _write_candidate(
         iso.data,
         slug="sava-pool",
@@ -1213,6 +1336,17 @@ def test_sequential_second_finalize_rolls_back_window_1(iso, monkeypatch):
         fetch_date="2026-08-20",
     )
     _seed_content(iso.content, "sava-pool")
+    candidates = find_review_candidates(data_root=iso.data)
+    prior_reviews = {}
+    if existing_reviews:
+        from schedules.review import draft_envelope
+        for candidate in candidates:
+            target = candidate.review_dir / "reviewed.json"
+            target.write_text(json.dumps(draft_envelope(candidate=candidate, attested_by="ci")))
+            prior_reviews[target] = target.read_bytes()
+        monkeypatch.setattr("schedules.publish.find_review_candidates", lambda **kwargs: candidates)
+        iso.tmp.joinpath("extraction-report-openai.json").write_text(json.dumps({"ready_openai": [
+            f"data/{candidate.slug}/{candidate.review_dir.name}/openai-fixture.json" for candidate in candidates]}))
     before = (iso.content / "sava-pool.md").read_bytes()
     monkeypatch.setattr("schedules.publish.load_registry", lambda: [_sava_entry()])
     iso.tmp.joinpath("discovery-decisions.json").write_text(
@@ -1233,12 +1367,12 @@ def test_sequential_second_finalize_rolls_back_window_1(iso, monkeypatch):
     assert count == 0
     refused = json.loads(report.with_name("publish-pending.json").read_text())["refused"]
     assert refused[0]["code"] == "sequential_partial"
-    assert not (
-        iso.data / "sava-pool" / f"2026-08-19-{SHA[:12]}" / "reviewed.json"
-    ).exists()
-    assert not (
-        iso.data / "sava-pool" / f"2026-08-20-{SHA2[:12]}" / "reviewed.json"
-    ).exists()
+    for candidate in candidates:
+        target = candidate.review_dir / "reviewed.json"
+        if existing_reviews:
+            assert target.read_bytes() == prior_reviews[target]
+        else:
+            assert not target.exists()
     assert (iso.content / "sava-pool.md").read_bytes() == before
 
 
@@ -1332,6 +1466,9 @@ def test_pair_bundle_preserves_identity_and_simultaneous_sessions(tmp_path, nort
     validate_envelope(envelope)
     assert "pdf_sha256" not in envelope and "source_pdf_url" not in envelope
     assert len(envelope["payload"]["sessions"]) == 35
+    for closure in envelope["payload"]["closures"]:
+        assert closure["reason_code"]
+        assert {notice["source_sha256"] for notice in closure["source_notices"]} == {member["artifact"]["pdf_sha256"] for member in components}
     simultaneous = [row for row in envelope["payload"]["sessions"] if row["day"] == "thursday" and row["start"] == "14:15"]
     assert {row["physical_pool"] for row in simultaneous} == {"cool", "warm"}
     assert len({row["source_sha256"] for row in simultaneous}) == 2

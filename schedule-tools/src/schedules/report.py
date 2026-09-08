@@ -6,6 +6,7 @@ from pathlib import Path
 from .discover import view_id_from_url
 from .models import Aborted, Extracted, PoolResult, ReviewNote, Skipped, Unchanged, Violation, needs_review
 from .review import DecisionSet, parse_view_id
+from .paths import relative_to_repo
 
 
 def result_counts(results: list[PoolResult]) -> dict[str, int]:
@@ -58,6 +59,12 @@ def write_report(results: list[PoolResult], path: Path) -> Path:
 
     path.write_text("\n".join(lines))
     path.with_suffix(".json").write_text(json.dumps({
+        "ready_openai": [relative_to_repo(Path(result.artifact_paths["openai"])) for result in results
+                         if isinstance(result, Extracted) and result.provider == "openai"
+                         and not result.catastrophic and not result.violations and "openai" in result.artifact_paths],
+        "ready_direct": {result.slug: result.artifact_paths["direct"] for result in results
+                         if isinstance(result, Extracted) and result.provider == "direct"
+                         and not result.catastrophic and not result.violations},
         "closure_reviews": [result.closure_review for result in results
                             if isinstance(result, Aborted) and result.closure_review is not None],
     }, indent=2) + "\n")

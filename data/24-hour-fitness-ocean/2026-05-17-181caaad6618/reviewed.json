@@ -9,7 +9,8 @@
       {
         "end": "2026-05-22",
         "reason": "Temporarily closed for renovation",
-        "start": "2026-05-17"
+        "start": "2026-05-17",
+        "reason_code": "temporarily_closed_for_renovation"
       }
     ],
     "schedule_basis": "temporarily_closed",

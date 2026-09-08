@@ -10,7 +10,8 @@
       {
         "end": "2026-06-19",
         "reason": "Juneteenth",
-        "start": "2026-06-19"
+        "start": "2026-06-19",
+        "reason_code": "juneteenth"
       }
     ],
     "effective_start": "2026-06-16",

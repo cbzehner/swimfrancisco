@@ -11,39 +11,46 @@
         "end_time": "13:00",
         "reason": "In-Service Training",
         "start": "2026-08-22",
-        "start_time": "09:00"
+        "start_time": "09:00",
+        "reason_code": "in_service_training"
       },
       {
         "end": "2026-12-12",
         "end_time": "14:00",
         "reason": "In-Service Training",
         "start": "2026-12-12",
-        "start_time": "09:00"
+        "start_time": "09:00",
+        "reason_code": "in_service_training"
       },
       {
         "end": "2026-08-27",
         "reason": "Staff Training",
-        "start": "2026-08-27"
+        "start": "2026-08-27",
+        "reason_code": "staff_training"
       },
       {
         "end": "2026-09-24",
         "reason": "Staff Training",
-        "start": "2026-09-24"
+        "start": "2026-09-24",
+        "reason_code": "staff_training"
       },
       {
         "end": "2026-10-22",
         "reason": "Staff Training",
-        "start": "2026-10-22"
+        "start": "2026-10-22",
+        "reason_code": "staff_training"
       },
       {
         "end": "2026-11-11",
         "reason": "Veterans Day",
-        "start": "2026-11-11"
+        "start": "2026-11-11",
+        "reason_code": "veterans_day"
       },
       {
         "end": "2026-11-27",
         "reason": "Thanksgiving",
-        "start": "2026-11-26"
+        "start": "2026-11-26",
+        "reason_code": "thanksgiving"
       }
     ],
     "effective_end": "2026-12-12",

@@ -34,7 +34,7 @@ _COMPARE_KEYS = {
     "sessions": ("day", "type", "start", "end", "pool", "physical_pool", "excluded_dates"),
     "access_hours": ("day", "start", "end", "label"),
     "access_exceptions": ("date", "start", "end", "label", "reason"),
-    "closures": ("start", "end", "reason", "start_time", "end_time", "physical_pool"),
+    "closures": ("start", "end", "reason", "start_time", "end_time", "physical_pool", "reason_code", "source_notices"),
 }
 
 

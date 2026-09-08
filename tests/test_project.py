@@ -102,6 +102,7 @@ def test_project_preserves_timed_closures(tmp_path):
             "start": "2026-05-21",
             "end": "2026-05-21",
             "reason": "Staff training",
+            "reason_code": "staff_training",
             "start_time": "11:00",
             "end_time": "15:00",
         }

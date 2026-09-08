@@ -44,7 +44,7 @@ def copy_extraction_cache(previous: Path, current: Path, previous_base: str, com
 def save_evidence(root: Path, destination: Path) -> None:
     destination.mkdir(parents=True, exist_ok=True)
     for name in ("discovery-decisions.json", "discovery-report.md", "publish-pending.json", "publish-pending-report.md",
-                 "extraction-report-direct.md", "extraction-report-openai.md", "extraction-report-openai.json"):
+                 "extraction-report-direct.md", "extraction-report-direct.json", "extraction-report-openai.md", "extraction-report-openai.json"):
         source = root / "tmp" / name
         if source.is_file():
             shutil.copyfile(source, destination / name)

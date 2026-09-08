@@ -438,7 +438,8 @@ def _process_direct_entry(
     date = fetch_result.path.parent.name[:10]
     reviewed_file = reviewed_path(entry.slug, date, fetch_result.sha256)
 
-    if policy.same_dir_reviewed and reviewed_file.exists():
+    reviewed = json.loads(reviewed_file.read_text()) if reviewed_file.exists() else {}
+    if policy.same_dir_reviewed and reviewed.get("direct_source") == extracted.source and reviewed.get("payload") == extracted.payload:
         return _build_unchanged(
             entry,
             pdf_sha256=fetch_result.sha256,
@@ -447,25 +448,6 @@ def _process_direct_entry(
         )
 
     payload = extracted.payload
-
-    # Direct extractors stamp payload.effective_start with the fetch date, so
-    # the carry comparison ignores that one clock-derived field.
-    if policy.carry_forward:
-        carried = carry_forward_review(
-            slug=entry.slug,
-            review_dir=fetch_result.path.parent,
-            pdf_sha256=fetch_result.sha256,
-            source_pdf_url=entry.pdf_url,
-            payload=payload,
-            ignore_effective_start=True,
-        )
-        if carried is not None:
-            return _build_unchanged(
-                entry,
-                pdf_sha256=fetch_result.sha256,
-                page_count=0,
-                reviewed_file=carried,
-            )
 
     review_notes = [
         ReviewNote(
@@ -477,6 +459,10 @@ def _process_direct_entry(
     ]
     review_notes.extend(check_delta(payload, prior_snapshot))
     validation = validate(payload, prior_sessions_count=len(prior_snapshot["sessions"]))
+    if extracted.coverage is not None and not extracted.coverage["ok"]:
+        from .models import Violation
+        validation = replace(validation, catastrophic=True, violations=[*validation.violations,
+            Violation("source_coverage_failed", "; ".join(extracted.coverage["issues"]))])
     artifact_paths = save_artifact_bundle(
         slug=entry.slug,
         date=date,
@@ -490,6 +476,7 @@ def _process_direct_entry(
         usage={},
         cost_estimate="deterministic",
         grounding=None,
+        details={"direct_source": extracted.source, "source_coverage": extracted.coverage},
     )
     return Extracted(
         **_identity_kwargs(entry),

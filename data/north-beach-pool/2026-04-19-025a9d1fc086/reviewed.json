@@ -4,40 +4,46 @@
       {
         "end": "2026-05-25",
         "reason": "Holiday Closure",
-        "start": "2026-05-25"
+        "start": "2026-05-25",
+        "reason_code": "holiday_closure"
       },
       {
         "end": "2026-06-19",
         "reason": "Holiday Closure",
-        "start": "2026-06-19"
+        "start": "2026-06-19",
+        "reason_code": "holiday_closure"
       },
       {
         "end": "2026-06-06",
         "reason": "In- Service Training: Pool Closed 9:00-1:00pm",
         "start": "2026-06-06",
         "start_time": "09:00",
-        "end_time": "13:00"
+        "end_time": "13:00",
+        "reason_code": "in_service_pool_closed_9_1"
       },
       {
         "end": "2026-03-19",
         "reason": "Every 3rd Thursday of the Month Closed for Aquatic Division Training 11:00am-2:00pm",
         "start": "2026-03-19",
         "start_time": "11:00",
-        "end_time": "14:00"
+        "end_time": "14:00",
+        "reason_code": "monthly_aquatic_training"
       },
       {
         "end": "2026-04-16",
         "reason": "Every 3rd Thursday of the Month Closed for Aquatic Division Training 11:00am-2:00pm",
         "start": "2026-04-16",
         "start_time": "11:00",
-        "end_time": "14:00"
+        "end_time": "14:00",
+        "reason_code": "monthly_aquatic_training"
       },
       {
         "end": "2026-05-21",
         "reason": "Every 3rd Thursday of the Month Closed for Aquatic Division Training 11:00am-2:00pm",
         "start": "2026-05-21",
         "start_time": "11:00",
-        "end_time": "14:00"
+        "end_time": "14:00",
+        "reason_code": "monthly_aquatic_training"
       }
     ],
     "effective_start": "2026-03-17",
@@ -62,7 +68,7 @@
       {
         "day": "tuesday",
         "end": "15:00",
-        "evidence": "LAP SWIM (LAP/THERAPY) 12:30\u2013 3:00 PM",
+        "evidence": "LAP SWIM (LAP/THERAPY) 12:30– 3:00 PM",
         "pool": "warm",
         "start": "12:30",
         "type": "lap_swim"
@@ -150,7 +156,7 @@
       {
         "day": "friday",
         "end": "10:15",
-        "evidence": "REC/FAMILY\u2014SENIOR SWIM 9:00 - 10:15 AM",
+        "evidence": "REC/FAMILY—SENIOR SWIM 9:00 - 10:15 AM",
         "pool": "warm",
         "start": "09:00",
         "type": "family_swim"
@@ -158,7 +164,7 @@
       {
         "day": "friday",
         "end": "10:15",
-        "evidence": "REC/FAMILY\u2014SENIOR SWIM 9:00 - 10:15 AM",
+        "evidence": "REC/FAMILY—SENIOR SWIM 9:00 - 10:15 AM",
         "pool": "warm",
         "start": "09:00",
         "type": "senior_swim"
@@ -182,7 +188,7 @@
       {
         "day": "saturday",
         "end": "13:15",
-        "evidence": "LAP SWIM (LAP/THERAPY) 12:00 \u2013 1:15 PM",
+        "evidence": "LAP SWIM (LAP/THERAPY) 12:00 – 1:15 PM",
         "pool": "warm",
         "start": "12:00",
         "type": "lap_swim"
@@ -190,7 +196,7 @@
       {
         "day": "saturday",
         "end": "15:00",
-        "evidence": "REC/FAMILY SWIM 1:45\u2013 3:00 PM",
+        "evidence": "REC/FAMILY SWIM 1:45– 3:00 PM",
         "pool": "warm",
         "start": "13:45",
         "type": "family_swim"
@@ -318,7 +324,7 @@
       {
         "day": "saturday",
         "end": "16:30",
-        "evidence": "LAP SWIM 2:30 \u2013 4:30 PM",
+        "evidence": "LAP SWIM 2:30 – 4:30 PM",
         "pool": "cool",
         "start": "14:30",
         "type": "lap_swim"

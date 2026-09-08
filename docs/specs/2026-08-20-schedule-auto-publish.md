@@ -39,6 +39,43 @@ provider/model, spending limits, and checked direct-main publication remain in
 place. See `docs/schedules.md` for artifact shapes, frozen sources, tests, and
 rollout evidence. This extension does not reinstate the historical PR publisher.
 
+### Closure coverage and direct-source pilot (approved September 7, 2026)
+
+Support explicit inherited-month holiday lists/ranges, separate maintenance
+footers, and clearly associated date/time clauses. A cancellation printed in a
+session cell cancels the whole session; a separate facility notice retains its
+own duration. Apply exclusions to single-document schedules as well as North
+Beach. Uncertain scope, contradictory recurrences, and suspect dates remain on
+the closure-review path. Other independent source failures still hold an update.
+
+Derive closure display codes from independently parsed source notices, retaining
+their identities/text and the separate model reason. Pool bundles must agree on
+facility closure meaning and preserve both originals. Project only explicit
+recognized codes. Migrate existing reviewed codes once through the exact label
+catalog without claiming new source verification; preserve paid responses.
+
+Direct captures now identify original bytes and the complete parser/schema
+configuration. Keep observation dates separate in `direct_source` evidence.
+For undated pages, the projected validity window runs from the observation date
+through thirteen days later, inclusive, in Pacific time. This is an approved
+freshness lifetime, not a printed effective window. Failed fetches cannot renew
+it. Historical normalized hashes are not original-byte attestations and cannot
+qualify for automatic publication.
+
+Only `pomeroy-pool`, explicitly opted in at its approved operator URL, may enter
+the direct-source pilot. Independently inventory every supported session and
+excluded class, closure notice, and therapeutic restriction. Hold unfamiliar
+content. Preserve limited-public/therapy access and slow-lap-only limits. Other
+non-city sources remain manual; access or facility hours never establish swim
+sessions. HTTP diagnostics retain sanitized status/URL/header evidence; permanent
+HTTP failures do not retry. Do not bypass access controls.
+
+Pause scheduled automation during the shared-format cutover. Run frozen-source
+tests and `just check`, then exact-commit CI/deployment and accounted hosted
+validation before restoring weekly operation. Keep the durable $5 monthly/$1
+run budget, existing model, stale-main checks, publication allowlist, non-force
+main promotion, and exact deployed-commit browser verification.
+
 ### Terms
 
 - **Source facts:** what an official document explicitly states, including its
@@ -154,7 +191,7 @@ the current year or a year from a holiday note. The closure inventory below adds
 a separate check; session and window coverage do not establish closure completeness.
 
 Run source discovery weekly on Monday at 16:00 UTC, as approved on 2026-09-06.
-Keep the $1 per-run allowance inside the approved $20/calendar-month API ceiling;
+Keep the $1 per-run allowance inside the approved $5/calendar-month API ceiling;
 the ceiling is not a spending target. Keep unchanged runs free of model calls and content
 commits unless a configuration or publication-state change requires work.
 

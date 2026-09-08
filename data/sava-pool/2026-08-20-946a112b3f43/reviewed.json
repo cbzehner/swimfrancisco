@@ -9,48 +9,56 @@
       {
         "end": "2026-09-07",
         "reason": "Labor Day",
-        "start": "2026-09-07"
+        "start": "2026-09-07",
+        "reason_code": "labor_day"
       },
       {
         "end": "2026-09-24",
         "end_time": "14:00",
         "reason": "staff training",
         "start": "2026-09-24",
-        "start_time": "12:00"
+        "start_time": "12:00",
+        "reason_code": "staff_training"
       },
       {
         "end": "2026-10-12",
         "reason": "Indigenous peoples day",
-        "start": "2026-10-12"
+        "start": "2026-10-12",
+        "reason_code": "indigenous_peoples_day"
       },
       {
         "end": "2026-10-22",
         "end_time": "14:00",
         "reason": "staff training",
         "start": "2026-10-22",
-        "start_time": "12:00"
+        "start_time": "12:00",
+        "reason_code": "staff_training"
       },
       {
         "end": "2026-11-11",
-        "reason": "Veteran\u2019s Day",
-        "start": "2026-11-11"
+        "reason": "Veteran’s Day",
+        "start": "2026-11-11",
+        "reason_code": "veterans_day"
       },
       {
         "end": "2026-11-27",
         "reason": "Thanksgiving",
-        "start": "2026-11-26"
+        "start": "2026-11-26",
+        "reason_code": "thanksgiving"
       },
       {
         "end": "2026-12-12",
         "reason": "annual maintenance",
-        "start": "2026-12-01"
+        "start": "2026-12-01",
+        "reason_code": "annual_maintenance"
       },
       {
         "end": "2026-12-22",
         "end_time": "11:00",
         "reason": "staff training",
         "start": "2026-12-22",
-        "start_time": "09:00"
+        "start_time": "09:00",
+        "reason_code": "staff_training"
       }
     ],
     "effective_end": "2026-12-12",

@@ -8,29 +8,34 @@
       {
         "end": "2026-03-19",
         "reason": "In Service Training",
-        "start": "2026-03-19"
+        "start": "2026-03-19",
+        "reason_code": "in_service_training"
       },
       {
         "end": "2026-04-16",
         "reason": "In Service Training",
-        "start": "2026-04-16"
+        "start": "2026-04-16",
+        "reason_code": "in_service_training"
       },
       {
         "end": "2026-05-21",
         "reason": "In Service Training",
-        "start": "2026-05-21"
+        "start": "2026-05-21",
+        "reason_code": "in_service_training"
       },
       {
         "end": "2026-05-25",
         "reason": "Memorial Day",
-        "start": "2026-05-25"
+        "start": "2026-05-25",
+        "reason_code": "memorial_day"
       },
       {
         "end": "2026-06-06",
         "reason": "Inservice Training",
         "start": "2026-06-06",
         "start_time": "09:00",
-        "end_time": "13:00"
+        "end_time": "13:00",
+        "reason_code": "in_service_training"
       }
     ],
     "effective_start": "2026-03-17",
@@ -143,7 +148,7 @@
       {
         "day": "friday",
         "end": "12:00",
-        "evidence": "SENIOR / THERAPY ACCESS SWIM (deep / shallow) 10:30 am \u2013 12:00 pm",
+        "evidence": "SENIOR / THERAPY ACCESS SWIM (deep / shallow) 10:30 am – 12:00 pm",
         "start": "10:30",
         "type": "senior_swim"
       },

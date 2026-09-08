@@ -92,7 +92,7 @@ sources = [
 [[closure_reason]]
 code = "staff_training"
 translation_key = "reason_staff_training"
-sources = ["Staff training", "Staff Training", "staff training"]
+sources = ["Staff training", "Staff Training", "staff training", "3rd Thursday training"]
 
 [[closure_reason]]
 code = "training"
@@ -263,3 +263,13 @@ sources = ["therapeutic indoor"]
 code = "outdoor"
 translation_key = "subtype_outdoor"
 sources = ["outdoor"]
+
+[[closure_reason]]
+code = "holiday"
+translation_key = "reason_holiday_closure"
+sources = ["FEDERAL HOLIDAY"]
+
+[[closure_reason]]
+code = "other"
+translation_key = "status_closed_window"
+sources = ["Scheduled closure"]

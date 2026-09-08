@@ -150,11 +150,13 @@ end = "15:30"
 start = "2026-06-19"
 end = "2026-06-19"
 reason = "All city pools will be closed on June 19 in observance of Juneteenth"
+reason_code = "juneteenth"
 
 [[extra.schedules.closures]]
 start = "2026-07-04"
 end = "2026-07-04"
 reason = "closed on July 4 for Independence Day"
+reason_code = "independence_day"
 
 [[extra.schedules]]
 effective_start = "2026-08-16"
@@ -294,11 +296,13 @@ end = "2026-08-27"
 reason = "Staff training"
 start_time = "12:00"
 end_time = "14:00"
+reason_code = "staff_training"
 
 [[extra.schedules.closures]]
 start = "2026-09-07"
 end = "2026-09-07"
 reason = "Holiday"
+reason_code = "holiday_closure"
 
 [[extra.schedules.closures]]
 start = "2026-09-24"
@@ -306,11 +310,13 @@ end = "2026-09-24"
 reason = "Staff training"
 start_time = "12:00"
 end_time = "14:00"
+reason_code = "staff_training"
 
 [[extra.schedules.closures]]
 start = "2026-10-12"
 end = "2026-10-12"
 reason = "Holiday"
+reason_code = "holiday_closure"
 
 [[extra.schedules.closures]]
 start = "2026-10-22"
@@ -318,26 +324,31 @@ end = "2026-10-22"
 reason = "Staff training"
 start_time = "12:00"
 end_time = "14:00"
+reason_code = "staff_training"
 
 [[extra.schedules.closures]]
 start = "2026-11-02"
 end = "2026-11-21"
 reason = "Annual maintenance"
+reason_code = "annual_maintenance"
 
 [[extra.schedules.closures]]
 start = "2026-11-11"
 end = "2026-11-11"
 reason = "Holiday"
+reason_code = "holiday_closure"
 
 [[extra.schedules.closures]]
 start = "2026-11-26"
 end = "2026-11-26"
 reason = "Holiday"
+reason_code = "holiday_closure"
 
 [[extra.schedules.closures]]
 start = "2026-11-27"
 end = "2026-11-27"
 reason = "Holiday"
+reason_code = "holiday_closure"
 +++
 
 An indoor pool at Rossi Playground in the Inner Richmond, at the corner of Arguello and Anza. Programs include lap swim, senior swim, recreation swim, and lessons.

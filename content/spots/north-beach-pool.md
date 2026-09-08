@@ -270,6 +270,7 @@ end = "2026-03-19"
 reason = "Every 3rd Thursday of the Month Closed for Aquatic Division Training 11:00am-2:00pm"
 start_time = "11:00"
 end_time = "14:00"
+reason_code = "monthly_aquatic_training"
 
 [[extra.schedules.closures]]
 start = "2026-04-16"
@@ -277,6 +278,7 @@ end = "2026-04-16"
 reason = "Every 3rd Thursday of the Month Closed for Aquatic Division Training 11:00am-2:00pm"
 start_time = "11:00"
 end_time = "14:00"
+reason_code = "monthly_aquatic_training"
 
 [[extra.schedules.closures]]
 start = "2026-05-21"
@@ -284,11 +286,13 @@ end = "2026-05-21"
 reason = "Every 3rd Thursday of the Month Closed for Aquatic Division Training 11:00am-2:00pm"
 start_time = "11:00"
 end_time = "14:00"
+reason_code = "monthly_aquatic_training"
 
 [[extra.schedules.closures]]
 start = "2026-05-25"
 end = "2026-05-25"
 reason = "Holiday Closure"
+reason_code = "holiday_closure"
 
 [[extra.schedules.closures]]
 start = "2026-06-06"
@@ -296,11 +300,13 @@ end = "2026-06-06"
 reason = "In- Service Training: Pool Closed 9:00-1:00pm"
 start_time = "09:00"
 end_time = "13:00"
+reason_code = "in_service_pool_closed_9_1"
 
 [[extra.schedules.closures]]
 start = "2026-06-19"
 end = "2026-06-19"
 reason = "Holiday Closure"
+reason_code = "holiday_closure"
 
 [[extra.schedules]]
 effective_start = "2026-06-09"
@@ -543,11 +549,13 @@ pool = "w"
 start = "2026-06-19"
 end = "2026-06-19"
 reason = "Juneteenth"
+reason_code = "juneteenth"
 
 [[extra.schedules.closures]]
 start = "2026-07-04"
 end = "2026-07-04"
 reason = "Independence Day"
+reason_code = "independence_day"
 
 [[extra.schedules]]
 effective_start = "2026-08-11"
@@ -820,6 +828,7 @@ end = "2026-08-22"
 reason = "Aquatics in-service training"
 start_time = "09:00"
 end_time = "12:00"
+reason_code = "aquatics_training"
 
 [[extra.schedules.closures]]
 start = "2026-08-27"
@@ -827,6 +836,7 @@ end = "2026-08-27"
 reason = "Aquatics Division training"
 start_time = "12:00"
 end_time = "14:00"
+reason_code = "aquatics_training"
 
 [[extra.schedules]]
 effective_start = "2026-09-01"
@@ -1181,11 +1191,13 @@ end = "2026-09-24"
 reason = "Aquatics Division Training"
 start_time = "12:00"
 end_time = "14:00"
+reason_code = "aquatics_training"
 
 [[extra.schedules.closures]]
 start = "2026-10-13"
 end = "2026-10-31"
 reason = "ANUAL MAINTENANCE for North Beach Pool closure"
+reason_code = "annual_maintenance"
 
 [[extra.schedules.closures]]
 start = "2026-10-22"
@@ -1193,11 +1205,13 @@ end = "2026-10-22"
 reason = "Aquatics Division Training"
 start_time = "12:00"
 end_time = "14:00"
+reason_code = "aquatics_training"
 
 [[extra.schedules.closures]]
 start = "2026-11-11"
 end = "2026-11-11"
 reason = "Veteran's Day"
+reason_code = "veterans_day"
 
 [[extra.schedules.closures]]
 start = "2026-11-26"
@@ -1205,11 +1219,13 @@ end = "2026-11-26"
 reason = "Aquatics Division Training"
 start_time = "12:00"
 end_time = "14:00"
+reason_code = "aquatics_training"
 
 [[extra.schedules.closures]]
 start = "2026-11-26"
 end = "2026-11-27"
 reason = "Thanksgiving"
+reason_code = "thanksgiving"
 
 [[extra.schedules.closures]]
 start = "2026-12-12"
@@ -1217,6 +1233,7 @@ end = "2026-12-12"
 reason = "Aquatics In-service Training"
 start_time = "09:00"
 end_time = "12:00"
+reason_code = "aquatics_training"
 +++
 
 An indoor complex with two pools: a 25-meter, 21-foot-deep lap pool and an 89-foot recreation pool, plus sauna and community rooms. Programs include lap swim, senior/therapy swim, self-guided exercise, family swim, and learn-to-swim lessons for tiny tots through adults.

@@ -92,8 +92,8 @@ def test_coffman_ambiguous_closure_block_is_held_before_model_call():
     from schedules.providers.openai_provider import source_request
 
     source = inspect_pdf_source((REPO_ROOT / "data/coffman-pool/2026-08-20-0345cb25881b/source.pdf").read_bytes())
-    assert any(issue.endswith(":unknown_program") for issue in source.issues)
-    with pytest.raises(ValueError, match="Unsupported PDF source"):
+    assert not source.issues
+    with pytest.raises(ValueError, match="conflicting_session_recurrence"):
         source_request(source, "extract", {})
 
 
@@ -129,13 +129,13 @@ def test_archived_missing_holiday_is_rejected_without_changing_benchmark_answers
     assert result["closures"]["missing"] == [["2026-07-04", "2026-07-04", None, None]]
 
 
-@pytest.mark.parametrize("reference_id", ["hamilton-fall", "balboa-fall", "balboa-interim", "rossi-spring", "mlk-fall", "mission-fall-holdout"])
+@pytest.mark.parametrize("reference_id", ["balboa-fall", "balboa-interim", "rossi-spring"])
 def test_unresolved_cell_closures_remain_held(reference_id):
     reference = load_benchmark_reference(MANIFEST, reference_id, repo_root=REPO_ROOT)
     source = inspect_pdf_source((REPO_ROOT / reference["source_pdf"]).read_bytes())
     result = source_closure_coverage(source, reference["expected"])
     assert not result["ok"]
-    assert any("unresolved_closure_scope" in issue for issue in result["issues"])
+    assert any("unresolved_closure" in issue for issue in result["issues"])
 
 
 def _notice_source(text, window="August 18-December 12, 2026"):
@@ -165,9 +165,8 @@ def test_independent_notice_dates_and_times(text, expected):
 
 @pytest.mark.parametrize("text", [
     "Training August 22", "Pool may be closed September 7", "Small pool will be closed September 7",
-    "Pool will be closed until September 7", "Pool will be closed November 26 and 27",
+    "Pool will be closed until September 7",
     "Pool will be closed September 7 morning", "Pool will be closed September 7 after lunch",
-    "Pool will be closed 8/22 9am-11am and 12/12 10am-2pm",
     "Pool will be closed every fourth Thursday", "Pool will be closed every 4th Thursday of the month",
     "Pool will be closed every 4th Thursday of the month from 12p-2p (8/27)",
     "Pool will be closed from 11/23 to 11/29/26 from 9am-11am",
@@ -223,3 +222,91 @@ def test_analyze_page_texts_detects_multi_grid():
     notes = source_notes_for_signals(signals)
     messages = [note.message for note in notes]
     assert any("repeated day-grid pages" in message for message in messages)
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Pool will be closed November 26 and 27", [("2026-11-26", "2026-11-26", None, None), ("2026-11-27", "2026-11-27", None, None)]),
+    ("Pool will be closed Nov. 26th & 27th for Thanksgiving", [("2026-11-26", "2026-11-26", None, None), ("2026-11-27", "2026-11-27", None, None)]),
+    ("Pool will be closed 11/26-27 for Thanksgiving", [("2026-11-26", "2026-11-27", None, None)]),
+    ("Closed for In-Service August 22, 9am-1pm December 12, 9am-2pm", [("2026-08-22", "2026-08-22", "09:00", "13:00"), ("2026-12-12", "2026-12-12", "09:00", "14:00")]),
+])
+def test_clear_city_notice_syntax_has_exact_independent_intervals(text, expected):
+    source = _notice_source(text)
+    result = source_closure_coverage(source, {})
+    assert result["expected"] == [list(row) for row in expected]
+    assert result["issues"] == ["source_closure_mismatch"]
+
+
+@pytest.mark.parametrize("capture,dates,count", [
+    ("hamilton-pool/2026-08-20-c8e193806d9e", ["2026-08-27", "2026-09-24", "2026-10-22"], 3),
+    ("martin-luther-king-jr-pool/2026-08-20-838c12e25ad1", ["2026-08-27", "2026-09-24"], 2),
+    ("martin-luther-king-jr-pool/2026-08-20-2e1c7d942a7a", ["2026-10-22"], 2),
+    ("mission-community-pool/2026-09-02-67f2a420e8fc", ["2026-08-27", "2026-09-24"], 1),
+])
+def test_frozen_city_cells_cancel_whole_sessions_independently(capture, dates, count):
+    from schedules.grounding import source_excluded_dates, source_exclusion_coverage, source_slots
+
+    source = inspect_pdf_source((REPO_ROOT / "data" / capture / "source.pdf").read_bytes())
+    exclusions = source_excluded_dates(source)
+    assert len(exclusions) == count
+    assert all(value == dates for value in exclusions.values())
+    sessions = [dict(day=slot.cell.day, type=slot.type, start=slot.start, end=slot.end,
+                     pool=slot.pool, excluded_dates=exclusions.get(slot.cell.id, []))
+                for slot in source_slots(source)]
+    assert source_exclusion_coverage(source, {"sessions": sessions})["ok"]
+    for index, session in enumerate(sessions):
+        if not session["excluded_dates"]:
+            continue
+        for replacement in ([], dates[:-1], ["2026-09-25"]):
+            damaged = copy.deepcopy(sessions)
+            damaged[index]["excluded_dates"] = replacement
+            assert not source_exclusion_coverage(source, {"sessions": damaged})["ok"]
+
+
+def test_rossi_footer_retains_exact_notice_without_contact_numbers():
+    from schedules.grounding import source_closure_inventory
+
+    source = inspect_pdf_source((REPO_ROOT / "data/rossi-pool/2026-08-20-cb8abdbbedda/source.pdf").read_bytes())
+    closures = source_closure_inventory(source)
+    maintenance = next(row for row in closures if row["reason_code"] == "maintenance")
+    assert (maintenance["start"], maintenance["end"]) == ("2026-11-02", "2026-11-21")
+    assert maintenance["source_notices"][0]["text"] == "Closed for annual maintenance\n11/2-11/21 reopen 11/22"
+    assert len(closures) == 9
+
+
+def test_garfield_holiday_inherited_month_preserves_every_date():
+    from schedules.grounding import source_closure_inventory
+
+    source = inspect_pdf_source((REPO_ROOT / "data/garfield-pool/2026-08-20-7f5c0074e8dd/source.pdf").read_bytes())
+    closures = source_closure_inventory(source)
+    assert [row["start"] for row in closures if row["reason_code"] == "holiday"] == ["2026-10-12", "2026-11-11", "2026-11-26", "2026-11-27"]
+    assert [(row["start"], row["start_time"], row["end_time"]) for row in closures if row["reason_code"] == "staff_training"] == [("2026-09-24", "11:00", "14:00"), ("2026-10-22", "11:00", "14:00")]
+
+
+@pytest.mark.parametrize("text", [
+    "Closed every 4th Thursday of the month except September",
+    "Closed every 4th Thursday of the month before noon",
+    "Closed (9/25)",
+    "Closed (9/24 & 9/24) unless training ends early",
+])
+def test_uncertain_cell_conditions_still_hold(text):
+    from schedules.signals import SourceCell
+    from schedules.grounding import source_excluded_dates
+
+    cell = SourceCell("cell", 1, "thursday", "Lap Swim 11am-1pm " + text, (0, 0, 10, 10))
+    notice = SourceNotice("notice", cell.text, False, session_cell=cell.id)
+    source = PdfSource("Schedule September 1-December 12, 2026", (cell,), (), 1, (notice,))
+    with pytest.raises(ValueError):
+        source_excluded_dates(source)
+
+
+@pytest.mark.parametrize("capture", ["2026-09-06-6c2b2e77fb23", "2026-09-06-ac196df42a14"])
+def test_north_beach_printed_maintenance_spelling_has_same_reason_code(capture):
+    from schedules.grounding import source_closure_inventory
+
+    source = inspect_pdf_source((REPO_ROOT / "data/north-beach-pool" / capture / "source.pdf").read_bytes())
+    closure = next(row for row in source_closure_inventory(source) if row["start"] == "2026-10-13")
+    assert closure["end"] == "2026-10-31"
+    assert closure["reason_code"] == "maintenance"
+    spelling = "MAINTENANCE" if capture.endswith("6c2b2e77fb23") else "MAINTENCE"
+    assert spelling in closure["source_notices"][0]["text"].upper()

@@ -619,12 +619,12 @@ def test_expected_banner_labels_flag_only_active_window_closures() -> None:
         {
             "effective_start": "2026-03-17",
             "effective_end": "2026-06-06",
-            "closures": [{"start": "2026-06-19", "end": "2026-06-19", "reason": "Holiday Closure"}],
+            "closures": [{"start": "2026-06-19", "end": "2026-06-19", "reason": "Holiday Closure", "reason_code": "holiday"}],
         },
         {
             "effective_start": "2026-06-09",
             "effective_end": "2026-08-10",
-            "closures": [{"start": "2026-07-04", "end": "2026-07-04", "reason": "Independence Day"}],
+            "closures": [{"start": "2026-07-04", "end": "2026-07-04", "reason": "Independence Day", "reason_code": "holiday"}],
         },
     ]
     assert _expected_banner_date_labels(schedules, "2026-07-01", "2026-07-15") == ["JUL 4"]

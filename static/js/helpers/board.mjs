@@ -1011,7 +1011,7 @@ export function sessionsForDate(schedule, now) {
   if (!active) return [];
   const dateISO = formatISODate(now);
   const normalized = normalizeSessions(active.sessions || []).filter((session) => session.day === DAY_KEYS[now.getDay()]);
-  if (!active.sessions?.some((session) => session.physical_pool)) return normalized.sort((left, right) => left.start - right.start);
+  if (!active.sessions?.some((session) => session.physical_pool || session.excluded_dates?.length)) return normalized.sort((left, right) => left.start - right.start);
   return normalized
     .flatMap((session) => availableSegmentsAfterClosures(session.start, session.end, allClosures(active), dateISO, session)
       .map((segment) => ({ ...session, ...segment })))

@@ -149,21 +149,25 @@ end = "17:00"
 start = "2026-03-19"
 end = "2026-03-19"
 reason = "In Service Training"
+reason_code = "in_service_training"
 
 [[extra.schedules.closures]]
 start = "2026-04-16"
 end = "2026-04-16"
 reason = "In Service Training"
+reason_code = "in_service_training"
 
 [[extra.schedules.closures]]
 start = "2026-05-21"
 end = "2026-05-21"
 reason = "In Service Training"
+reason_code = "in_service_training"
 
 [[extra.schedules.closures]]
 start = "2026-05-25"
 end = "2026-05-25"
 reason = "Memorial Day"
+reason_code = "memorial_day"
 
 [[extra.schedules.closures]]
 start = "2026-06-06"
@@ -171,6 +175,7 @@ end = "2026-06-06"
 reason = "Inservice Training"
 start_time = "09:00"
 end_time = "13:00"
+reason_code = "in_service_training"
 
 [[extra.schedules]]
 effective_start = "2026-06-09"
@@ -285,11 +290,13 @@ end = "17:00"
 start = "2026-06-19"
 end = "2026-06-19"
 reason = "Juneteenth"
+reason_code = "juneteenth"
 
 [[extra.schedules.closures]]
 start = "2026-07-04"
 end = "2026-07-04"
 reason = "Independence Day"
+reason_code = "independence_day"
 
 [[extra.schedules]]
 effective_start = "2026-08-11"
@@ -435,6 +442,7 @@ end = "17:00"
 start = "2026-08-22"
 end = "2026-08-22"
 reason = "Inservice Training"
+reason_code = "in_service_training"
 
 [[extra.schedules.closures]]
 start = "2026-08-27"
@@ -442,6 +450,7 @@ end = "2026-08-27"
 reason = "Aquatic division training"
 start_time = "11:30"
 end_time = "14:00"
+reason_code = "aquatics_training"
 
 [[extra.schedules]]
 effective_start = "2026-09-01"
@@ -593,6 +602,7 @@ end = "17:00"
 start = "2026-09-07"
 end = "2026-09-07"
 reason = "Holiday"
+reason_code = "holiday_closure"
 
 [[extra.schedules.closures]]
 start = "2026-09-24"
@@ -600,11 +610,13 @@ end = "2026-09-24"
 reason = "Aquatics division training"
 start_time = "11:30"
 end_time = "14:00"
+reason_code = "aquatics_training"
 
 [[extra.schedules.closures]]
 start = "2026-10-12"
 end = "2026-10-12"
 reason = "Holiday"
+reason_code = "holiday_closure"
 
 [[extra.schedules.closures]]
 start = "2026-10-22"
@@ -612,21 +624,25 @@ end = "2026-10-22"
 reason = "Aquatics division training"
 start_time = "11:30"
 end_time = "14:00"
+reason_code = "aquatics_training"
 
 [[extra.schedules.closures]]
 start = "2026-11-11"
 end = "2026-11-11"
 reason = "Holiday"
+reason_code = "holiday_closure"
 
 [[extra.schedules.closures]]
 start = "2026-11-26"
 end = "2026-11-27"
 reason = "Holiday"
+reason_code = "holiday_closure"
 
 [[extra.schedules.closures]]
 start = "2026-12-12"
 end = "2026-12-12"
 reason = "Inservice trainings"
+reason_code = "in_service_training"
 +++
 
 A 100' x 40', six-lane indoor pool in the Ingleside neighborhood, recently reopened after a $9M renovation that added new mechanical systems, accessibility upgrades, and a mural by local artist Jason Jägel. Programs include lap swim, senior swim, recreation swim, fitness and exercise classes, and lessons.

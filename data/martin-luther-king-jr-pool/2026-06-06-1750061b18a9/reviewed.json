@@ -8,12 +8,14 @@
       {
         "end": "2026-06-19",
         "reason": "Juneteenth",
-        "start": "2026-06-19"
+        "start": "2026-06-19",
+        "reason_code": "juneteenth"
       },
       {
         "end": "2026-07-04",
         "reason": "Independence Day",
-        "start": "2026-07-04"
+        "start": "2026-07-04",
+        "reason_code": "independence_day"
       }
     ],
     "schedule_basis": "swim_schedule",
@@ -23,147 +25,147 @@
       {
         "day": "tuesday",
         "end": "09:00",
-        "evidence": "7:30 AM \u2013 9:00 AM (10)",
+        "evidence": "7:30 AM – 9:00 AM (10)",
         "start": "07:30",
         "type": "lap_swim"
       },
       {
         "day": "tuesday",
         "end": "11:00",
-        "evidence": "9:00 AM \u2013 11:00 AM (4)",
+        "evidence": "9:00 AM – 11:00 AM (4)",
         "start": "09:00",
         "type": "lap_swim"
       },
       {
         "day": "tuesday",
         "end": "12:00",
-        "evidence": "11:00 AM \u2013 12:00 PM (10)",
+        "evidence": "11:00 AM – 12:00 PM (10)",
         "start": "11:00",
         "type": "lap_swim"
       },
       {
         "day": "tuesday",
         "end": "15:30",
-        "evidence": "12:30 PM \u2013 3:30 PM (8)",
+        "evidence": "12:30 PM – 3:30 PM (8)",
         "start": "12:30",
         "type": "lap_swim"
       },
       {
         "day": "tuesday",
         "end": "17:30",
-        "evidence": "3:30 PM \u2013 5:30 PM (5)",
+        "evidence": "3:30 PM – 5:30 PM (5)",
         "start": "15:30",
         "type": "lap_swim"
       },
       {
         "day": "tuesday",
         "end": "19:00",
-        "evidence": "6:00 PM \u2013 7:00 PM (8)",
+        "evidence": "6:00 PM – 7:00 PM (8)",
         "start": "18:00",
         "type": "lap_swim"
       },
       {
         "day": "wednesday",
         "end": "11:00",
-        "evidence": "9:00 AM \u2013 11:00 AM (4)",
+        "evidence": "9:00 AM – 11:00 AM (4)",
         "start": "09:00",
         "type": "lap_swim"
       },
       {
         "day": "wednesday",
         "end": "12:00",
-        "evidence": "11:00 AM \u2013 12:00 PM (8)",
+        "evidence": "11:00 AM – 12:00 PM (8)",
         "start": "11:00",
         "type": "lap_swim"
       },
       {
         "day": "wednesday",
         "end": "15:30",
-        "evidence": "12:30 PM \u2013 3:30 PM (8)",
+        "evidence": "12:30 PM – 3:30 PM (8)",
         "start": "12:30",
         "type": "lap_swim"
       },
       {
         "day": "wednesday",
         "end": "17:30",
-        "evidence": "3:30 PM \u2013 5:30 PM (5)",
+        "evidence": "3:30 PM – 5:30 PM (5)",
         "start": "15:30",
         "type": "lap_swim"
       },
       {
         "day": "thursday",
         "end": "09:00",
-        "evidence": "7:30 AM \u2013 9:00 AM (10)",
+        "evidence": "7:30 AM – 9:00 AM (10)",
         "start": "07:30",
         "type": "lap_swim"
       },
       {
         "day": "thursday",
         "end": "11:00",
-        "evidence": "9:00 AM \u2013 11:00 AM (4)",
+        "evidence": "9:00 AM – 11:00 AM (4)",
         "start": "09:00",
         "type": "lap_swim"
       },
       {
         "day": "thursday",
         "end": "12:00",
-        "evidence": "11:00 AM \u2013 12:00 PM (10)",
+        "evidence": "11:00 AM – 12:00 PM (10)",
         "start": "11:00",
         "type": "lap_swim"
       },
       {
         "day": "thursday",
         "end": "15:30",
-        "evidence": "12:30 PM \u2013 3:30 PM (8)",
+        "evidence": "12:30 PM – 3:30 PM (8)",
         "start": "12:30",
         "type": "lap_swim"
       },
       {
         "day": "thursday",
         "end": "17:30",
-        "evidence": "3:30 PM \u2013 5:30 PM (5)",
+        "evidence": "3:30 PM – 5:30 PM (5)",
         "start": "15:30",
         "type": "lap_swim"
       },
       {
         "day": "thursday",
         "end": "19:00",
-        "evidence": "6:00 PM \u2013 7:00 PM (8)",
+        "evidence": "6:00 PM – 7:00 PM (8)",
         "start": "18:00",
         "type": "lap_swim"
       },
       {
         "day": "friday",
         "end": "11:00",
-        "evidence": "9:00 AM \u2013 11:00 AM (4)",
+        "evidence": "9:00 AM – 11:00 AM (4)",
         "start": "09:00",
         "type": "lap_swim"
       },
       {
         "day": "friday",
         "end": "12:00",
-        "evidence": "11:00 AM \u2013 12:00 PM (8)",
+        "evidence": "11:00 AM – 12:00 PM (8)",
         "start": "11:00",
         "type": "lap_swim"
       },
       {
         "day": "friday",
         "end": "15:30",
-        "evidence": "12:30 PM \u2013 3:30 PM (8)",
+        "evidence": "12:30 PM – 3:30 PM (8)",
         "start": "12:30",
         "type": "lap_swim"
       },
       {
         "day": "friday",
         "end": "17:30",
-        "evidence": "3:30 PM \u2013 5:30 PM (5)",
+        "evidence": "3:30 PM – 5:30 PM (5)",
         "start": "15:30",
         "type": "lap_swim"
       },
       {
         "day": "saturday",
         "end": "08:30",
-        "evidence": "7:00 AM \u2013 8:30 PM (10)",
+        "evidence": "7:00 AM – 8:30 PM (10)",
         "start": "07:00",
         "type": "lap_swim",
         "notes": "Reviewer corrected PDF typo-like Saturday lap row from 8:30 PM to 8:30 AM; PM conflicts with listed afternoon lap, family swim, and rentals."
@@ -171,14 +173,14 @@
       {
         "day": "saturday",
         "end": "17:00",
-        "evidence": "3:30 PM \u2013 5:00 PM (10)",
+        "evidence": "3:30 PM – 5:00 PM (10)",
         "start": "15:30",
         "type": "lap_swim"
       },
       {
         "day": "tuesday",
         "end": "15:30",
-        "evidence": "12:30 PM \u2013 3:30 PM (Shallow)",
+        "evidence": "12:30 PM – 3:30 PM (Shallow)",
         "pool": "shallow",
         "start": "12:30",
         "type": "family_swim"
@@ -186,7 +188,7 @@
       {
         "day": "wednesday",
         "end": "15:30",
-        "evidence": "12:30 PM \u2013 3:30 PM (Shallow)",
+        "evidence": "12:30 PM – 3:30 PM (Shallow)",
         "pool": "shallow",
         "start": "12:30",
         "type": "family_swim"
@@ -194,7 +196,7 @@
       {
         "day": "thursday",
         "end": "15:30",
-        "evidence": "12:30 PM \u2013 3:30 PM (Shallow)",
+        "evidence": "12:30 PM – 3:30 PM (Shallow)",
         "pool": "shallow",
         "start": "12:30",
         "type": "family_swim"
@@ -202,7 +204,7 @@
       {
         "day": "friday",
         "end": "15:30",
-        "evidence": "12:30 PM \u2013 3:30 PM (Shallow)",
+        "evidence": "12:30 PM – 3:30 PM (Shallow)",
         "pool": "shallow",
         "start": "12:30",
         "type": "family_swim"
@@ -210,35 +212,35 @@
       {
         "day": "saturday",
         "end": "15:00",
-        "evidence": "1:30 PM \u2013 3:00 PM (10)",
+        "evidence": "1:30 PM – 3:00 PM (10)",
         "start": "13:30",
         "type": "family_swim"
       },
       {
         "day": "tuesday",
         "end": "11:00",
-        "evidence": "9:00 AM \u2013 11:00 AM (6)",
+        "evidence": "9:00 AM – 11:00 AM (6)",
         "start": "09:00",
         "type": "senior_swim"
       },
       {
         "day": "wednesday",
         "end": "10:30",
-        "evidence": "9:00 AM \u2013 10:30 AM (5)",
+        "evidence": "9:00 AM – 10:30 AM (5)",
         "start": "09:00",
         "type": "senior_swim"
       },
       {
         "day": "thursday",
         "end": "11:00",
-        "evidence": "9:00 AM \u2013 11:00 AM (6)",
+        "evidence": "9:00 AM – 11:00 AM (6)",
         "start": "09:00",
         "type": "senior_swim"
       },
       {
         "day": "friday",
         "end": "10:30",
-        "evidence": "9:00 AM \u2013 10:30 AM (5)",
+        "evidence": "9:00 AM – 10:30 AM (5)",
         "start": "09:00",
         "type": "senior_swim"
       }

@@ -107,7 +107,7 @@ def _column_cells(page, header: list[dict]) -> list[SourceCell]:
         blocks: list[list[dict]] = []
         current: list[dict] = []
         for line in lines:
-            if _PROGRAM_RE.search(line["text"]) and any(TIME_RANGE_RE.search(item["text"]) for item in current):
+            if (_PROGRAM_RE.search(line["text"]) or re.match(r"(?:Pool CLOSED|All city pools will be)", line["text"], re.IGNORECASE)) and any(TIME_RANGE_RE.search(item["text"]) for item in current):
                 blocks.append(current)
                 current = []
             current.append(line)
@@ -172,7 +172,7 @@ def _closure_notices(page, header: list[dict], cells: list[SourceCell] | None = 
     heading = headings[0]
     left, top = max(0, heading["x0"] - 4), heading["bottom"]
     text = page.crop((left, top, page.width, page.height)).extract_text() or ""
-    blocks = re.split(r"[•●]|\bPool Info:", text)
+    blocks = re.split(r"[•●]|\bPool Info:|(?=Closed for annual maintenance)", text)
     notices = [SourceNotice(f"p{page.page_number}-notice-{index}", block.strip(), True)
                for index, block in enumerate(blocks) if CLOSURE_TOKEN_RE.search(block)]
     covered = []
@@ -183,11 +183,11 @@ def _closure_notices(page, header: list[dict], cells: list[SourceCell] | None = 
             pools = re.findall(r"\b(cool|warm) pool will be closed\b", notice.text, re.IGNORECASE)
             scoped.append(replace(notice, physical_pool=pools[0].lower()) if len(pools) == 1 else notice)
         notices = scoped
-    if identity and cells is not None:
+    if cells is not None:
         for cell in cells:
             if not CLOSURE_TOKEN_RE.search(cell.text):
                 continue
-            facility = bool(re.search(r"All city pools will be", cell.text, re.IGNORECASE))
+            facility = not program_types(cell.text) or bool(re.search(r"All city pools will be", cell.text, re.IGNORECASE))
             notices.append(SourceNotice(cell.id + "-notice", cell.text, facility, cell.page, cell.bounds,
                                         None if facility else identity, None if facility else cell.id))
             covered.append(cell.bounds)
@@ -232,7 +232,7 @@ def inspect_pdf_source(pdf_bytes: bytes) -> PdfSource:
             for cell in page_cells:
                 if cell.text.count("(") != cell.text.count(")"):
                     issues.append(f"{cell.id}:unbalanced_text")
-                if north_beach_pool_identity(text) and re.search(r"All city pools will be", cell.text, re.IGNORECASE):
+                if any(notice.facility and notice.bounds == cell.bounds for notice in notices):
                     continue
                 if not program_types(cell.text) and not re.search(
                     r"\b(?:lessons?|learn|exercise|aerobics|rentals?|masters?|team|sfusd|piranha|preschool|parent|synchro|hockey)\b",

@@ -1009,3 +1009,21 @@ test("paired pools preserve simultaneous sessions, exclusion dates, and closure 
   const horizon = { kind: "window", date: "2026-09-24", day: "thursday", start: 14 * 60, end: 16 * 60 };
   assert.equal(computeWindowAvailability(partial, horizon).status, "AVAILABLE");
 });
+
+
+test("single-document session cancellation applies before a narrower facility closure", () => {
+  const schedule = {
+    effective_start: "2026-08-18", effective_end: "2026-10-17",
+    sessions: [
+      { day: "thursday", type: "lap_swim", start: "11:15", end: "13:30", excluded_dates: ["2026-09-24"] },
+      { day: "thursday", type: "lap_swim", start: "14:00", end: "15:30" },
+    ],
+    closures: [{ start: "2026-09-24", end: "2026-09-24", start_time: "12:00", end_time: "14:00", reason: "Training" }],
+  };
+  assert.equal(computeStatus(schedule, new Date("2026-09-24T11:30:00")).status, "CLOSED");
+  assert.equal(computeDetailStatus(schedule, new Date("2026-09-24T11:30:00")).kind, "CLOSED_HOURS");
+  assert.deepEqual(sessionsForDate(schedule, new Date("2026-09-24T11:30:00")).map((row) => row.start), [840]);
+  assert.equal(computeStatus(schedule, new Date("2026-09-24T14:00:00")).status, "OPEN");
+  assert.equal(sessionsForDate(schedule, new Date("2026-09-17T11:30:00")).length, 2);
+  assert.equal(computeStatus(schedule, new Date("2026-10-22T11:30:00")).status, "CHECK");
+});

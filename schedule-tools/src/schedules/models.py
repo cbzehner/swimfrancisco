@@ -106,6 +106,7 @@ class PoolEntry:
     source_kind: SourceKind = "sfrecpark_pdf"
     notes: str | None = None
     pool_sources: tuple[PoolSource, ...] = ()
+    auto_publish: bool = False
 
 
 @dataclass(frozen=True)

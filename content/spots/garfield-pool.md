@@ -159,11 +159,13 @@ end = "16:30"
 start = "2026-06-19"
 end = "2026-06-19"
 reason = "Juneteenth"
+reason_code = "juneteenth"
 
 [[extra.schedules.closures]]
 start = "2026-07-04"
 end = "2026-07-04"
 reason = "Independence Day"
+reason_code = "independence_day"
 
 [[extra.schedules]]
 sessions = []
@@ -176,6 +178,7 @@ last_verified_at = "2026-08-20"
 start = "2026-08-14"
 end = "2026-09-07"
 reason = "Garfield Pool Maintenance Closure 8-14_9-7 2026"
+reason_code = "garfield_maintenance"
 
 [[extra.schedules]]
 effective_start = "2026-09-08"
@@ -378,11 +381,13 @@ end = "2026-09-24"
 reason = "staff training"
 start_time = "11:00"
 end_time = "14:00"
+reason_code = "staff_training"
 
 [[extra.schedules.closures]]
 start = "2026-10-12"
 end = "2026-10-12"
 reason = "Indigenous Peoples Day"
+reason_code = "indigenous_peoples_day"
 
 [[extra.schedules.closures]]
 start = "2026-10-22"
@@ -390,21 +395,25 @@ end = "2026-10-22"
 reason = "staff training"
 start_time = "11:00"
 end_time = "14:00"
+reason_code = "staff_training"
 
 [[extra.schedules.closures]]
 start = "2026-11-11"
 end = "2026-11-11"
 reason = "Veterans Day"
+reason_code = "veterans_day"
 
 [[extra.schedules.closures]]
 start = "2026-11-26"
 end = "2026-11-26"
 reason = "Thanksgiving"
+reason_code = "thanksgiving"
 
 [[extra.schedules.closures]]
 start = "2026-11-27"
 end = "2026-11-27"
 reason = "Thanksgiving"
+reason_code = "thanksgiving"
 +++
 
 An indoor pool at Garfield Square in the Mission District, at the corner of 26th and Harrison. Programs include lap swim, senior swim, recreation swim, fitness and exercise classes, and lessons.

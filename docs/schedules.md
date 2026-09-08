@@ -2,6 +2,77 @@
 
 The schedule extractor is a local `uv`-managed Python CLI under `schedule-tools/`. It fetches direct sources once, asks an LLM provider to extract SF Rec & Park schedule PDFs, and writes review reports without changing `content/spots/*.md`.
 
+## Closure coverage and Pomeroy automation
+
+The September 7 approved extension adds explicit session-cell cancellations to
+single-document schedules, inherited-month holiday syntax, and isolated
+maintenance footers. Independent checks still reject ambiguous pool allocation,
+unknown programs, missing clock markers, conflicting recurrence/date lists, and
+unclear training duration. Resolving a closure parser error does not guarantee
+that the entire document qualifies for publication.
+
+Closure normalization derives a stable `reason_code` and original
+`source_notices` from independently parsed source evidence. It retains the model's
+`reason` separately. The renderer translates the code, so spelling differences
+in model reasons cannot block an otherwise verified schedule. North Beach bundle
+closures retain both original notice hashes and must agree on meaning and scope.
+Forty-five existing reviewed snapshots received codes through a one-time exact
+catalog migration. Removing those added codes reproduces their prior reviewed
+facts; this migration does not claim new source verification. Historical paid
+provider responses remain unchanged. Projection now requires codes; it does not
+silently translate unknown raw reasons through a second publication path.
+
+New direct-source artifacts store `details.direct_source`, copied into the
+reviewed envelope as `direct_source`: full original-byte `sha256`, requested and
+final URLs, Pacific `observed_on`, parser/schema configuration, and the approved
+14-day freshness lifetime. The existing envelope identity field `pdf_sha256`
+also contains that exact byte hash for direct captures. Historical direct
+payload/workbook-normalized hashes are retained as historical evidence, never
+reinterpreted as byte hashes. No historical direct artifact qualifies for the
+new automatic acceptance rule. Each new day's HTML observation retains its own
+capture; same-day reuse requires matching bytes, configuration, and facts.
+
+For an undated direct source, projected start/end dates mean observation validity,
+not printed effective dates. They cover fourteen Pacific calendar dates,
+inclusive. Failed fetching or parsing cannot renew that interval. The current
+extraction report must identify the exact ready artifact before publication;
+old pending candidates cannot substitute for a failed current extraction.
+CI-reviewed city snapshots can refresh from a changed, current-configuration
+production extraction only after that extraction succeeds in the current run.
+Human and legacy reviews remain untouched. Carry-forward never overwrites an
+existing review, and a failed multi-window update restores prior review bytes.
+
+The registry explicitly opts in only Pomeroy's operator therapeutic-swim page.
+Its independent inventory accounts for every table cell: the frozen original
+contains sixteen lap/open sessions and six excluded Aquatic Exercise classes.
+The verifier checks literal evidence, closures, and therapeutic restrictions.
+Pomeroy remains limited-public, therapy-oriented, and slow-lap-only. Unfamiliar
+source text holds the update. Other non-city sources remain manual, including
+sources that only prove facility or pool-access hours.
+
+HTTP handling now stops on permanent errors and retains bounded retries for
+transient failures. Diagnostics include sanitized final URL/status and selected
+headers; they exclude query strings, credentials, cookies, and response bodies.
+The six hosted 403s have not yet been resolved. Local production-client HTTP 200
+responses also exposed changed source semantics, so access recovery alone cannot
+qualify those sources for publication.
+
+Automation was paused after reading main `08e5c6c6231bf4b6945cac2be9f44bc0dac6209b`.
+The cutover preserves the existing paid model and durable spending ledger. Shared
+configuration changes invalidate extraction caches normally. Regression tests use
+frozen originals and deterministic model mocks, never benchmark reference answers
+as the production verifier. Hosted validation must use the existing accounted
+workflow within $5/month and $1/run, followed by exact-commit CI, deployment, and
+live browser verification before weekly operation resumes.
+
+Local cutover validation passed `just check`: 1,154 Python tests (55 skips),
+197 JavaScript tests, 35 WebKit/Chromium browser tests, localization, Worker type
+checking, and the build. These checks made no model calls. The browser regressions
+cover whole-session exclusions before/after narrower facility closures and
+fourteen-day expiry at Pacific midnight in a Tokyo browser. Final publication
+regressions also cover refreshing an existing verified window beside a future
+window without treating it as a new, regressed schedule.
+
 ## Setup
 
 Use `uv` for package management in the extractor project:

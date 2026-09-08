@@ -11,12 +11,14 @@
         "end_time": "14:00",
         "reason": "Aquatic division training",
         "start": "2026-08-27",
-        "start_time": "11:30"
+        "start_time": "11:30",
+        "reason_code": "aquatics_training"
       },
       {
         "end": "2026-08-22",
         "reason": "Inservice Training",
-        "start": "2026-08-22"
+        "start": "2026-08-22",
+        "reason_code": "in_service_training"
       }
     ],
     "effective_end": "2026-08-29",

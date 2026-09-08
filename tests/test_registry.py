@@ -37,3 +37,18 @@ def test_registry_pair_replaces_single_pointer(tmp_path, north_beach_pair):
         path.write_text(prefix + value)
         with pytest.raises(ValueError):
             load_registry(path)
+
+
+def test_direct_publication_opt_in_is_limited_to_pomeroy(tmp_path):
+    entry = next(entry for entry in load_registry() if entry.slug == "pomeroy-pool")
+    assert entry.auto_publish
+    assert all(not item.auto_publish for item in load_registry() if item.slug != entry.slug)
+    path = tmp_path / "registry.toml"
+    for slug, kind, url, opt_in in (
+        ("pomeroy-pool", "pomeroy_html", "https://example.org/", "true"),
+        ("pomeroy-pool", "pomeroy_html", entry.pdf_url, '"true"'),
+        ("jccsf-pool", "jccsf_html", entry.pdf_url, "true"),
+    ):
+        path.write_text(f'[[pool]]\nslug="{slug}"\nsource_kind="{kind}"\npdf_url="{url}"\nofficial_page_url="{entry.official_page_url}"\nauto_publish={opt_in}\n')
+        with pytest.raises(ValueError, match="Pomeroy"):
+            load_registry(path)

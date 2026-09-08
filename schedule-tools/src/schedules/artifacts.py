@@ -197,14 +197,22 @@ def combine_pool_artifacts(sources: list[dict], artifacts: list[dict], documents
             sessions.append(session | {"physical_pool": member["pool"], "pool_label_raw": fact["pool_label_raw"],
                                        "source_sha256": member["sha256"], "source_cell": slots[key]})
         facility_closures.append([closure for closure in payload["closures"] if not closure.get("physical_pool")])
-        scoped_closures.extend(closure for closure in payload["closures"] if closure.get("physical_pool"))
+        scoped_closures.extend(closure | {"source_notices": [notice | {"source_sha256": member["sha256"]}
+                                                           for notice in closure["source_notices"]]}
+                               for closure in payload["closures"] if closure.get("physical_pool"))
     if windows[0] != windows[1] or not windows[0][1]:
         raise ValueError("Pool effective windows conflict")
-    closure_key = lambda closure: tuple(closure.get(field, "") for field in ("start", "end", "start_time", "end_time"))
+    closure_key = lambda closure: tuple(closure.get(field, "") for field in ("start", "end", "start_time", "end_time", "reason_code"))
     if sorted(map(closure_key, facility_closures[0])) != sorted(map(closure_key, facility_closures[1])):
         raise ClosureReviewRequired(source, ["pair:facility_closure_conflict"])
+    combined_closures = []
+    for closure in facility_closures[0]:
+        other = next(item for item in facility_closures[1] if closure_key(item) == closure_key(closure))
+        notices = [notice | {"source_sha256": sources[index]["sha256"]}
+                   for index, item in enumerate((closure, other)) for notice in item["source_notices"]]
+        combined_closures.append(closure | {"source_notices": notices})
     payload = {"effective_start": windows[0][0], "effective_end": windows[0][1], "schedule_basis": "swim_schedule",
-               "sessions": sessions, "closures": facility_closures[0] + scoped_closures}
+               "sessions": sessions, "closures": combined_closures + scoped_closures}
     if not validate(payload).ok:
         raise ValueError("Invalid combined pool schedule")
     return payload

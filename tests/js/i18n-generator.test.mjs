@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -29,6 +29,9 @@ function archiveHead(target) {
 }
 
 function overlayWorkingGenerator(target) {
+  for (const file of readdirSync(path.join(ROOT, "content/spots"))) {
+    if (/^[^.]+\.md$/.test(file)) writeFileSync(path.join(target, "content/spots", file), readFileSync(path.join(ROOT, "content/spots", file)));
+  }
   for (const file of [
     "scripts/generate-i18n.mjs",
     "scripts/lib/spot-frontmatter.mjs",
@@ -163,3 +166,23 @@ for (const [table, field] of [["closures", "reason"], ["access_exceptions", "lab
     }
   });
 }
+
+test("closure display codes allow raw wording changes and reject unknown codes", () => {
+  const worktree = mkdtempSync(path.join(tmpdir(), "swimfrancisco-closure-code-"));
+  try {
+    archiveHead(worktree);
+    overlayWorkingGenerator(worktree);
+    const spot = path.join(worktree, "content/spots/hamilton-pool.md");
+    const original = readFileSync(spot, "utf8");
+    const changed = original.replace(/reason = "[^"]+"/, 'reason = "Preserved uncataloged original wording"');
+    writeFileSync(spot, changed);
+    const generate = spawnSync(process.execPath, ["scripts/generate-i18n.mjs", "generate"], { cwd: worktree, encoding: "utf8" });
+    assert.equal(generate.status, 0, generate.stderr);
+    writeFileSync(spot, changed.replace(/reason_code = "[^"]+"/, 'reason_code = "unknown_code"'));
+    const reject = spawnSync(process.execPath, ["scripts/generate-i18n.mjs", "generate"], { cwd: worktree, encoding: "utf8" });
+    assert.notEqual(reject.status, 0);
+    assert.match(reject.stderr, /missing canonical display code/);
+  } finally {
+    rmSync(worktree, { recursive: true, force: true });
+  }
+});

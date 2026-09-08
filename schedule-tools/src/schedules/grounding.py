@@ -4,7 +4,7 @@ import re
 import calendar
 from collections.abc import Iterable
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, timedelta
 
 from ._time import printed_time_range
@@ -113,17 +113,17 @@ _NOTICE_DATE_RE = re.compile(
     r"(?P<named_day>\d{1,2})(?:st|nd|rd|th)?(?:,?\s+(?P<named_year>20\d{2}))?\b", re.IGNORECASE,
 )
 _RECURRENCE_RE = re.compile(r"\bevery\s+([1-5])(?:st|nd|rd|th)\s+"
-                            r"(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+of\s+the\s+month\b", re.IGNORECASE)
+                            r"(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)(?:\s+of\s+the\s+month)?\b", re.IGNORECASE)
 
 
 def _notice_closures(notice: SourceNotice, window: tuple[date, date], *, paired: bool = False) -> list[tuple]:
     if not notice.facility:
         raise ValueError("unresolved_closure_scope")
     text = " ".join(notice.text.split())
-    if paired:
-        text = re.sub(r"\b(" + "|".join(_MONTH_NUMBERS) + r")\s+(\d{1,2})\s*[-–]\s*(\d{1,2})(?![\d:])\b",
-                      lambda match: f"{match[1]} {match[2]} - {match[1]} {match[3]}", text, flags=re.IGNORECASE)
-    if not re.search(r"\b(?:will be closed|pool(?:s)? closed|(?:holiday|training) closures)\b", text, re.IGNORECASE):
+    # Expand only an adjacent day which explicitly inherits a preceding month.
+    inherited = re.compile(r"(?P<prefix>(?P<month>" + "|".join(_MONTH_NUMBERS) + r")\.?\s+\d{1,2}(?:st|nd|rd|th)?|(?P<numeric>\d{1,2})/\d{1,2})(?P<join>\s*(?:and|&|[-–])\s*)(?P<day>\d{1,2})(?:st|nd|rd|th)?(?![\d/:])\b", re.IGNORECASE)
+    text = inherited.sub(lambda match: match["prefix"] + match["join"] + (match["month"] + " " if match["month"] else match["numeric"] + "/") + match["day"], text)
+    if not re.search(r"\b(?:will be closed|pool(?:s)? closed|closed for (?:annual maintenance|in-service)|(?:holiday|training) closures)\b", text, re.IGNORECASE):
         raise ValueError("unresolved_closure_notice")
     scope_text = re.sub(r"\b" + notice.physical_pool + r" pool\b", "pool", text, flags=re.IGNORECASE) if paired and notice.physical_pool else text
     if re.search(r"\b(?:small|main|warm|cool|therapy)\s+pool\b|\b(?:may|might|possibly|except|unless)\b", scope_text, re.IGNORECASE):
@@ -133,6 +133,17 @@ def _notice_closures(notice: SourceNotice, window: tuple[date, date], *, paired:
     if recurrence:
         text = text[:recurrence.start()] + " " * len(recurrence[0]) + text[recurrence.end():]
     matches = list(_NOTICE_DATE_RE.finditer(text))
+    clock_text = _NOTICE_DATE_RE.sub("", text)
+    if len(list(TIME_RANGE_RE.finditer(clock_text))) > 1:
+        if recurrence or len(matches) < 2:
+            raise ValueError("ambiguous_closure_times")
+        prefix = text[:matches[0].start()]
+        clauses = [text[match.start():matches[index + 1].start() if index + 1 < len(matches) else len(text)]
+                   for index, match in enumerate(matches)]
+        if any(len(list(TIME_RANGE_RE.finditer(_NOTICE_DATE_RE.sub("", clause)))) != 1 for clause in clauses):
+            raise ValueError("ambiguous_closure_times")
+        return [interval for clause in clauses
+                for interval in _notice_closures(replace(notice, text=prefix + clause), window, paired=paired)]
     days = []
     for match in matches:
         explicit_year = match["year"] or match["named_year"]
@@ -184,6 +195,37 @@ def _notice_closures(notice: SourceNotice, window: tuple[date, date], *, paired:
     return [(start.isoformat(), end.isoformat(), *clock) for start, end in intervals]
 
 
+def source_closure_inventory(source: PdfSource) -> list[dict]:
+    window = source_window(source)
+    if window is None:
+        raise ValueError("source_window_unavailable")
+    source_excluded_dates(source)
+    closures = []
+    paired = bool(north_beach_pool_identity(source.text))
+    for notice in source.notices:
+        if notice.session_cell:
+            continue
+        try:
+            intervals = _notice_closures(notice, window, paired=paired)
+        except ValueError as error:
+            raise ValueError(f"{notice.id}:{error}") from error
+        categories = [code for code, pattern in (
+            ("holiday", r"\b(?:holidays?|thanksgiving|veterans?\s+day|labor\s+day|indigenous)\b"),
+            ("staff_training", r"\b(?:trainings?|in-service)\b"),
+            ("maintenance", r"\b(?:maintenance|maintence)\b"),
+        ) if re.search(pattern, notice.text, re.IGNORECASE)]
+        if len(categories) > 1:
+            raise ValueError(f"{notice.id}:ambiguous_closure_reason")
+        for interval in intervals:
+            closure = dict(zip(("start", "end", "start_time", "end_time"), interval))
+            closure.update(reason_code=categories[0] if categories else "other",
+                           source_notices=[{"id": notice.id, "text": notice.text}])
+            if paired and notice.physical_pool:
+                closure["physical_pool"] = notice.physical_pool
+            closures.append(closure)
+    return closures
+
+
 def source_closure_coverage(source: PdfSource, payload: dict) -> dict:
     window = source_window(source)
     issues = []
@@ -192,13 +234,17 @@ def source_closure_coverage(source: PdfSource, payload: dict) -> dict:
         issues.append("source_window_unavailable")
     else:
         for notice in source.notices:
-            if notice.session_cell and north_beach_pool_identity(source.text):
+            if notice.session_cell:
                 continue
             try:
                 parsed = _notice_closures(notice, window, paired=bool(north_beach_pool_identity(source.text)))
                 expected.extend([(*item, notice.physical_pool) for item in parsed] if north_beach_pool_identity(source.text) else parsed)
             except ValueError as error:
                 issues.append(f"{notice.id}:{error}")
+    try:
+        source_excluded_dates(source)
+    except ValueError as error:
+        issues.append(str(error))
     if not north_beach_pool_identity(source.text) and any(closure.get("physical_pool") for closure in payload.get("closures", [])):
         issues.append("unsupported_pool_closure")
     expected_counts = Counter(expected)
@@ -393,11 +439,27 @@ def source_excluded_dates(source: PdfSource) -> dict[str, list[str]]:
     for notice in source.notices:
         if not notice.session_cell:
             continue
-        match = re.search(r"\(CLOSED\s+(\d{1,2}/\d{1,2}(?:\s*&\s*\d{1,2}/\d{1,2})*)\)", notice.text, re.IGNORECASE)
-        if not match or not window or len(CLOSURE_TOKEN_RE.findall(notice.text)) != 1:
+        cell = next(cell for cell in source.cells if cell.id == notice.session_cell)
+        if not window or len(re.findall(r"\bclosed\b", notice.text, re.IGNORECASE)) != 1 or re.search(r"\b(?:may|might|unless|except|before|after)\b", notice.text, re.IGNORECASE):
+            raise ValueError(f"{notice.id}:unresolved_session_exclusion")
+        recurrence = _RECURRENCE_RE.search(notice.text)
+        if recurrence:
+            remainder = re.split(r"\bclosed\b", notice.text, flags=re.IGNORECASE)[1]
+            remainder = TIME_RANGE_RE.sub("", _RECURRENCE_RE.sub("", remainder)).strip()
+            if not re.fullmatch(r"(?:for\s+(?:staff\s+)?training)?", remainder, re.IGNORECASE):
+                raise ValueError(f"{notice.id}:conflicting_session_recurrence")
+            weekday = list(day.lower() for day in calendar.day_name).index(recurrence[2].lower())
+            values = [window[0] + timedelta(days=offset) for offset in range((window[1] - window[0]).days + 1)]
+            dates = [day.isoformat() for day in values if day.weekday() == weekday and (day.day - 1) // 7 + 1 == int(recurrence[1])]
+            if recurrence[2].lower() != cell.day or re.search(r"\d+/\d+", notice.text):
+                raise ValueError(f"{notice.id}:conflicting_session_recurrence")
+            excluded[notice.session_cell] = dates
+            continue
+        match = re.search(r"(?:\(CLOSED\s*-?\s*|CLOSED\s*\()(\d{1,2}/\d{1,2}(?:\s*[&,]\s*\d{1,2}/\d{1,2})*)\)", notice.text, re.IGNORECASE)
+        if not match or len(CLOSURE_TOKEN_RE.findall(notice.text)) != 1:
             raise ValueError(f"{notice.id}:unresolved_session_exclusion")
         dates = []
-        for part in re.split(r"\s*&\s*", match[1]):
+        for part in re.split(r"\s*[&,]\s*", match[1]):
             month, day = map(int, part.split("/"))
             candidates = []
             for year in range(window[0].year, window[1].year + 1):
@@ -411,7 +473,9 @@ def source_excluded_dates(source: PdfSource) -> dict[str, list[str]]:
             if len(candidates) != 1 or candidates[0].strftime("%A").lower() != cell.day:
                 raise ValueError(f"{notice.id}:ambiguous_exclusion_date")
             dates.append(candidates[0].isoformat())
-        excluded[notice.session_cell] = sorted(set(dates))
+        if len(set(dates)) != len(dates):
+            raise ValueError(f"{notice.id}:duplicate_exclusion_date")
+        excluded[notice.session_cell] = sorted(dates)
     return excluded
 
 

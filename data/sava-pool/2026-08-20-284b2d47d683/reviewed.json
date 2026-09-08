@@ -11,14 +11,16 @@
         "end_time": "11:30",
         "reason": "staff training",
         "start": "2026-08-22",
-        "start_time": "09:00"
+        "start_time": "09:00",
+        "reason_code": "staff_training"
       },
       {
         "end": "2026-08-27",
         "end_time": "14:00",
         "reason": "staff training",
         "start": "2026-08-27",
-        "start_time": "12:00"
+        "start_time": "12:00",
+        "reason_code": "staff_training"
       }
     ],
     "effective_end": "2026-08-28",

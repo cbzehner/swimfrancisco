@@ -8,19 +8,22 @@
       {
         "end": "2026-05-25",
         "reason": "Memorial Day",
-        "start": "2026-05-25"
+        "start": "2026-05-25",
+        "reason_code": "memorial_day"
       },
       {
         "end": "2026-05-21",
         "reason": "Staff training",
-        "start": "2026-05-21"
+        "start": "2026-05-21",
+        "reason_code": "staff_training"
       },
       {
         "end": "2026-06-06",
         "reason": "Staff training",
         "start": "2026-06-06",
         "start_time": "09:00",
-        "end_time": "14:00"
+        "end_time": "14:00",
+        "reason_code": "staff_training"
       }
     ],
     "effective_start": "2026-05-12",
@@ -101,7 +104,7 @@
         "day": "thursday",
         "end": "17:00",
         "evidence": "Rec/Family Swim 3:00 PM - 5:00 PM",
-        "notes": "Pool closed every 3rd Thursday of the month from 11:00 AM\u2013 3:00 PM for staff training.",
+        "notes": "Pool closed every 3rd Thursday of the month from 11:00 AM– 3:00 PM for staff training.",
         "start": "15:00",
         "type": "family_swim"
       },

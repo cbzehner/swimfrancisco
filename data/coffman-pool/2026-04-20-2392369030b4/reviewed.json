@@ -7,15 +7,17 @@
     "closures": [
       {
         "end": "2026-06-06",
-        "reason": "In-Service (9am\u20131pm)",
+        "reason": "In-Service (9am–1pm)",
         "start": "2026-06-06",
         "start_time": "09:00",
-        "end_time": "13:00"
+        "end_time": "13:00",
+        "reason_code": "in_service_9_1"
       },
       {
         "end": "2026-05-21",
-        "reason": "Pool closed Thursday 5/21 11:30am\u20131pm",
-        "start": "2026-05-21"
+        "reason": "Pool closed Thursday 5/21 11:30am–1pm",
+        "start": "2026-05-21",
+        "reason_code": "pool_closed_5_21"
       }
     ],
     "effective_start": "2026-04-21",
@@ -148,7 +150,7 @@
       {
         "day": "friday",
         "end": "15:00",
-        "evidence": "REC/FAMILY SWIM 2:00 pm \u20133:00 pm",
+        "evidence": "REC/FAMILY SWIM 2:00 pm –3:00 pm",
         "start": "14:00",
         "type": "family_swim"
       },

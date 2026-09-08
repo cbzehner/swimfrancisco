@@ -5,7 +5,7 @@ const collections = {
   sessions: { title: "Swim sessions", fields: [["day", "Day", "day"], ["type", "Classification", "type"], ["start", "Start", "time"], ["end", "End", "time"], ["physical_pool", "Physical pool", "text"], ["pool_label_raw", "Literal allocation", "text"], ["source_sha256", "Original source SHA-256", "text"], ["source_cell", "Source cell", "text"], ["pool", "Printed allocation", "text"], ["excluded_dates", "Excluded dates (comma separated)", "dates"], ["evidence", "Source evidence", "text", "wide"], ["notes", "Reviewer note", "text", "wide"]] },
   access_hours: { title: "Access hours", fields: [["day", "Day", "day"], ["start", "Start", "time"], ["end", "End", "time"], ["label", "Label", "text"], ["evidence", "Source evidence", "text", "wide"], ["notes", "Reviewer note", "text", "wide"]] },
   access_exceptions: { title: "Access exceptions", fields: [["date", "Date", "date"], ["start", "Start", "time"], ["end", "End", "time"], ["label", "Label", "text"], ["reason", "Reason", "text", "wide"], ["evidence", "Source evidence", "text", "wide"], ["notes", "Reviewer note", "text", "wide"]] },
-  closures: { title: "Closures", fields: [["start", "Start date", "date"], ["end", "End date", "date"], ["start_time", "Start time", "time"], ["end_time", "End time", "time"], ["physical_pool", "Physical pool (empty means facility)", "text"], ["reason", "Reason", "text", "wide"]] }
+  closures: { title: "Closures", fields: [["start", "Start date", "date"], ["end", "End date", "date"], ["start_time", "Start time", "time"], ["end_time", "End time", "time"], ["physical_pool", "Physical pool (empty means facility)", "text"], ["reason", "Original reason", "text", "wide"], ["reason_code", "Display reason code", "text"]] }
 };
 const rowDefaults = {
   sessions: { day: "monday", type: "lap_swim", start: "09:00", end: "10:00" },
@@ -274,6 +274,11 @@ function renderRow(collection, fields, row, index) {
     wrapper.append(input);
     element.append(wrapper);
   });
+  if (row.source_notices) {
+    const evidence = document.createElement("pre");
+    evidence.textContent = row.source_notices.map(notice => `${notice.id}: ${notice.text}`).join("\n");
+    element.append(evidence);
+  }
   const remove = document.createElement("button");
   remove.className = "remove-row";
   remove.type = "button";

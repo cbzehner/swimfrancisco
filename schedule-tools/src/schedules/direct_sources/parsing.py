@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import re
 from datetime import date, datetime, timedelta
 from html import unescape
@@ -36,7 +35,6 @@ def _payload(
 ) -> dict:
     return {
         "schedule_basis": schedule_basis,
-        "effective_start": _time.pacific_today().isoformat(),
         "sessions": sorted(sessions, key=lambda s: (DAY_ORDER.index(s["day"]), s["start"], s["end"], s["type"])),
         "access_hours": sorted(
             access_hours or [],
@@ -48,16 +46,6 @@ def _payload(
         ),
         "closures": closures or [],
     }
-
-
-def _stable_payload_key(payload: dict) -> str:
-    stable = dict(payload)
-    stable.pop("effective_start", None)
-    stable["closures"] = [
-        {key: value for key, value in closure.items() if key != "start"}
-        for closure in stable.get("closures", [])
-    ]
-    return json.dumps(stable, sort_keys=True, separators=(",", ":"))
 
 
 def _weekly_hours_sessions(kind: str, hours: dict[str, tuple[str, str]], *, evidence: str) -> list[dict]:
@@ -247,6 +235,8 @@ class _PoolScheduleParser(HTMLParser):
             self.in_row = True
             self.current_row = []
         elif tag in {"th", "td"} and self.in_row:
+            if self.current_cell is not None:
+                self.handle_endtag(self.current_cell["tag"])
             self.current_cell = {
                 "tag": tag,
                 "class": attrs_dict.get("class") or "",
@@ -266,6 +256,8 @@ class _PoolScheduleParser(HTMLParser):
             self.current_row.append(self.current_cell)
             self.current_cell = None
         elif tag == "tr" and self.in_row:
+            if self.current_cell is not None:
+                self.handle_endtag(self.current_cell["tag"])
             self.rows.append(self.current_row)
             self.current_row = []
             self.in_row = False
@@ -278,8 +270,12 @@ class _PoolScheduleTable:
         self.rows = rows
 
     def day_cells(self) -> list[tuple[str, str]]:
+        if not self.rows:
+            raise DirectSourceError("Missing PoolSchedule table")
         header = self.rows[0]
         days = [str(cell["text"]).lower() for cell in header]
+        if len(days) != len(set(days)) or any(day not in DAY_ORDER for day in days):
+            raise DirectSourceError("Unknown or duplicate PoolSchedule weekdays")
         active_rowspans: dict[int, int] = {}
         out: list[tuple[str, str]] = []
         for row in self.rows[1:]:
@@ -290,10 +286,18 @@ class _PoolScheduleTable:
                     if active_rowspans[col] == 0:
                         del active_rowspans[col]
                     col += 1
-                if col < len(days):
-                    out.append((days[col], str(cell["text"])))
+                if col >= len(days):
+                    raise DirectSourceError("PoolSchedule row exceeds weekday columns")
+                out.append((days[col], str(cell["text"])))
                 rowspan = int(cell.get("rowspan") or 1)
                 if rowspan > 1:
                     active_rowspans[col] = rowspan - 1
                 col += 1
+            while col < len(days) and active_rowspans.get(col, 0) > 0:
+                active_rowspans[col] -= 1
+                col += 1
+            if col != len(days):
+                raise DirectSourceError("Incomplete PoolSchedule row")
+        if any(active_rowspans.values()):
+            raise DirectSourceError("PoolSchedule rowspan exceeds table")
         return out

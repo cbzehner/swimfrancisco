@@ -138,11 +138,13 @@ end = "17:00"
 start = "2026-05-21"
 end = "2026-05-21"
 reason = "Staff training"
+reason_code = "staff_training"
 
 [[extra.schedules.closures]]
 start = "2026-05-25"
 end = "2026-05-25"
 reason = "Memorial Day"
+reason_code = "memorial_day"
 
 [[extra.schedules.closures]]
 start = "2026-06-06"
@@ -150,6 +152,7 @@ end = "2026-06-06"
 reason = "Staff training"
 start_time = "09:00"
 end_time = "14:00"
+reason_code = "staff_training"
 
 [[extra.schedules]]
 effective_start = "2026-06-09"
@@ -305,11 +308,13 @@ end = "17:00"
 start = "2026-06-19"
 end = "2026-06-19"
 reason = "Juneteenth"
+reason_code = "juneteenth"
 
 [[extra.schedules.closures]]
 start = "2026-07-04"
 end = "2026-07-04"
 reason = "Independence Day"
+reason_code = "independence_day"
 
 [[extra.schedules]]
 effective_start = "2026-08-18"
@@ -474,6 +479,7 @@ end = "2026-08-22"
 reason = "staff training"
 start_time = "09:00"
 end_time = "11:00"
+reason_code = "staff_training"
 
 [[extra.schedules.closures]]
 start = "2026-08-27"
@@ -481,11 +487,13 @@ end = "2026-08-27"
 reason = "Aquatic Division Training"
 start_time = "12:00"
 end_time = "14:00"
+reason_code = "aquatics_training"
 
 [[extra.schedules.closures]]
 start = "2026-09-07"
 end = "2026-09-07"
 reason = "Labor Day"
+reason_code = "labor_day"
 
 [[extra.schedules.closures]]
 start = "2026-09-24"
@@ -493,11 +501,13 @@ end = "2026-09-24"
 reason = "Aquatic Division Training"
 start_time = "12:00"
 end_time = "14:00"
+reason_code = "aquatics_training"
 
 [[extra.schedules.closures]]
 start = "2026-10-12"
 end = "2026-10-12"
 reason = "Indigenous People’s Day"
+reason_code = "indigenous_peoples_day"
 +++
 
 The only city-operated outdoor pool in San Francisco. Built in 1916, the 90' x 40' pool sits between Linda and Valencia streets in the heart of the Mission District and operates seasonally from May through October. Programs include lap swim, senior swim, recreation swim, water aerobics, and lessons.

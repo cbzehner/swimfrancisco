@@ -8,12 +8,14 @@
       {
         "end": "2026-03-19",
         "reason": "Training",
-        "start": "2026-03-19"
+        "start": "2026-03-19",
+        "reason_code": "training"
       },
       {
         "end": "2026-04-16",
         "reason": "Training",
-        "start": "2026-04-16"
+        "start": "2026-04-16",
+        "reason_code": "training"
       }
     ],
     "effective_start": "2026-03-17",

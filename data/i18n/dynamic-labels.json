@@ -148,7 +148,8 @@
         "sources": [
           "Staff training",
           "Staff Training",
-          "staff training"
+          "staff training",
+          "3rd Thursday training"
         ]
       },
       "training": {
@@ -280,6 +281,18 @@
         "sources": [
           "Every 3rd Thursday of the Month Closed for Aquatic Division Training 11:00am-2:00pm"
         ]
+      },
+      "holiday": {
+        "translation_key": "reason_holiday_closure",
+        "sources": [
+          "FEDERAL HOLIDAY"
+        ]
+      },
+      "other": {
+        "translation_key": "status_closed_window",
+        "sources": [
+          "Scheduled closure"
+        ]
       }
     },
     "by_source": {
@@ -396,6 +409,10 @@
         "translation_key": "reason_staff_training"
       },
       "staff training": {
+        "code": "staff_training",
+        "translation_key": "reason_staff_training"
+      },
+      "3rd Thursday training": {
         "code": "staff_training",
         "translation_key": "reason_staff_training"
       },
@@ -518,6 +535,14 @@
       "Every 3rd Thursday of the Month Closed for Aquatic Division Training 11:00am-2:00pm": {
         "code": "monthly_aquatic_training",
         "translation_key": "reason_monthly_aquatic_training"
+      },
+      "FEDERAL HOLIDAY": {
+        "code": "holiday",
+        "translation_key": "reason_holiday_closure"
+      },
+      "Scheduled closure": {
+        "code": "other",
+        "translation_key": "status_closed_window"
       }
     }
   },

@@ -36,7 +36,7 @@ def test_merge_updates_only_schedule_fields(tmp_path):
                 {"day": "thursday", "type": "lap_swim", "start": "06:00", "end": "08:00"},
                 {"day": "friday", "type": "lap_swim", "start": "06:00", "end": "08:00"},
             ],
-            "closures": [{"start": "2026-05-25", "end": "2026-05-25", "reason": "Memorial Day"}],
+            "closures": [{"start": "2026-05-25", "end": "2026-05-25", "reason": "Memorial Day", "reason_code": "memorial_day"}],
             "effective_start": snapshot["effective_start"],
             "effective_end": snapshot.get("effective_end"),
         },
@@ -64,7 +64,7 @@ def test_merge_preserves_partial_day_closure_fields(tmp_path):
                 {
                     "start": "2026-05-21",
                     "end": "2026-05-21",
-                    "reason": "Staff training",
+                    "reason": "Staff training", "reason_code": "staff_training",
                     "start_time": "11:00",
                     "end_time": "15:00",
                 }
@@ -79,7 +79,7 @@ def test_merge_preserves_partial_day_closure_fields(tmp_path):
         {
             "start": "2026-05-21",
             "end": "2026-05-21",
-            "reason": "Staff training",
+            "reason": "Staff training", "reason_code": "staff_training",
             "start_time": "11:00",
             "end_time": "15:00",
         }
@@ -300,3 +300,20 @@ def test_resolve_yearless_date_rolls_forward_for_distant_past():
 
     today = date(2026, 12, 20)
     assert _resolve_yearless_date(1, 15, today=today) == date(2027, 1, 15)
+
+
+def test_closure_projection_preserves_raw_notice_and_requires_code(tmp_path):
+    import pytest
+    source = ROOT / 'content/spots/hamilton-pool.md'
+    target = tmp_path / source.name
+    target.write_text(source.read_text())
+    payload = read_schedule_snapshot(target)
+    closure = {'start': payload['effective_start'], 'end': payload['effective_start'],
+               'reason': 'Original model wording', 'reason_code': 'staff_training',
+               'source_notices': [{'id': 'notice-1', 'text': 'Original source wording'}]}
+    payload['closures'] = [closure]
+    merge(target, payload)
+    assert read_schedule_snapshot(target)['closures'] == [closure]
+    del closure['reason_code']
+    with pytest.raises(ValueError, match='reason_code'):
+        merge(target, payload)

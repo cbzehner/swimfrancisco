@@ -166,6 +166,7 @@ end = "17:00"
 start = "2026-05-21"
 end = "2026-05-21"
 reason = "Pool closed Thursday 5/21 11:30am–1pm"
+reason_code = "pool_closed_5_21"
 
 [[extra.schedules.closures]]
 start = "2026-06-06"
@@ -173,6 +174,7 @@ end = "2026-06-06"
 reason = "In-Service (9am–1pm)"
 start_time = "09:00"
 end_time = "13:00"
+reason_code = "in_service_9_1"
 
 [[extra.schedules]]
 effective_start = "2026-06-09"
@@ -280,11 +282,13 @@ end = "17:00"
 start = "2026-06-19"
 end = "2026-06-19"
 reason = "Juneteenth"
+reason_code = "juneteenth"
 
 [[extra.schedules.closures]]
 start = "2026-07-04"
 end = "2026-07-04"
 reason = "Independence Day"
+reason_code = "independence_day"
 
 [[extra.schedules]]
 effective_start = "2026-08-18"
@@ -427,31 +431,37 @@ end = "2026-08-22"
 reason = "In-Service Training"
 start_time = "09:00"
 end_time = "13:00"
+reason_code = "in_service_training"
 
 [[extra.schedules.closures]]
 start = "2026-08-27"
 end = "2026-08-27"
 reason = "Staff Training"
+reason_code = "staff_training"
 
 [[extra.schedules.closures]]
 start = "2026-09-24"
 end = "2026-09-24"
 reason = "Staff Training"
+reason_code = "staff_training"
 
 [[extra.schedules.closures]]
 start = "2026-10-22"
 end = "2026-10-22"
 reason = "Staff Training"
+reason_code = "staff_training"
 
 [[extra.schedules.closures]]
 start = "2026-11-11"
 end = "2026-11-11"
 reason = "Veterans Day"
+reason_code = "veterans_day"
 
 [[extra.schedules.closures]]
 start = "2026-11-26"
 end = "2026-11-27"
 reason = "Thanksgiving"
+reason_code = "thanksgiving"
 
 [[extra.schedules.closures]]
 start = "2026-12-12"
@@ -459,6 +469,7 @@ end = "2026-12-12"
 reason = "In-Service Training"
 start_time = "09:00"
 end_time = "14:00"
+reason_code = "in_service_training"
 +++
 
 A 10,000-square-foot indoor pool in Herz Playground at the southeastern entrance of McLaren Park, serving the Visitacion Valley neighborhood. Programs include lap swim, senior swim, recreation swim, self-guided water exercise, and lessons.

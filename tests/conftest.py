@@ -61,8 +61,8 @@ def north_beach_pair():
                     row["excluded_dates"] = ["2026-09-24", "2026-10-22"]
                 sessions.append(row)
         facts = {"effective_start": "2026-09-01", "effective_end": "2026-12-12", "schedule_basis": "swim_schedule", "sessions": sessions, "closures": closures}
-        payload = pool_label_payload(facts)
         source = inspect_pdf_source(document)
+        payload = openai_provider.source_fact_payload(facts, source)
         details = {"configuration": openai_provider.extraction_configuration(PROMPT_PATH.read_text().strip()),
                    "source_facts": facts, "visual_pages": [], "image_sha256": {},
                    "source_coverage": source_publication_coverage(source, payload)}

@@ -71,6 +71,7 @@ slug = "pomeroy-pool"
 pdf_url = "https://www.prrcsf.org/therapeutic-swim"
 official_page_url = "https://www.prrcsf.org/pool"
 source_kind = "pomeroy_html"
+auto_publish = true
 notes = "Direct extractor reads the public therapeutic swim table. Lap swim means slow therapeutic lap swim."
 
 [[pool]]
