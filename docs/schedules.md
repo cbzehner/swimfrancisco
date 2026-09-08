@@ -1899,3 +1899,61 @@ source entries; raw model facts remain unchanged. Gaps, extra dates, partial
 days, duplicate model intervals, and mixed notices still fail. Existing exact
 interval matches retain their behavior. This provider change invalidates caches
 through the full configuration identity; it does not relabel prior responses.
+
+The completed grouped-closure rollout used two accounted runs:
+
+- [34200692356](https://github.com/cbzehner/swimfrancisco/actions/runs/34200692356)
+  made seven completed requests for $0.741500. Garfield passed with 33 sessions,
+  five untouched raw model closures, and six canonical source closures. North
+  Beach Cool passed and was cached, but the run could not reserve Warm within
+  $1. Publication held the whole pair. The accepted city updates deployed at
+  `12dd5cd55d43ad3f53ae9c7d26a452238b5e6fd5` after candidate and main CI.
+- [34202066893](https://github.com/cbzehner/swimfrancisco/actions/runs/34202066893)
+  reused the seven accepted component artifacts and made only two requests:
+  North Beach Warm ($0.109970) and Rossi ($0.101485). Both passed. The complete
+  North Beach pair and Rossi deployed at
+  `dab82ff1847263d3d2964cb695adab44856ab767`, with successful
+  [candidate CI](https://github.com/cbzehner/swimfrancisco/actions/runs/34202363924),
+  [main CI](https://github.com/cbzehner/swimfrancisco/actions/runs/34202859195),
+  exact-commit deployment, and hosted live checks.
+
+All nine current city component artifacts also passed a separate local
+`verify_artifact` replay against original PDF bytes and the current prompt and
+configuration, without network or model calls. It checked payload reconstruction,
+source evidence, sessions, effective dates, closures, and cell exclusions. The
+North Beach bundle retains the original Cool/Warm URLs and full byte hashes,
+15 Cool sessions, 20 Warm sessions, and September 1–December 12 dates.
+
+Final schedule CI passed 1,287 Python tests (55 skips), 197 JavaScript tests,
+35 browser tests, localization, Worker types, and build. Local `just check`
+passed before publication; the final duplicate guard additionally passed all
+91 extraction-contract tests and independent review. Tests used frozen original
+PDFs and deterministic responses, without paid calls or benchmark answers as a
+verifier.
+
+The required `node scripts/smoke-production.mjs
+--expected-commit=dab82ff1847263d3d2964cb695adab44856ab767 --browser` passed
+for all 30 canonical spots. Additional WebKit and Chromium checks passed 80
+source-based scenarios on the board and individual pages: 28 for Coffman,
+Garfield, Rossi, and future MLK; 24 for Hamilton, Mission, and current MLK;
+eight for Pomeroy; and 20 for North Beach. Checks covered simultaneous physical
+pools, excluded school bookings, source-cell cancellations, full and partial
+closures, effective windows, expiry, Pacific midnight, and daylight saving time
+with a Tokyo visitor timezone. Pomeroy's September 8 observation expires after
+September 21; no prior observation window was extended.
+
+The durable September ledger settled at $3.869090, leaving $1.130910 of $5.
+This city-source follow-up spent $2.870180, including rejected responses; no
+usage reservation remains unresolved. Request/response evidence and spend
+receipts use the existing workflow artifact retention. Weekly Monday 16:00 UTC
+automation was restored only after live verification, with the unchanged $1
+per-run reservation and model configuration.
+
+Remaining city holds are Balboa's unspecified December 12 closure duration and
+the two Sava inputs: the current grid's literal Thursday 10am–12am session and
+the expired interim grid's unresolved recurrence. Do not infer corrected hours.
+Ambiguous closure notices remain on the existing review-PR path. Six hosted
+direct-source HTTP 403 failures remain unresolved; local HTTP 200 responses and
+the official alternatives described above do not establish hosted ingestion.
+Other non-city publication remains manual, with only the existing Pomeroy
+exception. A successful workflow does not mean every pool is automated.
