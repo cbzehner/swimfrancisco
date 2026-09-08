@@ -50,6 +50,7 @@ def test_evidence_and_live_browser_dependencies():
     assert "tmp/automation/" in WORKFLOW
     assert "tmp/api-budget/budget.json" in WORKFLOW
     assert "tmp/api-budget/reservation.json" in WORKFLOW
+    assert "tmp/api-budget/api-attempts/" in WORKFLOW
     assert "path: tmp/" not in WORKFLOW
 
 

@@ -20,6 +20,8 @@ Dates and closures:
 - closures[] describes facility-wide closures only. Do not encode timed school-only bookings in closures[]; omit them entirely. Pool-scoped restrictions are not facility closures.
 - Include explicit holiday, maintenance, seasonal, or training closures. A bare mention of training or an adjacent private booking is not evidence that the facility closes.
 - Use inclusive ISO dates. Omit time fields for an all-day closure. For an explicitly timed closure, include both start_time and end_time on a single-day entry; never turn it into an all-day closure.
+- Use session excluded_dates only for cancellation notices printed inside that session cell. Never copy facility holiday, maintenance, or training closure dates into session excluded_dates; keep them in closures[].
+- Read each notice separately. A date list inside a session cell does not limit a separate facility recurring closure. Retain a separately stated facility recurring closure even when a holiday or maintenance closure overlaps it.
 - Expand an explicit recurring closure to its dates within the printed schedule window. Preserve any stated time range. Do not invent occurrences outside that window.
 - When a recurrence also lists specific dates, retain those listed dates if every omitted in-window occurrence is independently covered by an explicit full-day facility closure. Keep that separate closure; do not invent an additional training event on the omitted dates. Apply the same rule to session excluded_dates. Any other disagreement is unresolved.
 - Return an empty closures array when the document lists no facility closures. Do not invent missing programs, dates, labels, or closure reasons.

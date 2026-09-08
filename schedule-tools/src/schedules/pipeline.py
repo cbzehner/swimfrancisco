@@ -242,6 +242,7 @@ def _process_entry(
         if provider == "openai" and use_cached:
             cached = json.loads(artifact_path(entry.slug, date, fetch_result.sha256, provider, default_model).read_text())
             verified = verify_artifact(cached, fetch_result.bytes, prompt)
+            use_cached = verified["ok"]
             reviewed_reusable = verified["ok"] and reviewed_file.exists() and (
                 load_reviewed_snapshot_from_path(reviewed_file, expected_slug=entry.slug, expected_sha=fetch_result.sha256)["payload"]
                 == cached["payload"]

@@ -1849,3 +1849,35 @@ literal caveat stays in source evidence. Named physical allocations retain their
 qualifiers. The correction passed 259 focused source/extraction tests, including
 the frozen original and seven numeric-versus-named allocation cases, without
 model calls.
+
+The first hosted follow-up [34195357373](https://github.com/cbzehner/swimfrancisco/actions/runs/34195357373)
+completed six paid requests for $0.739270 and published independently accepted
+Coffman, MLK, Mission, and Pomeroy updates at
+`194c8cc1426b650dbed7648a537e1cc9db5615e0`. Candidate CI, main CI, Cloudflare,
+and the exact-commit browser smoke passed. September spending settled at
+$1.738180. North Beach and Rossi made no requests after the run could no longer
+reserve another request within $1. Balboa and both Sava sources held before
+model calls. Garfield's model response had all 33 sessions and six closures but
+incorrectly copied facility closure dates into 22 session exclusions; independent
+verification rejected it. Hamilton's response omitted source closures and failed
+before a provider artifact was written. Its $0.140025 charge is known, but the
+exact omitted closure cannot be recovered from that run's retained files.
+
+The trial exposed two bounded automation corrections. A current-configuration
+model artifact with failed independent coverage cannot remain a reusable cache
+entry forever: retry it through the accounted provider while retaining prior
+reviews until acceptance. Valid caches still make no calls; malformed or
+identity-mismatched artifacts still hold. The prompt now explicitly separates
+session-cell cancellations from facility closures and separate recurrence
+notices. This changes configuration identity normally, without relabeling old
+responses. The existing workflow now retains `api-budget/api-attempts/` request
+and response files as well as budget receipts, including responses that fail
+before provider artifact creation. Those files contain public source/request
+bodies and model output, not authorization headers or keys. The earlier missing
+Hamilton response is not claimed as retroactively retained.
+
+The cache/exclusion/evidence follow-up passed `just check`: 1,250 Python tests
+(55 skips), 197 JavaScript tests, 35 browser tests, localization, Worker types,
+and build. Its pipeline regressions use independent cached-artifact verification
+and mocked paid-provider calls, including failed retries that preserve the prior
+review and malformed-cache cases that never call the provider.

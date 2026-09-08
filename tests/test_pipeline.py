@@ -1003,3 +1003,77 @@ def test_pair_failure_never_builds_bundle(tmp_path, north_beach_pair, monkeypatc
     monkeypatch.setattr(pipeline, "_process_entry", process)
     monkeypatch.setattr(pipeline, "save_pool_bundle", lambda *args: pytest.fail("incomplete bundle"))
     assert pipeline.run_pipeline(PdfRun("openai", (entry.slug,), False, ExpandFromDecisions(DecisionSet.from_items([]))))[0] == 1
+
+
+@pytest.mark.parametrize('state', ['rejected', 'retry_failure', 'valid', 'identity_error', 'schema_error'])
+def test_openai_cache_reuses_only_independently_verified_results(tmp_path, north_beach_pair, monkeypatch, state):
+    import copy
+    from schedules import artifacts, paths, pipeline
+    from schedules.models import ProviderResult
+    from schedules.paths import PROMPT_PATH
+    from schedules.schema import EXTRACTION_SCHEMA
+    from schedules.providers.openai_provider import source_fact_payload, inspect_pdf_source, verify_artifact
+
+    paired_entry, components = north_beach_pair
+    component = components[0]
+    good = component['artifact']
+    entry = replace(paired_entry, pdf_url=good['source_pdf_url'], pool_sources=())
+    prompt = PROMPT_PATH.read_text().strip()
+    root = tmp_path / 'data'
+    capture = paths.review_dir(entry.slug, '2026-09-06', good['pdf_sha256'], root=root)
+    capture.mkdir(parents=True)
+    original = capture / 'source.pdf'
+    original.write_bytes(component['document'])
+    snapshot = capture / 'reviewed.json'
+    snapshot.write_text(json.dumps({'slug': entry.slug, 'pdf_sha256': good['pdf_sha256'],
+                                   'source_pdf_url': entry.pdf_url, 'reviewed_at': '2026-09-06',
+                                   'payload': good['payload']}))
+    prior_bytes = snapshot.read_bytes()
+    cached = copy.deepcopy(good)
+    if state in {'rejected', 'retry_failure'}:
+        cached['details']['source_facts']['sessions'][0]['excluded_dates'] = ['2026-09-08']
+        cached['payload'] = source_fact_payload(cached['details']['source_facts'], inspect_pdf_source(component['document']))
+        assert not verify_artifact(cached, component['document'], prompt)['ok']
+    artifacts.save_artifact_bundle(slug=entry.slug, date='2026-09-06', provider='openai', model=good['model'],
+                                   source_pdf_url=entry.pdf_url, pdf_sha256=good['pdf_sha256'], prompt=prompt,
+                                   schema=EXTRACTION_SCHEMA, payload=cached['payload'], usage={}, cost_estimate='mocked',
+                                   details=cached['details'], root=root)
+    cached_path = paths.artifact_path(entry.slug, '2026-09-06', good['pdf_sha256'], 'openai', good['model'], root=root)
+    if state in {'identity_error', 'schema_error'}:
+        stored = json.loads(cached_path.read_text())
+        if state == 'identity_error':
+            stored['pdf_sha256'] = '0' * 64
+        else:
+            stored['details']['source_facts']['sessions'] = 'invalid'
+        cached_path.write_text(json.dumps(stored))
+    cached_bytes = cached_path.read_bytes()
+    monkeypatch.setattr(pipeline, 'read_schedule_snapshot', lambda _: good['payload'])
+    monkeypatch.setattr(pipeline, 'fetch_pdf', lambda *args: FetchResult(original, good['pdf_sha256'], component['document'], True, 1))
+    monkeypatch.setattr(pipeline, 'artifact_path', lambda *args: paths.artifact_path(*args, root=root))
+    monkeypatch.setattr(pipeline, 'reviewed_path', lambda *args: paths.reviewed_path(*args, root=root))
+    monkeypatch.setattr(pipeline, 'save_artifact_bundle', lambda **kwargs: artifacts.save_artifact_bundle(**kwargs, root=root))
+    monkeypatch.setattr(pipeline, 'skip_if_fresh', lambda **kwargs: artifacts.skip_if_fresh(**kwargs, root=root))
+    monkeypatch.setattr(pipeline, 'carry_forward_review', lambda **kwargs: None)
+    calls = []
+    def extract(*args):
+        calls.append(args[0])
+        if state == 'retry_failure':
+            raise ValueError('Accounted provider retry failed')
+        return ProviderResult(good['payload'], good['model'], {}, good['details'])
+    monkeypatch.setattr(pipeline, 'extract_with_provider', extract)
+    result = pipeline._process_entry(entry, command=_pdf_run(provider='openai'), prompt=prompt)
+    assert snapshot.read_bytes() == prior_bytes
+    if state == 'rejected':
+        assert isinstance(result, Extracted) and not result.catastrophic
+        assert calls == ['openai']
+        assert verify_artifact(json.loads(cached_path.read_text()), component['document'], prompt)['ok']
+        again = pipeline._process_entry(entry, command=_pdf_run(provider='openai'), prompt=prompt)
+        assert isinstance(again, Unchanged)
+        assert calls == ['openai']
+    elif state == 'valid':
+        assert isinstance(result, Unchanged)
+        assert not calls
+    else:
+        assert isinstance(result, Aborted)
+        assert calls == (['openai'] if state == 'retry_failure' else [])
+        assert cached_path.read_bytes() == cached_bytes

@@ -50,6 +50,12 @@ def test_prompt_distinguishes_physical_pool_labels_from_program_lane_counts() ->
     assert "When shared programs have only numeric lane counts, use null for each program" in prompt
 
 
+def test_prompt_separates_session_cancellations_from_facility_closures() -> None:
+    prompt = PROMPT_PATH.read_text()
+    assert "Never copy facility holiday, maintenance, or training closure dates into session excluded_dates" in prompt
+    assert "A date list inside a session cell does not limit a separate facility recurring closure" in prompt
+
+
 def test_closures_have_optional_partial_day_time_fields() -> None:
     props = _closure_properties()
     assert "start_time" in props, "closures lost the v2 partial-day start_time field"
