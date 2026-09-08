@@ -162,7 +162,7 @@ reason_code = "independence_day"
 effective_start = "2026-08-16"
 schedule_basis = "swim_schedule"
 effective_end = "2026-12-10"
-last_verified_at = "2026-08-20"
+last_verified_at = "2026-09-07"
 
 [[extra.schedules.sessions]]
 day = "monday"
@@ -184,12 +184,6 @@ end = "15:45"
 
 [[extra.schedules.sessions]]
 day = "monday"
-type = "family_swim"
-start = "18:15"
-end = "19:30"
-
-[[extra.schedules.sessions]]
-day = "monday"
 type = "lap_swim"
 start = "18:15"
 end = "19:30"
@@ -213,10 +207,18 @@ start = "12:30"
 end = "15:45"
 
 [[extra.schedules.sessions]]
-day = "wednesday"
+day = "tuesday"
+type = "family_swim"
+start = "18:15"
+end = "19:30"
+notes = "Printed “(3)” is a numeric lane count only, so pool_label_raw is null."
+
+[[extra.schedules.sessions]]
+day = "tuesday"
 type = "lap_swim"
-start = "07:30"
-end = "09:45"
+start = "18:15"
+end = "19:30"
+notes = "Printed “(3)” is a numeric lane count only, so pool_label_raw is null."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -235,12 +237,14 @@ day = "wednesday"
 type = "family_swim"
 start = "14:00"
 end = "15:30"
+notes = "Printed “(3)” is a numeric lane count only, so pool_label_raw is null."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "14:00"
 end = "15:30"
+notes = "Printed “(3)” is a numeric lane count only, so pool_label_raw is null."
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -265,12 +269,14 @@ day = "thursday"
 type = "family_swim"
 start = "18:15"
 end = "19:30"
+notes = "Printed “(3)” is a numeric lane count only, so pool_label_raw is null."
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "18:15"
 end = "19:30"
+notes = "Printed “(3)” is a numeric lane count only, so pool_label_raw is null."
 
 [[extra.schedules.sessions]]
 day = "sunday"
@@ -293,62 +299,98 @@ end = "15:30"
 [[extra.schedules.closures]]
 start = "2026-08-27"
 end = "2026-08-27"
-reason = "Staff training"
+reason = "training"
 start_time = "12:00"
 end_time = "14:00"
 reason_code = "staff_training"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-4"
+text = "Pool closed 12pm-2pm 8/27,\n9/24, 10/22 for training"
 
 [[extra.schedules.closures]]
 start = "2026-09-07"
 end = "2026-09-07"
-reason = "Holiday"
-reason_code = "holiday_closure"
+reason = "holiday"
+reason_code = "holiday"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-1"
+text = "All city pools will be closed for\nholidays 9/7, 10/12,11/11,\n11/26 and 11/27."
 
 [[extra.schedules.closures]]
 start = "2026-09-24"
 end = "2026-09-24"
-reason = "Staff training"
+reason = "training"
 start_time = "12:00"
 end_time = "14:00"
 reason_code = "staff_training"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-4"
+text = "Pool closed 12pm-2pm 8/27,\n9/24, 10/22 for training"
 
 [[extra.schedules.closures]]
 start = "2026-10-12"
 end = "2026-10-12"
-reason = "Holiday"
-reason_code = "holiday_closure"
+reason = "holiday"
+reason_code = "holiday"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-1"
+text = "All city pools will be closed for\nholidays 9/7, 10/12,11/11,\n11/26 and 11/27."
 
 [[extra.schedules.closures]]
 start = "2026-10-22"
 end = "2026-10-22"
-reason = "Staff training"
+reason = "training"
 start_time = "12:00"
 end_time = "14:00"
 reason_code = "staff_training"
 
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-4"
+text = "Pool closed 12pm-2pm 8/27,\n9/24, 10/22 for training"
+
 [[extra.schedules.closures]]
 start = "2026-11-02"
 end = "2026-11-21"
-reason = "Annual maintenance"
-reason_code = "annual_maintenance"
+reason = "annual maintenance"
+reason_code = "maintenance"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-6"
+text = "Closed for annual maintenance\n11/2-11/21 reopen 11/22"
 
 [[extra.schedules.closures]]
 start = "2026-11-11"
 end = "2026-11-11"
-reason = "Holiday"
-reason_code = "holiday_closure"
+reason = "holiday"
+reason_code = "holiday"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-1"
+text = "All city pools will be closed for\nholidays 9/7, 10/12,11/11,\n11/26 and 11/27."
 
 [[extra.schedules.closures]]
 start = "2026-11-26"
 end = "2026-11-26"
-reason = "Holiday"
-reason_code = "holiday_closure"
+reason = "holiday"
+reason_code = "holiday"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-1"
+text = "All city pools will be closed for\nholidays 9/7, 10/12,11/11,\n11/26 and 11/27."
 
 [[extra.schedules.closures]]
 start = "2026-11-27"
 end = "2026-11-27"
-reason = "Holiday"
-reason_code = "holiday_closure"
+reason = "holiday"
+reason_code = "holiday"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-1"
+text = "All city pools will be closed for\nholidays 9/7, 10/12,11/11,\n11/26 and 11/27."
 +++
 
 An indoor pool at Rossi Playground in the Inner Richmond, at the corner of Arguello and Anza. Programs include lap swim, senior swim, recreation swim, and lessons.
