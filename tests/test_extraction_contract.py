@@ -513,3 +513,108 @@ def test_closure_display_code_comes_from_original_notice(north_beach_pair):
     artifact['payload']['closures'][0]['reason_code'] = 'holiday'
     with pytest.raises(ValueError, match='differs'):
         openai_provider.verify_artifact(artifact, component['document'], PROMPT_PATH.read_text())
+
+
+def test_mlk_named_registered_lessons_are_not_public_sessions():
+    from schedules.paths import REPO_ROOT
+    from schedules.signals import inspect_pdf_source, program_types
+    from schedules.grounding import source_slots
+
+    source = inspect_pdf_source((REPO_ROOT / 'data/martin-luther-king-jr-pool/2026-08-20-2e1c7d942a7a/source.pdf').read_bytes())
+    lessons = [cell for cell in source.cells if 'Bayview Safety Swim' in cell.text]
+    assert len(lessons) == 4
+    assert {cell.day for cell in lessons} == {'tuesday', 'wednesday', 'thursday', 'friday'}
+    assert not source.issues
+    assert all(program_types(cell.text) == () for cell in lessons)
+    slots = source_slots(source)
+    assert len(slots) == 23
+    assert not {slot.cell.id for slot in slots} & {cell.id for cell in lessons}
+
+
+def test_garfield_school_group_booking_is_not_public_family_swim():
+    from schedules.paths import REPO_ROOT
+    from schedules.signals import inspect_pdf_source, program_types
+
+    source = inspect_pdf_source((REPO_ROOT / 'data/garfield-pool/2026-08-20-7f5c0074e8dd/source.pdf').read_bytes())
+    bookings = [cell for cell in source.cells if 'School Groups' in cell.text]
+    assert len(bookings) == 1
+    assert bookings[0].day == 'wednesday'
+    assert program_types(bookings[0].text) == ()
+    assert not any(issue.startswith(bookings[0].id + ':') for issue in source.issues)
+    assert program_types('Rec/Family Swim (Small Pool) 2:00pm-3:45pm') == ('family_swim',)
+    assert program_types('Senior/SFUSD 9am-11am') == ('senior_swim',)
+
+
+@pytest.mark.parametrize('capture,heading,replacement', [
+    ('martin-luther-king-jr-pool/2026-08-20-2e1c7d942a7a', 'Bayview Safety Swim\n& Splash', 'Bayview Safety Swim'),
+    ('martin-luther-king-jr-pool/2026-08-20-2e1c7d942a7a', 'Bayview Safety Swim\n& Splash', 'Bayview Safety Swim & Splash Special'),
+    ('garfield-pool/2026-08-20-7f5c0074e8dd', 'Rec/Family Swim\nSchool Groups', 'Rec/Family Swim School Group'),
+    ('garfield-pool/2026-08-20-7f5c0074e8dd', 'Rec/Family Swim\nSchool Groups', 'Rec/Family Swim School Groups and Guests'),
+    ('garfield-pool/2026-08-20-7f5c0074e8dd', 'Rec/Family Swim\nSchool Groups', 'Rec/Family Swim School Groups / Lap Swim / Water Exercise'),
+    ('martin-luther-king-jr-pool/2026-08-20-2e1c7d942a7a', 'Bayview Safety Swim\n& Splash', 'Bayview Safety Swim & Splash / Senior Swim / Lessons'),
+])
+def test_changed_registered_program_names_remain_unknown(monkeypatch, capture, heading, replacement):
+    from dataclasses import replace
+    from schedules.paths import REPO_ROOT
+    from schedules import signals
+
+    original = signals._column_cells
+    changed = []
+    def changed_cells(page, header):
+        cells = original(page, header)
+        for cell in cells:
+            if heading in cell.text:
+                changed.append(cell.id)
+        return [replace(cell, text=cell.text.replace(heading, replacement)) for cell in cells]
+    monkeypatch.setattr(signals, '_column_cells', changed_cells)
+    source = signals.inspect_pdf_source((REPO_ROOT / 'data' / capture / 'source.pdf').read_bytes())
+    assert changed
+    assert all(cell_id + ':unknown_program' in source.issues for cell_id in changed)
+
+
+def test_column_boundary_characters_belong_to_exactly_one_weekday():
+    from schedules.signals import _column_cells
+
+    class Page:
+        width, height, page_number = 200, 100, 1
+        def __init__(self, objects):
+            self.objects = objects
+        def filter(self, predicate):
+            return Page([item for item in self.objects if predicate(item)])
+        def crop(self, bounds):
+            return Page([item for item in self.objects if item['x1'] > bounds[0] and item['x0'] < bounds[2]])
+        def extract_text_lines(self, **kwargs):
+            return [{'text': ' '.join(item['text'] for item in self.objects if item['object_type'] == 'char'),
+                     'top': 20, 'bottom': 30}]
+
+    page = Page([
+        {'object_type': 'char', 'text': 'Lap Swim 9am-10am', 'x0': 20, 'x1': 80},
+        {'object_type': 'char', 'text': 'Lap Swim 9am-10am', 'x0': 120, 'x1': 180},
+        {'object_type': 'char', 'text': 'A', 'x0': 94, 'x1': 104},
+        {'object_type': 'char', 'text': 'W', 'x0': 95, 'x1': 107},
+        {'object_type': 'char', 'text': 'B', 'x0': 99, 'x1': 101},
+        {'object_type': 'rect', 'x0': 0, 'x1': 200},
+    ])
+    header = [{'text': 'SUNDAY', 'x0': 40, 'x1': 60, 'bottom': 10},
+              {'text': 'MONDAY', 'x0': 140, 'x1': 160, 'bottom': 10}]
+    cells = _column_cells(page, header)
+    assert [(cell.day, cell.text) for cell in cells] == [
+        ('sunday', 'Lap Swim 9am-10am A'), ('monday', 'Lap Swim 9am-10am W B'),
+    ]
+
+
+def test_garfield_boundary_keeps_monday_water_exercise_out_of_sunday_cell():
+    from collections import Counter
+    from schedules.paths import REPO_ROOT
+    from schedules.signals import inspect_pdf_source
+    from schedules.grounding import source_slots
+
+    source = inspect_pdf_source((REPO_ROOT / 'data/garfield-pool/2026-08-20-7f5c0074e8dd/source.pdf').read_bytes())
+    shared = next(cell for cell in source.cells if cell.id == 'p1-c1-b3')
+    assert shared.text == 'Lap Swim (Main Pool)\nRec/Family Swim\n(Small Pool)\n12:30 pm-2:00 pm'
+    assert any(cell.day == 'monday' and 'Water Exercise-Instructor Led' in cell.text for cell in source.cells)
+    slots = source_slots(source)
+    assert Counter(slot.type for slot in slots) == {'lap_swim': 15, 'family_swim': 14, 'senior_swim': 4}
+    assert [(slot.type, slot.pool) for slot in slots if slot.cell.id == shared.id] == [
+        ('family_swim', 'small'), ('lap_swim', 'main'),
+    ]

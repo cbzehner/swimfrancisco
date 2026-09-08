@@ -1732,3 +1732,113 @@ enabling automation again. Do not reset main or erase accounting to recover.
 
 Semantic XLSX fingerprinting remains separate work. This workflow uses existing
 source-byte identity and does not introduce semantic identity or canonicalization.
+
+## Hosted direct-source access investigation
+
+The follow-up inspection of [run 34191084886](https://github.com/cbzehner/swimfrancisco/actions/runs/34191084886)
+used its saved `extraction-report-direct.md` and bounded read-only requests.
+JCCSF and all four YMCA location pages returned hosted HTTP 403 with
+`server=cloudflare` and `cf-mitigated=challenge`. SFSU returned hosted HTTP 403
+with `server=Pantheon`. These are access failures, not evidence that their
+schedules are absent. All six exact URLs returned local HTTP 200 using the
+production httpx client and identifying schedule-bot User-Agent. Local success
+is not hosted access proof. No challenge bypass, provider call, or publication
+change formed part of this investigation.
+
+The [official YMCA aquatics page](https://www.ymcasf.org/aquatics/)
+embeds `https://embed.upace.app/equipment/103/schedule?facility_id=all&equipment_type_id=13`.
+The public embed loaded locally without login and requested the public GET
+endpoint `https://upace.app/api/equipment/schedules/unauth`. Its observed query
+used `facility_id=`, `equipment_type_id=13`, `university_id=103`,
+`start_date=2026-09-06`, `end_date=2026-09-12`,
+`exclude_if_closed_or_cancelled=true`, and `exclude_past_classes=true`.
+The screen displayed September 7–13, 2026. The date offset and filtering require
+explanation before these rows can establish a complete dated schedule.
+
+The returned all-location schedule included Chinatown (`gym_id=733`, room
+`Pool`) and Embarcadero (`gym_id=732`, rooms `Pool` and `Activity Pool`). It
+contained four Chinatown Lap Swim slots and three Pool Closed slots, plus six
+Embarcadero Lap Swim and six Rec Swim slots. Embarcadero also had a separate
+hot-tub closure. Stonestown and Letterman/Presidio had no returned schedule
+rows. Absence must not become a closed-pool assertion. Individual slots exposed
+weekday/time values rather than explicit occurrence dates. A cutover therefore
+needs confirmed coverage for all four facilities, complete cancellation and
+closure semantics, pool identity, and the exact timezone/date-window contract.
+The existing access-hours parsers and manual publication policy remain in place.
+
+[JCCSF's official aquatics page](https://www.jccsf.org/fitness/aquatics/) now
+links a [first-party seven-page pool PDF](https://www.jccsf.org/wp-content/uploads/2026/08/260814_AQU_PoolSchedules-Aug-Oct_v2dm.pdf),
+not the historical SharePoint source described in the registry note. The PDF
+returned local HTTP 200 and has SHA-256
+`39d3939ee434f0a3db93cb7d0de04a286a8f774bca881e17073c565c06b9e92e`.
+It matches the previously rendered inspection copy and prints “Updated 8/14/26”.
+The filename's August–October wording is not a printed effective-date window.
+The HTML and Monday PDF page agree on the changed 13:30 family-swim reopening.
+The HTML also contains third-Sunday early closing and Swim School closures;
+those notices must retain their own scope. No hosted PDF fetch or complete
+seven-page extraction acceptance is claimed.
+
+[SFSU's current aquatics URL](https://campusrec.sfsu.edu/Aquatics) remains
+locally valid. Its linked `/aquatic` alternative returned local HTTP 404, so it
+is not a replacement. The current page uses Monday–Thursday and Friday–Saturday
+natatorium-hours groups, which the older parser rejects. These are pool access
+hours, not proof of lap-lane availability. No verified supported alternate feed
+was found.
+
+Next access decisions require operator-supported bot access or an explicitly
+supported complete schedule feed. For YMCA, confirm whether the public embed
+covers Stonestown and Letterman, how to include cancelled/closed occurrences,
+and which timezone and inclusive dates define the requested week. For JCCSF,
+confirm an accessible authoritative PDF link and effective-date policy. For
+SFSU, confirm permitted hosted access or an official published equivalent.
+These are questions to resolve; no external messages were sent. Do not replace
+these holds with client impersonation, proxies, or inferred hours.
+
+## Source-supported city hold resolution
+
+The approved follow-up resolves only facts established by frozen original PDFs.
+Coffman's August 18–December 12 schedule lists August 27, September 24, and
+October 22 training exclusions. Its only omitted fourth Thursday is November 26,
+which a separate notice explicitly closes for Thanksgiving. Sava's current
+August 29–December 12 schedule has the same holiday-covered omission. The
+verifier preserves the listed training dates and the separate holiday closure;
+it does not create a training event on Thanksgiving. Only an independent,
+explicit full-day facility notice can justify such an omission. Pool-specific,
+partial-day, conditional, reopening, and circular recurrence evidence cannot.
+
+Sava's “morning of December 22” notice explicitly gives 09:00–11:00. Those literal
+dates and times remain source evidence; the schedule still ends December 12.
+Balboa's December 12 in-service notice gives no duration and remains held.
+Sava's fall Thursday Senior/Therapy cell prints 10:00 a.m.–12:00 a.m.; this
+unsupported session duration holds the current document before paid extraction.
+Do not silently correct midnight to noon. The expired Sava interim PDF also
+remains held for unclear recurrence and duplicate source sessions. These sources
+cannot establish replacement hours without clarification.
+
+Garfield explicitly assigns Main Pool to lap swim and Small Pool to family swim
+within shared-time cells. Each program retains its own allocation. Column
+character ownership prevents a clipped neighboring glyph from becoming another
+weekday's text. Unknown allocation wording must still hold the source. The
+Wednesday Rec/Family Swim School Groups entry is a school booking. MLK's exact
+Bayview Safety Swim & Splash program is a registered youth lesson, as confirmed
+by its [official program page](https://www.sfrecpark.org/1613/Bayview-Safety-Swim-Splash).
+Both remain in original source evidence and do not become public drop-in sessions;
+changed or combined program names must pass the independent inventory anew.
+
+Rossi prints both clocks in `2:00pm–3:30`; only the ending suffix is absent. The
+parser accepts an unlabeled ending clock only when an explicit PM start and
+same-day ordering establish a later afternoon end. It does not supply missing
+clock values or resolve ambiguous morning, overnight, or fully unlabeled ranges.
+
+The shared verifier and prompt changes invalidate component extraction caches
+through the existing full configuration identity. Frozen-source tests and mocked
+responses precede any hosted API validation. Each hosted run retains the $1
+reservation and the unchanged $5 monthly durable ledger; no benchmark allowance
+or local paid extraction applies. Non-city publication authority is unchanged.
+
+Local validation passed `just check`: 1,226 Python tests (55 skips), 197
+JavaScript tests, 35 browser tests, localization, Worker types, and build. The
+final unsupported-duration guard then passed 264 focused source, grounding, and
+extraction-contract tests. These checks made no model calls. Automation was
+paused for the controlled rollout; hosted validation and live verification must
+succeed before weekly operation resumes.

@@ -31,7 +31,11 @@ def printed_time_range(start: str, end: str) -> tuple[str, str]:
     first, first_explicit = clock(start)
     last, last_explicit = clock(end)
     if not last_explicit:
-        raise ValueError("time range has no explicit end meridiem")
+        afternoon_start = first_explicit and bool(re.search(r"p\.?m\.?\s*$", start, re.IGNORECASE))
+        afternoon_end = last % 720 + 720
+        if not afternoon_start or not 1 <= last // 60 <= 12 or afternoon_end <= first:
+            raise ValueError("time range has no explicit end meridiem")
+        last = afternoon_end
     if not first_explicit:
         candidates = [first % 720, first % 720 + 720]
         candidates = [value for value in candidates if 0 < (last or 1440) - value <= 720]

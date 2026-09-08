@@ -88,13 +88,18 @@ def test_mission_holdout_matches_frozen_visual_transcription():
     assert len(reference["expected"]["closures"]) == 5
 
 
-def test_coffman_ambiguous_closure_block_is_held_before_model_call():
+def test_coffman_list_omits_only_independently_closed_thanksgiving():
+    from dataclasses import replace
+    from schedules.grounding import source_excluded_dates
     from schedules.providers.openai_provider import source_request
 
     source = inspect_pdf_source((REPO_ROOT / "data/coffman-pool/2026-08-20-0345cb25881b/source.pdf").read_bytes())
     assert not source.issues
-    with pytest.raises(ValueError, match="conflicting_session_recurrence"):
-        source_request(source, "extract", {})
+    assert list(source_excluded_dates(source).values()) == [["2026-08-27", "2026-09-24", "2026-10-22"]]
+    source_request(source, "extract", {})
+    without_holiday = replace(source, notices=tuple(notice for notice in source.notices if "Thanksgiving" not in notice.text))
+    with pytest.raises(ValueError, match="conflicting_recurring_closure_dates"):
+        source_excluded_dates(without_holiday)
 
 
 @pytest.mark.parametrize("reference_id", ["north-beach-expired", "garfield-maintenance"])
@@ -186,12 +191,15 @@ def test_unclear_notice_is_never_silently_accepted(text):
     ("5:30", "7 PM", ("17:30", "19:00")),
     ("11pm", "midnight", ("23:00", "23:59")),
     ("14:00", "16:00", ("14:00", "16:00")),
+    ("2:00pm", "3:30", ("14:00", "15:30")),
+    ("12:00 p.m.", "1:15", ("12:00", "13:15")),
 ])
 def test_printed_ranges_resolve_shared_meridiems(start, end, expected):
     assert printed_time_range(start, end) == expected
 
 
-@pytest.mark.parametrize("start,end", [("7", "8"), ("25:00", "3pm"), ("9:70am", "11am"), ("4pm", "3pm")])
+@pytest.mark.parametrize("start,end", [("7", "8"), ("25:00", "3pm"), ("9:70am", "11am"), ("4pm", "3pm"),
+    ("11am", "1"), ("11pm", "1"), ("2pm", "2"), ("2pm", "0:30"), ("14:00", "3:30")])
 def test_ambiguous_or_invalid_printed_ranges_are_held(start, end):
     with pytest.raises(ValueError):
         printed_time_range(start, end)
@@ -310,3 +318,176 @@ def test_north_beach_printed_maintenance_spelling_has_same_reason_code(capture):
     assert closure["reason_code"] == "maintenance"
     spelling = "MAINTENANCE" if capture.endswith("6c2b2e77fb23") else "MAINTENCE"
     assert spelling in closure["source_notices"][0]["text"].upper()
+
+
+@pytest.mark.parametrize("support", [
+    "Pool will be closed November 26 for Thanksgiving",
+    "Pool will be closed November 23-29 for maintenance",
+])
+def test_recurring_notice_uses_explicit_list_when_omission_is_fully_closed(support):
+    from schedules.grounding import source_closure_inventory
+
+    source = _notice_source("Pool will be closed every 4th Thursday from 12pm-2pm for training (8/27, 9/24, 10/22)")
+    source = PdfSource(source.text, (), (), 1, source.notices + (SourceNotice("independent", support, True),))
+    inventory = source_closure_inventory(source)
+    training = [row for row in inventory if row["reason_code"] == "staff_training"]
+    assert [row["start"] for row in training] == ["2026-08-27", "2026-09-24", "2026-10-22"]
+    assert all(row["source_notices"][0]["id"] == "test-notice" for row in training)
+
+
+@pytest.mark.parametrize("damage", ["missing", "partial", "pool_specific", "recurring", "uncertain", "wrong_day", "extra", "duplicate"])
+def test_recurring_notice_cannot_borrow_inadequate_or_conflicting_evidence(damage):
+    from schedules.grounding import source_closure_inventory
+
+    text = "Pool will be closed every 4th Thursday from 12pm-2pm for training (8/27, 9/24, 10/22)"
+    if damage == "wrong_day": text = text.replace("9/24", "9/25")
+    if damage == "extra": text = text.replace("10/22", "10/22, 12/24")
+    if damage == "duplicate": text = text.replace("9/24", "9/24, 9/24")
+    notice = SourceNotice("independent", "Pool will be closed November 26 for Thanksgiving", True)
+    if damage == "partial": notice = SourceNotice("independent", "Pool will be closed November 26 from 12pm-2pm for Thanksgiving", True)
+    if damage == "pool_specific": notice = SourceNotice("independent", notice.text, True, physical_pool="cool")
+    if damage == "recurring": notice = SourceNotice("independent", "Pool will be closed every 4th Thursday from 12pm-2pm", True)
+    if damage == "uncertain": notice = SourceNotice("independent", "Pool may be closed November 26", True)
+    source = _notice_source(text)
+    notices = source.notices if damage == "missing" else source.notices + (notice,)
+    with pytest.raises(ValueError):
+        source_closure_inventory(PdfSource(source.text, (), (), 1, notices))
+
+
+def test_sava_fall_preserves_literal_outside_window_training_without_extension():
+    from schedules.grounding import source_closure_inventory, source_window
+
+    source = inspect_pdf_source((REPO_ROOT / "data/sava-pool/2026-08-20-946a112b3f43/source.pdf").read_bytes())
+    inventory = source_closure_inventory(source)
+    training = [row for row in inventory if row["reason_code"] == "staff_training"]
+    assert {(row["start"], row["start_time"], row["end_time"]) for row in training} == {
+        ("2026-12-22", "09:00", "11:00"), ("2026-09-24", "12:00", "14:00"), ("2026-10-22", "12:00", "14:00")}
+    assert tuple(day.isoformat() for day in source_window(source)) == ("2026-08-29", "2026-12-12")
+    assert any("December 22" in item["text"] for row in training for item in row["source_notices"])
+
+
+@pytest.mark.parametrize("text", [
+    "Pool will be closed the morning of September 7",
+    "Pool will be closed the morning of September 7 from 9pm-11pm",
+    "Pool will be closed the morning of September 7 from 11am-1pm",
+])
+def test_morning_without_matching_precise_morning_clock_remains_held(text):
+    from schedules.grounding import source_closure_inventory
+
+    with pytest.raises(ValueError):
+        source_closure_inventory(_notice_source(text))
+
+
+def test_expired_sava_duplicate_notice_remains_held():
+    from schedules.grounding import source_closure_inventory, source_window
+
+    source = inspect_pdf_source((REPO_ROOT / "data/sava-pool/2026-09-01-4d9a6f5e805d/source.pdf").read_bytes())
+    assert tuple(day.isoformat() for day in source_window(source)) == ("2026-08-18", "2026-08-28")
+    with pytest.raises(ValueError):
+        source_closure_inventory(source)
+
+
+def test_garfield_shared_time_cells_preserve_distinct_program_allocations():
+    from collections import Counter
+    from schedules.grounding import source_slots
+
+    source = inspect_pdf_source((REPO_ROOT / "data/garfield-pool/2026-08-20-7f5c0074e8dd/source.pdf").read_bytes())
+    slots = source_slots(source)
+    assert Counter(slot.type for slot in slots) == {"lap_swim": 15, "family_swim": 14, "senior_swim": 4}
+    sunday = [slot for slot in slots if slot.cell.day == "sunday" and slot.start == "12:30"]
+    assert {(slot.type, slot.pool, slot.end) for slot in sunday} == {("lap_swim", "main", "14:00"), ("family_swim", "small", "14:00")}
+    assert all("\nW\n" not in slot.cell.text for slot in sunday)
+
+
+@pytest.mark.parametrize("text", [
+    "Lap Swim (Main Pool) (Small Pool) Rec/Family Swim 1pm-2pm",
+    "(Main Pool) Lap Swim Rec/Family Swim (Small Pool) 1pm-2pm",
+    "Lap Swim (Main Pool) Lap Swim (Small Pool) 1pm-2pm",
+    "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) (Therapy Pool) 1pm-2pm",
+])
+def test_multi_program_allocations_require_unique_attached_labels(text):
+    from schedules.signals import SourceCell
+    from schedules.grounding import source_slots
+
+    cell = SourceCell("test", 1, "thursday", text, (0, 0, 100, 100))
+    with pytest.raises(ValueError, match="ambiguous_pool_allocation"):
+        source_slots(PdfSource("", (cell,), (), 1, ()))
+
+
+@pytest.mark.parametrize("damage", ["missing", "swapped", "duplicate", "alternate"])
+def test_shared_program_allocations_reject_missing_swapped_or_conditional_sessions(damage):
+    from schedules.signals import SourceCell
+
+    text = "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 12:30pm-2pm"
+    cell = SourceCell("cell", 1, "sunday", text, (0, 0, 100, 100))
+    source = PdfSource("", (cell,), (), 1, ())
+    sessions = [
+        {"day": "sunday", "type": "lap_swim", "pool": "main", "start": "12:30", "end": "14:00"},
+        {"day": "sunday", "type": "family_swim", "pool": "small", "start": "12:30", "end": "14:00"},
+    ]
+    assert source_coverage(source, {"sessions": sessions})["ok"]
+    if damage == "missing": sessions.pop()
+    if damage == "swapped": sessions[0]["pool"], sessions[1]["pool"] = "small", "main"
+    if damage == "duplicate": sessions.append(dict(sessions[0]))
+    if damage == "alternate":
+        from dataclasses import replace
+        source = replace(source, cells=(replace(cell, text=text.replace("Rec/Family", "or Rec/Family")),))
+    assert not source_coverage(source, {"sessions": sessions})["ok"]
+
+
+@pytest.mark.parametrize("support", [
+    "Lap Pool will be closed November 26 for Thanksgiving",
+    "Deep Pool will be closed November 26 for Thanksgiving",
+    "Main Pool will be closed November 26 for Thanksgiving",
+    "Pool will be closed November 26; reopen at 10am for Thanksgiving",
+    "Pool will be closed November 26; reopen November 27",
+    "Pool will be closed November 26 if staff training proceeds",
+])
+def test_recurrence_support_requires_explicit_unconditional_whole_facility_notice(support):
+    from schedules.grounding import source_closure_inventory
+
+    source = _notice_source("Pool will be closed every 4th Thursday from 12pm-2pm for training (8/27, 9/24, 10/22)")
+    source = PdfSource(source.text, (), (), 1, source.notices + (SourceNotice("independent", support, True),))
+    with pytest.raises(ValueError, match="conflicting_recurring_closure_dates"):
+        source_closure_inventory(source)
+
+
+@pytest.mark.parametrize("phrase", ["not in", "reserved for lessons", "only", "W", "or"])
+def test_shared_allocation_does_not_ignore_intervening_qualifiers(phrase):
+    from schedules.signals import SourceCell
+    from schedules.grounding import source_slots
+
+    cell = SourceCell("cell", 1, "sunday", f"Lap Swim {phrase} (Main Pool) Rec/Family Swim (Small Pool) 12:30pm-2pm", (0, 0, 100, 100))
+    with pytest.raises(ValueError, match="ambiguous_pool_allocation"):
+        source_slots(PdfSource("", (cell,), (), 1, ()))
+
+
+@pytest.mark.parametrize("clock,allowed", [("10am-midnight", False), ("10am-12am", False), ("11pm-midnight", True), ("10am-10pm", True)])
+def test_source_drop_in_session_duration_is_bounded_without_rewriting_midnight(clock, allowed):
+    from schedules.signals import SourceCell
+    from schedules.grounding import source_slots
+
+    source = PdfSource("", (SourceCell("cell", 1, "thursday", "Lap Swim " + clock, (0, 0, 100, 100)),), (), 1, ())
+    if allowed:
+        assert len(source_slots(source)) == 1
+    else:
+        with pytest.raises(ValueError, match="unsupported_session_duration"):
+            source_slots(source)
+
+
+def test_sava_printed_daytime_to_midnight_session_holds_before_paid_call(tmp_path, monkeypatch):
+    from schedules.paths import PROMPT_PATH
+    from schedules.schema import EXTRACTION_SCHEMA
+    from schedules.providers import openai_provider
+
+    monkeypatch.setenv("OPENAI_API_KEY", "unit-test-not-a-key")
+    ledger = tmp_path / "budget.json"
+    monkeypatch.setenv("SCHEDULES_API_BUDGET_FILE", str(ledger))
+    monkeypatch.setenv("SCHEDULES_API_BUDGET_USD", "1")
+    def unexpected_call(*args, **kwargs):
+        pytest.fail("Ambiguous Sava midnight session reached the paid API")
+    monkeypatch.setattr(openai_provider, "budgeted_call", unexpected_call)
+    original = (REPO_ROOT / "data/sava-pool/2026-08-20-946a112b3f43/source.pdf").read_bytes()
+    with pytest.raises(ValueError, match="unsupported_session_duration"):
+        openai_provider.extract(original, PROMPT_PATH.read_text(), EXTRACTION_SCHEMA)
+    assert not ledger.exists()

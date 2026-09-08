@@ -76,6 +76,26 @@ validation before restoring weekly operation. Keep the durable $5 monthly/$1
 run budget, existing model, stale-main checks, publication allowlist, non-force
 main promotion, and exact deployed-commit browser verification.
 
+### Source-supported city hold resolution (approved September 7, 2026)
+
+Resolve only facts established by the original sources: program-specific pool
+labels within a shared-time cell; exact named registered lessons and school-group
+bookings; an explicit afternoon start with an unlabeled ending clock that can
+only fall later in the same afternoon; and recurrence lists whose omitted dates
+are independently covered by explicit full-day facility closures. Preserve the
+printed date list without inventing training sessions on a holiday. Partial-day,
+pool-specific, circular, missing, or contradictory evidence cannot resolve a
+recurrence conflict. A morning qualifier requires an explicit associated morning
+time range; retain literal out-of-window dates without extending the schedule.
+
+Keep genuinely ambiguous notices and malformed sources held. Drop-in source
+sessions longer than twelve hours remain unsupported; never correct a printed
+midnight to noon. Investigate hosted
+403s through operator-linked alternatives and supported public access only;
+access success does not authorize publication or prove source completeness.
+Other non-city publication remains manual. Preserve the existing model, budget,
+ledger, independent verification, atomic publication, CI and deployment gates.
+
 ### Terms
 
 - **Source facts:** what an official document explicitly states, including its

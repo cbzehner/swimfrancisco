@@ -5,10 +5,12 @@ Sessions:
 - family_swim: family, recreation, rec, or rec/family swim.
 - senior_swim: senior swim, senior lap swim, senior/therapy, or senior access swim.
 - Ignore lessons, exercise/aerobics, self-guided exercise, school bookings, and private teams/clubs when no allowed program shares their cell. A team or lesson with "lap", "family", or "senior" in its name is not a drop-in session.
+- Bayview Safety Swim & Splash is a registered lesson, and Rec/Family Swim School Groups is a school booking; neither is a drop-in session.
 - A shared cell such as SENIOR/SELF GUIDED EXERCISE, SENIOR/SFUSD, or LAP SWIM / WATER EXERCISE still contains the allowed program. Emit each allowed type, with its own printed time range. Apply a program-specific end time such as "Lap until 4pm" to that program only.
 - Preserve every distinct day, program, time, and pool allocation. Never duplicate a session. Never copy times from an adjacent cell or substitute the outer time range for a program's shorter range.
 - Use 24-hour HH:MM. Use 23:59 for an end at midnight.
 - Copy the complete printed pool allocation to pool_label_raw. Preserve qualifiers, combined labels, and short codes verbatim. Do not lowercase, expand codes, or remove words. Use null when there is no allocation or only a numeric lane count.
+- When a shared cell explicitly attaches different pool labels to different programs, retain each program with its own label and the shared printed time.
 - A pool allocation identifies a physical pool, section, or printed pool code. A program name followed by a lane count is not a pool allocation. Do not copy program names or footnote marks into pool_label_raw. When shared programs have only numeric lane counts, use null for each program. Retain a lane count only when the printed allocation combines it with a named physical section, such as "4 & shallow".
 - Copy evidence verbatim from the session's visible text; join wrapped lines with one space. Put a session-specific caveat in notes. Use the rendered page when extracted text contains overlapping or broken characters.
 
@@ -19,4 +21,5 @@ Dates and closures:
 - Include explicit holiday, maintenance, seasonal, or training closures. A bare mention of training or an adjacent private booking is not evidence that the facility closes.
 - Use inclusive ISO dates. Omit time fields for an all-day closure. For an explicitly timed closure, include both start_time and end_time on a single-day entry; never turn it into an all-day closure.
 - Expand an explicit recurring closure to its dates within the printed schedule window. Preserve any stated time range. Do not invent occurrences outside that window.
+- When a recurrence also lists specific dates, retain those listed dates if every omitted in-window occurrence is independently covered by an explicit full-day facility closure. Keep that separate closure; do not invent an additional training event on the omitted dates. Apply the same rule to session excluded_dates. Any other disagreement is unresolved.
 - Return an empty closures array when the document lists no facility closures. Do not invent missing programs, dates, labels, or closure reasons.

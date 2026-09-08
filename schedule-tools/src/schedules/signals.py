@@ -62,7 +62,24 @@ def north_beach_pool_identity(text: str) -> str | None:
     return identities[0].lower() if len(identities) == 1 else None
 
 
+def _registered_program_prefix(text: str) -> bool:
+    return bool(re.match(r"\s*(?:Bayview\s+Safety\b|Rec/Family\s+Swim\s+School)", text, re.IGNORECASE))
+
+
+def _registered_program_cell(text: str) -> bool:
+    ranges = list(TIME_RANGE_RE.finditer(text))
+    if len(ranges) != 1 or text[ranges[0].end():].strip():
+        return False
+    heading = text[:ranges[0].start()].strip()
+    return bool(re.fullmatch(
+        r"(?:Bayview\s+Safety\s+Swim\s*&\s*Splash(?:\s*\(\d+\))?|"
+        r"Rec/Family\s+Swim\s+School\s+Groups)", heading, re.IGNORECASE,
+    ))
+
+
 def program_types(text: str) -> tuple[str, ...]:
+    if _registered_program_prefix(text):
+        return ()
     value = text.lower()
     for word in ("senior", "family", "recreation", "rec", "lap", "swim"):
         value = re.sub(r"\b" + r"\s*".join(word) + r"\b", word, value)
@@ -103,7 +120,9 @@ def _column_cells(page, header: list[dict]) -> list[SourceCell]:
     for column, word in enumerate(header):
         day = normalize_day_token(word["text"])
         bounds = (boundaries[column], word["bottom"] + 2, boundaries[column + 1], page.height)
-        lines = page.crop(bounds).extract_text_lines(return_chars=False)
+        column_page = page.filter(lambda obj: obj["object_type"] != "char" or
+                                  bounds[0] <= (obj["x0"] + obj["x1"]) / 2 < bounds[2])
+        lines = column_page.crop(bounds).extract_text_lines(return_chars=False)
         blocks: list[list[dict]] = []
         current: list[dict] = []
         for line in lines:
@@ -230,11 +249,14 @@ def inspect_pdf_source(pdf_bytes: bytes) -> PdfSource:
                 issues.append(f"page_{page.page_number}:empty_grid")
             cells.extend(page_cells)
             for cell in page_cells:
+                if _registered_program_prefix(cell.text) and not _registered_program_cell(cell.text):
+                    issues.append(f"{cell.id}:unknown_program")
+                    continue
                 if cell.text.count("(") != cell.text.count(")"):
                     issues.append(f"{cell.id}:unbalanced_text")
                 if any(notice.facility and notice.bounds == cell.bounds for notice in notices):
                     continue
-                if not program_types(cell.text) and not re.search(
+                if not program_types(cell.text) and not _registered_program_cell(cell.text) and not re.search(
                     r"\b(?:lessons?|learn|exercise|aerobics|rentals?|masters?|team|sfusd|piranha|preschool|parent|synchro|hockey)\b",
                     cell.text, re.IGNORECASE,
                 ):
