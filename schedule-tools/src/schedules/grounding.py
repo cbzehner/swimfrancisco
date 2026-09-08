@@ -29,7 +29,7 @@ class SourceSlot:
 
 def _cell_pool(cell: SourceCell, time_match, program_type: str) -> str | None:
     labels = [label.strip() for label in re.findall(r"\(([^()]*)\)", cell.text)]
-    labels = [label for label in labels if not re.fullmatch(r"\d+\s*(?:lanes?)?", label, re.IGNORECASE)
+    labels = [label for label in labels if not re.fullmatch(r"\d+\s*(?:lanes?(?:\s*;\s*may\s+vary)?)?", label, re.IGNORECASE)
               and not re.search(r"\b(?:closed|until)\b|\d+/\d+", label, re.IGNORECASE)]
     tail = cell.text[time_match.end():].strip()
     if re.fullmatch(r"[A-Z](?:/[A-Z])*", tail):

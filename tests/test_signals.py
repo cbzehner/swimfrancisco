@@ -491,3 +491,36 @@ def test_sava_printed_daytime_to_midnight_session_holds_before_paid_call(tmp_pat
     with pytest.raises(ValueError, match="unsupported_session_duration"):
         openai_provider.extract(original, PROMPT_PATH.read_text(), EXTRACTION_SCHEMA)
     assert not ledger.exists()
+
+
+@pytest.mark.parametrize('label,expected_pool', [
+    ('4 lanes; may vary', None),
+    ('4 LANES ; MAY VARY', None),
+    ('4 lanes', None),
+    ('4', None),
+    ('4 & shallow', '4 & shallow'),
+    ('Main Pool; may vary', 'main ; may vary'),
+    ('4 lanes + Small Pool; may vary', '4 lanes + small ; may vary'),
+])
+def test_lane_count_variability_is_not_a_physical_pool_label(label, expected_pool):
+    from schedules.signals import SourceCell
+    from schedules.grounding import source_slots
+
+    text = f'Senior Swim ({label}) 2:00pm-4:00pm'
+    cell = SourceCell('cell', 1, 'tuesday', text, (0, 0, 100, 100))
+    slots = source_slots(PdfSource('', (cell,), (), 1, ()))
+    assert len(slots) == 1
+    assert slots[0].pool == expected_pool
+    assert slots[0].cell.text == text
+
+
+def test_coffman_numeric_variability_keeps_literal_evidence_without_pool_identity():
+    from schedules.grounding import source_slots
+
+    source = inspect_pdf_source((REPO_ROOT / 'data/coffman-pool/2026-08-20-0345cb25881b/source.pdf').read_bytes())
+    slots = source_slots(source)
+    senior = next(slot for slot in slots if slot.cell.day == 'tuesday' and slot.type == 'senior_swim' and slot.start == '14:00')
+    assert senior.end == '16:00'
+    assert senior.pool is None
+    assert '(4 lanes; may vary)' in senior.cell.text
+    assert len(slots) == 21

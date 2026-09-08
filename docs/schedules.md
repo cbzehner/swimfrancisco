@@ -1842,3 +1842,10 @@ final unsupported-duration guard then passed 264 focused source, grounding, and
 extraction-contract tests. These checks made no model calls. Automation was
 paused for the controlled rollout; hosted validation and live verification must
 succeed before weekly operation resumes.
+
+A final prompt/verifier consistency check found Coffman's “4 lanes; may vary”
+count. It has no named pool or section, so its pool label remains null while the
+literal caveat stays in source evidence. Named physical allocations retain their
+qualifiers. The correction passed 259 focused source/extraction tests, including
+the frozen original and seven numeric-versus-named allocation cases, without
+model calls.
