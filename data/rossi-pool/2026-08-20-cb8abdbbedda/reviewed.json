@@ -2,7 +2,7 @@
   "pdf_sha256": "cb8abdbbedda075c85b1a8f1400345efb2d9b022eee6f452bf6b21d4876d80bc",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29804",
   "slug": "rossi-pool",
-  "reviewed_at": "2026-09-07",
+  "reviewed_at": "2026-09-08",
   "attested_by": "ci",
   "payload": {
     "closures": [
@@ -199,7 +199,7 @@
         "day": "tuesday",
         "end": "19:30",
         "evidence": "Lap Swim 6:15pm-7:30pm (3)",
-        "notes": "Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.",
+        "notes": "Printed (3) is not copied to pool_label_raw because it is only numeric.",
         "start": "18:15",
         "type": "lap_swim"
       },
@@ -207,7 +207,7 @@
         "day": "tuesday",
         "end": "19:30",
         "evidence": "Rec/Family Swim 6:15pm-7:30pm (3)",
-        "notes": "Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.",
+        "notes": "Printed (3) is not copied to pool_label_raw because it is only numeric.",
         "start": "18:15",
         "type": "family_swim"
       },
@@ -229,7 +229,7 @@
         "day": "wednesday",
         "end": "15:30",
         "evidence": "Rec/Family Swim 2:00pm-3:30 (3)",
-        "notes": "Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.",
+        "notes": "End meridiem is not printed; normalized as PM from the printed afternoon start. Printed (3) is not copied to pool_label_raw because it is only numeric.",
         "start": "14:00",
         "type": "family_swim"
       },
@@ -237,7 +237,7 @@
         "day": "wednesday",
         "end": "15:30",
         "evidence": "Lap Swim 2:00pm-3:30pm (3)",
-        "notes": "Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.",
+        "notes": "Printed (3) is not copied to pool_label_raw because it is only numeric.",
         "start": "14:00",
         "type": "lap_swim"
       },
@@ -266,7 +266,7 @@
         "day": "thursday",
         "end": "19:30",
         "evidence": "Lap Swim 6:15pm-7:30pm (3)",
-        "notes": "Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.",
+        "notes": "Printed (3) is not copied to pool_label_raw because it is only numeric.",
         "start": "18:15",
         "type": "lap_swim"
       },
@@ -274,7 +274,7 @@
         "day": "thursday",
         "end": "19:30",
         "evidence": "Rec/Family Swim 6:15pm-7:30pm (3)",
-        "notes": "Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.",
+        "notes": "Printed (3) is not copied to pool_label_raw because it is only numeric.",
         "start": "18:15",
         "type": "family_swim"
       }

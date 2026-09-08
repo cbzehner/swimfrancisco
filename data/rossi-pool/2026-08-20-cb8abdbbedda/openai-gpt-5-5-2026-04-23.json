@@ -1,12 +1,12 @@
 {
-  "cost_estimate": "input_tokens=3894, output_tokens=3113",
+  "cost_estimate": "input_tokens=3971, output_tokens=2721",
   "details": {
     "attempts": [
       {
-        "cost_usd": 0.11286,
-        "elapsed_seconds": 35.831,
+        "cost_usd": 0.101485,
+        "elapsed_seconds": 29.787,
         "http_status": 200,
-        "reserved_microusd": 341415,
+        "reserved_microusd": 343645,
         "status": "completed"
       }
     ],
@@ -16,7 +16,7 @@
         "_time.py": "f1efa6d6ad8330772b2fa08cca374337c238aefa03ebf39edd002f5eecab4f35",
         "artifacts.py": "be675cf6d20a5f1b73092af8ad2ef2b08e54618b19f4565220a009bce4ecee46",
         "grounding.py": "8cbb607e772769fed10b25258b7d8e017b3a6d5c1e4ad0a3a2b1d7a1f8a68fd0",
-        "providers/openai_provider.py": "53033c4960194fff1849dcfc69dd70b40e10e0f1c7522f3a1beba2cfeed4e76b",
+        "providers/openai_provider.py": "249fc978692bc9b4f86d7a5c285dea9e2643e63f0abc63f21f9c4a20d48eae56",
         "schema.py": "b4a7307f43667e00ea7408112b180aed1e48851621022eeb690a6971c87719c6",
         "signals.py": "f29c87c4cd8047a3a10402683135dfa30477d2c899984bad06134cea08fa8391",
         "window_dates.py": "ad6af1472977d18e6ec4df57c0198cb7ebb3f66ca20c0333cd57f008822259b9"
@@ -37,14 +37,14 @@
         "service_tier": "default",
         "source": "https://developers.openai.com/api/docs/models/gpt-5.5"
       },
-      "prompt_sha256": "e087a2b845f7dad1eefdbe20bc6ac71076abfb9b58cd9c472f3d9d729e048acd",
+      "prompt_sha256": "fc1ba7fba37a6326844c9b48b2b31530dab6e4f6059024897a32aa478a43802b",
       "reasoning": "medium",
       "render_dpi": 150,
       "schema_sha256": "d2839c7fa22768d3b11935bd0e7103d9424f7d0d93813349e0c63e91e7ed6629"
     },
-    "final_response": "{\"effective_start\":\"2026-08-16\",\"schedule_basis\":\"swim_schedule\",\"effective_end\":\"2026-12-10\",\"sessions\":[{\"day\":\"sunday\",\"type\":\"lap_swim\",\"start\":\"07:30\",\"end\":\"08:30\",\"evidence\":\"Lap Swim 7:30am-8:30am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"sunday\",\"type\":\"family_swim\",\"start\":\"12:30\",\"end\":\"14:00\",\"evidence\":\"Rec/Family Swim 12:30pm-2:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"sunday\",\"type\":\"family_swim\",\"start\":\"14:30\",\"end\":\"15:30\",\"evidence\":\"Rec/Family Swim 2:30pm- 3:30pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"lap_swim\",\"start\":\"07:30\",\"end\":\"09:45\",\"evidence\":\"Lap Swim 7:30am-9:45am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"senior_swim\",\"start\":\"12:00\",\"end\":\"13:30\",\"evidence\":\"Senior/Therapy Swim 12:00pm-1:30pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"lap_swim\",\"start\":\"13:45\",\"end\":\"15:45\",\"evidence\":\"Lap Swim 1:45pm-3:45pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"lap_swim\",\"start\":\"18:15\",\"end\":\"19:30\",\"evidence\":\"Lap Swim 6:15pm-7:30pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"07:30\",\"end\":\"09:45\",\"evidence\":\"Lap Swim 7:30am-9:45am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"senior_swim\",\"start\":\"10:15\",\"end\":\"12:00\",\"evidence\":\"Senior/ Therapy Swim 10:15am-12:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"12:30\",\"end\":\"15:45\",\"evidence\":\"Lap Swim 12:30pm-3:45pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"18:15\",\"end\":\"19:30\",\"evidence\":\"Lap Swim 6:15pm-7:30pm (3)\",\"notes\":\"Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"family_swim\",\"start\":\"18:15\",\"end\":\"19:30\",\"evidence\":\"Rec/Family Swim 6:15pm-7:30pm (3)\",\"notes\":\"Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"10:45\",\"evidence\":\"Senior/Therapy Swim 9:00am-10:45am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"13:30\",\"evidence\":\"Lap Swim 11:00am-1:30pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"family_swim\",\"start\":\"14:00\",\"end\":\"15:30\",\"evidence\":\"Rec/Family Swim 2:00pm-3:30 (3)\",\"notes\":\"Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"14:00\",\"end\":\"15:30\",\"evidence\":\"Lap Swim 2:00pm-3:30pm (3)\",\"notes\":\"Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"07:30\",\"end\":\"09:45\",\"evidence\":\"Lap Swim 7:30am-9:45am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"senior_swim\",\"start\":\"10:15\",\"end\":\"12:00\",\"evidence\":\"Senior/ Therapy Swim 10:15am-12:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"12:30\",\"end\":\"15:45\",\"evidence\":\"Lap Swim 12:30pm-3:45pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"18:15\",\"end\":\"19:30\",\"evidence\":\"Lap Swim 6:15pm-7:30pm (3)\",\"notes\":\"Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"family_swim\",\"start\":\"18:15\",\"end\":\"19:30\",\"evidence\":\"Rec/Family Swim 6:15pm-7:30pm (3)\",\"notes\":\"Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.\",\"pool_label_raw\":null,\"excluded_dates\":null}],\"access_hours\":null,\"access_exceptions\":null,\"closures\":[{\"start\":\"2026-09-07\",\"end\":\"2026-09-07\",\"reason\":\"holiday\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-10-12\",\"end\":\"2026-10-12\",\"reason\":\"holiday\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-11-11\",\"end\":\"2026-11-11\",\"reason\":\"holiday\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-11-26\",\"end\":\"2026-11-26\",\"reason\":\"holiday\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-11-27\",\"end\":\"2026-11-27\",\"reason\":\"holiday\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-08-27\",\"end\":\"2026-08-27\",\"reason\":\"training\",\"start_time\":\"12:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-09-24\",\"end\":\"2026-09-24\",\"reason\":\"training\",\"start_time\":\"12:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-10-22\",\"end\":\"2026-10-22\",\"reason\":\"training\",\"start_time\":\"12:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-11-02\",\"end\":\"2026-11-21\",\"reason\":\"annual maintenance\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null}]}",
+    "final_response": "{\"effective_start\":\"2026-08-16\",\"schedule_basis\":\"swim_schedule\",\"effective_end\":\"2026-12-10\",\"sessions\":[{\"day\":\"sunday\",\"type\":\"lap_swim\",\"start\":\"07:30\",\"end\":\"08:30\",\"evidence\":\"Lap Swim 7:30am-8:30am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"sunday\",\"type\":\"family_swim\",\"start\":\"12:30\",\"end\":\"14:00\",\"evidence\":\"Rec/Family Swim 12:30pm-2:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"sunday\",\"type\":\"family_swim\",\"start\":\"14:30\",\"end\":\"15:30\",\"evidence\":\"Rec/Family Swim 2:30pm- 3:30pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"lap_swim\",\"start\":\"07:30\",\"end\":\"09:45\",\"evidence\":\"Lap Swim 7:30am-9:45am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"senior_swim\",\"start\":\"12:00\",\"end\":\"13:30\",\"evidence\":\"Senior/Therapy Swim 12:00pm-1:30pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"lap_swim\",\"start\":\"13:45\",\"end\":\"15:45\",\"evidence\":\"Lap Swim 1:45pm-3:45pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"lap_swim\",\"start\":\"18:15\",\"end\":\"19:30\",\"evidence\":\"Lap Swim 6:15pm-7:30pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"07:30\",\"end\":\"09:45\",\"evidence\":\"Lap Swim 7:30am-9:45am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"senior_swim\",\"start\":\"10:15\",\"end\":\"12:00\",\"evidence\":\"Senior/ Therapy Swim 10:15am-12:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"12:30\",\"end\":\"15:45\",\"evidence\":\"Lap Swim 12:30pm-3:45pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"18:15\",\"end\":\"19:30\",\"evidence\":\"Lap Swim 6:15pm-7:30pm (3)\",\"notes\":\"Printed (3) is not copied to pool_label_raw because it is only numeric.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"family_swim\",\"start\":\"18:15\",\"end\":\"19:30\",\"evidence\":\"Rec/Family Swim 6:15pm-7:30pm (3)\",\"notes\":\"Printed (3) is not copied to pool_label_raw because it is only numeric.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"10:45\",\"evidence\":\"Senior/Therapy Swim 9:00am-10:45am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"13:30\",\"evidence\":\"Lap Swim 11:00am-1:30pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"family_swim\",\"start\":\"14:00\",\"end\":\"15:30\",\"evidence\":\"Rec/Family Swim 2:00pm-3:30 (3)\",\"notes\":\"End meridiem is not printed; normalized as PM from the printed afternoon start. Printed (3) is not copied to pool_label_raw because it is only numeric.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"14:00\",\"end\":\"15:30\",\"evidence\":\"Lap Swim 2:00pm-3:30pm (3)\",\"notes\":\"Printed (3) is not copied to pool_label_raw because it is only numeric.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"07:30\",\"end\":\"09:45\",\"evidence\":\"Lap Swim 7:30am-9:45am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"senior_swim\",\"start\":\"10:15\",\"end\":\"12:00\",\"evidence\":\"Senior/ Therapy Swim 10:15am-12:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"12:30\",\"end\":\"15:45\",\"evidence\":\"Lap Swim 12:30pm-3:45pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"18:15\",\"end\":\"19:30\",\"evidence\":\"Lap Swim 6:15pm-7:30pm (3)\",\"notes\":\"Printed (3) is not copied to pool_label_raw because it is only numeric.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"family_swim\",\"start\":\"18:15\",\"end\":\"19:30\",\"evidence\":\"Rec/Family Swim 6:15pm-7:30pm (3)\",\"notes\":\"Printed (3) is not copied to pool_label_raw because it is only numeric.\",\"pool_label_raw\":null,\"excluded_dates\":null}],\"access_hours\":null,\"access_exceptions\":null,\"closures\":[{\"start\":\"2026-09-07\",\"end\":\"2026-09-07\",\"reason\":\"holiday\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-10-12\",\"end\":\"2026-10-12\",\"reason\":\"holiday\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-11-11\",\"end\":\"2026-11-11\",\"reason\":\"holiday\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-11-26\",\"end\":\"2026-11-26\",\"reason\":\"holiday\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-11-27\",\"end\":\"2026-11-27\",\"reason\":\"holiday\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-08-27\",\"end\":\"2026-08-27\",\"reason\":\"training\",\"start_time\":\"12:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-09-24\",\"end\":\"2026-09-24\",\"reason\":\"training\",\"start_time\":\"12:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-10-22\",\"end\":\"2026-10-22\",\"reason\":\"training\",\"start_time\":\"12:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-11-02\",\"end\":\"2026-11-21\",\"reason\":\"annual maintenance\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null}]}",
     "image_sha256": {},
-    "request_sha256": "10c301b4863b57e58142796a51ad21aa856a835bef3c037822822056513aba43",
+    "request_sha256": "6854dd60c3b2b789e851ed12f114bbee7c413128b5f32c247dc4f34befa1aa54",
     "response_status": "completed",
     "source_closures": {
       "expected": [
@@ -359,7 +359,7 @@
           "day": "tuesday",
           "end": "19:30",
           "evidence": "Lap Swim 6:15pm-7:30pm (3)",
-          "notes": "Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.",
+          "notes": "Printed (3) is not copied to pool_label_raw because it is only numeric.",
           "pool_label_raw": null,
           "start": "18:15",
           "type": "lap_swim"
@@ -368,7 +368,7 @@
           "day": "tuesday",
           "end": "19:30",
           "evidence": "Rec/Family Swim 6:15pm-7:30pm (3)",
-          "notes": "Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.",
+          "notes": "Printed (3) is not copied to pool_label_raw because it is only numeric.",
           "pool_label_raw": null,
           "start": "18:15",
           "type": "family_swim"
@@ -393,7 +393,7 @@
           "day": "wednesday",
           "end": "15:30",
           "evidence": "Rec/Family Swim 2:00pm-3:30 (3)",
-          "notes": "Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.",
+          "notes": "End meridiem is not printed; normalized as PM from the printed afternoon start. Printed (3) is not copied to pool_label_raw because it is only numeric.",
           "pool_label_raw": null,
           "start": "14:00",
           "type": "family_swim"
@@ -402,7 +402,7 @@
           "day": "wednesday",
           "end": "15:30",
           "evidence": "Lap Swim 2:00pm-3:30pm (3)",
-          "notes": "Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.",
+          "notes": "Printed (3) is not copied to pool_label_raw because it is only numeric.",
           "pool_label_raw": null,
           "start": "14:00",
           "type": "lap_swim"
@@ -435,7 +435,7 @@
           "day": "thursday",
           "end": "19:30",
           "evidence": "Lap Swim 6:15pm-7:30pm (3)",
-          "notes": "Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.",
+          "notes": "Printed (3) is not copied to pool_label_raw because it is only numeric.",
           "pool_label_raw": null,
           "start": "18:15",
           "type": "lap_swim"
@@ -444,7 +444,7 @@
           "day": "thursday",
           "end": "19:30",
           "evidence": "Rec/Family Swim 6:15pm-7:30pm (3)",
-          "notes": "Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.",
+          "notes": "Printed (3) is not copied to pool_label_raw because it is only numeric.",
           "pool_label_raw": null,
           "start": "18:15",
           "type": "family_swim"
@@ -921,7 +921,7 @@
     },
     "visual_pages": []
   },
-  "extracted_at": "2026-09-08T06:57:20.784691+00:00",
+  "extracted_at": "2026-09-08T08:02:12.327902+00:00",
   "grounding": {
     "grounded_count": 21,
     "ratio": 1.0,
@@ -1293,7 +1293,7 @@
         "day": "tuesday",
         "end": "19:30",
         "evidence": "Lap Swim 6:15pm-7:30pm (3)",
-        "notes": "Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.",
+        "notes": "Printed (3) is not copied to pool_label_raw because it is only numeric.",
         "start": "18:15",
         "type": "lap_swim"
       },
@@ -1301,7 +1301,7 @@
         "day": "tuesday",
         "end": "19:30",
         "evidence": "Rec/Family Swim 6:15pm-7:30pm (3)",
-        "notes": "Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.",
+        "notes": "Printed (3) is not copied to pool_label_raw because it is only numeric.",
         "start": "18:15",
         "type": "family_swim"
       },
@@ -1323,7 +1323,7 @@
         "day": "wednesday",
         "end": "15:30",
         "evidence": "Rec/Family Swim 2:00pm-3:30 (3)",
-        "notes": "Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.",
+        "notes": "End meridiem is not printed; normalized as PM from the printed afternoon start. Printed (3) is not copied to pool_label_raw because it is only numeric.",
         "start": "14:00",
         "type": "family_swim"
       },
@@ -1331,7 +1331,7 @@
         "day": "wednesday",
         "end": "15:30",
         "evidence": "Lap Swim 2:00pm-3:30pm (3)",
-        "notes": "Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.",
+        "notes": "Printed (3) is not copied to pool_label_raw because it is only numeric.",
         "start": "14:00",
         "type": "lap_swim"
       },
@@ -1360,7 +1360,7 @@
         "day": "thursday",
         "end": "19:30",
         "evidence": "Lap Swim 6:15pm-7:30pm (3)",
-        "notes": "Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.",
+        "notes": "Printed (3) is not copied to pool_label_raw because it is only numeric.",
         "start": "18:15",
         "type": "lap_swim"
       },
@@ -1368,27 +1368,27 @@
         "day": "thursday",
         "end": "19:30",
         "evidence": "Rec/Family Swim 6:15pm-7:30pm (3)",
-        "notes": "Printed \u201c(3)\u201d is a numeric lane count only, so pool_label_raw is null.",
+        "notes": "Printed (3) is not copied to pool_label_raw because it is only numeric.",
         "start": "18:15",
         "type": "family_swim"
       }
     ]
   },
   "pdf_sha256": "cb8abdbbedda075c85b1a8f1400345efb2d9b022eee6f452bf6b21d4876d80bc",
-  "prompt_sha256": "e087a2b845f7dad1eefdbe20bc6ac71076abfb9b58cd9c472f3d9d729e048acd",
+  "prompt_sha256": "fc1ba7fba37a6326844c9b48b2b31530dab6e4f6059024897a32aa478a43802b",
   "provider": "openai",
   "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29804",
   "usage": {
-    "input_tokens": 3894,
+    "input_tokens": 3971,
     "input_tokens_details": {
       "cache_write_tokens": 0,
       "cached_tokens": 0
     },
-    "output_tokens": 3113,
+    "output_tokens": 2721,
     "output_tokens_details": {
-      "reasoning_tokens": 1431
+      "reasoning_tokens": 1034
     },
-    "total_tokens": 7007
+    "total_tokens": 6692
   }
 }
