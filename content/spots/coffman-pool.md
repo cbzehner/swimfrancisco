@@ -294,7 +294,7 @@ reason_code = "independence_day"
 effective_start = "2026-08-18"
 schedule_basis = "swim_schedule"
 effective_end = "2026-12-12"
-last_verified_at = "2026-09-07"
+last_verified_at = "2026-09-08"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -319,21 +319,21 @@ day = "tuesday"
 type = "family_swim"
 start = "14:00"
 end = "16:00"
-notes = "Printed lane count only; no pool allocation extracted."
+notes = "Printed lane count is numeric only; no pool allocation label."
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "senior_swim"
 start = "14:00"
 end = "16:00"
-notes = "Printed lane count only; no pool allocation extracted."
+notes = "Printed lane count is numeric only; no pool allocation label."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "senior_swim"
 start = "09:00"
 end = "10:30"
-notes = "Shared cell with Self-Guided Exercise; only the senior swim program was extracted."
+notes = "Shared cell also lists Self-Guided Exercise."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -346,21 +346,21 @@ day = "wednesday"
 type = "family_swim"
 start = "13:30"
 end = "14:30"
-notes = "Shared cell includes SFUSD; only the rec swim program was extracted."
+notes = "Shared cell also lists Sfusd."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "family_swim"
 start = "18:00"
 end = "19:00"
-notes = "Printed lane count only; no pool allocation extracted."
+notes = "Printed lane count is numeric only; no pool allocation label."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "18:00"
 end = "19:00"
-notes = "Printed lane count only; no pool allocation extracted."
+notes = "Printed lane count is numeric only; no pool allocation label."
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -379,7 +379,7 @@ day = "thursday"
 type = "lap_swim"
 start = "11:30"
 end = "13:00"
-notes = "This session cell is marked closed on listed training dates."
+notes = "Session cell lists closure dates for this session."
 excluded_dates = [ "2026-08-27", "2026-09-24", "2026-10-22" ]
 
 [[extra.schedules.sessions]]
@@ -393,7 +393,7 @@ day = "friday"
 type = "senior_swim"
 start = "09:00"
 end = "10:30"
-notes = "Shared cell with Self-Guided Exercise; only the senior swim program was extracted."
+notes = "Shared cell also lists Self-Guided Exercise."
 
 [[extra.schedules.sessions]]
 day = "friday"
@@ -418,6 +418,7 @@ day = "saturday"
 type = "family_swim"
 start = "13:00"
 end = "14:00"
+notes = "Shared cell also lists Parent and Tots."
 
 [[extra.schedules.sessions]]
 day = "saturday"

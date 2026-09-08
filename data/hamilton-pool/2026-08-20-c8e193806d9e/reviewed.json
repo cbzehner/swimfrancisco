@@ -2,7 +2,7 @@
   "pdf_sha256": "c8e193806d9e9b7c6240eda5cc3e533ac2bb261007b6f72c48f60ce466db6697",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29800",
   "slug": "hamilton-pool",
-  "reviewed_at": "2026-09-07",
+  "reviewed_at": "2026-09-08",
   "attested_by": "ci",
   "payload": {
     "closures": [
@@ -231,7 +231,7 @@
           "2026-09-24",
           "2026-10-22"
         ],
-        "notes": "Cell is marked CLOSED on 8/27, 9/24, 10/22.",
+        "notes": "Session cell marked closed on the listed dates.",
         "start": "11:00",
         "type": "lap_swim"
       },
@@ -244,7 +244,7 @@
           "2026-09-24",
           "2026-10-22"
         ],
-        "notes": "Cell is marked CLOSED on 8/27, 9/24, 10/22.",
+        "notes": "Session cell marked closed on the listed dates.",
         "start": "13:00",
         "type": "lap_swim"
       },
@@ -257,7 +257,7 @@
           "2026-09-24",
           "2026-10-22"
         ],
-        "notes": "Cell is marked CLOSED on 8/27, 9/24, 10/22.",
+        "notes": "Session cell marked closed on the listed dates.",
         "pool": "2 lanes + small",
         "start": "13:00",
         "type": "family_swim"

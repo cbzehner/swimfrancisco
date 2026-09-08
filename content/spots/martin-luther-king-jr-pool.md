@@ -417,7 +417,7 @@ reason_code = "independence_day"
 effective_start = "2026-08-18"
 schedule_basis = "swim_schedule"
 effective_end = "2026-09-26"
-last_verified_at = "2026-09-07"
+last_verified_at = "2026-09-08"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -520,7 +520,7 @@ type = "family_swim"
 start = "12:30"
 end = "15:30"
 pool = "shallow"
-notes = "Closed on 8/27 & 9/24."
+notes = "Session cell marked CLOSED on 8/27 & 9/24."
 excluded_dates = [ "2026-08-27", "2026-09-24" ]
 
 [[extra.schedules.sessions]]
@@ -528,7 +528,7 @@ day = "thursday"
 type = "lap_swim"
 start = "12:30"
 end = "15:30"
-notes = "Closed on 8/27 & 9/24."
+notes = "Session cell marked CLOSED on 8/27 & 9/24."
 excluded_dates = [ "2026-08-27", "2026-09-24" ]
 
 [[extra.schedules.sessions]]
@@ -617,7 +617,7 @@ text = "Holiday Closures\nSeptember 7, 2026"
 effective_start = "2026-09-29"
 schedule_basis = "swim_schedule"
 effective_end = "2026-12-12"
-last_verified_at = "2026-09-07"
+last_verified_at = "2026-09-08"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -708,7 +708,7 @@ type = "family_swim"
 start = "12:30"
 end = "15:30"
 pool = "shallow"
-notes = "Closed on 2026-10-22 as printed."
+notes = "CLOSED (10/22)"
 excluded_dates = [ "2026-10-22" ]
 
 [[extra.schedules.sessions]]
@@ -716,7 +716,7 @@ day = "thursday"
 type = "lap_swim"
 start = "12:30"
 end = "15:30"
-notes = "Closed on 2026-10-22 as printed."
+notes = "CLOSED (10/22)"
 excluded_dates = [ "2026-10-22" ]
 
 [[extra.schedules.sessions]]
@@ -772,7 +772,7 @@ end = "17:00"
 [[extra.schedules.closures]]
 start = "2026-10-12"
 end = "2026-10-12"
-reason = "Holiday Closure"
+reason = "Holiday Closures"
 reason_code = "holiday"
 
 [[extra.schedules.closures.source_notices]]
@@ -782,7 +782,7 @@ text = "Holiday Closures\nOctober 12, 2026\nNovember 11, 2026\nNovember 26, 2026
 [[extra.schedules.closures]]
 start = "2026-11-11"
 end = "2026-11-11"
-reason = "Holiday Closure"
+reason = "Holiday Closures"
 reason_code = "holiday"
 
 [[extra.schedules.closures.source_notices]]
@@ -792,7 +792,7 @@ text = "Holiday Closures\nOctober 12, 2026\nNovember 11, 2026\nNovember 26, 2026
 [[extra.schedules.closures]]
 start = "2026-11-26"
 end = "2026-11-26"
-reason = "Holiday Closure"
+reason = "Holiday Closures"
 reason_code = "holiday"
 
 [[extra.schedules.closures.source_notices]]
@@ -802,7 +802,7 @@ text = "Holiday Closures\nOctober 12, 2026\nNovember 11, 2026\nNovember 26, 2026
 [[extra.schedules.closures]]
 start = "2026-11-27"
 end = "2026-11-27"
-reason = "Holiday Closure"
+reason = "Holiday Closures"
 reason_code = "holiday"
 
 [[extra.schedules.closures.source_notices]]
@@ -812,7 +812,7 @@ text = "Holiday Closures\nOctober 12, 2026\nNovember 11, 2026\nNovember 26, 2026
 [[extra.schedules.closures]]
 start = "2026-12-12"
 end = "2026-12-12"
-reason = "Training Closure"
+reason = "Training Closures"
 reason_code = "staff_training"
 
 [[extra.schedules.closures.source_notices]]

@@ -2,13 +2,13 @@
   "pdf_sha256": "2e1c7d942a7a0097ab69390153401cc28f53733be2271122c68d54f6b910dd1f",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29803",
   "slug": "martin-luther-king-jr-pool",
-  "reviewed_at": "2026-09-07",
+  "reviewed_at": "2026-09-08",
   "attested_by": "ci",
   "payload": {
     "closures": [
       {
         "end": "2026-10-12",
-        "reason": "Holiday Closure",
+        "reason": "Holiday Closures",
         "reason_code": "holiday",
         "source_notices": [
           {
@@ -20,7 +20,7 @@
       },
       {
         "end": "2026-11-11",
-        "reason": "Holiday Closure",
+        "reason": "Holiday Closures",
         "reason_code": "holiday",
         "source_notices": [
           {
@@ -32,7 +32,7 @@
       },
       {
         "end": "2026-11-26",
-        "reason": "Holiday Closure",
+        "reason": "Holiday Closures",
         "reason_code": "holiday",
         "source_notices": [
           {
@@ -44,7 +44,7 @@
       },
       {
         "end": "2026-11-27",
-        "reason": "Holiday Closure",
+        "reason": "Holiday Closures",
         "reason_code": "holiday",
         "source_notices": [
           {
@@ -56,7 +56,7 @@
       },
       {
         "end": "2026-12-12",
-        "reason": "Training Closure",
+        "reason": "Training Closures",
         "reason_code": "staff_training",
         "source_notices": [
           {
@@ -174,7 +174,7 @@
         "excluded_dates": [
           "2026-10-22"
         ],
-        "notes": "Closed on 2026-10-22 as printed.",
+        "notes": "CLOSED (10/22)",
         "pool": "shallow",
         "start": "12:30",
         "type": "family_swim"
@@ -186,7 +186,7 @@
         "excluded_dates": [
           "2026-10-22"
         ],
-        "notes": "Closed on 2026-10-22 as printed.",
+        "notes": "CLOSED (10/22)",
         "start": "12:30",
         "type": "lap_swim"
       },

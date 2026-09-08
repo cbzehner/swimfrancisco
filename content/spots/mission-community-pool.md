@@ -320,94 +320,105 @@ reason_code = "independence_day"
 effective_start = "2026-08-18"
 schedule_basis = "swim_schedule"
 effective_end = "2026-10-17"
-last_verified_at = "2026-09-07"
+last_verified_at = "2026-09-08"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "07:30"
 end = "09:00"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "senior_swim"
 start = "09:15"
 end = "11:00"
-notes = "Shared cell with Parent & Tot; numeric lane count only omitted from pool_label_raw."
+notes = "Senior Swim shares the cell with Parent & Tot; numeric lane count is not a pool allocation."
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "11:15"
 end = "13:30"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "14:00"
 end = "15:30"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "family_swim"
 start = "15:45"
 end = "17:15"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "17:45"
 end = "19:00"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "07:30"
 end = "09:00"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "senior_swim"
 start = "09:15"
 end = "11:00"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "11:30"
 end = "13:30"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "family_swim"
 start = "14:30"
 end = "16:30"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "17:00"
 end = "19:00"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "07:30"
 end = "09:00"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "senior_swim"
 start = "09:15"
 end = "11:00"
-notes = "Shared cell with Parent & Tot; numeric lane count only omitted from pool_label_raw."
+notes = "Senior Swim shares the cell with Parent & Tot; numeric lane count is not a pool allocation."
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "11:15"
 end = "13:30"
-notes = "Cell is marked closed every 4th Thursday of the month for training."
+notes = "Session cell states it is closed every 4th Thursday of the month for training."
 excluded_dates = [ "2026-08-27", "2026-09-24" ]
 
 [[extra.schedules.sessions]]
@@ -415,66 +426,77 @@ day = "thursday"
 type = "lap_swim"
 start = "14:00"
 end = "15:30"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "family_swim"
 start = "15:45"
 end = "17:15"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "17:45"
 end = "19:00"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "friday"
 type = "lap_swim"
 start = "07:30"
 end = "09:00"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "friday"
 type = "senior_swim"
 start = "09:15"
 end = "11:00"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "friday"
 type = "lap_swim"
 start = "11:30"
 end = "13:30"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "friday"
 type = "lap_swim"
 start = "14:30"
 end = "16:30"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "friday"
 type = "family_swim"
 start = "17:00"
 end = "19:00"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "saturday"
 type = "lap_swim"
 start = "11:30"
 end = "12:45"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "saturday"
 type = "family_swim"
 start = "14:00"
 end = "15:30"
+notes = "No pool allocation printed."
 
 [[extra.schedules.sessions]]
 day = "saturday"
 type = "lap_swim"
 start = "16:00"
 end = "17:30"
+notes = "No pool allocation printed."
 
 [[extra.schedules.closures]]
 start = "2026-08-22"
