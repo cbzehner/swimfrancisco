@@ -1881,3 +1881,21 @@ The cache/exclusion/evidence follow-up passed `just check`: 1,250 Python tests
 and build. Its pipeline regressions use independent cached-artifact verification
 and mocked paid-provider calls, including failed retries that preserve the prior
 review and malformed-cache cases that never call the provider.
+
+The next accounted runs charged $0.461875
+([34196672255](https://github.com/cbzehner/swimfrancisco/actions/runs/34196672255))
+and $0.716080
+([34197948665](https://github.com/cbzehner/swimfrancisco/actions/runs/34197948665)).
+September's durable ledger settled at $2.916135, with $2.083865 remaining.
+The latter run accepted Hamilton with the clarified prompt. Its retained
+Garfield response contains all 33 source sessions and no false session
+exclusions, but represents the same Thanksgiving notice as November 26–27
+instead of two singleton dates. The strict interval comparison held Garfield.
+
+Grouped all-day closure dates can match independent singleton source entries
+only when they cover exactly the same consecutive dates, physical pool scope,
+reason code, and original notice. Canonical closures retain the independent
+source entries; raw model facts remain unchanged. Gaps, extra dates, partial
+days, duplicate model intervals, and mixed notices still fail. Existing exact
+interval matches retain their behavior. This provider change invalidates caches
+through the full configuration identity; it does not relabel prior responses.

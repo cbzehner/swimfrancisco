@@ -11,6 +11,7 @@ import re
 import subprocess
 import time
 from dataclasses import asdict
+from datetime import date
 from io import BytesIO
 from pathlib import Path
 import tempfile
@@ -426,19 +427,49 @@ def visual_page_numbers(source: PdfSource) -> frozenset[int]:
     return frozenset(cell.page for cell in source.cells if f"{cell.id}:unbalanced_text" in source.issues)
 
 
+def matched_source_closures(closure: dict, inventory: list[dict]) -> list[dict]:
+    fields = ("start", "end", "start_time", "end_time", "physical_pool")
+    exact = [item for item in inventory if all(item.get(field) == closure.get(field) for field in fields)]
+    if len(exact) == 1:
+        return exact
+    if exact or closure.get("start_time") or closure.get("end_time"):
+        raise ValueError("Closure does not match one independently verified source notice")
+    matches = sorted([
+        item for item in inventory
+        if closure["start"] <= item["start"] <= closure["end"]
+        and item.get("physical_pool") == closure.get("physical_pool")
+    ], key=lambda item: item["start"])
+    day_count = (date.fromisoformat(closure["end"]) - date.fromisoformat(closure["start"])).days + 1
+    if (
+        len(matches) < 2 or len(matches) != day_count
+        or len({item["start"] for item in matches}) != day_count
+        or any(
+            item["start"] != item["end"] or item.get("start_time") or item.get("end_time")
+            or item["reason_code"] != matches[0]["reason_code"]
+            or item["source_notices"] != matches[0]["source_notices"]
+            for item in matches
+        )
+    ):
+        raise ValueError("Closure does not match one independently verified source notice")
+    return matches
+
+
 def source_fact_payload(facts: dict, source: PdfSource) -> dict:
     payload = pool_label_payload(facts)
-    inventory = source_closure_inventory(source)
-    fields = ("start", "end", "start_time", "end_time", "physical_pool")
-    remaining = list(inventory)
+    remaining = list(source_closure_inventory(source))
     closures = []
+    identities = set()
     for closure in payload.get("closures", []):
-        matches = [item for item in remaining if all(item.get(field) == closure.get(field) for field in fields)]
-        if len(matches) != 1:
-            raise ValueError("Closure does not match one independently verified source notice")
-        item = matches[0]
-        remaining.remove(item)
-        closures.append(closure | {"reason_code": item["reason_code"], "source_notices": item["source_notices"]})
+        identity = tuple(closure.get(field) for field in ("start", "end", "start_time", "end_time", "physical_pool"))
+        if identity in identities:
+            raise ValueError("Duplicate closure cannot consume independently verified source notices")
+        identities.add(identity)
+        for item in matched_source_closures(closure, remaining):
+            remaining.remove(item)
+            closures.append(closure | {
+                "start": item["start"], "end": item["end"],
+                "reason_code": item["reason_code"], "source_notices": item["source_notices"],
+            })
     if remaining:
         raise ValueError("Extracted closures omit independently verified source notices")
     return payload | {"closures": closures}

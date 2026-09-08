@@ -624,3 +624,74 @@ def test_garfield_boundary_keeps_monday_water_exercise_out_of_sunday_cell():
     assert [(slot.type, slot.pool) for slot in slots if slot.cell.id == shared.id] == [
         ('family_swim', 'small'), ('lap_swim', 'main'),
     ]
+
+
+def test_garfield_grouped_thanksgiving_matches_original_single_dates():
+    import copy
+    from schedules.paths import REPO_ROOT
+
+    source = openai_provider.inspect_pdf_source((REPO_ROOT / 'data/garfield-pool/2026-08-20-7f5c0074e8dd/source.pdf').read_bytes())
+    # Closure facts from accounted response 34197948665, without transport nulls.
+    facts = {'sessions': [], 'closures': [
+        {'start': '2026-10-12', 'end': '2026-10-12', 'reason': 'Indigenous Peoples Day'},
+        {'start': '2026-11-11', 'end': '2026-11-11', 'reason': 'Veterans Day'},
+        {'start': '2026-11-26', 'end': '2026-11-27', 'reason': 'Thanksgiving'},
+        {'start': '2026-09-24', 'end': '2026-09-24', 'reason': 'staff training', 'start_time': '11:00', 'end_time': '14:00'},
+        {'start': '2026-10-22', 'end': '2026-10-22', 'reason': 'staff training', 'start_time': '11:00', 'end_time': '14:00'},
+    ]}
+    original = copy.deepcopy(facts)
+    payload = openai_provider.source_fact_payload(facts, source)
+    assert facts == original
+    assert len(payload['closures']) == 6
+    thanksgiving = [item for item in payload['closures'] if item['reason'] == 'Thanksgiving']
+    assert [(item['start'], item['end']) for item in thanksgiving] == [('2026-11-26', '2026-11-26'), ('2026-11-27', '2026-11-27')]
+    assert all(item['reason_code'] == 'holiday' for item in thanksgiving)
+    assert thanksgiving[0]['source_notices'] == thanksgiving[1]['source_notices']
+    assert 'Nov. 26 and 27' in thanksgiving[0]['source_notices'][0]['text']
+
+
+@pytest.mark.parametrize('failure', ['omitted', 'extra', 'gap', 'scope', 'partial_model', 'partial_source', 'reason', 'notice', 'duplicate_source', 'duplicate_model', 'source_range'])
+def test_grouped_closures_reject_inexact_source_unions(monkeypatch, failure):
+    inventory = [
+        {'start': day, 'end': day, 'reason_code': 'holiday', 'source_notices': [{'id': 'p1-notice-1', 'text': 'Closed November 26 and 27'}]}
+        for day in ['2026-11-26', '2026-11-27']
+    ]
+    closure = {'start': '2026-11-26', 'end': '2026-11-27', 'reason': 'Thanksgiving'}
+    if failure == 'omitted':
+        closure['end'] = closure['start']
+    elif failure == 'extra':
+        closure['end'] = '2026-11-28'
+    elif failure == 'gap':
+        inventory[1].update(start='2026-11-28', end='2026-11-28')
+        closure['end'] = '2026-11-28'
+    elif failure == 'scope':
+        inventory[1]['physical_pool'] = 'warm'
+    elif failure == 'partial_model':
+        closure.update(start_time='11:00', end_time='14:00')
+    elif failure == 'partial_source':
+        inventory[1].update(start_time='11:00', end_time='14:00')
+    elif failure == 'reason':
+        inventory[1]['reason_code'] = 'maintenance'
+    elif failure == 'notice':
+        inventory[1]['source_notices'] = [{'id': 'p1-notice-2', 'text': 'Closed November 27'}]
+    elif failure == 'duplicate_source':
+        inventory.append(inventory[0].copy())
+    elif failure == 'source_range':
+        inventory[0]['end'] = '2026-11-27'
+    facts = {'sessions': [], 'closures': [closure] * (2 if failure == 'duplicate_model' else 1)}
+    monkeypatch.setattr(openai_provider, 'source_closure_inventory', lambda source: inventory)
+    with pytest.raises(ValueError, match='independently verified source notice'):
+        openai_provider.source_fact_payload(facts, None)
+
+
+@pytest.mark.parametrize('second_reason', ['Thanksgiving', 'A different model reason'])
+def test_duplicate_grouped_closures_cannot_consume_other_notice(monkeypatch, second_reason):
+    closure = {'start': '2026-11-26', 'end': '2026-11-27', 'reason': 'Thanksgiving'}
+    inventory = [closure | {'reason_code': 'holiday', 'source_notices': [{'id': 'p1-notice-1', 'text': 'Closed November 26–27'}]}] + [
+        {'start': day, 'end': day, 'reason_code': 'holiday', 'source_notices': [{'id': 'p1-notice-2', 'text': 'Closed November 26 and 27'}]}
+        for day in ['2026-11-26', '2026-11-27']
+    ]
+    monkeypatch.setattr(openai_provider, 'source_closure_inventory', lambda source: inventory)
+    facts = {'sessions': [], 'closures': [closure, closure | {'reason': second_reason}]}
+    with pytest.raises(ValueError, match='Duplicate closure'):
+        openai_provider.source_fact_payload(facts, None)
