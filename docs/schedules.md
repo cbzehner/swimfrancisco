@@ -87,8 +87,8 @@ literal wording. Five paid provider artifacts were independently reverified and
 retained in their original source directories for a cache-only retry; candidate
 reviews and projected hours were not manually copied into main. Deployment of
 code commit `e9fb9b5ae76f331ac86cc50accb326567fa28574` passed exact-commit browser
-smoke checks for all thirty spots. Weekly automation remains paused until the
-publication retry and live schedule checks succeed.
+smoke checks for all thirty spots. Weekly automation stayed paused through the
+publication retry and live schedule checks.
 
 A detached replay of the actual candidate with the corrected translation test
 passed `just check`: 1,168 Python tests (55 skips), 197 JavaScript tests,
@@ -113,6 +113,31 @@ Pool” wording failed the existing parser. These sources did not gain automatic
 publication authority. Pomeroy's stale pending-artifact refusal was corrected:
 a valid current artifact supersedes an older pending artifact, while missing
 current readiness still holds publication.
+
+The accounted retry ([34191084886](https://github.com/cbzehner/swimfrancisco/actions/runs/34191084886))
+published Hamilton, current MLK, Mission, North Beach, and Pomeroy at commit
+`66890c8ebe738f71be48a4a3d95f455adb92f13b`. Its request receipt is empty: zero model
+calls and $0 charged, settled on the existing ledger. Candidate CI
+[34191245437](https://github.com/cbzehner/swimfrancisco/actions/runs/34191245437)
+and main CI [34191540855](https://github.com/cbzehner/swimfrancisco/actions/runs/34191540855)
+passed; final CI ran 1,174 Python tests (55 skips), 197 JavaScript tests, and
+35 browser tests. Cloudflare deployed that exact commit. The required
+`smoke-production.mjs --expected-commit=66890c8ebe738f71be48a4a3d95f455adb92f13b --browser`
+passed all thirty spots, both in the hosted workflow and locally.
+
+An additional 52 live WebKit/Chromium scenarios used Tokyo visitor clocks and
+expectations transcribed from original sources: twenty North Beach cases covered
+both pools, September 1–December 12 dates, simultaneous sessions, exclusions,
+maintenance, partial closures, expiry, Pacific midnight and standard time; eight
+Pomeroy cases covered therapy restrictions, excluded classes, and September 7–20
+observation validity; twenty-four Hamilton/Mission/MLK cases checked session
+cancellations separately from narrower facility closures and ordinary-day
+controls. All passed. The workflow artifact retains original source/configuration
+identities, publication decisions, live verification, and spend receipts. The
+closure-review job also succeeded. Equinox parsed on the retry but remains manual;
+six hosted 403s and the seven city input holds above remain. Weekly Monday
+16:00 UTC automation was restored only after these checks. The $5 monthly limit,
+$1 run reservation, unchanged production model, and durable ledger remain intact.
 
 ## Setup
 
