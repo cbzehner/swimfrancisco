@@ -1,0 +1,91 @@
+{
+  "cost_estimate": "deterministic",
+  "details": {
+    "direct_source": {
+      "configuration": {
+        "freshness_days": 14,
+        "libraries": {
+          "httpx": "0.28.1",
+          "openpyxl": "3.1.5"
+        },
+        "parser_sha256": "c0eaa8804e41816d3549fe2db7a1f6a26ae62ee3423c02a2ca2f3819291b91f4",
+        "python": "3.13.15",
+        "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+        "source_identity": "original_bytes"
+      },
+      "freshness_days": 14,
+      "observed_on": "2026-09-07",
+      "requested_url": "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport",
+      "sha256": "78aa76d2e95c54627d6bdb8d5d2b2306addb08a63a9323b10dd58e767a191e43",
+      "url": "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
+    },
+    "source_coverage": null
+  },
+  "extracted_at": "2026-09-08T05:35:38.148627+00:00",
+  "model": "twenty-four-hour-fitness-html-v1",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "22:00",
+        "evidence": "Monday - Thursday: 05:00 AM - 10:00 PM",
+        "label": "Gym hours",
+        "start": "05:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "22:00",
+        "evidence": "Monday - Thursday: 05:00 AM - 10:00 PM",
+        "label": "Gym hours",
+        "start": "05:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "22:00",
+        "evidence": "Monday - Thursday: 05:00 AM - 10:00 PM",
+        "label": "Gym hours",
+        "start": "05:00"
+      },
+      {
+        "day": "thursday",
+        "end": "22:00",
+        "evidence": "Monday - Thursday: 05:00 AM - 10:00 PM",
+        "label": "Gym hours",
+        "start": "05:00"
+      },
+      {
+        "day": "friday",
+        "end": "21:00",
+        "evidence": "Friday: 05:00 AM - 09:00 PM",
+        "label": "Gym hours",
+        "start": "05:00"
+      },
+      {
+        "day": "saturday",
+        "end": "20:00",
+        "evidence": "Saturday - Sunday: 06:00 AM - 08:00 PM",
+        "label": "Gym hours",
+        "start": "06:00"
+      },
+      {
+        "day": "sunday",
+        "end": "20:00",
+        "evidence": "Saturday - Sunday: 06:00 AM - 08:00 PM",
+        "label": "Gym hours",
+        "start": "06:00"
+      }
+    ],
+    "closures": [],
+    "effective_end": "2026-09-20",
+    "effective_start": "2026-09-07",
+    "schedule_basis": "facility_hours",
+    "sessions": []
+  },
+  "pdf_sha256": "78aa76d2e95c54627d6bdb8d5d2b2306addb08a63a9323b10dd58e767a191e43",
+  "prompt_sha256": "03eee14261fe48668ae6e1ae2c9bfc14ceddb86ab899274257f52ca6309b93a7",
+  "provider": "direct",
+  "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+  "source_pdf_url": "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport",
+  "usage": {}
+}

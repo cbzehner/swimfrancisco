@@ -1,46 +1,76 @@
 {
-  "slug": "mission-community-pool",
   "pdf_sha256": "67f2a420e8fc7957ece8b02acfcbf574249473f759eafb123e17c6ed0cebd2b4",
-  "reviewed_at": "2026-09-02",
-  "attested_by": "ci",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/30001",
+  "slug": "mission-community-pool",
+  "reviewed_at": "2026-09-07",
+  "attested_by": "ci",
   "payload": {
     "closures": [
       {
         "end": "2026-09-07",
         "reason": "Labor Day",
-        "start": "2026-09-07",
-        "reason_code": "labor_day"
+        "reason_code": "holiday",
+        "source_notices": [
+          {
+            "id": "p1-notice-1",
+            "text": "All city pools will be closed on\nSeptember 7 in observance of\nLabor Day and October 12 for\nIndigenous People\u2019s Day"
+          }
+        ],
+        "start": "2026-09-07"
       },
       {
         "end": "2026-10-12",
-        "reason": "Indigenous People’s Day",
-        "start": "2026-10-12",
-        "reason_code": "indigenous_peoples_day"
+        "reason": "Indigenous People\u2019s Day",
+        "reason_code": "holiday",
+        "source_notices": [
+          {
+            "id": "p1-notice-1",
+            "text": "All city pools will be closed on\nSeptember 7 in observance of\nLabor Day and October 12 for\nIndigenous People\u2019s Day"
+          }
+        ],
+        "start": "2026-10-12"
       },
       {
         "end": "2026-08-22",
         "end_time": "11:00",
         "reason": "staff training",
+        "reason_code": "staff_training",
+        "source_notices": [
+          {
+            "id": "p1-notice-2",
+            "text": "All city pools will be closed\nfrom 9am-11am on August 22\ndue to staff training"
+          }
+        ],
         "start": "2026-08-22",
-        "start_time": "09:00",
-        "reason_code": "staff_training"
+        "start_time": "09:00"
       },
       {
         "end": "2026-08-27",
         "end_time": "14:00",
         "reason": "Aquatic Division Training",
+        "reason_code": "staff_training",
+        "source_notices": [
+          {
+            "id": "p1-notice-3",
+            "text": "All Pools will be closed every\n4th Thursday of the month\nfrom 12p-2p for Aquatic\nDivision Training (8/27 & 9/24)"
+          }
+        ],
         "start": "2026-08-27",
-        "start_time": "12:00",
-        "reason_code": "aquatics_training"
+        "start_time": "12:00"
       },
       {
         "end": "2026-09-24",
         "end_time": "14:00",
         "reason": "Aquatic Division Training",
+        "reason_code": "staff_training",
+        "source_notices": [
+          {
+            "id": "p1-notice-3",
+            "text": "All Pools will be closed every\n4th Thursday of the month\nfrom 12p-2p for Aquatic\nDivision Training (8/27 & 9/24)"
+          }
+        ],
         "start": "2026-09-24",
-        "start_time": "12:00",
-        "reason_code": "aquatics_training"
+        "start_time": "12:00"
       }
     ],
     "effective_end": "2026-10-17",
@@ -58,6 +88,7 @@
         "day": "tuesday",
         "end": "11:00",
         "evidence": "Parent & Tot (1) / Senior Swim (3) 9:15am-11:00am",
+        "notes": "Shared cell with Parent & Tot; only Senior Swim emitted. Numeric lane count only, no pool allocation.",
         "start": "09:15",
         "type": "senior_swim"
       },
@@ -120,7 +151,7 @@
       {
         "day": "wednesday",
         "end": "19:00",
-        "evidence": "Lap Swim 5:00pm-7:00pm",
+        "evidence": "Lap Swim 5:00pm-7:00pm --",
         "start": "17:00",
         "type": "lap_swim"
       },
@@ -134,7 +165,8 @@
       {
         "day": "thursday",
         "end": "11:00",
-        "evidence": "Parent & Tot (1) / Senior Swim (3) 9:15am – 11:00am",
+        "evidence": "Parent & Tot (1) / Senior Swim (3) 9:15am \u2013 11:00am",
+        "notes": "Shared cell with Parent & Tot; only Senior Swim emitted. Numeric lane count only, no pool allocation.",
         "start": "09:15",
         "type": "senior_swim"
       },
@@ -142,7 +174,11 @@
         "day": "thursday",
         "end": "13:30",
         "evidence": "Lap Swim 11:15am-1:30pm Closed every 4th Thursday of the Month for Training",
-        "notes": "Closed every 4th Thursday of the Month for Training",
+        "excluded_dates": [
+          "2026-08-27",
+          "2026-09-24"
+        ],
+        "notes": "Cell is marked closed every 4th Thursday of the month for training; dates taken from printed note listing 8/27 & 9/24.",
         "start": "11:15",
         "type": "lap_swim"
       },
@@ -198,7 +234,7 @@
       {
         "day": "friday",
         "end": "19:00",
-        "evidence": "Family Swim 5:00pm-7:00pm",
+        "evidence": "Family Swim 5:00pm-7:00pm --",
         "start": "17:00",
         "type": "family_swim"
       },
@@ -219,7 +255,7 @@
       {
         "day": "saturday",
         "end": "17:30",
-        "evidence": "Lap Swim 4:00pm-5:30pm",
+        "evidence": "Lap Swim 4:00pm-5:30pm --",
         "start": "16:00",
         "type": "lap_swim"
       }

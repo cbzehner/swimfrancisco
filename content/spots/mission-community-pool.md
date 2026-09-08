@@ -320,7 +320,7 @@ reason_code = "independence_day"
 effective_start = "2026-08-18"
 schedule_basis = "swim_schedule"
 effective_end = "2026-10-17"
-last_verified_at = "2026-09-02"
+last_verified_at = "2026-09-07"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -333,6 +333,7 @@ day = "tuesday"
 type = "senior_swim"
 start = "09:15"
 end = "11:00"
+notes = "Shared cell with Parent & Tot; only Senior Swim emitted. Numeric lane count only, no pool allocation."
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -399,13 +400,15 @@ day = "thursday"
 type = "senior_swim"
 start = "09:15"
 end = "11:00"
+notes = "Shared cell with Parent & Tot; only Senior Swim emitted. Numeric lane count only, no pool allocation."
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "11:15"
 end = "13:30"
-notes = "Closed every 4th Thursday of the Month for Training"
+notes = "Cell is marked closed every 4th Thursday of the month for training; dates taken from printed note listing 8/27 & 9/24."
+excluded_dates = [ "2026-08-27", "2026-09-24" ]
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -481,19 +484,31 @@ start_time = "09:00"
 end_time = "11:00"
 reason_code = "staff_training"
 
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-2"
+text = "All city pools will be closed\nfrom 9am-11am on August 22\ndue to staff training"
+
 [[extra.schedules.closures]]
 start = "2026-08-27"
 end = "2026-08-27"
 reason = "Aquatic Division Training"
 start_time = "12:00"
 end_time = "14:00"
-reason_code = "aquatics_training"
+reason_code = "staff_training"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-3"
+text = "All Pools will be closed every\n4th Thursday of the month\nfrom 12p-2p for Aquatic\nDivision Training (8/27 & 9/24)"
 
 [[extra.schedules.closures]]
 start = "2026-09-07"
 end = "2026-09-07"
 reason = "Labor Day"
-reason_code = "labor_day"
+reason_code = "holiday"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-1"
+text = "All city pools will be closed on\nSeptember 7 in observance of\nLabor Day and October 12 for\nIndigenous People’s Day"
 
 [[extra.schedules.closures]]
 start = "2026-09-24"
@@ -501,13 +516,21 @@ end = "2026-09-24"
 reason = "Aquatic Division Training"
 start_time = "12:00"
 end_time = "14:00"
-reason_code = "aquatics_training"
+reason_code = "staff_training"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-3"
+text = "All Pools will be closed every\n4th Thursday of the month\nfrom 12p-2p for Aquatic\nDivision Training (8/27 & 9/24)"
 
 [[extra.schedules.closures]]
 start = "2026-10-12"
 end = "2026-10-12"
 reason = "Indigenous People’s Day"
-reason_code = "indigenous_peoples_day"
+reason_code = "holiday"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-1"
+text = "All city pools will be closed on\nSeptember 7 in observance of\nLabor Day and October 12 for\nIndigenous People’s Day"
 +++
 
 The only city-operated outdoor pool in San Francisco. Built in 1916, the 90' x 40' pool sits between Linda and Valencia streets in the heart of the Mission District and operates seasonally from May through October. Programs include lap swim, senior swim, recreation swim, water aerobics, and lessons.

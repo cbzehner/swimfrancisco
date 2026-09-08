@@ -297,21 +297,19 @@ reason_code = "independence_day"
 effective_start = "2026-08-18"
 schedule_basis = "swim_schedule"
 effective_end = "2026-12-12"
-last_verified_at = "2026-08-20"
+last_verified_at = "2026-09-07"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "09:00"
 end = "11:00"
-pool = "4"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "11:00"
 end = "12:30"
-pool = "6"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -325,28 +323,24 @@ day = "tuesday"
 type = "lap_swim"
 start = "13:00"
 end = "15:00"
-pool = "4"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "06:30"
 end = "08:30"
-pool = "6"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "09:00"
 end = "11:00"
-pool = "4"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "11:00"
 end = "12:30"
-pool = "6"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -360,28 +354,26 @@ day = "wednesday"
 type = "lap_swim"
 start = "13:00"
 end = "15:00"
-pool = "4"
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "18:30"
 end = "20:00"
-pool = "6"
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "09:00"
 end = "11:00"
-pool = "4"
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "11:00"
 end = "12:30"
-pool = "6"
+notes = "Cell is marked CLOSED on 8/27, 9/24, 10/22."
+excluded_dates = [ "2026-08-27", "2026-09-24", "2026-10-22" ]
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -389,34 +381,34 @@ type = "family_swim"
 start = "13:00"
 end = "15:00"
 pool = "2 lanes + small"
+notes = "Cell is marked CLOSED on 8/27, 9/24, 10/22."
+excluded_dates = [ "2026-08-27", "2026-09-24", "2026-10-22" ]
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "13:00"
 end = "15:00"
-pool = "4"
+notes = "Cell is marked CLOSED on 8/27, 9/24, 10/22."
+excluded_dates = [ "2026-08-27", "2026-09-24", "2026-10-22" ]
 
 [[extra.schedules.sessions]]
 day = "friday"
 type = "lap_swim"
 start = "06:30"
 end = "08:30"
-pool = "6"
 
 [[extra.schedules.sessions]]
 day = "friday"
 type = "lap_swim"
 start = "09:00"
 end = "11:00"
-pool = "4"
 
 [[extra.schedules.sessions]]
 day = "friday"
 type = "lap_swim"
 start = "11:00"
 end = "12:30"
-pool = "6"
 
 [[extra.schedules.sessions]]
 day = "friday"
@@ -430,7 +422,6 @@ day = "friday"
 type = "lap_swim"
 start = "13:00"
 end = "15:00"
-pool = "4"
 
 [[extra.schedules.sessions]]
 day = "friday"
@@ -443,7 +434,6 @@ day = "saturday"
 type = "lap_swim"
 start = "09:00"
 end = "10:30"
-pool = "5"
 
 [[extra.schedules.sessions]]
 day = "saturday"
@@ -457,15 +447,18 @@ day = "saturday"
 type = "lap_swim"
 start = "16:00"
 end = "17:00"
-pool = "6"
 
 [[extra.schedules.closures]]
 start = "2026-08-22"
 end = "2026-08-22"
-reason = "Aq. In-Service Training"
+reason = "Learn To Swim Aq. In-Service Training"
 start_time = "08:30"
 end_time = "12:30"
-reason_code = "in_service_training"
+reason_code = "staff_training"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-1"
+text = "All pools will be closed on 8/22/26 and\n12/12/26 from 8:30 am – 12:30pm for\nAq. In-Service Training"
 
 [[extra.schedules.closures]]
 start = "2026-08-27"
@@ -473,13 +466,21 @@ end = "2026-08-27"
 reason = "Aquatics Division Training"
 start_time = "12:00"
 end_time = "14:00"
-reason_code = "aquatics_training"
+reason_code = "staff_training"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-2"
+text = "All pools will be closed every 4th\nThursday of the month from\n12 pm – 2pm for Aquatics Division\nTraining."
 
 [[extra.schedules.closures]]
 start = "2026-09-07"
 end = "2026-09-07"
 reason = "Labor Day"
-reason_code = "labor_day"
+reason_code = "holiday"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-3"
+text = "All Pools will be closed on 9/7/26 for\nLabor Day;10/12/26 for Indigenous\nPeople’s Day; 11/11/26 for Veteran’s\nDay"
 
 [[extra.schedules.closures]]
 start = "2026-09-24"
@@ -487,13 +488,21 @@ end = "2026-09-24"
 reason = "Aquatics Division Training"
 start_time = "12:00"
 end_time = "14:00"
-reason_code = "aquatics_training"
+reason_code = "staff_training"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-2"
+text = "All pools will be closed every 4th\nThursday of the month from\n12 pm – 2pm for Aquatics Division\nTraining."
 
 [[extra.schedules.closures]]
 start = "2026-10-12"
 end = "2026-10-12"
 reason = "Indigenous People’s Day"
-reason_code = "indigenous_peoples_day"
+reason_code = "holiday"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-3"
+text = "All Pools will be closed on 9/7/26 for\nLabor Day;10/12/26 for Indigenous\nPeople’s Day; 11/11/26 for Veteran’s\nDay"
 
 [[extra.schedules.closures]]
 start = "2026-10-22"
@@ -501,13 +510,21 @@ end = "2026-10-22"
 reason = "Aquatics Division Training"
 start_time = "12:00"
 end_time = "14:00"
-reason_code = "aquatics_training"
+reason_code = "staff_training"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-2"
+text = "All pools will be closed every 4th\nThursday of the month from\n12 pm – 2pm for Aquatics Division\nTraining."
 
 [[extra.schedules.closures]]
 start = "2026-11-11"
 end = "2026-11-11"
 reason = "Veteran’s Day"
-reason_code = "veterans_day"
+reason_code = "holiday"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-3"
+text = "All Pools will be closed on 9/7/26 for\nLabor Day;10/12/26 for Indigenous\nPeople’s Day; 11/11/26 for Veteran’s\nDay"
 
 [[extra.schedules.closures]]
 start = "2026-11-23"
@@ -515,13 +532,33 @@ end = "2026-11-29"
 reason = "maintenance"
 reason_code = "maintenance"
 
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-4"
+text = "Hamilton Pool will be closed for\nmaintenance from 11/23 to 11/29/26"
+
+[[extra.schedules.closures]]
+start = "2026-11-26"
+end = "2026-11-26"
+reason = "Aquatics Division Training"
+start_time = "12:00"
+end_time = "14:00"
+reason_code = "staff_training"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-2"
+text = "All pools will be closed every 4th\nThursday of the month from\n12 pm – 2pm for Aquatics Division\nTraining."
+
 [[extra.schedules.closures]]
 start = "2026-12-12"
 end = "2026-12-12"
-reason = "Aq. In-Service Training"
+reason = "Learn To Swim Aq. In-Service Training"
 start_time = "08:30"
 end_time = "12:30"
-reason_code = "in_service_training"
+reason_code = "staff_training"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-1"
+text = "All pools will be closed on 8/22/26 and\n12/12/26 from 8:30 am – 12:30pm for\nAq. In-Service Training"
 +++
 
 A heated indoor pool at Hamilton Recreation Center on the corner of Geary and Steiner in Lower Pacific Heights. Notable for the only two indoor water slides in a San Francisco city pool. Programs include lap swim, senior swim, recreation swim, and lessons.
