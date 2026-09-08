@@ -571,7 +571,8 @@ def publish_pending_all(
             artifact_path = _pick_provider_artifact(candidate.review_dir)
             expected = f"data/{candidate.slug}/{candidate.review_dir.name}/{artifact_path.name}"
             if ready_direct.get(candidate.slug) != expected:
-                refused.append({"slug": candidate.slug, "code": "direct_extraction_incomplete", "message": "Current direct extraction must pass before publication"})
+                if candidate.slug not in ready_direct:
+                    refused.append({"slug": candidate.slug, "code": "direct_extraction_incomplete", "message": "Current direct extraction must pass before publication"})
                 continue
         if entry and entry.pool_sources and (not candidate.bundle_sha256 or ready_bundles.get(entry.slug) != candidate.bundle_sha256):
             continue

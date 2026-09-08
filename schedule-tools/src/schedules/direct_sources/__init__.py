@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import platform
+from importlib.metadata import version
 from datetime import date, timedelta
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -54,6 +56,8 @@ def direct_configuration() -> dict:
     root = Path(__file__).parent
     files = sorted(root.rglob("*.py"))
     return {"source_identity": "original_bytes", "freshness_days": 14,
+            "python": platform.python_version(),
+            "libraries": {name: version(name) for name in ("httpx", "openpyxl")},
             "schema_sha256": hashlib.sha256(json.dumps(EXTRACTION_SCHEMA, sort_keys=True).encode()).hexdigest(),
             "parser_sha256": hashlib.sha256(b"".join(
                 path.relative_to(root.parent).as_posix().encode() + b"\0" + path.read_bytes()

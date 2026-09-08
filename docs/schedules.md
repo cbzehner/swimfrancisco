@@ -24,7 +24,7 @@ silently translate unknown raw reasons through a second publication path.
 
 New direct-source artifacts store `details.direct_source`, copied into the
 reviewed envelope as `direct_source`: full original-byte `sha256`, requested and
-final URLs, Pacific `observed_on`, parser/schema configuration, and the approved
+final URLs, Pacific `observed_on`, parser/schema and Python/library configuration, and the approved
 14-day freshness lifetime. The existing envelope identity field `pdf_sha256`
 also contains that exact byte hash for direct captures. Historical direct
 payload/workbook-normalized hashes are retained as historical evidence, never
@@ -72,6 +72,47 @@ cover whole-session exclusions before/after narrower facility closures and
 fourteen-day expiry at Pacific midnight in a Tokyo browser. Final publication
 regressions also cover refreshing an existing verified window beside a future
 window without treating it as a new, regressed schedule.
+
+The first hosted cutover trial ([34189395735](https://github.com/cbzehner/swimfrancisco/actions/runs/34189395735))
+completed five paid requests under the unchanged production configuration, costing
+$0.553410. The durable September ledger settled that amount: $0.998910 total,
+$4.001090 remaining. The run retained original PDFs, model responses, independent
+verification results, candidate outputs, and request receipts in its workflow
+artifact. Hamilton, current MLK, Mission, both North Beach components, and Pomeroy
+passed candidate acceptance. Candidate `69431b7b26d96fecb799c00ec64eb733581a9269`
+failed CI because a site-render test still required literal closure reasons in the
+translation catalog. Main did not advance. The test now checks verified closure
+codes and translations in every locale, including the trial's previously unseen
+literal wording. Five paid provider artifacts were independently reverified and
+retained in their original source directories for a cache-only retry; candidate
+reviews and projected hours were not manually copied into main. Deployment of
+code commit `e9fb9b5ae76f331ac86cc50accb326567fa28574` passed exact-commit browser
+smoke checks for all thirty spots. Weekly automation remains paused until the
+publication retry and live schedule checks succeed.
+
+A detached replay of the actual candidate with the corrected translation test
+passed `just check`: 1,168 Python tests (55 skips), 197 JavaScript tests,
+35 browser tests, localization, Worker types, and build. It made no model calls.
+
+The follow-up main checkout passed `just check`: 1,162 Python tests (55 skips),
+197 JavaScript tests, 35 browser tests, localization, Worker types, and build.
+Independent re-verification of all five retained provider artifacts passed
+source coverage, date-window, closure, and exclusion checks without model calls.
+
+The trial charged Hamilton $0.130305, current MLK $0.108015, Mission $0.099710,
+North Beach Cool $0.099795, and North Beach Warm $0.115585. Original full byte
+hashes and extraction configurations remain in the corresponding source and
+provider artifacts listed by the run's `ready_openai` receipt.
+
+Remaining trial holds were four ambiguous closure inputs (Balboa, Coffman, and
+two Sava windows), plus Garfield pool allocation, Rossi's missing end meridiem,
+and unknown programs in MLK's later window. Five hosted HTTP 403s carried
+Cloudflare challenge headers (JCCSF and four YMCA sources); SFSU returned a
+Pantheon 403. Equinox fetched successfully but its changed “Indoor Saline Lap
+Pool” wording failed the existing parser. These sources did not gain automatic
+publication authority. Pomeroy's stale pending-artifact refusal was corrected:
+a valid current artifact supersedes an older pending artifact, while missing
+current readiness still holds publication.
 
 ## Setup
 

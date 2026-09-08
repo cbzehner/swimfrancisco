@@ -440,12 +440,16 @@ def _process_direct_entry(
 
     reviewed = json.loads(reviewed_file.read_text()) if reviewed_file.exists() else {}
     if policy.same_dir_reviewed and reviewed.get("direct_source") == extracted.source and reviewed.get("payload") == extracted.payload:
-        return _build_unchanged(
+        result = _build_unchanged(
             entry,
             pdf_sha256=fetch_result.sha256,
             page_count=0,
             reviewed_file=reviewed_file,
         )
+        return replace(result, provider="direct", model=extracted.model, artifact_paths={
+            **result.artifact_paths,
+            "direct": relative_to_repo(artifact_path(entry.slug, date, fetch_result.sha256, "direct", extracted.model)),
+        })
 
     payload = extracted.payload
 

@@ -175,9 +175,14 @@ def test_all_spots_have_access_classification() -> None:
             assert len(open_ended) <= 1, f"{path.name}: more than one open-ended schedule window"
 
 
-def test_canonical_labels_have_i18n_mappings() -> None:
+@pytest.mark.parametrize("extra_closure", [None, {
+    "reason": "Learn To Swim Aq. In-Service Training",
+    "reason_code": "staff_training",
+}], ids=["canonical-content", "uncataloged-source-wording"])
+def test_canonical_labels_have_i18n_mappings(extra_closure) -> None:
     extras_by_slug = _canonical_spot_extras()
-    translation_keys = set(tomllib.loads((ROOT / "i18n" / "ui" / "en.toml").read_text()))
+    if extra_closure is not None:
+        extras_by_slug["source-wording-regression"] = {"schedules": [{"closures": [extra_closure]}]}
     dynamic_labels = tomllib.loads((ROOT / "i18n" / "dynamic-labels.toml").read_text())
     dynamic_label_source_index: dict[tuple[str, str], str] = {}
     dynamic_label_code_index: dict[tuple[str, str], str] = {}
@@ -206,7 +211,6 @@ def test_canonical_labels_have_i18n_mappings() -> None:
             windows = [
                 *schedule.get("access_hours", []),
                 *schedule.get("access_exceptions", []),
-                *schedule.get("closures", []),
             ]
             for window in windows:
                 if label := window.get("label"):
@@ -215,6 +219,10 @@ def test_canonical_labels_have_i18n_mappings() -> None:
                     closure_reasons.add(str(reason))
                 if window.get("reason_code"):
                     closure_reason_codes.add(str(window["reason_code"]))
+            for closure in schedule.get("closures", []):
+                code = closure.get("reason_code")
+                assert isinstance(code, str) and code, f"Closure has no display code: {closure}"
+                closure_reason_codes.add(code)
 
     for label in visible_spot_labels | access_badges:
         assert ("spot_label", label) in dynamic_label_source_index
@@ -225,8 +233,12 @@ def test_canonical_labels_have_i18n_mappings() -> None:
     for code in closure_reason_codes:
         assert ("closure_reason", code) in dynamic_label_code_index
 
-    assert set(dynamic_label_source_index.values()) <= translation_keys
-    assert set(dynamic_label_code_index.values()) <= translation_keys
+    for locale in _locales():
+        language = str(locale["code"])
+        translations = tomllib.loads((ROOT / "i18n" / "ui" / f"{language}.toml").read_text())
+        required_keys = set(dynamic_label_source_index.values()) | set(dynamic_label_code_index.values())
+        assert required_keys <= translations.keys(), f"Missing dynamic-label translations for {language}"
+        assert all(isinstance(translations[key], str) and translations[key].strip() for key in required_keys), language
 
 
 def test_translated_spot_catalogs_cover_visible_english_fields() -> None:

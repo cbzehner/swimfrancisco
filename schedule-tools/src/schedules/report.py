@@ -63,8 +63,8 @@ def write_report(results: list[PoolResult], path: Path) -> Path:
                          if isinstance(result, Extracted) and result.provider == "openai"
                          and not result.catastrophic and not result.violations and "openai" in result.artifact_paths],
         "ready_direct": {result.slug: result.artifact_paths["direct"] for result in results
-                         if isinstance(result, Extracted) and result.provider == "direct"
-                         and not result.catastrophic and not result.violations},
+                         if isinstance(result, (Extracted, Unchanged)) and result.provider == "direct"
+                         and (isinstance(result, Unchanged) or (not result.catastrophic and not result.violations))},
         "closure_reviews": [result.closure_review for result in results
                             if isinstance(result, Aborted) and result.closure_review is not None],
     }, indent=2) + "\n")

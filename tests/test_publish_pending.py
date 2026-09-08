@@ -117,6 +117,46 @@ def test_pomeroy_failed_current_extraction_cannot_publish_prior_candidate(tmp_pa
     assert reviewed["payload"]["effective_end"] == "2026-09-20"
 
 
+
+@pytest.mark.parametrize("current_ready", [False, True])
+def test_pomeroy_superseded_candidate_is_skipped_only_with_current_ready_artifact(tmp_path, monkeypatch, current_ready):
+    import shutil
+    import schedules.publish as module
+
+    candidate, artifact, path = _pomeroy_candidate(tmp_path, monkeypatch)
+    older_dir = candidate.review_dir.with_name("2026-09-06-" + candidate.pdf_sha256[:12])
+    shutil.copytree(candidate.review_dir, older_dir)
+    older_artifact = older_dir / path.name
+    stale = json.loads(older_artifact.read_text())
+    stale["details"]["direct_source"]["configuration"]["parser_sha256"] = "0" * 64
+    older_artifact.write_text(json.dumps(stale))
+    original = older_artifact.read_bytes()
+    content = tmp_path / "content"
+    content.mkdir()
+    _seed_content(content, "pomeroy-pool")
+    reports = tmp_path / "tmp"
+    reports.mkdir()
+    monkeypatch.setattr(module, "TMP_DIR", reports)
+    monkeypatch.setattr(module, "auto_project_enabled", lambda: True)
+    monkeypatch.setattr(module, "load_quarantine", lambda: frozenset())
+    entry = PoolEntry("pomeroy-pool", "https://www.prrcsf.org/therapeutic-swim", "https://www.prrcsf.org/pool", source_kind="pomeroy_html", auto_publish=True)
+    monkeypatch.setattr(module, "load_registry", lambda: [entry])
+    if current_ready:
+        (reports / "extraction-report-direct.json").write_text(json.dumps({"ready_direct": {
+            "pomeroy-pool": f"data/pomeroy-pool/{candidate.review_dir.name}/{path.name}"
+        }}))
+    count, _ = publish_pending_all(data_root=tmp_path / "data", content_spots_dir=content, today=date(2026, 9, 7))
+    report = json.loads((reports / "publish-pending.json").read_text())
+    assert count == int(current_ready)
+    assert (candidate.review_dir / "reviewed.json").exists() is current_ready
+    assert not (older_dir / "reviewed.json").exists()
+    assert older_artifact.read_bytes() == original
+    if current_ready:
+        assert report["refused"] == []
+    else:
+        assert report["refused"]
+        assert {row["code"] for row in report["refused"]} == {"direct_extraction_incomplete"}
+
 def test_direct_configuration_change_requeues_review_without_destroying_it(tmp_path, monkeypatch):
     candidate, artifact, path = _pomeroy_candidate(tmp_path, monkeypatch)
     from schedules.review import draft_envelope
@@ -1602,3 +1642,50 @@ def test_pair_review_refresh_reuses_valid_components(tmp_path, north_beach_pair,
         app.refresh(entry.slug, candidate.source_identity[:12])
     assert commands[0].provider == "openai"
     assert commands[0].force is False
+
+
+@pytest.mark.parametrize("component", ["python", "httpx", "openpyxl"])
+def test_pomeroy_acceptance_rejects_runtime_or_library_change(tmp_path, monkeypatch, component):
+    import schedules.direct_sources as direct
+    candidate, artifact, _ = _pomeroy_candidate(tmp_path, monkeypatch)
+    assert _pomeroy_eligible(candidate, artifact, direct_opt_in=True, today=date(2026, 9, 7)).ok
+    if component == "python":
+        monkeypatch.setattr(direct.platform, "python_version", lambda: "99.0.0")
+    else:
+        original_version = direct.version
+        monkeypatch.setattr(direct, "version", lambda name: "99.0.0" if name == component else original_version(name))
+    assert not _pomeroy_eligible(candidate, artifact, direct_opt_in=True, today=date(2026, 9, 7)).ok
+    assert artifact["details"]["direct_source"]["configuration"] != direct.direct_configuration()
+
+
+def test_unchanged_direct_extraction_retains_ready_artifact_receipt(tmp_path, monkeypatch):
+    import schedules.pipeline as pipeline
+    from schedules.direct_sources import DirectExtraction, DirectFetchResult
+    from schedules.models import Unchanged
+    from schedules.review import draft_envelope
+    from schedules.report import write_report
+
+    candidate, artifact, artifact_file = _pomeroy_candidate(tmp_path, monkeypatch)
+    reviewed = draft_envelope(candidate=candidate, today=date(2026, 9, 7), attested_by="ci")
+    reviewed_file = candidate.review_dir / "reviewed.json"
+    reviewed_file.write_text(json.dumps(reviewed))
+    extraction = DirectExtraction(
+        fetch_result=DirectFetchResult(candidate.source_path, artifact["pdf_sha256"], True, artifact["source_pdf_url"]),
+        payload=artifact["payload"], model=artifact["model"], notes=[],
+        source=artifact["details"]["direct_source"],
+    )
+    monkeypatch.setattr(pipeline, "extract_direct", lambda entry: extraction)
+    monkeypatch.setattr(pipeline, "reviewed_path", lambda *args: reviewed_file)
+    monkeypatch.setattr(pipeline, "artifact_path", lambda *args: artifact_file)
+    monkeypatch.setattr(pipeline, "relative_to_repo", lambda path: str(path.relative_to(tmp_path)))
+    entry = PoolEntry("pomeroy-pool", artifact["source_pdf_url"], "https://www.prrcsf.org/pool", source_kind="pomeroy_html", auto_publish=True)
+    result = pipeline._process_direct_entry(entry, artifact["payload"], policy=pipeline.ReusePolicy(True, True, True, False))
+    assert isinstance(result, Unchanged)
+    assert result.provider == "direct"
+    assert result.model == "pomeroy-html-v1"
+    assert result.artifact_paths["reviewed-snapshot"] == str(reviewed_file)
+    report = tmp_path / "extraction-report-direct.md"
+    write_report([result], report)
+    receipt = json.loads(report.with_suffix(".json").read_text())
+    assert receipt["ready_direct"] == {"pomeroy-pool": str(artifact_file.relative_to(tmp_path))}
+    assert json.loads(reviewed_file.read_text()) == reviewed
