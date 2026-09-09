@@ -2031,3 +2031,32 @@ maintenance-closure wording, and SFSU held its changed weekday-hours format.
 Those parser limitations are not capture failures and were not relaxed here.
 The nine existing city PDF artifacts still passed current independent
 verification; this capture integration did not invalidate their model caches.
+
+Hosted validation completed in [run 34310713112](https://github.com/cbzehner/swimfrancisco/actions/runs/34310713112)
+on September 8, 2026 Pacific time. The permanent account-scoped Actions token
+captured all six sources with HTTP 200 in one batch, confirmed browser closure,
+and settled 33 of 300 browser seconds. The retained artifact
+`schedule-automation-34310713112-1` contains `browser-budget.json`, model budget
+receipts, and `automation/build-1/browser-capture/` with all original HTML,
+rendered HTML, screenshots, and full source/configuration hashes. Downloaded
+receipts matched the committed capture script and all three evidence hashes for
+each source; all six PNGs validated. Capture dates correctly remained September
+8 in Pacific time despite September 9 UTC timestamps.
+
+The hosted parser outcomes matched local validation: two manual access-hours
+candidates and four holds. Only Pomeroy appeared in `published_slugs`; none of
+the six gained automatic publication. Existing city closure holds and an
+unrelated Equinox parser hold remained visible. The model receipt had no
+requests, and durable ledger entry `34310713112-1` settled at $0. September
+model charges remained $3.869090 of $5, leaving $1.130910. Browser seconds are
+conservative run accounting, not an invoice-dollar estimate.
+
+The run promoted `f1cb4fc53b219a97f0854e1e83e0b57bcc825796` after exact-commit
+[candidate CI](https://github.com/cbzehner/swimfrancisco/actions/runs/34310871671).
+[Main CI](https://github.com/cbzehner/swimfrancisco/actions/runs/34311192730),
+deployment, and hosted live verification passed. A separate local invocation of
+`node scripts/smoke-production.mjs --expected-commit=f1cb4fc53b219a97f0854e1e83e0b57bcc825796 --browser`
+also passed all 30 canonical spots. Implementation validation passed `just check`:
+1,325 Python tests, 214 JavaScript tests, and 35 browser tests; 55 Python tests
+were skipped. Automation remains enabled for Monday 16:00 UTC, with the existing
+$1 model reservation, $5 monthly ceiling, and exact-commit deployment gate.
