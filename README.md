@@ -49,6 +49,10 @@ npm run dev           # wrangler dev
 npm run typecheck     # tsc --noEmit
 ```
 
+For a disposable Linux workspace with a shared browser and Cloudflare
+access, see [Project sandboxes](docs/sandboxes.md). The sandbox uses this
+repository's devenv and dependency lockfiles.
+
 ## Tests
 
 ```sh

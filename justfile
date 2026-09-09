@@ -3,6 +3,23 @@ set positional-arguments
 default:
     @just --list
 
+# Disposable Linux workspace, browser, and host-proxied Cloudflare access.
+sandbox name="swimfrancisco" agent="codex" template="":
+    python3 scripts/sandbox.py create "$1" --agent "$2" --template "$3"
+
+sandbox-attach name="swimfrancisco":
+    python3 scripts/sandbox.py attach "$1"
+
+sandbox-exec name="swimfrancisco" *command:
+    sandbox_name="$1"; shift; python3 scripts/sandbox.py exec "$sandbox_name" -- "$@"
+
+sandbox-export name="swimfrancisco":
+    python3 scripts/sandbox.py export "$1"
+
+# Export first; then delete the guest and its scoped credentials.
+sandbox-remove name="swimfrancisco":
+    python3 scripts/sandbox.py remove "$1"
+
 # Same pipeline Cloudflare Workers Builds runs; package.json is the one
 # definition of the build steps.
 build:

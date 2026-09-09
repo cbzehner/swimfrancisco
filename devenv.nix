@@ -48,8 +48,9 @@
   # watcher rewrites public/, so template/CSS edits are picked up without a
   # manual `devenv up` restart. Debounce swallows Zola's multi-file write burst.
   processes.worker.exec = ''
+    mkdir -p public
     watchexec --no-vcs-ignore --restart --debounce 500ms --watch public \
-      -- npm --prefix worker run dev
+      -- npm --prefix worker run dev -- --ip "''${SWIMFRANCISCO_DEV_HOST:-127.0.0.1}"
   '';
   # Seed KV on startup so /api/conditions returns data instead of 503 on a
   # fresh `devenv up`. Polls until wrangler is listening, then fires the

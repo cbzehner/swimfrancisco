@@ -1,0 +1,92 @@
+schemaVersion: "2"
+kind: mixin
+name: swimfrancisco
+description: Swimfrancisco devenv, interactive browser, and Cloudflare access
+credentials:
+  - service: swimfrancisco-cloudflare
+    description: Use the host Wrangler login for the Swimfrancisco sandbox
+    apiKey:
+      name: CLOUDFLARE_API_TOKEN
+      proxyManaged: true
+      inject:
+        - domain: api.cloudflare.com
+          scheme: bearer
+permissions:
+  network:
+    allow:
+      - api.cloudflare.com
+      - releases.nixos.org
+      - cache.nixos.org
+      - devenv.cachix.org
+      - cachix.cachix.org
+      - github.com
+      - api.github.com
+      - codeload.github.com
+      - release-assets.githubusercontent.com
+      - registry.npmjs.org
+      - cdn.playwright.dev
+      - playwright.download.prss.microsoft.com
+      - storage.googleapis.com
+      - archive.ubuntu.com:80
+      - security.ubuntu.com:80
+      - ports.ubuntu.com:80
+      - download.docker.com
+      - pypi.org
+      - files.pythonhosted.org
+      - waterservices.usgs.gov
+      - api.tidesandcurrents.noaa.gov
+      - www.ndbc.noaa.gov
+      - coastwatch.pfeg.noaa.gov
+      - erddap.sensors.ioos.us
+      - swimfrancisco.com
+      - '*.basemaps.cartocdn.com'
+      - us-assets.i.posthog.com
+      - us.i.posthog.com
+ports:
+  - container: 8787
+    name: app
+  - container: 6080
+    name: browser
+environment:
+  variables:
+    DISPLAY: ":99"
+    PLAYWRIGHT_BROWSERS_PATH: /opt/ms-playwright
+    # Nix's ldd cannot resolve Ubuntu's browser libraries; install --with-deps
+    # supplies them, and the project's browser tests verify they actually run.
+    PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS: "1"
+    GSETTINGS_SCHEMA_DIR: /usr/share/glib-2.0/schemas
+    NIX_SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+    WRANGLER_SEND_METRICS: "false"
+    SWIMFRANCISCO_DEV_HOST: 0.0.0.0
+setup:
+  install:
+    - command: bash /home/agent/.local/lib/swim-sandbox/install.sh
+      description: Install Nix, devenv, and a browser with human takeover
+  startup:
+    - command: [bash, /home/agent/.local/lib/swim-sandbox/desktop.sh]
+      background: true
+      description: Start the private browser desktop
+agentInstructions:
+  content: |
+    The project is in /home/agent/workspace. Read its AGENTS.md before work.
+    Use `devenv shell` for commands
+    and `devenv up` for the local app on port 8787. Run `just check` inside
+    devenv before delivering code changes.
+
+    Use the project's locked playwright-core package inside devenv.
+    A visible Chromium session is available at http://127.0.0.1:9222.
+    Control that session with Playwright's chromium.connectOverCDP.
+    The user can view and control it through the published browser port.
+    For a password or MFA prompt, pause browser automation and ask the user
+    to sign in there. Resume after they say they are done. Never ask them
+    to paste passwords into chat, and do not inspect or export credentials.
+
+    CLOUDFLARE_API_TOKEN is a proxy placeholder. Use the repository's
+    Wrangler normally; do not replace it or run wrangler login here.
+    The host supplies its current Wrangler credential to api.cloudflare.com.
+    This grants the host credential's permissions, not a resource-level
+    restriction to this Worker. Access does not itself authorize deployments
+    or infrastructure changes: follow the user's task instructions.
+
+    This workspace and browser profile are disposable. Tell the user when
+    changes are ready to export before removing the sandbox.

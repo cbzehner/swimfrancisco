@@ -1,0 +1,30 @@
+schemaVersion: "1"
+name: "${{ env.args.name }}"
+agent: "${{ env.args.agent }}"
+args:
+  name:
+    default: swimfrancisco
+    pattern: '^[a-z0-9][a-z0-9.-]+$'
+  agent:
+    default: codex
+    enum: [codex, claude, shell]
+  template:
+    default: ""
+kits:
+  - ./kit
+# Source is copied by scripts/sandbox.py. No host directory is mounted.
+sandboxOptions:
+  template: "${{ env.args.template }}"
+  cpus: 4
+  memory: 8g
+  shareSkills: false
+env:
+  CLOUDFLARE_ACCOUNT_ID: d985f954e272a26b858d9f8c5fc53217
+secrets:
+  swimfrancisco-cloudflare:
+    command: python3 ../scripts/sandbox.py credential
+    refresh: 10m
+bindings:
+  swimfrancisco-cloudflare:
+    apiKey:
+      domains: [api.cloudflare.com]

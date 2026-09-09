@@ -49,6 +49,7 @@ test-results/
 # Local agent/tool state
 .claude/
 .codex/
+.sandbox/
 
 # Worker build artifacts
 worker/out/
