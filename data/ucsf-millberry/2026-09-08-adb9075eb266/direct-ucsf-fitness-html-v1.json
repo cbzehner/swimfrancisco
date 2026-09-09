@@ -8,7 +8,7 @@
           "httpx": "0.28.1",
           "openpyxl": "3.1.5"
         },
-        "parser_sha256": "72f34215e9863422d3e3b229b15e4ab066abcf317044c1adae2acbc1ebb41bc3",
+        "parser_sha256": "828c6a231cf44cc075c40d48af24473608fbec3d11cf20aff60b8d247a677fb9",
         "python": "3.13.15",
         "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
         "source_identity": "original_bytes"
@@ -21,7 +21,7 @@
     },
     "source_coverage": null
   },
-  "extracted_at": "2026-09-08T08:00:50.498970+00:00",
+  "extracted_at": "2026-09-09T04:24:29.315433+00:00",
   "model": "ucsf-fitness-html-v1",
   "payload": {
     "access_exceptions": [],

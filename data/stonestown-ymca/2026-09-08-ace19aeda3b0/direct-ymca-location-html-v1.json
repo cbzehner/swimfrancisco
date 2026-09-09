@@ -1,0 +1,205 @@
+{
+  "cost_estimate": "deterministic",
+  "details": {
+    "direct_source": {
+      "configuration": {
+        "capture": {
+          "browser_version": "128.0.6613.137",
+          "captured_at": "2026-09-09T04:24:09.620Z",
+          "configuration": {
+            "playwright_version": "1.60.0",
+            "script_sha256": "56ed47662a267147befeb4c898586da48683caaa7868061fb8f9d620bd07f02a"
+          },
+          "hashes": {
+            "rendered": "91b9dacefd9fd07ff249e8d6fa63a3a7de96028ca582bf6978ecce7310f56853",
+            "screenshot": "f3b7eca1dddc7d475f97eb1108fde465839e5677616f436498f51d55d7174d83",
+            "source": "ace19aeda3b06386e1003a67ec0ef697c88a1d94b68f7b6d9637893f8cad4d97"
+          },
+          "method": "cloudflare_browser",
+          "requested_url": "https://www.ymcasf.org/location/stonestown-family-ymca/",
+          "status": 200,
+          "url": "https://www.ymcasf.org/location/stonestown-family-ymca/"
+        },
+        "freshness_days": 14,
+        "libraries": {
+          "httpx": "0.28.1",
+          "openpyxl": "3.1.5"
+        },
+        "parser_sha256": "828c6a231cf44cc075c40d48af24473608fbec3d11cf20aff60b8d247a677fb9",
+        "python": "3.13.15",
+        "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+        "source_identity": "original_bytes"
+      },
+      "freshness_days": 14,
+      "observed_on": "2026-09-08",
+      "requested_url": "https://www.ymcasf.org/location/stonestown-family-ymca/",
+      "sha256": "ace19aeda3b06386e1003a67ec0ef697c88a1d94b68f7b6d9637893f8cad4d97",
+      "url": "https://www.ymcasf.org/location/stonestown-family-ymca/"
+    },
+    "source_coverage": null
+  },
+  "extracted_at": "2026-09-09T04:24:26.341089+00:00",
+  "model": "ymca-location-html-v1",
+  "payload": {
+    "access_exceptions": [
+      {
+        "date": "2026-09-07",
+        "end": "14:00",
+        "evidence": "Monday, September 7 (Labor Day) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Labor Day",
+        "start": "07:00"
+      },
+      {
+        "date": "2026-11-26",
+        "end": "14:00",
+        "evidence": "Thursday, November 26 (Thanksgiving) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Thanksgiving",
+        "start": "07:00"
+      },
+      {
+        "date": "2026-11-27",
+        "end": "14:00",
+        "evidence": "Friday, November 27 (Holiday Hours) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Holiday Hours",
+        "start": "07:00"
+      },
+      {
+        "date": "2026-12-24",
+        "end": "14:00",
+        "evidence": "Thursday, December 24 (Christmas Eve) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Christmas Eve",
+        "start": "07:00"
+      },
+      {
+        "date": "2026-12-31",
+        "end": "14:00",
+        "evidence": "Thursday, December 31 (New Year\u2019s Eve) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "New Year\u2019s Eve",
+        "start": "07:00"
+      },
+      {
+        "date": "2027-01-01",
+        "end": "16:00",
+        "evidence": "Friday, January 1 (New Year\u2019s Day) 10:00 a.m. \u2013 4:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "New Year\u2019s Day",
+        "start": "10:00"
+      },
+      {
+        "date": "2027-01-18",
+        "end": "14:00",
+        "evidence": "Monday, January 18 (Martin Luther King Jr. Day) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Martin Luther King Jr. Day",
+        "start": "07:00"
+      },
+      {
+        "date": "2027-02-06",
+        "end": "14:00",
+        "evidence": "Saturday, February 6 (Lunar New Year) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Lunar New Year",
+        "start": "07:00"
+      },
+      {
+        "date": "2027-03-28",
+        "end": "14:00",
+        "evidence": "Sunday, March 28 (Easter Sunday) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Easter Sunday",
+        "start": "07:00"
+      },
+      {
+        "date": "2027-05-31",
+        "end": "14:00",
+        "evidence": "Monday, May 31 (Memorial Day) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Memorial Day",
+        "start": "07:00"
+      },
+      {
+        "date": "2027-06-19",
+        "end": "14:00",
+        "evidence": "Saturday, June 19 (Juneteenth) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Juneteenth",
+        "start": "07:00"
+      },
+      {
+        "date": "2027-07-04",
+        "end": "14:00",
+        "evidence": "Saturday, July 4 (Independence Day) 7:00 a.m. \u2013 2:00 p.m.",
+        "label": "Holiday facility hours",
+        "reason": "Independence Day",
+        "start": "07:00"
+      }
+    ],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "21:00",
+        "evidence": "Monday: 5:30 am \u2013 9:00 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "tuesday",
+        "end": "21:00",
+        "evidence": "Tuesday: 5:30 am \u2013 9:00 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "wednesday",
+        "end": "21:00",
+        "evidence": "Wednesday: 5:30 am \u2013 9:00 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "thursday",
+        "end": "21:00",
+        "evidence": "Thursday: 5:30 am \u2013 9:00 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "friday",
+        "end": "21:00",
+        "evidence": "Friday: 5:30 am \u2013 9:00 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "saturday",
+        "end": "17:00",
+        "evidence": "Saturday: 7:00 am \u2013 5:00 pm",
+        "label": "Facility hours",
+        "start": "07:00"
+      },
+      {
+        "day": "sunday",
+        "end": "17:00",
+        "evidence": "Sunday: 7:00 am \u2013 5:00 pm",
+        "label": "Facility hours",
+        "start": "07:00"
+      }
+    ],
+    "closures": [],
+    "effective_end": "2026-09-21",
+    "effective_start": "2026-09-08",
+    "schedule_basis": "facility_hours",
+    "sessions": []
+  },
+  "pdf_sha256": "ace19aeda3b06386e1003a67ec0ef697c88a1d94b68f7b6d9637893f8cad4d97",
+  "prompt_sha256": "f61aea063461b7d02e6e993bc9cf3962503e1b69da06bee1ae5d2f1210a81de9",
+  "provider": "direct",
+  "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+  "source_pdf_url": "https://www.ymcasf.org/location/stonestown-family-ymca/",
+  "usage": {}
+}

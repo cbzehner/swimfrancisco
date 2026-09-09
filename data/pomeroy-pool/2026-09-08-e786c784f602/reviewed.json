@@ -1,0 +1,147 @@
+{
+  "pdf_sha256": "e786c784f60288745073b35f7a220634b1e54b2025ee56c504c8779f4ae59226",
+  "source_pdf_url": "https://www.prrcsf.org/therapeutic-swim",
+  "direct_source": {
+    "configuration": {
+      "freshness_days": 14,
+      "libraries": {
+        "httpx": "0.28.1",
+        "openpyxl": "3.1.5"
+      },
+      "parser_sha256": "828c6a231cf44cc075c40d48af24473608fbec3d11cf20aff60b8d247a677fb9",
+      "python": "3.13.15",
+      "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+      "source_identity": "original_bytes"
+    },
+    "freshness_days": 14,
+    "observed_on": "2026-09-08",
+    "requested_url": "https://www.prrcsf.org/therapeutic-swim",
+    "sha256": "e786c784f60288745073b35f7a220634b1e54b2025ee56c504c8779f4ae59226",
+    "url": "https://www.prrcsf.org/therapeutic-swim"
+  },
+  "slug": "pomeroy-pool",
+  "reviewed_at": "2026-09-08",
+  "attested_by": "ci",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [],
+    "closures": [],
+    "effective_end": "2026-09-21",
+    "effective_start": "2026-09-08",
+    "schedule_basis": "swim_schedule",
+    "sessions": [
+      {
+        "day": "monday",
+        "end": "11:55",
+        "evidence": "11am - 11:55am Lap Swim",
+        "start": "11:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "monday",
+        "end": "14:55",
+        "evidence": "1pm - 2:55pm Open Swim",
+        "start": "13:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "08:55",
+        "evidence": "8am - 8:55am Lap Swim",
+        "start": "08:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "09:55",
+        "evidence": "9am - 9:55am Open Swim",
+        "start": "09:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "14:55",
+        "evidence": "1pm - 2:55pm Open Swim",
+        "start": "13:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "08:55",
+        "evidence": "8am - 8:55am Lap Swim",
+        "start": "08:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "09:55",
+        "evidence": "9am - 9:55am Open Swim",
+        "start": "09:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "14:55",
+        "evidence": "2pm - 2:55pm Open Swim",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "08:55",
+        "evidence": "8am - 8:55am Lap Swim",
+        "start": "08:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "09:55",
+        "evidence": "9am - 9:55am Open Swim",
+        "start": "09:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "18:55",
+        "evidence": "6pm - 6:55pm Lap Swim",
+        "start": "18:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "08:55",
+        "evidence": "8am - 8:55am Lap Swim",
+        "start": "08:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "09:55",
+        "evidence": "9am - 9:55am Open Swim",
+        "start": "09:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "17:55",
+        "evidence": "5pm - 5:55pm Lap Swim",
+        "start": "17:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "08:55",
+        "evidence": "8am - 8:55am Lap Swim",
+        "start": "08:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "09:55",
+        "evidence": "9am - 9:55am Open Swim",
+        "start": "09:00",
+        "type": "family_swim"
+      }
+    ]
+  }
+}

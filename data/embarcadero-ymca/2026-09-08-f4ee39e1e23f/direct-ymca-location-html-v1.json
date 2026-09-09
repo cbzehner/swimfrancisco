@@ -1,0 +1,174 @@
+{
+  "cost_estimate": "deterministic",
+  "details": {
+    "direct_source": {
+      "configuration": {
+        "capture": {
+          "browser_version": "128.0.6613.137",
+          "captured_at": "2026-09-09T04:24:13.711Z",
+          "configuration": {
+            "playwright_version": "1.60.0",
+            "script_sha256": "56ed47662a267147befeb4c898586da48683caaa7868061fb8f9d620bd07f02a"
+          },
+          "hashes": {
+            "rendered": "f16062b52cb9764e565d8de39023285b5fc5bf522c9adc9cc96e504d5e40d6d6",
+            "screenshot": "faf5af8cab98f3a3db549c3ca5928e90f4784b53f921c7f63f9d64596ed0050c",
+            "source": "f4ee39e1e23f8bad5e075b131a06ee414ebfbaaa1bfe483a3e6768369614a633"
+          },
+          "method": "cloudflare_browser",
+          "requested_url": "https://www.ymcasf.org/location/embarcadero-ymca/",
+          "status": 200,
+          "url": "https://www.ymcasf.org/location/embarcadero-ymca/"
+        },
+        "freshness_days": 14,
+        "libraries": {
+          "httpx": "0.28.1",
+          "openpyxl": "3.1.5"
+        },
+        "parser_sha256": "828c6a231cf44cc075c40d48af24473608fbec3d11cf20aff60b8d247a677fb9",
+        "python": "3.13.15",
+        "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+        "source_identity": "original_bytes"
+      },
+      "freshness_days": 14,
+      "observed_on": "2026-09-08",
+      "requested_url": "https://www.ymcasf.org/location/embarcadero-ymca/",
+      "sha256": "f4ee39e1e23f8bad5e075b131a06ee414ebfbaaa1bfe483a3e6768369614a633",
+      "url": "https://www.ymcasf.org/location/embarcadero-ymca/"
+    },
+    "source_coverage": null
+  },
+  "extracted_at": "2026-09-09T04:24:26.400935+00:00",
+  "model": "ymca-location-html-v1",
+  "payload": {
+    "access_exceptions": [
+      {
+        "date": "2026-09-07",
+        "end": "13:30",
+        "evidence": "Monday, September 7 (Labor Day) 7:00 a.m. \u2013 2:00 p.m. Pool Closes at 1:30 p.m.",
+        "label": "Holiday pool hours",
+        "reason": "Labor Day",
+        "start": "07:30"
+      },
+      {
+        "date": "2026-11-26",
+        "end": "13:30",
+        "evidence": "Thursday, November 26 (Thanksgiving) 7:00 a.m. \u2013 2:00 p.m. Pool Closes at 1:30 p.m.",
+        "label": "Holiday pool hours",
+        "reason": "Thanksgiving",
+        "start": "07:30"
+      },
+      {
+        "date": "2026-11-27",
+        "end": "13:30",
+        "evidence": "Friday, November 27 (Holiday Hours) 7:00 a.m. \u2013 2:00 p.m. Pool Closes at 1:30 p.m.",
+        "label": "Holiday pool hours",
+        "reason": "Holiday Hours",
+        "start": "07:30"
+      },
+      {
+        "date": "2026-12-24",
+        "end": "13:30",
+        "evidence": "Thursday, December 24 (Christmas Eve) 7:00 a.m. \u2013 2:00 p.m. Pool Closes at 1:30 p.m.",
+        "label": "Holiday pool hours",
+        "reason": "Christmas Eve",
+        "start": "07:30"
+      },
+      {
+        "date": "2026-12-31",
+        "end": "13:30",
+        "evidence": "Thursday, December 31 (New Year\u2019s Eve) 7:00 a.m. \u2013 2:00 p.m. Pool Closes at 1:30 p.m.",
+        "label": "Holiday pool hours",
+        "reason": "New Year\u2019s Eve",
+        "start": "07:30"
+      },
+      {
+        "date": "2027-01-01",
+        "end": "15:30",
+        "evidence": "Friday, January 1 (New Year\u2019s Day) 10:00 a.m. \u2013 4:00 p.m. Pool Closes at 3:30 p.m.",
+        "label": "Holiday pool hours",
+        "reason": "New Year\u2019s Day",
+        "start": "10:30"
+      },
+      {
+        "date": "2027-01-18",
+        "end": "13:30",
+        "evidence": "Monday, January 18 (Martin Luther King Jr. Day) 7:00 a.m. \u2013 2:00 p.m. Pool Closes at 1:30 p.m.",
+        "label": "Holiday pool hours",
+        "reason": "Martin Luther King Jr. Day",
+        "start": "07:30"
+      },
+      {
+        "date": "2027-02-06",
+        "end": "13:30",
+        "evidence": "Saturday, February 6 (Lunar New Year) 7:00 a.m. \u2013 2:00 p.m. Pool Closes at 1:30 p.m.",
+        "label": "Holiday pool hours",
+        "reason": "Lunar New Year",
+        "start": "07:30"
+      },
+      {
+        "date": "2027-07-04",
+        "end": "13:30",
+        "evidence": "Saturday, July 4 (Independence Day) 7:00 a.m. \u2013 2:00 p.m. Pool Closes at 1:30 p.m.",
+        "label": "Holiday pool hours",
+        "reason": "Independence Day",
+        "start": "07:30"
+      }
+    ],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "20:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "06:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "20:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "06:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "20:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "06:00"
+      },
+      {
+        "day": "thursday",
+        "end": "20:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "06:00"
+      },
+      {
+        "day": "friday",
+        "end": "20:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "06:00"
+      },
+      {
+        "day": "saturday",
+        "end": "16:30",
+        "evidence": "Pool opens 30 min after, closes 30 min before facility",
+        "label": "Pool hours",
+        "start": "07:30"
+      }
+    ],
+    "closures": [],
+    "effective_end": "2026-09-21",
+    "effective_start": "2026-09-08",
+    "schedule_basis": "pool_hours",
+    "sessions": []
+  },
+  "pdf_sha256": "f4ee39e1e23f8bad5e075b131a06ee414ebfbaaa1bfe483a3e6768369614a633",
+  "prompt_sha256": "f61aea063461b7d02e6e993bc9cf3962503e1b69da06bee1ae5d2f1210a81de9",
+  "provider": "direct",
+  "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+  "source_pdf_url": "https://www.ymcasf.org/location/embarcadero-ymca/",
+  "usage": {}
+}

@@ -1,0 +1,91 @@
+{
+  "cost_estimate": "deterministic",
+  "details": {
+    "direct_source": {
+      "configuration": {
+        "freshness_days": 14,
+        "libraries": {
+          "httpx": "0.28.1",
+          "openpyxl": "3.1.5"
+        },
+        "parser_sha256": "828c6a231cf44cc075c40d48af24473608fbec3d11cf20aff60b8d247a677fb9",
+        "python": "3.13.15",
+        "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+        "source_identity": "original_bytes"
+      },
+      "freshness_days": 14,
+      "observed_on": "2026-09-08",
+      "requested_url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914",
+      "sha256": "b16c14ddf02bb180e89bc40335275c5ff8febbd8af35d1857f972a6081461b08",
+      "url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914"
+    },
+    "source_coverage": null
+  },
+  "extracted_at": "2026-09-09T04:24:27.845464+00:00",
+  "model": "city-sports-html-v1",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "23:00",
+        "evidence": "Mon-Thu: 5:00am - 11:00pm",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "23:00",
+        "evidence": "Mon-Thu: 5:00am - 11:00pm",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "23:00",
+        "evidence": "Mon-Thu: 5:00am - 11:00pm",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "thursday",
+        "end": "23:00",
+        "evidence": "Mon-Thu: 5:00am - 11:00pm",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "friday",
+        "end": "22:00",
+        "evidence": "Fri: 5:00am - 10:00pm",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "saturday",
+        "end": "20:00",
+        "evidence": "Sat-Sun: 8:00am - 8:00pm",
+        "label": "Club hours",
+        "start": "08:00"
+      },
+      {
+        "day": "sunday",
+        "end": "20:00",
+        "evidence": "Sat-Sun: 8:00am - 8:00pm",
+        "label": "Club hours",
+        "start": "08:00"
+      }
+    ],
+    "closures": [],
+    "effective_end": "2026-09-21",
+    "effective_start": "2026-09-08",
+    "schedule_basis": "facility_hours",
+    "sessions": []
+  },
+  "pdf_sha256": "b16c14ddf02bb180e89bc40335275c5ff8febbd8af35d1857f972a6081461b08",
+  "prompt_sha256": "c6d66ea6d229afd461a7314ba4ed02cf3682bd0b079c3763047f3d06cb64555a",
+  "provider": "direct",
+  "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+  "source_pdf_url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914",
+  "usage": {}
+}

@@ -1,0 +1,77 @@
+{
+  "cost_estimate": "deterministic",
+  "details": {
+    "direct_source": {
+      "configuration": {
+        "freshness_days": 14,
+        "libraries": {
+          "httpx": "0.28.1",
+          "openpyxl": "3.1.5"
+        },
+        "parser_sha256": "828c6a231cf44cc075c40d48af24473608fbec3d11cf20aff60b8d247a677fb9",
+        "python": "3.13.15",
+        "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+        "source_identity": "original_bytes"
+      },
+      "freshness_days": 14,
+      "observed_on": "2026-09-08",
+      "requested_url": "https://docs.google.com/spreadsheets/d/1PcFSl3ndScM2-SZnubwDvBlbhpmbFsVjEPK-yGilZU0/edit?gid=1958899859&pli=1",
+      "sha256": "ecf2f6106ab2b27180d915e020401ad62a5d8aa78c3e040d3c6df7c4d130e088",
+      "url": "https://doc-0s-b4-sheets.googleusercontent.com/export/54bogvaave6cua4cdnls17ksc4/c9epfbr20mqqp8bkuc75q8b174/1788927860000/118278286397404577947/*/1PcFSl3ndScM2-SZnubwDvBlbhpmbFsVjEPK-yGilZU0?format=xlsx"
+    },
+    "source_coverage": null
+  },
+  "extracted_at": "2026-09-09T04:24:25.476267+00:00",
+  "model": "koret-google-workbook-v1",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [],
+    "closures": [],
+    "effective_end": "2026-09-21",
+    "effective_start": "2026-09-08",
+    "schedule_basis": "pool_hours",
+    "sessions": [
+      {
+        "day": "tuesday",
+        "end": "21:00",
+        "evidence": "Tuesday Hours: 6am-9pm",
+        "start": "06:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "21:00",
+        "evidence": "Wednesday Hours: 6am-9pm",
+        "start": "06:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "21:00",
+        "evidence": "Thursday Hours: 6am-9pm",
+        "start": "06:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "21:00",
+        "evidence": "Friday Hours: 6am-9pm",
+        "start": "06:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "18:00",
+        "evidence": "Saturday Hours 8am-6pm",
+        "start": "08:00",
+        "type": "lap_swim"
+      }
+    ]
+  },
+  "pdf_sha256": "ecf2f6106ab2b27180d915e020401ad62a5d8aa78c3e040d3c6df7c4d130e088",
+  "prompt_sha256": "d890ba6f8d2dfd4dbae8cfba507a0e627b9100313325103fdc48ac549ca8dcc2",
+  "provider": "direct",
+  "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+  "source_pdf_url": "https://docs.google.com/spreadsheets/d/1PcFSl3ndScM2-SZnubwDvBlbhpmbFsVjEPK-yGilZU0/edit?gid=1958899859&pli=1",
+  "usage": {}
+}
