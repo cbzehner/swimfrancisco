@@ -4,7 +4,8 @@ import hashlib
 import json
 import platform
 from importlib.metadata import version
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -120,8 +121,14 @@ def extract_direct(entry: PoolEntry, *, cache_root: Path | None = None) -> Direc
         raise DirectSourceError(f"{entry.slug}: unsupported direct source kind {entry.source_kind!r}")
     extractor, model, note = spec
     cache_root = fetch_kwargs.get("cache_root") or DATA_DIR
-    response = fetch_text(entry.pdf_url)
-    observed_on = pacific_today()
+    capture = None
+    if entry.capture_method == "cloudflare_browser":
+        from .browser import read_browser_capture
+        response, capture = read_browser_capture(entry)
+    else:
+        response = fetch_text(entry.pdf_url)
+    observed_on = (datetime.fromisoformat(capture["captured_at"].replace("Z", "+00:00"))
+                   .astimezone(ZoneInfo("America/Los_Angeles")).date()) if capture else pacific_today()
     sha256 = hashlib.sha256(response.content).hexdigest()
     slug_dir = cache_root / entry.slug
     slug_dir.mkdir(parents=True, exist_ok=True)
@@ -133,6 +140,8 @@ def extract_direct(entry: PoolEntry, *, cache_root: Path | None = None) -> Direc
         response_url=response.response_url,
     )
     source = _source_metadata(entry, fetched, observed_on)
+    if capture is not None:
+        source["configuration"] = source["configuration"] | {"capture": capture}
     payload = _extract_pomeroy(response.text, observed_on=observed_on) if entry.source_kind == "pomeroy_html" else extractor(response.text)
     payload = observation_window(payload, source["observed_on"])
     from .providers.pomeroy import verify_pomeroy

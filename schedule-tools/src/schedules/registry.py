@@ -3,12 +3,21 @@ from __future__ import annotations
 import tomllib
 from typing import get_args
 
-from .models import PoolEntry, PoolSource, SourceKind, SourceStatus
+from .models import CaptureMethod, PoolEntry, PoolSource, SourceKind, SourceStatus
 from .paths import CONTENT_SPOTS_DIR, REGISTRY_PATH
 
 
 _VALID_SOURCE_STATUSES = frozenset(get_args(SourceStatus))
 _VALID_SOURCE_KINDS = frozenset(get_args(SourceKind))
+_VALID_CAPTURE_METHODS = frozenset(get_args(CaptureMethod))
+_BROWSER_CAPTURE_SOURCES = frozenset({
+    ("jccsf", "jccsf_html", "https://www.jccsf.org/fitness/aquatics/"),
+    ("presidio-ymca-letterman", "ymca_location_html", "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"),
+    ("stonestown-ymca", "ymca_location_html", "https://www.ymcasf.org/location/stonestown-family-ymca/"),
+    ("embarcadero-ymca", "ymca_location_html", "https://www.ymcasf.org/location/embarcadero-ymca/"),
+    ("chinatown-ymca", "ymca_location_html", "https://www.ymcasf.org/location/chinatown-ymca/"),
+    ("sfsu-mashouf", "sfsu_aquatics_html", "https://campusrec.sfsu.edu/Aquatics"),
+})
 
 
 def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
@@ -45,6 +54,11 @@ def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
         source_status = raw_entry.get("source_status", "published")
         source_kind = raw_entry.get("source_kind", "sfrecpark_pdf")
         notes = raw_entry.get("notes")
+        capture_method = raw_entry.get("capture_method", "http")
+        if not isinstance(capture_method, str) or capture_method not in _VALID_CAPTURE_METHODS:
+            raise ValueError("capture_method must be http or cloudflare_browser")
+        if capture_method == "cloudflare_browser" and (slug, source_kind, pdf_url) not in _BROWSER_CAPTURE_SOURCES:
+            raise ValueError("Cloudflare browser capture is limited to the six approved HTML sources and URLs")
         auto_publish = raw_entry.get("auto_publish", False)
         if not isinstance(auto_publish, bool) or (auto_publish and (slug, source_kind, pdf_url) != (
             "pomeroy-pool", "pomeroy_html", "https://www.prrcsf.org/therapeutic-swim"
@@ -80,6 +94,7 @@ def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
                 source_status=source_status,
                 source_kind=source_kind,
                 auto_publish=auto_publish,
+                capture_method=capture_method,
                 notes=notes,
                 pool_sources=pool_sources,
             )

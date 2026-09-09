@@ -29,6 +29,8 @@ jobs:
       SCHEDULES_AUTOMATION_ENABLED: ${{ vars.SCHEDULES_AUTOMATION_ENABLED }}
       SCHEDULES_MONTHLY_BUDGET_USD: ${{ vars.SCHEDULES_MONTHLY_BUDGET_USD }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      CLOUDFLARE_BROWSER_API_TOKEN: ${{ secrets.CLOUDFLARE_BROWSER_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
       GITHUB_TOKEN: ${{ github.token }}
     steps:
       - name: Require an approved budget and CI-capable token
@@ -38,6 +40,8 @@ jobs:
           test -n "$SCHEDULES_BOT_TOKEN"
           test -n "$OPENAI_API_KEY"
           test -n "$SCHEDULES_MONTHLY_BUDGET_USD"
+          test -n "$CLOUDFLARE_BROWSER_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
 
       - uses: actions/checkout@v4
         with:
@@ -71,11 +75,13 @@ jobs:
         run: |
           uv --project schedule-tools run --locked schedules budget reserve --run-id "$RUN_ID" --output tmp/api-budget
           node --input-type=module -e '
-            import { readFileSync, appendFileSync } from "node:fs";
+            import { readFileSync, appendFileSync, writeFileSync } from "node:fs";
             import { resolve } from "node:path";
             const receipt = JSON.parse(readFileSync("tmp/api-budget/reservation.json", "utf8"));
+            writeFileSync("tmp/browser-budget.json", JSON.stringify({limit_seconds: 300, used_seconds: 0, blocked: false}), {flag: "wx"});
             appendFileSync(process.env.GITHUB_ENV,
               "SCHEDULES_API_BUDGET_FILE=" + resolve("tmp/api-budget/budget.json") + "\n" +
+              "SCHEDULES_BROWSER_BUDGET_FILE=" + resolve("tmp/browser-budget.json") + "\n" +
               "SCHEDULES_API_BUDGET_USD=" + receipt.limit_microusd / 1000000 + "\n");
           '
 
@@ -99,6 +105,7 @@ jobs:
             tmp/api-budget/reservation.json
             tmp/api-budget/budget.json
             tmp/api-budget/api-attempts/
+            tmp/browser-budget.json
           retention-days: 90
           if-no-files-found: warn
 

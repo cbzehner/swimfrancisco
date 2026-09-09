@@ -75,6 +75,8 @@ SourceKind = Literal[
 ]
 
 
+CaptureMethod = Literal["http", "cloudflare_browser"]
+
 ScheduleBasis = Literal[
     "swim_schedule",
     "pool_hours",
@@ -107,6 +109,7 @@ class PoolEntry:
     notes: str | None = None
     pool_sources: tuple[PoolSource, ...] = ()
     auto_publish: bool = False
+    capture_method: CaptureMethod = "http"
 
 
 @dataclass(frozen=True)

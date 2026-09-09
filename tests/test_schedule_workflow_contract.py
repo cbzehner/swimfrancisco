@@ -60,3 +60,13 @@ def test_operator_issue_is_deduplicated_and_requires_live_confirmation():
     assert "result.status === 'published' ? result.published_slugs" in WORKFLOW
     assert "commandFailures" in WORKFLOW
     assert "needs.extract.result != 'skipped'" in WORKFLOW
+
+
+def test_browser_credentials_budget_and_evidence_are_scoped_to_extraction():
+    extract, rest = WORKFLOW.split('\n  review-closures:', 1)
+    assert 'CLOUDFLARE_BROWSER_API_TOKEN: ${{ secrets.CLOUDFLARE_BROWSER_API_TOKEN }}' in extract
+    assert 'CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}' in extract
+    assert 'test -n "$CLOUDFLARE_BROWSER_API_TOKEN"' in extract
+    assert 'SCHEDULES_BROWSER_BUDGET_FILE=' in extract
+    assert 'tmp/browser-budget.json' in extract
+    assert 'CLOUDFLARE_BROWSER_API_TOKEN' not in rest

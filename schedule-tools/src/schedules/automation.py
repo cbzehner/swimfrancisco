@@ -43,6 +43,15 @@ def copy_extraction_cache(previous: Path, current: Path, previous_base: str, com
 
 def save_evidence(root: Path, destination: Path) -> None:
     destination.mkdir(parents=True, exist_ok=True)
+    captures = root / "tmp/browser-capture"
+    for source in captures.glob("**/*"):
+        relative = source.relative_to(captures)
+        if (source.is_symlink() or source.parent.is_symlink() or not source.is_file()
+                or not re.fullmatch(r"results\.json|[a-z0-9-]+/(source\.html|rendered\.html|screenshot\.png|capture\.json)", relative.as_posix())):
+            continue
+        target = destination / "browser-capture" / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, target)
     for name in ("discovery-decisions.json", "discovery-report.md", "publish-pending.json", "publish-pending-report.md",
                  "extraction-report-direct.md", "extraction-report-direct.json", "extraction-report-openai.md", "extraction-report-openai.json"):
         source = root / "tmp" / name
@@ -207,11 +216,12 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
                 checked(["uv", "--project", "schedule-tools", "sync", "--locked"], worktree, command)
                 schedules = ["uv", "--project", "schedule-tools", "run", "--locked", "schedules"]
                 for name, arguments, required in (
-                    ("discover", ["discover"], True),
-                    ("direct", ["extract", "--direct"], False),
-                    ("openai", ["extract", "--provider", "openai", "--no-discover"], False),
+                    ("discover", schedules + ["discover"], True),
+                    ("browser", ["node", "scripts/capture-schedules.mjs"], False),
+                    ("direct", schedules + ["extract", "--direct"], False),
+                    ("openai", schedules + ["extract", "--provider", "openai", "--no-discover"], False),
                 ):
-                    result = command(schedules + arguments, worktree, timeout=1800)
+                    result = command(arguments, worktree, timeout=160 if name == "browser" else 1800)
                     build["commands"][name] = result.returncode
                     if required and result.returncode:
                         raise RuntimeError(f"{name} failed; no publication is allowed")

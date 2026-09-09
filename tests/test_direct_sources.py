@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import io
+import json
 import zipfile
 from datetime import date, time, timedelta
 
@@ -786,3 +787,97 @@ def test_pomeroy_inventory_allows_application_link():
     observed = date(2026, 9, 7)
     payload = _extract_pomeroy(html, observed_on=observed)
     assert verify_pomeroy(html + '<a href="/application.pdf">Application form</a>', payload, observed)["ok"]
+
+
+@pytest.fixture
+def browser_capture(tmp_path):
+    import hashlib
+    from datetime import datetime, timezone
+    from schedules.models import PoolEntry
+    root = tmp_path
+    directory = root / 'tmp/browser-capture/jccsf'
+    directory.mkdir(parents=True)
+    (root / 'scripts').mkdir()
+    (root / 'scripts/capture-schedules.mjs').write_text('capture implementation')
+    package = root / 'node_modules/playwright-core'
+    package.mkdir(parents=True)
+    (package / 'package.json').write_text('{"version":"1.60.0"}')
+    files = {'source': ('source.html', b'<html><body>Official pool schedule</body></html>'),
+             'rendered': ('rendered.html', b'<html><body>Rendered schedule</body></html>'),
+             'screenshot': ('screenshot.png', b'\x89PNG\r\n\x1a\nfixture')}
+    for filename, content in files.values():
+        (directory / filename).write_bytes(content)
+    entry = PoolEntry(slug='jccsf', pdf_url='https://www.jccsf.org/fitness/aquatics/',
+                      official_page_url='https://www.jccsf.org/fitness/aquatics/',
+                      source_kind='jccsf_html', capture_method='cloudflare_browser')
+    receipt = {'method': 'cloudflare_browser', 'requested_url': entry.pdf_url, 'url': entry.pdf_url,
+               'captured_at': datetime.now(timezone.utc).isoformat(), 'status': 200,
+               'configuration': {'script_sha256': hashlib.sha256((root / 'scripts/capture-schedules.mjs').read_bytes()).hexdigest(),
+                                 'playwright_version': '1.60.0'},
+               'hashes': {key: hashlib.sha256(value[1]).hexdigest() for key, value in files.items()},
+               'browser_version': '128'}
+    (directory / 'capture.json').write_text(json.dumps(receipt))
+    (directory.parent / 'results.json').write_text(json.dumps({'closed': True, 'results': [{'slug': entry.slug, 'status': 'captured'}]}))
+    return root, directory, entry, receipt
+
+
+def test_browser_capture_uses_original_bytes_and_keeps_provenance(browser_capture, monkeypatch):
+    from schedules import direct_sources
+    from schedules.direct_sources.browser import read_browser_capture
+    root, directory, entry, receipt = browser_capture
+    monkeypatch.setattr('schedules.direct_sources.browser.read_browser_capture', lambda entry: read_browser_capture(entry, root=root))
+    monkeypatch.setattr(direct_sources, 'fetch_text', lambda *_: pytest.fail('Browser source must never use HTTP fallback'))
+    monkeypatch.setitem(direct_sources._HTML_EXTRACTORS, 'jccsf_html', (lambda text: {'sessions': [], 'closures': [], 'schedule_basis': 'swim_schedule'}, 'test', 'note'))
+    result = direct_sources.extract_direct(entry, cache_root=root / 'data')
+    assert result.fetch_result.path.read_bytes() == (directory / 'source.html').read_bytes()
+    assert result.source['configuration']['capture'] == receipt
+
+
+@pytest.mark.parametrize('failure', ['missing', 'source_hash', 'rendered_hash', 'screenshot_hash', 'url', 'status', 'stale', 'future', 'script', 'version', 'unclosed', 'failed', 'duplicate', 'symlink'])
+def test_browser_capture_rejects_invalid_evidence_without_http_fallback(browser_capture, monkeypatch, failure):
+    from schedules import direct_sources
+    from schedules.direct_sources.browser import read_browser_capture
+    root, directory, entry, receipt = browser_capture
+    if failure == 'missing':
+        (directory / 'capture.json').unlink()
+    elif failure.endswith('_hash'):
+        receipt['hashes'][failure.removesuffix('_hash')] = '0' * 64
+    elif failure == 'url':
+        receipt['url'] = 'https://example.org/'
+    elif failure == 'status':
+        receipt['status'] = 403
+    elif failure in {'stale', 'future'}:
+        receipt['captured_at'] = '2000-01-01T00:00:00Z' if failure == 'stale' else '2999-01-01T00:00:00Z'
+    elif failure == 'script':
+        receipt['configuration']['script_sha256'] = '0' * 64
+    elif failure == 'version':
+        receipt['configuration']['playwright_version'] = 'unknown'
+    elif failure in {'unclosed', 'failed', 'duplicate'}:
+        items = [{'slug': entry.slug, 'status': 'failed' if failure == 'failed' else 'captured'}]
+        (directory.parent / 'results.json').write_text(json.dumps({'closed': failure != 'unclosed', 'results': items * (2 if failure == 'duplicate' else 1)}))
+    elif failure == 'symlink':
+        source = directory / 'source.html'
+        content = source.read_bytes()
+        source.unlink()
+        (root / 'elsewhere.html').write_bytes(content)
+        source.symlink_to(root / 'elsewhere.html')
+    if failure != 'missing':
+        (directory / 'capture.json').write_text(json.dumps(receipt))
+    monkeypatch.setattr('schedules.direct_sources.browser.read_browser_capture', lambda entry: read_browser_capture(entry, root=root))
+    monkeypatch.setattr(direct_sources, 'fetch_text', lambda *_: pytest.fail('No fallback on capture failure'))
+    with pytest.raises(DirectSourceError, match='valid current Cloudflare capture required'):
+        direct_sources.extract_direct(entry, cache_root=root / 'data')
+
+
+def test_browser_parser_failure_retains_original_source_and_capture(browser_capture, monkeypatch):
+    from schedules import direct_sources
+    from schedules.direct_sources.browser import read_browser_capture
+    root, directory, entry, _ = browser_capture
+    monkeypatch.setattr('schedules.direct_sources.browser.read_browser_capture', lambda entry: read_browser_capture(entry, root=root))
+    def fail(text):
+        raise DirectSourceError('Changed schedule requires review')
+    monkeypatch.setitem(direct_sources._HTML_EXTRACTORS, 'jccsf_html', (fail, 'test', 'note'))
+    with pytest.raises(DirectSourceError, match='Changed schedule'):
+        direct_sources.extract_direct(entry, cache_root=root / 'data')
+    assert len(list((root / 'data/jccsf').glob('*/source.html'))) == 1
+    assert (directory / 'capture.json').exists()

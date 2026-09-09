@@ -1957,3 +1957,77 @@ direct-source HTTP 403 failures remain unresolved; local HTTP 200 responses and
 the official alternatives described above do not establish hosted ingestion.
 Other non-city publication remains manual, with only the existing Pomeroy
 exception. A successful workflow does not mean every pool is automated.
+
+## Cloudflare primary capture for blocked HTML sources
+
+The registry selects exactly one `capture_method` for each source. JCCSF,
+Chinatown YMCA, Embarcadero YMCA, Stonestown YMCA, Presidio/Letterman YMCA, and
+SFSU use `cloudflare_browser`. Other sources use `http`, including city PDFs.
+There is no fallback chain. A failed browser capture holds that source.
+
+The existing schedule workflow captures these six pages through
+`scripts/capture-schedules.mjs` before direct extraction. One Cloudflare Browser
+Run session visits the six approved URLs sequentially. Each source retains its
+original main-document HTML bytes, rendered HTML, screenshot, exact URLs,
+response status, timestamp, browser version, and capture configuration and
+hashes. Parsing uses original HTML, never silently substitutes rendered DOM.
+These are HTML sources; this change does not claim original JCCSF PDF capture or
+YMCA calendar-feed acceptance.
+
+The Python consumer requires a completed capture with confirmed browser closure,
+matching source/configuration/evidence identities, and a capture no older than
+15 minutes. It holds changed redirects, failed responses, missing or mismatched
+files, and stale receipts. Browser evidence remains in each build's retained
+workflow artifact even when parsing fails. It is not added to the generated-file
+publication allowlist. Accepted direct artifacts bind capture provenance inside
+their configuration; reviewed envelope fields retain their existing contract.
+
+Stale-main rebuilding performs a fresh capture against that checkout's registry
+and implementation. Browser captures are not copied as extraction caches.
+Each workflow run has a separate 300-second browser allowance. Before session
+creation a batch reserves 150 seconds; an 80-second active deadline plus the
+60-second idle expiry bounds abandoned sessions. Confirmed closure settles
+elapsed time conservatively; uncertain closure retains the reservation and
+blocks another browser. The run budget uses an exclusive lock. No capture
+retries or concurrent browser sessions are used. This accounting is separate
+from the unchanged durable $5 model ledger and $1 model reservation.
+
+GitHub Actions needs `CLOUDFLARE_BROWSER_API_TOKEN` as a repository secret, with
+Account / Browser Rendering / Edit restricted to the intended account, and
+`CLOUDFLARE_ACCOUNT_ID` as a repository variable. The token does not need Workers
+deployment, DNS, or token-administration permissions. Local Wrangler OAuth is
+not copied into GitHub. Missing credentials fail workflow setup before spending.
+The browser budget and source receipts use the existing 90-day artifact retention.
+
+Local deterministic checks mock browser and API responses; ordinary tests make
+no network or model calls. Local capture requires the same two Cloudflare
+environment variables and an absolute `SCHEDULES_BROWSER_BUDGET_FILE` pointing
+to a fresh JSON run receipt with `limit_seconds: 300`, `used_seconds: 0`, and
+`blocked: false`. Run `node scripts/capture-schedules.mjs` before
+`just schedules extract --direct`. A completed capture directory is not reused
+for another batch; preserve its evidence before starting a separate run.
+
+Capture success does not authorize schedule publication. These six sources
+remain manual, and their existing parser guards continue to hold changed or
+unsupported source wording. Pomeroy remains the only approved direct automatic
+publisher. The exact-commit CI/deployment gate and live verification remain in
+force.
+
+Local integration validation used the approved Cloudflare account and one
+shared 300-second browser receipt. The first two batches exposed screenshot
+readiness timeouts; both closed their sessions and retained conservative charges
+(49 and 81 seconds). The final implementation uses Chrome's direct screenshot
+command as its sole screenshot path, with an explicit timeout and size bound.
+Its third batch captured all six sources, closed successfully, and settled 71
+seconds. Total local browser accounting was 201 seconds; model calls and spend
+were zero. Cloudflare's subsequent active-session list was empty. This is local
+orchestration of real Cloudflare browsers, not yet proof of a GitHub-hosted run.
+
+All six final original HTML captures, rendered documents, PNGs, configuration
+identities, hashes, and timestamps passed the Python consumer. Stonestown and
+Embarcadero produced manual access-hours candidates with zero swim sessions.
+JCCSF held changed afternoon hours, Letterman and Chinatown held explicit
+maintenance-closure wording, and SFSU held its changed weekday-hours format.
+Those parser limitations are not capture failures and were not relaxed here.
+The nine existing city PDF artifacts still passed current independent
+verification; this capture integration did not invalidate their model caches.

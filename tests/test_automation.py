@@ -303,3 +303,39 @@ def test_orphan_review_branch_is_preserved_not_force_pushed(closure_repository):
         open_closure_review_prs(root, evidence, command)
     assert git(remote, "rev-parse", branch) == before
     assert not any("push" in args for args in calls)
+
+
+def test_browser_capture_runs_before_direct_and_again_after_stale_main(runner):
+    _, calls, controls, run = runner
+    controls['stale'] = 1
+    assert run()['status'] == 'published'
+    captures = [i for i, args in enumerate(calls) if args == ['node', 'scripts/capture-schedules.mjs']]
+    direct = [i for i, args in enumerate(calls) if '--direct' in args]
+    assert len(captures) == len(direct) == 2
+    assert captures[0] < direct[0] < captures[1] < direct[1]
+
+
+def test_browser_failure_is_reported_without_blocking_independent_sources(runner):
+    _, calls, controls, run = runner
+    controls['failure'] = 'scripts/capture-schedules.mjs'
+    result = run()
+    assert result['builds'][0]['commands']['browser'] == 1
+    assert any('--direct' in args for args in calls)
+    assert result['status'] == 'published'
+
+
+def test_browser_evidence_retained_with_narrow_filename_allowlist(tmp_path):
+    from schedules.automation import save_evidence
+    root = tmp_path / 'root'
+    capture = root / 'tmp/browser-capture/jccsf'
+    capture.mkdir(parents=True)
+    (capture.parent / 'results.json').write_text('{}')
+    for name in ['source.html', 'rendered.html', 'screenshot.png', 'capture.json', 'credentials.txt']:
+        (capture / name).write_text('evidence')
+    destination = tmp_path / 'evidence'
+    save_evidence(root, destination)
+    assert sorted(str(p.relative_to(destination)) for p in destination.rglob('*') if p.is_file()) == [
+        'browser-capture/jccsf/capture.json', 'browser-capture/jccsf/rendered.html',
+        'browser-capture/jccsf/screenshot.png', 'browser-capture/jccsf/source.html',
+        'browser-capture/results.json',
+    ]
