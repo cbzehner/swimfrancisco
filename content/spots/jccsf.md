@@ -20,8 +20,8 @@ access_summary = "Gallanter Family Aquatics Center access is tied to JCCSF Fitne
 [[extra.schedules]]
 closures = []
 effective_start = "2026-05-17"
-effective_end = "2026-08-11"
 schedule_basis = "swim_schedule"
+effective_end = "2026-08-11"
 last_verified_at = "2026-05-17"
 
 [[extra.schedules.sessions]]
@@ -154,6 +154,7 @@ end = "18:45"
 closures = []
 effective_start = "2026-08-12"
 schedule_basis = "swim_schedule"
+effective_end = "2026-09-08"
 last_verified_at = "2026-08-12"
 
 [[extra.schedules.sessions]]
@@ -281,6 +282,176 @@ day = "sunday"
 type = "family_swim"
 start = "14:00"
 end = "18:45"
+
+[[extra.schedules]]
+closures = []
+effective_start = "2026-09-09"
+schedule_basis = "swim_schedule"
+effective_end = "2026-09-22"
+last_verified_at = "2026-09-09"
+
+[[extra.schedules.sessions]]
+day = "monday"
+type = "family_swim"
+start = "05:30"
+end = "12:00"
+pool = "rec"
+
+[[extra.schedules.sessions]]
+day = "monday"
+type = "lap_swim"
+start = "05:30"
+end = "21:45"
+pool = "lap"
+
+[[extra.schedules.sessions]]
+day = "monday"
+type = "family_swim"
+start = "13:30"
+end = "21:45"
+pool = "rec"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "family_swim"
+start = "05:30"
+end = "11:30"
+pool = "rec"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "lap_swim"
+start = "05:30"
+end = "21:45"
+pool = "lap"
+
+[[extra.schedules.sessions]]
+day = "tuesday"
+type = "family_swim"
+start = "12:30"
+end = "21:45"
+pool = "rec"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "family_swim"
+start = "05:30"
+end = "12:00"
+pool = "rec"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "lap_swim"
+start = "05:30"
+end = "21:45"
+pool = "lap"
+
+[[extra.schedules.sessions]]
+day = "wednesday"
+type = "family_swim"
+start = "13:30"
+end = "21:45"
+pool = "rec"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "family_swim"
+start = "05:30"
+end = "12:00"
+pool = "rec"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "lap_swim"
+start = "05:30"
+end = "21:45"
+pool = "lap"
+
+[[extra.schedules.sessions]]
+day = "thursday"
+type = "family_swim"
+start = "13:00"
+end = "21:45"
+pool = "rec"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "family_swim"
+start = "05:30"
+end = "12:00"
+pool = "rec"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "lap_swim"
+start = "05:30"
+end = "21:45"
+pool = "lap"
+
+[[extra.schedules.sessions]]
+day = "friday"
+type = "family_swim"
+start = "13:30"
+end = "21:45"
+pool = "rec"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "family_swim"
+start = "07:00"
+end = "08:00"
+pool = "rec"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "lap_swim"
+start = "07:00"
+end = "18:45"
+pool = "lap"
+
+[[extra.schedules.sessions]]
+day = "saturday"
+type = "family_swim"
+start = "14:00"
+end = "18:45"
+pool = "rec"
+
+[[extra.schedules.sessions]]
+day = "sunday"
+type = "family_swim"
+start = "07:00"
+end = "08:00"
+pool = "rec"
+
+[[extra.schedules.sessions]]
+day = "sunday"
+type = "lap_swim"
+start = "07:00"
+end = "18:00"
+pool = "lap"
+
+[[extra.schedules.sessions]]
+day = "sunday"
+type = "family_swim"
+start = "14:00"
+end = "18:00"
+pool = "rec"
+
+[[extra.schedules.sessions]]
+day = "sunday"
+type = "family_swim"
+start = "18:00"
+end = "18:45"
+pool = "rec"
+excluded_dates = [ "2026-09-20" ]
+
+[[extra.schedules.sessions]]
+day = "sunday"
+type = "lap_swim"
+start = "18:00"
+end = "18:45"
+pool = "lap"
+excluded_dates = [ "2026-09-20" ]
 
 [[extra.pricing]]
 label = "Fitness Center member"
