@@ -11,6 +11,7 @@ import time
 from pathlib import Path
 
 from .publish import pager_job_payload
+from .registry import BROWSER_SOURCES
 
 
 def run_command(arguments: list[str], root: Path, *, timeout: int = 900) -> subprocess.CompletedProcess:
@@ -89,10 +90,12 @@ def wait_for_deployment(root: Path, commit: str, command=run_command, *, sleep=t
 def closure_review_document(review: dict) -> str:
     notices = json.dumps({"issues": review["issues"], "notices": review["notices"]}, ensure_ascii=False, indent=2)
     fence = "`" * (max([len(value) for value in re.findall(r"`+", notices)] + [2]) + 1)
+    source_name = Path(review["source_path"]).name
+    source_label = "Source HTML" if source_name == "source.html" else "Source PDF"
     return (
         f"# Closure review: {review['slug']}\n\n"
         f"Source SHA-256: `{review['source_sha256']}`\n\n"
-        "[Source PDF](source.pdf)\n\n"
+        f"[{source_label}]({source_name})\n\n"
         "This draft contains evidence only. It does not change published hours.\n"
         "Merging this note alone does not approve or resolve the closure.\n\n"
         "- [ ] Confirm closure dates, times, and affected programs against the official source.\n"
@@ -115,9 +118,10 @@ def open_closure_review_prs(root: Path, evidence: Path, command=run_command) -> 
     for review in builds[-1].get("closure_reviews", []):
         slug, digest = review.get("slug", ""), review.get("source_sha256", "")
         relative = Path(review.get("source_path", ""))
+        source_extension = "html" if slug in BROWSER_SOURCES else "pdf"
         if (not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug)
                 or not re.fullmatch(r"[a-f0-9]{64}", digest)
-                or not re.fullmatch(rf"data/{re.escape(slug)}/\d{{4}}-\d{{2}}-\d{{2}}-{digest[:12]}/source\.pdf", relative.as_posix())
+                or not re.fullmatch(rf"data/{re.escape(slug)}/\d{{4}}-\d{{2}}-\d{{2}}-{digest[:12]}/source\.{source_extension}", relative.as_posix())
                 or not isinstance(review.get("issues"), list) or not review["issues"]
                 or not isinstance(review.get("notices"), list) or not review["notices"]):
             raise ValueError("Invalid closure review evidence")
@@ -137,6 +141,18 @@ def open_closure_review_prs(root: Path, evidence: Path, command=run_command) -> 
         if existing:
             published.append({"slug": slug, "source_sha256": digest, **existing[0]})
             continue
+        if source_extension == "html":
+            open_reviews = json.loads(checked([
+                "gh", "pr", "list", "--base", "main", "--state", "open",
+                "--json", "headRefName,url,state", "--limit", "1000"], root, command))
+            matching = [item for item in open_reviews
+                        if item.get("state") == "OPEN" and re.fullmatch(
+                            rf"review/closures/{re.escape(slug)}-[a-f0-9]{{12}}", item.get("headRefName", ""))]
+            if matching:
+                existing_review = sorted(matching, key=lambda item: item["headRefName"])[0]
+                published.append({"slug": slug, "source_sha256": digest,
+                                  "url": existing_review["url"], "state": existing_review["state"]})
+                continue
         remote = checked(["git", "ls-remote", "--heads", "origin", f"refs/heads/{branch}"], root, command)
         if remote:
             raise RuntimeError("Closure review branch exists without a PR; preserve it for operator recovery")
@@ -159,7 +175,7 @@ def open_closure_review_prs(root: Path, evidence: Path, command=run_command) -> 
         checked(["git", "add", "--", *paths], worktree, command)
         staged = checked(["git", "diff", "--cached", "--name-only"], worktree, command).splitlines()
         if not staged or not set(staged).issubset(paths):
-            raise ValueError("Closure PR may contain only its source PDF and review note")
+            raise ValueError("Closure PR may contain only its source document and review note")
         checked(["git", "-c", "user.name=Schedule automation", "-c", "user.email=schedules@swimfrancisco.com",
                  "commit", "-m", f"Review unclear closure notice for {slug}"], worktree, command)
         checked(["git", "push", "origin", f"HEAD:refs/heads/{branch}"], worktree, command)
@@ -168,8 +184,9 @@ def open_closure_review_prs(root: Path, evidence: Path, command=run_command) -> 
             raise ValueError("Invalid repository identity")
         body = worktree / "tmp/closure-pr-body.md"
         body.parent.mkdir(exist_ok=True)
-        body.write_text(note.read_text().replace("[Source PDF](source.pdf)",
-                        f"[Source PDF](https://github.com/{repository}/blob/{branch}/{relative.as_posix()})"))
+        source_label = "Source HTML" if relative.name == "source.html" else "Source PDF"
+        body.write_text(note.read_text().replace(f"[{source_label}]({relative.name})",
+                        f"[{source_label}](https://github.com/{repository}/blob/{branch}/{relative.as_posix()})"))
         url = checked(["gh", "pr", "create", "--draft", "--base", "main", "--head", branch,
                        "--title", f"Review unclear closure notice: {slug}", "--body-file", str(body)], worktree, command)
         published.append({"slug": slug, "source_sha256": digest, "url": url, "state": "OPEN"})
@@ -225,8 +242,11 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
                     build["commands"][name] = result.returncode
                     if required and result.returncode:
                         raise RuntimeError(f"{name} failed; no publication is allowed")
-                closure_report = worktree / "tmp/extraction-report-openai.json"
-                build["closure_reviews"] = json.loads(closure_report.read_text())["closure_reviews"] if closure_report.exists() else []
+                build["closure_reviews"] = []
+                for provider in ("openai", "direct"):
+                    closure_report = worktree / f"tmp/extraction-report-{provider}.json"
+                    if closure_report.exists():
+                        build["closure_reviews"].extend(json.loads(closure_report.read_text()).get("closure_reviews", []))
                 save_state()
                 if mode == "extract-only":
                     state["status"] = "extracted"

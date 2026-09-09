@@ -1689,3 +1689,99 @@ def test_unchanged_direct_extraction_retains_ready_artifact_receipt(tmp_path, mo
     receipt = json.loads(report.with_suffix(".json").read_text())
     assert receipt["ready_direct"] == {"pomeroy-pool": str(artifact_file.relative_to(tmp_path))}
     assert json.loads(reviewed_file.read_text()) == reviewed
+
+
+def _browser_html_candidate(tmp_path, monkeypatch, slug="stonestown-ymca"):
+    from schedules.registry import APPROVED_DIRECT_SOURCES
+    import schedules.direct_sources as direct
+    candidate, artifact, path = _pomeroy_candidate(tmp_path, monkeypatch)
+    new_dir = tmp_path / "data" / slug / candidate.review_dir.name
+    new_dir.parent.mkdir()
+    candidate.review_dir.rename(new_dir)
+    kind, url = APPROVED_DIRECT_SOURCES[slug]
+    artifact.update(provider="direct", model="browser-html", source_pdf_url=url)
+    artifact["details"]["direct_source"].update(url=url, requested_url=url)
+    artifact["payload"] = _payload(n=0, start="2026-09-07", end="2026-09-20", basis="facility_hours")
+    artifact["payload"]["access_hours"] = [{"day": day, "start": "07:00", "end": "18:00", "label": "Facility hours"} for day in DAYS]
+    (new_dir / path.name).unlink()
+    path = new_dir / "direct-browser-html.json"
+    path.write_text(json.dumps(artifact))
+    monkeypatch.setattr(direct, "verify_direct_artifact", lambda *args, **kwargs: {"ok": True, "issues": []})
+    candidate = find_review_candidates(data_root=tmp_path / "data")[0]
+    return candidate, artifact, path, kind, url
+
+
+def _browser_html_eligible(candidate, artifact, kind, url, **overrides):
+    options = dict(candidate=candidate, payload=artifact["payload"], prior_sessions_count=16,
+                   latest_effective_start="2026-05-17", source_kind=kind,
+                   source_status="access_hours_only", blocking_slugs=frozenset(), quarantined_shas=frozenset(),
+                   has_prior_schedule_window=True, source_pdf_path=candidate.source_path,
+                   pin_url=url, direct_opt_in=True, today=date(2026, 9, 7))
+    return publish_eligible(**(options | overrides))
+
+
+@pytest.mark.parametrize("slug", ["stonestown-ymca", "embarcadero-ymca", "chinatown-ymca", "presidio-ymca-letterman", "sfsu-mashouf"])
+def test_verified_browser_access_hours_can_replace_sessions_only_for_approved_sources(tmp_path, monkeypatch, slug):
+    candidate, artifact, _, kind, url = _browser_html_candidate(tmp_path, monkeypatch, slug)
+    assert _browser_html_eligible(candidate, artifact, kind, url).ok
+    assert not _browser_html_eligible(candidate, artifact, kind, url, direct_opt_in=False).ok
+    assert not _browser_html_eligible(candidate, artifact, kind, url, pin_url=url + "?changed=1").ok
+    assert _browser_html_eligible(candidate, artifact, kind, url, source_status="published").code == "sessions_dropped_to_zero"
+    import schedules.direct_sources as direct
+    monkeypatch.setattr(direct, "verify_direct_artifact", lambda *args, **kwargs: {"ok": False, "issues": ["Source configuration or facts differ"]})
+    assert _browser_html_eligible(candidate, artifact, kind, url).code == "source_coverage_failed"
+
+
+def test_jccsf_cannot_silently_become_access_hours(tmp_path, monkeypatch):
+    candidate, artifact, _, kind, url = _browser_html_candidate(tmp_path, monkeypatch, "jccsf")
+    assert _browser_html_eligible(candidate, artifact, kind, url).code == "sessions_dropped_to_zero"
+
+
+@pytest.mark.parametrize("ready", [False, True])
+def test_browser_html_refresh_uses_current_direct_receipt_and_preserves_provenance(tmp_path, monkeypatch, ready):
+    import schedules.publish as module
+    from schedules.review import draft_envelope
+    candidate, artifact, path, kind, url = _browser_html_candidate(tmp_path, monkeypatch)
+    reviewed = draft_envelope(candidate=candidate, today=date(2026, 9, 7), attested_by="ci")
+    assert reviewed["direct_source"] == artifact["details"]["direct_source"]
+    (candidate.review_dir / "reviewed.json").write_text(json.dumps(reviewed))
+    assert find_review_candidates(data_root=tmp_path / "data") == []
+    artifact["details"]["direct_source"]["configuration"] = {"changed": True}
+    path.write_text(json.dumps(artifact))
+    assert len(find_review_candidates(data_root=tmp_path / "data")) == 1
+    content = tmp_path / "content"
+    content.mkdir()
+    _seed_content(content, candidate.slug)
+    reports = tmp_path / "tmp"
+    reports.mkdir()
+    monkeypatch.setattr(module, "TMP_DIR", reports)
+    monkeypatch.setattr(module, "auto_project_enabled", lambda: True)
+    monkeypatch.setattr(module, "load_quarantine", lambda: frozenset())
+    entry = PoolEntry(candidate.slug, url, url, source_kind=kind, source_status="access_hours_only", auto_publish=True)
+    monkeypatch.setattr(module, "load_registry", lambda: [entry])
+    (reports / "extraction-report-direct.json").write_text(json.dumps({"ready_direct": {
+        candidate.slug: f"data/{candidate.slug}/{candidate.review_dir.name}/{path.name}"
+    } if ready else {}}))
+    count, _ = publish_pending_all(data_root=tmp_path / "data", content_spots_dir=content, today=date(2026, 9, 7))
+    assert count == int(ready)
+    report = json.loads((reports / "publish-pending.json").read_text())
+    assert {row["code"] for row in report["refused"]} == (set() if ready else {"direct_extraction_incomplete"})
+    current = json.loads((candidate.review_dir / "reviewed.json").read_text())
+    assert current["direct_source"] == (artifact["details"]["direct_source"] if ready else reviewed["direct_source"])
+
+
+def test_access_transition_finalize_requires_independent_evidence(tmp_path, monkeypatch):
+    from schedules.review import draft_envelope
+    import schedules.direct_sources as direct
+    candidate, artifact, _, _, _ = _browser_html_candidate(tmp_path, monkeypatch)
+    reviewed = draft_envelope(candidate=candidate, today=date(2026, 9, 7), attested_by="ci")
+    target = candidate.review_dir / "reviewed.json"
+    target.write_text(json.dumps(reviewed))
+    content = tmp_path / "content"
+    content.mkdir()
+    _seed_content(content, candidate.slug)
+    before = (content / f"{candidate.slug}.md").read_bytes()
+    monkeypatch.setattr(direct, "verify_direct_artifact", lambda *args, **kwargs: {"ok": False, "issues": ["Unverified source"]})
+    with pytest.raises(FinalizeError):
+        finalize_draft(reviewed_json_path=target, content_spots_dir=content)
+    assert (content / f"{candidate.slug}.md").read_bytes() == before

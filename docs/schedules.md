@@ -2060,3 +2060,70 @@ also passed all 30 canonical spots. Implementation validation passed `just check
 1,325 Python tests, 214 JavaScript tests, and 35 browser tests; 55 Python tests
 were skipped. Automation remains enabled for Monday 16:00 UTC, with the existing
 $1 model reservation, $5 monthly ceiling, and exact-commit deployment gate.
+
+## Deterministic extraction for the six browser sources
+
+The approved implementation publishes supported JCCSF, Letterman, Stonestown,
+Embarcadero, Chinatown, and SFSU captures through deterministic extraction.
+Cloudflare remains their primary capture method, with no HTTP fallback. There
+is no paid HTML model path, model-facts cache, or model scheduling queue.
+Pomeroy retains its existing extractor; unrelated non-city sources remain
+outside this publication scope. Hosted publication validation of this change
+is pending. The earlier hosted run proves capture only.
+
+Each capture retains original HTML, a full byte hash, the Pacific observation
+date, browser receipt, rendered HTML, and screenshot. A source inventory keeps
+hours, closed days, exceptions, notices, and their scope. Code derives supported
+facts and reconstructs the payload from the original source before publication.
+Unknown wording, omitted inventory rows, ambiguous dates, contradictory notices,
+and unsupported closure scope hold the source. Printed years remain explicit;
+supported relative dates and freshness windows resolve in code. Expired prior
+hours never extend because a new source fails.
+
+The frozen captures support four sources: JCCSF's swim hours with its
+third-Sunday exception; Letterman's dated maintenance closure; and Embarcadero
+and SFSU access hours. Access hours do not establish lap-swim availability.
+Chinatown and Stonestown contain conflicting closure notices and remain held.
+These fixture results do not establish that all future captures will publish.
+Each update must pass source identity, extraction, and publication checks.
+
+Ambiguous HTML closures use the existing evidence-only draft review PR path.
+The original HTML and hash remain attached; only the six approved browser
+sources may use HTML attachments. A new capture reuses an existing open closure
+review for the same source, so harmless HTML changes do not create weekly review
+PRs. New captures still remain in workflow evidence. The system does not change
+an existing review's contents, and merging a note does not approve changed hours.
+
+Automation retains discovery, browser capture, direct extraction, and city PDF
+extraction in that order. Direct extraction consumes no model budget. A
+stale-main rebuild captures fresh browser evidence and recomputes publication
+decisions; it preserves the existing PDF/model cache reuse and concurrent main
+changes. It does not reuse old browser receipts or reviewed decisions.
+
+The city PDF model remains `gpt-5.5-2026-04-23` with medium reasoning. Its durable
+`schedule-budget` branch, $5 monthly ceiling, and $1 run reservation remain
+unchanged, as does the separate 300-second browser allowance. Source failures
+hold that source while independent sources continue. Exact-commit CI, non-force
+main promotion, publication file allowlists, evidence retention, and live browser
+verification remain required. Ordinary tests use frozen captures and make no
+paid calls. Any real city model validation uses the existing accounted workflow.
+
+Fable 5.1 reviewed the model-based proposal and the implementation through Pi.
+The user approved removing the redundant HTML model path after the deterministic
+verifier already derived the supported facts. The resulting design keeps source
+provenance, explicit closure scope and exceptions, deterministic date handling,
+and deletion of replaced extractors. It removes paid HTML requests, their cache
+and rotation logic, and the duplicate model-facts representation. Model pricing
+estimates from the review are not spend receipts. Hosted results and exact live
+commit checks must establish deployment success before this rollout is reported
+as verified.
+
+Review adjudication retains exact, full PDF extraction configuration identities,
+all historical receipts, and the existing live smoke checks. Removing the HTML
+model does not justify weakening any of those contracts. Broader core-review
+recommendations remain outside this change and require separate review.
+
+Local deterministic validation passed `just check`: 1,435 Python tests (55
+skipped), 214 JavaScript tests, and 35 browser tests, plus worker type checks
+and the production build. Tests forbid paid HTML calls and cover actual source
+extraction through readiness reporting and publication verification.

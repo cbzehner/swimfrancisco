@@ -58,6 +58,7 @@ pdf_url = "https://www.jccsf.org/fitness/aquatics/"
 official_page_url = "https://www.jccsf.org/fitness/aquatics/"
 source_kind = "jccsf_html"
 capture_method = "cloudflare_browser"
+auto_publish = true
 notes = "Direct extractor models lap swim from Aquatics Center hours and recreation/family swim from the public aquatics page. The full lane breakdown is linked from JCCSF via SharePoint and is not yet parsed."
 
 [[pool]]
@@ -97,6 +98,7 @@ official_page_url = "https://www.ymcasf.org/location/presidio-community-ymca/let
 source_status = "access_hours_only"
 source_kind = "ymca_location_html"
 capture_method = "cloudflare_browser"
+auto_publish = true
 notes = "Location page has pool/facility hours and links to the YMCA pool schedule area, but the actual schedule content is not available in static HTML."
 
 [[pool]]
@@ -106,6 +108,7 @@ official_page_url = "https://www.ymcasf.org/location/stonestown-family-ymca/"
 source_status = "access_hours_only"
 source_kind = "ymca_location_html"
 capture_method = "cloudflare_browser"
+auto_publish = true
 notes = "Location page has fitness center hours and pool closure notes, but not a concrete lane schedule in static HTML."
 
 [[pool]]
@@ -115,6 +118,7 @@ official_page_url = "https://www.ymcasf.org/location/embarcadero-ymca/"
 source_status = "access_hours_only"
 source_kind = "ymca_location_html"
 capture_method = "cloudflare_browser"
+auto_publish = true
 notes = "Location page publishes facility hours plus the rule that pool hours open 30 minutes after and close 30 minutes before facility hours; no lane schedule is available in static HTML."
 
 [[pool]]
@@ -124,6 +128,7 @@ official_page_url = "https://www.ymcasf.org/location/chinatown-ymca/"
 source_status = "access_hours_only"
 source_kind = "ymca_location_html"
 capture_method = "cloudflare_browser"
+auto_publish = true
 notes = "Location page confirms a saltwater pool and publishes facility hours, but not concrete lap/open swim sessions in static HTML."
 
 [[pool]]
@@ -165,6 +170,7 @@ official_page_url = "https://campusrec.sfsu.edu/Aquatics"
 source_status = "access_hours_only"
 source_kind = "sfsu_aquatics_html"
 capture_method = "cloudflare_browser"
+auto_publish = true
 notes = "Official aquatics page publishes natatorium hours and describes a lap pool, but not lane-level public availability."
 
 [[pool]]

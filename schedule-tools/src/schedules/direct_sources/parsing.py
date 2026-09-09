@@ -1,28 +1,13 @@
 from __future__ import annotations
 
 import re
-from datetime import date, datetime, timedelta
+from datetime import date
 from html import unescape
 from html.parser import HTMLParser
 
 from .. import _time
 from ..models import DAY_ORDER, ScheduleBasis
 from .errors import DirectSourceError
-
-_MONTH_NUMBERS = {
-    "january": 1,
-    "february": 2,
-    "march": 3,
-    "april": 4,
-    "may": 5,
-    "june": 6,
-    "july": 7,
-    "august": 8,
-    "september": 9,
-    "october": 10,
-    "november": 11,
-    "december": 12,
-}
 
 
 def _payload(
@@ -48,10 +33,6 @@ def _payload(
     }
 
 
-def _weekly_hours_sessions(kind: str, hours: dict[str, tuple[str, str]], *, evidence: str) -> list[dict]:
-    return [_session(day, kind, start, end, evidence) for day, (start, end) in hours.items()]
-
-
 def _session(day: str, kind: str, start: str, end: str, evidence: str) -> dict:
     return {
         "day": day,
@@ -72,17 +53,6 @@ def _access_hour(day: str, start: str, end: str, label: str, evidence: str) -> d
     }
 
 
-def _access_exception(date_iso: str, start: str, end: str, label: str, reason: str, evidence: str) -> dict:
-    return {
-        "date": date_iso,
-        "start": start,
-        "end": end,
-        "label": label,
-        "reason": reason,
-        "evidence": _squash(evidence),
-    }
-
-
 def _expand_days(value: str) -> list[str]:
     normalized = _squash(value).lower()
     day_names = list(DAY_ORDER)
@@ -99,17 +69,6 @@ def _expand_days(value: str) -> list[str]:
             if start_i <= end_i:
                 return list(DAY_ORDER[start_i : end_i + 1])
     raise DirectSourceError(f"Could not expand day range {value!r}")
-
-
-def _expand_day_phrase(value: str) -> list[str]:
-    normalized = _squash(value).lower().replace("&", " and ")
-    normalized = re.sub(r"\s+", " ", normalized)
-    if " and " in normalized and "-" not in normalized:
-        days: list[str] = []
-        for part in normalized.split(" and "):
-            days.extend(_expand_days(part))
-        return days
-    return _expand_days(normalized)
 
 
 def _parse_hours_range(text: str) -> tuple[str, str]:
@@ -149,11 +108,6 @@ def _to_hhmm(hour: int, minute: int, ampm: str) -> str:
     return f"{normalized:02d}:{minute:02d}"
 
 
-def _shift_hhmm(value: str, *, minutes: int) -> str:
-    shifted = datetime.strptime(value, "%H:%M") + timedelta(minutes=minutes)
-    return shifted.strftime("%H:%M")
-
-
 def _resolve_yearless_date(month: int, day: int, today: date | None = None) -> date:
     """Resolve a month/day to an absolute date, rolling to next year when the
     naive same-year resolution would land more than 30 days in the past. Web
@@ -165,32 +119,6 @@ def _resolve_yearless_date(month: int, day: int, today: date | None = None) -> d
     if (today - resolved).days > 30:
         resolved = date(today.year + 1, month, day)
     return resolved
-
-
-def _closure_dates_from_text(text: str) -> list[dict]:
-    closures: list[dict] = []
-    for match in re.finditer(
-        r"\b(?:(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\w*\s+)?"
-        r"(January|February|March|April|May|June|July|August|September|October|November|December)"
-        r"\s+(\d{1,2})(?:st|nd|rd|th)?\s*-\s*([A-Za-z][^\n.]+)",
-        text,
-        flags=re.IGNORECASE,
-    ):
-        month, day, reason = match.groups()
-        iso = _resolve_yearless_date(_MONTH_NUMBERS[month.lower()], int(day)).isoformat()
-        closures.append({"start": iso, "end": iso, "reason": _squash(reason)})
-    return closures
-
-
-def _closure_dates_from_html_lines(html: str) -> list[dict]:
-    text = re.sub(r"<(script|style)\b.*?</\1>", " ", html, flags=re.IGNORECASE | re.DOTALL)
-    text = re.sub(r"</(?:p|li|div|h[1-6])\s*>", "\n", text, flags=re.IGNORECASE)
-    text = re.sub(r"<br\s*/?>", "\n", text, flags=re.IGNORECASE)
-    text = re.sub(r"<[^>]+>", " ", text)
-    closures: list[dict] = []
-    for line in unescape(text).splitlines():
-        closures.extend(_closure_dates_from_text(line))
-    return closures
 
 
 def _html_text(html: str) -> str:

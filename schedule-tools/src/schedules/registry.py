@@ -10,14 +10,32 @@ from .paths import CONTENT_SPOTS_DIR, REGISTRY_PATH
 _VALID_SOURCE_STATUSES = frozenset(get_args(SourceStatus))
 _VALID_SOURCE_KINDS = frozenset(get_args(SourceKind))
 _VALID_CAPTURE_METHODS = frozenset(get_args(CaptureMethod))
-_BROWSER_CAPTURE_SOURCES = frozenset({
-    ("jccsf", "jccsf_html", "https://www.jccsf.org/fitness/aquatics/"),
-    ("presidio-ymca-letterman", "ymca_location_html", "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"),
-    ("stonestown-ymca", "ymca_location_html", "https://www.ymcasf.org/location/stonestown-family-ymca/"),
-    ("embarcadero-ymca", "ymca_location_html", "https://www.ymcasf.org/location/embarcadero-ymca/"),
-    ("chinatown-ymca", "ymca_location_html", "https://www.ymcasf.org/location/chinatown-ymca/"),
-    ("sfsu-mashouf", "sfsu_aquatics_html", "https://campusrec.sfsu.edu/Aquatics"),
-})
+BROWSER_SOURCES = {
+    "jccsf": ("jccsf_html", "https://www.jccsf.org/fitness/aquatics/"),
+    "presidio-ymca-letterman": ("ymca_location_html", "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"),
+    "stonestown-ymca": ("ymca_location_html", "https://www.ymcasf.org/location/stonestown-family-ymca/"),
+    "embarcadero-ymca": ("ymca_location_html", "https://www.ymcasf.org/location/embarcadero-ymca/"),
+    "chinatown-ymca": ("ymca_location_html", "https://www.ymcasf.org/location/chinatown-ymca/"),
+    "sfsu-mashouf": ("sfsu_aquatics_html", "https://campusrec.sfsu.edu/Aquatics"),
+}
+APPROVED_DIRECT_SOURCES = {
+    "pomeroy-pool": ("pomeroy_html", "https://www.prrcsf.org/therapeutic-swim"),
+    **BROWSER_SOURCES,
+}
+_ACCESS_SOURCES = {slug: BROWSER_SOURCES[slug] for slug in (
+    "presidio-ymca-letterman", "stonestown-ymca", "embarcadero-ymca", "chinatown-ymca", "sfsu-mashouf",
+)}
+
+
+def allows_access_transition(slug: str, source_kind: str, source_url: str,
+                             source_status: str, payload: dict) -> bool:
+    return (
+        _ACCESS_SOURCES.get(slug) == (source_kind, source_url)
+        and source_status == "access_hours_only"
+        and payload.get("schedule_basis") in {"pool_hours", "facility_hours"}
+        and payload.get("sessions") == [] and bool(payload.get("access_hours"))
+    )
+
 
 
 def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
@@ -57,13 +75,11 @@ def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
         capture_method = raw_entry.get("capture_method", "http")
         if not isinstance(capture_method, str) or capture_method not in _VALID_CAPTURE_METHODS:
             raise ValueError("capture_method must be http or cloudflare_browser")
-        if capture_method == "cloudflare_browser" and (slug, source_kind, pdf_url) not in _BROWSER_CAPTURE_SOURCES:
+        if capture_method == "cloudflare_browser" and BROWSER_SOURCES.get(slug) != (source_kind, pdf_url):
             raise ValueError("Cloudflare browser capture is limited to the six approved HTML sources and URLs")
         auto_publish = raw_entry.get("auto_publish", False)
-        if not isinstance(auto_publish, bool) or (auto_publish and (slug, source_kind, pdf_url) != (
-            "pomeroy-pool", "pomeroy_html", "https://www.prrcsf.org/therapeutic-swim"
-        )):
-            raise ValueError("Direct automatic publication is limited to the approved Pomeroy source")
+        if not isinstance(auto_publish, bool) or (auto_publish and APPROVED_DIRECT_SOURCES.get(slug) != (source_kind, pdf_url)):
+            raise ValueError("Direct automatic publication is limited to the seven approved source identities")
 
         if slug in seen_slugs:
             raise ValueError(f"Duplicate registry slug: {slug}")

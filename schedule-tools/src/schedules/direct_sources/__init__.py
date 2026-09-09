@@ -24,13 +24,10 @@ from .providers.fitness_clubs import (
     _extract_city_sports,
     _extract_equinox,
     _extract_fitness_sf,
-    _extract_sfsu_aquatics,
 )
-from .providers.jccsf import _extract_jccsf
 from .providers.koret import _extract_koret
 from .providers.pomeroy import _extract_pomeroy
 from .providers.ucsf import _extract_ucsf_bakar, _extract_ucsf_fitness
-from .providers.ymca import _extract_ymca_location
 
 __all__ = [
     "DirectExtraction",
@@ -81,6 +78,8 @@ def observation_window(payload: dict, observed_on: str) -> dict:
 
 def verify_direct_artifact(artifact: dict, source_path: Path, *, today: date) -> dict:
     from .providers.pomeroy import verify_pomeroy
+    if artifact.get("model") == "browser-html":
+        return _verify_browser_artifact(artifact, source_path, today=today)
     source = artifact.get("details", {}).get("direct_source", {})
     if artifact.get("provider") != "direct" or artifact.get("model") != "pomeroy-html-v1":
         raise DirectSourceError("Only the approved Pomeroy parser can establish direct acceptance")
@@ -116,19 +115,15 @@ def extract_direct(entry: PoolEntry, *, cache_root: Path | None = None) -> Direc
             notes=["Koret sessions represent official pool hours; the sheet still carries lane-level restrictions and team bookings."],
             source=source,
         )
+    if entry.capture_method == "cloudflare_browser":
+        return _extract_browser_entry(entry, cache_root=cache_root or DATA_DIR)
     spec = _HTML_EXTRACTORS.get(entry.source_kind or "")
     if spec is None:
         raise DirectSourceError(f"{entry.slug}: unsupported direct source kind {entry.source_kind!r}")
     extractor, model, note = spec
     cache_root = fetch_kwargs.get("cache_root") or DATA_DIR
-    capture = None
-    if entry.capture_method == "cloudflare_browser":
-        from .browser import read_browser_capture
-        response, capture = read_browser_capture(entry)
-    else:
-        response = fetch_text(entry.pdf_url)
-    observed_on = (datetime.fromisoformat(capture["captured_at"].replace("Z", "+00:00"))
-                   .astimezone(ZoneInfo("America/Los_Angeles")).date()) if capture else pacific_today()
+    response = fetch_text(entry.pdf_url)
+    observed_on = pacific_today()
     sha256 = hashlib.sha256(response.content).hexdigest()
     slug_dir = cache_root / entry.slug
     slug_dir.mkdir(parents=True, exist_ok=True)
@@ -140,8 +135,6 @@ def extract_direct(entry: PoolEntry, *, cache_root: Path | None = None) -> Direc
         response_url=response.response_url,
     )
     source = _source_metadata(entry, fetched, observed_on)
-    if capture is not None:
-        source["configuration"] = source["configuration"] | {"capture": capture}
     payload = _extract_pomeroy(response.text, observed_on=observed_on) if entry.source_kind == "pomeroy_html" else extractor(response.text)
     payload = observation_window(payload, source["observed_on"])
     from .providers.pomeroy import verify_pomeroy
@@ -165,11 +158,6 @@ _HTML_EXTRACTORS: dict[str, tuple[Callable[[str], dict], str, str]] = {
         "twenty-four-hour-fitness-html-v1",
         "24 Hour Fitness exposes gym hours, not pool lane availability; these are access hours only.",
     ),
-    "jccsf_html": (
-        _extract_jccsf,
-        "jccsf-html-v1",
-        "JCCSF lap swim is modeled from Aquatics Center hours; lane-count breakdown remains linked on the official page.",
-    ),
     "pomeroy_html": (
         _extract_pomeroy,
         "pomeroy-html-v1",
@@ -190,11 +178,6 @@ _HTML_EXTRACTORS: dict[str, tuple[Callable[[str], dict], str, str]] = {
         "fitness-sf-html-v1",
         "FITNESS SF exposes club hours and pool policies, not lane availability; these are access hours only.",
     ),
-    "sfsu_aquatics_html": (
-        _extract_sfsu_aquatics,
-        "sfsu-aquatics-html-v1",
-        "SFSU exposes natatorium hours, not public lane availability; these are access hours only.",
-    ),
     "ucsf_fitness_html": (
         _extract_ucsf_fitness,
         "ucsf-fitness-html-v1",
@@ -205,9 +188,76 @@ _HTML_EXTRACTORS: dict[str, tuple[Callable[[str], dict], str, str]] = {
         "ucsf-bakar-html-v1",
         "UCSF Bakar exposes facility hours and pool amenities, but not pool lane availability; these are access hours only.",
     ),
-    "ymca_location_html": (
-        _extract_ymca_location,
-        "ymca-location-html-v1",
-        "YMCA location pages expose facility hours and link to a separate pool schedule; these are access hours only.",
-    ),
 }
+
+
+def _extract_browser_entry(entry: PoolEntry, *, cache_root: Path) -> DirectExtraction:
+    from ..paths import relative_to_repo
+    from ..registry import BROWSER_SOURCES
+    from .browser import read_browser_capture
+    from .errors import CapturedClosureReviewRequired
+    from .html_facts import (
+        HtmlClosureReviewRequired, inspect_html_source, html_source_payload,
+    )
+    if BROWSER_SOURCES.get(entry.slug) != (entry.source_kind, entry.pdf_url):
+        raise DirectSourceError("HTML extraction requires an approved source identity")
+    response, capture = read_browser_capture(entry)
+    observed = datetime.fromisoformat(capture["captured_at"].replace("Z", "+00:00")).astimezone(
+        ZoneInfo("America/Los_Angeles")).date()
+    sha256 = hashlib.sha256(response.content).hexdigest()
+    directory = cache_root / entry.slug
+    directory.mkdir(parents=True, exist_ok=True)
+    path, from_cache = _cache_bytes(directory, sha256, "html", response.content)
+    fetched = DirectFetchResult(path, sha256, from_cache, response.response_url)
+    try:
+        inventory = inspect_html_source(entry.slug, response.text)
+        payload = html_source_payload(inventory, observed)
+    except HtmlClosureReviewRequired as error:
+        raise CapturedClosureReviewRequired(slug=entry.slug, source_path=relative_to_repo(path),
+            source_sha256=sha256, issues=error.issues, notices=error.notices) from error
+    source = {"sha256": sha256, "url": response.response_url, "requested_url": entry.pdf_url,
+              "observed_on": observed.isoformat(), "freshness_days": 14,
+              "configuration": direct_configuration() | {"capture": capture}}
+    notes = (["These are pool or facility access hours; they do not establish lap-swim availability."]
+             if payload.get("schedule_basis") in {"pool_hours", "facility_hours"} else [])
+    return DirectExtraction(fetched, payload, "browser-html", notes, source, {"ok": True, "issues": []})
+
+
+def _verify_browser_artifact(artifact: dict, source_path: Path, *, today: date) -> dict:
+    from ..models import PoolEntry
+    from ..registry import BROWSER_SOURCES
+    from .browser import read_browser_capture
+    from .html_facts import inspect_html_source, html_source_payload
+    if artifact.get("provider") != "direct" or artifact.get("model") != "browser-html":
+        raise DirectSourceError("HTML artifact must use the approved direct parser")
+    source = artifact["details"]["direct_source"]
+    slug = source_path.parent.parent.name
+    approved = BROWSER_SOURCES.get(slug)
+    if not approved:
+        raise DirectSourceError("HTML artifact is outside the approved sources")
+    kind, url = approved
+    if (artifact.get("source_pdf_url") != url or source.get("requested_url") != url
+            or source.get("url", "").rstrip("/") != url.rstrip("/")):
+        raise DirectSourceError("HTML source URL changed")
+    if source_path.name != "source.html" or source_path.is_symlink() or source_path.parent.is_symlink():
+        raise DirectSourceError("HTML source is not an original capture file")
+    content = source_path.read_bytes()
+    if hashlib.sha256(content).hexdigest() != artifact.get("pdf_sha256") or source.get("sha256") != artifact.get("pdf_sha256"):
+        raise DirectSourceError("HTML original bytes do not match the source identity")
+    entry = PoolEntry(slug=slug, official_page_url=url, pdf_url=url, source_kind=kind,
+                      capture_method="cloudflare_browser")
+    response, receipt = read_browser_capture(entry)
+    if response.content != content or source.get("configuration") != direct_configuration() | {"capture": receipt}:
+        raise DirectSourceError("HTML artifact does not match the current capture and configuration")
+    observed = datetime.fromisoformat(receipt["captured_at"].replace("Z", "+00:00")).astimezone(
+        ZoneInfo("America/Los_Angeles")).date()
+    if (source.get("observed_on") != observed.isoformat() or source.get("freshness_days") != 14
+            or not observed <= today <= observed + timedelta(days=13)):
+        raise DirectSourceError("HTML observation is expired or future-dated")
+    inventory = inspect_html_source(slug, content.decode("utf-8"))
+    payload = html_source_payload(inventory, observed)
+    if payload != artifact.get("payload"):
+        raise DirectSourceError("Published HTML payload differs from verified source facts")
+    if not payload["effective_start"] <= today.isoformat() <= payload["effective_end"]:
+        raise DirectSourceError("Verified HTML schedule window is expired or future-dated")
+    return {"ok": True, "issues": []}

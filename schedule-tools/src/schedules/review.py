@@ -392,7 +392,24 @@ def finalize_draft(
         snapshot = read_schedule_snapshot(md_path)
         prior_sessions_count = len(snapshot.get("sessions") or [])
 
-    result = validate(raw.get("payload", {}), prior_sessions_count=prior_sessions_count)
+    payload = raw.get("payload", {})
+    if prior_sessions_count and raw.get("direct_source"):
+        from .registry import allows_access_transition, load_registry
+        from .direct_sources import DirectSourceError, verify_direct_artifact
+        entry = next((item for item in load_registry() if item.slug == slug), None)
+        if (entry and entry.auto_publish and allows_access_transition(
+                slug, entry.source_kind, entry.pdf_url, entry.source_status, payload)):
+            try:
+                artifact = json.loads(_pick_provider_artifact(reviewed_json_path.parent).read_text())
+                source = artifact.get("details", {}).get("direct_source", {})
+                verified = (artifact.get("payload") == payload and source == raw["direct_source"]
+                            and source.get("requested_url") == entry.pdf_url
+                            and verify_direct_artifact(artifact, _source_path(reviewed_json_path.parent), today=pacific_today())["ok"])
+            except (OSError, ValueError, KeyError, TypeError, DirectSourceError):
+                verified = False
+            if verified:
+                prior_sessions_count = 0
+    result = validate(payload, prior_sessions_count=prior_sessions_count)
     if not result.ok:
         raise FinalizeError("; ".join(v.message for v in result.violations))
 

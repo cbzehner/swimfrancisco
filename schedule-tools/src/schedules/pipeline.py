@@ -10,6 +10,7 @@ from typing import Literal
 from .artifacts import save_artifact_bundle, skip_if_fresh, save_pool_bundle
 from .delta import check_delta
 from .direct_sources import extract_direct
+from .direct_sources.errors import CapturedClosureReviewRequired
 from .envelope import AttestationCarried, parse_attestation
 from .discover import (
     absolute_view_url,
@@ -404,7 +405,7 @@ def _process_entry(
                 "source_sha256": fetch_result.sha256,
                 "issues": exc.issues,
                 "notices": exc.notices,
-            } if isinstance(exc, ClosureReviewRequired) else None,
+            } if isinstance(exc, ClosureReviewRequired) else exc.review if isinstance(exc, CapturedClosureReviewRequired) else None,
             error=f"{type(exc).__name__}: {exc}\n{traceback.format_exc()}",
             prior_sessions_count=len(prior_snapshot["sessions"]),
             prior_closures_count=len(prior_snapshot["closures"]),
@@ -463,7 +464,12 @@ def _process_direct_entry(
         for note in extracted.notes
     ]
     review_notes.extend(check_delta(payload, prior_snapshot))
-    validation = validate(payload, prior_sessions_count=len(prior_snapshot["sessions"]))
+    from .registry import allows_access_transition
+    verified_access = (
+        allows_access_transition(entry.slug, entry.source_kind, entry.pdf_url, entry.source_status, payload)
+        and extracted.coverage is not None and extracted.coverage["ok"]
+    )
+    validation = validate(payload, prior_sessions_count=0 if verified_access else len(prior_snapshot["sessions"]))
     if extracted.coverage is not None and not extracted.coverage["ok"]:
         from .models import Violation
         validation = replace(validation, catastrophic=True, violations=[*validation.violations,

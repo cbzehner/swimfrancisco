@@ -593,3 +593,19 @@ def test_save_all_overlapping_posted_end_refuses(queue_env, monkeypatch):
         data / "balboa-pool" / f"2026-08-20-{SHA_29796[:12]}" / "reviewed.json"
     ).exists()
     assert (content / "balboa-pool.md").read_bytes() == before
+
+
+@pytest.mark.parametrize('override', [None, 'https://www.jccsf.org/fitness/aquatics/'])
+def test_browser_review_identity_hashes_capture_without_extraction(monkeypatch, override):
+    import hashlib
+    from schedules import review_server
+    from schedules.direct_sources.http import DirectTextResponse
+    entry = next(entry for entry in review_server.load_registry() if entry.slug == 'jccsf')
+    content = b'<html>Original bytes\r\n</html>'
+    monkeypatch.setattr(review_server, 'extract_direct', lambda *args, **kwargs: pytest.fail('Identity lookup must not extract or spend'))
+    monkeypatch.setattr(review_server, 'fetch_pdf', lambda *args, **kwargs: pytest.fail('Browser identity must not fetch a PDF'))
+    monkeypatch.setattr('schedules.direct_sources.browser.read_browser_capture', lambda current: (
+        DirectTextResponse(content.decode(), content, entry.pdf_url), {}))
+    assert review_server.current_source_identity(entry.slug, url=override) == hashlib.sha256(content).hexdigest()
+    with pytest.raises(ValueError, match='differs from the approved'):
+        review_server.current_source_identity(entry.slug, url='https://other.invalid/')
