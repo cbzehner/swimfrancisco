@@ -2127,3 +2127,18 @@ Local deterministic validation passed `just check`: 1,435 Python tests (55
 skipped), 214 JavaScript tests, and 35 browser tests, plus worker type checks
 and the production build. Tests forbid paid HTML calls and cover actual source
 extraction through readiness reporting and publication verification.
+
+The first hosted deterministic trial, run `34410514298`, captured all six
+original sources and closed the browser session (56/300 seconds). Four browser
+sources passed extraction; Chinatown and Stonestown retained their closure
+holds. Publication stopped before main promotion because Letterman's closure
+lacked the reason category required by content projection. No schedule changes
+reached main. The model receipt contained zero requests and $0 charges. The
+retained artifact `schedule-automation-34410514298-1` preserves the original
+captures, hashes/configuration, extraction reports, and spend receipts.
+
+The correction assigns source-supported closure categories and treats projection
+errors as candidate refusals with rollback. The regression now runs all four
+supported frozen captures through full publication and content projection.
+`just check` passed 1,445 Python tests (55 skipped), 214 JavaScript tests, 35
+browser tests, worker type checks, and the production build.

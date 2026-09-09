@@ -322,7 +322,7 @@ def _derive_payload(inventory: dict, observed: date) -> dict:
                 if len(dates) == 2:
                     dated_closed.append((first, last))
                 if last >= observed and first <= end:
-                    closures.append({'start': max(first, observed).isoformat(), 'end': min(last, end).isoformat(), 'reason': text,
+                    closures.append({'start': max(first, observed).isoformat(), 'end': min(last, end).isoformat(), 'reason': text, 'reason_code': _closure_reason(text),
                         'source_notices': [{'id': line['id'], 'text': text}]})
             elif kind == 'exception' and observed <= first <= end:
                 window = fact['ranges'][0]
@@ -382,3 +382,14 @@ def _shift(value: str, minutes: int) -> str:
     if not 0 <= total < 24 * 60:
         raise DirectSourceError('Source offset crosses midnight')
     return f'{total // 60:02d}:{total % 60:02d}'
+
+
+def _closure_reason(text: str) -> str:
+    categories = [code for code, pattern in (
+        ('maintenance', r'\bmaintenance\b'),
+        ('staff_training', r'\b(?:staff training|all staff training|in-service training)\b'),
+        ('holiday', r'\b(?:holidays?|thanksgiving|christmas|new year|independence day|labor day|veterans? day|indigenous|martin luther king|lunar new year|easter|memorial day|juneteenth)\b'),
+    ) if re.search(pattern, text, re.I)]
+    if len(categories) != 1:
+        raise DirectSourceError('Unknown or conflicting source closure reason requires review')
+    return categories[0]

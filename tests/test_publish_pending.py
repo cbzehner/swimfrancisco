@@ -1785,3 +1785,27 @@ def test_access_transition_finalize_requires_independent_evidence(tmp_path, monk
     with pytest.raises(FinalizeError):
         finalize_draft(reviewed_json_path=target, content_spots_dir=content)
     assert (content / f"{candidate.slug}.md").read_bytes() == before
+
+
+@pytest.mark.parametrize('existing_review', [False, True])
+def test_invalid_closure_projection_rolls_back_candidate_and_reports_finalize_error(tmp_path, monkeypatch, existing_review):
+    candidate, artifact, path = _pomeroy_candidate(tmp_path, monkeypatch)
+    artifact['payload']['closures'][0].pop('reason_code', None)
+    path.write_text(json.dumps(artifact))
+    candidate = find_review_candidates(data_root=tmp_path / 'data')[0]
+    content = tmp_path / 'content'
+    content.mkdir()
+    _seed_content(content, candidate.slug)
+    content_path = content / f'{candidate.slug}.md'
+    content_before = content_path.read_bytes()
+    reviewed_path = candidate.review_dir / 'reviewed.json'
+    if existing_review:
+        reviewed_path.write_text('{"prior": "review"}\n')
+    with pytest.raises(FinalizeError, match='reviewed reason_code'):
+        publish_candidate(candidate=candidate, content_spots_dir=content,
+                          attested_at=date(2026, 9, 7), eligibility=Eligibility(ok=True, code=None))
+    assert content_path.read_bytes() == content_before
+    if existing_review:
+        assert reviewed_path.read_text() == '{"prior": "review"}\n'
+    else:
+        assert not reviewed_path.exists()

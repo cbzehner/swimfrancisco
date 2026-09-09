@@ -235,18 +235,18 @@ def test_relevant_inventory_line_count_is_bounded():
 
 @pytest.mark.parametrize('tag', ['p', 'div', 'button'])
 def test_notice_scan_keeps_complete_text_across_html_whitespace(tag):
-    notice = f'<{tag}>The pool will be closed from\nSeptember 12, 2026 through\nSeptember 13, 2026.</{tag}>'
+    notice = f'<{tag}>The pool will be closed from\nSeptember 12, 2026 through\nSeptember 13, 2026 for maintenance.</{tag}>'
     source = inventory('sfsu-mashouf', lambda text: text.replace('</body>', notice + '</body>'))
     notice_rows = [row for row in source['lines'] if 'September 12' in row['text']]
     assert len(notice_rows) == 1
-    assert notice_rows[0]['text'] == 'The pool will be closed from September 12, 2026 through September 13, 2026.'
+    assert notice_rows[0]['text'] == 'The pool will be closed from September 12, 2026 through September 13, 2026 for maintenance.'
     result = html_source_payload(source, OBSERVED)
     assert result['closures'][0]['start'] == '2026-09-12'
     assert result['closures'][0]['end'] == '2026-09-13'
 
 
 def test_availability_24_7_is_not_inventoried_as_a_date():
-    notice = '<div>The pool will be closed from 09/12/2026 through 09/13/2026, 24/7.</div>'
+    notice = '<div>The pool will be closed from 09/12/2026 through 09/13/2026, 24/7 for maintenance.</div>'
     source = inventory('sfsu-mashouf', lambda text: text.replace('</body>', notice + '</body>'))
     result = html_source_payload(source, OBSERVED)
     assert result['closures'][0]['start'] == '2026-09-12'
@@ -259,7 +259,7 @@ def test_all_closed_ymca_can_use_pool_closure_without_slug_exception():
         'lines': [{'id': day, 'section': 'Facility Hours', 'scope': 'facility', 'text': f'{day.title()}: Closed'}
             for day in ('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')]
         + [{'id': 'pool-notice', 'section': 'Source notice', 'scope': 'pool',
-            'text': 'The pool will be closed from September 1, 2026 through September 13, 2026.'}],
+            'text': 'The pool will be closed from September 1, 2026 through September 13, 2026 for maintenance.'}],
     }
     result = html_source_payload(source, OBSERVED)
     assert result['schedule_basis'] == 'temporarily_closed'
@@ -301,4 +301,36 @@ def test_identical_simultaneous_intervals_in_two_pools_remain_distinct():
 def test_rec_pool_intervals_cannot_exceed_printed_aquatics_center_hours():
     source = inventory('jccsf', lambda text: text.replace('Monday – Friday: 5:30 am – 9:45 pm', 'Monday – Friday: 5:30 am – Noon'))
     with pytest.raises(DirectSourceError, match='conflict with Aquatics Center'):
+        html_source_payload(source, OBSERVED)
+
+
+@pytest.mark.parametrize('slug', ['jccsf', 'sfsu-mashouf', 'embarcadero-ymca', 'presidio-ymca-letterman'])
+def test_supported_capture_payloads_pass_actual_merge_normalization(slug):
+    from schedules.merge import _normalized_schedule_payload
+
+    result = payload(slug)
+    normalized = _normalized_schedule_payload(result)
+    assert normalized['schedule_basis'] == result['schedule_basis']
+    if slug == 'presidio-ymca-letterman':
+        assert normalized['closures'][0]['reason_code'] == 'maintenance'
+        assert normalized['closures'][0]['end'] == '2026-09-13'
+        assert normalized['closures'][0]['source_notices'][0]['text'] == result['closures'][0]['reason']
+
+
+@pytest.mark.parametrize('observed,closed_date,reason_code', [
+    (date(2026, 11, 10), '2026-11-11', 'staff_training'),
+    (date(2026, 12, 20), '2026-12-25', 'holiday'),
+])
+def test_future_ymca_closures_have_grounded_codes_and_normalize(observed, closed_date, reason_code):
+    from schedules.merge import _normalized_schedule_payload
+
+    normalized = _normalized_schedule_payload(payload('embarcadero-ymca', observed))
+    assert any(row['start'] == closed_date and row['reason_code'] == reason_code for row in normalized['closures'])
+
+
+@pytest.mark.parametrize('reason', ['', 'for maintenance and a holiday'])
+def test_unknown_or_conflicting_closure_reason_holds(reason):
+    notice = f'<div>The pool will be closed from September 12, 2026 through September 13, 2026 {reason}.</div>'
+    source = inventory('sfsu-mashouf', lambda text: text.replace('</body>', notice + '</body>'))
+    with pytest.raises(HtmlClosureReviewRequired, match='closure reason'):
         html_source_payload(source, OBSERVED)

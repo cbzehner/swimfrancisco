@@ -34,5 +34,8 @@ def project(
     if not md_path.exists():
         raise ProjectError(f"content file missing: {md_path}")
 
-    merge(md_path, payload, last_verified_at=envelope["reviewed_at"])
+    try:
+        merge(md_path, payload, last_verified_at=envelope["reviewed_at"])
+    except ValueError as exc:
+        raise ProjectError(str(exc)) from exc
     return md_path

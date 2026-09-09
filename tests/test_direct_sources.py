@@ -830,33 +830,41 @@ def test_frozen_letterman_closure_cannot_publish_after_printed_end(tmp_path, int
     assert not publish_eligible(**options, today=date(2026, 9, 14)).ok
 
 
-def test_frozen_access_hours_publish_only_with_current_ready_receipt(tmp_path, integrated_html_capture, monkeypatch):
+def test_frozen_browser_sources_publish_atomically_per_candidate(tmp_path, integrated_html_capture, monkeypatch):
     from pathlib import Path
     from schedules import publish, review
-    entry, result, artifact = _integrated_html_artifact(tmp_path, 'sfsu-mashouf')
+    extracted = [_integrated_html_artifact(tmp_path, slug) for slug in _PUBLISHABLE_HTML_SLUGS]
     content = tmp_path / 'content'
     content.mkdir()
-    (content / f'{entry.slug}.md').write_bytes((Path(__file__).parents[1] / 'content/spots' / f'{entry.slug}.md').read_bytes())
+    for entry, _, _ in extracted:
+        (content / f'{entry.slug}.md').write_bytes((Path(__file__).parents[1] / 'content/spots' / f'{entry.slug}.md').read_bytes())
     reports = tmp_path / 'reports'
     reports.mkdir()
     monkeypatch.setattr(publish, 'TMP_DIR', reports)
     monkeypatch.setattr(publish, 'auto_project_enabled', lambda: True)
-    monkeypatch.setattr(publish, 'load_registry', lambda: [entry])
+    monkeypatch.setattr(publish, 'load_registry', lambda: [entry for entry, _, _ in extracted])
     monkeypatch.setattr(publish, 'load_quarantine', lambda: frozenset())
     monkeypatch.setattr(review, 'pacific_today', lambda: date(2026, 9, 8))
     options = dict(data_root=tmp_path / 'data', content_spots_dir=content, today=date(2026, 9, 8))
     assert publish.publish_pending_all(**options)[0] == 0
-    reviewed_path = result.fetch_result.path.parent / 'reviewed.json'
-    assert not reviewed_path.exists()
-    artifact_path = result.fetch_result.path.parent / 'direct-browser-html.json'
+    assert not list((tmp_path / 'data').glob('*/*/reviewed.json'))
     (reports / 'extraction-report-direct.json').write_text(json.dumps({'ready_direct': {
-        entry.slug: artifact_path.relative_to(tmp_path).as_posix()}}))
-    assert publish.publish_pending_all(**options)[0] == 1
-    reviewed = json.loads(reviewed_path.read_text())
-    assert reviewed['direct_source'] == artifact['details']['direct_source']
-    assert reviewed['payload'] == artifact['payload']
-    assert reviewed['payload']['sessions'] == []
-    assert reviewed['payload']['schedule_basis'] == 'pool_hours'
+        entry.slug: (result.fetch_result.path.parent / 'direct-browser-html.json').relative_to(tmp_path).as_posix()
+        for entry, result, _ in extracted}}))
+    assert publish.publish_pending_all(**options)[0] == 4
+    report = json.loads((reports / 'publish-pending.json').read_text())
+    assert report['refused'] == []
+    for entry, result, artifact in extracted:
+        reviewed = json.loads((result.fetch_result.path.parent / 'reviewed.json').read_text())
+        assert reviewed['direct_source'] == artifact['details']['direct_source']
+        assert reviewed['payload'] == artifact['payload']
+        projected = (content / f'{entry.slug}.md').read_text()
+        if entry.slug == 'presidio-ymca-letterman':
+            assert 'maintenance' in projected
+            assert reviewed['payload']['effective_end'] == '2026-09-13'
+        if entry.slug in {'sfsu-mashouf', 'embarcadero-ymca'}:
+            assert reviewed['payload']['sessions'] == []
+            assert reviewed['payload']['schedule_basis'] == 'pool_hours'
 
 
 def test_browser_pipeline_writes_ready_direct_artifact_for_verified_access_transition(tmp_path, integrated_html_capture, monkeypatch):
