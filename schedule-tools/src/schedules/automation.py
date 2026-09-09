@@ -166,16 +166,20 @@ def open_closure_review_prs(root: Path, evidence: Path, command=run_command) -> 
         target.parent.mkdir(parents=True, exist_ok=True)
         if target.exists() and target.read_bytes() != source_bytes:
             raise ValueError("Existing source differs; refusing to overwrite it")
+        sidecar = target.with_name("source.sha256")
+        if sidecar.is_symlink() or (sidecar.exists() and sidecar.read_text() != f"{digest}\n"):
+            raise ValueError("Existing source hash differs; preserve the operator's work")
         target.write_bytes(source_bytes)
+        sidecar.write_text(f"{digest}\n")
         note = target.with_name("closure-review.md")
         if note.exists() or note.is_symlink():
             raise ValueError("Closure review note already exists; preserve the operator's work")
         note.write_text(closure_review_document(review))
-        paths = [relative.as_posix(), note.relative_to(worktree).as_posix()]
+        paths = [relative.as_posix(), sidecar.relative_to(worktree).as_posix(), note.relative_to(worktree).as_posix()]
         checked(["git", "add", "--", *paths], worktree, command)
         staged = checked(["git", "diff", "--cached", "--name-only"], worktree, command).splitlines()
         if not staged or not set(staged).issubset(paths):
-            raise ValueError("Closure PR may contain only its source document and review note")
+            raise ValueError("Closure PR may contain only its source document, hash, and review note")
         checked(["git", "-c", "user.name=Schedule automation", "-c", "user.email=schedules@swimfrancisco.com",
                  "commit", "-m", f"Review unclear closure notice for {slug}"], worktree, command)
         checked(["git", "push", "origin", f"HEAD:refs/heads/{branch}"], worktree, command)

@@ -831,13 +831,18 @@ def test_frozen_letterman_closure_cannot_publish_after_printed_end(tmp_path, int
 
 
 def test_frozen_browser_sources_publish_atomically_per_candidate(tmp_path, integrated_html_capture, monkeypatch):
-    from pathlib import Path
     from schedules import publish, review
     extracted = [_integrated_html_artifact(tmp_path, slug) for slug in _PUBLISHABLE_HTML_SLUGS]
     content = tmp_path / 'content'
     content.mkdir()
     for entry, _, _ in extracted:
-        (content / f'{entry.slug}.md').write_bytes((Path(__file__).parents[1] / 'content/spots' / f'{entry.slug}.md').read_bytes())
+        sessions = '\n'.join(
+            f'[[extra.schedules.sessions]]\nday = "{day}"\ntype = "lap_swim"\nstart = "07:00"\nend = "08:00"'
+            for day in ('monday', 'tuesday', 'wednesday', 'thursday', 'friday'))
+        (content / f'{entry.slug}.md').write_text(
+            f'+++\ntitle = "{entry.slug}"\nslug = "{entry.slug}"\n[extra]\n'
+            '[[extra.schedules]]\neffective_start = "2026-05-17"\neffective_end = "2026-08-11"\n'
+            f'schedule_basis = "swim_schedule"\nclosures = []\n{sessions}\n+++\n')
     reports = tmp_path / 'reports'
     reports.mkdir()
     monkeypatch.setattr(publish, 'TMP_DIR', reports)
@@ -865,6 +870,17 @@ def test_frozen_browser_sources_publish_atomically_per_candidate(tmp_path, integ
         if entry.slug in {'sfsu-mashouf', 'embarcadero-ymca'}:
             assert reviewed['payload']['sessions'] == []
             assert reviewed['payload']['schedule_basis'] == 'pool_hours'
+    published_bytes = {path: path.read_bytes() for path in content.glob('*.md')}
+    assert publish.publish_pending_all(**options)[0] == 0
+    assert all(path.read_bytes() == original for path, original in published_bytes.items())
+    for _, receipt in integrated_html_capture.values():
+        receipt['captured_at'] = '2026-09-09T18:00:00Z'
+    for slug in _PUBLISHABLE_HTML_SLUGS:
+        _integrated_html_artifact(tmp_path, slug)
+    monkeypatch.setattr(review, 'pacific_today', lambda: date(2026, 9, 9))
+    assert publish.publish_pending_all(**(options | {'today': date(2026, 9, 9)}))[0] == 4
+    for path in (tmp_path / 'data').glob('*/*/reviewed.json'):
+        assert json.loads(path.read_text())['payload']['effective_start'] == '2026-09-09'
 
 
 def test_browser_pipeline_writes_ready_direct_artifact_for_verified_access_transition(tmp_path, integrated_html_capture, monkeypatch):

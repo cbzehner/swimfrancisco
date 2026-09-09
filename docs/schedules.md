@@ -2142,3 +2142,21 @@ errors as candidate refusals with rollback. The regression now runs all four
 supported frozen captures through full publication and content projection.
 `just check` passed 1,445 Python tests (55 skipped), 214 JavaScript tests, 35
 browser tests, worker type checks, and the production build.
+
+Hosted run `34412111592` passed extraction and content projection for JCCSF,
+Letterman, Embarcadero, SFSU, and Pomeroy. Exact-commit CI blocked generated
+commit `4dce34e64fce83d30127d41b13d9756a62be6897`: the new integration test
+incorrectly used changing live content as the baseline for an older frozen
+capture. No changes reached main. Spend was zero model calls/$0 and 55 browser
+seconds. Its retained workflow artifact preserves all source and spend evidence.
+The test now uses a fixed baseline and checks unchanged and next-day refreshes.
+
+The trial also exposed missing `source.sha256` files in new closure-review PRs.
+Review creation now includes the verified digest and rejects conflicting existing
+sidecars. The three affected PRs (#105, #106, #107) received only their missing
+hash files; all passed CI. No closure decision or published hours changed.
+
+With these fixes overlaid on the actual generated schedule tree, `just check`
+passed 1,470 Python tests (55 skipped), 214 JavaScript tests, 35 browser tests,
+worker type checks, and the production build. This checks the tests against
+updated schedule data, not only the prior checked-in baseline.

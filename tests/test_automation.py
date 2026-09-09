@@ -256,7 +256,12 @@ def test_closure_pr_contains_evidence_only_and_does_not_move_main(closure_reposi
     branch = f"review/closures/{review['slug']}-{review['source_sha256'][:12]}"
     assert git(remote, "rev-parse", "main") == main
     paths = git(remote, "diff", "--name-only", "main", branch).splitlines()
-    assert set(paths) == {review["source_path"], str(Path(review["source_path"]).with_name("closure-review.md"))}
+    assert set(paths) == {review["source_path"], str(Path(review["source_path"]).with_name("closure-review.md")),
+                          str(Path(review["source_path"]).with_name("source.sha256"))}
+    sidecar = str(Path(review["source_path"]).with_name("source.sha256"))
+    assert git(remote, "show", f"{branch}:{sidecar}") == review["source_sha256"]
+    stored_source = subprocess.check_output(["git", "show", f"{branch}:{review['source_path']}"], cwd=remote)
+    assert hashlib.sha256(stored_source).hexdigest() == git(remote, "show", f"{branch}:{sidecar}")
     assert git(remote, "show", f"{branch}:hours.txt") == "Do not change these hours"
     assert result[0]["state"] == "OPEN"
     assert not any("--force" in args or "--auto" in args or "merge" in args for args in calls)
@@ -457,3 +462,23 @@ def test_changed_html_capture_second_run_keeps_existing_review_and_new_evidence(
     assert second[0]["source_sha256"] == digest
     assert source.read_bytes() == source_bytes
     assert len(calls) == 2 and all(args[:3] == ["gh", "pr", "list"] for args in calls)
+
+
+@pytest.mark.parametrize("existing_hash", ["wrong hash\n", "symlink"])
+def test_closure_pr_preserves_conflicting_source_hash_before_push(closure_repository, existing_hash):
+    root, remote, evidence, review, _, calls, _, command, git = closure_repository
+    sidecar = root / Path(review["source_path"]).with_name("source.sha256")
+    sidecar.parent.mkdir(parents=True)
+    if existing_hash == "symlink":
+        sidecar.symlink_to(root / "hours.txt")
+    else:
+        sidecar.write_text(existing_hash)
+    git(root, "add", str(sidecar.relative_to(root)))
+    git(root, "commit", "-m", "Preserve operator hash")
+    git(root, "push", "origin", "main")
+    before = git(remote, "rev-parse", "main")
+    with pytest.raises(ValueError, match="Existing source hash differs"):
+        open_closure_review_prs(root, evidence, command)
+    assert git(remote, "rev-parse", "main") == before
+    assert not any("push" in args for args in calls)
+    assert sidecar.is_symlink() if existing_hash == "symlink" else sidecar.read_text() == existing_hash
