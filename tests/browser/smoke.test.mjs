@@ -292,6 +292,37 @@ for (const engine of ["webkit", "chromium"]) {
     assert.equal(await page.locator(".today-block-list li").count(), 0, "expired prior hours must not supply Tuesday swimming");
   });
 
+  test(`[${engine}] closure-only board windows expire at Pacific midnight`, async (t) => {
+    const schedule = { schedules: [{
+      effective_start: "2026-09-09", effective_end: "2026-09-13", schedule_basis: "temporarily_closed",
+      sessions: [], access_hours: [],
+      closures: [{ start: "2026-09-09", end: "2026-09-13", reason: "Maintenance", reason_code: "maintenance" }],
+    }] };
+    const html = `
+      <table class="board"><tbody><tr data-type="pool" data-slug="letterman" data-access-mode="limited_public" data-schedule='${JSON.stringify(schedule)}'>
+        <td data-cell="status"></td><td data-cell="next"></td>
+      </tr></tbody></table><script type="module" src="/js/status.js"></script>`;
+    const page = await fixturePage(t, engine, html, {
+      time: "2026-09-14T06:59:00Z", timezoneId: "Asia/Tokyo",
+    });
+    await page.route("**/fixture?*", (route) => route.fulfill({ contentType: "text/html", body: html }));
+    await page.goto(`${baseURL}/fixture`);
+    const status = page.locator('[data-cell="status"]');
+    assert.equal(await status.getAttribute("data-status-value"), "CLOSED");
+    assert.match(await page.locator('[data-cell="next"]').textContent(), /Sep 13/i);
+    assert.equal(await page.locator("tr.is-open").count(), 0);
+    await page.clock.fastForward(60_000);
+    assert.equal(await status.getAttribute("data-status-value"), "CHECK");
+    assert.equal(await page.locator("tr.is-open").count(), 0);
+
+    await page.clock.setSystemTime(new Date("2026-09-13T17:00:00Z"));
+    await page.goto(`${baseURL}/fixture?when=this-afternoon`);
+    assert.equal(await status.getAttribute("data-status-value"), "CLOSED");
+    await page.goto(`${baseURL}/fixture?when=tomorrow-afternoon`);
+    assert.equal(await status.getAttribute("data-status-value"), "CHECK");
+    assert.equal(await page.locator("tr.is-open").count(), 0);
+  });
+
   test(`[${engine}] detail restores today's sessions after a partial closure`, async (t) => {
     const schedule = {
       sessions: [{ day: "thursday", type: "lap_swim", start: "11:00", end: "15:00" }],

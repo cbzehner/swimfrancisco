@@ -15,6 +15,7 @@ import {
   getHorizonOptions,
   readScheduleAttribute,
   resolveHorizon,
+  resolveActiveSchedule,
   scheduleHasAccessHours,
   scheduleHasSessions,
 } from "./helpers/board.mjs";
@@ -181,8 +182,9 @@ function applyStatuses(root, now, allowedTypes = null) {
     const asOf = horizon.kind === "window" ? horizon.date : now;
     const hasSessions = scheduleHasSessions(schedule, asOf);
     const hasAccessHours = scheduleHasAccessHours(schedule, asOf);
+    const hasSwimStatus = hasSessions || resolveActiveSchedule(schedule, asOf)?.schedule_basis === "temporarily_closed";
     if (horizon.kind === "window") {
-      const result = hasSessions
+      const result = hasSwimStatus
         ? computeWindowAvailability(schedule, horizon, allowedTypes)
         : computeAccessWindowAvailability(schedule, horizon);
       setStatus(statusCell, result.status, "pool");
@@ -194,7 +196,7 @@ function applyStatuses(root, now, allowedTypes = null) {
 
     const accessMode = row.getAttribute("data-access-mode") || "public";
     const showsCheck = accessMode !== "public";
-    const result = hasSessions
+    const result = hasSwimStatus
       ? computeStatus(schedule, now, allowedTypes)
       : hasAccessHours
         ? computeAccessStatus(schedule, now)

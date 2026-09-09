@@ -2068,8 +2068,8 @@ Embarcadero, Chinatown, and SFSU captures through deterministic extraction.
 Cloudflare remains their primary capture method, with no HTTP fallback. There
 is no paid HTML model path, model-facts cache, or model scheduling queue.
 Pomeroy retains its existing extractor; unrelated non-city sources remain
-outside this publication scope. Hosted publication validation of this change
-is pending. The earlier hosted run proves capture only.
+outside this publication scope. Hosted publication is verified by run `34413507767`, recorded below. The earlier
+capture-only run does not establish publication.
 
 Each capture retains original HTML, a full byte hash, the Pacific observation
 date, browser receipt, rendered HTML, and screenshot. A source inventory keeps
@@ -2160,3 +2160,36 @@ With these fixes overlaid on the actual generated schedule tree, `just check`
 passed 1,470 Python tests (55 skipped), 214 JavaScript tests, 35 browser tests,
 worker type checks, and the production build. This checks the tests against
 updated schedule data, not only the prior checked-in baseline.
+
+Hosted run [34413507767](https://github.com/cbzehner/swimfrancisco/actions/runs/34413507767)
+completed with `status=published`. It published JCCSF, Letterman, Embarcadero,
+SFSU, and the existing Pomeroy source at exact commit
+`1eff139b502acec8f8ceed55a2c8586a5783087f`. Generated-commit CI, non-force main
+promotion, main CI, Cloudflare deployment, and hosted browser checks passed. A
+separate local `smoke-production.mjs --expected-commit=1eff139b502acec8f8ceed55a2c8586a5783087f --browser`
+also passed all 30 canonical spots. The artifact
+`schedule-automation-34413507767-1` preserves original captures, full hashes,
+configuration, extraction/publication reports, and budget/deployment receipts.
+
+All six Cloudflare captures completed and the browser closed. Browser spend was
+52/300 seconds. The model receipt contained zero requests and $0 charges; this
+is proof of hosted deterministic HTML publication, not hosted paid extraction.
+September model charges remain $3.869090 of $5, with $1.130910 remaining and no
+unsettled reservations. The earlier two failed trials also charged $0 and used
+56 and 55 browser seconds; the cancelled stale-commit dispatch never reserved
+model funds. The spending ledger was not reset.
+
+JCCSF's 23 swim sessions and third-Sunday exception cover the observed September
+9–22 window. Embarcadero and SFSU each expose six days of pool access over that
+window, not confirmed lap-swim hours. Letterman's explicit maintenance closure
+ends September 13. Chinatown and Stonestown remain held for conflicting notices,
+using their existing open review PRs. Other city closure holds and unrelated
+manual non-city sources remain outside this change. Monday 16:00 UTC automation,
+the $1 run limit, and the $5 monthly ceiling remain enabled.
+
+The board now routes verified `temporarily_closed` schedules through the existing
+status calculator even when no weekly sessions or access hours are present.
+Browser tests cover CLOSED through September 13, CHECK after Pacific midnight,
+and current/future horizon selection for a Tokyo visitor. Final local
+`just check` with the published schedules passed 1,470 Python tests (55 skipped),
+214 JavaScript tests, 37 browser tests, worker type checks, and the build.
