@@ -482,15 +482,20 @@ def _chinatown_payload(inventory: dict, observed: date) -> dict:
         for day, record in weekly['pool'].items() for window in record['ranges']]
     closures, exceptions = [], []
     for holiday, record in sorted(holidays.items()):
+        if holiday < observed:
+            continue
         facility, pool = record['statuses'].get('facility'), record['statuses'].get('pool')
-        if facility == 'closed' and pool not in (None, 'closed'):
-            raise DirectSourceError(f'Pool holiday hours conflict with closed facility on {holiday}')
-        if isinstance(facility, list) and isinstance(pool, list) and any(
+        conflict = facility == 'closed' and pool not in (None, 'closed')
+        conflict = conflict or isinstance(facility, list) and isinstance(pool, list) and any(
             not any(outer['start'] <= inner['start'] < inner['end'] <= outer['end'] for outer in facility)
             for inner in pool
-        ):
-            raise DirectSourceError(f'Pool holiday hours conflict with facility hours on {holiday}')
-        if not observed <= holiday <= end:
+        )
+        if conflict:
+            if holiday == observed:
+                raise DirectSourceError(f'Pool holiday hours conflict with facility hours on {holiday}')
+            end = min(end, holiday - timedelta(days=1))
+            continue
+        if holiday > end:
             continue
         text = ' '.join(dict.fromkeys(line['text'] for line in record['lines']))
         if facility == 'closed' or pool == 'closed':

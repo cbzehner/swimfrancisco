@@ -131,7 +131,7 @@ source_status = "access_hours_only"
 source_kind = "ymca_location_html"
 capture_method = "cloudflare_browser"
 auto_publish = true
-notes = "Location page confirms a saltwater pool and publishes facility hours, but not concrete lap/open swim sessions in static HTML."
+notes = "Location page publishes separate pool and facility access hours. Verified publication windows stop before conflicting holiday hours; these hours do not establish lap-swim availability."
 
 [[pool]]
 slug = "fitness-sf-fillmore"

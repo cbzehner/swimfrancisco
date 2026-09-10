@@ -752,7 +752,7 @@ def test_browser_parser_failure_retains_original_source_and_capture(browser_capt
     assert (directory / 'capture.json').exists()
 
 
-_PUBLISHABLE_HTML_SLUGS = ('jccsf', 'sfsu-mashouf', 'embarcadero-ymca', 'presidio-ymca-letterman')
+_PUBLISHABLE_HTML_SLUGS = ('jccsf', 'sfsu-mashouf', 'embarcadero-ymca', 'presidio-ymca-letterman', 'chinatown-ymca')
 
 @pytest.fixture
 def integrated_html_capture(tmp_path, monkeypatch):
@@ -764,7 +764,8 @@ def integrated_html_capture(tmp_path, monkeypatch):
     captures = {}
     for slug in _PUBLISHABLE_HTML_SLUGS:
         entry = next(item for item in load_registry() if item.slug == slug)
-        content = (Path(__file__).parent / 'fixtures/html-facts' / f'{slug}.html').read_bytes()
+        fixture = 'chinatown-ymca-reopened' if slug == 'chinatown-ymca' else slug
+        content = (Path(__file__).parent / 'fixtures/html-facts' / f'{fixture}.html').read_bytes()
         receipt = {'method': 'cloudflare_browser', 'requested_url': entry.pdf_url,
                    'url': entry.pdf_url, 'status': 200, 'captured_at': '2026-09-08T18:00:00Z',
                    'hashes': {'source': hashlib.sha256(content).hexdigest()},
@@ -834,6 +835,19 @@ def test_frozen_letterman_closure_cannot_publish_after_printed_end(tmp_path, int
     assert not publish_eligible(**options, today=date(2026, 9, 14)).ok
 
 
+def test_chinatown_publication_rejects_conflict_date_even_with_fresh_capture(tmp_path, integrated_html_capture):
+    from schedules.direct_sources import verify_direct_artifact
+    integrated_html_capture['chinatown-ymca'][1]['captured_at'] = '2026-12-20T18:00:00Z'
+    _, result, artifact = _integrated_html_artifact(tmp_path, 'chinatown-ymca')
+    assert artifact['payload']['effective_end'] == '2026-12-31'
+    assert verify_direct_artifact(artifact, result.fetch_result.path, today=date(2026, 12, 31))['ok']
+    with pytest.raises(DirectSourceError, match='schedule window is expired'):
+        verify_direct_artifact(artifact, result.fetch_result.path, today=date(2027, 1, 1))
+    artifact['payload']['effective_end'] = '2027-01-02'
+    with pytest.raises(DirectSourceError, match='differs from verified source facts'):
+        verify_direct_artifact(artifact, result.fetch_result.path, today=date(2026, 12, 31))
+
+
 def test_frozen_browser_sources_publish_atomically_per_candidate(tmp_path, integrated_html_capture, monkeypatch):
     from schedules import publish, review
     extracted = [_integrated_html_artifact(tmp_path, slug) for slug in _PUBLISHABLE_HTML_SLUGS]
@@ -860,7 +874,7 @@ def test_frozen_browser_sources_publish_atomically_per_candidate(tmp_path, integ
     (reports / 'extraction-report-direct.json').write_text(json.dumps({'ready_direct': {
         entry.slug: (result.fetch_result.path.parent / 'direct-browser-html.json').relative_to(tmp_path).as_posix()
         for entry, result, _ in extracted}}))
-    assert publish.publish_pending_all(**options)[0] == 4
+    assert publish.publish_pending_all(**options)[0] == len(_PUBLISHABLE_HTML_SLUGS)
     report = json.loads((reports / 'publish-pending.json').read_text())
     assert report['refused'] == []
     for entry, result, artifact in extracted:
@@ -882,7 +896,7 @@ def test_frozen_browser_sources_publish_atomically_per_candidate(tmp_path, integ
     for slug in _PUBLISHABLE_HTML_SLUGS:
         _integrated_html_artifact(tmp_path, slug)
     monkeypatch.setattr(review, 'pacific_today', lambda: date(2026, 9, 9))
-    assert publish.publish_pending_all(**(options | {'today': date(2026, 9, 9)}))[0] == 4
+    assert publish.publish_pending_all(**(options | {'today': date(2026, 9, 9)}))[0] == len(_PUBLISHABLE_HTML_SLUGS)
     for path in (tmp_path / 'data').glob('*/*/reviewed.json'):
         assert json.loads(path.read_text())['payload']['effective_start'] == '2026-09-09'
 

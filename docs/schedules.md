@@ -2264,10 +2264,17 @@ The human attestation records that explicit full-draft approval; the original
 PDF and literal midnight evidence remain unchanged.
 
 Chinatown's newer original provides separate complete facility and pool hours.
-The parser supports that format but still holds the source because January 1,
-2027 lists facility opening at 10:00 and pool opening at 08:00. The current rule
-holds the whole source for that conflict. Publishing a shorter window that
-excludes a precisely dated conflict is a separate, pending policy decision.
+January 1, 2027 lists facility opening at 10:00 and pool opening at 08:00.
+The user approved publishing verified dates before this conflict. Chinatown's
+pool-access window lasts at most 14 days and stops before the first future
+holiday with conflicting facility and pool hours. The conflicting date itself
+holds publication; a later observation can publish dates after it. This does
+not guess holiday hours, publish lap-swim sessions, or extend an expired window.
+Unknown date/scope, conflicting duplicate statements, incomplete weekly hours,
+and unsupported closure notices retain the existing review hold. The original
+HTML and full source inventory preserve the withheld holiday evidence.
+Publication reconstructs the shortened window and rejects any extension into
+the conflicting date, even when the capture is otherwise still fresh.
 
 Koret's original workbook, frozen as `tests/fixtures/koret-september.xlsx`,
 prints Monday hours as 7 a.m.–7 a.m. Invalid headlines now hold extraction
@@ -2276,7 +2283,7 @@ close the entire pool. Automatic publication remains disabled until Monday's
 closing time is confirmed and lane-level completeness checks cover bookings
 and restrictions.
 
-Remaining operator questions include Stonestown's conflicting “Thursday, 09/22/2026” reopening date, and current
+Remaining operator questions include Stonestown's conflicting “Thursday, 09/22/2026” closure end date, and current
 2026 holiday hours for both 24 Hour Fitness locations. September 22 is Tuesday.
 The linked 24 Hour Fitness holiday page still identifies 2025; the pipeline
 must not advance that year by assumption. No operator messages were sent.
@@ -2390,3 +2397,65 @@ remain intact. Its non-force append fails on concurrent ledger changes; reruns
 cannot reset or reapply the prior cap. The workflow never runs this amendment
 automatically. PDF provider code and extraction configuration remain unchanged
 by this budget approval mechanism.
+
+### Deferred schedule work
+
+These work items remain open after the September 9 source reviews. They do not
+authorize operator messages, guessed corrections, or additional model spending.
+Keep source evidence and existing review holds until each item's checks pass.
+
+- [ ] **Confirm Chinatown's January 1 pool and facility hours.** The
+  [official location page](https://www.ymcasf.org/location/chinatown-ymca/)
+  lists January 1, 2027 facility hours as 10:00–16:00 and pool hours as
+  08:00–13:30. The repeated pool statement agrees with the pool statement,
+  but the facility and pool opening times conflict. Retain the original in
+  `tests/fixtures/html-facts/chinatown-ymca-reopened.html`. Obtain a corrected
+  official statement or an explicit source-specific review before publishing
+  that date. The separately approved date-limited publication policy may
+  publish an earlier verified window; it does not resolve January 1. Done when
+  both scopes agree, the source checks pass, and January 1's individual-page
+  and board behavior is verified in Pacific time.
+
+- [ ] **Confirm Stonestown's last closed date and reopening time.** The
+  [official notice](https://www.ymcasf.org/location/stonestown-family-ymca/)
+  gives a pool, sauna, and spa closure from August 21 through “Thursday,
+  09/22/2026.” September 22 is Tuesday. Ask which date is the last closed day
+  and when the pool first reopens; the printed range end is not itself a
+  reopening announcement. Preserve pool-specific scope and do not infer
+  September 22 or September 24. Done when the corrected source dates and
+  weekdays agree and publication cannot extend closure or prior hours beyond
+  their verified window. The retained original is
+  `tests/fixtures/html-facts/stonestown-ymca.html`.
+
+- [ ] **Confirm Koret's Monday closing time and validate lane coverage.**
+  The [official workbook](https://docs.google.com/spreadsheets/d/1PcFSl3ndScM2-SZnubwDvBlbhpmbFsVjEPK-yGilZU0/edit?gid=1958899859&pli=1)
+  prints `Hours: 7am-7am` in Monday cell A2. Obtain the corrected closing time;
+  evening bookings alone do not establish it. Then independently account for
+  all lane cells, bookings, closures, shallow-lane restrictions, and the
+  Sunday deep-end closure before enabling automatic publication. Preserve
+  `tests/fixtures/koret-september.xlsx` as the regression source. Done when
+  missing days, unaccounted bookings, and wrongly broadened lane closures
+  reject publication, while complete supported schedules pass.
+
+- [ ] **Obtain current 24 Hour Fitness holiday coverage for both clubs.**
+  [Potrero](https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport)
+  and [Ocean](https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport)
+  link a [holiday page](https://www.24hourfitness.com/locations/holiday-hours)
+  that still identifies 2025 and allows club-specific differences. Monitor
+  for an explicit 2026 update or obtain an official confirmation for both
+  clubs, including Thanksgiving, Christmas, and New Year reopening hours.
+  Do not advance a printed year. Done when originals for the relevant year
+  and both club identities support all exceptions, with tested December–January
+  rollover and no extension of expired hours.
+
+- [ ] **Define reuse and renewal of approved Sava and Balboa reviews.**
+  The [September 9 full-source approvals](#approved-sava-and-balboa-source-reviews--september-9-2026)
+  resolve the current Sava noon correction and Balboa December 12 09:00–12:00
+  closure. They are not outstanding requests for the same answers. Specify
+  how unchanged approved source bytes reuse those reviews without repeated
+  work, and how changed primary or supplemental documents require a fresh
+  comparison and review. Keep the literal source text, full hashes, reviewer
+  decision, and effective dates; never turn these approvals into a general
+  meridiem correction or automatic cross-source closure propagation. Done
+  when unchanged reviews remain usable, changed evidence cannot silently
+  inherit an attestation, and expired schedules remain expired.

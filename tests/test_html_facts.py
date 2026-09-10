@@ -346,12 +346,58 @@ def corrected_chinatown(text):
     return text.replace('10:00 a.m.', '7:00 a.m.')
 
 
-def test_latest_chinatown_original_still_holds_precise_future_conflict():
+def test_latest_chinatown_original_publishes_verified_dates_before_future_conflict():
     import hashlib
 
     assert hashlib.sha256((FIXTURES / 'chinatown-ymca-reopened.html').read_bytes()).hexdigest() == '4710bd6d9fba436d4c663bed81e518acff60b167898fff1c542cb962c96429de'
+    result = html_source_payload(reopened_chinatown(), date(2026, 9, 9))
+    assert result['effective_start'] == '2026-09-09'
+    assert result['effective_end'] == '2026-09-22'
+    assert len(result['access_hours']) == 7
+    assert result['access_exceptions'] == []
+
+
+@pytest.mark.parametrize('observed,end', [
+    (date(2026, 12, 17), '2026-12-30'),
+    (date(2026, 12, 18), '2026-12-31'),
+    (date(2026, 12, 19), '2026-12-31'),
+    (date(2026, 12, 31), '2026-12-31'),
+    (date(2027, 1, 2), '2027-01-15'),
+])
+def test_chinatown_window_never_includes_conflicting_holiday(observed, end):
+    result = html_source_payload(reopened_chinatown(), observed)
+    assert result['effective_start'] == observed.isoformat()
+    assert result['effective_end'] == end
+    assert all(row['date'] != '2027-01-01' for row in result['access_exceptions'])
+
+
+def test_chinatown_holds_on_conflicting_holiday_itself():
     with pytest.raises(HtmlClosureReviewRequired, match='facility hours on 2027-01-01'):
-        html_source_payload(reopened_chinatown(), date(2026, 9, 9))
+        html_source_payload(reopened_chinatown(), date(2027, 1, 1))
+
+
+def test_chinatown_does_not_defer_conflict_without_a_resolved_date():
+    source = reopened_chinatown(lambda text: text.replace('Friday, January 1', 'New Year holiday'))
+    with pytest.raises(HtmlClosureReviewRequired, match='holiday notice'):
+        html_source_payload(source, date(2026, 9, 9))
+
+
+def test_chinatown_closed_facility_conflict_caps_window_and_holds_on_date():
+    source = reopened_chinatown()
+    for line in source['lines']:
+        if line['scope'] == 'facility' and line['text'].startswith('Friday, January 1 '):
+            line['text'] = line['text'].replace('10:00 a.m. – 4:00 p.m.', 'Closed')
+    assert html_source_payload(source, date(2026, 12, 20))['effective_end'] == '2026-12-31'
+    with pytest.raises(HtmlClosureReviewRequired, match='facility hours on 2027-01-01'):
+        html_source_payload(source, date(2027, 1, 1))
+
+
+def test_chinatown_corrected_source_can_publish_formerly_conflicting_date():
+    result = html_source_payload(reopened_chinatown(corrected_chinatown), date(2027, 1, 1))
+    assert result['effective_end'] == '2027-01-14'
+    assert [(row['date'], row['start'], row['end']) for row in result['access_exceptions']] == [
+        ('2027-01-01', '08:00', '13:30'),
+    ]
 
 
 def test_corrected_chinatown_publishes_explicit_pool_group_without_facility_duplicates():
