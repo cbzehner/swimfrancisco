@@ -1,0 +1,101 @@
+{
+  "pdf_sha256": "fa16884f0c67377f483cc3ae4164942ccb0097444e692b32b2d721c2740c931f",
+  "source_pdf_url": "https://www.ymcasf.org/location/chinatown-ymca/",
+  "direct_source": {
+    "configuration": {
+      "capture": {
+        "browser_version": "128.0.6613.137",
+        "captured_at": "2026-09-10T04:45:11.500Z",
+        "configuration": {
+          "playwright_version": "1.60.0",
+          "script_sha256": "56ed47662a267147befeb4c898586da48683caaa7868061fb8f9d620bd07f02a"
+        },
+        "hashes": {
+          "rendered": "d7a0870a1108955874dee499c7fce00726713a9f6106265d3a8e2b9d7a49523a",
+          "screenshot": "8847683eb3dcf9d2c8e074eb923a23cd700f3234fadf4fd640dda1a072de8af7",
+          "source": "fa16884f0c67377f483cc3ae4164942ccb0097444e692b32b2d721c2740c931f"
+        },
+        "method": "cloudflare_browser",
+        "requested_url": "https://www.ymcasf.org/location/chinatown-ymca/",
+        "status": 200,
+        "url": "https://www.ymcasf.org/location/chinatown-ymca/"
+      },
+      "freshness_days": 14,
+      "libraries": {
+        "httpx": "0.28.1",
+        "openpyxl": "3.1.5"
+      },
+      "parser_sha256": "e8ad66fa5b3fd21d553df2a86588ab0a67e57ada3111b1cd3f432f6cd538a078",
+      "python": "3.13.15",
+      "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+      "source_identity": "original_bytes"
+    },
+    "freshness_days": 14,
+    "observed_on": "2026-09-09",
+    "requested_url": "https://www.ymcasf.org/location/chinatown-ymca/",
+    "sha256": "fa16884f0c67377f483cc3ae4164942ccb0097444e692b32b2d721c2740c931f",
+    "url": "https://www.ymcasf.org/location/chinatown-ymca/"
+  },
+  "slug": "chinatown-ymca",
+  "reviewed_at": "2026-09-09",
+  "attested_by": "ci",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "19:30",
+        "evidence": "Monday: 8:00 am \u2013 7:30 pm",
+        "label": "Pool hours",
+        "start": "08:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "19:30",
+        "evidence": "Tuesday: 8:00 am \u2013 7:30 pm",
+        "label": "Pool hours",
+        "start": "08:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:30",
+        "evidence": "Wednesday: 8:00 am \u2013 7:30 pm",
+        "label": "Pool hours",
+        "start": "08:00"
+      },
+      {
+        "day": "thursday",
+        "end": "19:30",
+        "evidence": "Thursday: 8:00 am \u2013 7:30 pm",
+        "label": "Pool hours",
+        "start": "08:00"
+      },
+      {
+        "day": "friday",
+        "end": "19:30",
+        "evidence": "Friday: 8:00 am \u2013 7:30 pm",
+        "label": "Pool hours",
+        "start": "08:00"
+      },
+      {
+        "day": "saturday",
+        "end": "15:30",
+        "evidence": "Saturday: 8:00 am \u2013 3:30 pm",
+        "label": "Pool hours",
+        "start": "08:00"
+      },
+      {
+        "day": "sunday",
+        "end": "15:30",
+        "evidence": "Sunday: 8:00 am \u2013 3:30 pm",
+        "label": "Pool hours",
+        "start": "08:00"
+      }
+    ],
+    "closures": [],
+    "effective_end": "2026-09-22",
+    "effective_start": "2026-09-09",
+    "schedule_basis": "pool_hours",
+    "sessions": []
+  }
+}

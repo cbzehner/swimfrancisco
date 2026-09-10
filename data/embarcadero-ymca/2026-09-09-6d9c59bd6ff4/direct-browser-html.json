@@ -5,20 +5,20 @@
       "configuration": {
         "capture": {
           "browser_version": "128.0.6613.137",
-          "captured_at": "2026-09-10T04:45:14.685Z",
+          "captured_at": "2026-09-10T04:45:07.626Z",
           "configuration": {
             "playwright_version": "1.60.0",
             "script_sha256": "56ed47662a267147befeb4c898586da48683caaa7868061fb8f9d620bd07f02a"
           },
           "hashes": {
-            "rendered": "19cb86e4eca3f27e6acf620c26757026735c665a24446a96e7fae025adefa460",
-            "screenshot": "e4888d4fc908d303262d109578004b378e18ba9450fe4b06618a9534a380798f",
-            "source": "7c086f2f60cd34190cdcd7c66b5ef3ec2fc6848c43b4c77f871c0c8fb81a9ca3"
+            "rendered": "34c47e9cbc71f89bd3a3fa296970222450f7d68f867bd98e7ee1d06c0dbb95cd",
+            "screenshot": "45340af14b9169ced43719c26345dedbf486f689460988b4b0a030630be40d21",
+            "source": "6d9c59bd6ff49b0d769f0dcb5c13cb29577ef2424016c433e556cff5c87ec8ab"
           },
           "method": "cloudflare_browser",
-          "requested_url": "https://campusrec.sfsu.edu/Aquatics",
+          "requested_url": "https://www.ymcasf.org/location/embarcadero-ymca/",
           "status": 200,
-          "url": "https://campusrec.sfsu.edu/Aquatics"
+          "url": "https://www.ymcasf.org/location/embarcadero-ymca/"
         },
         "freshness_days": 14,
         "libraries": {
@@ -32,61 +32,61 @@
       },
       "freshness_days": 14,
       "observed_on": "2026-09-09",
-      "requested_url": "https://campusrec.sfsu.edu/Aquatics",
-      "sha256": "7c086f2f60cd34190cdcd7c66b5ef3ec2fc6848c43b4c77f871c0c8fb81a9ca3",
-      "url": "https://campusrec.sfsu.edu/Aquatics"
+      "requested_url": "https://www.ymcasf.org/location/embarcadero-ymca/",
+      "sha256": "6d9c59bd6ff49b0d769f0dcb5c13cb29577ef2424016c433e556cff5c87ec8ab",
+      "url": "https://www.ymcasf.org/location/embarcadero-ymca/"
     },
     "source_coverage": {
       "issues": [],
       "ok": true
     }
   },
-  "extracted_at": "2026-09-10T04:45:20.229446+00:00",
+  "extracted_at": "2026-09-10T04:45:17.840985+00:00",
   "model": "browser-html",
   "payload": {
     "access_exceptions": [],
     "access_hours": [
       {
         "day": "monday",
-        "end": "20:00",
-        "evidence": "Monday - Thursday: 10 a.m. - 8 p.m.",
+        "end": "20:30",
+        "evidence": "Monday: 5:30 am \u2013 9:00 pm",
         "label": "Pool hours",
-        "start": "10:00"
+        "start": "06:00"
       },
       {
         "day": "tuesday",
-        "end": "20:00",
-        "evidence": "Monday - Thursday: 10 a.m. - 8 p.m.",
+        "end": "20:30",
+        "evidence": "Tuesday: 5:30 am \u2013 9:00 pm",
         "label": "Pool hours",
-        "start": "10:00"
+        "start": "06:00"
       },
       {
         "day": "wednesday",
-        "end": "20:00",
-        "evidence": "Monday - Thursday: 10 a.m. - 8 p.m.",
+        "end": "20:30",
+        "evidence": "Wednesday: 5:30 am \u2013 9:00 pm",
         "label": "Pool hours",
-        "start": "10:00"
+        "start": "06:00"
       },
       {
         "day": "thursday",
-        "end": "20:00",
-        "evidence": "Monday - Thursday: 10 a.m. - 8 p.m.",
+        "end": "20:30",
+        "evidence": "Thursday: 5:30 am \u2013 9:00 pm",
         "label": "Pool hours",
-        "start": "10:00"
+        "start": "06:00"
       },
       {
         "day": "friday",
-        "end": "16:00",
-        "evidence": "Friday - Saturday: Noon - 4 p.m.",
+        "end": "20:30",
+        "evidence": "Friday: 5:30 am \u2013 9:00 pm",
         "label": "Pool hours",
-        "start": "12:00"
+        "start": "06:00"
       },
       {
         "day": "saturday",
-        "end": "16:00",
-        "evidence": "Friday - Saturday: Noon - 4 p.m.",
+        "end": "16:30",
+        "evidence": "Saturday: 7:00 am \u2013 5:00 pm",
         "label": "Pool hours",
-        "start": "12:00"
+        "start": "07:30"
       }
     ],
     "closures": [],
@@ -95,10 +95,10 @@
     "schedule_basis": "pool_hours",
     "sessions": []
   },
-  "pdf_sha256": "7c086f2f60cd34190cdcd7c66b5ef3ec2fc6848c43b4c77f871c0c8fb81a9ca3",
-  "prompt_sha256": "cdbd4d363ed9e37f4d2f295dc4876375f125b25695442fcedc8e7f6863385617",
+  "pdf_sha256": "6d9c59bd6ff49b0d769f0dcb5c13cb29577ef2424016c433e556cff5c87ec8ab",
+  "prompt_sha256": "f61aea063461b7d02e6e993bc9cf3962503e1b69da06bee1ae5d2f1210a81de9",
   "provider": "direct",
   "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
-  "source_pdf_url": "https://campusrec.sfsu.edu/Aquatics",
+  "source_pdf_url": "https://www.ymcasf.org/location/embarcadero-ymca/",
   "usage": {}
 }

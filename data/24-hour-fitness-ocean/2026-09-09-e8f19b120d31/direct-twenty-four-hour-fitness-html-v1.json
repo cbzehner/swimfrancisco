@@ -8,7 +8,7 @@
           "httpx": "0.28.1",
           "openpyxl": "3.1.5"
         },
-        "parser_sha256": "53eeac81d30109235050c1235e31e4eedb82a5dbb928971140a5a3b38d528bed",
+        "parser_sha256": "e8ad66fa5b3fd21d553df2a86588ab0a67e57ada3111b1cd3f432f6cd538a078",
         "python": "3.13.15",
         "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
         "source_identity": "original_bytes"
@@ -21,7 +21,7 @@
     },
     "source_coverage": null
   },
-  "extracted_at": "2026-09-10T03:39:55.844325+00:00",
+  "extracted_at": "2026-09-10T04:45:19.738965+00:00",
   "model": "twenty-four-hour-fitness-html-v1",
   "payload": {
     "access_exceptions": [],

@@ -1,6 +1,6 @@
 {
-  "pdf_sha256": "9ae8b6715d45f930e1cfef0e70296cb0b771c33230857deabe5972c269a0d945",
-  "source_pdf_url": "https://www.bayclubs.com/clubs/thegateway",
+  "pdf_sha256": "122f43b33436b087d7d6129fe77ebb95d236bd59207c29066c07fdd0e987d44a",
+  "source_pdf_url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914",
   "direct_source": {
     "configuration": {
       "freshness_days": 14,
@@ -15,11 +15,11 @@
     },
     "freshness_days": 14,
     "observed_on": "2026-09-09",
-    "requested_url": "https://www.bayclubs.com/clubs/thegateway",
-    "sha256": "9ae8b6715d45f930e1cfef0e70296cb0b771c33230857deabe5972c269a0d945",
-    "url": "https://www.bayclubs.com/clubs/thegateway"
+    "requested_url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914",
+    "sha256": "122f43b33436b087d7d6129fe77ebb95d236bd59207c29066c07fdd0e987d44a",
+    "url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914"
   },
-  "slug": "bay-club-gateway",
+  "slug": "city-sports-20th-ave",
   "reviewed_at": "2026-09-09",
   "attested_by": "ci",
   "payload": {
@@ -27,52 +27,52 @@
     "access_hours": [
       {
         "day": "monday",
-        "end": "21:00",
-        "evidence": "Mon: 6:00 am - 9:00 pm",
+        "end": "23:00",
+        "evidence": "Mon - Thu: 5:00am - 11:00pm",
         "label": "Club hours",
-        "start": "06:00"
+        "start": "05:00"
       },
       {
         "day": "tuesday",
-        "end": "21:00",
-        "evidence": "Tue: 6:00 am - 9:00 pm",
+        "end": "23:00",
+        "evidence": "Mon - Thu: 5:00am - 11:00pm",
         "label": "Club hours",
-        "start": "06:00"
+        "start": "05:00"
       },
       {
         "day": "wednesday",
-        "end": "21:00",
-        "evidence": "Wed: 6:00 am - 9:00 pm",
+        "end": "23:00",
+        "evidence": "Mon - Thu: 5:00am - 11:00pm",
         "label": "Club hours",
-        "start": "06:00"
+        "start": "05:00"
       },
       {
         "day": "thursday",
-        "end": "21:00",
-        "evidence": "Thu: 6:00 am - 9:00 pm",
+        "end": "23:00",
+        "evidence": "Mon - Thu: 5:00am - 11:00pm",
         "label": "Club hours",
-        "start": "06:00"
+        "start": "05:00"
       },
       {
         "day": "friday",
-        "end": "21:00",
-        "evidence": "Fri: 6:00 am - 9:00 pm",
+        "end": "22:00",
+        "evidence": "Fri: 5:00am - 10:00pm",
         "label": "Club hours",
-        "start": "06:00"
+        "start": "05:00"
       },
       {
         "day": "saturday",
         "end": "20:00",
-        "evidence": "Sat: 7:00 am - 8:00 pm",
+        "evidence": "Sat - Sun: 8:00am - 8:00pm",
         "label": "Club hours",
-        "start": "07:00"
+        "start": "08:00"
       },
       {
         "day": "sunday",
         "end": "20:00",
-        "evidence": "Sun: 7:00 am - 8:00 pm",
+        "evidence": "Sat - Sun: 8:00am - 8:00pm",
         "label": "Club hours",
-        "start": "07:00"
+        "start": "08:00"
       }
     ],
     "closures": [],

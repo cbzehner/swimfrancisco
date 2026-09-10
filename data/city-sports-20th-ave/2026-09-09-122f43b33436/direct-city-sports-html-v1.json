@@ -15,68 +15,68 @@
       },
       "freshness_days": 14,
       "observed_on": "2026-09-09",
-      "requested_url": "https://fitnesssf.com/location/fillmore",
-      "sha256": "eb19802b51f5715daf1067620e717a64b080bcac8d1258dcfe1a84c6679ceb68",
-      "url": "https://fitnesssf.com/location/fillmore"
+      "requested_url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914",
+      "sha256": "122f43b33436b087d7d6129fe77ebb95d236bd59207c29066c07fdd0e987d44a",
+      "url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914"
     },
     "source_coverage": {
       "issues": [],
       "ok": true
     }
   },
-  "extracted_at": "2026-09-10T04:45:18.051867+00:00",
-  "model": "fitness-sf-html-v1",
+  "extracted_at": "2026-09-10T04:45:19.363765+00:00",
+  "model": "city-sports-html-v1",
   "payload": {
     "access_exceptions": [],
     "access_hours": [
       {
         "day": "monday",
-        "end": "23:59",
-        "evidence": "Mon - Thu: 5 am - 12 am",
+        "end": "23:00",
+        "evidence": "Mon - Thu: 5:00am - 11:00pm",
         "label": "Club hours",
         "start": "05:00"
       },
       {
         "day": "tuesday",
-        "end": "23:59",
-        "evidence": "Mon - Thu: 5 am - 12 am",
+        "end": "23:00",
+        "evidence": "Mon - Thu: 5:00am - 11:00pm",
         "label": "Club hours",
         "start": "05:00"
       },
       {
         "day": "wednesday",
-        "end": "23:59",
-        "evidence": "Mon - Thu: 5 am - 12 am",
+        "end": "23:00",
+        "evidence": "Mon - Thu: 5:00am - 11:00pm",
         "label": "Club hours",
         "start": "05:00"
       },
       {
         "day": "thursday",
-        "end": "23:59",
-        "evidence": "Mon - Thu: 5 am - 12 am",
+        "end": "23:00",
+        "evidence": "Mon - Thu: 5:00am - 11:00pm",
         "label": "Club hours",
         "start": "05:00"
       },
       {
         "day": "friday",
-        "end": "23:00",
-        "evidence": "Fri: 5 am - 11 pm",
+        "end": "22:00",
+        "evidence": "Fri: 5:00am - 10:00pm",
         "label": "Club hours",
         "start": "05:00"
       },
       {
         "day": "saturday",
         "end": "20:00",
-        "evidence": "Sat - Sun: 7 am - 8 pm",
+        "evidence": "Sat - Sun: 8:00am - 8:00pm",
         "label": "Club hours",
-        "start": "07:00"
+        "start": "08:00"
       },
       {
         "day": "sunday",
         "end": "20:00",
-        "evidence": "Sat - Sun: 7 am - 8 pm",
+        "evidence": "Sat - Sun: 8:00am - 8:00pm",
         "label": "Club hours",
-        "start": "07:00"
+        "start": "08:00"
       }
     ],
     "closures": [],
@@ -85,10 +85,10 @@
     "schedule_basis": "facility_hours",
     "sessions": []
   },
-  "pdf_sha256": "eb19802b51f5715daf1067620e717a64b080bcac8d1258dcfe1a84c6679ceb68",
-  "prompt_sha256": "2529b3401aac7f9b94d213be7af2b27264162b7f0941f293330790026c3b8ae7",
+  "pdf_sha256": "122f43b33436b087d7d6129fe77ebb95d236bd59207c29066c07fdd0e987d44a",
+  "prompt_sha256": "c6d66ea6d229afd461a7314ba4ed02cf3682bd0b079c3763047f3d06cb64555a",
   "provider": "direct",
   "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
-  "source_pdf_url": "https://fitnesssf.com/location/fillmore",
+  "source_pdf_url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914",
   "usage": {}
 }
