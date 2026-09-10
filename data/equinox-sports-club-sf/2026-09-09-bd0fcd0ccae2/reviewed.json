@@ -1,6 +1,6 @@
 {
-  "pdf_sha256": "9ae8b6715d45f930e1cfef0e70296cb0b771c33230857deabe5972c269a0d945",
-  "source_pdf_url": "https://www.bayclubs.com/clubs/thegateway",
+  "pdf_sha256": "bd0fcd0ccae2ddd36bad5c45ae06d98a8d1ade1511cd6642e9754d62f1e1b7d5",
+  "source_pdf_url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco",
   "direct_source": {
     "configuration": {
       "freshness_days": 14,
@@ -15,11 +15,11 @@
     },
     "freshness_days": 14,
     "observed_on": "2026-09-09",
-    "requested_url": "https://www.bayclubs.com/clubs/thegateway",
-    "sha256": "9ae8b6715d45f930e1cfef0e70296cb0b771c33230857deabe5972c269a0d945",
-    "url": "https://www.bayclubs.com/clubs/thegateway"
+    "requested_url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco",
+    "sha256": "bd0fcd0ccae2ddd36bad5c45ae06d98a8d1ade1511cd6642e9754d62f1e1b7d5",
+    "url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco"
   },
-  "slug": "bay-club-gateway",
+  "slug": "equinox-sports-club-sf",
   "reviewed_at": "2026-09-09",
   "attested_by": "ci",
   "payload": {
@@ -27,50 +27,50 @@
     "access_hours": [
       {
         "day": "monday",
-        "end": "21:00",
-        "evidence": "Mon: 6:00 am - 9:00 pm",
+        "end": "22:00",
+        "evidence": "Monday: 05:00\u201322:00",
         "label": "Club hours",
-        "start": "06:00"
+        "start": "05:00"
       },
       {
         "day": "tuesday",
-        "end": "21:00",
-        "evidence": "Tue: 6:00 am - 9:00 pm",
+        "end": "22:00",
+        "evidence": "Tuesday: 05:00\u201322:00",
         "label": "Club hours",
-        "start": "06:00"
+        "start": "05:00"
       },
       {
         "day": "wednesday",
-        "end": "21:00",
-        "evidence": "Wed: 6:00 am - 9:00 pm",
+        "end": "22:00",
+        "evidence": "Wednesday: 05:00\u201322:00",
         "label": "Club hours",
-        "start": "06:00"
+        "start": "05:00"
       },
       {
         "day": "thursday",
-        "end": "21:00",
-        "evidence": "Thu: 6:00 am - 9:00 pm",
+        "end": "22:00",
+        "evidence": "Thursday: 05:00\u201322:00",
         "label": "Club hours",
-        "start": "06:00"
+        "start": "05:00"
       },
       {
         "day": "friday",
         "end": "21:00",
-        "evidence": "Fri: 6:00 am - 9:00 pm",
+        "evidence": "Friday: 05:00\u201321:00",
         "label": "Club hours",
-        "start": "06:00"
+        "start": "05:00"
       },
       {
         "day": "saturday",
-        "end": "20:00",
-        "evidence": "Sat: 7:00 am - 8:00 pm",
+        "end": "19:00",
+        "evidence": "Saturday: 07:00\u201319:00",
         "label": "Club hours",
         "start": "07:00"
       },
       {
         "day": "sunday",
-        "end": "20:00",
-        "evidence": "Sun: 7:00 am - 8:00 pm",
+        "end": "19:00",
+        "evidence": "Sunday: 07:00\u201319:00",
         "label": "Club hours",
         "start": "07:00"
       }
