@@ -5,13 +5,13 @@
       "configuration": {
         "capture": {
           "browser_version": "128.0.6613.137",
-          "captured_at": "2026-09-10T03:22:07.857Z",
+          "captured_at": "2026-09-10T03:39:30.058Z",
           "configuration": {
             "playwright_version": "1.60.0",
             "script_sha256": "56ed47662a267147befeb4c898586da48683caaa7868061fb8f9d620bd07f02a"
           },
           "hashes": {
-            "rendered": "7d8cc43bc0c562c8933210c83a2dc4fa871014316fa9f195ecf15245b3745620",
+            "rendered": "0a60a743163e58f2d19a3254666ed71ccf10e6534d67f6cbd84dcea50caee83f",
             "screenshot": "140ee25abc128e2b8d712e51cbb460fa7ff77b1de88a9caf2418727aeca83b0e",
             "source": "f0f8836ffee8872e392984ce84e164dab037258978a071df34c99d033e833724"
           },
@@ -41,7 +41,7 @@
       "ok": true
     }
   },
-  "extracted_at": "2026-09-10T03:22:37.182337+00:00",
+  "extracted_at": "2026-09-10T03:39:54.353020+00:00",
   "model": "browser-html",
   "payload": {
     "access_exceptions": [],

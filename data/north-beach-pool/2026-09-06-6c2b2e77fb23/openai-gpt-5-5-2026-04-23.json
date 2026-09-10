@@ -1,10 +1,10 @@
 {
-  "cost_estimate": "input_tokens=3548, output_tokens=2224",
+  "cost_estimate": "input_tokens=3548, output_tokens=2757",
   "details": {
     "attempts": [
       {
-        "cost_usd": 0.08446,
-        "elapsed_seconds": 23.746,
+        "cost_usd": 0.087778,
+        "elapsed_seconds": 28.807,
         "http_status": 200,
         "reserved_microusd": 341545,
         "status": "completed"
@@ -15,11 +15,11 @@
       "implementation_sha256": {
         "_time.py": "f1efa6d6ad8330772b2fa08cca374337c238aefa03ebf39edd002f5eecab4f35",
         "artifacts.py": "be675cf6d20a5f1b73092af8ad2ef2b08e54618b19f4565220a009bce4ecee46",
-        "grounding.py": "8cbb607e772769fed10b25258b7d8e017b3a6d5c1e4ad0a3a2b1d7a1f8a68fd0",
-        "providers/openai_provider.py": "249fc978692bc9b4f86d7a5c285dea9e2643e63f0abc63f21f9c4a20d48eae56",
+        "grounding.py": "3b8825c133212114061dc740fd55a78877f0a0e1bc4e21fb39c8804bc5845e4c",
+        "providers/openai_provider.py": "e70b0d9ed562737f5496cf0d5aa4f4bbd6175fc9ab35ef7755a2d38c3e62aef4",
         "schema.py": "b4a7307f43667e00ea7408112b180aed1e48851621022eeb690a6971c87719c6",
-        "signals.py": "f29c87c4cd8047a3a10402683135dfa30477d2c899984bad06134cea08fa8391",
-        "window_dates.py": "ad6af1472977d18e6ec4df57c0198cb7ebb3f66ca20c0333cd57f008822259b9"
+        "signals.py": "6a1a57bfadd13674c02e89ee60b2012c6b47963796af71e312380a580192f1de",
+        "window_dates.py": "a0389c04375b84df9b8c5d120e2c58ddab4ddf789c480707df756a24cfce9ae9"
       },
       "libraries": {
         "pdfminer-six": "20260107",
@@ -749,7 +749,7 @@
     },
     "visual_pages": []
   },
-  "extracted_at": "2026-09-08T07:47:57.152216+00:00",
+  "extracted_at": "2026-09-10T03:40:35.259166+00:00",
   "grounding": {
     "grounded_count": 15,
     "ratio": 1.0,
@@ -1098,12 +1098,12 @@
     "input_tokens": 3548,
     "input_tokens_details": {
       "cache_write_tokens": 0,
-      "cached_tokens": 0
+      "cached_tokens": 2816
     },
-    "output_tokens": 2224,
+    "output_tokens": 2757,
     "output_tokens_details": {
-      "reasoning_tokens": 1019
+      "reasoning_tokens": 1552
     },
-    "total_tokens": 5772
+    "total_tokens": 6305
   }
 }

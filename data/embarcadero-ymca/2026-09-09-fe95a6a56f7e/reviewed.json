@@ -1,24 +1,24 @@
 {
-  "pdf_sha256": "7c086f2f60cd34190cdcd7c66b5ef3ec2fc6848c43b4c77f871c0c8fb81a9ca3",
-  "source_pdf_url": "https://campusrec.sfsu.edu/Aquatics",
+  "pdf_sha256": "fe95a6a56f7e633139a545b8266cea3947a68abeb974a2a8817e8fb5308a874f",
+  "source_pdf_url": "https://www.ymcasf.org/location/embarcadero-ymca/",
   "direct_source": {
     "configuration": {
       "capture": {
         "browser_version": "128.0.6613.137",
-        "captured_at": "2026-09-10T03:39:50.702Z",
+        "captured_at": "2026-09-10T03:39:41.358Z",
         "configuration": {
           "playwright_version": "1.60.0",
           "script_sha256": "56ed47662a267147befeb4c898586da48683caaa7868061fb8f9d620bd07f02a"
         },
         "hashes": {
-          "rendered": "78223d0cd5088173f30ce4dcc0785192c24c5a1360173464c7bb700c9bb18674",
-          "screenshot": "e4888d4fc908d303262d109578004b378e18ba9450fe4b06618a9534a380798f",
-          "source": "7c086f2f60cd34190cdcd7c66b5ef3ec2fc6848c43b4c77f871c0c8fb81a9ca3"
+          "rendered": "b84fd7bcdbaa5c91896323c902f2baf25420c9cd544d163aa532d3ed2ac1048d",
+          "screenshot": "aecf82e6c366ba838314d38a93e29a9dfb7c1bce69d6e7280fe6ad0ddac10d7c",
+          "source": "fe95a6a56f7e633139a545b8266cea3947a68abeb974a2a8817e8fb5308a874f"
         },
         "method": "cloudflare_browser",
-        "requested_url": "https://campusrec.sfsu.edu/Aquatics",
+        "requested_url": "https://www.ymcasf.org/location/embarcadero-ymca/",
         "status": 200,
-        "url": "https://campusrec.sfsu.edu/Aquatics"
+        "url": "https://www.ymcasf.org/location/embarcadero-ymca/"
       },
       "freshness_days": 14,
       "libraries": {
@@ -32,11 +32,11 @@
     },
     "freshness_days": 14,
     "observed_on": "2026-09-09",
-    "requested_url": "https://campusrec.sfsu.edu/Aquatics",
-    "sha256": "7c086f2f60cd34190cdcd7c66b5ef3ec2fc6848c43b4c77f871c0c8fb81a9ca3",
-    "url": "https://campusrec.sfsu.edu/Aquatics"
+    "requested_url": "https://www.ymcasf.org/location/embarcadero-ymca/",
+    "sha256": "fe95a6a56f7e633139a545b8266cea3947a68abeb974a2a8817e8fb5308a874f",
+    "url": "https://www.ymcasf.org/location/embarcadero-ymca/"
   },
-  "slug": "sfsu-mashouf",
+  "slug": "embarcadero-ymca",
   "reviewed_at": "2026-09-09",
   "attested_by": "ci",
   "payload": {
@@ -44,45 +44,45 @@
     "access_hours": [
       {
         "day": "monday",
-        "end": "20:00",
-        "evidence": "Monday - Thursday: 10 a.m. - 8 p.m.",
+        "end": "20:30",
+        "evidence": "Monday: 5:30 am \u2013 9:00 pm",
         "label": "Pool hours",
-        "start": "10:00"
+        "start": "06:00"
       },
       {
         "day": "tuesday",
-        "end": "20:00",
-        "evidence": "Monday - Thursday: 10 a.m. - 8 p.m.",
+        "end": "20:30",
+        "evidence": "Tuesday: 5:30 am \u2013 9:00 pm",
         "label": "Pool hours",
-        "start": "10:00"
+        "start": "06:00"
       },
       {
         "day": "wednesday",
-        "end": "20:00",
-        "evidence": "Monday - Thursday: 10 a.m. - 8 p.m.",
+        "end": "20:30",
+        "evidence": "Wednesday: 5:30 am \u2013 9:00 pm",
         "label": "Pool hours",
-        "start": "10:00"
+        "start": "06:00"
       },
       {
         "day": "thursday",
-        "end": "20:00",
-        "evidence": "Monday - Thursday: 10 a.m. - 8 p.m.",
+        "end": "20:30",
+        "evidence": "Thursday: 5:30 am \u2013 9:00 pm",
         "label": "Pool hours",
-        "start": "10:00"
+        "start": "06:00"
       },
       {
         "day": "friday",
-        "end": "16:00",
-        "evidence": "Friday - Saturday: Noon - 4 p.m.",
+        "end": "20:30",
+        "evidence": "Friday: 5:30 am \u2013 9:00 pm",
         "label": "Pool hours",
-        "start": "12:00"
+        "start": "06:00"
       },
       {
         "day": "saturday",
-        "end": "16:00",
-        "evidence": "Friday - Saturday: Noon - 4 p.m.",
+        "end": "16:30",
+        "evidence": "Saturday: 7:00 am \u2013 5:00 pm",
         "label": "Pool hours",
-        "start": "12:00"
+        "start": "07:30"
       }
     ],
     "closures": [],

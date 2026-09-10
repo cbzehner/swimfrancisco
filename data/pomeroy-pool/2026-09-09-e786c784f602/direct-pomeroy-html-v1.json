@@ -8,7 +8,7 @@
           "httpx": "0.28.1",
           "openpyxl": "3.1.5"
         },
-        "parser_sha256": "da3d27019650b1e8d13dc54cb57c7abbb5540405de20912800545146ce7f8e4a",
+        "parser_sha256": "53eeac81d30109235050c1235e31e4eedb82a5dbb928971140a5a3b38d528bed",
         "python": "3.13.15",
         "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
         "source_identity": "original_bytes"
@@ -234,7 +234,7 @@
       ]
     }
   },
-  "extracted_at": "2026-09-09T22:44:42.798349+00:00",
+  "extracted_at": "2026-09-10T03:39:53.187860+00:00",
   "model": "pomeroy-html-v1",
   "payload": {
     "access_exceptions": [],

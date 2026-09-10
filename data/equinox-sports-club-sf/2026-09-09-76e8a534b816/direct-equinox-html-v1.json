@@ -15,65 +15,68 @@
       },
       "freshness_days": 14,
       "observed_on": "2026-09-09",
-      "requested_url": "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport",
-      "sha256": "a5bb2a1144fb24b8d3d6d1214f8277e812e19958da882196e16a69f2c6f8a230",
-      "url": "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
+      "requested_url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco",
+      "sha256": "76e8a534b816cfa0058aa84614302a1f2919e46b15f62fb6fd2e3bda50a5ff4f",
+      "url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco"
     },
-    "source_coverage": null
+    "source_coverage": {
+      "issues": [],
+      "ok": true
+    }
   },
-  "extracted_at": "2026-09-10T03:39:53.611741+00:00",
-  "model": "twenty-four-hour-fitness-html-v1",
+  "extracted_at": "2026-09-10T03:39:56.535765+00:00",
+  "model": "equinox-html-v1",
   "payload": {
     "access_exceptions": [],
     "access_hours": [
       {
         "day": "monday",
         "end": "22:00",
-        "evidence": "Monday - Thursday: 05:00 AM - 10:00 PM",
-        "label": "Gym hours",
+        "evidence": "Mon: 5:00am \u2014 10:00pm",
+        "label": "Club hours",
         "start": "05:00"
       },
       {
         "day": "tuesday",
         "end": "22:00",
-        "evidence": "Monday - Thursday: 05:00 AM - 10:00 PM",
-        "label": "Gym hours",
+        "evidence": "Tue: 5:00am \u2014 10:00pm",
+        "label": "Club hours",
         "start": "05:00"
       },
       {
         "day": "wednesday",
         "end": "22:00",
-        "evidence": "Monday - Thursday: 05:00 AM - 10:00 PM",
-        "label": "Gym hours",
+        "evidence": "Wed: 5:00am \u2014 10:00pm",
+        "label": "Club hours",
         "start": "05:00"
       },
       {
         "day": "thursday",
         "end": "22:00",
-        "evidence": "Monday - Thursday: 05:00 AM - 10:00 PM",
-        "label": "Gym hours",
+        "evidence": "Thu: 5:00am \u2014 10:00pm",
+        "label": "Club hours",
         "start": "05:00"
       },
       {
         "day": "friday",
         "end": "21:00",
-        "evidence": "Friday: 05:00 AM - 09:00 PM",
-        "label": "Gym hours",
+        "evidence": "Fri: 5:00am \u2014 9:00pm",
+        "label": "Club hours",
         "start": "05:00"
       },
       {
         "day": "saturday",
-        "end": "20:00",
-        "evidence": "Saturday - Sunday: 06:00 AM - 08:00 PM",
-        "label": "Gym hours",
-        "start": "06:00"
+        "end": "19:00",
+        "evidence": "Sat: 7:00am \u2014 7:00pm",
+        "label": "Club hours",
+        "start": "07:00"
       },
       {
         "day": "sunday",
-        "end": "20:00",
-        "evidence": "Saturday - Sunday: 06:00 AM - 08:00 PM",
-        "label": "Gym hours",
-        "start": "06:00"
+        "end": "19:00",
+        "evidence": "Sun: 7:00am \u2014 7:00pm",
+        "label": "Club hours",
+        "start": "07:00"
       }
     ],
     "closures": [],
@@ -82,10 +85,10 @@
     "schedule_basis": "facility_hours",
     "sessions": []
   },
-  "pdf_sha256": "a5bb2a1144fb24b8d3d6d1214f8277e812e19958da882196e16a69f2c6f8a230",
-  "prompt_sha256": "03eee14261fe48668ae6e1ae2c9bfc14ceddb86ab899274257f52ca6309b93a7",
+  "pdf_sha256": "76e8a534b816cfa0058aa84614302a1f2919e46b15f62fb6fd2e3bda50a5ff4f",
+  "prompt_sha256": "ba8a702335cf62f72261e6eb250e340652b6897710e6976a608e93a50f2cdb81",
   "provider": "direct",
   "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
-  "source_pdf_url": "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport",
+  "source_pdf_url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco",
   "usage": {}
 }
