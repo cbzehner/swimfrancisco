@@ -162,7 +162,7 @@ reason_code = "independence_day"
 effective_start = "2026-08-16"
 schedule_basis = "swim_schedule"
 effective_end = "2026-12-10"
-last_verified_at = "2026-09-08"
+last_verified_at = "2026-09-09"
 
 [[extra.schedules.sessions]]
 day = "monday"
@@ -211,14 +211,14 @@ day = "tuesday"
 type = "family_swim"
 start = "18:15"
 end = "19:30"
-notes = "Printed (3) is not copied to pool_label_raw because it is only numeric."
+notes = "Printed “(3)” is a numeric lane count only and is not copied as a pool allocation."
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "18:15"
 end = "19:30"
-notes = "Printed (3) is not copied to pool_label_raw because it is only numeric."
+notes = "Printed “(3)” is a numeric lane count only and is not copied as a pool allocation."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -237,14 +237,14 @@ day = "wednesday"
 type = "family_swim"
 start = "14:00"
 end = "15:30"
-notes = "End meridiem is not printed; normalized as PM from the printed afternoon start. Printed (3) is not copied to pool_label_raw because it is only numeric."
+notes = "Printed “(3)” is a numeric lane count only and is not copied as a pool allocation."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "14:00"
 end = "15:30"
-notes = "Printed (3) is not copied to pool_label_raw because it is only numeric."
+notes = "Printed “(3)” is a numeric lane count only and is not copied as a pool allocation."
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -269,14 +269,14 @@ day = "thursday"
 type = "family_swim"
 start = "18:15"
 end = "19:30"
-notes = "Printed (3) is not copied to pool_label_raw because it is only numeric."
+notes = "Printed “(3)” is a numeric lane count only and is not copied as a pool allocation."
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "18:15"
 end = "19:30"
-notes = "Printed (3) is not copied to pool_label_raw because it is only numeric."
+notes = "Printed “(3)” is a numeric lane count only and is not copied as a pool allocation."
 
 [[extra.schedules.sessions]]
 day = "sunday"

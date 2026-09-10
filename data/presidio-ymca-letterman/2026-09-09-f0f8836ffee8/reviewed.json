@@ -5,13 +5,13 @@
     "configuration": {
       "capture": {
         "browser_version": "128.0.6613.137",
-        "captured_at": "2026-09-10T01:46:54.456Z",
+        "captured_at": "2026-09-10T03:22:07.857Z",
         "configuration": {
           "playwright_version": "1.60.0",
           "script_sha256": "56ed47662a267147befeb4c898586da48683caaa7868061fb8f9d620bd07f02a"
         },
         "hashes": {
-          "rendered": "f21eab6053b5fda1c9f1b880f48a67d188aa8d25b41957492e436aa557f822d7",
+          "rendered": "7d8cc43bc0c562c8933210c83a2dc4fa871014316fa9f195ecf15245b3745620",
           "screenshot": "140ee25abc128e2b8d712e51cbb460fa7ff77b1de88a9caf2418727aeca83b0e",
           "source": "f0f8836ffee8872e392984ce84e164dab037258978a071df34c99d033e833724"
         },
