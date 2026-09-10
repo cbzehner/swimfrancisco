@@ -187,10 +187,10 @@ jobs:
             if (issue?.body?.includes(statusMarker)) return;
             const runUrl = context.serverUrl + '/' + owner + '/' + repo + '/actions/runs/' + context.runId;
             const body = [marker, statusMarker, 'Schedule automation needs attention.',
-              '', 'Status: ' + (result.status || process.env.EXTRACT_RESULT),
+              '', 'Publication status: ' + (result.status || process.env.EXTRACT_RESULT),
               'Held pools: ' + (flags.join(', ') || 'see run evidence'),
               'Paid extraction allowance: ' + (result.paid_budget_status || 'unknown'),
-              'Failed extraction commands: ' + (commandFailures.join(', ') || 'none'),
+              'Extraction commands with held or failed sources: ' + (commandFailures.join(', ') || 'none'),
               'Confirmed live updates: ' + (result.status === 'published' ? result.published_slugs.join(', ') || 'none' : 'none'),
               '', '[Run and retained evidence](' + runUrl + ')'].join('\n');
             if (issue) await github.rest.issues.update({ owner, repo, issue_number: issue.number, body });

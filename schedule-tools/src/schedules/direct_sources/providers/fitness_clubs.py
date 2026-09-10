@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 from datetime import date, timedelta
 from html import unescape
@@ -46,39 +47,6 @@ def _extract_24_hour_fitness(html: str) -> dict:
     if not access_hours:
         raise DirectSourceError("24 Hour Fitness page did not expose gym hours.")
     return _payload("facility_hours", [], access_hours=access_hours)
-
-
-def _extract_equinox(html: str) -> dict:
-    text = _html_text(html)
-    for identity in ('Equinox Sports Club San Francisco', '747 Market Street', 'Indoor Pool'):
-        _require_text(text, identity)
-    sections = []
-    for section in ('club-hours-header', 'spa-schedule-header'):
-        matches = list(re.finditer(r'<button\b[^>]*id="' + section + r'"[^>]*>.*?</button>\s*<div\b[^>]*>\s*(<dl\b[^>]*>.*?</dl>)', html, re.I | re.S))
-        if len(matches) != 1:
-            raise DirectSourceError('Missing or duplicate Equinox club or spa hours section')
-        sections.append(matches[0])
-    repeated = list(re.finditer(r'<dl\b[^>]*title="All Club Hours"[^>]*>(.*?)</dl>', html, re.I | re.S))
-    holidays = list(re.finditer(r'<div\b[^>]*class="ClubInfo_holiday-exception__[^"]*"[^>]*>(.*?)</div>', html, re.I | re.S))
-    if len(repeated) != 1 or len(holidays) != 1:
-        raise DirectSourceError('Missing or duplicate Equinox repeated hours or holiday section')
-    if holidays[0].group(1).strip():
-        _club_hold('Equinox has populated holiday hours', _html_text(holidays[0].group(1)) or 'Holiday-hours media')
-    def hours(block: str) -> list[dict]:
-        rows = re.findall(r'<dt\b[^>]*>(.*?)</dt>\s*<dd\b[^>]*>(.*?)</dd>', block, re.I | re.S)
-        remainder = re.sub(r'<dt\b[^>]*>.*?</dt>\s*<dd\b[^>]*>.*?</dd>', '', block, flags=re.I | re.S)
-        if _html_text(remainder):
-            raise DirectSourceError('Unaccounted Equinox hours content')
-        return _club_week([(_html_text(day), _html_text(raw)) for day, raw in rows])
-    primary = hours(sections[0].group(1))
-    if _club_identity(primary) != _club_identity(hours(repeated[0].group(0))):
-        raise DirectSourceError('Equinox primary and repeated club hours disagree')
-    hours(sections[1].group(1))
-    remainder = html
-    for match in sorted([*sections, repeated[0], holidays[0]], key=lambda match: match.start(), reverse=True):
-        remainder = remainder[:match.start()] + remainder[match.end():]
-    _check_remaining_club_notices(remainder)
-    return _payload('facility_hours', [], access_hours=primary)
 
 
 def _extract_bayclub_gateway(html: str) -> dict:
@@ -203,7 +171,6 @@ def _city_hours_table(table: str) -> list[dict]:
     return _club_week(rows)
 
 
-
 def _city_class_replacements(calendar: str) -> str:
     remaining = calendar
     for cell in re.findall(r'<td\b[^>]*>(.*?)</td>', calendar, re.I | re.S):
@@ -280,3 +247,157 @@ def _extract_city_sports(html: str) -> dict:
 
 def _club_hold(issue: str, text: str) -> None:
     raise HtmlClosureReviewRequired(issue, {'lines': [{'id': 'club-notice', 'section': 'Holiday Hours', 'scope': 'facility', 'text': text}]})
+
+
+def _equinox_clock(value: str) -> str:
+    if not isinstance(value, str) or not re.fullmatch(r'(?:[01]\d|2[0-3]):[0-5]\d(?::00)?', value):
+        raise DirectSourceError('Invalid Equinox structured clock')
+    return value[:5]
+
+
+def _equinox_structured_week(rows: list[dict]) -> list[dict]:
+    hours = []
+    seen = set()
+    for row in rows:
+        start, end = _equinox_clock(row['opens']), _equinox_clock(row['closes'])
+        if start >= end or not isinstance(row['dayOfWeek'], list) or not row['dayOfWeek']:
+            raise DirectSourceError('Unsupported Equinox structured hours interval')
+        for raw_day in row['dayOfWeek']:
+            day = raw_day.lower()
+            if day not in DAY_ORDER or day in seen:
+                raise DirectSourceError('Unknown or duplicate Equinox structured weekday')
+            seen.add(day)
+            hours.append(_access_hour(day, start, end, 'Club hours', f'{raw_day}: {start}–{end}'))
+    if seen != set(DAY_ORDER):
+        raise DirectSourceError('Equinox structured hours omit a weekday')
+    return sorted(hours, key=lambda row: DAY_ORDER.index(row['day']))
+
+
+def _equinox_service_week(hours: dict) -> list[dict]:
+    rows = []
+    for day, ranges in hours.items():
+        if len(ranges) != 1 or len(_expand_days(day)) != 1:
+            raise DirectSourceError('Unsupported Equinox service hours ranges')
+        rows.append({'dayOfWeek': [_expand_days(day)[0]], 'opens': ranges[0]['startTime'], 'closes': ranges[0]['endTime']})
+    return _equinox_structured_week(rows)
+
+
+def _equinox_visible_week(rows: list[tuple[str, str]]) -> list[dict]:
+    labels = [label.lower() for label, _ in rows]
+    if 'today' in labels:
+        named = [_expand_days(label)[0] for label in labels if label != 'today']
+        missing = set(DAY_ORDER) - set(named)
+        if labels.count('today') != 1 or len(rows) != 7 or len(missing) != 1:
+            raise DirectSourceError('Ambiguous Equinox Today weekday')
+        rows = [(next(iter(missing)) if label.lower() == 'today' else label, hours) for label, hours in rows]
+        days = [_expand_days(label)[0] for label, _ in rows]
+        if any((DAY_ORDER.index(right) - DAY_ORDER.index(left)) % 7 != 1 for left, right in zip(days, days[1:])):
+            raise DirectSourceError('Equinox visible weekday order conflicts with Today')
+    return _club_week(rows)
+
+
+def _extract_equinox(html: str) -> dict:
+    url = 'https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco'
+    name = 'Equinox Sports Club San Francisco'
+    if len(html.encode('utf-8')) > 4 * 1024 * 1024:
+        raise DirectSourceError('Club source exceeds four MiB')
+    try:
+        canonical = [re.search(r'\bhref="([^"]+)"', tag, re.I)[1]
+            for tag in re.findall(r'<link\b[^>]*>', html, re.I)
+            if re.search(r'\brel="canonical"', tag, re.I)]
+        if canonical != [url]:
+            raise DirectSourceError('Equinox canonical source URL does not match')
+        structured = [json.loads(raw) for raw in re.findall(r'<script\b[^>]*type="application/ld\+json"[^>]*>(.*?)</script>', html, re.I | re.S)]
+        clubs = [node for document in structured for node in document.get('@graph', []) if node.get('@type') == 'HealthClub' and node.get('url') == url]
+        if len(clubs) != 1:
+            raise DirectSourceError('Missing or duplicate primary Equinox structured identity')
+        club = clubs[0]
+        if club.get('name') != name or club.get('@id') != url + '#healthclub' or club['address'].get('streetAddress') != '747 Market Street' or club['address'].get('addressLocality') != 'San Francisco':
+            raise DirectSourceError('Equinox primary club identity does not match')
+        if club.get('specialOpeningHoursSpecification'):
+            _club_hold('Equinox has structured special hours', json.dumps(club['specialOpeningHoursSpecification']))
+        primary = _equinox_structured_week(club['openingHoursSpecification'])
+        documents = re.findall(r'<script\b[^>]*id="__NEXT_DATA__"[^>]*>(.*?)</script>', html, re.I | re.S)
+        if len(documents) != 1:
+            raise DirectSourceError('Missing or duplicate Equinox facility data')
+        page = json.loads(documents[0])['props']['pageProps']
+        facility = page['facility']
+        if facility.get('name') != name or page.get('slug') != 'clubs/northern-california/sportsclubsanfrancisco':
+            raise DirectSourceError('Equinox facility data is for another club')
+        if facility['holidays'] != []:
+            _club_hold('Equinox has populated holiday hours', json.dumps(facility['holidays']))
+        for field in ('banner', 'statusMessage', 'clubHTMLContent'):
+            if facility.get(field):
+                _club_hold('Equinox has a structured facility notice requiring review', json.dumps({field: facility[field]}))
+        if (facility.get('clubMessageTitle'), facility.get('clubMessageBody')) != (
+            'Destination Club', 'This club is only accessible to Equinox Destination Members.',
+        ):
+            _club_hold('Equinox has an unrecognized facility message', json.dumps({key: facility.get(key) for key in ('clubMessageTitle', 'clubMessageBody')}))
+        banner = page['club']['fields'].get('notificationBanner') or {}
+        _check_remaining_club_notices(json.dumps(banner.get('fields', {})))
+        services = facility['facilityServiceHours']
+        if sorted(service['serviceType'] for service in services) != ['Appointment Hours', 'Club', 'Spa']:
+            raise DirectSourceError('Unsupported or duplicate Equinox service hours scope')
+        for service in services:
+            _equinox_service_week(service['hours'])
+        club_services = [service for service in services if service['serviceType'] == 'Club']
+        spa_services = [service for service in services if service['serviceType'] == 'Spa']
+        if len(club_services) != 1 or len(spa_services) != 1:
+            raise DirectSourceError('Missing or duplicate Equinox Club or Spa hours')
+        repeated = [
+            _equinox_service_week(club_services[0]['hours']),
+            _equinox_service_week(facility['facilityFormattedServiceHours']['hours']),
+            _club_week([(row['days'], row['hours']) for row in facility['serviceHours']]),
+        ]
+        if any(_club_identity(group) != _club_identity(primary) for group in repeated):
+            raise DirectSourceError('Equinox primary and repeated club hours disagree')
+        spa = _equinox_service_week(spa_services[0]['hours'])
+        if _club_identity(spa) != _club_identity(_club_week([(row['days'], row['hours']) for row in facility['spaServiceHours']])):
+            raise DirectSourceError('Equinox repeated spa hours disagree')
+    except (KeyError, TypeError, AttributeError, ValueError) as error:
+        raise DirectSourceError('Malformed or incomplete Equinox structured source') from error
+    primary_html = html
+    for heading in re.finditer(r'<h[1-6]\b[^>]*>(.*?)</h[1-6]>', html, re.I | re.S):
+        if _html_text(heading[1]).startswith('Other locations near '):
+            primary_html = html[:heading.start()]
+            break
+    primary_text = _html_text(primary_html)
+    _require_text(primary_text, '747 Market Street')
+    if not re.search(r'\bindoor(?: saline lap)? pool\b', primary_text, re.I):
+        raise DirectSourceError('Equinox primary source does not establish the indoor pool amenity')
+    groups = [(match, re.findall(r'<dt\b[^>]*>(.*?)</dt>\s*<dd\b[^>]*>(.*?)</dd>', match[1], re.I | re.S))
+        for match in re.finditer(r'<dl\b[^>]*>(.*?)</dl>', primary_html, re.I | re.S)]
+    for match in re.finditer(r'<ul\b[^>]*>(.*?)</ul>', primary_html, re.I | re.S):
+        rows = re.findall(r'<li\b[^>]*>\s*<span>([^<]+)</span>\s*<span>([^<]+)</span>\s*</li>', match[1], re.I | re.S)
+        if rows and any(label.lower() == 'today' or label.lower()[:3] in {day[:3] for day in DAY_ORDER} for label, _ in rows):
+            groups.append((match, rows))
+    for notice in re.finditer(r'<div\b[^>]*class="[^"]*holiday-exception[^"]*"[^>]*>(.*?)</div>', primary_html, re.I | re.S):
+        if notice[1].strip():
+            _club_hold('Equinox has populated holiday hours', _html_text(notice[1]) or 'Holiday-hours media')
+    consumed = []
+    found = {'club': 0, 'spa': 0}
+    for match, rows in sorted(groups, key=lambda group: group[0].start()):
+        row_pattern = (r'<dt\b[^>]*>.*?</dt>\s*<dd\b[^>]*>.*?</dd>' if match.group(0).lower().startswith('<dl')
+                       else r'<li\b[^>]*>\s*<span>[^<]+</span>\s*<span>[^<]+</span>\s*</li>')
+        if not rows or _html_text(re.sub(row_pattern, '', match[1], flags=re.I | re.S)) or re.search(r'<(?:img|iframe|object|svg|canvas)\b', match[1], re.I):
+            raise DirectSourceError('Unaccounted Equinox hours-group content')
+        prefix = _html_text(primary_html[:match.start()]).lower()
+        scope = 'spa' if prefix.rfind('spa hours') > max(prefix.rfind('club hours'), prefix.rfind('hours today')) else 'club'
+        visible = _equinox_visible_week([(_html_text(day), _html_text(hours)) for day, hours in rows])
+        if _club_identity(visible) != _club_identity(spa if scope == 'spa' else primary):
+            raise DirectSourceError('Equinox primary and repeated visible hours disagree')
+        consumed.append(match.span())
+        found[scope] += 1
+    if not all(found.values()):
+        raise DirectSourceError('Missing complete Equinox visible Club or Spa hours')
+    remainder = primary_html
+    for start, end in sorted(consumed, reverse=True):
+        remainder = remainder[:start] + remainder[end:]
+    if re.search(r'\b(?:closed|closure|closes|reopen|unavailable|maintenance|cancelled|canceled|special hours|holiday hours)\b', _html_text(html), re.I):
+        _club_hold('Equinox has an unaccounted whole-page closure or special-hours notice', _html_text(html))
+    summaries = re.findall(r'Hours today\s+(.+?)(?=\s+Join Now|\s+Schedule a Visit|$)', _html_text(remainder), re.I)
+    for summary in summaries:
+        if _club_range(summary) not in {(row['start'], row['end']) for row in primary}:
+            raise DirectSourceError('Equinox daily summary disagrees with weekly hours')
+    _check_remaining_club_notices(remainder)
+    return _payload('facility_hours', [], access_hours=primary)

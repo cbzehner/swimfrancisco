@@ -210,3 +210,125 @@ def test_class_replacement_cannot_hide_an_additional_unscoped_notice():
     html = CITY_REPLACEMENT_SOURCE.read_text().replace('<span>Unavailable</span></div>', '<span>Unavailable</span></div><p>The pool is unavailable.</p>', 1)
     with pytest.raises(HtmlClosureReviewRequired):
         _extract_city_sports(html)
+
+
+def equinox_redesigned():
+    return source('equinox-sports-club-sf-redesigned')
+
+
+def change_equinox_json(html, script_id, transform):
+    import json
+    import re
+
+    pattern = r'(<script\b[^>]*' + script_id + r'[^>]*>)(.*?)(</script>)'
+    def replace(match):
+        value = json.loads(match[2])
+        transform(value)
+        return match[1] + json.dumps(value, separators=(',', ':')) + match[3]
+    return re.sub(pattern, replace, html, count=1, flags=re.S)
+
+
+def test_equinox_redesigned_original_matches_same_semantic_parser():
+    import hashlib
+
+    raw = (FIXTURES / 'equinox-sports-club-sf-redesigned.html').read_bytes()
+    assert hashlib.sha256(raw).hexdigest() == 'b6d908e0a0d7a6f1c4adb2879ba998ddcd8278699c0a4d3cf17674b580510013'
+    current = _normalized_schedule_payload(_extract_equinox(raw.decode()))
+    prior_layout = _normalized_schedule_payload(_extract_equinox(source('equinox-sports-club-sf')))
+    assert current == prior_layout
+    assert current['schedule_basis'] == 'facility_hours'
+
+
+@pytest.mark.parametrize('change', [
+    lambda page: page['props']['pageProps']['facility']['facilityFormattedServiceHours']['hours'].pop('Mon'),
+    lambda page: page['props']['pageProps']['facility']['serviceHours'][0].update(hours='06:00 AM - 10:00 PM'),
+    lambda page: page['props']['pageProps']['facility'].update(name='Equinox Pine Street'),
+])
+def test_equinox_primary_structured_group_mutations_hold(change):
+    html = change_equinox_json(equinox_redesigned(), 'id="__NEXT_DATA__"', change)
+    with pytest.raises(DirectSourceError):
+        _extract_equinox(html)
+
+
+def test_equinox_structured_holiday_requires_review():
+    html = change_equinox_json(equinox_redesigned(), 'id="__NEXT_DATA__"', lambda page: page['props']['pageProps']['facility'].update(holidays=[{'date': '2026-12-25', 'closed': True}]))
+    with pytest.raises(HtmlClosureReviewRequired):
+        _extract_equinox(html)
+
+
+def test_equinox_other_club_json_does_not_supply_primary_hours():
+    import copy
+
+    def append(document):
+        other = copy.deepcopy(document['@graph'][0])
+        other.update(url='https://www.equinox.com/clubs/northern-california/pinestreet', name='Equinox Pine Street')
+        other['openingHoursSpecification'][0]['opens'] = '06:00'
+        document['@graph'].append(other)
+    html = change_equinox_json(equinox_redesigned(), 'type="application/ld\\+json"', append)
+    assert _extract_equinox(html) == _extract_equinox(equinox_redesigned())
+
+
+def test_equinox_duplicate_primary_structured_identity_holds():
+    import copy
+
+    html = change_equinox_json(equinox_redesigned(), 'type="application/ld\\+json"', lambda document: document['@graph'].append(copy.deepcopy(document['@graph'][0])))
+    with pytest.raises(DirectSourceError, match='duplicate primary'):
+        _extract_equinox(html)
+
+
+@pytest.mark.parametrize('original,replacement', [
+    ('<span>Friday</span><span>5:00am – 9:00pm</span>', '<span>Friday</span><span>6:00am – 9:00pm</span>'),
+    ('<span>Friday</span>', '<span>Today</span>'),
+    ('<span>Friday</span>', '<span>Thursday</span>'),
+    ('<span>Friday</span>', '<span>Unknown</span>'),
+])
+def test_equinox_visible_weekday_group_is_complete_and_agrees(original, replacement):
+    html = equinox_redesigned()
+    assert original in html
+    with pytest.raises(DirectSourceError):
+        _extract_equinox(html.replace(original, replacement, 1))
+
+
+def test_equinox_unparsed_notice_inside_hours_group_holds():
+    html = equinox_redesigned().replace('<span>Friday</span><span>5:00am – 9:00pm</span>', '<span>Friday</span><span>5:00am – 9:00pm</span><p>Pool closed</p>', 1)
+    with pytest.raises(DirectSourceError):
+        _extract_equinox(html)
+
+
+def test_equinox_does_not_infer_pool_hours_from_spa():
+    payload = _extract_equinox(equinox_redesigned())
+    assert payload['access_hours'][0]['start'] == '05:00'
+    assert payload['access_hours'][0]['end'] == '22:00'
+    assert payload['sessions'] == []
+
+
+def test_equinox_notice_inside_definition_list_holds():
+    html = equinox_redesigned().replace('<dl>', '<dl><p>Pool closed tomorrow</p>', 1)
+    with pytest.raises(DirectSourceError):
+        _extract_equinox(html)
+
+
+def test_equinox_primary_closure_after_nearby_clubs_heading_is_not_discarded():
+    html = equinox_redesigned().replace('Other locations near Sports Club San Francisco</h2>', 'Other locations near Sports Club San Francisco</h2><p>Sports Club San Francisco pool closed tomorrow.</p>', 1)
+    with pytest.raises(HtmlClosureReviewRequired, match='whole-page'):
+        _extract_equinox(html)
+
+
+@pytest.mark.parametrize('field', ['banner', 'statusMessage', 'clubHTMLContent', 'clubMessageBody'])
+def test_equinox_structured_notice_fields_require_review(field):
+    html = change_equinox_json(equinox_redesigned(), 'id="__NEXT_DATA__"', lambda page: page['props']['pageProps']['facility'].update({field: 'Pool closed for maintenance'}))
+    with pytest.raises(HtmlClosureReviewRequired):
+        _extract_equinox(html)
+
+
+def test_equinox_unknown_pool_service_scope_holds():
+    import copy
+
+    def add(page):
+        services = page['props']['pageProps']['facility']['facilityServiceHours']
+        pool = copy.deepcopy(services[-1])
+        pool['serviceType'] = 'Pool'
+        services.append(pool)
+    html = change_equinox_json(equinox_redesigned(), 'id="__NEXT_DATA__"', add)
+    with pytest.raises(DirectSourceError, match='service hours scope'):
+        _extract_equinox(html)

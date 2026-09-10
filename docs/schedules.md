@@ -2291,7 +2291,9 @@ must not advance that year by assumption. No operator messages were sent.
 Publication reports distinguish the number of pools with refusals from the
 number of refused retained candidates. Markdown groups reasons by pool; JSON
 keeps every refusal for audit. These counts are not a count of current source
-outages.
+outages. The operator issue reports publication status separately from extraction
+commands with held or failed sources: a per-source hold can produce a nonzero
+command result while other verified sources publish successfully.
 
 Fitness SF Fillmore and City Sports 20th Avenue also permit automatic facility
 access publication. Fitness SF must expose agreeing repeated weekly hours and
@@ -2305,9 +2307,13 @@ hours, closure coverage, or observation lifetime. Facility hours do not establis
 pool lane availability. The existing minute-based midnight representation ends
 at 23:59; it does not claim the final minute before midnight.
 
-Equinox uses its visible Club Hours table and requires agreement with the
-repeated header table. Spa hours remain a separate scope, and a populated
-holiday-exception field requires review. Gateway uses the individual
+Equinox verifies its canonical club identity and requires complete agreement
+between its structured club hours and every visible club hours group. A visible
+“Today” row must identify the sole missing weekday in a complete, ordered week;
+the parser does not guess a date. Spa hours remain a separate scope. Populated
+holiday fields, unknown service scopes, and unsupported visible or structured
+notices hold publication. Both retained page layouts exercise this same source
+contract, including the September 9 redesigned original. Gateway uses the individual
 `https://www.bayclubs.com/clubs/thegateway` page, with its exact name, address,
 pool amenities, seven-day hours, and dedicated notice field. It does not choose
 among the four campus cards. Both publish facility access only and use the same
@@ -2422,7 +2428,11 @@ Keep source evidence and existing review holds until each item's checks pass.
   09/22/2026.” September 22 is Tuesday. Ask which date is the last closed day
   and when the pool first reopens; the printed range end is not itself a
   reopening announcement. Preserve pool-specific scope and do not infer
-  September 22 or September 24. Done when the corrected source dates and
+  September 22 or September 24. Member Services lists
+  `memberservices@ymcasf.org` and (415) 242-7100. Ask for both dates and the
+  reopening time in Pacific time, whether the pool, sauna, and spa reopen
+  together, and a corrected notice or current pool schedule.
+  Done when the corrected source dates and
   weekdays agree and publication cannot extend closure or prior hours beyond
   their verified window. The retained original is
   `tests/fixtures/html-facts/stonestown-ymca.html`.
