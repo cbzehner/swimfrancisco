@@ -275,6 +275,8 @@ def html_source_payload(inventory: dict, observed_on: date) -> dict:
 
 
 def _derive_payload(inventory: dict, observed: date) -> dict:
+    if inventory['slug'] == 'chinatown-ymca':
+        return _chinatown_payload(inventory, observed)
     facts = [_parse_line(line) for line in inventory['lines']]
     slug = inventory['slug']
     lines = {line['id']: line for line in inventory['lines']}
@@ -393,3 +395,120 @@ def _closure_reason(text: str) -> str:
     if len(categories) != 1:
         raise DirectSourceError('Unknown or conflicting source closure reason requires review')
     return categories[0]
+
+
+def _holiday_status(text: str):
+    return 'closed' if re.fullmatch(r'closed\.?', text, re.I) else _ranges(text)
+
+
+def _chinatown_holiday(line: dict, observed: date) -> dict:
+    text = line['text']
+    dates = re.findall(_DATE, text, re.I)
+    if text.startswith('Annual Facility Closure '):
+        pattern = rf'Annual Facility Closure ({_DATE})\s*[-–]\s*({_DATE}) The facility will reopen at (.+?) on ({_DATE})'
+        match = re.fullmatch(pattern, text, re.I)
+        if not match:
+            raise DirectSourceError('Unsupported annual closure and reopening notice')
+        start, end, clock, reopening = match.groups()
+        resolved = [_resolve_date(value, observed) for value in (start, end, reopening)]
+        if not resolved[0] <= resolved[1] < resolved[2] or resolved[2] != resolved[1] + timedelta(days=1):
+            raise DirectSourceError('Annual closure conflicts with printed reopening date')
+        reopening_time = _ranges('12:01 am - ' + clock)[0]['end']
+        return {'kind': 'annual_closure', 'start': resolved[0], 'end': resolved[1],
+            'reopening': resolved[2], 'reopening_time': reopening_time, 'line': line}
+    if len(dates) != 1 or not text.startswith(dates[0]):
+        raise DirectSourceError('Unsupported or conflicting holiday notice')
+    tail = text[len(dates[0]):].strip()
+    tail = re.sub(r'^\([^)]*\)\s*', '', tail)
+    parts = re.split(r'\bPool Hours:\s*', tail, flags=re.I)
+    if len(parts) > 2:
+        raise DirectSourceError('Duplicate explicit pool holiday statement')
+    statuses = {}
+    if len(parts) == 2:
+        if parts[0].strip():
+            statuses['facility'] = _holiday_status(parts[0].strip())
+        statuses['pool'] = _holiday_status(parts[1].strip())
+    else:
+        statuses[line['scope']] = _holiday_status(tail)
+    return {'kind': 'holiday', 'date': _resolve_date(dates[0], observed), 'statuses': statuses, 'line': line}
+
+
+def _chinatown_payload(inventory: dict, observed: date) -> dict:
+    end = observed + timedelta(days=13)
+    weekly = {'facility': {}, 'pool': {}}
+    holidays = {}
+    annual = []
+    notices = []
+    for line in inventory['lines']:
+        if line['section'] == 'Holiday Hours':
+            parsed = _chinatown_holiday(line, observed)
+            if parsed['kind'] == 'annual_closure':
+                annual.append(parsed)
+                continue
+            record = holidays.setdefault(parsed['date'], {'statuses': {}, 'lines': []})
+            for scope, status in parsed['statuses'].items():
+                if scope in record['statuses'] and record['statuses'][scope] != status:
+                    raise DirectSourceError(f'Conflicting {scope} holiday statements on {parsed["date"]}')
+                record['statuses'][scope] = status
+            record['lines'].append(line)
+            continue
+        fact = _parse_line(line)
+        if fact['kind'] in {'weekly_hours', 'closed_day'}:
+            if fact['scope'] not in weekly:
+                raise DirectSourceError('Unsupported Chinatown weekly hours scope')
+            for day in fact['days']:
+                if day in weekly[fact['scope']]:
+                    raise DirectSourceError('Duplicate Chinatown weekly hours day')
+                weekly[fact['scope']][day] = {'ranges': fact['ranges'], 'line': line}
+        elif fact['kind'] == 'closure':
+            notices.append((fact, line))
+        elif fact['kind'] != 'context':
+            raise DirectSourceError('Unsupported Chinatown pool-hours rule')
+    if any(set(group) != set(DAY_ORDER) for group in weekly.values()):
+        raise DirectSourceError('Chinatown requires complete facility and pool hours for all seven weekdays')
+    for day, pool in weekly['pool'].items():
+        if any(not any(facility['start'] <= window['start'] < window['end'] <= facility['end']
+                       for facility in weekly['facility'][day]['ranges']) for window in pool['ranges']):
+            raise DirectSourceError(f'Pool weekly hours conflict with facility hours on {day}')
+    annual_windows = {(row['start'], row['end'], row['reopening'], row['reopening_time']) for row in annual}
+    if len(annual_windows) > 1:
+        raise DirectSourceError('Conflicting annual facility closure and reopening statements')
+    if not any(row['ranges'] for row in weekly['pool'].values()):
+        raise DirectSourceError('Closed weekly source lacks current pool hours after its printed reopening')
+    if any(row['start'] <= observed <= row['end'] for row in annual):
+        raise DirectSourceError('Weekly pool hours conflict with current annual facility closure')
+    hours = [{'day': day, 'start': window['start'], 'end': window['end'], 'label': 'Pool hours',
+              'evidence': record['line']['text']}
+        for day, record in weekly['pool'].items() for window in record['ranges']]
+    closures, exceptions = [], []
+    for holiday, record in sorted(holidays.items()):
+        facility, pool = record['statuses'].get('facility'), record['statuses'].get('pool')
+        if facility == 'closed' and pool not in (None, 'closed'):
+            raise DirectSourceError(f'Pool holiday hours conflict with closed facility on {holiday}')
+        if isinstance(facility, list) and isinstance(pool, list) and any(
+            not any(outer['start'] <= inner['start'] < inner['end'] <= outer['end'] for outer in facility)
+            for inner in pool
+        ):
+            raise DirectSourceError(f'Pool holiday hours conflict with facility hours on {holiday}')
+        if not observed <= holiday <= end:
+            continue
+        text = ' '.join(dict.fromkeys(line['text'] for line in record['lines']))
+        if facility == 'closed' or pool == 'closed':
+            closures.append({'start': holiday.isoformat(), 'end': holiday.isoformat(), 'reason': text,
+                'reason_code': _closure_reason(text), 'source_notices': [{'id': line['id'], 'text': line['text']} for line in record['lines']]})
+        elif isinstance(pool, list):
+            exceptions.extend({'date': holiday.isoformat(), 'start': window['start'], 'end': window['end'],
+                'label': 'Holiday pool hours', 'reason': text, 'evidence': text} for window in pool)
+        else:
+            raise DirectSourceError(f'Missing explicit pool holiday hours on {holiday}')
+    for fact, line in notices:
+        dates = [_resolve_date(value, observed) for value in fact['date_texts']]
+        if dates[-1] < dates[0]:
+            raise DirectSourceError('Source closure dates conflict')
+        if dates[-1] >= observed and dates[0] <= end:
+            raise DirectSourceError('Current standalone Chinatown closure requires review')
+    for row in annual:
+        if row['start'] <= end and row['end'] >= observed:
+            raise DirectSourceError('Annual closure inside publication window requires review')
+    return _payload('pool_hours', [], access_hours=hours, access_exceptions=exceptions, closures=closures) | {
+        'effective_start': observed.isoformat(), 'effective_end': end.isoformat()}

@@ -75,12 +75,20 @@ def _weekend_schedule(sheet: Worksheet) -> tuple[list[dict], list[dict]]:
         start, end, evidence = saturday
         sessions.append(_session("saturday", "lap_swim", start, end, evidence))
 
-    sunday_text = " ".join(
-        str(sheet.cell(row, column).value or "")
-        for row in range(sunday_row, sheet.max_row + 1)
-        for column in range(1, sheet.max_column + 1)
-    )
-    if "closed" not in sunday_text.lower():
+    sunday_closed = False
+    for row in sheet.iter_rows(min_row=sunday_row):
+        for cell in row:
+            value = str(cell.value or "").strip()
+            if "closed" not in value.lower():
+                continue
+            if value.lower() == "deep end closed":
+                continue
+            if (_clock(sheet.cell(cell.row, 1).value) is None
+                    and re.match(r"^(?:(?:Koret|Pool|Sunday)\s+)?CLOSED\b", value, re.IGNORECASE)):
+                sunday_closed = True
+            elif not re.match(r"Saturday\s+CLOSED\s+\d", value, re.IGNORECASE):
+                raise DirectSourceError(f"Weekend {cell.coordinate}: unresolved closure scope: {value}")
+    if not sunday_closed:
         sunday = _headline_hours(sheet, start_row=sunday_row, end_row=sheet.max_row, label="Sunday")
         if sunday is None:
             sunday = _time_grid_range(sheet, start_row=sunday_row + 1, end_row=sheet.max_row)
@@ -107,8 +115,12 @@ def _headline_hours(
                 continue
             try:
                 start, end = _parse_hours_range(value)
-            except DirectSourceError:
+            except DirectSourceError as error:
+                if re.search(r"\d", value):
+                    raise DirectSourceError(f"{sheet.title} {sheet.cell(row, column).coordinate}: invalid stated hours: {value}") from error
                 continue
+            if start >= end:
+                raise DirectSourceError(f"{sheet.title} {sheet.cell(row, column).coordinate}: invalid stated hours: {value}")
             return start, end, f"{label or sheet.title} {value}"
     return None
 

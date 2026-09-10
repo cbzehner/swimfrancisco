@@ -42,7 +42,7 @@ def test_registry_pair_replaces_single_pointer(tmp_path, north_beach_pair):
 def test_direct_publication_opt_in_is_limited_to_approved_identities(tmp_path):
     entry = next(entry for entry in load_registry() if entry.slug == "pomeroy-pool")
     assert entry.auto_publish
-    assert {item.slug for item in load_registry() if item.auto_publish} == _BROWSER_SLUGS | {entry.slug}
+    assert {item.slug for item in load_registry() if item.auto_publish} == _BROWSER_SLUGS | {entry.slug, "ucsf-bakar", "ucsf-millberry", "fitness-sf-fillmore", "city-sports-20th-ave", "equinox-sports-club-sf", "bay-club-gateway"}
     path = tmp_path / "registry.toml"
     for slug, kind, url, opt_in in (
         ("pomeroy-pool", "pomeroy_html", "https://example.org/", "true"),
@@ -62,7 +62,7 @@ def test_registry_uses_browser_primary_only_for_six_approved_sources():
     assert {entry.slug for entry in entries if entry.capture_method == "cloudflare_browser"} == _BROWSER_SLUGS
     assert all(entry.capture_method == "http" for entry in entries if entry.slug not in _BROWSER_SLUGS)
     assert all(entry.auto_publish for entry in entries if entry.slug in _BROWSER_SLUGS)
-    assert {entry.slug for entry in entries if entry.auto_publish} == _BROWSER_SLUGS | {"pomeroy-pool"}
+    assert {entry.slug for entry in entries if entry.auto_publish} == _BROWSER_SLUGS | {"pomeroy-pool", "ucsf-bakar", "ucsf-millberry", "fitness-sf-fillmore", "city-sports-20th-ave", "equinox-sports-club-sf", "bay-club-gateway"}
 
 
 def _capture_registry(path, *, slug="jccsf", kind="jccsf_html", url="https://www.jccsf.org/fitness/aquatics/", method=None, auto_publish=False):

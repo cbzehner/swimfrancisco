@@ -504,12 +504,6 @@ class ClosureReviewRequired(ValueError):
 
 
 def extract(pdf_bytes: bytes, prompt: str, schema: dict) -> ProviderResult:
-    if not os.environ.get("OPENAI_API_KEY", "").strip():
-        raise ValueError("OPENAI_API_KEY is not configured")
-    budget_path = os.environ.get("SCHEDULES_API_BUDGET_FILE")
-    if not budget_path:
-        raise ValueError("SCHEDULES_API_BUDGET_FILE is required")
-    budget = SpendBudget(Path(budget_path), float(os.environ.get("SCHEDULES_API_BUDGET_USD", "0")))
     source = inspect_pdf_source(pdf_bytes)
     closure_issues = [issue for issue in source_closure_coverage(source, {})["issues"]
                       if issue != "source_closure_mismatch"]
@@ -521,6 +515,12 @@ def extract(pdf_bytes: bytes, prompt: str, schema: dict) -> ProviderResult:
         source_closure_inventory(source)
     except ValueError as error:
         raise ClosureReviewRequired(source, [str(error)]) from error
+    if not os.environ.get("OPENAI_API_KEY", "").strip():
+        raise ValueError("OPENAI_API_KEY is not configured")
+    budget_path = os.environ.get("SCHEDULES_API_BUDGET_FILE")
+    if not budget_path:
+        raise ValueError("SCHEDULES_API_BUDGET_FILE is required")
+    budget = SpendBudget(Path(budget_path), float(os.environ.get("SCHEDULES_API_BUDGET_USD", "0")))
     visual_pages = visual_page_numbers(source)
     images = render_source_pages(pdf_bytes, visual_pages)
     request = source_request(source, prompt, images)

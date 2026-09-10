@@ -304,7 +304,8 @@ def test_ambiguous_source_requires_original_image_and_reserves_its_cost() -> Non
         openai_provider.api_reservation_microusd(request)
 
 
-def test_unresolved_closure_scope_stops_before_spend(tmp_path, monkeypatch):
+@pytest.mark.parametrize("allowance", ["approved", "zero", "missing_key", "missing_ledger"])
+def test_unresolved_closure_scope_stops_before_spend(tmp_path, monkeypatch, allowance):
     from schedules.paths import REPO_ROOT
 
     monkeypatch.setenv("OPENAI_API_KEY", "unit-test-not-a-key")
@@ -314,13 +315,27 @@ def test_unresolved_closure_scope_stops_before_spend(tmp_path, monkeypatch):
     def unexpected_call(*args, **kwargs):
         pytest.fail("An unresolved source reached the paid API")
 
+    if allowance == "zero":
+        monkeypatch.setenv("SCHEDULES_API_BUDGET_USD", "0")
+        (tmp_path / "budget.json").write_text('{"limit_microusd":0,"requests":[]}')
+    elif allowance == "missing_key":
+        monkeypatch.delenv("OPENAI_API_KEY")
+    elif allowance == "missing_ledger":
+        monkeypatch.delenv("SCHEDULES_API_BUDGET_FILE")
+    original_ledger = (tmp_path / "budget.json").read_bytes() if (tmp_path / "budget.json").exists() else None
+    monkeypatch.setattr(openai_provider, "SpendBudget", unexpected_call)
+    monkeypatch.setattr(openai_provider, "render_source_pages", unexpected_call)
+    monkeypatch.setattr(openai_provider, "source_request", unexpected_call)
     monkeypatch.setattr(openai_provider, "budgeted_call", unexpected_call)
     pdf = REPO_ROOT / "data/balboa-pool/2026-08-20-d6f218710372/source.pdf"
     with pytest.raises(openai_provider.ClosureReviewRequired, match="Unresolved source closures") as held:
         openai_provider.extract(pdf.read_bytes(), PROMPT_PATH.read_text(), EXTRACTION_SCHEMA)
     assert held.value.issues
     assert all({"id", "text", "facility"}.issubset(notice) for notice in held.value.notices)
-    assert not (tmp_path / "budget.json").exists()
+    if original_ledger is None:
+        assert not (tmp_path / "budget.json").exists()
+    else:
+        assert (tmp_path / "budget.json").read_bytes() == original_ledger
 
 
 @pytest.mark.parametrize("pages,selected", [(0, {1}), (13, {1}), (1, {0}), (1, {2})])
@@ -695,3 +710,112 @@ def test_duplicate_grouped_closures_cannot_consume_other_notice(monkeypatch, sec
     facts = {'sessions': [], 'closures': [closure, closure | {'reason': second_reason}]}
     with pytest.raises(ValueError, match='Duplicate closure'):
         openai_provider.source_fact_payload(facts, None)
+
+
+@pytest.mark.parametrize("problem", ["exhausted", "missing", "blocked", "malformed", "missing_key", "missing_approval"])
+def test_unavailable_monthly_allowance_creates_free_only_receipt_without_ledger_write(monthly_budget, monkeypatch, tmp_path, problem):
+    from click.testing import CliRunner
+    from schedules.cli import cli
+    from datetime import datetime, timezone
+    budget, git, remote = monthly_budget
+    month = datetime.now(timezone.utc).strftime("%Y-%m")
+    monkeypatch.setattr("schedules.cli.REPO_ROOT", budget.repo_root)
+    monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_USD", "1")
+    monkeypatch.setenv("OPENAI_API_KEY", "test-no-call")
+    if problem != "missing":
+        budget.initialize()
+    if problem == "exhausted":
+        budget.reserve(month, "1-1")
+    elif problem in {"blocked", "malformed"}:
+        parent, state = budget._load()
+        state["blocked"] = True if problem == "blocked" else "invalid"
+        budget._save(parent, state, "Test unavailable accounting")
+    elif problem == "missing_key":
+        monkeypatch.delenv("OPENAI_API_KEY")
+    elif problem == "missing_approval":
+        monkeypatch.delenv("SCHEDULES_MONTHLY_BUDGET_USD")
+    before = git("ls-remote", "origin", "refs/heads/schedule-budget", cwd=budget.repo_root)
+    output = tmp_path / "free-run"
+    runner = CliRunner()
+    result = runner.invoke(cli, ["budget", "reserve", "--run-id", "2-1", "--output", str(output)])
+    assert result.exit_code == 0, result.output
+    receipt = json.loads((output / "reservation.json").read_text())
+    assert receipt["status"] == "unavailable" and receipt["limit_microusd"] == 0
+    assert json.loads((output / "budget.json").read_text()) == {"limit_microusd": 0, "requests": []}
+    assert runner.invoke(cli, ["budget", "settle", "--directory", str(output)]).exit_code == 0
+    assert git("ls-remote", "origin", "refs/heads/schedule-budget", cwd=budget.repo_root) == before
+    with pytest.raises(ValueError, match="positive API budget"):
+        openai_provider.SpendBudget(output / "budget.json", 0)
+
+
+def test_uncertain_remote_reservation_keeps_full_charge(monthly_budget, monkeypatch, tmp_path):
+    from click.testing import CliRunner
+    from schedules.cli import cli
+    budget, git, remote = monthly_budget
+    budget.initialize()
+    monkeypatch.setenv("OPENAI_API_KEY", "test-no-call")
+    monkeypatch.setattr("schedules.cli._monthly_budget", lambda: budget)
+    original = budget.reserve
+    def uncertain(month, run_id):
+        original(month, run_id)
+        raise RuntimeError("Remote push result unavailable")
+    monkeypatch.setattr(budget, "reserve", uncertain)
+    output = tmp_path / "uncertain"
+    runner = CliRunner()
+    assert runner.invoke(cli, ["budget", "reserve", "--run-id", "2-1", "--output", str(output)]).exit_code == 0
+    before = git("rev-parse", "schedule-budget", cwd=remote)
+    assert runner.invoke(cli, ["budget", "settle", "--directory", str(output)]).exit_code == 0
+    assert git("rev-parse", "schedule-budget", cwd=remote) == before
+    state = json.loads(git("show", "schedule-budget:budget.json", cwd=remote))
+    reservation = next(iter(state["months"].values()))["runs"]["2-1"]
+    assert reservation == {"reserved_microusd": 1000000, "charged_microusd": 1000000, "status": "reserved"}
+
+
+@pytest.mark.parametrize("ledger", [{"limit_microusd": 0, "requests": [{}]}, {"limit_microusd": 1, "requests": []}, {"limit_microusd": False, "requests": []}])
+def test_free_only_settlement_rejects_any_requests_or_invalid_limit(tmp_path, monkeypatch, ledger):
+    from click.testing import CliRunner
+    from schedules.cli import cli
+    (tmp_path / "reservation.json").write_text(json.dumps({"status": "unavailable", "limit_microusd": 0}))
+    (tmp_path / "budget.json").write_text(json.dumps(ledger))
+    monkeypatch.setattr("schedules.cli._monthly_budget", lambda: pytest.fail("Free settlement must not contact durable ledger"))
+    assert CliRunner().invoke(cli, ["budget", "settle", "--directory", str(tmp_path)]).exit_code != 0
+
+
+def test_authorized_cli_reservation_and_settlement_keep_existing_accounting(monthly_budget, monkeypatch, tmp_path):
+    from click.testing import CliRunner
+    from schedules.cli import cli
+    budget, git, remote = monthly_budget
+    budget.initialize()
+    monkeypatch.setenv("OPENAI_API_KEY", "test-no-call")
+    monkeypatch.setattr("schedules.cli._monthly_budget", lambda: budget)
+    output = tmp_path / "authorized"
+    runner = CliRunner()
+    result = runner.invoke(cli, ["budget", "reserve", "--run-id", "2-1", "--output", str(output)])
+    assert result.exit_code == 0, result.output
+    receipt = json.loads((output / "reservation.json").read_text())
+    assert receipt["status"] == "reserved" and receipt["limit_microusd"] == 1000000
+    assert runner.invoke(cli, ["budget", "settle", "--directory", str(output)]).exit_code == 0
+    state = json.loads(git("show", "schedule-budget:budget.json", cwd=remote))
+    assert state["months"][receipt["month"]]["runs"]["2-1"]["charged_microusd"] == 0
+
+
+@pytest.mark.parametrize("allowance", ["zero", "missing_key", "missing_ledger"])
+def test_valid_pdf_requires_paid_authority_before_render_or_request(tmp_path, monkeypatch, north_beach_pair, allowance):
+    _, components = north_beach_pair
+    monkeypatch.setenv("OPENAI_API_KEY", "unit-test-not-a-key")
+    monkeypatch.setenv("SCHEDULES_API_BUDGET_FILE", str(tmp_path / "budget.json"))
+    monkeypatch.setenv("SCHEDULES_API_BUDGET_USD", "0" if allowance == "zero" else "1")
+    if allowance == "missing_key":
+        monkeypatch.delenv("OPENAI_API_KEY")
+    elif allowance == "missing_ledger":
+        monkeypatch.delenv("SCHEDULES_API_BUDGET_FILE")
+    ledger = b'{"limit_microusd":0,"requests":[]}'
+    (tmp_path / "budget.json").write_bytes(ledger)
+    def forbidden(*args, **kwargs):
+        pytest.fail("Paid authority must be checked before rendering or building an API request")
+    monkeypatch.setattr(openai_provider, "render_source_pages", forbidden)
+    monkeypatch.setattr(openai_provider, "source_request", forbidden)
+    monkeypatch.setattr(openai_provider, "budgeted_call", forbidden)
+    with pytest.raises(ValueError, match="positive API budget|OPENAI_API_KEY|SCHEDULES_API_BUDGET_FILE"):
+        openai_provider.extract(components[0]["document"], PROMPT_PATH.read_text(), EXTRACTION_SCHEMA)
+    assert (tmp_path / "budget.json").read_bytes() == ledger

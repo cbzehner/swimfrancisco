@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 
 from .publish import pager_job_payload
-from .registry import BROWSER_SOURCES
+from .registry import BROWSER_SOURCES, HTTP_ACCESS_SOURCES
 
 
 def run_command(arguments: list[str], root: Path, *, timeout: int = 900) -> subprocess.CompletedProcess:
@@ -118,7 +118,7 @@ def open_closure_review_prs(root: Path, evidence: Path, command=run_command) -> 
     for review in builds[-1].get("closure_reviews", []):
         slug, digest = review.get("slug", ""), review.get("source_sha256", "")
         relative = Path(review.get("source_path", ""))
-        source_extension = "html" if slug in BROWSER_SOURCES else "pdf"
+        source_extension = "html" if slug in BROWSER_SOURCES | HTTP_ACCESS_SOURCES else "pdf"
         if (not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug)
                 or not re.fullmatch(r"[a-f0-9]{64}", digest)
                 or not re.fullmatch(rf"data/{re.escape(slug)}/\d{{4}}-\d{{2}}-\d{{2}}-{digest[:12]}/source\.{source_extension}", relative.as_posix())
@@ -213,7 +213,10 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
     if evidence.exists():
         raise ValueError("Automation evidence directory already exists; use a fresh checkout")
     evidence.mkdir(parents=True)
-    state: dict = {"run_id": run_id, "mode": mode, "status": "running", "builds": [], "published_slugs": []}
+    allowance = ledger.with_name("reservation.json")
+    paid_budget_status = json.loads(allowance.read_text()).get("status", "unknown") if allowance.is_file() else "unknown"
+    state: dict = {"run_id": run_id, "mode": mode, "status": "running", "builds": [], "published_slugs": [],
+                   "paid_budget_status": paid_budget_status}
     def save_state() -> None:
         (evidence / "result.json").write_text(json.dumps(state, indent=2) + "\n")
 

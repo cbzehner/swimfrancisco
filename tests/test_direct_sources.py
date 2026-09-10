@@ -384,75 +384,79 @@ def test_24_hour_fitness_extractor_models_reopened_facility_hours():
     assert any(a["day"] == "wednesday" and a["start"] == "00:00" for a in payload["access_hours"])
 
 
-def test_city_sports_extractor_reads_club_hours():
-    payload = _extract_city_sports(
-        """
-        <h1>SAN FRANCISCO - 20TH AVE</h1>
-        <p>lap pool</p>
-        <p>HOURS Mon - Thu 5:00am - 11:00pm Fri 5:00am - 10:00pm
-        Sat - Sun 8:00am - 8:00pm Special Club Hours</p>
-        """
-    )
+def test_city_sports_rejects_hours_without_complete_independent_source_tables():
+    with pytest.raises(DirectSourceError):
+        _extract_city_sports("""<h1>SAN FRANCISCO - 20TH AVE</h1><p>lap pool</p>
+            <p>HOURS Mon - Thu 5:00am - 11:00pm Fri 5:00am - 10:00pm
+            Sat - Sun 8:00am - 8:00pm Special Club Hours</p>""")
 
+
+def test_equinox_rejects_incomplete_location_hours():
+    with pytest.raises(DirectSourceError):
+        _extract_equinox("""<h1>Equinox Sports Club San Francisco</h1><p>Indoor Pool</p>
+            "openingHoursSpecification": [
+              {"dayOfWeek": ["Monday","Tuesday"],"opens": "05:00","closes": "22:00"},
+              {"dayOfWeek": ["Saturday","Sunday"],"opens": "07:00","closes": "18:00"}]
+            """)
+
+
+def test_fitness_sf_rejects_partial_location_hours_without_full_source_evidence():
+    with pytest.raises(DirectSourceError):
+        _extract_fitness_sf("""<h1>FITNESS SF Fillmore</h1>
+            <p>25-yard, 5-lane swimming pool</p>
+            <p>Mon - Thu: 5 am - 12 am Fri: 5 am - 11 pm Sat - Sun: 7 am - 8 pm 1-415-348-6377</p>""")
+
+
+@pytest.mark.parametrize("extractor, weekend_end", [(_extract_ucsf_bakar, "18:00"), (_extract_ucsf_fitness, "16:00")])
+def test_ucsf_combined_calendar_preserves_facility_identity(extractor, weekend_end):
+    from pathlib import Path
+    html = (Path(__file__).parent / "fixtures/html-facts/ucsf-holiday-2026.html").read_text()
+    payload = extractor(html, date(2026, 9, 1))
     assert payload["schedule_basis"] == "facility_hours"
+    assert payload["sessions"] == []
     assert len(payload["access_hours"]) == 7
-    assert any(a["day"] == "friday" and a["end"] == "22:00" for a in payload["access_hours"])
+    assert next(row for row in payload["access_hours"] if row["day"] == "sunday")["end"] == weekend_end
+    assert payload["closures"][0]["start"] == "2026-09-07"
 
 
-def test_equinox_extractor_reads_schema_hours():
-    payload = _extract_equinox(
-        """
-        <h1>Equinox Sports Club San Francisco</h1>
-        <p>Indoor Pool</p>
-        "openingHoursSpecification": [
-          {"dayOfWeek": ["Monday","Tuesday"],"opens": "05:00","closes": "22:00"},
-          {"dayOfWeek": ["Saturday","Sunday"],"opens": "07:00","closes": "18:00"}
-        ]
-        """
-    )
-
-    assert payload["schedule_basis"] == "facility_hours"
-    assert any(a["day"] == "monday" and a["start"] == "05:00" for a in payload["access_hours"])
-    assert any(a["day"] == "sunday" and a["end"] == "18:00" for a in payload["access_hours"])
+@pytest.mark.parametrize("observed, end, closed, exceptions", [
+    (date(2026, 11, 20), "2026-12-03", ["2026-11-26"], ["2026-11-27"]),
+    (date(2026, 12, 24), "2027-01-01", ["2026-12-24", "2026-12-25", "2027-01-01"],
+     [f"2026-12-{day}" for day in range(26, 32)]),
+])
+def test_ucsf_closures_partial_days_and_printed_rollover(observed, end, closed, exceptions):
+    from pathlib import Path
+    html = (Path(__file__).parent / "fixtures/html-facts/ucsf-holiday-2026.html").read_text()
+    payload = _extract_ucsf_bakar(html, observed)
+    assert payload["effective_end"] == end
+    assert [row["start"] for row in payload["closures"]] == closed
+    assert [row["date"] for row in payload["access_exceptions"]] == exceptions
+    assert all((row["start"], row["end"]) == ("08:00", "14:00") for row in payload["access_exceptions"])
 
 
-def test_fitness_sf_extractor_reads_pool_hours_from_location_hours():
-    payload = _extract_fitness_sf(
-        """
-        <h1>FITNESS SF Fillmore</h1>
-        <p>25-yard, 5-lane swimming pool</p>
-        <p>Mon - Thu: 5 am - 12 am Fri: 5 am - 11 pm Sat - Sun: 7 am - 8 pm 1-415-348-6377</p>
-        """
-    )
-
-    assert payload["schedule_basis"] == "pool_hours"
-    assert any(a["day"] == "thursday" and a["end"] == "23:59" for a in payload["access_hours"])
-
-
-def test_ucsf_bakar_extractor_reads_facility_hours():
-    payload = _extract_ucsf_bakar(
-        """
-        <p>Facility Hours: Monday-Friday, 6:00 am-9:00 pm;
-        Saturday-Sunday, 8:00 am-6:00 pm</p>
-        """
-    )
-
-    assert payload["schedule_basis"] == "facility_hours"
-    assert len(payload["access_hours"]) == 7
-    assert any(a["day"] == "monday" and a["start"] == "06:00" for a in payload["access_hours"])
-    assert any(a["day"] == "sunday" and a["end"] == "18:00" for a in payload["access_hours"])
+@pytest.mark.parametrize("old, new", [
+    ("(Bakar and Millberry)", "(Bakar)"),
+    ("Monday-Friday", "Monday-Thursday"),
+    ("January 19 (MLK", "January 1 (MLK"),
+    ("2027 New Year's", "2026 New Year's"),
+    ("Open Regular Hours", "Open Regular Hours except pool closed"),
+    ("8:00 am-2:00 pm", "8:00 am-2:00 pm pool only"),
+    ("<p>November 11 (Veterans Day): Open Regular Hours</p>", ""),
+])
+def test_ucsf_unsupported_scope_dates_or_missing_rows_hold(old, new):
+    from pathlib import Path
+    html = (Path(__file__).parent / "fixtures/html-facts/ucsf-holiday-2026.html").read_text()
+    assert old in html
+    with pytest.raises(DirectSourceError):
+        _extract_ucsf_bakar(html.replace(old, new), date(2026, 9, 9))
 
 
-def test_ucsf_fitness_extractor_handles_millberry_page():
-    payload = _extract_ucsf_fitness(
-        """
-        <p>Facility Hours: Monday-Friday, 6:00 am-9:00 pm;
-        Saturday-Sunday, 8:00 am-4:00 pm Millberry Union</p>
-        """
-    )
-
-    assert payload["schedule_basis"] == "facility_hours"
-    assert any(a["day"] == "sunday" and a["end"] == "16:00" for a in payload["access_hours"])
+@pytest.mark.parametrize("observed", [date(2025, 12, 31), date(2027, 1, 2)])
+def test_ucsf_expired_or_future_year_schedule_never_extends(observed):
+    from pathlib import Path
+    html = (Path(__file__).parent / "fixtures/html-facts/ucsf-holiday-2026.html").read_text()
+    with pytest.raises(DirectSourceError):
+        _extract_ucsf_bakar(html, observed)
 
 
 def test_koret_cache_identity_includes_original_zip_bytes(monkeypatch, tmp_path):
@@ -912,3 +916,37 @@ def test_browser_pipeline_writes_ready_direct_artifact_for_verified_access_trans
     assert artifact['payload']['access_hours']
     assert artifact['prompt_sha256'] == hashlib.sha256(f'direct:{entry.source_kind}'.encode()).hexdigest()
     assert direct_sources.verify_direct_artifact(artifact, artifact_path.parent / 'source.html', today=date(2026, 9, 8))['ok']
+
+
+def test_koret_original_invalid_monday_hours_hold_whole_workbook():
+    from pathlib import Path
+    original = Path(__file__).parent / 'fixtures/koret-september.xlsx'
+    assert hashlib.sha256(original.read_bytes()).hexdigest() == 'a2506a70e8567c8ad5cee1b369b2e0b23be8927afa760a870aadb807253d3c4b'
+    with pytest.raises(DirectSourceError, match='Monday A2: invalid stated hours: Hours: 7am-7am'):
+        _extract_koret(original)
+
+
+def test_koret_original_sunday_deep_end_closure_does_not_close_other_lanes():
+    from pathlib import Path
+    from openpyxl import load_workbook
+    from schedules.direct_sources.providers.koret import _weekend_schedule
+    workbook = load_workbook(Path(__file__).parent / 'fixtures/koret-september.xlsx', data_only=True)
+    sessions, closures = _weekend_schedule(workbook['Weekend'])
+    assert [(row['day'], row['start'], row['end']) for row in sessions] == [
+        ('saturday', '08:00', '18:00'), ('sunday', '08:00', '18:00')]
+    assert closures == []
+    assert workbook['Weekend']['L27'].value == 'Deep End Closed'
+
+
+@pytest.mark.parametrize('hours', ['Hours: 7am-7am', 'Hours: 9pm-7am'])
+def test_koret_invalid_headline_never_falls_back_to_grid(tmp_path, hours):
+    sheets = {'Monday': [['Monday'], [hours], [time(6), 'slow'], [time(20), 'slow']]}
+    with pytest.raises(DirectSourceError, match='invalid stated hours'):
+        _extract_koret(_koret_workbook(tmp_path, sheets))
+
+
+def test_koret_unresolved_sunday_closure_scope_holds(tmp_path):
+    sheets = {'Weekend': [['Saturday'], ['Hours 8am-6pm'], ['Sunday'],
+                         ['Hours 8am-6pm'], [time(8), 'Closed unless staffing permits']]}
+    with pytest.raises(DirectSourceError, match='unresolved closure scope'):
+        _extract_koret(_koret_workbook(tmp_path, sheets))

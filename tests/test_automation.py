@@ -204,7 +204,7 @@ def test_live_verification_timeout_never_succeeds(tmp_path):
     assert clock[0] == 1200
 
 
-@pytest.fixture(params=[("test-pool", "pdf"), ("chinatown-ymca", "html")])
+@pytest.fixture(params=[("test-pool", "pdf"), ("chinatown-ymca", "html"), ("ucsf-bakar", "html")])
 def closure_repository(tmp_path, monkeypatch, request):
     slug, extension = request.param
     remote, root, evidence = tmp_path / "origin.git", tmp_path / "repo", tmp_path / "evidence"
@@ -482,3 +482,19 @@ def test_closure_pr_preserves_conflicting_source_hash_before_push(closure_reposi
     assert git(remote, "rev-parse", "main") == before
     assert not any("push" in args for args in calls)
     assert sidecar.is_symlink() if existing_hash == "symlink" else sidecar.read_text() == existing_hash
+
+
+def test_zero_model_allowance_still_captures_extracts_and_publishes_free_updates(runner, monkeypatch):
+    root, calls, controls, run = runner
+    ledger = root.parent / "budget.json"
+    ledger.write_text(json.dumps({"limit_microusd": 0, "requests": []}))
+    ledger.with_name("reservation.json").write_text(json.dumps({"status": "unavailable", "limit_microusd": 0}))
+    monkeypatch.setenv("SCHEDULES_API_BUDGET_USD", "0")
+    controls["failure"] = "openai"
+    result = run()
+    assert result["status"] == "published"
+    assert result["paid_budget_status"] == "unavailable"
+    assert result["builds"][0]["commands"] == {"discover": 0, "browser": 0, "direct": 0, "openai": 1}
+    assert any(args == ["node", "scripts/capture-schedules.mjs"] for args in calls)
+    assert controls["verified"] == ["b" * 40]
+    assert json.loads(ledger.read_text()) == {"limit_microusd": 0, "requests": []}

@@ -18,13 +18,25 @@ BROWSER_SOURCES = {
     "chinatown-ymca": ("ymca_location_html", "https://www.ymcasf.org/location/chinatown-ymca/"),
     "sfsu-mashouf": ("sfsu_aquatics_html", "https://campusrec.sfsu.edu/Aquatics"),
 }
+UCSF_SOURCES = {
+    "ucsf-bakar": ("ucsf_bakar_html", "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/news/2026-fitness-and-recreation-holiday-schedule"),
+    "ucsf-millberry": ("ucsf_fitness_html", "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/news/2026-fitness-and-recreation-holiday-schedule"),
+}
+HTTP_ACCESS_SOURCES = {
+    "equinox-sports-club-sf": ("equinox_html", "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco"),
+    "bay-club-gateway": ("bayclub_html", "https://www.bayclubs.com/clubs/thegateway"),
+    **UCSF_SOURCES,
+    "fitness-sf-fillmore": ("fitness_sf_html", "https://fitnesssf.com/location/fillmore"),
+    "city-sports-20th-ave": ("city_sports_html", "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914"),
+}
 APPROVED_DIRECT_SOURCES = {
     "pomeroy-pool": ("pomeroy_html", "https://www.prrcsf.org/therapeutic-swim"),
     **BROWSER_SOURCES,
+    **HTTP_ACCESS_SOURCES,
 }
 _ACCESS_SOURCES = {slug: BROWSER_SOURCES[slug] for slug in (
     "presidio-ymca-letterman", "stonestown-ymca", "embarcadero-ymca", "chinatown-ymca", "sfsu-mashouf",
-)}
+)} | HTTP_ACCESS_SOURCES
 
 
 def allows_access_transition(slug: str, source_kind: str, source_url: str,
@@ -79,7 +91,7 @@ def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
             raise ValueError("Cloudflare browser capture is limited to the six approved HTML sources and URLs")
         auto_publish = raw_entry.get("auto_publish", False)
         if not isinstance(auto_publish, bool) or (auto_publish and APPROVED_DIRECT_SOURCES.get(slug) != (source_kind, pdf_url)):
-            raise ValueError("Direct automatic publication is limited to the seven approved source identities")
+            raise ValueError("Direct automatic publication is limited to the approved source identities")
 
         if slug in seen_slugs:
             raise ValueError(f"Duplicate registry slug: {slug}")

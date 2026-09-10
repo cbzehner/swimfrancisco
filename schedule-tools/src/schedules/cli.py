@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import subprocess
 import zipfile
 from pathlib import Path
 from datetime import datetime, timezone
@@ -72,10 +74,22 @@ def budget_reserve_command(run_id: str, output: Path) -> None:
     """Reserve at most $1 for this run before creating its local request ledger."""
     if output.exists() and any(output.iterdir()):
         raise click.ClickException("Budget output directory must be empty")
-    receipt = _monthly_budget().reserve(datetime.now(timezone.utc).strftime("%Y-%m"), run_id)
+    if not re.fullmatch(r"\d+-\d+", run_id):
+        raise click.ClickException("Budget reservation requires an Actions run/attempt ID")
+    month = datetime.now(timezone.utc).strftime("%Y-%m")
+    try:
+        if not os.environ.get("OPENAI_API_KEY", "").strip():
+            raise ValueError("Paid extraction credentials unavailable")
+        receipt = _monthly_budget().reserve(month, run_id) | {"status": "reserved"}
+    except (ValueError, RuntimeError, OSError, subprocess.TimeoutExpired, click.ClickException):
+        receipt = {"month": month, "run_id": run_id, "limit_microusd": 0,
+                   "status": "unavailable", "reason": "Paid extraction unavailable; free updates continue"}
     output.mkdir(parents=True, exist_ok=True)
     (output / "reservation.json").write_text(json.dumps(receipt, indent=2) + "\n")
-    SpendBudget(output / "budget.json", receipt["limit_microusd"] / 1_000_000)._update(lambda _: None)
+    if receipt["status"] == "unavailable":
+        (output / "budget.json").write_text(json.dumps({"limit_microusd": 0, "requests": []}) + "\n")
+    else:
+        SpendBudget(output / "budget.json", receipt["limit_microusd"] / 1_000_000)._update(lambda _: None)
     click.echo(json.dumps(receipt))
 
 
@@ -84,6 +98,16 @@ def budget_reserve_command(run_id: str, output: Path) -> None:
 def budget_settle_command(directory: Path) -> None:
     """Settle conservative run charges; missing usage keeps its reservation."""
     receipt = json.loads((directory / "reservation.json").read_text())
+    if receipt.get("status") == "unavailable":
+        ledger = json.loads((directory / "budget.json").read_text())
+        if (type(receipt.get("limit_microusd")) is not int or receipt["limit_microusd"] != 0
+                or ledger != {"limit_microusd": 0, "requests": []}
+                or type(ledger.get("limit_microusd")) is not int):
+            raise click.ClickException("Unavailable paid budget must have no requests or charges")
+        click.echo("Paid extraction unavailable; no durable reservation settled")
+        return
+    if receipt.get("status") != "reserved":
+        raise click.ClickException("Unknown budget reservation status")
     _monthly_budget().settle(receipt, directory / "budget.json")
 
 
@@ -298,7 +322,7 @@ def publish_pending_command() -> None:
     payload = json.loads(report_path.with_name("publish-pending.json").read_text())
     refused = payload.get("refused") or []
     click.echo(f"Wrote {report_path}")
-    click.echo(f"{published} published, {len(refused)} refused")
+    click.echo(f"{published} published; pools with refusals: {len({item['slug'] for item in refused})}; candidate refusals: {len(refused)}")
 
 
 @cli.command("pending-reviews")

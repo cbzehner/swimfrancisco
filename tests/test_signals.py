@@ -524,3 +524,30 @@ def test_coffman_numeric_variability_keeps_literal_evidence_without_pool_identit
     assert senior.pool is None
     assert '(4 lanes; may vary)' in senior.cell.text
     assert len(slots) == 21
+
+
+def test_sava_current_original_preserves_notice_scope_and_highlighted_session_cancellation():
+    from schedules.grounding import source_closure_inventory, source_excluded_dates, source_slots
+    source = inspect_pdf_source((REPO_ROOT / 'tests/fixtures/sava-fall-30037.pdf').read_bytes())
+    assert source.notices[0].text.startswith('All city pools will be CLOSED')
+    closures = source_closure_inventory(source)
+    assert any(row['start'] == '2026-11-26' and row['reason_code'] == 'holiday' for row in closures)
+    exclusions = source_excluded_dates(source)
+    assert exclusions == {'p1-c3-b16': ['2026-09-24', '2026-10-22']}
+    assert {(row['start'], row['start_time'], row['end_time']) for row in closures if row['start'] in {'2026-09-24', '2026-10-22'}} == {
+        ('2026-09-24', '12:00', '14:00'), ('2026-10-22', '12:00', '14:00')}
+    assert any('10:00 a.m. -12:00 a.m.' in cell.text for cell in source.cells)
+
+
+@pytest.mark.parametrize('ending', ['CLOSED 9/24, 10/22 FOR STAFF TRAINING', 'CLOSED 9/24, 9/24 FOR STAFF TRAINING', 'CLOSED 9/25 FOR STAFF TRAINING', 'CLOSED 9/24 FOR STAFF TRAINING unless announced otherwise'])
+def test_unparenthesized_session_cancellation_requires_exact_dates_and_scope(ending):
+    from schedules.grounding import source_excluded_dates
+    from schedules.signals import PdfSource, SourceCell, SourceNotice
+    cell = SourceCell('session', 1, 'thursday', 'Lap Swim 12:30pm-3pm\n' + ending, (0, 0, 1, 1))
+    source = PdfSource('FALL 2026 SCHEDULE (AUGUST 29TH – DECEMBER 12TH)', (cell,), (), 1,
+                       (SourceNotice('notice', cell.text, False, session_cell=cell.id),))
+    if ending == 'CLOSED 9/24, 10/22 FOR STAFF TRAINING':
+        assert source_excluded_dates(source) == {'session': ['2026-09-24', '2026-10-22']}
+    else:
+        with pytest.raises(ValueError):
+            source_excluded_dates(source)

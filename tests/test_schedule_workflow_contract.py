@@ -70,3 +70,10 @@ def test_browser_credentials_budget_and_evidence_are_scoped_to_extraction():
     assert 'SCHEDULES_BROWSER_BUDGET_FILE=' in extract
     assert 'tmp/browser-budget.json' in extract
     assert 'CLOUDFLARE_BROWSER_API_TOKEN' not in rest
+
+
+def test_missing_paid_credentials_do_not_block_free_updates():
+    assert 'test -n "$OPENAI_API_KEY"' not in WORKFLOW
+    assert 'test -n "$SCHEDULES_MONTHLY_BUDGET_USD"' not in WORKFLOW
+    assert 'Paid extraction allowance: ' in WORKFLOW
+    assert 'receipt.status' in WORKFLOW

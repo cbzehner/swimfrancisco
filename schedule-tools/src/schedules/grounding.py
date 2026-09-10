@@ -512,7 +512,11 @@ def source_excluded_dates(source: PdfSource) -> dict[str, list[str]]:
             excluded[notice.session_cell] = [day.isoformat() for day, _ in reconciled]
             continue
         match = re.search(r"(?:\(CLOSED\s*-?\s*|CLOSED\s*\()(\d{1,2}/\d{1,2}(?:\s*[&,]\s*\d{1,2}/\d{1,2})*)\)", notice.text, re.IGNORECASE)
-        if not match or len(CLOSURE_TOKEN_RE.findall(notice.text)) != 1:
+        expected_tokens = 1
+        if not match:
+            expected_tokens = 2
+            match = re.search(r"\bCLOSED\s+(\d{1,2}/\d{1,2}(?:\s*[&,]\s*\d{1,2}/\d{1,2})*)\s+FOR\s+STAFF\s+TRAINING\s*$", notice.text, re.IGNORECASE)
+        if not match or len(CLOSURE_TOKEN_RE.findall(notice.text)) != expected_tokens:
             raise ValueError(f"{notice.id}:unresolved_session_exclusion")
         dates = []
         for part in re.split(r"\s*[&,]\s*", match[1]):

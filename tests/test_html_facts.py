@@ -40,7 +40,7 @@ def test_frozen_originals_pass_independent_validation(slug, basis):
 
 @pytest.mark.parametrize('slug,reason', [
     ('stonestown-ymca', 'Printed weekday conflicts'),
-    ('chinatown-ymca', 'conflicting holiday'),
+    ('chinatown-ymca', 'after its printed reopening'),
 ])
 def test_ambiguous_closures_hold_before_publication(slug, reason):
     with pytest.raises(HtmlClosureReviewRequired, match=reason) as caught:
@@ -334,3 +334,79 @@ def test_unknown_or_conflicting_closure_reason_holds(reason):
     source = inventory('sfsu-mashouf', lambda text: text.replace('</body>', notice + '</body>'))
     with pytest.raises(HtmlClosureReviewRequired, match='closure reason'):
         html_source_payload(source, OBSERVED)
+
+
+def reopened_chinatown(transform=lambda text: text):
+    text = (FIXTURES / 'chinatown-ymca-reopened.html').read_text()
+    return inspect_html_source('chinatown-ymca', transform(text))
+
+
+def corrected_chinatown(text):
+    # A hypothetical source correction, not a production override.
+    return text.replace('10:00 a.m.', '7:00 a.m.')
+
+
+def test_latest_chinatown_original_still_holds_precise_future_conflict():
+    import hashlib
+
+    assert hashlib.sha256((FIXTURES / 'chinatown-ymca-reopened.html').read_bytes()).hexdigest() == '4710bd6d9fba436d4c663bed81e518acff60b167898fff1c542cb962c96429de'
+    with pytest.raises(HtmlClosureReviewRequired, match='facility hours on 2027-01-01'):
+        html_source_payload(reopened_chinatown(), date(2026, 9, 9))
+
+
+def test_corrected_chinatown_publishes_explicit_pool_group_without_facility_duplicates():
+    from schedules.merge import _normalized_schedule_payload
+
+    result = html_source_payload(reopened_chinatown(corrected_chinatown), date(2026, 9, 9))
+    normalized = _normalized_schedule_payload(result)
+    assert result['schedule_basis'] == 'pool_hours'
+    assert result['sessions'] == []
+    assert result['effective_end'] == '2026-09-22'
+    assert len(normalized['access_hours']) == 7
+    assert [(row['start'], row['end']) for row in normalized['access_hours']] == [('08:00', '19:30')] * 5 + [('08:00', '15:30')] * 2
+    assert result['closures'] == []
+
+
+def test_chinatown_pool_holiday_duplicates_agree_and_are_published_once():
+    result = html_source_payload(reopened_chinatown(corrected_chinatown), date(2026, 11, 25))
+    assert [(row['date'], row['start'], row['end']) for row in result['access_exceptions']] == [
+        ('2026-11-26', '08:00', '13:30'), ('2026-11-27', '08:00', '13:30'),
+    ]
+
+
+def test_chinatown_facility_closed_and_pool_closed_notices_preserve_both_sources():
+    from schedules.merge import _normalized_schedule_payload
+
+    result = _normalized_schedule_payload(html_source_payload(reopened_chinatown(corrected_chinatown), date(2026, 11, 10)))
+    assert len(result['closures']) == 1
+    assert result['closures'][0]['reason_code'] == 'staff_training'
+    assert len(result['closures'][0]['source_notices']) == 2
+
+
+def test_chinatown_conflicting_duplicate_holiday_statement_holds():
+    def change(text):
+        text = corrected_chinatown(text)
+        marker = '<h2>Pool Hours</h2>'
+        before, after = text.split(marker, 1)
+        return before + marker + after.replace('Pool Hours: 8:00 a.m.', 'Pool Hours: 9:00 a.m.', 1)
+
+    with pytest.raises(HtmlClosureReviewRequired, match='Conflicting pool holiday statements'):
+        html_source_payload(reopened_chinatown(change), date(2026, 9, 9))
+
+
+def test_chinatown_pool_weekly_hours_cannot_exceed_facility_hours():
+    source = reopened_chinatown(lambda text: corrected_chinatown(text).replace('8:00 am &#8211; 7:30 pm', '6:00 am &#8211; 7:30 pm'))
+    with pytest.raises(HtmlClosureReviewRequired, match='weekly hours conflict'):
+        html_source_payload(source, date(2026, 9, 9))
+
+
+def test_chinatown_reopening_date_conflict_is_not_inferred_away():
+    source = reopened_chinatown(lambda text: corrected_chinatown(text).replace('Tuesday, September 8', 'Monday, September 7'))
+    with pytest.raises(HtmlClosureReviewRequired, match='printed reopening date'):
+        html_source_payload(source, date(2026, 9, 9))
+
+
+def test_chinatown_missing_reopening_date_is_unsupported():
+    source = reopened_chinatown(lambda text: corrected_chinatown(text).replace(' on Tuesday, September 8', ' soon'))
+    with pytest.raises(HtmlClosureReviewRequired, match='annual closure and reopening'):
+        html_source_payload(source, date(2026, 9, 9))

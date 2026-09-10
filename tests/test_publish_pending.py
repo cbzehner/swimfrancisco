@@ -849,7 +849,7 @@ def test_publish_pending_all_eligible_unique_grid(iso):
         (iso.data / "hamilton-pool" / f"2026-08-19-{SHA[:12]}" / "reviewed.json").read_text()
     )
     assert envelope["attested_by"] == "ci"
-    assert "1 published, 0 refused" in report.read_text()
+    assert "1 published; pools with refusals: 0; candidate refusals: 0" in report.read_text()
 
 
 def test_unique_grid_refuses_sibling_session_grids(iso, monkeypatch):
@@ -962,12 +962,23 @@ def test_cli_mixed_published_and_refused(iso, monkeypatch):
     )
     result = CliRunner().invoke(cli, ["publish-pending"])
     assert result.exit_code == 0, result.output
-    assert "1 published, 1 refused" in result.output
+    assert "1 published; pools with refusals: 1; candidate refusals: 1" in result.output
     payload = json.loads((iso.tmp / "publish-pending.json").read_text())
     assert "hamilton-pool" in payload["published"]
     assert {"slug": "koret-center", "code": "not_rec_park"} in payload["refused"]
     flagged = pager_flagged_set(refused=payload["refused"])
     assert flagged == []
+
+
+def test_report_distinguishes_pools_from_retained_candidate_refusals(tmp_path):
+    from schedules.publish import _write_reports
+    report = tmp_path / 'report.md'
+    evidence = tmp_path / 'report.json'
+    refusals = [{'slug': 'sava-pool', 'code': 'source_coverage_failed', 'message': 'Review source'}] * 3
+    _write_reports(report, evidence, published=[], refused=refusals, closure=[], windows=[], skipped=None)
+    assert 'pools with refusals: 1; candidate refusals: 3' in report.read_text()
+    assert report.read_text().count('- sava-pool:') == 1
+    assert len(json.loads(evidence.read_text())['refused']) == 3
 
 
 def test_pager_flagged_set_omits_not_rec_park():
@@ -1809,3 +1820,176 @@ def test_invalid_closure_projection_rolls_back_candidate_and_reports_finalize_er
         assert reviewed_path.read_text() == '{"prior": "review"}\n'
     else:
         assert not reviewed_path.exists()
+
+
+@pytest.mark.parametrize('valid_original', [False, True])
+def test_expired_grid_without_extraction_is_covered_only_by_verified_original(iso, monkeypatch, valid_original):
+    source = Path(__file__).parents[1] / 'data/sava-pool/2026-09-01-4d9a6f5e805d/source.pdf'
+    content = source.read_bytes()
+    digest = hashlib.sha256(content).hexdigest()
+    expired_dir = iso.data / 'sava-pool' / f'2026-09-01-{digest[:12]}'
+    expired_dir.mkdir(parents=True)
+    (expired_dir / 'source.pdf').write_bytes(content if valid_original else b'changed bytes')
+    attested_dir = iso.data / 'sava-pool' / f'2026-08-29-{SHA[:12]}'
+    attested_dir.mkdir()
+    (attested_dir / 'reviewed.json').write_text(json.dumps({
+        'slug': 'sava-pool', 'pdf_sha256': SHA, 'reviewed_at': '2026-08-29', 'attested_by': 'human',
+        'source_pdf_url': SAVA_FALL2, 'payload': _payload(start='2026-08-29', end='2026-12-12')}))
+    _seed_content(iso.content, 'sava-pool')
+    monkeypatch.setattr('schedules.publish.load_registry', lambda: [_sava_entry()])
+    decision = _sava_sequential_decision()
+    decision['candidates'][0].update(view_id=29806, href='https://sfrecpark.org/DocumentCenter/View/29806',
+        source='persisted', window_start='2026-08-18', window_end='2026-08-28',
+        window_source='page-1', grid_confirmed=True, pdf_sha256=digest)
+    (iso.tmp / 'discovery-decisions.json').write_text(json.dumps([decision]))
+    count, report = publish_pending_all(data_root=iso.data, content_spots_dir=iso.content, today=date(2026, 9, 9))
+    assert count == 0
+    refused = json.loads(report.with_name('publish-pending.json').read_text())['refused']
+    assert bool(refused) is not valid_original
+    if refused:
+        assert refused[0]['code'] == 'sequential_incomplete'
+    assert not (expired_dir / 'reviewed.json').exists()
+
+
+def _ucsf_candidate(tmp_path, slug="ucsf-bakar", observed=date(2026, 12, 24)):
+    from schedules.direct_sources import direct_configuration
+    from schedules.direct_sources.providers.ucsf import _extract_ucsf_bakar, _extract_ucsf_fitness
+    from schedules.registry import UCSF_SOURCES
+    content = (Path(__file__).parent / "fixtures/html-facts/ucsf-holiday-2026.html").read_bytes()
+    digest = hashlib.sha256(content).hexdigest()
+    directory = tmp_path / "data" / slug / f"{observed}-{digest[:12]}"
+    directory.mkdir(parents=True)
+    (directory / "source.html").write_bytes(content)
+    (directory / "source.sha256").write_text(digest + "\n")
+    kind, url = UCSF_SOURCES[slug]
+    extractor = _extract_ucsf_bakar if slug == "ucsf-bakar" else _extract_ucsf_fitness
+    model = "ucsf-bakar-html-v1" if slug == "ucsf-bakar" else "ucsf-fitness-html-v1"
+    artifact = {"provider": "direct", "model": model, "pdf_sha256": digest, "source_pdf_url": url,
+                "payload": extractor(content.decode(), observed), "details": {"direct_source": {
+                    "sha256": digest, "url": url, "requested_url": url, "observed_on": observed.isoformat(),
+                    "freshness_days": 14, "configuration": direct_configuration()}}}
+    path = directory / f"direct-{model}.json"
+    path.write_text(json.dumps(artifact))
+    return find_review_candidates(data_root=tmp_path / "data")[0], artifact, path, kind, url
+
+
+@pytest.mark.parametrize("slug", ["ucsf-bakar", "ucsf-millberry"])
+def test_ucsf_publication_recomputes_holidays_and_caps_printed_year(tmp_path, slug):
+    candidate, artifact, _, kind, url = _ucsf_candidate(tmp_path, slug)
+    assert _browser_html_eligible(candidate, artifact, kind, url, today=date(2026, 12, 24)).ok
+    assert _browser_html_eligible(candidate, artifact, kind, url, today=date(2027, 1, 1)).ok
+    assert not _browser_html_eligible(candidate, artifact, kind, url, today=date(2027, 1, 2)).ok
+    assert not _browser_html_eligible(candidate, artifact, kind, url, today=date(2026, 12, 24), direct_opt_in=False).ok
+    assert artifact["payload"]["schedule_basis"] == "facility_hours"
+    assert artifact["payload"]["sessions"] == []
+
+
+@pytest.mark.parametrize("change", ["hours", "closures", "exceptions", "hash", "url", "configuration", "facility", "window"])
+def test_ucsf_tampered_candidate_cannot_publish(tmp_path, change):
+    candidate, artifact, path, kind, url = _ucsf_candidate(tmp_path)
+    if change == "hours":
+        artifact["payload"]["access_hours"][0]["end"] = "22:00"
+    elif change in {"closures", "exceptions"}:
+        artifact["payload"]["closures" if change == "closures" else "access_exceptions"] = []
+    elif change == "hash":
+        candidate.source_path.write_bytes(b"changed original")
+    elif change == "url":
+        artifact["details"]["direct_source"]["url"] += "?wrong"
+    elif change == "configuration":
+        artifact["details"]["direct_source"]["configuration"] = {}
+    elif change == "facility":
+        artifact["model"] = "ucsf-fitness-html-v1"
+    else:
+        artifact["payload"]["effective_end"] = "2027-01-06"
+    path.write_text(json.dumps(artifact))
+    assert not _browser_html_eligible(candidate, artifact, kind, url, today=date(2026, 12, 24)).ok
+
+
+@pytest.mark.parametrize("notice", ["Millberry pool closed for maintenance", "Bakar modified hours 10:00 am-2:00 pm"])
+def test_ucsf_closure_notice_outside_calendar_holds(notice):
+    from schedules.direct_sources.providers.ucsf import _extract_ucsf_bakar
+    from schedules.direct_sources.errors import DirectSourceError
+    html = (Path(__file__).parent / "fixtures/html-facts/ucsf-holiday-2026.html").read_text()
+    with pytest.raises(DirectSourceError, match="outside the calendar"):
+        _extract_ucsf_bakar(html.replace("<article", f"<p>{notice}</p><article", 1), date(2026, 9, 9))
+
+
+def test_ucsf_partial_day_extension_outside_regular_hours_holds():
+    from schedules.direct_sources.providers.ucsf import _extract_ucsf_fitness
+    from schedules.direct_sources.errors import DirectSourceError
+    html = (Path(__file__).parent / "fixtures/html-facts/ucsf-holiday-2026.html").read_text()
+    with pytest.raises(DirectSourceError, match="exceed regular"):
+        _extract_ucsf_fitness(html.replace("December 26-31 (Winter Holiday): 8:00 am-2:00 pm", "December 26-31 (Winter Holiday): 8:00 am-5:00 pm"), date(2026, 12, 24))
+
+
+def test_ucsf_extraction_retains_original_notice_for_existing_closure_review(tmp_path, monkeypatch):
+    from schedules import direct_sources, paths
+    from schedules.direct_sources.http import DirectTextResponse
+    from schedules.direct_sources.errors import CapturedClosureReviewRequired
+    from schedules.registry import load_registry
+    entry = next(entry for entry in load_registry() if entry.slug == "ucsf-bakar")
+    html = (Path(__file__).parent / "fixtures/html-facts/ucsf-holiday-2026.html").read_text()
+    html = html.replace("<article", "<p>Bakar pool closed for maintenance</p><article", 1)
+    monkeypatch.setattr(direct_sources, "fetch_text", lambda url: DirectTextResponse(html, html.encode(), url))
+    monkeypatch.setattr(paths, "relative_to_repo", lambda path: str(path.relative_to(tmp_path)))
+    with pytest.raises(CapturedClosureReviewRequired) as failure:
+        direct_sources.extract_direct(entry, cache_root=tmp_path / "data")
+    review = failure.value.review
+    original = tmp_path / review["source_path"]
+    assert original.read_bytes() == html.encode()
+    assert hashlib.sha256(original.read_bytes()).hexdigest() == review["source_sha256"]
+    assert "Bakar pool closed for maintenance" in review["notices"][0]["text"]
+    assert review["slug"] == entry.slug
+
+
+@pytest.mark.parametrize("slug", ["fitness-sf-fillmore", "city-sports-20th-ave", "equinox-sports-club-sf", "bay-club-gateway"])
+@pytest.mark.parametrize("change", [None, "hours", "original", "url", "configuration", "expired"])
+def test_verified_club_source_publication_checks_original_hours_and_freshness(tmp_path, slug, change):
+    from schedules.direct_sources import _HTML_EXTRACTORS, direct_configuration, observation_window
+    from schedules.registry import HTTP_ACCESS_SOURCES
+    kind, url = HTTP_ACCESS_SOURCES[slug]
+    extractor, model, _ = _HTML_EXTRACTORS[kind]
+    content = (Path(__file__).parent / f"fixtures/html-facts/{slug}.html").read_bytes()
+    digest = hashlib.sha256(content).hexdigest()
+    directory = tmp_path / "data" / slug / f"2026-09-09-{digest[:12]}"
+    directory.mkdir(parents=True)
+    original = directory / "source.html"
+    original.write_bytes(content)
+    (directory / "source.sha256").write_text(digest + "\n")
+    artifact = {"provider": "direct", "model": model, "pdf_sha256": digest, "source_pdf_url": url,
+                "payload": observation_window(extractor(content.decode()), "2026-09-09"), "details": {"direct_source": {
+                    "sha256": digest, "url": url, "requested_url": url, "observed_on": "2026-09-09",
+                    "freshness_days": 14, "configuration": direct_configuration()}}}
+    if change == "hours":
+        artifact["payload"]["access_hours"][0]["start"] = "01:00"
+    elif change == "original":
+        original.write_bytes(b"wrong capture")
+    elif change == "url":
+        artifact["details"]["direct_source"]["url"] += "&wrong=1"
+    elif change == "configuration":
+        artifact["details"]["direct_source"]["configuration"] = {}
+    (directory / f"direct-{model}.json").write_text(json.dumps(artifact))
+    candidate = find_review_candidates(data_root=tmp_path / "data")[0]
+    result = _browser_html_eligible(candidate, artifact, kind, url,
+                                   today=date(2026, 9, 23) if change == "expired" else date(2026, 9, 9))
+    assert result.ok == (change is None)
+    assert artifact["payload"]["sessions"] == []
+
+
+@pytest.mark.parametrize("slug", ["equinox-sports-club-sf", "bay-club-gateway"])
+def test_new_club_closure_holds_retain_original_for_review(tmp_path, monkeypatch, slug):
+    from schedules import direct_sources, paths
+    from schedules.direct_sources.http import DirectTextResponse
+    from schedules.direct_sources.errors import CapturedClosureReviewRequired
+    from schedules.registry import load_registry
+    entry = next(entry for entry in load_registry() if entry.slug == slug)
+    html = (Path(__file__).parent / f"fixtures/html-facts/{slug}.html").read_text()
+    html += "<p>Facility closed until further notice</p>"
+    monkeypatch.setattr(direct_sources, "fetch_text", lambda url: DirectTextResponse(html, html.encode(), url))
+    monkeypatch.setattr(paths, "relative_to_repo", lambda path: str(path.relative_to(tmp_path)))
+    with pytest.raises(CapturedClosureReviewRequired) as failure:
+        direct_sources.extract_direct(entry, cache_root=tmp_path / "data")
+    review = failure.value.review
+    assert (tmp_path / review["source_path"]).read_bytes() == html.encode()
+    assert review["source_sha256"] == hashlib.sha256(html.encode()).hexdigest()
+    assert any("closed until further notice" in notice["text"] for notice in review["notices"])

@@ -86,9 +86,11 @@ notes = "Official page confirms gym hours and an indoor lap pool, but not lane/o
 
 [[pool]]
 slug = "bay-club-gateway"
-pdf_url = "https://www.bayclubs.com/sf-campus"
-official_page_url = "https://www.bayclubs.com/sf-campus"
+source_kind = "bayclub_html"
+pdf_url = "https://www.bayclubs.com/clubs/thegateway"
+official_page_url = "https://www.bayclubs.com/clubs/thegateway"
 source_status = "access_hours_only"
+auto_publish = true
 notes = "Official site exposes club hours and class calendar endpoints, but not public lap-lane availability; keep as access-hours-only."
 
 [[pool]]
@@ -136,6 +138,7 @@ slug = "fitness-sf-fillmore"
 pdf_url = "https://fitnesssf.com/location/fillmore"
 official_page_url = "https://fitnesssf.com/location/fillmore"
 source_status = "access_hours_only"
+auto_publish = true
 source_kind = "fitness_sf_html"
 notes = "Official location page publishes club hours and the help center confirms a 25-yard pool with lap-swim lane reservations; no lane availability schedule is published."
 
@@ -144,6 +147,7 @@ slug = "city-sports-20th-ave"
 pdf_url = "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914"
 official_page_url = "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914"
 source_status = "access_hours_only"
+auto_publish = true
 source_kind = "city_sports_html"
 notes = "Official location page confirms a lap pool and publishes club hours, but not lap-lane availability."
 
@@ -160,6 +164,7 @@ slug = "equinox-sports-club-sf"
 pdf_url = "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco"
 official_page_url = "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco"
 source_status = "access_hours_only"
+auto_publish = true
 source_kind = "equinox_html"
 notes = "Official page confirms an indoor pool and publishes club hours, but not lap-lane availability."
 
@@ -175,16 +180,18 @@ notes = "Official aquatics page publishes natatorium hours and describes a lap p
 
 [[pool]]
 slug = "ucsf-millberry"
-pdf_url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/millberry-fitness-center-ucsf-parnassus"
+pdf_url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/news/2026-fitness-and-recreation-holiday-schedule"
 official_page_url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/millberry-fitness-center-ucsf-parnassus"
 source_status = "access_hours_only"
+auto_publish = true
 source_kind = "ucsf_fitness_html"
-notes = "Official page publishes facility hours; pool-specific schedule source still needs verification."
+notes = "Combined official 2026 facility hours and holiday calendar; access hours only, not lap-lane availability. Printed coverage ends January 1, 2027."
 
 [[pool]]
 slug = "ucsf-bakar"
-pdf_url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
+pdf_url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/news/2026-fitness-and-recreation-holiday-schedule"
 official_page_url = "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/bakar-fitness-center-ucsf-mission-bay"
 source_status = "access_hours_only"
+auto_publish = true
 source_kind = "ucsf_bakar_html"
-notes = "Official page has facility hours and pool amenities; schedule page is JavaScript-rendered and needs API/browser investigation before schedule ingestion."
+notes = "Combined official 2026 facility hours and holiday calendar; access hours only, not lap-lane availability. Printed coverage ends January 1, 2027."

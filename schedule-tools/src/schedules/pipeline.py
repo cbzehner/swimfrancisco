@@ -552,10 +552,15 @@ def _session_grid_hrefs(entry: PoolEntry, decisions: DecisionSet) -> list[str]:
             seen.add(href)
             hrefs.append(href)
 
+    from ._time import pacific_today
+    from .window_dates import verified_expired_grid_ids
+    expired = verified_expired_grid_ids(entry.slug, decision, pacific_today())
     if decision is not None:
         raw = list(decision.get("candidates") or [])
         extra = list(decision.get("extra_candidates") or [])
         for item in collapse_grid_candidates(raw + extra):
+            if parse_view_id(item.get("view_id")) in expired:
+                continue
             href = item.get("href")
             if isinstance(href, str) and href:
                 add(href)
@@ -563,7 +568,8 @@ def _session_grid_hrefs(entry: PoolEntry, decisions: DecisionSet) -> list[str]:
             view_id = parse_view_id(item.get("view_id"))
             if view_id is not None:
                 add(absolute_view_url(view_id))
-    add(entry.pdf_url)
+    if parse_view_id(entry.pdf_url.rstrip("/").rsplit("/", 1)[-1]) not in expired:
+        add(entry.pdf_url)
     return hrefs
 
 

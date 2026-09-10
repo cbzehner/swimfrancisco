@@ -771,7 +771,8 @@ def publish_sequential_slug(
     # A human Save-all still publishes whatever the operator confirmed.
     expired: set[int] = set()
     if attested_by == "ci":
-        expired = {
+        from .window_dates import verified_expired_grid_ids
+        expired = verified_expired_grid_ids(slug, decision, attested_at, data_root=data_root) | {
             view_id
             for view_id, candidate in unpublished.items()
             if (window := _payload_window(dict(candidate.payload))) is not None
@@ -1064,7 +1065,7 @@ def _write_reports(
     lines = [
         "# publish-pending",
         "",
-        f"{len(published)} published, {len(refused)} refused",
+        f"{len(published)} published; pools with refusals: {len({item['slug'] for item in refused})}; candidate refusals: {len(refused)}",
         "",
     ]
     if skipped:
@@ -1074,12 +1075,11 @@ def _write_reports(
         lines.extend(f"- {slug}" for slug in published)
     else:
         lines.append("- none")
-    lines.extend(["", "## Refused"])
+    lines.extend(["", "## Candidate refusals by pool"])
     if refused:
-        lines.extend(
-            f"- {item['slug']}: {item['code']} — {item.get('message', '')}"
-            for item in refused
-        )
+        for slug in sorted({item["slug"] for item in refused}):
+            reasons = sorted({f"{item['code']} — {item.get('message', '')}" for item in refused if item["slug"] == slug})
+            lines.append(f"- {slug}: {'; '.join(reasons)}")
     else:
         lines.append("- none")
     lines.extend(["", "## Closure"])

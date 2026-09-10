@@ -1047,6 +1047,12 @@ def test_openai_cache_reuses_only_independently_verified_results(tmp_path, north
             stored['details']['source_facts']['sessions'] = 'invalid'
         cached_path.write_text(json.dumps(stored))
     cached_bytes = cached_path.read_bytes()
+    if state == 'valid':
+        budget = tmp_path / 'budget.json'
+        budget.write_text(json.dumps({'limit_microusd': 0, 'requests': []}))
+        monkeypatch.setenv('SCHEDULES_API_BUDGET_FILE', str(budget))
+        monkeypatch.setenv('SCHEDULES_API_BUDGET_USD', '0')
+        monkeypatch.delenv('OPENAI_API_KEY', raising=False)
     monkeypatch.setattr(pipeline, 'read_schedule_snapshot', lambda _: good['payload'])
     monkeypatch.setattr(pipeline, 'fetch_pdf', lambda *args: FetchResult(original, good['pdf_sha256'], component['document'], True, 1))
     monkeypatch.setattr(pipeline, 'artifact_path', lambda *args: paths.artifact_path(*args, root=root))
@@ -1073,7 +1079,40 @@ def test_openai_cache_reuses_only_independently_verified_results(tmp_path, north
     elif state == 'valid':
         assert isinstance(result, Unchanged)
         assert not calls
+        assert json.loads(budget.read_text()) == {'limit_microusd': 0, 'requests': []}
     else:
         assert isinstance(result, Aborted)
         assert calls == (['openai'] if state == 'retry_failure' else [])
         assert cached_path.read_bytes() == cached_bytes
+
+
+@pytest.mark.parametrize('damage', [None, 'hash', 'printed_window', 'anchor_only', 'unconfirmed', 'missing_bytes', 'future'])
+def test_expired_discovery_grid_requires_independent_retained_original(tmp_path, monkeypatch, damage):
+    import hashlib
+    from datetime import date
+    from schedules import paths
+    from schedules.window_dates import verified_expired_grid_ids
+    content = (Path(__file__).parents[1] / 'data/sava-pool/2026-09-01-4d9a6f5e805d/source.pdf').read_bytes()
+    digest = hashlib.sha256(content).hexdigest()
+    directory = tmp_path / 'sava-pool' / f'2026-09-01-{digest[:12]}'
+    directory.mkdir(parents=True)
+    (directory / 'source.pdf').write_bytes(content)
+    old = {'view_id': 29806, 'href': 'https://sfrecpark.org/DocumentCenter/View/29806',
+           'kind': 'session_grid', 'source': 'persisted', 'window_start': '2026-08-18',
+           'window_end': '2026-08-28', 'window_source': 'page-1', 'grid_confirmed': True, 'pdf_sha256': digest}
+    current = {'view_id': 30037, 'href': 'https://sfrecpark.org/DocumentCenter/View/30037',
+               'kind': 'session_grid', 'source': 'table', 'window_start': '2026-08-29', 'window_end': '2026-12-12'}
+    if damage == 'hash': old['pdf_sha256'] = '0' * 64
+    if damage == 'printed_window': old['window_end'] = '2026-08-27'
+    if damage == 'anchor_only': old['window_source'] = 'anchor'
+    if damage == 'unconfirmed': old['grid_confirmed'] = False
+    if damage == 'missing_bytes': (directory / 'source.pdf').unlink()
+    today = date(2026, 8, 17) if damage == 'future' else date(2026, 9, 9)
+    decision = {'slug': 'sava-pool', 'reason': 'sequential_windows', 'candidates': [old, current]}
+    assert verified_expired_grid_ids('sava-pool', decision, today, data_root=tmp_path) == ({29806} if damage is None else set())
+    monkeypatch.setattr(paths, 'DATA_DIR', tmp_path)
+    monkeypatch.setattr('schedules._time.pacific_today', lambda: today)
+    entry = PoolEntry('sava-pool', current['href'], 'https://sfrecpark.org/sava')
+    hrefs = _session_grid_hrefs(entry, DecisionSet.from_items([decision]))
+    assert current['href'] in hrefs
+    assert (old['href'] not in hrefs) is (damage is None)

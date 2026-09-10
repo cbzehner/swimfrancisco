@@ -2193,3 +2193,127 @@ Browser tests cover CLOSED through September 13, CHECK after Pacific midnight,
 and current/future horizon selection for a Tokyo visitor. Final local
 `just check` with the published schedules passed 1,470 Python tests (55 skipped),
 214 JavaScript tests, 37 browser tests, worker type checks, and the build.
+
+### Free updates when paid extraction is unavailable
+
+A missing API key or monthly approval, exhausted allowance, or unavailable or
+invalid spending ledger disables new model calls without blocking browser
+capture, deterministic extraction, cached PDF verification, or publication of
+independently valid updates. The budget command records `status: unavailable`
+and a zero-limit local ledger with no requests. Workflow summaries and retained
+receipts expose that status. Sources that need a model call remain held.
+
+Successful allowance checks still reserve at most $1 through the unchanged
+durable `schedule-budget` branch and record `status: reserved`. The $5 monthly
+ceiling and existing conservative settlement remain unchanged. Free-only
+settlement requires a zero-limit ledger with no requests and makes no durable
+ledger write. If a reservation may have reached GitHub before a connection
+failure, its full charge remains reserved for later operator reconciliation;
+free execution never clears or reinitializes it. Invalid local free-only
+accounting fails settlement. PDF closure inspection runs before credential and
+budget checks, so free-only runs can still produce review evidence. Paid-ready
+sources must pass those checks before rendering or constructing a model request.
+This ordering change and the Sava parsing fixes below change the full PDF
+configuration and therefore invalidate affected model caches. The production
+model and reasoning setting remain unchanged.
+
+### UCSF facility calendar publication
+
+Bakar and Millberry use the same [official 2026 facility and holiday calendar](https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/news/2026-fitness-and-recreation-holiday-schedule).
+Their registry entries permit automatic publication of facility access hours,
+not swim sessions or lap-lane availability. The original HTML is frozen at
+`tests/fixtures/html-facts/ucsf-holiday-2026.html` for deterministic tests.
+
+The parser validates the calendar identity, all three regular-hours groups,
+both facility names, and all 17 holiday rows. It preserves their different
+weekend closing times, all-day holidays, and dated partial-day hours. Unsupported
+rows, missing rows, conflicting scope, duplicate dates, or unexpected ordering
+hold the update. Explicit printed years establish January 1, 2026 through
+January 1, 2027 coverage. Each observation lasts at most 14 days and cannot
+extend past that printed endpoint. The system does not infer a new year's
+schedule from an expired calendar.
+
+Publication checks the exact approved URL and facility/parser identity, original
+byte hash, current full extraction configuration, Pacific observation date,
+and freshness. It reconstructs the whole payload from retained original HTML
+and rejects any changed hours, omitted closures or exceptions, or extended
+window. This is deterministic HTTP extraction and uses no model calls. These
+sources do not use Cloudflare unless separately approved. Unsupported UCSF
+source wording holds publication. Ambiguous closure notices retain their original
+HTML and full hash on the existing evidence-only review PR path, including
+notices outside the accepted calendar body. Hosted publication must pass the
+required commit-specific CI, deployment, and production checks.
+
+### Current-source holds and source corrections
+
+Sava's current original is PDF 30037, printed August 29–December 12, 2026,
+SHA-256 `4b1055669e1df46512c16b051b02b8de52d1b935f7cbfde2f27bfe38ff03009c`.
+The frozen `tests/fixtures/sava-fall-30037.pdf` covers the exact training-cell
+wording and overlapping Notes heading. Source checks preserve the full
+September 24 and October 22 12:30–15:00 lap cancellations separately from the
+12:00–14:00 facility closures. An expired discovery grid is excluded only when
+its full hash and printed window agree with a retained original. Discovery
+metadata alone cannot exclude it, and current or future grids remain required.
+
+The printed Thursday therapy end still says 12 a.m. The user confirmed noon,
+but the complete new snapshot still requires approval through the existing
+human review path. Its other changes include Wednesday 14:30–15:30 lap swim,
+Friday lap ending at 15:30, and both full Thursday session cancellations.
+December 1–19 maintenance does not extend the schedule's December 12 expiry.
+No new human attestation has been inferred from the earlier noon correction.
+
+Chinatown's newer original provides separate complete facility and pool hours.
+The parser supports that format but still holds the source because January 1,
+2027 lists facility opening at 10:00 and pool opening at 08:00. The current rule
+holds the whole source for that conflict. Publishing a shorter window that
+excludes a precisely dated conflict is a separate, pending policy decision.
+
+Koret's original workbook, frozen as `tests/fixtures/koret-september.xlsx`,
+prints Monday hours as 7 a.m.–7 a.m. Invalid headlines now hold extraction
+instead of silently dropping a day. Sunday’s “Deep End Closed” notice does not
+close the entire pool. Automatic publication remains disabled until Monday's
+closing time is confirmed and lane-level completeness checks cover bookings
+and restrictions.
+
+Remaining operator questions include Balboa's December 12 in-service hours,
+Stonestown's conflicting “Thursday, 09/22/2026” reopening date, and current
+2026 holiday hours for both 24 Hour Fitness locations. September 22 is Tuesday.
+The linked 24 Hour Fitness holiday page still identifies 2025; the pipeline
+must not advance that year by assumption. No operator messages were sent.
+
+Publication reports distinguish the number of pools with refusals from the
+number of refused retained candidates. Markdown groups reasons by pool; JSON
+keeps every refusal for audit. These counts are not a count of current source
+outages.
+
+Fitness SF Fillmore and City Sports 20th Avenue also permit automatic facility
+access publication. Fitness SF must expose agreeing repeated weekly hours and
+empty holiday content fields. City Sports must expose agreeing main and repeated
+hours; its maintenance footnote must remain bound to the named non-aquatic
+class cancellation. New pool, facility, holiday, or unsupported cancellation
+notices hold and retain original HTML on the review-PR path. Frozen original
+HTML and source receipts live in `tests/fixtures/html-facts`. Publication repeats
+the source checks and rejects changes to identity, original bytes, configuration,
+hours, closure coverage, or observation lifetime. Facility hours do not establish
+pool lane availability. The existing minute-based midnight representation ends
+at 23:59; it does not claim the final minute before midnight.
+
+Equinox uses its visible Club Hours table and requires agreement with the
+repeated header table. Spa hours remain a separate scope, and a populated
+holiday-exception field requires review. Gateway uses the individual
+`https://www.bayclubs.com/clubs/thegateway` page, with its exact name, address,
+pool amenities, seven-day hours, and dedicated notice field. It does not choose
+among the four campus cards. Both publish facility access only and use the same
+original-byte, identity, configuration, observation, and publication checks as
+the other approved HTTP access sources. They use no model calls.
+
+Local release validation on September 9 passed `just check`: 1,642 Python tests
+(55 skipped), 214 JavaScript tests, 37 browser tests, worker type checks, and the
+build. Ordinary tests made no model calls. They include zero-allowance cached
+PDF reuse, free closure-review evidence, unchanged durable accounting, complete
+original-source publication and tamper rejection, expired-grid exclusion,
+Sava session cancellations, and non-aquatic City Sports class replacements.
+Automation remains enabled; these changes do not require pausing it because
+source formats remain valid for existing readers and stale-main/commit-specific
+CI protections remain in place. Hosted results and spend receipts must be read
+from the subsequent accounted Actions run, not inferred from local tests.

@@ -67,6 +67,7 @@ SourceKind = Literal[
     "pomeroy_html",
     "city_sports_html",
     "equinox_html",
+    "bayclub_html",
     "fitness_sf_html",
     "sfsu_aquatics_html",
     "ucsf_fitness_html",

@@ -23,6 +23,7 @@ from .providers.fitness_clubs import (
     _extract_24_hour_fitness,
     _extract_city_sports,
     _extract_equinox,
+    _extract_bayclub_gateway,
     _extract_fitness_sf,
 )
 from .providers.koret import _extract_koret
@@ -80,6 +81,8 @@ def verify_direct_artifact(artifact: dict, source_path: Path, *, today: date) ->
     from .providers.pomeroy import verify_pomeroy
     if artifact.get("model") == "browser-html":
         return _verify_browser_artifact(artifact, source_path, today=today)
+    if artifact.get("model") in {"ucsf-fitness-html-v1", "ucsf-bakar-html-v1", "fitness-sf-html-v1", "city-sports-html-v1", "equinox-html-v1", "bayclub-html"}:
+        return _verify_access_artifact(artifact, source_path, today=today)
     source = artifact.get("details", {}).get("direct_source", {})
     if artifact.get("provider") != "direct" or artifact.get("model") != "pomeroy-html-v1":
         raise DirectSourceError("Only the approved Pomeroy parser can establish direct acceptance")
@@ -135,10 +138,19 @@ def extract_direct(entry: PoolEntry, *, cache_root: Path | None = None) -> Direc
         response_url=response.response_url,
     )
     source = _source_metadata(entry, fetched, observed_on)
-    payload = _extract_pomeroy(response.text, observed_on=observed_on) if entry.source_kind == "pomeroy_html" else extractor(response.text)
+    from ..paths import relative_to_repo
+    from .html_facts import HtmlClosureReviewRequired
+    from .errors import CapturedClosureReviewRequired
+    try:
+        payload = extractor(response.text, observed_on=observed_on) if entry.source_kind in {"pomeroy_html", "ucsf_fitness_html", "ucsf_bakar_html"} else extractor(response.text)
+    except HtmlClosureReviewRequired as error:
+        raise CapturedClosureReviewRequired(slug=entry.slug, source_path=relative_to_repo(path),
+            source_sha256=sha256, issues=error.issues, notices=error.notices) from error
     payload = observation_window(payload, source["observed_on"])
     from .providers.pomeroy import verify_pomeroy
     coverage = verify_pomeroy(response.text, payload, observed_on) if entry.source_kind == "pomeroy_html" else None
+    if entry.source_kind in {"ucsf_fitness_html", "ucsf_bakar_html", "fitness_sf_html", "city_sports_html", "equinox_html", "bayclub_html"}:
+        coverage = {"ok": True, "issues": []}
     return DirectExtraction(
         fetch_result=fetched,
         payload=payload,
@@ -167,6 +179,11 @@ _HTML_EXTRACTORS: dict[str, tuple[Callable[[str], dict], str, str]] = {
         _extract_city_sports,
         "city-sports-html-v1",
         "City Sports exposes club hours and lap-pool amenities, not lane availability; these are access hours only.",
+    ),
+    "bayclub_html": (
+        _extract_bayclub_gateway,
+        "bayclub-html",
+        "Gateway publishes facility access hours, not lap-lane availability.",
     ),
     "equinox_html": (
         _extract_equinox,
@@ -260,4 +277,36 @@ def _verify_browser_artifact(artifact: dict, source_path: Path, *, today: date) 
         raise DirectSourceError("Published HTML payload differs from verified source facts")
     if not payload["effective_start"] <= today.isoformat() <= payload["effective_end"]:
         raise DirectSourceError("Verified HTML schedule window is expired or future-dated")
+    return {"ok": True, "issues": []}
+
+
+def _verify_access_artifact(artifact: dict, source_path: Path, *, today: date) -> dict:
+    from ..registry import HTTP_ACCESS_SOURCES
+    slug = source_path.parent.parent.name
+    approved = HTTP_ACCESS_SOURCES.get(slug)
+    if not approved:
+        raise DirectSourceError("HTTP access artifact has an unapproved facility identity")
+    kind, url = approved
+    extractor, model, _ = _HTML_EXTRACTORS[kind]
+    source = artifact.get("details", {}).get("direct_source", {})
+    if (artifact.get("provider") != "direct" or artifact.get("model") != model
+            or artifact.get("source_pdf_url") != url or source.get("requested_url") != url
+            or source.get("url") != url):
+        raise DirectSourceError("HTTP access source identity differs from the approved facility and calendar")
+    if (source_path.name != "source.html" or source_path.is_symlink() or source_path.parent.is_symlink()
+            or source.get("configuration") != direct_configuration() or source.get("freshness_days") != 14):
+        raise DirectSourceError("HTTP access source configuration or original file changed")
+    content = source_path.read_bytes()
+    if hashlib.sha256(content).hexdigest() != source.get("sha256") or source.get("sha256") != artifact.get("pdf_sha256"):
+        raise DirectSourceError("HTTP access original bytes do not match their identity")
+    observed = date.fromisoformat(source["observed_on"])
+    if not observed <= today <= observed + timedelta(days=13):
+        raise DirectSourceError("HTTP access observation is expired or future-dated")
+    payload = (extractor(content.decode("utf-8"), observed_on=observed)
+               if kind in {"ucsf_fitness_html", "ucsf_bakar_html"} else extractor(content.decode("utf-8")))
+    payload = observation_window(payload, observed.isoformat())
+    if payload != artifact.get("payload"):
+        raise DirectSourceError("HTTP access payload differs from the complete official source")
+    if not payload["effective_start"] <= today.isoformat() <= payload["effective_end"]:
+        raise DirectSourceError("HTTP access printed schedule coverage is expired")
     return {"ok": True, "issues": []}
