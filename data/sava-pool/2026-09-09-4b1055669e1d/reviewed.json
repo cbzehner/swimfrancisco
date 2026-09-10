@@ -1,0 +1,274 @@
+{
+  "slug": "sava-pool",
+  "pdf_sha256": "4b1055669e1df46512c16b051b02b8de52d1b935f7cbfde2f27bfe38ff03009c",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/30037",
+  "reviewed_at": "2026-09-09",
+  "payload": {
+    "effective_start": "2026-08-29",
+    "effective_end": "2026-12-12",
+    "schedule_basis": "swim_schedule",
+    "sessions": [
+      {
+        "day": "tuesday",
+        "type": "senior_swim",
+        "start": "09:30",
+        "end": "11:30",
+        "evidence": "Senior/ Therapy Swim\n9:30 a.m. -11:30 a.m."
+      },
+      {
+        "day": "tuesday",
+        "type": "lap_swim",
+        "start": "12:00",
+        "end": "14:30",
+        "evidence": "Lap Swim\n12:00 p.m. - 2:30 p.m."
+      },
+      {
+        "day": "tuesday",
+        "type": "family_swim",
+        "start": "15:00",
+        "end": "17:00",
+        "evidence": "Family Swim\n3:00 p.m. -5:00 p.m."
+      },
+      {
+        "day": "wednesday",
+        "type": "lap_swim",
+        "start": "06:30",
+        "end": "09:00",
+        "evidence": "Lap Swim\n6:30 a.m.-9:00 a.m."
+      },
+      {
+        "day": "wednesday",
+        "type": "senior_swim",
+        "start": "09:30",
+        "end": "11:30",
+        "evidence": "Senior/ Therapy Swim\n9:30 a.m. -11:30 a.m."
+      },
+      {
+        "day": "wednesday",
+        "type": "lap_swim",
+        "start": "12:00",
+        "end": "14:00",
+        "evidence": "Lap Swim\n12:00 p.m. - 2:00 p.m."
+      },
+      {
+        "day": "wednesday",
+        "type": "family_swim",
+        "start": "14:30",
+        "end": "15:30",
+        "evidence": "Lap Swim (4 Lanes)/\nFamily Swim\n2:30pm-3:30 p.m."
+      },
+      {
+        "day": "wednesday",
+        "type": "lap_swim",
+        "start": "14:30",
+        "end": "15:30",
+        "evidence": "Lap Swim (4 Lanes)/\nFamily Swim\n2:30pm-3:30 p.m."
+      },
+      {
+        "day": "wednesday",
+        "type": "lap_swim",
+        "start": "19:00",
+        "end": "20:30",
+        "evidence": "Lap Swim\n7:00 p.m. -8:30 p.m."
+      },
+      {
+        "day": "thursday",
+        "type": "senior_swim",
+        "start": "10:00",
+        "end": "12:00",
+        "evidence": "Senior/ Therapy Swim\n10:00 a.m. -12:00 a.m."
+      },
+      {
+        "day": "thursday",
+        "type": "lap_swim",
+        "start": "12:30",
+        "end": "15:00",
+        "evidence": "Lap Swim\n12:30 p.m. -3:00 p.m.\nCLOSED 9/24, 10/22\nFOR STAFF TRAINING",
+        "excluded_dates": [
+          "2026-09-24",
+          "2026-10-22"
+        ]
+      },
+      {
+        "day": "thursday",
+        "type": "lap_swim",
+        "start": "15:30",
+        "end": "17:30",
+        "evidence": "Lap Swim\n3:30 p.m. - 5:30 p.m."
+      },
+      {
+        "day": "friday",
+        "type": "lap_swim",
+        "start": "06:30",
+        "end": "09:00",
+        "evidence": "Lap Swim\n6:30 a.m.-9:00 a.m."
+      },
+      {
+        "day": "friday",
+        "type": "senior_swim",
+        "start": "09:30",
+        "end": "11:30",
+        "evidence": "Senior/ Therapy Swim\n9:30 a.m. -11:30 a.m."
+      },
+      {
+        "day": "friday",
+        "type": "lap_swim",
+        "start": "12:00",
+        "end": "15:30",
+        "evidence": "Lap Swim\n12:00pm-3:30 p.m."
+      },
+      {
+        "day": "friday",
+        "type": "family_swim",
+        "start": "18:00",
+        "end": "19:30",
+        "evidence": "Family Swim\n6:00 p.m. -7:30 p.m."
+      },
+      {
+        "day": "saturday",
+        "type": "lap_swim",
+        "start": "09:00",
+        "end": "11:00",
+        "evidence": "Lap Swim (4 Lanes)/\nLearn To Swim\n9:00 a.m. -11:00 a.m."
+      },
+      {
+        "day": "saturday",
+        "type": "family_swim",
+        "start": "11:30",
+        "end": "13:00",
+        "evidence": "Family Swim\n11:30am-1:00 p.m."
+      },
+      {
+        "day": "saturday",
+        "type": "family_swim",
+        "start": "13:30",
+        "end": "15:00",
+        "evidence": "Family Swim\n1:30pm-3:00 p.m."
+      },
+      {
+        "day": "saturday",
+        "type": "lap_swim",
+        "start": "15:30",
+        "end": "17:00",
+        "evidence": "Lap Swim\n3:30 p.m. -5:00 p.m."
+      }
+    ],
+    "closures": [
+      {
+        "start": "2026-09-07",
+        "end": "2026-09-07",
+        "reason_code": "holiday",
+        "source_notices": [
+          {
+            "id": "p1-notice-1",
+            "text": "All city pools will be CLOSED\nSeptember 7th for Labor Day,\non October 12th for Indigenous\npeoples day, November 11th\nfor Veteran\u2019s Day, and\nNovember 26th & 27th for\nThanksgiving."
+          }
+        ],
+        "reason": "All city pools will be CLOSED\nSeptember 7th for Labor Day,\non October 12th for Indigenous\npeoples day, November 11th\nfor Veteran\u2019s Day, and\nNovember 26th & 27th for\nThanksgiving."
+      },
+      {
+        "start": "2026-10-12",
+        "end": "2026-10-12",
+        "reason_code": "holiday",
+        "source_notices": [
+          {
+            "id": "p1-notice-1",
+            "text": "All city pools will be CLOSED\nSeptember 7th for Labor Day,\non October 12th for Indigenous\npeoples day, November 11th\nfor Veteran\u2019s Day, and\nNovember 26th & 27th for\nThanksgiving."
+          }
+        ],
+        "reason": "All city pools will be CLOSED\nSeptember 7th for Labor Day,\non October 12th for Indigenous\npeoples day, November 11th\nfor Veteran\u2019s Day, and\nNovember 26th & 27th for\nThanksgiving."
+      },
+      {
+        "start": "2026-11-11",
+        "end": "2026-11-11",
+        "reason_code": "holiday",
+        "source_notices": [
+          {
+            "id": "p1-notice-1",
+            "text": "All city pools will be CLOSED\nSeptember 7th for Labor Day,\non October 12th for Indigenous\npeoples day, November 11th\nfor Veteran\u2019s Day, and\nNovember 26th & 27th for\nThanksgiving."
+          }
+        ],
+        "reason": "All city pools will be CLOSED\nSeptember 7th for Labor Day,\non October 12th for Indigenous\npeoples day, November 11th\nfor Veteran\u2019s Day, and\nNovember 26th & 27th for\nThanksgiving."
+      },
+      {
+        "start": "2026-11-26",
+        "end": "2026-11-26",
+        "reason_code": "holiday",
+        "source_notices": [
+          {
+            "id": "p1-notice-1",
+            "text": "All city pools will be CLOSED\nSeptember 7th for Labor Day,\non October 12th for Indigenous\npeoples day, November 11th\nfor Veteran\u2019s Day, and\nNovember 26th & 27th for\nThanksgiving."
+          }
+        ],
+        "reason": "All city pools will be CLOSED\nSeptember 7th for Labor Day,\non October 12th for Indigenous\npeoples day, November 11th\nfor Veteran\u2019s Day, and\nNovember 26th & 27th for\nThanksgiving."
+      },
+      {
+        "start": "2026-11-27",
+        "end": "2026-11-27",
+        "reason_code": "holiday",
+        "source_notices": [
+          {
+            "id": "p1-notice-1",
+            "text": "All city pools will be CLOSED\nSeptember 7th for Labor Day,\non October 12th for Indigenous\npeoples day, November 11th\nfor Veteran\u2019s Day, and\nNovember 26th & 27th for\nThanksgiving."
+          }
+        ],
+        "reason": "All city pools will be CLOSED\nSeptember 7th for Labor Day,\non October 12th for Indigenous\npeoples day, November 11th\nfor Veteran\u2019s Day, and\nNovember 26th & 27th for\nThanksgiving."
+      },
+      {
+        "start": "2026-12-22",
+        "end": "2026-12-22",
+        "start_time": "09:00",
+        "end_time": "11:00",
+        "reason_code": "staff_training",
+        "source_notices": [
+          {
+            "id": "p1-notice-2",
+            "text": "All city pools will be CLOSED\nthe morning of December 22\nfor staff training 9 \u2013 11 a.m."
+          }
+        ],
+        "reason": "All city pools will be CLOSED\nthe morning of December 22\nfor staff training 9 \u2013 11 a.m."
+      },
+      {
+        "start": "2026-12-01",
+        "end": "2026-12-19",
+        "reason_code": "maintenance",
+        "source_notices": [
+          {
+            "id": "p1-notice-5",
+            "text": "Sava Pool will be CLOSED\n12/1-12/19 for annual\nmaintenance."
+          }
+        ],
+        "reason": "Sava Pool will be CLOSED\n12/1-12/19 for annual\nmaintenance."
+      },
+      {
+        "start": "2026-09-24",
+        "end": "2026-09-24",
+        "start_time": "12:00",
+        "end_time": "14:00",
+        "reason_code": "staff_training",
+        "source_notices": [
+          {
+            "id": "p1-c3-b19-notice",
+            "text": "Pool CLOSED every 4th\nThursday for staff\ntraining\n12:00 p.m. -2:00 p.m.\n(9/24, 10/22)"
+          }
+        ],
+        "reason": "Pool CLOSED every 4th\nThursday for staff\ntraining\n12:00 p.m. -2:00 p.m.\n(9/24, 10/22)"
+      },
+      {
+        "start": "2026-10-22",
+        "end": "2026-10-22",
+        "start_time": "12:00",
+        "end_time": "14:00",
+        "reason_code": "staff_training",
+        "source_notices": [
+          {
+            "id": "p1-c3-b19-notice",
+            "text": "Pool CLOSED every 4th\nThursday for staff\ntraining\n12:00 p.m. -2:00 p.m.\n(9/24, 10/22)"
+          }
+        ],
+        "reason": "Pool CLOSED every 4th\nThursday for staff\ntraining\n12:00 p.m. -2:00 p.m.\n(9/24, 10/22)"
+      }
+    ]
+  },
+  "attested_by": "human"
+}

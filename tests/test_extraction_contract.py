@@ -754,7 +754,7 @@ def test_uncertain_remote_reservation_keeps_full_charge(monthly_budget, monkeypa
     budget, git, remote = monthly_budget
     budget.initialize()
     monkeypatch.setenv("OPENAI_API_KEY", "test-no-call")
-    monkeypatch.setattr("schedules.cli._monthly_budget", lambda: budget)
+    monkeypatch.setattr("schedules.cli._monthly_budget", lambda *args: budget)
     original = budget.reserve
     def uncertain(month, run_id):
         original(month, run_id)
@@ -777,7 +777,7 @@ def test_free_only_settlement_rejects_any_requests_or_invalid_limit(tmp_path, mo
     from schedules.cli import cli
     (tmp_path / "reservation.json").write_text(json.dumps({"status": "unavailable", "limit_microusd": 0}))
     (tmp_path / "budget.json").write_text(json.dumps(ledger))
-    monkeypatch.setattr("schedules.cli._monthly_budget", lambda: pytest.fail("Free settlement must not contact durable ledger"))
+    monkeypatch.setattr("schedules.cli._monthly_budget", lambda *args: pytest.fail("Free settlement must not contact durable ledger"))
     assert CliRunner().invoke(cli, ["budget", "settle", "--directory", str(tmp_path)]).exit_code != 0
 
 
@@ -787,7 +787,7 @@ def test_authorized_cli_reservation_and_settlement_keep_existing_accounting(mont
     budget, git, remote = monthly_budget
     budget.initialize()
     monkeypatch.setenv("OPENAI_API_KEY", "test-no-call")
-    monkeypatch.setattr("schedules.cli._monthly_budget", lambda: budget)
+    monkeypatch.setattr("schedules.cli._monthly_budget", lambda *args: budget)
     output = tmp_path / "authorized"
     runner = CliRunner()
     result = runner.invoke(cli, ["budget", "reserve", "--run-id", "2-1", "--output", str(output)])
@@ -819,3 +819,79 @@ def test_valid_pdf_requires_paid_authority_before_render_or_request(tmp_path, mo
     with pytest.raises(ValueError, match="positive API budget|OPENAI_API_KEY|SCHEDULES_API_BUDGET_FILE"):
         openai_provider.extract(components[0]["document"], PROMPT_PATH.read_text(), EXTRACTION_SCHEMA)
     assert (tmp_path / "budget.json").read_bytes() == ledger
+
+
+def test_month_specific_cap_expires_without_changing_default(monkeypatch):
+    from schedules.cli import _monthly_budget
+    monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_USD", "5")
+    monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_OVERRIDES", '{"2026-09":6}')
+    assert _monthly_budget("2026-09").limit == 6000000
+    assert _monthly_budget("2026-10").limit == 5000000
+    assert _monthly_budget("2027-09").limit == 5000000
+    monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_OVERRIDES", "")
+    assert _monthly_budget("2026-09").limit == 5000000
+
+
+@pytest.mark.parametrize("override", ['[]', '{"2026-09":true}', '{"2026-09":4}', '{"2026-13":6}', '{"2026-09":NaN}'])
+def test_invalid_month_cap_override_fails_closed(monkeypatch, override):
+    import click
+    from schedules.cli import _monthly_budget
+    monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_USD", "5")
+    monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_OVERRIDES", override)
+    with pytest.raises(click.ClickException):
+        _monthly_budget("2026-09")
+
+
+def test_explicit_cap_increase_preserves_all_runs_and_nonforce_history(monthly_budget, monkeypatch, tmp_path):
+    from click.testing import CliRunner
+    from schedules.cli import cli
+    from datetime import datetime, timezone
+    budget, git, remote = monthly_budget
+    budget.initialize()
+    month = datetime.now(timezone.utc).strftime("%Y-%m")
+    budget.reserve(month, "1-1")
+    before, state = budget._load()
+    monkeypatch.setattr("schedules.cli.REPO_ROOT", budget.repo_root)
+    monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_USD", "1")
+    monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_OVERRIDES", json.dumps({month: 2}))
+    runner = CliRunner()
+    arguments = ["budget", "increase", "--month", month, "--from-usd", "1", "--to-usd", "2"]
+    result = runner.invoke(cli, arguments)
+    assert result.exit_code == 0, result.output
+    after = git("rev-parse", "schedule-budget", cwd=remote)
+    assert git("rev-parse", "schedule-budget^", cwd=remote) == before
+    updated = json.loads(git("show", "schedule-budget:budget.json", cwd=remote))
+    expected = json.loads(json.dumps(state))
+    expected["months"][month]["limit_microusd"] = 2000000
+    assert updated == expected
+    assert runner.invoke(cli, arguments).exit_code != 0
+    assert git("rev-parse", "schedule-budget", cwd=remote) == after
+    monkeypatch.setenv("OPENAI_API_KEY", "test-not-sent")
+    output = tmp_path / "increased-run"
+    assert runner.invoke(cli, ["budget", "reserve", "--run-id", "2-1", "--output", str(output)]).exit_code == 0
+    assert json.loads((output / "reservation.json").read_text())["limit_microusd"] == 1000000
+
+
+@pytest.mark.parametrize("problem", ["missing", "blocked", "wrong_prior", "decrease", "approval_mismatch", "other_month"])
+def test_cap_increase_refuses_without_modifying_ledger(monthly_budget, monkeypatch, problem):
+    from click.testing import CliRunner
+    from schedules.cli import cli
+    from datetime import datetime, timezone
+    budget, git, remote = monthly_budget
+    budget.initialize()
+    month = datetime.now(timezone.utc).strftime("%Y-%m")
+    if problem != "missing":
+        budget.reserve(month, "1-1")
+    if problem == "blocked":
+        parent, state = budget._load()
+        state["blocked"] = True
+        budget._save(parent, state, "Test blocked cap")
+    before = git("rev-parse", "schedule-budget", cwd=remote)
+    monkeypatch.setattr("schedules.cli.REPO_ROOT", budget.repo_root)
+    monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_USD", "1")
+    monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_OVERRIDES", json.dumps({month: 2}))
+    arguments = ["budget", "increase", "--month", "2000-01" if problem == "other_month" else month,
+                 "--from-usd", "0.5" if problem == "wrong_prior" else "1", "--to-usd",
+                 "0.5" if problem == "decrease" else "3" if problem == "approval_mismatch" else "2"]
+    assert CliRunner().invoke(cli, arguments).exit_code != 0
+    assert git("rev-parse", "schedule-budget", cwd=remote) == before

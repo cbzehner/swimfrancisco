@@ -77,3 +77,9 @@ def test_missing_paid_credentials_do_not_block_free_updates():
     assert 'test -n "$SCHEDULES_MONTHLY_BUDGET_USD"' not in WORKFLOW
     assert 'Paid extraction allowance: ' in WORKFLOW
     assert 'receipt.status' in WORKFLOW
+
+
+def test_month_specific_approval_is_passed_without_raising_default():
+    assert 'SCHEDULES_MONTHLY_BUDGET_OVERRIDES: ${{ vars.SCHEDULES_MONTHLY_BUDGET_OVERRIDES }}' in WORKFLOW
+    assert 'SCHEDULES_MONTHLY_BUDGET_USD: ${{ vars.SCHEDULES_MONTHLY_BUDGET_USD }}' in WORKFLOW
+    assert 'schedules budget increase' not in WORKFLOW

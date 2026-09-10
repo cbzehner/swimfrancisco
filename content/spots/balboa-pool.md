@@ -456,7 +456,7 @@ reason_code = "aquatics_training"
 effective_start = "2026-09-01"
 schedule_basis = "swim_schedule"
 effective_end = "2026-12-12"
-last_verified_at = "2026-08-21"
+last_verified_at = "2026-09-09"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -490,6 +490,7 @@ type = "lap_swim"
 start = "14:30"
 end = "16:00"
 pool = "small/main"
+notes = "Lap swim until 4pm"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -548,6 +549,7 @@ day = "thursday"
 type = "lap_swim"
 start = "11:30"
 end = "14:00"
+notes = "Closed every 4th Thursday of the month"
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -642,7 +644,19 @@ reason_code = "holiday_closure"
 start = "2026-12-12"
 end = "2026-12-12"
 reason = "Inservice trainings"
+start_time = "09:00"
+end_time = "12:00"
 reason_code = "in_service_training"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-c5-b20-notice"
+text = "All city pools will be\nCLOSED December 12\nfrom 9am-12pm for\nAquatics In-service Training"
+source_sha256 = "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-c5-b28-notice"
+text = "All city pools will be CLOSED\nDecember 12 from 9am-12pm\nfor Aquatics In-service Training"
+source_sha256 = "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8"
 +++
 
 A 100' x 40', six-lane indoor pool in the Ingleside neighborhood, recently reopened after a $9M renovation that added new mechanical systems, accessibility upgrades, and a mural by local artist Jason Jägel. Programs include lap swim, senior swim, recreation swim, fitness and exercise classes, and lessons.

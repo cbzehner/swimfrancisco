@@ -2255,12 +2255,13 @@ September 24 and October 22 12:30–15:00 lap cancellations separately from the
 its full hash and printed window agree with a retained original. Discovery
 metadata alone cannot exclude it, and current or future grids remain required.
 
-The printed Thursday therapy end still says 12 a.m. The user confirmed noon,
-but the complete new snapshot still requires approval through the existing
-human review path. Its other changes include Wednesday 14:30–15:30 lap swim,
+The printed Thursday therapy end still says 12 a.m. On September 9, the user
+reviewed and approved the complete source-specific draft through the human
+review path, including the noon correction. Its other changes include Wednesday 14:30–15:30 lap swim,
 Friday lap ending at 15:30, and both full Thursday session cancellations.
 December 1–19 maintenance does not extend the schedule's December 12 expiry.
-No new human attestation has been inferred from the earlier noon correction.
+The human attestation records that explicit full-draft approval; the original
+PDF and literal midnight evidence remain unchanged.
 
 Chinatown's newer original provides separate complete facility and pool hours.
 The parser supports that format but still holds the source because January 1,
@@ -2275,8 +2276,7 @@ close the entire pool. Automatic publication remains disabled until Monday's
 closing time is confirmed and lane-level completeness checks cover bookings
 and restrictions.
 
-Remaining operator questions include Balboa's December 12 in-service hours,
-Stonestown's conflicting “Thursday, 09/22/2026” reopening date, and current
+Remaining operator questions include Stonestown's conflicting “Thursday, 09/22/2026” reopening date, and current
 2026 holiday hours for both 24 Hour Fitness locations. September 22 is Tuesday.
 The linked 24 Hour Fitness holiday page still identifies 2025; the pipeline
 must not advance that year by assumption. No operator messages were sent.
@@ -2317,3 +2317,76 @@ Automation remains enabled; these changes do not require pausing it because
 source formats remain valid for existing readers and stale-main/commit-specific
 CI protections remain in place. Hosted results and spend receipts must be read
 from the subsequent accounted Actions run, not inferred from local tests.
+
+
+### Approved Sava and Balboa source reviews — September 9, 2026
+
+The user explicitly approved both complete review drafts. Both snapshots were
+finalized through `finalize_draft` and projected into their individual pool
+content. No model request was made for either review.
+
+Sava uses official PDF [30037](https://sfrecpark.org/DocumentCenter/View/30037),
+SHA-256 `4b1055669e1df46512c16b051b02b8de52d1b935f7cbfde2f27bfe38ff03009c`.
+Its 20 public-swim rows include Wednesday 14:30–15:30 lap swim and Friday lap
+until 15:30. Thursday therapy is approved as 10:00–12:00, with the original
+`10:00 a.m. -12:00 a.m.` retained as evidence. Thursday 12:30–15:00 lap swim
+is fully excluded on September 24 and October 22. Nine closure rows retain
+printed maintenance through December 19 and the December 22 training notice;
+the operating schedule still expires December 12. No general meridiem
+correction or extension of expired hours was introduced.
+
+Balboa retains all 22 swim rows and six other closures from official PDF
+[29796](https://sfrecpark.org/DocumentCenter/View/29796), SHA-256
+`d6f21871037274cc7b8817ab17a92eb7fec8b8d9dfa915d1cb72182b9526dda9`.
+The approved December 12 closure is 09:00–12:00, replacing the prior all-day
+interpretation. Balboa's in-service note does not give times, but both official
+North Beach schedules explicitly say all city pools close December 12 from
+09:00 to noon. Supplemental originals and literal page-one Saturday notices
+are retained with the closure:
+
+- [Cool 29953](https://sfrecpark.org/DocumentCenter/View/29953), SHA-256
+  `6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c`,
+  notice `p1-c5-b20-notice`.
+- [Warm 29954](https://sfrecpark.org/DocumentCenter/View/29954), SHA-256
+  `ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8`,
+  notice `p1-c5-b28-notice`.
+
+Balboa's afternoon December 12 sessions therefore remain available. Its
+September 24 and October 22 training still starts at its explicitly printed
+11:30. The fourth-Thursday November 26 cancellation is covered by Thanksgiving.
+August 22 and August 27 precede this fall window; no historical closure time
+was inferred. Existing session notes about Tuesday lap until 16:00 and
+Thursday recurrence are restored in projected content. These approved reviews
+do not enable automatic cross-source closure propagation.
+
+### September-only spending approval
+
+The user approved an additional $1 for September 2026, raising that month's
+ceiling from $5 to $6. The default monthly ceiling remains $5, and each run
+still reserves at most $1. This approval does not resolve ambiguous source
+notices or permit new calls outside the accounted workflow.
+
+`SCHEDULES_MONTHLY_BUDGET_OVERRIDES` accepts explicit calendar-month approvals,
+for this authorization `{"2026-09":6}`. The workflow passes this variable to
+the existing budget commands. October 2026 and every other month continue to
+use `SCHEDULES_MONTHLY_BUDGET_USD=5`; no scheduled reset is needed. Missing or
+empty overrides retain the default. Invalid overrides disable paid extraction
+through the existing free-only receipt path.
+
+A changed variable alone cannot change the durable ledger. After checks and
+explicit approval, the operator applies the matching amendment with:
+
+```sh
+SCHEDULES_MONTHLY_BUDGET_USD=5 \
+SCHEDULES_MONTHLY_BUDGET_OVERRIDES='{"2026-09":6}' \
+uv --project schedule-tools run --locked schedules budget increase \
+  --month 2026-09 --from-usd 5 --to-usd 6
+```
+
+The command requires the current month, the exact prior cap, a greater approved
+cap, an existing month, and an unblocked ledger. It changes only that month's
+limit. Existing charges, active reservations, other months, and commit history
+remain intact. Its non-force append fails on concurrent ledger changes; reruns
+cannot reset or reapply the prior cap. The workflow never runs this amendment
+automatically. PDF provider code and extraction configuration remain unchanged
+by this budget approval mechanism.
