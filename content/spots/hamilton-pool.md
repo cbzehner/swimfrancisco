@@ -297,7 +297,7 @@ reason_code = "independence_day"
 effective_start = "2026-08-18"
 schedule_basis = "swim_schedule"
 effective_end = "2026-12-12"
-last_verified_at = "2026-09-08"
+last_verified_at = "2026-09-09"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -372,7 +372,7 @@ day = "thursday"
 type = "lap_swim"
 start = "11:00"
 end = "12:30"
-notes = "Cell includes CLOSED dates; retained as session exclusions."
+notes = "Cell includes CLOSED dates; retained weekly session with excluded_dates."
 excluded_dates = [ "2026-08-27", "2026-09-24", "2026-10-22" ]
 
 [[extra.schedules.sessions]]
@@ -381,7 +381,7 @@ type = "family_swim"
 start = "13:00"
 end = "15:00"
 pool = "2 lanes + small"
-notes = "Cell includes CLOSED dates; retained as session exclusions."
+notes = "Cell includes CLOSED dates; retained weekly session with excluded_dates."
 excluded_dates = [ "2026-08-27", "2026-09-24", "2026-10-22" ]
 
 [[extra.schedules.sessions]]
@@ -389,7 +389,7 @@ day = "thursday"
 type = "lap_swim"
 start = "13:00"
 end = "15:00"
-notes = "Cell includes CLOSED dates; retained as session exclusions."
+notes = "Cell includes CLOSED dates; retained weekly session with excluded_dates."
 excluded_dates = [ "2026-08-27", "2026-09-24", "2026-10-22" ]
 
 [[extra.schedules.sessions]]

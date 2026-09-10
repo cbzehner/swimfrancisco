@@ -2,7 +2,7 @@
   "pdf_sha256": "2e1c7d942a7a0097ab69390153401cc28f53733be2271122c68d54f6b910dd1f",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29803",
   "slug": "martin-luther-king-jr-pool",
-  "reviewed_at": "2026-09-08",
+  "reviewed_at": "2026-09-09",
   "attested_by": "ci",
   "payload": {
     "closures": [
@@ -174,7 +174,7 @@
         "excluded_dates": [
           "2026-10-22"
         ],
-        "notes": "Session cell is marked CLOSED on 10/22.",
+        "notes": "Cell marked CLOSED (10/22).",
         "pool": "shallow",
         "start": "12:30",
         "type": "family_swim"
@@ -186,7 +186,7 @@
         "excluded_dates": [
           "2026-10-22"
         ],
-        "notes": "Session cell is marked CLOSED on 10/22.",
+        "notes": "Cell marked CLOSED (10/22).",
         "start": "12:30",
         "type": "lap_swim"
       },

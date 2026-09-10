@@ -17,11 +17,62 @@ access_notes = []
 access_summary = "City Sports Club on 20th Ave lists a lap pool, Pool & Spa amenities, and club hours on its official location page."
 
 [[extra.schedules]]
-effective_start = "2026-05-17"
-last_verified_at = "2026-05-17"
-schedule_basis = "facility_hours"
 sessions = []
 closures = []
+effective_start = "2026-05-17"
+schedule_basis = "facility_hours"
+effective_end = "2026-09-08"
+last_verified_at = "2026-05-17"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "05:00"
+end = "23:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "05:00"
+end = "23:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "05:00"
+end = "23:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "05:00"
+end = "23:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "05:00"
+end = "22:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "08:00"
+end = "20:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "sunday"
+start = "08:00"
+end = "20:00"
+label = "Club hours"
+
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-09-09"
+schedule_basis = "facility_hours"
+effective_end = "2026-09-22"
+last_verified_at = "2026-09-09"
 
 [[extra.schedules.access_hours]]
 day = "monday"

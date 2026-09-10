@@ -2,7 +2,7 @@
   "pdf_sha256": "0345cb25881bf830cc0da365d669c36410bf6ac3cebcd9a83cb0910459e3e457",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29798",
   "slug": "coffman-pool",
-  "reviewed_at": "2026-09-08",
+  "reviewed_at": "2026-09-09",
   "attested_by": "ci",
   "payload": {
     "closures": [
@@ -88,7 +88,7 @@
         "day": "tuesday",
         "end": "16:00",
         "evidence": "Senior Swim (4 lanes; may vary) 2:00pm-4:00pm",
-        "notes": "Lane count only; no pool allocation retained.",
+        "notes": "Lane count only; no pool allocation extracted.",
         "start": "14:00",
         "type": "senior_swim"
       },
@@ -96,7 +96,7 @@
         "day": "tuesday",
         "end": "16:00",
         "evidence": "Family Swim (2 lanes) 2:00pm-4:00pm",
-        "notes": "Lane count only; no pool allocation retained.",
+        "notes": "Lane count only; no pool allocation extracted.",
         "start": "14:00",
         "type": "family_swim"
       },
@@ -104,7 +104,7 @@
         "day": "wednesday",
         "end": "10:30",
         "evidence": "Senior Swim/ Self-Guided Exercise 9:00am-10:30am",
-        "notes": "Shared cell with Self-Guided Exercise; emitted senior swim only.",
+        "notes": "Shared cell also lists Self-Guided Exercise; only senior_swim extracted.",
         "start": "09:00",
         "type": "senior_swim"
       },
@@ -119,7 +119,7 @@
         "day": "wednesday",
         "end": "14:30",
         "evidence": "Sfusd/Rec Swim 1:30pm-2:30pm",
-        "notes": "Shared SFUSD/Rec Swim cell; emitted rec swim only.",
+        "notes": "Shared cell includes Sfusd; Rec Swim extracted as family_swim.",
         "start": "13:30",
         "type": "family_swim"
       },
@@ -127,7 +127,7 @@
         "day": "wednesday",
         "end": "19:00",
         "evidence": "Family Swim 6:00pm-7:00pm (3 lanes)",
-        "notes": "Lane count only; no pool allocation retained.",
+        "notes": "Lane count only; no pool allocation extracted.",
         "start": "18:00",
         "type": "family_swim"
       },
@@ -135,7 +135,7 @@
         "day": "wednesday",
         "end": "19:00",
         "evidence": "Lap Swim 6:00pm-7:00pm (3 lanes)",
-        "notes": "Lane count only; no pool allocation retained.",
+        "notes": "Lane count only; no pool allocation extracted.",
         "start": "18:00",
         "type": "lap_swim"
       },
@@ -162,7 +162,7 @@
           "2026-09-24",
           "2026-10-22"
         ],
-        "notes": "Session cell states closed every 4th Thursday for training on listed dates; retained weekly hours with excluded_dates.",
+        "notes": "Session cell marks closed on listed dates for training.",
         "start": "11:30",
         "type": "lap_swim"
       },
@@ -177,7 +177,7 @@
         "day": "friday",
         "end": "10:30",
         "evidence": "Senior Swim/ Self-Guided Exercise 9:00am-10:30am",
-        "notes": "Shared cell with Self-Guided Exercise; emitted senior swim only.",
+        "notes": "Shared cell also lists Self-Guided Exercise; only senior_swim extracted.",
         "start": "09:00",
         "type": "senior_swim"
       },
@@ -206,7 +206,7 @@
         "day": "saturday",
         "end": "14:00",
         "evidence": "Parent and Tots Family Swim 1:00pm-2:00pm",
-        "notes": "Shared cell with Parent and Tots; emitted family swim.",
+        "notes": "Shared cell also lists Parent and Tots; Family Swim extracted.",
         "start": "13:00",
         "type": "family_swim"
       },

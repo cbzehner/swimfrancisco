@@ -184,7 +184,7 @@ reason_code = "garfield_maintenance"
 effective_start = "2026-09-08"
 schedule_basis = "swim_schedule"
 effective_end = "2026-12-10"
-last_verified_at = "2026-09-08"
+last_verified_at = "2026-09-09"
 
 [[extra.schedules.sessions]]
 day = "monday"
@@ -415,7 +415,6 @@ day = "sunday"
 type = "family_swim"
 start = "14:30"
 end = "16:30"
-notes = "Pool allocation is not printed in this session cell."
 
 [[extra.schedules.closures]]
 start = "2026-09-24"

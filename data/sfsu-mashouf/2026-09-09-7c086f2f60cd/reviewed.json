@@ -5,13 +5,13 @@
     "configuration": {
       "capture": {
         "browser_version": "128.0.6613.137",
-        "captured_at": "2026-09-09T22:44:40.232Z",
+        "captured_at": "2026-09-10T01:47:10.764Z",
         "configuration": {
           "playwright_version": "1.60.0",
           "script_sha256": "56ed47662a267147befeb4c898586da48683caaa7868061fb8f9d620bd07f02a"
         },
         "hashes": {
-          "rendered": "3d3c8e2e2ed121605f774e934641555ad4aa2ea46135a303fcf132f55b6eac9a",
+          "rendered": "6a73cf6755ac84a561092b7cf068b4687e77aa8353ee32328a91750cb6597dfe",
           "screenshot": "e4888d4fc908d303262d109578004b378e18ba9450fe4b06618a9534a380798f",
           "source": "7c086f2f60cd34190cdcd7c66b5ef3ec2fc6848c43b4c77f871c0c8fb81a9ca3"
         },
@@ -25,7 +25,7 @@
         "httpx": "0.28.1",
         "openpyxl": "3.1.5"
       },
-      "parser_sha256": "da3d27019650b1e8d13dc54cb57c7abbb5540405de20912800545146ce7f8e4a",
+      "parser_sha256": "53eeac81d30109235050c1235e31e4eedb82a5dbb928971140a5a3b38d528bed",
       "python": "3.13.15",
       "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
       "source_identity": "original_bytes"

@@ -2,7 +2,7 @@
   "pdf_sha256": "c8e193806d9e9b7c6240eda5cc3e533ac2bb261007b6f72c48f60ce466db6697",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29800",
   "slug": "hamilton-pool",
-  "reviewed_at": "2026-09-08",
+  "reviewed_at": "2026-09-09",
   "attested_by": "ci",
   "payload": {
     "closures": [
@@ -21,6 +21,20 @@
         "start_time": "08:30"
       },
       {
+        "end": "2026-12-12",
+        "end_time": "12:30",
+        "reason": "Learn To Swim Aq. In-Service Training",
+        "reason_code": "staff_training",
+        "source_notices": [
+          {
+            "id": "p1-notice-1",
+            "text": "All pools will be closed on 8/22/26 and\n12/12/26 from 8:30 am \u2013 12:30pm for\nAq. In-Service Training"
+          }
+        ],
+        "start": "2026-12-12",
+        "start_time": "08:30"
+      },
+      {
         "end": "2026-08-27",
         "end_time": "14:00",
         "reason": "Aquatics Division Training",
@@ -33,18 +47,6 @@
         ],
         "start": "2026-08-27",
         "start_time": "12:00"
-      },
-      {
-        "end": "2026-09-07",
-        "reason": "Labor Day",
-        "reason_code": "holiday",
-        "source_notices": [
-          {
-            "id": "p1-notice-3",
-            "text": "All Pools will be closed on 9/7/26 for\nLabor Day;10/12/26 for Indigenous\nPeople\u2019s Day; 11/11/26 for Veteran\u2019s\nDay"
-          }
-        ],
-        "start": "2026-09-07"
       },
       {
         "end": "2026-09-24",
@@ -61,18 +63,6 @@
         "start_time": "12:00"
       },
       {
-        "end": "2026-10-12",
-        "reason": "Indigenous People\u2019s Day",
-        "reason_code": "holiday",
-        "source_notices": [
-          {
-            "id": "p1-notice-3",
-            "text": "All Pools will be closed on 9/7/26 for\nLabor Day;10/12/26 for Indigenous\nPeople\u2019s Day; 11/11/26 for Veteran\u2019s\nDay"
-          }
-        ],
-        "start": "2026-10-12"
-      },
-      {
         "end": "2026-10-22",
         "end_time": "14:00",
         "reason": "Aquatics Division Training",
@@ -85,6 +75,44 @@
         ],
         "start": "2026-10-22",
         "start_time": "12:00"
+      },
+      {
+        "end": "2026-11-26",
+        "end_time": "14:00",
+        "reason": "Aquatics Division Training",
+        "reason_code": "staff_training",
+        "source_notices": [
+          {
+            "id": "p1-notice-2",
+            "text": "All pools will be closed every 4th\nThursday of the month from\n12 pm \u2013 2pm for Aquatics Division\nTraining."
+          }
+        ],
+        "start": "2026-11-26",
+        "start_time": "12:00"
+      },
+      {
+        "end": "2026-09-07",
+        "reason": "Labor Day",
+        "reason_code": "holiday",
+        "source_notices": [
+          {
+            "id": "p1-notice-3",
+            "text": "All Pools will be closed on 9/7/26 for\nLabor Day;10/12/26 for Indigenous\nPeople\u2019s Day; 11/11/26 for Veteran\u2019s\nDay"
+          }
+        ],
+        "start": "2026-09-07"
+      },
+      {
+        "end": "2026-10-12",
+        "reason": "Indigenous People\u2019s Day",
+        "reason_code": "holiday",
+        "source_notices": [
+          {
+            "id": "p1-notice-3",
+            "text": "All Pools will be closed on 9/7/26 for\nLabor Day;10/12/26 for Indigenous\nPeople\u2019s Day; 11/11/26 for Veteran\u2019s\nDay"
+          }
+        ],
+        "start": "2026-10-12"
       },
       {
         "end": "2026-11-11",
@@ -109,34 +137,6 @@
           }
         ],
         "start": "2026-11-23"
-      },
-      {
-        "end": "2026-11-26",
-        "end_time": "14:00",
-        "reason": "Aquatics Division Training",
-        "reason_code": "staff_training",
-        "source_notices": [
-          {
-            "id": "p1-notice-2",
-            "text": "All pools will be closed every 4th\nThursday of the month from\n12 pm \u2013 2pm for Aquatics Division\nTraining."
-          }
-        ],
-        "start": "2026-11-26",
-        "start_time": "12:00"
-      },
-      {
-        "end": "2026-12-12",
-        "end_time": "12:30",
-        "reason": "Learn To Swim Aq. In-Service Training",
-        "reason_code": "staff_training",
-        "source_notices": [
-          {
-            "id": "p1-notice-1",
-            "text": "All pools will be closed on 8/22/26 and\n12/12/26 from 8:30 am \u2013 12:30pm for\nAq. In-Service Training"
-          }
-        ],
-        "start": "2026-12-12",
-        "start_time": "08:30"
       }
     ],
     "effective_end": "2026-12-12",
@@ -231,7 +231,7 @@
           "2026-09-24",
           "2026-10-22"
         ],
-        "notes": "Cell includes CLOSED dates; retained as session exclusions.",
+        "notes": "Cell includes CLOSED dates; retained weekly session with excluded_dates.",
         "start": "11:00",
         "type": "lap_swim"
       },
@@ -244,7 +244,7 @@
           "2026-09-24",
           "2026-10-22"
         ],
-        "notes": "Cell includes CLOSED dates; retained as session exclusions.",
+        "notes": "Cell includes CLOSED dates; retained weekly session with excluded_dates.",
         "start": "13:00",
         "type": "lap_swim"
       },
@@ -257,7 +257,7 @@
           "2026-09-24",
           "2026-10-22"
         ],
-        "notes": "Cell includes CLOSED dates; retained as session exclusions.",
+        "notes": "Cell includes CLOSED dates; retained weekly session with excluded_dates.",
         "pool": "2 lanes + small",
         "start": "13:00",
         "type": "family_swim"

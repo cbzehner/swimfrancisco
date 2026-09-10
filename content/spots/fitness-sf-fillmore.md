@@ -17,11 +17,62 @@ access_notes = []
 access_summary = "FITNESS SF Fillmore is the FITNESS SF location with a 25-yard, 5-lane pool. The official help page says lap swimming is available and lane reservations are made in person."
 
 [[extra.schedules]]
-effective_start = "2026-05-17"
-last_verified_at = "2026-05-17"
-schedule_basis = "pool_hours"
 sessions = []
 closures = []
+effective_start = "2026-05-17"
+schedule_basis = "pool_hours"
+effective_end = "2026-09-08"
+last_verified_at = "2026-05-17"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "05:00"
+end = "23:59"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "05:00"
+end = "23:59"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "05:00"
+end = "23:59"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "05:00"
+end = "23:59"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "05:00"
+end = "23:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "07:00"
+end = "20:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "sunday"
+start = "07:00"
+end = "20:00"
+label = "Club hours"
+
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-09-09"
+schedule_basis = "facility_hours"
+effective_end = "2026-09-22"
+last_verified_at = "2026-09-09"
 
 [[extra.schedules.access_hours]]
 day = "monday"

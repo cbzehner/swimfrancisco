@@ -2,7 +2,7 @@
   "pdf_sha256": "7f5c0074e8ddf2428c38ce3870d36d73521e7ae17f863839c5db20893e26573b",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29799",
   "slug": "garfield-pool",
-  "reviewed_at": "2026-09-08",
+  "reviewed_at": "2026-09-09",
   "attested_by": "ci",
   "payload": {
     "closures": [
@@ -114,8 +114,7 @@
       {
         "day": "sunday",
         "end": "16:30",
-        "evidence": "Rec/Family Swim 2:30 pm-4:30 pm Please note that registration is",
-        "notes": "Pool allocation is not printed in this session cell.",
+        "evidence": "Rec/Family Swim 2:30 pm-4:30 pm",
         "start": "14:30",
         "type": "family_swim"
       },

@@ -49,7 +49,7 @@ slug = "sava-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/30037"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Sava-Pool-220"
 notes = """
-discover: 2026-09-09 adopt sequential_windows id=30037:session_grid:table band_session_grid id=29806:session_grid:persisted band_session_grid id=29815:session_grid:persisted
+discover: 2026-09-09 unchanged sequential_windows id=30037:session_grid:table band_session_grid id=29806:session_grid:persisted band_session_grid id=29815:session_grid:persisted
 """
 
 [[pool]]

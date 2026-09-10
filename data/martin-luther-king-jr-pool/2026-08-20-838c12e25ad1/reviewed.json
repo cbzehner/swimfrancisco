@@ -2,13 +2,13 @@
   "pdf_sha256": "838c12e25ad10207558e0a5c7e72d84aa3a2eaa0cc974be92e82e46e3acf4b72",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29802",
   "slug": "martin-luther-king-jr-pool",
-  "reviewed_at": "2026-09-08",
+  "reviewed_at": "2026-09-09",
   "attested_by": "ci",
   "payload": {
     "closures": [
       {
         "end": "2026-09-07",
-        "reason": "Holiday Closure",
+        "reason": "Holiday Closures",
         "reason_code": "holiday",
         "source_notices": [
           {
@@ -20,7 +20,7 @@
       },
       {
         "end": "2026-08-22",
-        "reason": "Training Closure",
+        "reason": "Training Closures",
         "reason_code": "staff_training",
         "source_notices": [
           {
@@ -153,7 +153,7 @@
           "2026-08-27",
           "2026-09-24"
         ],
-        "notes": "Printed cell says CLOSED (8/27 & 9/24).",
+        "notes": "Session cell is marked CLOSED on 8/27 & 9/24.",
         "pool": "shallow",
         "start": "12:30",
         "type": "family_swim"
@@ -166,7 +166,7 @@
           "2026-08-27",
           "2026-09-24"
         ],
-        "notes": "Printed cell says CLOSED (8/27 & 9/24).",
+        "notes": "Session cell is marked CLOSED on 8/27 & 9/24.",
         "start": "12:30",
         "type": "lap_swim"
       },
