@@ -124,7 +124,6 @@ def north_beach_pair():
     from schedules.signals import inspect_pdf_source
     from schedules.grounding import source_publication_coverage
     from schedules.paths import PROMPT_PATH
-    import hashlib
 
     rows = {
         "cool": {

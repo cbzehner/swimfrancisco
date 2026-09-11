@@ -435,7 +435,7 @@ def test_force_bypasses_reviewed_fast_path(monkeypatch, tmp_path) -> None:
     artifact that would otherwise short-circuit the run.
     """
     registry = [_pdf_entry("hamilton-pool", OLD_URL)]
-    state = _stub_extract_pipeline(monkeypatch, tmp_path, registry)
+    _stub_extract_pipeline(monkeypatch, tmp_path, registry)
     reviewed = tmp_path / "reviewed.json"
     reviewed.write_text(
         json.dumps(

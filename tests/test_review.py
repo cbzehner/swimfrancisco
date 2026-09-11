@@ -439,6 +439,19 @@ def test_finalize_rejects_validate_failure(tmp_path, reviewed_envelope, schedule
     assert reviewed.exists()
 
 
+def test_finalize_rejects_envelope_missing_required_field(tmp_path, reviewed_envelope):
+    envelope = reviewed_envelope()
+    del envelope["source_pdf_url"]
+    reviewed = _write_draft(tmp_path / "data", envelope)
+
+    with pytest.raises(FinalizeError, match="source_pdf_url"):
+        finalize_draft(
+            reviewed_json_path=reviewed,
+            content_spots_dir=tmp_path / "content" / "spots",
+        )
+    assert reviewed.exists()
+
+
 def test_finalize_accepts_byte_identical_provider_payload(tmp_path, reviewed_envelope):
     envelope = reviewed_envelope()
     reviewed = _write_draft(tmp_path / "data", envelope)
