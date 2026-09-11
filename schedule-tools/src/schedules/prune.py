@@ -1,21 +1,26 @@
 """Retention for captured schedule snapshots.
 
 Per slug, keep a snapshot dir if ANY of: (a) it is the newest dir containing
-``reviewed.json``; (b) it contains provider or direct JSON but no
-``reviewed.json`` (pending review); (c) another dir's ``reviewed.json`` names
-it in ``carried_from``; (d) its source is a PDF (Rec & Park corpus used by
-backtests); (e) a file under ``tests/`` or ``docs/`` names the dir. Everything
-else is deleted. Deletion never touches dir contents, only whole dirs.
+``reviewed.json``; (b) it lacks ``reviewed.json`` and its date equals the
+slug's newest capture date (pending review); (c) another dir's
+``reviewed.json`` names it in ``carried_from``; (d) its source is a PDF
+(Rec & Park corpus used by backtests); (e) a file under ``tests/`` or
+``docs/`` names the dir. Everything else is deleted. A dir whose source body
+does not hash to its own ``source.sha256`` is deleted unless (a), (c), (d) or
+(e) protects it: it can prove no identity, and it would fail every later
+capture of that slug with a prefix collision. Deletion never touches dir
+contents, only whole dirs.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import shutil
 from pathlib import Path
 
-from .paths import all_review_dirs
+from .paths import all_review_dirs, parse_review_dir_name
 
 PROVIDER_ARTIFACT = re.compile(r"(?:openai|direct|gemini|anthropic)-[a-z0-9.-]+\.json")
 SNAPSHOT_DIR_NAME = re.compile(rb"\d{4}-\d{2}-\d{2}-[0-9a-f]{12}")
@@ -36,15 +41,18 @@ def plan_prune(data_root: Path, repo_root: Path) -> list[Path]:
         for slug_dir in sorted(data_root.iterdir()):
             if not slug_dir.is_dir():
                 continue
-            snapshots = all_review_dirs(slug_dir.name, root=data_root)
+            # A symlink is not a capture this tool put there: it is neither
+            # removed nor allowed to stand in for the slug's newest review.
+            snapshots = [snapshot for snapshot in all_review_dirs(slug_dir.name, root=data_root)
+                         if not snapshot.is_symlink()]
+            if not snapshots:
+                continue
             reviewed = [snapshot for snapshot in snapshots if (snapshot / "reviewed.json").is_file()]
+            newest_date = max(parse_review_dir_name(snapshot.name)[0] for snapshot in snapshots)
             found.update(
                 snapshot for snapshot in snapshots
-                # A symlink is not a capture this tool put there, so it is
-                # never something this tool removes.
-                if not snapshot.is_symlink()
-                and keep_reason(snapshot, newest_reviewed=reviewed[-1] if reviewed else None,
-                                carried=carried, documented=documented) is None
+                if keep_reason(snapshot, newest_reviewed=reviewed[-1] if reviewed else None,
+                               newest_date=newest_date, carried=carried, documented=documented) is None
             )
         if found == obsolete:
             return sorted(obsolete)
@@ -61,15 +69,12 @@ def prune(data_root: Path, repo_root: Path, *, dry_run: bool) -> list[Path]:
 
 
 def keep_reason(
-    snapshot: Path, *, newest_reviewed: Path | None, carried: set[Path], documented: set[str]
+    snapshot: Path, *, newest_reviewed: Path | None, newest_date: str,
+    carried: set[Path], documented: set[str]
 ) -> str | None:
     """Why this snapshot stays, or None when nothing needs it any more."""
     if snapshot == newest_reviewed:
         return "newest reviewed capture"
-    if not (snapshot / "reviewed.json").is_file() and any(
-        PROVIDER_ARTIFACT.fullmatch(path.name) for path in snapshot.iterdir() if path.is_file()
-    ):
-        return "pending review"
     if snapshot in carried:
         return "a later review was carried from it"
     # A workbook capture stores the sheet's PDF rendering beside it; the
@@ -78,7 +83,34 @@ def keep_reason(
         return "PDF backtest corpus"
     if snapshot.name in documented:
         return "named by a test or document"
+    if not _proves_its_own_identity(snapshot):
+        return None
+    extracted = any(PROVIDER_ARTIFACT.fullmatch(path.name) for path in snapshot.iterdir() if path.is_file())
+    # Only the newest day's captures are still waiting for the queue; an
+    # older one it never reviewed is a re-capture of a schedule it did.
+    if extracted and not (snapshot / "reviewed.json").is_file() \
+            and parse_review_dir_name(snapshot.name)[0] == newest_date:
+        return "pending review"
     return None
+
+
+def _proves_its_own_identity(snapshot: Path) -> bool:
+    """Whether a source body here hashes to what ``source.sha256`` records.
+
+    A capture with no sidecar yet is not in question: the next fetch of those
+    bytes backfills it. A capture that contradicts its own sidecar is, and it
+    fails every later capture of that slug with a prefix collision.
+    """
+    bodies = [path for path in snapshot.glob("source.*") if path.name != "source.sha256"]
+    recorded = _sidecar_sha256(snapshot)
+    if not bodies or recorded is None:
+        return True
+    return any(hashlib.sha256(body.read_bytes()).hexdigest() == recorded for body in bodies)
+
+
+def _sidecar_sha256(snapshot: Path) -> str | None:
+    sidecar = snapshot / "source.sha256"
+    return sidecar.read_text().strip() if sidecar.is_file() else None
 
 
 def _names_in_tests_and_docs(repo_root: Path) -> set[str]:

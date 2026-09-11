@@ -1,11 +1,13 @@
 """Retention for captured snapshots: what each clause of the rule protects.
 
 Every snapshot dir the automation writes is committed, so without a rule the
-tree grows on every run. These cover the five ways a dir earns its place.
+tree grows on every run. These cover the ways a dir earns its place, and the
+two ways it loses one.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 
 import pytest
@@ -39,13 +41,26 @@ def test_keeps_only_the_newest_reviewed_snapshot(repo):
     assert newest.is_dir()
 
 
-def test_keeps_a_snapshot_pending_review(repo):
+def test_keeps_a_snapshot_pending_review_from_the_newest_capture_date(repo):
     data = repo / "data"
     snapshot(data, "sava-pool", "2026-08-21-cccccccccccc",
              **{"source.html": "pending", "direct-pomeroy-html-v1.json": {"provider": "direct"}})
+    snapshot(data, "sava-pool", "2026-08-21-dddddddddddd",
+             **{"source.html": "also pending", "direct-pomeroy-html-v1.json": {"provider": "direct"}})
     snapshot(data, "sava-pool", "2026-08-20-bbbbbbbbbbbb",
              **{"source.html": "reviewed", "reviewed.json": {"slug": "sava-pool"}})
     assert plan_prune(data, repo) == []
+
+
+def test_deletes_a_pending_capture_older_than_the_newest_capture_date(repo):
+    """A capture the queue passed over is not pending, it is stale."""
+    data = repo / "data"
+    stale = snapshot(data, "sava-pool", "2026-08-19-aaaaaaaaaaaa",
+                     **{"source.html": "stale", "direct-pomeroy-html-v1.json": {"provider": "direct"}})
+    current = snapshot(data, "sava-pool", "2026-08-21-cccccccccccc",
+                       **{"source.html": "pending", "direct-pomeroy-html-v1.json": {"provider": "direct"}})
+    assert plan_prune(data, repo) == [stale]
+    assert current.is_dir()
 
 
 def test_deletes_a_reviewed_snapshot_that_kept_its_provider_artifact(repo):
@@ -137,16 +152,39 @@ def test_prune_removes_whole_dirs_only_when_it_is_not_a_dry_run(repo):
     assert prune(data, repo, dry_run=False) == []
 
 
+def test_deletes_a_capture_whose_bytes_disagree_with_its_own_sidecar(repo):
+    """A capture that cannot prove its identity blocks every later fetch."""
+    data = repo / "data"
+    broken = snapshot(data, "sava-pool", "2026-08-21-ffffffffffff",
+                      **{"source.html": "not what the sidecar says",
+                         "source.sha256": hashlib.sha256(b"something else").hexdigest(),
+                         "direct-pomeroy-html-v1.json": {"provider": "direct"}})
+    intact = snapshot(data, "sava-pool", "2026-08-21-cccccccccccc",
+                      **{"source.html": "pending",
+                         "source.sha256": hashlib.sha256(b"pending").hexdigest(),
+                         "direct-pomeroy-html-v1.json": {"provider": "direct"}})
+    assert plan_prune(data, repo) == [broken]
+    assert intact.is_dir()
+
+
+def test_keeps_a_mismatched_capture_the_backtest_corpus_needs(repo):
+    data = repo / "data"
+    snapshot(data, "hamilton-pool", "2026-08-21-ffffffffffff",
+             **{"source.pdf": "%PDF", "source.sha256": hashlib.sha256(b"other").hexdigest()})
+    assert plan_prune(data, repo) == []
+
+
 def test_prune_never_follows_a_symlinked_snapshot(repo):
+    """A symlink is neither deleted nor allowed to stand in for the newest review."""
     data = repo / "data"
     real = snapshot(data, "sava-pool", "2026-08-19-aaaaaaaaaaaa",
                     **{"source.html": "old", "reviewed.json": {"slug": "sava-pool"}})
-    snapshot(data, "sava-pool", "2026-08-20-bbbbbbbbbbbb",
-             **{"source.html": "new", "reviewed.json": {"slug": "sava-pool"}})
-    link = data / "sava-pool" / "2026-08-18-cccccccccccc"
+    newest = snapshot(data, "sava-pool", "2026-08-20-bbbbbbbbbbbb",
+                      **{"source.html": "new", "reviewed.json": {"slug": "sava-pool"}})
+    link = data / "sava-pool" / "2026-08-21-cccccccccccc"
     link.symlink_to(real, target_is_directory=True)
     assert prune(data, repo, dry_run=False) == [real]
-    assert link.is_symlink()
+    assert link.is_symlink() and newest.is_dir()
 
 
 def test_prune_ignores_paths_that_are_not_snapshots(repo):
