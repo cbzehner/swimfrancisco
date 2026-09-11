@@ -122,20 +122,42 @@ def test_concurrent_api_requests_cannot_overbook_budget(tmp_path) -> None:
     assert len(json.loads(path.read_text())["requests"]) == 1
 
 
+def _git(*args, cwd):
+    return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, check=True).stdout.strip()
+
+
+@pytest.fixture(scope="module")
+def baseline_remote(tmp_path_factory):
+    """One bare repo holding the baseline commit, built once for the module.
+
+    Every test below needs the same starting point but must be free to
+    push to its own origin, so each clones a private copy of this rather
+    than paying for an init, a clone, and a commit of its own.
+    """
+    root = tmp_path_factory.mktemp("budget-baseline")
+    remote = root / "baseline.git"
+    work = root / "work"
+    _git("init", "--bare", "--initial-branch=main", str(remote), cwd=root)
+    _git("clone", str(remote), str(work), cwd=root)
+    _git("config", "user.name", "Budget test", cwd=work)
+    _git("config", "user.email", "test@example.invalid", cwd=work)
+    (work / "baseline.txt").write_text("baseline\n")
+    _git("add", "baseline.txt", cwd=work)
+    _git("commit", "-m", "Baseline", cwd=work)
+    _git("push", "origin", "main", cwd=work)
+    return remote
+
+
 @pytest.fixture
-def monthly_budget(tmp_path):
+def monthly_budget(tmp_path, baseline_remote):
     remote = tmp_path / "origin.git"
     repo = tmp_path / "repo"
     def git(*args, cwd=tmp_path):
-        return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, check=True).stdout.strip()
-    git("init", "--bare", "--initial-branch=main", str(remote))
+        return _git(*args, cwd=cwd)
+    git("clone", "--bare", str(baseline_remote), str(remote))
     git("clone", str(remote), str(repo))
     git("config", "user.name", "Budget test", cwd=repo)
     git("config", "user.email", "test@example.invalid", cwd=repo)
-    (repo / "baseline.txt").write_text("baseline\n")
-    git("add", "baseline.txt", cwd=repo)
-    git("commit", "-m", "Baseline", cwd=repo)
-    git("push", "origin", "main", cwd=repo)
     budget = openai_provider.MonthlySpendBudget(repo, 1)
     return budget, git, remote
 

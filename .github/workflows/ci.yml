@@ -20,6 +20,10 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    # Matches the timezone the justfile pins locally, so a clock-reading
+    # test cannot pass in one place and fail in the other.
+    env:
+      TZ: America/Los_Angeles
     steps:
       - uses: actions/checkout@v4
 
