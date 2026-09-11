@@ -15,7 +15,7 @@ content/spots/   one .md per spot (TOML frontmatter)
 i18n/            source translation catalogs and locale registry
 data/i18n/       generated runtime/Zola localization artifacts
 templates/       Zola/Tera templates (base, index, spots/page)
-static/          plain JS (conditions, detail, filters, map, status), main.css, _redirects
+static/          plain JS (conditions, detail, filters, map, status), main.css
 worker/          Cloudflare Worker source (TypeScript)
 schedule-tools/  uv-managed Python pool schedule extractor
 scripts/         generators and smoke checks run by just/npm

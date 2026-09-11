@@ -42,7 +42,6 @@ This follows Google Search Central guidance to make pages crawlable, use unique 
    - "How public pool schedules work in San Francisco"
    - "Where to start open-water swimming in San Francisco"
    - "How to choose between lap swim, family swim, and senior swim"
-4. Keep field-note/internal build content out of the production sitemap unless it becomes reader-facing.
 
 ## Search Console Workflow
 

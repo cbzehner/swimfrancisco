@@ -171,11 +171,15 @@ cell was read correctly.
 ## Retention
 
 Per slug, keep a snapshot dir if ANY of: (a) it is the newest dir containing
-`reviewed.json`; (b) it contains provider or direct JSON but no `reviewed.json`
-(pending review); (c) another dir's `reviewed.json` names it in `carried_from`;
-(d) its source is a PDF (Rec & Park corpus used by backtests); (e) a file under
-`tests/` or `docs/` names the dir. Everything else is deleted by
-`schedules prune`, which `schedules automate` runs before every commit.
+`reviewed.json`; (b) it contains provider or direct JSON but no `reviewed.json`,
+and its date equals the slug's newest capture date (pending review); (c)
+another dir's `reviewed.json` names it in `carried_from`; (d) its source is a
+PDF (Rec & Park corpus used by backtests); (e) a file under `tests/` or
+`docs/` names the dir. A dir whose source body hash does not match its
+`source.sha256` is deleted unless (a), (c), (d), or (e) protects it. Among
+byte-identical dirs within a slug the newest is kept. Everything else is
+deleted by `schedules prune`, which `schedules automate` runs before every
+commit.
 
 Run it by hand with `just schedules prune`.
 

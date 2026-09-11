@@ -1,15 +1,15 @@
 """Retention for captured schedule snapshots.
 
 Per slug, keep a snapshot dir if ANY of: (a) it is the newest dir containing
-``reviewed.json``; (b) it lacks ``reviewed.json`` and its date equals the
-slug's newest capture date (pending review); (c) another dir's
-``reviewed.json`` names it in ``carried_from``; (d) its source is a PDF
-(Rec & Park corpus used by backtests); (e) a file under ``tests/`` or
-``docs/`` names the dir. Everything else is deleted. A dir whose source body
-does not hash to its own ``source.sha256`` is deleted unless (a), (c), (d) or
-(e) protects it: it can prove no identity, and it would fail every later
-capture of that slug with a prefix collision. Deletion never touches dir
-contents, only whole dirs.
+``reviewed.json``; (b) it contains provider or direct JSON but no
+``reviewed.json``, and its date equals the slug's newest capture date
+(pending review); (c) another dir's ``reviewed.json`` names it in
+``carried_from``; (d) its source is a PDF (Rec & Park corpus used by
+backtests); (e) a file under ``tests/`` or ``docs/`` names the dir. A dir
+whose source body hash does not match its ``source.sha256`` is deleted unless
+(a), (c), (d), or (e) protects it. Among byte-identical dirs within a slug
+the newest is kept. Everything else is deleted by ``schedules prune``, which
+``schedules automate`` runs before every commit.
 """
 
 from __future__ import annotations
