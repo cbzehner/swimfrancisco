@@ -550,6 +550,9 @@ def discover_all(
     headers = {
         "User-Agent": BOT_USER_AGENT,
         "Accept": "text/html,application/xhtml+xml,application/pdf;q=0.9,*/*;q=0.8",
+        # Bounded PDF reads measure and return raw bytes, so the body must
+        # arrive undecoded.
+        "Accept-Encoding": "identity",
     }
     table_links: dict[str, list[DocumentLink]] = {}
     fetch_errors: set[str] = set()

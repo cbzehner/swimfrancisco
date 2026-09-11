@@ -2537,3 +2537,22 @@ def test_registry_pdf_url_rewrite_helper_is_gone() -> None:
     from schedules import discover
 
     assert not hasattr(discover, "rewrite_registry_pdf_url")
+
+
+def test_discover_asks_for_identity_encoded_bodies(tmp_path, monkeypatch) -> None:
+    """Bounded reads measure and return raw bytes, so a gzipped body is refused."""
+    _freeze_today(monkeypatch)
+    entry = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "hamilton-pool")
+    seen, _ = _install_http(
+        monkeypatch,
+        pages={entry.official_page_url: _fixture("hamilton-one-grid.html")},
+        views={29800: {"filename": "Hamilton Pool Fall 2026.pdf", "content": _grid_pdf()}},
+    )
+    discover_all(
+        [entry],
+        dry_run=True,
+        delay=0,
+        registry_path=tmp_path / "unused.toml",
+        report_dir=tmp_path,
+    )
+    assert seen["headers"]["Accept-Encoding"] == "identity"
