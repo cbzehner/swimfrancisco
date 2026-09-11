@@ -10,20 +10,15 @@ table against an older human envelope; never score CI vs CI.
 
 from __future__ import annotations
 
-import hashlib
 import json
-from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
-
-import jsonschema
 
 from ._time import PACIFIC_TZ
 from .envelope import AttestationCarried, AttestationCi, parse_attestation
 from .paths import DATA_DIR, TMP_DIR
-from .schema import EXTRACTION_SCHEMA
 
 
 @dataclass(frozen=True)
@@ -52,122 +47,6 @@ def prf1(tp: int, fp: int, fn: int) -> tuple[float, float, float]:
     recall = tp / (tp + fn) if (tp + fn) else 1.0
     f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
     return precision, recall, f1
-
-
-def load_benchmark_reference(path: Path, reference_id: str, *, repo_root: Path) -> dict:
-    references = json.loads(path.read_text())["documents"]
-    matches = [item for item in references if item["id"] == reference_id]
-    if len(matches) != 1:
-        raise ValueError("Benchmark reference must identify exactly one document.")
-    reference = matches[0]
-    if reference["split"] not in {"development", "finalist", "holdout"} or not reference.get("expected"):
-        raise ValueError("This document is reserved or has no checked reference yet.")
-    source = (repo_root / reference["source_pdf"]).resolve()
-    if not source.is_relative_to(repo_root.resolve()):
-        raise ValueError("Benchmark source must be inside the repository.")
-    if hashlib.sha256(source.read_bytes()).hexdigest() != reference["source_sha256"]:
-        raise ValueError("Benchmark source hash does not match the checked document.")
-    expected = reference["expected"]
-    try:
-        jsonschema.validate(
-            expected | {"closures": expected.get("closures", [])}, EXTRACTION_SCHEMA,
-            format_checker=jsonschema.FormatChecker(),
-        )
-    except (jsonschema.ValidationError, TypeError, AttributeError) as exc:
-        raise ValueError("Benchmark reference contains invalid expected schedule data.") from exc
-    rows = [RowKey.from_session(row) for row in expected["sessions"]]
-    if len(rows) != len(set(rows)):
-        raise ValueError("Benchmark reference contains duplicate sessions.")
-    if "as_of" in reference:
-        date.fromisoformat(reference["as_of"])
-    return reference
-
-
-def _benchmark_rows(rows: list[dict], fields: tuple[str, ...]) -> Counter:
-    return Counter(tuple(row.get(field, "") for field in fields) for row in rows)
-
-
-def _benchmark_row_score(expected: list[dict], actual: list[dict], fields: tuple[str, ...]) -> dict:
-    truth = _benchmark_rows(expected, fields)
-    extracted = _benchmark_rows(actual, fields)
-    matches = (truth & extracted).total()
-    extras = extracted - truth
-    missing = truth - extracted
-    precision, recall, f1 = prf1(matches, extras.total(), missing.total())
-    return {
-        "precision": precision, "recall": recall, "f1": f1,
-        "expected_count": truth.total(), "actual_count": extracted.total(),
-        "extra": [dict(zip(fields, row)) for row in extras.elements()],
-        "missing": [dict(zip(fields, row)) for row in missing.elements()],
-    }
-
-
-def score_benchmark_run(reference: dict, run: dict) -> dict:
-    """Score a recorded attempt without calling a model or publishing data."""
-    for field in ("model", "transport", "source_sha256"):
-        if not isinstance(run.get(field), str) or not run[field].strip():
-            raise ValueError(f"Benchmark attempt requires {field}.")
-    if run["source_sha256"] != reference["source_sha256"]:
-        raise ValueError("Attempt and reference must use the same source bytes.")
-    if not isinstance(run.get("timed_out"), bool):
-        raise ValueError("Benchmark attempt requires a boolean timed_out.")
-    exit_code = run.get("exit_code")
-    if not run["timed_out"] and type(exit_code) is not int:
-        raise ValueError("Completed benchmark attempt requires an integer exit_code.")
-    result = {
-        "reference": reference["id"], "model": run["model"], "transport": run["transport"],
-        "reference_review": reference["review"], "unresolved": reference["unresolved"],
-        "status": "timeout" if run["timed_out"] else "execution_error",
-    }
-    if run["timed_out"] or exit_code != 0:
-        return result
-    payload = run.get("payload")
-    errors = list(jsonschema.Draft202012Validator(
-        EXTRACTION_SCHEMA, format_checker=jsonschema.FormatChecker(),
-    ).iter_errors(payload))
-    if errors:
-        return result | {"status": "schema_invalid", "schema_error_paths": [
-            "/".join(map(str, error.absolute_path)) or "<root>" for error in errors
-        ]}
-    expected = reference["expected"]
-    scores = {}
-    for field in ("effective_start", "effective_end", "schedule_basis"):
-        if field in expected:
-            scores[field] = {"expected": expected[field], "actual": payload.get(field),
-                             "match": expected[field] == payload.get(field)}
-    if "as_of" in reference:
-        expected_status = benchmark_window_status(expected, reference["as_of"])
-        actual_status = benchmark_window_status(payload, reference["as_of"])
-        scores["window_status"] = {
-            "as_of": reference["as_of"], "expected": expected_status,
-            "actual": actual_status, "match": expected_status == actual_status,
-        }
-    fields_by_rows = {
-        "sessions": ("day", "type", "start", "end", "pool"),
-        "closures": ("start", "end", "start_time", "end_time"),
-    }
-    for field, row_fields in fields_by_rows.items():
-        if field in expected:
-            scores[field] = _benchmark_row_score(expected[field], payload[field], row_fields)
-    return result | {
-        "status": "scored", "scores": scores,
-        "unscored_fields": sorted(set(fields_by_rows) - expected.keys()),
-        "checked_fields_match": all(
-            score.get("match", not score.get("extra") and not score.get("missing"))
-            for score in scores.values()
-        ),
-    }
-
-
-def benchmark_window_status(payload: dict, as_of: str) -> str:
-    """Classify extracted dates, not whether the facility itself is open."""
-    today = date.fromisoformat(as_of)
-    if date.fromisoformat(payload["effective_start"]) > today:
-        return "future"
-    end = payload.get("effective_end")
-    if end is None:
-        return "unknown_end"
-    return "expired" if date.fromisoformat(end) < today else "within_window"
 
 
 @dataclass(frozen=True)

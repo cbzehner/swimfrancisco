@@ -1,27 +1,54 @@
 from schedules.signals import analyze_page_texts, source_notes_for_signals
 
 import copy
+import hashlib
 import json
-import zipfile
 
 import pytest
 
+from conftest import SOURCE_REFERENCES as MANIFEST, load_source_reference
 from schedules._time import printed_time_range
-from schedules.eval import load_benchmark_reference
 from schedules.grounding import source_closure_coverage, source_coverage, source_publication_coverage, source_window_coverage
 from schedules.signals import PdfSource, SourceNotice
 from schedules.paths import REPO_ROOT
 from schedules.signals import inspect_pdf_source, program_types
 
 
-MANIFEST = REPO_ROOT / "tests/fixtures/schedule-benchmark.json"
-REFERENCE_IDS = json.loads(MANIFEST.read_text())["comparisons"]["literal-pool-labels"]["references"]
+DOCUMENTS = json.loads(MANIFEST.read_text())["documents"]
+# Every checked document that carries literal pool labels; the holdout is scored on its own.
+REFERENCE_IDS = [document["id"] for document in DOCUMENTS if document["split"] != "holdout"]
 
 
 @pytest.fixture(scope="module", params=REFERENCE_IDS)
 def source_reference(request):
-    reference = load_benchmark_reference(MANIFEST, request.param, repo_root=REPO_ROOT)
+    reference = load_source_reference(MANIFEST, request.param, repo_root=REPO_ROOT)
     return inspect_pdf_source((REPO_ROOT / reference["source_pdf"]).read_bytes()), reference
+
+
+def test_checked_source_hashes_and_split_are_disjoint():
+    assert len({item["id"] for item in DOCUMENTS}) == len(DOCUMENTS)
+    assert len({item["source_sha256"] for item in DOCUMENTS}) == len(DOCUMENTS)
+    for item in DOCUMENTS:
+        assert hashlib.sha256((REPO_ROOT / item["source_pdf"]).read_bytes()).hexdigest() == item["source_sha256"]
+        if item["split"] == "reserved":
+            assert "expected" not in item
+
+
+def test_source_reference_rejects_changed_pdf(tmp_path):
+    reference = copy.deepcopy(load_source_reference(MANIFEST, "hamilton-fall", repo_root=REPO_ROOT))
+    reference["source_pdf"] = "source.pdf"
+    (tmp_path / "source.pdf").write_bytes(b"changed")
+    manifest = tmp_path / "references.json"
+    manifest.write_text(json.dumps({"documents": [reference]}))
+    with pytest.raises(ValueError, match="hash"):
+        load_source_reference(manifest, reference["id"], repo_root=tmp_path)
+
+
+def test_reserved_document_has_no_reference_answers(tmp_path):
+    manifest = tmp_path / "reserved.json"
+    manifest.write_text(json.dumps({"documents": [{"id": "unreviewed", "split": "reserved"}]}))
+    with pytest.raises(ValueError, match="reserved"):
+        load_source_reference(manifest, "unreviewed", repo_root=tmp_path)
 
 
 def test_coordinate_inventory_covers_preserved_reference_sessions(source_reference):
@@ -80,7 +107,7 @@ def test_printed_window_does_not_borrow_year_from_a_holiday_note():
 
 
 def test_mission_holdout_matches_frozen_visual_transcription():
-    reference = load_benchmark_reference(MANIFEST, "mission-fall-holdout", repo_root=REPO_ROOT)
+    reference = load_source_reference(MANIFEST, "mission-fall-holdout", repo_root=REPO_ROOT)
     source = inspect_pdf_source((REPO_ROOT / reference["source_pdf"]).read_bytes())
     assert source_coverage(source, reference["expected"])["ok"]
     assert source_window_coverage(source, reference["expected"])["ok"]
@@ -104,7 +131,7 @@ def test_coffman_list_omits_only_independently_closed_thanksgiving():
 
 @pytest.mark.parametrize("reference_id", ["north-beach-expired", "garfield-maintenance"])
 def test_closure_inventory_rejects_each_omission_and_change(reference_id):
-    reference = load_benchmark_reference(MANIFEST, reference_id, repo_root=REPO_ROOT)
+    reference = load_source_reference(MANIFEST, reference_id, repo_root=REPO_ROOT)
     source = inspect_pdf_source((REPO_ROOT / reference["source_pdf"]).read_bytes())
     assert source_closure_coverage(source, reference["expected"])["ok"]
     for index in range(len(reference["expected"]["closures"])):
@@ -122,21 +149,20 @@ def test_closure_inventory_rejects_each_omission_and_change(reference_id):
             assert not source_publication_coverage(source, payload)["ok"], (index, damage)
 
 
-def test_archived_missing_holiday_is_rejected_without_changing_benchmark_answers():
-    with zipfile.ZipFile(REPO_ROOT / "benchmarks/pdf/physical-pool-labels-2026-09-05.zip") as archive:
-        rows = json.loads(archive.read("results.json"))
-    row = next(row for row in rows if row["reference"] == "north-beach-expired" and row["repetition"] == 2)
-    reference = load_benchmark_reference(MANIFEST, row["reference"], repo_root=REPO_ROOT)
+def test_recorded_missing_holiday_is_rejected_without_changing_reference_answers():
+    """A recorded extraction that dropped one holiday closure; sessions still cover."""
+    payload = json.loads((REPO_ROOT / "tests/fixtures/north-beach-expired-missing-holiday.json").read_text())
+    reference = load_source_reference(MANIFEST, "north-beach-expired", repo_root=REPO_ROOT)
     source = inspect_pdf_source((REPO_ROOT / reference["source_pdf"]).read_bytes())
-    assert source_coverage(source, row["payload"])["ok"]
-    result = source_publication_coverage(source, row["payload"])
+    assert source_coverage(source, payload)["ok"]
+    result = source_publication_coverage(source, payload)
     assert not result["ok"]
     assert result["closures"]["missing"] == [["2026-07-04", "2026-07-04", None, None]]
 
 
 @pytest.mark.parametrize("reference_id", ["balboa-fall", "balboa-interim", "rossi-spring"])
 def test_unresolved_cell_closures_remain_held(reference_id):
-    reference = load_benchmark_reference(MANIFEST, reference_id, repo_root=REPO_ROOT)
+    reference = load_source_reference(MANIFEST, reference_id, repo_root=REPO_ROOT)
     source = inspect_pdf_source((REPO_ROOT / reference["source_pdf"]).read_bytes())
     result = source_closure_coverage(source, reference["expected"])
     assert not result["ok"]
