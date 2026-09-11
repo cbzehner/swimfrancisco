@@ -357,8 +357,8 @@ test("generated path allowlist excludes credentials, source code, and unexpected
   for (const path of [
     ".env", ".github/workflows/ci.yml", "schedule-tools/src/schedules/publish.py",
     "content/spots/../../.env", "content/spots/pool.md\n", "data/i18n/private.json",
-    "data/dynamic-labels.json",
-    "data/pool/2026-09-02-67f2a420e8fc/request.json", "data/pool/2026-09-02-67f2a420e8fc/gemini-model.json",
+    "data/dynamic-labels.json", "data/i18n/fi.json", "content/spots/mission-community-pool.fi.md",
+    "data/pool/2026-09-02-67f2a420e8fc/request.json", "data/pool/2026-09-02-67f2a420e8fc/other-model.json",
     "data/north-beach-pool/2026-09-06-67f2a420e8fc/bundle.json",
   ]) assert.equal(generatedSchedulePath(path), false, path);
 });
