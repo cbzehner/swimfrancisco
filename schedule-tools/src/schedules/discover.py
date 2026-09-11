@@ -789,28 +789,37 @@ def _with_persisted_survivors(
     adopted_id = (
         view_id_from_url(decision.new_url or "") if decision.action == "adopt" else None
     )
+    unfetched: list[int] = []
     for view_id in sorted(previous):
         if view_id in dropped or view_id in current_ids or view_id == adopted_id:
             continue
         fetched = views.get(view_id)
-        filename = fetched.filename if fetched else None
-        page_text = (
-            _first_page_text(fetched.content)
-            if fetched is not None and fetched.is_pdf
-            else ""
-        )
+        if fetched is None or not fetched.is_pdf:
+            # No bytes, no claim: asserting an unfetched ID is a session_grid
+            # hides it from expiry and makes the pipeline re-fetch it forever.
+            unfetched.append(view_id)
+            continue
         survivors.append(
-            _classified_with_window(
-                link=DocumentLink(
+            classify_pdf(
+                DocumentLink(
                     view_id=view_id,
                     href=absolute_view_url(view_id),
-                    anchor_text=filename or "",
+                    anchor_text=fetched.filename or "",
                 ),
-                kind="session_grid",
-                filename=filename,
+                pool_slug=decision.slug,
+                pdf_bytes=fetched.content,
+                filename=fetched.filename,
                 source="persisted",
-                page_text=page_text,
             )
+        )
+    if unfetched:
+        # Leave registry.toml alone so the persisted IDs we could not fetch
+        # survive in the notes rather than being silently forgotten.
+        return replace(
+            decision,
+            candidates=decision.candidates + tuple(survivors),
+            reason="fetch_error",
+            blocking=True,
         )
     if not survivors:
         return decision

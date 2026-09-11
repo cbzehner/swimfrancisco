@@ -2339,3 +2339,67 @@ def test_adopt_refuses_when_the_facility_page_failed(tmp_path, monkeypatch) -> N
             adopt=("sava-pool", 29815),
         )
     assert registry.read_text() == before
+
+
+# --- persisted survivors must not be asserted as grids ---------------------
+
+_UNLABELLED_GRID_TEXT = (
+    "FALL 2026 SCHEDULE (SEPTEMBER 8- DECEMBER 10)\n"
+    "SUNDAY MONDAY TUESDAY WEDNESDAY THURSDAY"
+)
+
+
+def _persisted_survivor_run(tmp_path, monkeypatch, *, survivor: dict):
+    """Garfield with persisted 29799 whose PDF names no pool, so the band loop
+    cannot classify it and it reaches the persisted-survivor path."""
+    _freeze_today(monkeypatch)
+    registry = _garfield_registry_with_persisted_29799(tmp_path)
+    garfield = next(item for item in load_registry(registry) if item.slug == "garfield-pool")
+    pages = {garfield.official_page_url: _fixture("garfield-flyer-only.html")}
+    views = {
+        29564: {
+            "filename": "Garfield Pool Summer 2026.pdf",
+            "content": _pdf_with_text(_GARFIELD_SUMMER_TEXT),
+        },
+        29799: survivor,
+    }
+    _install_http(monkeypatch, pages=pages, views=views)
+    before = registry.read_text()
+    decisions = discover_all(
+        [garfield], delay=0, sleep=lambda _: None, registry_path=registry, report_dir=tmp_path
+    )
+    return registry, before, decisions[0]
+
+
+def test_persisted_survivor_carries_its_real_kind_and_hash(tmp_path, monkeypatch) -> None:
+    import hashlib
+
+    content = _pdf_with_text(_UNLABELLED_GRID_TEXT)
+    _, _, decision = _persisted_survivor_run(
+        tmp_path,
+        monkeypatch,
+        survivor={"filename": "Fall 2026 Schedule.pdf", "content": content},
+    )
+    survivor = next(item for item in decision.candidates if item.link.view_id == 29799)
+    assert survivor.source == "persisted"
+    assert survivor.pdf_sha256 == hashlib.sha256(content).hexdigest()
+    assert survivor.kind == classify_pdf(
+        DocumentLink(29799, survivor.link.href, "Fall 2026 Schedule.pdf"),
+        pool_slug="garfield-pool",
+        pdf_bytes=content,
+        filename="Fall 2026 Schedule.pdf",
+    ).kind
+
+
+def test_persisted_survivor_that_failed_to_fetch_is_not_asserted(tmp_path, monkeypatch) -> None:
+    registry, before, decision = _persisted_survivor_run(
+        tmp_path,
+        monkeypatch,
+        survivor={"status": 500, "content": b"down", "type": "text/plain"},
+    )
+    assert not any(item.link.view_id == 29799 for item in decision.candidates)
+    assert decision.reason == "fetch_error"
+    assert registry.read_text() == before
+    assert 29799 in persisted_band_ids(
+        next(item for item in load_registry(registry) if item.slug == "garfield-pool").notes
+    )
