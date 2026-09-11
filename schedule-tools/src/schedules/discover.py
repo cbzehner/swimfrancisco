@@ -18,7 +18,7 @@ import httpx
 
 from ._time import pacific_today
 from .direct_sources.http import BOT_USER_AGENT
-from .fetch import MAX_PDF_BYTES, get_with_retries
+from .fetch import MAX_PDF_BYTES, FetchError, get_with_retries
 from .models import PoolEntry
 from .paths import REGISTRY_PATH, TMP_DIR
 from .registry import load_registry
@@ -972,7 +972,9 @@ def _fetch_view(
     except httpx.HTTPStatusError as exc:
         # A 404 still tells discover the document is gone; the body does not.
         response, content = exc.response, b""
-    except httpx.HTTPError:
+    except (httpx.HTTPError, FetchError):
+        # Transport failure, oversized body, unreadable encoding: the document
+        # is unusable, but one bad DocumentCenter ID must not end the run.
         return _ViewFetch(
             view_id=view_id,
             status_code=0,

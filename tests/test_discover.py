@@ -2458,9 +2458,9 @@ def test_page_fetch_does_not_retry_a_permanent_status() -> None:
     assert len(calls) == 1
 
 
-def test_view_fetch_rejects_a_pdf_over_the_source_limit(monkeypatch) -> None:
+def test_view_over_the_source_limit_degrades_to_an_unusable_view(monkeypatch) -> None:
+    """One outsized DocumentCenter ID must not end the run for every pool."""
     from schedules import discover
-    from schedules.fetch import FetchError
 
     monkeypatch.setattr(discover, "MAX_PDF_BYTES", 100)
 
@@ -2472,8 +2472,33 @@ def test_view_fetch_rejects_a_pdf_over_the_source_limit(monkeypatch) -> None:
         )
 
     with _mock_client(handler) as client:
-        with pytest.raises(FetchError, match="source limit"):
-            discover._fetch_view(client, 29800, sleep=lambda _: None)
+        fetched = discover._fetch_view(client, 29800, sleep=lambda _: None)
+    assert (fetched.status_code, fetched.is_pdf, fetched.content) == (0, False, b"")
+
+
+def test_oversized_view_does_not_abort_the_discover_run(tmp_path, monkeypatch) -> None:
+    from schedules import discover
+
+    _freeze_today(monkeypatch)
+    monkeypatch.setattr(discover, "MAX_PDF_BYTES", 100)
+    entry = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "hamilton-pool")
+    _install_http(
+        monkeypatch,
+        pages={entry.official_page_url: _fixture("hamilton-one-grid.html")},
+        views={29800: {"filename": "Hamilton Pool Fall 2026.pdf", "content": _grid_pdf()}},
+    )
+    decisions = discover_all(
+        [entry],
+        dry_run=True,
+        delay=0,
+        sleep=lambda _: None,
+        registry_path=tmp_path / "unused.toml",
+        report_dir=tmp_path,
+    )
+    assert [item.slug for item in decisions] == ["hamilton-pool"]
+    assert decisions[0].reason != "fetch_error"
+    assert (tmp_path / "discovery-report.md").exists()
+    assert (tmp_path / "discovery-decisions.json").exists()
 
 
 def test_view_fetch_retries_a_transient_status_then_succeeds() -> None:
