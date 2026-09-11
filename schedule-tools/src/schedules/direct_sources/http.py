@@ -144,7 +144,7 @@ def _cache_bytes(slug_dir: Path, sha256: str, extension: str, content: bytes) ->
     if hashlib.sha256(content).hexdigest() != sha256:
         raise DirectSourceError("source bytes do not match source hash")
     prefix = sha256[:12]
-    matches = sorted(slug_dir.glob(f"{pacific_today().isoformat()}-{prefix}/source.{extension}"))
+    matches = sorted(slug_dir.glob(f"*-{prefix}/source.{extension}"))
     for existing in matches:
         if hashlib.sha256(existing.read_bytes()).hexdigest() != sha256:
             raise DirectSourceError(f"prefix collision under {slug_dir}: {prefix}")

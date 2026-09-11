@@ -36,6 +36,20 @@ def test_cache_bytes_preserves_encoding_and_rejects_corruption(tmp_path):
         _cache_bytes(tmp_path, digest, "html", content)
 
 
+def test_cache_bytes_reuses_a_capture_from_an_earlier_day(tmp_path):
+    """Identical bytes are one capture, no matter which day they arrive on."""
+    from schedules.direct_sources.http import _cache_bytes
+    content = b"<p>hours</p>"
+    digest = hashlib.sha256(content).hexdigest()
+    yesterday = (pacific_today() - timedelta(days=1)).isoformat()
+    earlier = tmp_path / f"{yesterday}-{digest[:12]}"
+    earlier.mkdir()
+    (earlier / "source.html").write_bytes(content)
+    path, cached = _cache_bytes(tmp_path, digest, "html", content)
+    assert (path, cached) == (earlier / "source.html", True)
+    assert [directory.name for directory in sorted(tmp_path.iterdir())] == [earlier.name]
+
+
 def test_cache_bytes_rejects_semantic_hash(tmp_path):
     from schedules.direct_sources.http import _cache_bytes
     with pytest.raises(DirectSourceError, match="source bytes"):
