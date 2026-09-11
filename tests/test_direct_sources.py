@@ -21,6 +21,7 @@ from schedules.direct_sources import (
     _extract_ucsf_bakar,
     _extract_ucsf_fitness,
 )
+from schedules.direct_sources.parsing import _resolve_yearless_date
 
 
 def test_cache_bytes_preserves_encoding_and_rejects_corruption(tmp_path):
@@ -230,6 +231,21 @@ def _koret_workbook(tmp_path, sheets):
     path = tmp_path / "koret.xlsx"
     workbook.save(path)
     return path
+
+
+# ---- yearless dates in source text roll forward, never backward -------------
+
+
+def test_resolve_yearless_date_keeps_same_year_for_near_future():
+    assert _resolve_yearless_date(4, 30, today=date(2026, 4, 1)) == date(2026, 4, 30)
+
+
+def test_resolve_yearless_date_keeps_same_year_for_recent_past():
+    assert _resolve_yearless_date(4, 1, today=date(2026, 4, 20)) == date(2026, 4, 1)
+
+
+def test_resolve_yearless_date_rolls_forward_for_distant_past():
+    assert _resolve_yearless_date(1, 15, today=date(2026, 12, 20)) == date(2027, 1, 15)
 
 
 def test_koret_google_sheet_extractor_reads_weekday_and_weekend_hours(tmp_path):
