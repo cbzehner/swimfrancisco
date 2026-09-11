@@ -2,7 +2,7 @@
 
 **Author:** TBD
 **Date:** 2026-08-19
-**Status:** Draft
+**Status:** Implemented
 **Audience:** Operators of the schedule extract/review pipeline
 
 ---
