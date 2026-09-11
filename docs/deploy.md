@@ -26,8 +26,8 @@ Create the root `.env` file from `.env.example`. Fill in:
 - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` — R2 credentials for the
   Terraform state bucket. (These ARE R2 credentials; the `AWS_` naming is a
   Terraform S3 backend quirk.)
-- `GOOGLE_API_KEY` / `ANTHROPIC_API_KEY` — for the schedule extractor.
-  Unrelated to deploy, but `.env` is the one file that holds both.
+- `OPENAI_API_KEY` — for the schedule extractor. Unrelated to deploy, but
+  `.env` is the one file that holds both.
 
 ### 2. R2 state bucket for Terraform
 

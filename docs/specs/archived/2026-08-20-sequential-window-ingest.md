@@ -5,7 +5,7 @@
 **Status:** Implemented
 **Audience:** Operators of the schedule extract/review pipeline; engineers implementing after Key Decisions are approved
 
-This is the spec after unique-grid auto-publish ([`docs/specs/archived/2026-08-20-schedule-auto-publish.md`](docs/specs/archived/2026-08-20-schedule-auto-publish.md)). It closes that spec's Open Questions 1–2 for sequential windows, and it fixes classifier and persist bugs that keep FLAG pools dark after unique grids already ship.
+This is the spec after unique-grid auto-publish ([`2026-08-20-schedule-auto-publish.md`](2026-08-20-schedule-auto-publish.md)). It closes that spec's Open Questions 1–2 for sequential windows, and it fixes classifier and persist bugs that keep FLAG pools dark after unique grids already ship.
 
 Do not implement until the operator approves Key Decisions.
 

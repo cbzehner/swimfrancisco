@@ -21,21 +21,6 @@ them up opportunistically or hand the relevant section to a native speaker.
 - `sections.spots.title = "Spots"` untranslated (section has
   `render = false`; verify it never surfaces before bothering).
 
-## fi
-
-- `plan_ahead` "Suunnittele eteenpäin" is an anglicism → "Suunnittele
-  etukäteen".
-- `footer_credit` "…, tekijä" dangles before the linked name → "tekijä:".
-- `subtype_membership_indoor` "jäsenyyssisäallas" is a clunky triple
-  compound → "jäsenten sisäallas".
-- `upcoming_closures` "Tulevat sulut" is ambiguous → "Tulevat sulkuajat".
-- `chip_day_pass` "PÄIVÄLIPPU" vs spots' "Päiväpassi" terminology drift.
-- Reason strings keep "9am–1pm" style times; Finnish convention is
-  "klo 9–13".
-- spots: baker "paikallistuntemus" editorializes "conservative swim
-  plans"; "Mahdollinen jäsen" → "Jäsenyyttä harkitseva"; "kaappeihin" →
-  "pukukaappeihin"; "sekki" → "shekki"; "$12" vs "12 $" drift.
-
 ## fil
 
 - Program chips are formal Tagalog ("LANGOY SA LANE", "LANGOY PARA SA
