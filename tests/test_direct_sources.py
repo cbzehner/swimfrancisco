@@ -62,12 +62,21 @@ def _cfemail_page(payload: str) -> bytes:
     ).encode()
 
 
-def _workbook_bytes(creator: str, hours: str = "Hours: 6am-8pm") -> bytes:
+def _workbook_bytes(creator: str, hours: str = "Hours: 6am-8pm", *, merge: str = "B2:C2",
+                    hidden_notice: bool = False) -> bytes:
+    """A Koret-shaped export. The merge covers empty cells inside the used range,
+    so a different merge changes no cell value and no sheet dimension."""
     book = Workbook()
     sheet = book.active
     sheet.title = "Monday"
     sheet["A1"] = hours
     sheet["A2"] = time(6, 0)
+    sheet["E5"] = "notes"
+    sheet.merge_cells(merge)
+    notice = book.create_sheet("Long Course Notice")
+    notice["A1"] = "Short course from 9/10"
+    if hidden_notice:
+        notice.sheet_state = "hidden"
     book.properties.creator = creator
     buffer = io.BytesIO()
     book.save(buffer)
@@ -101,11 +110,40 @@ def test_canonical_xlsx_identity_ignores_export_nondeterminism(tmp_path):
     assert [directory.name for directory in sorted(tmp_path.iterdir())] == [stored.path.parent.name]
 
 
+def test_canonical_xlsx_identity_covers_everything_the_parser_reads():
+    """Merges and hidden sheets change the schedule the parser sees, not just the cells."""
+    from schedules.artifacts import canonical_source_sha256
+    from schedules.artifacts import workbook_facts
+    plain, elsewhere, hidden = (
+        _workbook_bytes("export"),
+        _workbook_bytes("export", merge="C2:D2"),
+        _workbook_bytes("export", hidden_notice=True),
+    )
+    cells = lambda content: {title: sheet["cells"] for title, sheet in workbook_facts(content).items()}
+    assert cells(plain) == cells(elsewhere) == cells(hidden)
+    assert len({canonical_source_sha256("xlsx", book) for book in (plain, elsewhere, hidden)}) == 3
+
+
 def test_canonical_identity_keeps_pdf_and_csv_on_raw_bytes():
     from schedules.artifacts import canonical_source_sha256
     body = b"%PDF-1.4 lap swim"
     assert canonical_source_sha256("pdf", body) == hashlib.sha256(body).hexdigest()
     assert canonical_source_sha256("csv", b"day,start\n") == hashlib.sha256(b"day,start\n").hexdigest()
+
+
+def test_cache_bytes_reuses_the_latest_capture_of_the_same_document(tmp_path):
+    """Retention keeps the newest capture, so reuse has to land there too."""
+    from schedules.direct_sources.http import _cache_bytes
+    older, newer = _cfemail_page("11111111"), _cfemail_page("22222222")
+    for content, day in ((older, "2026-09-07"), (newer, "2026-09-08")):
+        directory = tmp_path / f"{day}-{hashlib.sha256(content).hexdigest()[:12]}"
+        directory.mkdir()
+        (directory / "source.html").write_bytes(content)
+        (directory / "source.sha256").write_text(hashlib.sha256(content).hexdigest())
+    reused = _cache_bytes(tmp_path, hashlib.sha256(_cfemail_page("33333333")).hexdigest(),
+                          "html", _cfemail_page("33333333"))
+    assert (reused.from_cache, reused.content) == (True, newer)
+    assert reused.path.parent.name.startswith("2026-09-08")
 
 
 def test_cache_bytes_keeps_a_changed_document_apart(tmp_path):

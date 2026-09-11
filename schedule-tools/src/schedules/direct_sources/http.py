@@ -8,8 +8,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile
 from urllib.parse import urlsplit, urlunsplit
+from xml.etree.ElementTree import ParseError
 
 import httpx
+from openpyxl.utils.exceptions import InvalidFileException
 
 from .._time import pacific_today
 from ..artifacts import canonical_source_sha256
@@ -122,13 +124,13 @@ def fetch_koret_workbook(slug: str, workbook_url: str, *, cache_root: Path = DAT
                 raise BadZipFile("missing workbook")
         # Reading the cells here keeps an unreadable export out of the corpus
         # instead of failing later, in the parser, on a stored capture.
-        canonical_source_sha256("xlsx", workbook_bytes)
+        canonical = canonical_source_sha256("xlsx", workbook_bytes)
         sha256 = hashlib.sha256(workbook_bytes).hexdigest()
-    except (BadZipFile, KeyError) as exc:
+    except (BadZipFile, KeyError, ValueError, InvalidFileException, ParseError) as exc:
         raise DirectSourceError(f"{slug} workbook export is not a valid XLSX (interstitial page?)") from exc
     slug_dir = cache_root / slug
     slug_dir.mkdir(parents=True, exist_ok=True)
-    capture = _cache_bytes(slug_dir, sha256, "xlsx", workbook_bytes)
+    capture = _cache_bytes(slug_dir, sha256, "xlsx", workbook_bytes, canonical)
     pdf_path = capture.path.parent / "source.pdf"
     if not capture.from_cache or not pdf_path.exists():
         pdf_path.write_bytes(pdf_bytes)
@@ -140,8 +142,13 @@ def fetch_koret_workbook(slug: str, workbook_url: str, *, cache_root: Path = DAT
     )
 
 
-def _cache_bytes(slug_dir: Path, sha256: str, extension: str, content: bytes) -> CachedCapture:
-    """Return the capture that holds this document, storing it on a first sight."""
+def _cache_bytes(slug_dir: Path, sha256: str, extension: str, content: bytes,
+                 canonical: str | None = None) -> CachedCapture:
+    """Return the capture that holds this document, storing it on a first sight.
+
+    ``canonical`` is this document's canonical identity when the caller already
+    computed it; reading a workbook twice is not free.
+    """
     if hashlib.sha256(content).hexdigest() != sha256:
         raise DirectSourceError("source bytes do not match source hash")
     prefix = sha256[:12]
@@ -156,7 +163,7 @@ def _cache_bytes(slug_dir: Path, sha256: str, extension: str, content: bytes) ->
             metadata.write_text(f"{sha256}\n")
         return CachedCapture(existing, content, sha256, True)
 
-    held = _held_capture(slug_dir, extension, content)
+    held = _held_capture(slug_dir, extension, canonical or canonical_source_sha256(extension, content))
     if held is not None:
         return held
 
@@ -168,16 +175,16 @@ def _cache_bytes(slug_dir: Path, sha256: str, extension: str, content: bytes) ->
     return CachedCapture(path, content, sha256, False)
 
 
-def _held_capture(slug_dir: Path, extension: str, content: bytes) -> CachedCapture | None:
+def _held_capture(slug_dir: Path, extension: str, canonical: str) -> CachedCapture | None:
     """The stored capture of the same document, when only noise bytes changed.
 
     A raw-hash miss is not proof the schedule changed: Cloudflare rotates its
     email obfuscation per response and the Google Sheets export reshuffles its
     archive. The capture already on disk stays the evidence and the identity,
-    so an unchanged schedule never mints a second snapshot dir.
+    so an unchanged schedule never mints a second snapshot dir. The latest
+    matching capture wins, because that is the one retention keeps.
     """
-    canonical = canonical_source_sha256(extension, content)
-    for directory in sorted(slug_dir.iterdir()) if slug_dir.is_dir() else []:
+    for directory in sorted(slug_dir.iterdir(), reverse=True) if slug_dir.is_dir() else []:
         parsed = parse_review_dir_name(directory.name) if directory.is_dir() else None
         stored_path = directory / f"source.{extension}"
         metadata = directory / "source.sha256"
