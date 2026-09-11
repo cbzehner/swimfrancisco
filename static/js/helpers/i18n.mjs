@@ -3,8 +3,21 @@ export function t(key, fallback = "") {
   return (dict && typeof dict[key] === "string" && dict[key]) || fallback;
 }
 
-export function statusLabel(status) {
-  const key = {
+// The four lookups below share one shape: map a domain value to a
+// translation key, then fall back to a literal derived from the value —
+// `translated` when the key exists but the catalog does not carry it,
+// `unknown` when the value itself is off-table.
+function labelLookup(keys, translated, unknown = translated) {
+  return (value) => {
+    const key = keys[value];
+    return key ? t(key, translated(value)) : unknown(value);
+  };
+}
+
+const upperCase = (value) => String(value ?? "").toUpperCase();
+
+export const statusLabel = labelLookup(
+  {
     OPEN: "status_open",
     CLOSED: "status_closed",
     ACCESS: "status_access",
@@ -12,21 +25,21 @@ export function statusLabel(status) {
     AVAILABLE: "status_available",
     LIMITED: "status_limited",
     OCEAN: "status_ocean",
-  }[status];
-  return key ? t(key, status) : status;
-}
+  },
+  (status) => status,
+);
 
-export function programLabel(type) {
-  const key = {
+export const programLabel = labelLookup(
+  {
     lap_swim: "lap",
     family_swim: "family",
     senior_swim: "senior",
-  }[type];
-  return key ? t(key, type.toUpperCase()) : type.toUpperCase();
-}
+  },
+  upperCase,
+);
 
-export function dayShortLabel(day) {
-  const key = {
+export const dayShortLabel = labelLookup(
+  {
     monday: "day_monday_short",
     tuesday: "day_tuesday_short",
     wednesday: "day_wednesday_short",
@@ -34,12 +47,13 @@ export function dayShortLabel(day) {
     friday: "day_friday_short",
     saturday: "day_saturday_short",
     sunday: "day_sunday_short",
-  }[day];
-  return key ? t(key, day.slice(0, 3).toUpperCase()) : String(day || "").toUpperCase();
-}
+  },
+  (day) => day.slice(0, 3).toUpperCase(),
+  upperCase,
+);
 
-export function dayFullLabel(day) {
-  const key = {
+export const dayFullLabel = labelLookup(
+  {
     monday: "day_monday",
     tuesday: "day_tuesday",
     wednesday: "day_wednesday",
@@ -47,9 +61,9 @@ export function dayFullLabel(day) {
     friday: "day_friday",
     saturday: "day_saturday",
     sunday: "day_sunday",
-  }[day];
-  return key ? t(key, day.toUpperCase()) : String(day || "").toUpperCase();
-}
+  },
+  upperCase,
+);
 
 function activeLanguage() {
   return globalThis.window?.SWIMFRANCISCO_LANG || "en";
@@ -80,7 +94,6 @@ const ISO_DATE_FORMAT = {
   fil: "month_d_y",
   es: "dmy_slash",
   vi: "dmy_slash",
-  fi: "dmy_dot",
   "zh-Hant": "ymd_han",
 };
 
@@ -99,7 +112,6 @@ export function formatLocalizedISODate(isoDate) {
   const day = Number(match[3]);
   const format = ISO_DATE_FORMAT[activeLanguage()] || ISO_DATE_FORMAT.en;
   if (format === "ymd_han") return `${year}年${month}月${day}日`;
-  if (format === "dmy_dot") return `${day}.${month}.${year}`;
   if (format === "dmy_slash") return `${day}/${month}/${year}`;
   const label = monthLabel(month);
   return `${label} ${day}, ${year}`;

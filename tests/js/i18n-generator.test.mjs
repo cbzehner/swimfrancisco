@@ -38,7 +38,6 @@ function overlayWorkingGenerator(target) {
     "i18n/dynamic-labels.toml",
     "i18n/ui/en.toml",
     "i18n/ui/es.toml",
-    "i18n/ui/fi.toml",
     "i18n/ui/fil.toml",
     "i18n/ui/vi.toml",
     "i18n/ui/zh-Hant.toml",

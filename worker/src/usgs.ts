@@ -3,10 +3,10 @@
 // reports water temperature as parameter 00010 in °C.
 // Docs: https://waterservices.usgs.gov/docs/instantaneous-values/
 
+import { fetchJson } from "./http.ts";
 import { readingFromC, type TempReading } from "./temp.ts";
 
 const BASE = "https://waterservices.usgs.gov/nwis/iv/";
-const FETCH_TIMEOUT_MS = 10_000;
 // USGS marks missing/invalid readings with large negative sentinels.
 const MISSING_SENTINEL_CEILING = -100;
 
@@ -26,12 +26,7 @@ export async function fetchUsgsTemp(stationId: string): Promise<TempReading | nu
     period: "PT4H",
     format: "json",
   });
-  const res = await fetch(`${BASE}?${query}`, {
-    headers: { accept: "application/json" },
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-  });
-  if (!res.ok) throw new Error(`USGS ${stationId} HTTP ${res.status}`);
-  const body = (await res.json()) as NwisResponse;
+  const body = (await fetchJson(`USGS ${stationId}`, `${BASE}?${query}`)) as NwisResponse;
 
   for (const series of body.value?.timeSeries ?? []) {
     for (const block of series.values ?? []) {

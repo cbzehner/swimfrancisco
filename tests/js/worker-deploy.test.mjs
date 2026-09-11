@@ -130,3 +130,37 @@ test("map config reads the CARTO key on every request", async () => {
   assert.deepEqual(await first.json(), { carto_basemap_key: "fake-key-one" });
   assert.deepEqual(await second.json(), { carto_basemap_key: "fake-key-two" });
 });
+
+// Negative responses: the two "no data yet" answers are worth a short edge
+// cache, a rejected method is not. Pins that split so a shared helper cannot
+// quietly start caching a 405.
+test("a rejected method sends no cache-control; the miss responses keep theirs", async () => {
+  const rejected = await worker.fetch(
+    new Request("https://swimfrancisco.com/api/conditions", { method: "POST" }),
+    {},
+    {},
+  );
+  assert.equal(rejected.status, 405);
+  assert.equal(rejected.headers.get("cache-control"), null);
+  assert.equal(await rejected.text(), "method not allowed");
+
+  const missing = await worker.fetch(new Request("https://swimfrancisco.com/nope"), {}, {});
+  assert.equal(missing.status, 404);
+  assert.equal(missing.headers.get("cache-control"), "public, max-age=60");
+
+  const originalCaches = globalThis.caches;
+  globalThis.caches = { default: { match: async () => undefined, put: async () => {} } };
+  try {
+    const empty = await worker.fetch(
+      new Request("https://swimfrancisco.com/api/conditions"),
+      { CONDITIONS: { get: async () => null } },
+      { waitUntil() {} },
+    );
+    assert.equal(empty.status, 503);
+    assert.equal(empty.headers.get("cache-control"), "public, max-age=60");
+    assert.equal(await empty.text(), "conditions not yet available");
+  } finally {
+    if (originalCaches === undefined) delete globalThis.caches;
+    else globalThis.caches = originalCaches;
+  }
+});

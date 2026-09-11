@@ -9,7 +9,12 @@ export function isPtMidnight(scheduledTime: number): boolean {
     new Intl.DateTimeFormat("en-US", {
       timeZone: "America/Los_Angeles",
       hour: "2-digit",
-      hour12: false,
+      // h23 pins midnight to "00"; an ICU build defaulting to h24 renders it
+      // as "24" and the equality below would never hold. `hour12` must stay
+      // out of the bag: ECMA-402 CreateDateTimeFormat nulls `hourCycle`
+      // whenever `hour12` is present, so `hour12: false` would silently
+      // discard this pin.
+      hourCycle: "h23",
     }).format(new Date(scheduledTime)),
   );
   return ptHour === 0;
