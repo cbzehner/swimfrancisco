@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
 
@@ -172,6 +173,17 @@ def _install_http(
 
         def __exit__(self, exc_type, exc, tb):
             return False
+
+        @contextmanager
+        def stream(self, method: str, url: str):
+            # Bounded PDF reads stream; re-wrap so iter_raw() is available.
+            response = self.get(url)
+            yield httpx.Response(
+                response.status_code,
+                stream=httpx.ByteStream(response.content),
+                headers=response.headers,
+                request=response.request,
+            )
 
         def get(self, url: str):
             requested.append(url)
@@ -1590,12 +1602,18 @@ def test_discover_all_hard_error_when_every_page_fails(tmp_path, monkeypatch) ->
             request = httpx.Request("GET", url)
             return httpx.Response(500, content=b"nope", request=request)
 
+        @contextmanager
+        def stream(self, method: str, url: str):
+            request = httpx.Request(method, url)
+            yield httpx.Response(500, stream=httpx.ByteStream(b"nope"), request=request)
+
     monkeypatch.setattr("schedules.discover.httpx.Client", FakeClient)
     with pytest.raises(DiscoverError, match="every Rec & Park"):
         discover_all(
             [entry],
             dry_run=True,
             delay=0,
+            sleep=lambda _: None,
             registry_path=tmp_path / "unused.toml",
             report_dir=tmp_path,
         )
@@ -2212,6 +2230,9 @@ def test_fetch_error_keeps_registry_notes_and_reports_persisted(tmp_path, monkey
                 return httpx.Response(503, content=b"down", request=request)
             return self.inner.get(url)
 
+        def stream(self, method: str, url: str):
+            return self.inner.stream(method, url)
+
     real_client = __import__("schedules.discover", fromlist=["httpx"]).httpx.Client
     monkeypatch.setattr(
         "schedules.discover.httpx.Client",
@@ -2325,6 +2346,9 @@ def test_adopt_refuses_when_the_facility_page_failed(tmp_path, monkeypatch) -> N
                 raise httpx.ConnectError("page down")
             return self.inner.get(url)
 
+        def stream(self, method: str, url: str):
+            return self.inner.stream(method, url)
+
     monkeypatch.setattr(
         "schedules.discover.httpx.Client",
         lambda *args, **kwargs: FailPages(real_client(*args, **kwargs)),
@@ -2403,3 +2427,81 @@ def test_persisted_survivor_that_failed_to_fetch_is_not_asserted(tmp_path, monke
     assert 29799 in persisted_band_ids(
         next(item for item in load_registry(registry) if item.slug == "garfield-pool").notes
     )
+
+
+# --- page and view fetches retry transient failures and bound the body -----
+
+
+def _mock_client(handler) -> httpx.Client:
+    return httpx.Client(transport=httpx.MockTransport(handler))
+
+
+def test_page_fetch_retries_a_transient_status_then_succeeds() -> None:
+    from schedules import discover
+
+    statuses = [502, 200]
+
+    def handler(request):
+        return httpx.Response(statuses.pop(0), text="<html></html>")
+
+    with _mock_client(handler) as client:
+        response = discover._get_with_retries(
+            client, "https://example.test/page", sleep=lambda _: None
+        )
+    assert response.status_code == 200
+    assert statuses == []
+
+
+def test_page_fetch_does_not_retry_a_permanent_status() -> None:
+    from schedules import discover
+
+    calls: list[httpx.Request] = []
+
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(404, text="missing")
+
+    with _mock_client(handler) as client:
+        with pytest.raises(httpx.HTTPStatusError):
+            discover._get_with_retries(
+                client, "https://example.test/page", sleep=lambda _: None
+            )
+    assert len(calls) == 1
+
+
+def test_view_fetch_rejects_a_pdf_over_the_source_limit(monkeypatch) -> None:
+    from schedules import discover
+    from schedules.fetch import FetchError
+
+    monkeypatch.setattr(discover, "MAX_PDF_BYTES", 100)
+
+    def handler(request):
+        return httpx.Response(
+            200,
+            stream=httpx.ByteStream(b"%PDF-1.4" + b"x" * 500),
+            headers={"Content-Type": "application/pdf"},
+        )
+
+    with _mock_client(handler) as client:
+        with pytest.raises(FetchError, match="source limit"):
+            discover._fetch_view(client, 29800, sleep=lambda _: None)
+
+
+def test_view_fetch_retries_a_transient_status_then_succeeds() -> None:
+    from schedules import discover
+
+    statuses = [503, 200]
+
+    def handler(request):
+        status = statuses.pop(0)
+        return httpx.Response(
+            status,
+            stream=httpx.ByteStream(_pdf_bytes() if status == 200 else b"down"),
+            headers={"Content-Type": "application/pdf" if status == 200 else "text/plain"},
+        )
+
+    with _mock_client(handler) as client:
+        fetched = discover._fetch_view(client, 29800, sleep=lambda _: None)
+    assert fetched.status_code == 200
+    assert fetched.is_pdf is True
+    assert statuses == []

@@ -15,6 +15,10 @@ from .paths import DATA_DIR, review_dir as make_review_dir
 from .signals import MAX_PDF_BYTES, MAX_PDF_PAGES, MAX_PAGE_POINTS
 
 
+# Retried everywhere: a server that is busy, rate-limiting or briefly broken.
+TRANSIENT_STATUSES = frozenset({408, 429, 500, 502, 503, 504})
+
+
 class FetchError(RuntimeError):
     """Raised when a PDF cannot be fetched or validated."""
 

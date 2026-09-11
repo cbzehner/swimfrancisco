@@ -18,6 +18,7 @@ import httpx
 
 from ._time import pacific_today
 from .direct_sources.http import BOT_USER_AGENT
+from .fetch import MAX_PDF_BYTES, TRANSIENT_STATUSES, FetchError
 from .models import PoolEntry
 from .paths import REGISTRY_PATH, TMP_DIR
 from .registry import load_registry
@@ -568,7 +569,6 @@ def discover_all(
         for entry in selected:
             try:
                 page = _get_with_retries(client, entry.official_page_url, sleep=sleep)
-                page.raise_for_status()
                 table_links[entry.slug] = discover_facility_documents(page.text)
             except Exception:  # noqa: BLE001
                 fetch_errors.add(entry.slug)
@@ -585,13 +585,13 @@ def discover_all(
             current_ids.add(adopt[1])
         immediate_ids = sorted(table_ids | current_ids)
         for view_id in immediate_ids:
-            views[view_id] = _fetch_view(client, view_id)
+            views[view_id] = _fetch_view(client, view_id, sleep=sleep)
 
         remaining = sorted(view_id for view_id in probe if view_id not in views)
         for index, view_id in enumerate(remaining):
             if index and delay:
                 sleep(delay)
-            views[view_id] = _fetch_view(client, view_id)
+            views[view_id] = _fetch_view(client, view_id, sleep=sleep)
 
     dropped_persisted = {
         view_id
@@ -969,24 +969,64 @@ def _get_with_retries(
     *,
     sleep: Callable[[float], None],
     retries: int = PAGE_RETRIES,
+    max_bytes: int | None = None,
 ) -> httpx.Response:
-    last_error: Exception | None = None
+    """GET with bounded retries on transient failures, raising for other statuses."""
+    last_error: httpx.HTTPError
     for attempt in range(retries + 1):
         try:
-            return client.get(url)
+            return _get_once(client, url, max_bytes)
         except httpx.HTTPError as exc:
             last_error = exc
-            if attempt >= retries:
+            transient = isinstance(exc, httpx.TransportError) or (
+                isinstance(exc, httpx.HTTPStatusError)
+                and exc.response.status_code in TRANSIENT_STATUSES
+            )
+            if not transient or attempt >= retries:
                 break
             sleep(0.25 * (attempt + 1))
-    assert last_error is not None
     raise last_error
 
 
-def _fetch_view(client: httpx.Client, view_id: int) -> _ViewFetch:
+def _get_once(
+    client: httpx.Client, url: str, max_bytes: int | None
+) -> httpx.Response:
+    if max_bytes is None:
+        response = client.get(url)
+        response.raise_for_status()
+        return response
+    with client.stream("GET", url) as response:
+        response.raise_for_status()
+        length = response.headers.get("content-length")
+        if length is not None and (not length.isdecimal() or int(length) > max_bytes):
+            raise FetchError("PDF exceeds the 25 MiB source limit or has an invalid length")
+        chunks: list[bytes] = []
+        size = 0
+        for chunk in response.iter_raw(chunk_size=64 * 1024):
+            size += len(chunk)
+            if size > max_bytes:
+                raise FetchError("PDF exceeds the 25 MiB source limit")
+            chunks.append(chunk)
+        return httpx.Response(
+            status_code=response.status_code,
+            headers=response.headers,
+            content=b"".join(chunks),
+            request=response.request,
+            extensions=response.extensions,
+            history=response.history,
+        )
+
+
+def _fetch_view(
+    client: httpx.Client, view_id: int, *, sleep: Callable[[float], None]
+) -> _ViewFetch:
     url = absolute_view_url(view_id)
     try:
-        response = client.get(url)
+        response = _get_with_retries(client, url, sleep=sleep, max_bytes=MAX_PDF_BYTES)
+        content = response.content or b""
+    except httpx.HTTPStatusError as exc:
+        # A 404 still tells discover the document is gone; the body does not.
+        response, content = exc.response, b""
     except httpx.HTTPError:
         return _ViewFetch(
             view_id=view_id,
@@ -998,7 +1038,6 @@ def _fetch_view(client: httpx.Client, view_id: int) -> _ViewFetch:
         )
     content_type = response.headers.get("content-type", "")
     filename = _filename_from_headers(response.headers)
-    content = response.content or b""
     is_pdf = response.status_code == 200 and (
         "pdf" in content_type.lower() or content.lstrip().startswith(b"%PDF")
     )
