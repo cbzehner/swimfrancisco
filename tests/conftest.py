@@ -10,14 +10,54 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 
+import hashlib
+import json
+from datetime import date
+
+import jsonschema
 import pytest
+
+from schedules.eval import RowKey
+from schedules.schema import EXTRACTION_SCHEMA
+
+
+SOURCE_REFERENCES = ROOT / "tests/fixtures/source-references.json"
+
+
+def load_source_reference(path: Path, reference_id: str, *, repo_root: Path) -> dict:
+    """Load one checked source reference and re-verify its PDF bytes."""
+    references = json.loads(path.read_text())["documents"]
+    matches = [item for item in references if item["id"] == reference_id]
+    if len(matches) != 1:
+        raise ValueError("Source reference must identify exactly one document.")
+    reference = matches[0]
+    if reference["split"] not in {"development", "finalist", "holdout"} or not reference.get("expected"):
+        raise ValueError("This document is reserved or has no checked reference yet.")
+    source = (repo_root / reference["source_pdf"]).resolve()
+    if not source.is_relative_to(repo_root.resolve()):
+        raise ValueError("Source reference must be inside the repository.")
+    if hashlib.sha256(source.read_bytes()).hexdigest() != reference["source_sha256"]:
+        raise ValueError("Source reference hash does not match the checked document.")
+    expected = reference["expected"]
+    try:
+        jsonschema.validate(
+            expected | {"closures": expected.get("closures", [])}, EXTRACTION_SCHEMA,
+            format_checker=jsonschema.FormatChecker(),
+        )
+    except (jsonschema.ValidationError, TypeError, AttributeError) as exc:
+        raise ValueError("Source reference contains invalid expected schedule data.") from exc
+    rows = [RowKey.from_session(row) for row in expected["sessions"]]
+    if len(rows) != len(set(rows)):
+        raise ValueError("Source reference contains duplicate sessions.")
+    if "as_of" in reference:
+        date.fromisoformat(reference["as_of"])
+    return reference
 
 
 @pytest.fixture
 def north_beach_pair():
     """Frozen fall originals and independent visual transcriptions; never production input."""
     from schedules.models import PoolEntry, PoolSource
-    from schedules.schema import pool_label_payload
     from schedules.providers import openai_provider
     from schedules.signals import inspect_pdf_source
     from schedules.grounding import source_publication_coverage

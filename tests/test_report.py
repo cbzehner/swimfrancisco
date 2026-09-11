@@ -20,7 +20,7 @@ def _proposed(**overrides: object) -> Extracted:
         "official_page_url": "https://example.test/rossi",
         "pdf_url": "https://example.test/rossi.pdf",
         "source_status": "published",
-        "provider": "anthropic",
+        "provider": "openai",
         "model": "claude",
         "pdf_sha256": "a" * 64,
         "page_count": 1,
@@ -40,7 +40,7 @@ def _unchanged(**overrides: object) -> Unchanged:
         "official_page_url": "https://example.test/rossi",
         "pdf_url": "https://example.test/rossi.pdf",
         "source_status": "published",
-        "provider": "anthropic",
+        "provider": "openai",
         "model": "claude",
         "pdf_sha256": "a" * 64,
         "page_count": 1,
@@ -85,7 +85,7 @@ def _rejected(**overrides: object) -> Extracted:
         "official_page_url": "https://example.test/rossi",
         "pdf_url": "https://example.test/rossi.pdf",
         "source_status": "published",
-        "provider": "anthropic",
+        "provider": "openai",
         "model": "claude",
         "pdf_sha256": "a" * 64,
         "page_count": 1,
@@ -142,8 +142,7 @@ class TestSummaryHeader:
     def test_consecutive_mode_reports_keep_distinct_contents(self, tmp_path: Path) -> None:
         paths = {
             "direct": tmp_path / "extraction-report-direct.md",
-            "gemini": tmp_path / "extraction-report-gemini.md",
-            "anthropic": tmp_path / "extraction-report-anthropic.md",
+            "openai": tmp_path / "extraction-report-openai.md",
         }
         for mode, path in paths.items():
             write_report([_proposed(slug=mode)], path)
@@ -192,19 +191,19 @@ class TestPoolBlock:
             [
                 _proposed(
                     review_notes=[
-                        ReviewNote(kind="grounding_coverage_low", message="70% grounded"),
+                        ReviewNote(kind="delta_session_count_shift", message="12 -> 9 sessions"),
                         ReviewNote(
-                            kind="compare_provider_failed",
-                            message="gemini failed",
-                            severity="warning",
+                            kind="direct_extractor_note",
+                            message="koret sheet had no closures tab",
+                            severity="info",
                         ),
                     ],
                 )
             ],
             tmp_path,
         )
-        assert "- review_note[warning::grounding_coverage_low]: 70% grounded" in text
-        assert "- review_note[warning::compare_provider_failed]: gemini failed" in text
+        assert "- review_note[warning::delta_session_count_shift]: 12 -> 9 sessions" in text
+        assert "- review_note[info::direct_extractor_note]: koret sheet had no closures tab" in text
 
     def test_no_notes_renders_none_marker(self, tmp_path: Path) -> None:
         text = _render([_proposed()], tmp_path)
@@ -232,7 +231,7 @@ class TestPoolBlock:
             [
                 _proposed(
                     artifact_paths={
-                        "payload": "data/hamilton-pool/2026-04-19-aaaaaaaaaaaa/gemini-model.json",
+                        "payload": "data/hamilton-pool/2026-04-19-aaaaaaaaaaaa/openai-model.json",
                         "reviewed-snapshot": "data/hamilton-pool/2026-04-19-aaaaaaaaaaaa/reviewed.json",
                         "pdf": "data/hamilton-pool/2026-04-19-aaaaaaaaaaaa/source.pdf",
                     }
@@ -243,7 +242,7 @@ class TestPoolBlock:
         lines = [line for line in text.splitlines() if line.startswith("- artifact[")]
         assert lines == [
             "- artifact[reviewed-snapshot]: data/hamilton-pool/2026-04-19-aaaaaaaaaaaa/reviewed.json",
-            "- artifact[payload]: data/hamilton-pool/2026-04-19-aaaaaaaaaaaa/gemini-model.json",
+            "- artifact[payload]: data/hamilton-pool/2026-04-19-aaaaaaaaaaaa/openai-model.json",
             "- artifact[pdf]: data/hamilton-pool/2026-04-19-aaaaaaaaaaaa/source.pdf",
         ]
 

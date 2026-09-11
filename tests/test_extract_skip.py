@@ -10,6 +10,7 @@ from schedules import registry as registry_mod
 from schedules.models import Extracted, FetchResult, Unchanged
 from schedules.pipeline import ExpandFromDecisions, PdfRun, run_pipeline
 from schedules.review import DecisionSet
+from schedules.providers.openai_provider import API_MODEL, extraction_configuration
 from schedules.report import write_report
 from schedules.schema import EXTRACTION_SCHEMA as _EXTRACTION_SCHEMA
 
@@ -61,8 +62,8 @@ def _setup_world(
         artifacts_mod.save_artifact_bundle(
             slug=SLUG,
             date=DATE,
-            provider="gemini",
-            model="gemini-3.1-flash-lite-preview",
+            provider="openai",
+            model=API_MODEL,
             source_pdf_url=PDF_URL,
             pdf_sha256=PDF_SHA,
             prompt=prompt_text,
@@ -70,6 +71,7 @@ def _setup_world(
             payload=_payload(),
             usage={},
             cost_estimate="cached",
+            details={"configuration": extraction_configuration(prompt_text)},
             root=data_root,
         )
 
@@ -126,19 +128,19 @@ def _setup_world(
     )
 
     # PDF inspection is out of scope for these pipeline-flow tests.
-    from schedules.models import GroundingResult
     monkeypatch.setattr("schedules.pipeline.extract_page_texts", lambda _bytes: [""])
     monkeypatch.setattr(
         "schedules.pipeline.analyze_page_texts",
         lambda _pages: [],
     )
-    monkeypatch.setattr("schedules.pipeline.normalize_pdf_text", lambda _pages: "")
-    monkeypatch.setattr(
-        "schedules.pipeline.grounding_from_text",
-        lambda _text, _payload: GroundingResult(sessions=[]),
-    )
     monkeypatch.setattr("schedules.pipeline.source_notes_for_signals", lambda _sig: [])
     monkeypatch.setattr("schedules.pipeline.check_delta", lambda _payload, _prior: [])
+    monkeypatch.setattr("schedules.pipeline.inspect_pdf_source", lambda _bytes: None)
+    monkeypatch.setattr("schedules.pipeline.verify_artifact", lambda *args, **kwargs: {"ok": True})
+    monkeypatch.setattr(
+        "schedules.pipeline.source_publication_coverage",
+        lambda _source, _payload, **kwargs: {"ok": True, "issues": []},
+    )
 
     source_pdf = review_dir / "source.pdf"
     fetched: list[tuple[str, str]] = []
@@ -163,12 +165,12 @@ def _raise_if_called(*_args, **_kwargs):
     raise AssertionError("extract_with_provider must not be called on the fast path")
 
 
-def test_extract_skips_llm_when_reviewed_exists(tmp_path, monkeypatch):
-    _setup_world(tmp_path, monkeypatch, with_reviewed=True, with_cached_provider=False, prompt_text="P")
+def test_extract_skips_llm_when_reviewed_matches_the_verified_cache(tmp_path, monkeypatch):
+    _setup_world(tmp_path, monkeypatch, with_reviewed=True, with_cached_provider=True, prompt_text="P")
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", _raise_if_called)
 
     exit_code, _, results = run_pipeline(
-        PdfRun(provider="gemini", slugs=(SLUG,), force=False, urls=ExpandFromDecisions(DecisionSet.from_items([]))),
+        PdfRun(provider="openai", slugs=(SLUG,), force=False, urls=ExpandFromDecisions(DecisionSet.from_items([]))),
     )
 
     assert exit_code == 0
@@ -182,7 +184,7 @@ def test_extract_uses_cached_provider_when_prompt_hashes_match(tmp_path, monkeyp
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", _raise_if_called)
 
     exit_code, _, results = run_pipeline(
-        PdfRun(provider="gemini", slugs=(SLUG,), force=False, urls=ExpandFromDecisions(DecisionSet.from_items([]))),
+        PdfRun(provider="openai", slugs=(SLUG,), force=False, urls=ExpandFromDecisions(DecisionSet.from_items([]))),
     )
 
     from schedules.models import Aborted
@@ -203,7 +205,7 @@ def test_extract_reruns_after_prompt_change(tmp_path, monkeypatch):
     from schedules.artifacts import save_artifact_bundle
     data_root = tmp_path / "data"
     save_artifact_bundle(
-        slug=SLUG, date=DATE, provider="gemini", model="gemini-3.1-flash-lite-preview",
+        slug=SLUG, date=DATE, provider="openai", model=API_MODEL,
         source_pdf_url=PDF_URL, pdf_sha256=PDF_SHA,
         prompt="OLD", schema={"type": "object"},
         payload=_payload(), usage={}, cost_estimate="cached",
@@ -217,14 +219,14 @@ def test_extract_reruns_after_prompt_change(tmp_path, monkeypatch):
         from schedules.models import ProviderResult
         return ProviderResult(
             payload=_payload(),
-            model="gemini-3.1-flash-lite-preview",
+            model=API_MODEL,
             usage={},
         )
 
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", fake_extract)
 
     exit_code, _, results = run_pipeline(
-        PdfRun(provider="gemini", slugs=(SLUG,), force=False, urls=ExpandFromDecisions(DecisionSet.from_items([]))),
+        PdfRun(provider="openai", slugs=(SLUG,), force=False, urls=ExpandFromDecisions(DecisionSet.from_items([]))),
     )
 
     assert exit_code == 0
@@ -237,7 +239,7 @@ def test_flag_notes_do_not_skip_published_extract(tmp_path, monkeypatch):
         tmp_path,
         monkeypatch,
         with_reviewed=True,
-        with_cached_provider=False,
+        with_cached_provider=True,
         prompt_text="P",
         registry_extra=(
             'source_status = "published"\n'
@@ -248,7 +250,7 @@ def test_flag_notes_do_not_skip_published_extract(tmp_path, monkeypatch):
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", _raise_if_called)
 
     exit_code, _, results = run_pipeline(
-        PdfRun(provider="gemini", slugs=(SLUG,), force=False, urls=ExpandFromDecisions(DecisionSet.from_items([]))),
+        PdfRun(provider="openai", slugs=(SLUG,), force=False, urls=ExpandFromDecisions(DecisionSet.from_items([]))),
     )
 
     assert exit_code == 0
@@ -270,7 +272,7 @@ def test_missing_current_schedule_still_skips(tmp_path, monkeypatch):
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", _raise_if_called)
 
     exit_code, _, results = run_pipeline(
-        PdfRun(provider="gemini", slugs=(SLUG,), force=False, urls=ExpandFromDecisions(DecisionSet.from_items([]))),
+        PdfRun(provider="openai", slugs=(SLUG,), force=False, urls=ExpandFromDecisions(DecisionSet.from_items([]))),
     )
 
     assert exit_code == 0

@@ -6,7 +6,6 @@ from click.testing import CliRunner
 from schedules.cli import cli
 from schedules.discover import DiscoverError
 from schedules.pipeline import (
-    BakeoffRun,
     DirectRun,
     DiscoverAndExpand,
     ExpandFromDecisions,
@@ -20,7 +19,7 @@ def test_extract_requires_exactly_one_source_mode() -> None:
 
     neither = runner.invoke(cli, ["extract"])
     both = runner.invoke(
-        cli, ["extract", "--direct", "--provider", "gemini"]
+        cli, ["extract", "--direct", "--provider", "openai"]
     )
 
     assert neither.exit_code != 0
@@ -42,7 +41,7 @@ def _capture_run_pipeline(monkeypatch) -> dict:
 
 def test_extract_provider_applies_discover(monkeypatch) -> None:
     captured = _capture_run_pipeline(monkeypatch)
-    result = CliRunner().invoke(cli, ["extract", "--provider", "gemini"])
+    result = CliRunner().invoke(cli, ["extract", "--provider", "openai"])
     assert result.exit_code == 0
     command = captured["command"]
     assert isinstance(command, PdfRun)
@@ -58,7 +57,7 @@ def test_extract_no_discover_reuses_explicit_decisions(tmp_path, monkeypatch) ->
     monkeypatch.setattr("schedules.cli.TMP_DIR", tmp_path)
     captured = _capture_run_pipeline(monkeypatch)
     result = CliRunner().invoke(
-        cli, ["extract", "--provider", "gemini", "--no-discover"]
+        cli, ["extract", "--provider", "openai", "--no-discover"]
     )
     assert result.exit_code == 0
     command = captured["command"]
@@ -82,7 +81,7 @@ def test_extract_direct_never_applies_discover(monkeypatch) -> None:
 def test_extract_force_still_applies_discover(monkeypatch) -> None:
     captured = _capture_run_pipeline(monkeypatch)
     result = CliRunner().invoke(
-        cli, ["extract", "--provider", "gemini", "--force"]
+        cli, ["extract", "--provider", "openai", "--force"]
     )
     assert result.exit_code == 0
     command = captured["command"]
@@ -95,14 +94,14 @@ def test_extract_url_requires_exactly_one_only_slug() -> None:
     runner = CliRunner()
     missing = runner.invoke(
         cli,
-        ["extract", "--provider", "gemini", "--url", "https://example.test/notice.pdf"],
+        ["extract", "--provider", "openai", "--url", "https://example.test/notice.pdf"],
     )
     many = runner.invoke(
         cli,
         [
             "extract",
             "--provider",
-            "gemini",
+            "openai",
             "--only",
             "hamilton-pool,sava-pool",
             "--url",
@@ -139,7 +138,7 @@ def test_extract_url_skips_discover_and_passes_override(monkeypatch) -> None:
         [
             "extract",
             "--provider",
-            "gemini",
+            "openai",
             "--only",
             "garfield-pool",
             "--url",
@@ -154,34 +153,12 @@ def test_extract_url_skips_discover_and_passes_override(monkeypatch) -> None:
     assert command.slugs == ("garfield-pool",)
 
 
-def test_bakeoff_does_not_apply_discover(monkeypatch) -> None:
-    captured = _capture_run_pipeline(monkeypatch)
-    result = CliRunner().invoke(
-        cli,
-        [
-            "debug",
-            "bakeoff",
-            "--only",
-            "hamilton-pool",
-            "--provider",
-            "gemini",
-            "--compare-with",
-            "anthropic",
-        ],
-    )
-    assert result.exit_code == 0
-    command = captured["command"]
-    assert isinstance(command, BakeoffRun)
-    assert command.compare_with == "anthropic"
-    assert command.slugs == ("hamilton-pool",)
-
-
 def test_extract_prints_discover_error(monkeypatch) -> None:
     def boom(_command):
         raise DiscoverError("every Rec & Park facility page failed to fetch")
 
     monkeypatch.setattr("schedules.cli.run_pipeline", boom)
-    result = CliRunner().invoke(cli, ["extract", "--provider", "gemini"])
+    result = CliRunner().invoke(cli, ["extract", "--provider", "openai"])
     assert result.exit_code == 1
     assert "every Rec & Park facility page failed to fetch" in result.output
     assert "0 pools processed" not in result.output

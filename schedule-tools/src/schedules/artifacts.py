@@ -5,7 +5,6 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from .models import GroundingResult
 from .paths import DATA_DIR, all_review_dirs, artifact_path, parse_review_dir_name, relative_to_repo
 
 
@@ -87,7 +86,6 @@ def save_artifact_bundle(
     payload: dict,
     usage: dict,
     cost_estimate: str,
-    grounding: GroundingResult | None = None,
     details: dict | None = None,
     root: Path = DATA_DIR,
 ) -> dict[str, str]:
@@ -106,23 +104,6 @@ def save_artifact_bundle(
         "cost_estimate": cost_estimate,
         "payload": payload,
     }
-    if grounding is not None:
-        provider_payload["grounding"] = {
-            "grounded_count": grounding.grounded_count,
-            "total": grounding.total,
-            "ratio": round(grounding.ratio, 4),
-            "sessions": [
-                {
-                    "index": entry.index,
-                    "grounded": entry.grounded,
-                    "missing_evidence": entry.missing_evidence,
-                    "evidence_in_pdf": entry.evidence_in_pdf,
-                    "start_in_evidence": entry.start_in_evidence,
-                    "type_in_evidence": entry.type_in_evidence,
-                }
-                for entry in grounding.sessions
-            ],
-        }
     if details is not None:
         provider_payload["details"] = details
     target.write_text(json.dumps(provider_payload, indent=2, sort_keys=True) + "\n")

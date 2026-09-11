@@ -5,13 +5,11 @@ import math
 import os
 import re
 import subprocess
-import zipfile
 from pathlib import Path
 from datetime import datetime, timezone
 import click
 
 from .discover import DiscoverError, discover_all, rec_park_entries
-from .benchmark import archive_benchmark, benchmark_models, check_model, prepare_benchmark, replay_benchmark, run_benchmark, run_api_benchmark
 from .models import PoolResult
 from .paths import (
     CONTENT_SPOTS_DIR,
@@ -22,9 +20,8 @@ from .paths import (
 )
 from .publish import publish_pending_all
 from .registry import load_registry
-from .eval import collect_pool_evals, load_benchmark_reference, render_report, score_benchmark_run, write_report
+from .eval import collect_pool_evals, render_report, write_report
 from .pipeline import (
-    BakeoffRun,
     DirectRun,
     DiscoverAndExpand,
     ExpandFromDecisions,
@@ -39,10 +36,6 @@ from .project import ProjectError, project as _project
 from .review import DecisionSet
 from .review_server import ReviewApp, serve_review_app
 from .providers.openai_provider import MonthlySpendBudget, SpendBudget
-
-
-def _default_provider() -> str:
-    return os.getenv("SCHEDULES_PROVIDER", "openai")
 
 
 @click.group()
@@ -176,8 +169,8 @@ def _summary_line(results: list[PoolResult]) -> str:
 )
 @click.option(
     "--provider",
-    type=click.Choice(["openai", "anthropic", "gemini"]),
-    help="Process only configured sfrecpark_pdf sources with this provider.",
+    type=click.Choice(["openai"]),
+    help="Process configured sfrecpark_pdf sources with the OpenAI extractor.",
 )
 @click.option("--force", is_flag=True, help="Re-fetch PDFs and bypass the unchanged shortcut.")
 @click.option(
@@ -419,163 +412,3 @@ def eval_command(stdout: bool, all_dirs: bool) -> None:
         return
     path = write_report(evals)
     click.echo(f"Wrote {path}")
-
-
-@cli.command("benchmark")
-@click.argument("attempt", type=click.Path(exists=True, dir_okay=False, path_type=Path))
-@click.option("--reference", "reference_id", required=True, help="Checked development document ID.")
-def benchmark_command(attempt: Path, reference_id: str) -> None:
-    """Score one recorded attempt against checked PDF facts. No API calls or writes."""
-    try:
-        reference = load_benchmark_reference(
-            REPO_ROOT / "tests/fixtures/schedule-benchmark.json", reference_id, repo_root=REPO_ROOT,
-        )
-        run = json.loads(attempt.read_text())
-        if not isinstance(run, dict):
-            raise ValueError("Benchmark attempt must be an object.")
-        result = score_benchmark_run(reference, run)
-    except (OSError, ValueError, KeyError) as exc:
-        raise click.ClickException(str(exc)) from exc
-    click.echo(json.dumps(result, indent=2))
-
-
-@cli.command("benchmark-prepare")
-@click.option("--poppler", type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--comparison", default="source-inventory", type=click.Choice(["source-inventory", "source-holdout", "development", "finalists", "literal-pool-labels"]))
-def benchmark_prepare_command(poppler: Path | None, comparison: str) -> None:
-    """Prepare label-free comparison inputs in a fresh temporary directory. No model calls."""
-    try:
-        root = prepare_benchmark(REPO_ROOT / "tests/fixtures/schedule-benchmark.json", REPO_ROOT, poppler, comparison)
-    except (OSError, ValueError) as exc:
-        raise click.ClickException(str(exc)) from exc
-    click.echo(str(root))
-
-
-@cli.command("benchmark-check")
-@click.option("--candidate", required=True, help="Exact candidate ID from the benchmark manifest.")
-@click.option("--output", required=True, type=click.Path(file_okay=False, path_type=Path))
-@click.option("--pi-extension", type=click.Path(exists=True, dir_okay=False, path_type=Path))
-@click.option("--timeout", default=60, type=click.IntRange(1, 180))
-def benchmark_check_command(candidate: str, output: Path, pi_extension: Path | None, timeout: int) -> None:
-    """Make ONE CLI inference call to check text/JSON readiness. Uses account quota."""
-    try:
-        models = benchmark_models(REPO_ROOT / "tests/fixtures/schedule-benchmark.json")
-        matches = [model for model in models if model["id"] == candidate]
-        if not matches:
-            raise ValueError("Unknown benchmark candidate.")
-        result = check_model(matches[0], output.resolve(), pi_extension, timeout)
-    except (OSError, ValueError) as exc:
-        raise click.ClickException(str(exc)) from exc
-    click.echo(json.dumps(result, indent=2))
-    if result["status"] != "text_ready":
-        raise click.exceptions.Exit(1)
-
-
-@cli.command("benchmark-run")
-@click.option("--inputs", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--output", required=True, type=click.Path(file_okay=False, path_type=Path))
-@click.option("--pi-extension", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path))
-@click.option("--blocked-candidate", multiple=True, help="Record an authentication-blocked candidate without calling it.")
-@click.option("--timeout", default=180, type=click.IntRange(1, 300))
-def benchmark_run_command(inputs: Path, output: Path, pi_extension: Path,
-                          blocked_candidate: tuple[str, ...], timeout: int) -> None:
-    """Run and score the frozen development matrix. Uses CLI account quota; never publishes."""
-    try:
-        results = run_benchmark(inputs.resolve(), output.resolve(),
-                                REPO_ROOT / "tests/fixtures/schedule-benchmark.json", REPO_ROOT,
-                                pi_extension.resolve(), blocked_candidate, timeout, progress=click.echo)
-    except (OSError, ValueError) as exc:
-        raise click.ClickException(str(exc)) from exc
-    click.echo(f"Recorded {len(results)} cells. Report: {output / 'report.md'}")
-
-
-@cli.command("benchmark-api-run")
-@click.option("--inputs", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--output", required=True, type=click.Path(file_okay=False, path_type=Path))
-@click.option("--budget-usd", required=True, type=click.FloatRange(min=0, max=10, min_open=True))
-@click.option("--timeout", default=240, type=click.IntRange(1, 300))
-def benchmark_api_run_command(inputs: Path, output: Path, budget_usd: float, timeout: int) -> None:
-    """Run the frozen API comparison with a maximum reservation before each call. Never publishes."""
-    try:
-        results = run_api_benchmark(inputs.resolve(), output.resolve(),
-                                    REPO_ROOT / "tests/fixtures/schedule-benchmark.json", REPO_ROOT,
-                                    budget_usd, timeout, progress=click.echo)
-    except (OSError, ValueError) as exc:
-        raise click.ClickException(str(exc)) from exc
-    click.echo(f"Recorded {len(results)} cells. Report: {output / 'report.md'}")
-
-
-@cli.command("benchmark-archive")
-@click.option("--inputs", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--results", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--output", required=True, type=click.Path(dir_okay=False, path_type=Path))
-def benchmark_archive_command(inputs: Path, results: Path, output: Path) -> None:
-    """Preserve frozen inputs, final responses and scores in a new ZIP. No model calls."""
-    try:
-        archive_benchmark(inputs, results, output, REPO_ROOT / "tests/fixtures/schedule-benchmark.json", REPO_ROOT)
-    except (OSError, ValueError, KeyError) as exc:
-        raise click.ClickException(str(exc)) from exc
-    click.echo(f"Verified and archived benchmark: {output}")
-
-
-@cli.command("benchmark-replay")
-@click.argument("archive", type=click.Path(exists=True, dir_okay=False, path_type=Path))
-@click.option("--output", required=True, type=click.Path(file_okay=False, path_type=Path))
-def benchmark_replay_command(archive: Path, output: Path) -> None:
-    """Verify checksums and reproduce all recorded scores offline. Never calls models."""
-    try:
-        report = replay_benchmark(archive, output, REPO_ROOT)
-    except (OSError, ValueError, KeyError, zipfile.BadZipFile) as exc:
-        raise click.ClickException(str(exc)) from exc
-    click.echo(f"Verified all archived cells and reproduced both reports: {report}")
-
-
-@cli.group()
-def debug() -> None:
-    """Research tools that never mutate content or state."""
-
-
-@debug.command("bakeoff")
-@click.option(
-    "--only",
-    required=True,
-    help="Comma-separated pool slugs to process.",
-)
-@click.option(
-    "--provider",
-    type=click.Choice(["openai", "anthropic", "gemini"]),
-    default=_default_provider(),
-    show_default="env SCHEDULES_PROVIDER or gemini",
-)
-@click.option(
-    "--compare-with",
-    type=click.Choice(["openai", "anthropic", "gemini"]),
-    required=True,
-    help="Second provider to run against the same PDFs and diff.",
-)
-@click.option("--force", is_flag=True, help="Re-fetch PDFs and bypass the unchanged shortcut.")
-def debug_bakeoff(
-    only: str,
-    provider: str,
-    compare_with: str,
-    force: bool,
-) -> None:
-    """Run two providers on the same PDFs and surface disagreements.
-
-    Writes provider artifact bundles under data/, never content/spots."""
-
-    if compare_with == provider:
-        raise click.ClickException("--compare-with must differ from --provider.")
-
-    slugs = _parse_slugs(only)
-    exit_code, report_path, results = run_pipeline(
-        BakeoffRun(
-            provider=parse_provider(provider),
-            compare_with=parse_provider(compare_with),
-            slugs=tuple(slugs) if slugs is not None else None,
-            force=force,
-        )
-    )
-    click.echo(f"Wrote {report_path}")
-    click.echo(_summary_line(results))
-    raise SystemExit(exit_code)

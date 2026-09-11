@@ -100,7 +100,7 @@ def api_reservation_microusd(request: dict) -> int:
     # plus one rounding token. Text uses UTF-8 bytes plus framing as a bound.
     input_bound = len(json.dumps(body, ensure_ascii=False).encode()) + 4096 + image_tokens
     if input_bound > 200_000:
-        raise ValueError("API benchmark input exceeds the short-context price reservation.")
+        raise ValueError("API request input exceeds the short-context price reservation.")
     return input_bound * 5 + request["max_output_tokens"] * 30
 
 
