@@ -13,7 +13,7 @@ def _write_review(
     sha12: str,
     truth_sessions: list[dict],
     provider_sessions: list[dict],
-    provider_filename: str = "gemini-gemini-3-1-flash-lite-preview.json",
+    provider_filename: str = "openai-model.json",
     *,
     attested_by: str | None = None,
     carried_from: str | None = None,

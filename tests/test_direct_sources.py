@@ -913,7 +913,7 @@ def test_browser_pipeline_writes_ready_direct_artifact_for_verified_access_trans
     monkeypatch.setattr(artifacts, 'relative_to_repo', lambda path: path.relative_to(tmp_path).as_posix())
     prior = {'sessions': [{'day': 'monday', 'type': 'lap_swim', 'start': '07:00', 'end': '08:00'}],
              'closures': [], 'effective_start': '2026-05-17', 'effective_end': None}
-    result = pipeline._process_direct_entry(entry, prior, policy=pipeline.ReusePolicy(False, False, False, False))
+    result = pipeline._process_direct_entry(entry, prior, policy=pipeline.ReusePolicy(False, False, False))
     assert result.provider == 'direct'
     assert result.model == 'browser-html'
     assert not result.catastrophic

@@ -9,9 +9,7 @@ description = "Local PDF schedule extraction pipeline for Swim Francisco pool co
 license = "GPL-3.0-only"
 requires-python = ">=3.13"
 dependencies = [
-  "anthropic",
   "click",
-  "google-genai",
   "httpx",
   "jsonschema",
   "openpyxl",

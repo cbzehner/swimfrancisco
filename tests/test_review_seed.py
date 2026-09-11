@@ -43,8 +43,7 @@ def _make_candidate(review_dir: Path, pdf_sha256: str, slug: str = "hamilton-poo
 
 def test_seed_draft_envelope_fields(tmp_path):
     artifact_dir = tmp_path / "artifacts" / "hamilton-pool" / ("a" * 12)
-    _write_provider(artifact_dir, "gemini", "gemini-3.1-flash-lite-preview", "a" * 64)
-    _write_provider(artifact_dir, "anthropic", "claude-sonnet-4-6", "a" * 64)
+    _write_provider(artifact_dir, "openai", "gpt-5.5-2026-04-23", "a" * 64)
     data_root = tmp_path / "data"
 
     path = seed_draft(
@@ -64,7 +63,7 @@ def test_seed_draft_envelope_fields(tmp_path):
 
 def test_seed_draft_is_idempotent(tmp_path):
     artifact_dir = tmp_path / "artifacts" / "hamilton-pool" / ("a" * 12)
-    _write_provider(artifact_dir, "gemini", "gemini-3.1-flash-lite-preview", "a" * 64)
+    _write_provider(artifact_dir, "openai", "gpt-5.5-2026-04-23", "a" * 64)
     data_root = tmp_path / "data"
     candidate = _make_candidate(artifact_dir, "a" * 64)
 
@@ -83,7 +82,7 @@ def test_seed_draft_uses_pacific_time_for_today(tmp_path, monkeypatch):
     from zoneinfo import ZoneInfo
 
     artifact_dir = tmp_path / "artifacts" / "hamilton-pool" / ("a" * 12)
-    _write_provider(artifact_dir, "gemini", "gemini-3.1-flash-lite-preview", "a" * 64)
+    _write_provider(artifact_dir, "openai", "gpt-5.5-2026-04-23", "a" * 64)
 
     # 2026-04-20 00:30 UTC is 2026-04-19 17:30 PT — PT date must win.
     fixed_utc = datetime(2026, 4, 20, 0, 30, tzinfo=ZoneInfo("UTC"))

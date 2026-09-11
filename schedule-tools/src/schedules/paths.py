@@ -13,8 +13,6 @@ TMP_DIR = REPO_ROOT / "tmp"
 REPORT_PATHS = {
     "openai": TMP_DIR / "extraction-report-openai.md",
     "direct": TMP_DIR / "extraction-report-direct.md",
-    "gemini": TMP_DIR / "extraction-report-gemini.md",
-    "anthropic": TMP_DIR / "extraction-report-anthropic.md",
 }
 REGISTRY_PATH = PACKAGE_ROOT / "registry.toml"
 PROMPT_PATH = PACKAGE_ROOT / "prompts" / "extract.txt"

@@ -59,7 +59,7 @@ def _write_capture(
 ) -> Path:
     review_dir = data / slug / f"{fetch_date}-{sha[:12]}"
     review_dir.mkdir(parents=True, exist_ok=True)
-    (review_dir / "gemini-model.json").write_text(
+    (review_dir / "openai-model.json").write_text(
         json.dumps(
             {
                 "pdf_sha256": sha,

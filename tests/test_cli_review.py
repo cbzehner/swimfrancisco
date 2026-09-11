@@ -25,7 +25,7 @@ def _seed_review_dir(
     review_dir = _review_dir(data_root, slug, date, pdf_sha256)
     review_dir.mkdir(parents=True, exist_ok=True)
     artifact = {
-        "provider": "gemini",
+        "provider": "openai",
         "model": "model",
         "source_pdf_url": "https://example.com/x.pdf",
         "pdf_sha256": pdf_sha256,
@@ -41,7 +41,7 @@ def _seed_review_dir(
     }
     if extracted_at is not None:
         artifact["extracted_at"] = extracted_at
-    (review_dir / "gemini-model.json").write_text(json.dumps(artifact))
+    (review_dir / "openai-model.json").write_text(json.dumps(artifact))
     (review_dir / "source.pdf").write_bytes(b"%PDF-fake")
     return review_dir
 
@@ -199,12 +199,12 @@ def test_review_app_reports_current_and_changed_source(tmp_path, monkeypatch):
     assert app.check_source("koret-center") == {"status": "changed", "source_identity": "b" * 64}
 
 
-@pytest.mark.parametrize("source_kind, configured_provider, expected_mode", [
-    ("koret_google_sheet", "anthropic", "direct"),
-    ("pomeroy_html", "gemini", "direct"),
-    ("sfrecpark_pdf", "anthropic", "anthropic"),
+@pytest.mark.parametrize("source_kind, expected_mode", [
+    ("koret_google_sheet", "direct"),
+    ("pomeroy_html", "direct"),
+    ("sfrecpark_pdf", "openai"),
 ])
-def test_review_refresh_uses_registry_source_mode(tmp_path, monkeypatch, source_kind, configured_provider, expected_mode):
+def test_review_refresh_uses_registry_source_mode(tmp_path, monkeypatch, source_kind, expected_mode):
     data = tmp_path / "data"
     content = tmp_path / "content" / "spots"
     _seed_review_dir(data, "koret-center", "2026-04-01", "a" * 64)
@@ -217,7 +217,6 @@ def test_review_refresh_uses_registry_source_mode(tmp_path, monkeypatch, source_
     )
     monkeypatch.setattr("schedules.review_server.load_registry", lambda: [entry])
     monkeypatch.setattr("schedules.review_server.current_source_identity", lambda slug: "b" * 64)
-    monkeypatch.setenv("SCHEDULES_PROVIDER", configured_provider)
     calls = []
 
     def fake_run(command):
@@ -284,22 +283,3 @@ def test_review_refresh_selects_exact_live_same_day_capture(tmp_path, monkeypatc
     )
     assert reviewed == live / "reviewed.json"
     assert reviewed.exists()
-
-
-def test_review_refresh_rejects_invalid_pdf_provider(tmp_path, monkeypatch):
-    data = tmp_path / "data"
-    content = tmp_path / "content" / "spots"
-    _seed_review_dir(data, "koret-center", "2026-04-01", "a" * 64)
-    app = ReviewApp(data_root=data, content_spots_dir=content)
-    entry = PoolEntry(
-        slug="koret-center",
-        pdf_url="https://example.com/source.pdf",
-        official_page_url="https://example.com/pool",
-        source_kind="sfrecpark_pdf",
-    )
-    monkeypatch.setattr("schedules.review_server.load_registry", lambda: [entry])
-    monkeypatch.setattr("schedules.review_server.current_source_identity", lambda slug: "b" * 64)
-    monkeypatch.setenv("SCHEDULES_PROVIDER", "direct")
-
-    with pytest.raises(ValueError, match="Unsupported provider"):
-        app.refresh("koret-center")

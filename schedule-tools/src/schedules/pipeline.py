@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 import traceback
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -24,21 +23,18 @@ from .merge import read_schedule_snapshot
 from .models import Aborted, Extracted, GroundingResult, PoolEntry, PoolResult, ReviewNote, Skipped, Unchanged, Violation
 from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH, REPORT_PATHS, TMP_DIR, artifact_path, reviewed_path, relative_to_repo
 from .providers import extract as extract_with_provider
-from .providers.anthropic_provider import DEFAULT_MODEL as ANTHROPIC_DEFAULT_MODEL
-from .providers.gemini_provider import DEFAULT_MODEL as GEMINI_DEFAULT_MODEL
 from .providers.openai_provider import API_MODEL, ClosureReviewRequired, extraction_configuration, verify_artifact
 from .registry import load_registry
 from .review import DecisionSet, carry_forward_review, parse_view_id
 from .reviewed_snapshots import load_reviewed_snapshot_from_path
-from .diff import compare_payloads
 from .report import discovery_notes_from_decisions, write_report
 from .schema import EXTRACTION_SCHEMA
 from .signals import analyze_page_texts, extract_page_texts, inspect_pdf_source, source_notes_for_signals
 from .validate import validate
 
 GROUNDING_MIN_RATIO = 0.9
-SourceMode = Literal["direct", "openai", "gemini", "anthropic"]
-ProviderMode = Literal["openai", "gemini", "anthropic"]
+SourceMode = Literal["direct", "openai"]
+ProviderMode = Literal["openai"]
 
 
 @dataclass(frozen=True)
@@ -70,15 +66,7 @@ class PdfRun:
     urls: DiscoverAndExpand | ExpandFromDecisions | PinOverride
 
 
-@dataclass(frozen=True)
-class BakeoffRun:
-    provider: ProviderMode
-    compare_with: ProviderMode
-    slugs: tuple[str, ...] | None
-    force: bool
-
-
-RunCommand = DirectRun | PdfRun | BakeoffRun
+RunCommand = DirectRun | PdfRun
 
 
 @dataclass(frozen=True)
@@ -86,36 +74,26 @@ class ReusePolicy:
     same_dir_reviewed: bool
     provider_artifact: bool
     carry_forward: bool
-    bakeoff: bool
 
 
 def reuse_policy(command: RunCommand) -> ReusePolicy:
-    if isinstance(command, BakeoffRun):
-        return ReusePolicy(
-            same_dir_reviewed=False,
-            provider_artifact=False,
-            carry_forward=False,
-            bakeoff=True,
-        )
     if command.force:
         return ReusePolicy(
             same_dir_reviewed=False,
             provider_artifact=False,
             carry_forward=True,
-            bakeoff=False,
         )
     return ReusePolicy(
         same_dir_reviewed=True,
         provider_artifact=True,
         carry_forward=True,
-        bakeoff=False,
     )
 
 
 def parse_provider(value: str) -> ProviderMode:
-    if value in ("openai", "gemini", "anthropic"):
+    if value == "openai":
         return value
-    raise ValueError(f"Unsupported provider {value!r}; expected 'openai', 'gemini', or 'anthropic'.")
+    raise ValueError(f"Unsupported provider {value!r}; expected 'openai'.")
 
 
 def compute_exit_code(results: list[PoolResult]) -> int:
@@ -139,16 +117,6 @@ def _identity_kwargs(entry: PoolEntry) -> dict:
         "pdf_url": entry.pdf_url,
         "source_status": entry.source_status,
     }
-
-
-def _default_model(provider: str) -> str:
-    if provider == "openai":
-        return API_MODEL
-    if provider == "gemini":
-        return os.getenv("SCHEDULES_GEMINI_MODEL", GEMINI_DEFAULT_MODEL)
-    if provider == "anthropic":
-        return os.getenv("SCHEDULES_ANTHROPIC_MODEL", ANTHROPIC_DEFAULT_MODEL)
-    raise ValueError(f"Unsupported provider {provider!r}.")
 
 
 def _grounding_notes(provider: str, grounding: GroundingResult) -> list[ReviewNote]:
@@ -230,7 +198,7 @@ def _process_entry(
                 raise ValueError("Paired component requires its printed pool identity and the production provider")
         date = fetch_result.path.parent.name[:10]
         reviewed_file = reviewed_path(entry.slug, date, fetch_result.sha256)
-        default_model = _default_model(provider)
+        default_model = API_MODEL
         configuration = extraction_configuration(prompt) if provider == "openai" else None
         use_cached = policy.provider_artifact and skip_if_fresh(
             slug=entry.slug, date=date, pdf_sha256=fetch_result.sha256,
@@ -256,7 +224,7 @@ def _process_entry(
                 reviewed_file=reviewed_file,
             )
 
-        # PDF text + signals (reused for grounding both providers if bakeoff).
+        # PDF text + signals.
         page_texts = extract_page_texts(fetch_result.bytes)
         pdf_signals = analyze_page_texts(page_texts)
         pdf_text_normalized = normalize_pdf_text(page_texts)
@@ -309,8 +277,7 @@ def _process_entry(
             )
 
         # A payload identical to the last human-reviewed one needs no new
-        # review — carry the attestation to this capture. Bakeoff runs
-        # always produce a full Extracted result.
+        # review — carry the attestation to this capture.
         if policy.carry_forward and not entry.pool_sources and (coverage is None or coverage["ok"]):
             carried = carry_forward_review(
                 slug=entry.slug,
@@ -334,40 +301,6 @@ def _process_entry(
             *(_grounding_notes(provider, grounding) if coverage is None else []),
             *check_delta(payload, prior_snapshot),
         ]
-
-        # Optional bakeoff against a second provider.
-        if policy.bakeoff and isinstance(command, BakeoffRun):
-            compare_with = command.compare_with
-            try:
-                compare = extract_with_provider(compare_with, fetch_result.bytes, prompt, EXTRACTION_SCHEMA)
-                compare_grounding = grounding_from_text(pdf_text_normalized, compare.payload)
-                review_notes.extend(_grounding_notes(compare_with, compare_grounding))
-                artifact_paths.update(
-                    save_artifact_bundle(
-                        slug=entry.slug,
-                        date=date,
-                        provider=compare_with,
-                        model=compare.model,
-                        source_pdf_url=entry.pdf_url,
-                        pdf_sha256=fetch_result.sha256,
-                        prompt=prompt,
-                        schema=EXTRACTION_SCHEMA,
-                        payload=compare.payload,
-                        usage=compare.usage,
-                        cost_estimate=compare.cost_estimate,
-                        grounding=compare_grounding,
-                        details=compare.details,
-                    )
-                )
-                review_notes.extend(compare_payloads(provider, payload, compare_with, compare.payload))
-            except Exception as exc:  # noqa: BLE001
-                review_notes.append(
-                    ReviewNote(
-                        kind="compare_provider_failed",
-                        message=f"{compare_with} comparison run failed: {exc}",
-                        severity="warning",
-                    )
-                )
 
         # Catastrophic validation routes to a non-zero exit (Extracted with
         # catastrophic=True); advisory violations land on the result for the

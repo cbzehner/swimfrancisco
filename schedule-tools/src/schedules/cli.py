@@ -22,7 +22,6 @@ from .publish import publish_pending_all
 from .registry import load_registry
 from .eval import collect_pool_evals, render_report, write_report
 from .pipeline import (
-    BakeoffRun,
     DirectRun,
     DiscoverAndExpand,
     ExpandFromDecisions,
@@ -37,10 +36,6 @@ from .project import ProjectError, project as _project
 from .review import DecisionSet
 from .review_server import ReviewApp, serve_review_app
 from .providers.openai_provider import MonthlySpendBudget, SpendBudget
-
-
-def _default_provider() -> str:
-    return os.getenv("SCHEDULES_PROVIDER", "openai")
 
 
 @click.group()
@@ -174,8 +169,8 @@ def _summary_line(results: list[PoolResult]) -> str:
 )
 @click.option(
     "--provider",
-    type=click.Choice(["openai", "anthropic", "gemini"]),
-    help="Process only configured sfrecpark_pdf sources with this provider.",
+    type=click.Choice(["openai"]),
+    help="Process configured sfrecpark_pdf sources with the OpenAI extractor.",
 )
 @click.option("--force", is_flag=True, help="Re-fetch PDFs and bypass the unchanged shortcut.")
 @click.option(
@@ -417,54 +412,3 @@ def eval_command(stdout: bool, all_dirs: bool) -> None:
         return
     path = write_report(evals)
     click.echo(f"Wrote {path}")
-
-
-@cli.group()
-def debug() -> None:
-    """Research tools that never mutate content or state."""
-
-
-@debug.command("bakeoff")
-@click.option(
-    "--only",
-    required=True,
-    help="Comma-separated pool slugs to process.",
-)
-@click.option(
-    "--provider",
-    type=click.Choice(["openai", "anthropic", "gemini"]),
-    default=_default_provider(),
-    show_default="env SCHEDULES_PROVIDER or gemini",
-)
-@click.option(
-    "--compare-with",
-    type=click.Choice(["openai", "anthropic", "gemini"]),
-    required=True,
-    help="Second provider to run against the same PDFs and diff.",
-)
-@click.option("--force", is_flag=True, help="Re-fetch PDFs and bypass the unchanged shortcut.")
-def debug_bakeoff(
-    only: str,
-    provider: str,
-    compare_with: str,
-    force: bool,
-) -> None:
-    """Run two providers on the same PDFs and surface disagreements.
-
-    Writes provider artifact bundles under data/, never content/spots."""
-
-    if compare_with == provider:
-        raise click.ClickException("--compare-with must differ from --provider.")
-
-    slugs = _parse_slugs(only)
-    exit_code, report_path, results = run_pipeline(
-        BakeoffRun(
-            provider=parse_provider(provider),
-            compare_with=parse_provider(compare_with),
-            slugs=tuple(slugs) if slugs is not None else None,
-            force=force,
-        )
-    )
-    click.echo(f"Wrote {report_path}")
-    click.echo(_summary_line(results))
-    raise SystemExit(exit_code)

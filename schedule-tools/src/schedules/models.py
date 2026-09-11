@@ -33,15 +33,10 @@ ViolationCode = Literal[
 
 ReviewNoteKind = Literal[
     "multi_grid_suspected",
-    "provider_session_count_disagreement",
-    "provider_session_diff",
-    "provider_closure_diff",
-    "provider_schedule_effective_diff",
     "delta_session_count_shift",
     "delta_session_types_missing",
     "delta_schedule_effective_regressed",
     "grounding_coverage_low",
-    "compare_provider_failed",
     "direct_extractor_note",
     "review_carried_forward",
     "url_rolled",

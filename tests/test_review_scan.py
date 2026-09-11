@@ -4,7 +4,7 @@ from pathlib import Path
 from schedules.review import find_review_candidates
 
 
-def _write_provider_json(review_dir: Path, pdf_sha256: str, provider: str = "gemini") -> Path:
+def _write_provider_json(review_dir: Path, pdf_sha256: str, provider: str = "openai") -> Path:
     review_dir.mkdir(parents=True, exist_ok=True)
     path = review_dir / f"{provider}-model.json"
     path.write_text(json.dumps({

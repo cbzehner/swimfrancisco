@@ -1690,7 +1690,7 @@ def test_unchanged_direct_extraction_retains_ready_artifact_receipt(tmp_path, mo
     monkeypatch.setattr(pipeline, "artifact_path", lambda *args: artifact_file)
     monkeypatch.setattr(pipeline, "relative_to_repo", lambda path: str(path.relative_to(tmp_path)))
     entry = PoolEntry("pomeroy-pool", artifact["source_pdf_url"], "https://www.prrcsf.org/pool", source_kind="pomeroy_html", auto_publish=True)
-    result = pipeline._process_direct_entry(entry, artifact["payload"], policy=pipeline.ReusePolicy(True, True, True, False))
+    result = pipeline._process_direct_entry(entry, artifact["payload"], policy=pipeline.ReusePolicy(True, True, True))
     assert isinstance(result, Unchanged)
     assert result.provider == "direct"
     assert result.model == "pomeroy-html-v1"

@@ -21,11 +21,11 @@ def test_artifact_path_includes_provider_and_model(tmp_path):
         "hamilton-pool",
         "2026-04-19",
         "a" * 64,
-        "gemini",
-        "gemini-3.1-flash-lite-preview",
+        "openai",
+        "gpt-5.5-2026-04-23",
         root=tmp_path,
     )
-    assert p.name == "gemini-gemini-3-1-flash-lite-preview.json"
+    assert p.name == "openai-gpt-5-5-2026-04-23.json"
     assert p.parent.name == "2026-04-19-aaaaaaaaaaaa"
 
 

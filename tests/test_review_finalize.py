@@ -101,7 +101,7 @@ def test_finalize_rejects_validate_failure(tmp_path):
 
 
 def _write_provider_artifact(review_dir: Path, payload: dict) -> Path:
-    path = review_dir / "gemini-gemini-3-1-flash-lite-preview.json"
+    path = review_dir / "openai-model.json"
     path.write_text(json.dumps({"payload": payload}))
     return path
 

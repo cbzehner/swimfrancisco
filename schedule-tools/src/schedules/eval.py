@@ -1,4 +1,4 @@
-"""Bakeoff-style eval that diffs provider extractions against attested truth.
+"""Eval that diffs provider extractions against attested truth.
 
 Reads existing artifacts under ``data/<slug>/<date>-<sha>/``; no API calls.
 Run via ``just schedules-eval``.

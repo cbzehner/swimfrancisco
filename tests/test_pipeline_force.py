@@ -1,4 +1,4 @@
-"""--force and --compare-with must bypass the reviewed.json fast-path."""
+"""--force must bypass the reviewed.json fast-path."""
 from __future__ import annotations
 
 import json
@@ -8,7 +8,7 @@ from schedules import artifacts as artifacts_mod
 from schedules import paths as paths_mod
 from schedules import registry as registry_mod
 from schedules.models import FetchResult, ProviderResult
-from schedules.pipeline import BakeoffRun, PdfRun, ExpandFromDecisions, run_pipeline
+from schedules.pipeline import PdfRun, ExpandFromDecisions, run_pipeline
 from schedules.report import write_report
 from schedules.review import DecisionSet
 
@@ -101,6 +101,11 @@ def _setup(tmp_path: Path, monkeypatch) -> None:
     )
     monkeypatch.setattr("schedules.pipeline.source_notes_for_signals", lambda _sig: [])
     monkeypatch.setattr("schedules.pipeline.check_delta", lambda _payload, _prior: [])
+    monkeypatch.setattr("schedules.pipeline.inspect_pdf_source", lambda _bytes: None)
+    monkeypatch.setattr(
+        "schedules.pipeline.source_publication_coverage",
+        lambda _source, _payload, **kwargs: {"ok": True, "issues": []},
+    )
 
     source_pdf = review_dir / "source.pdf"
 
@@ -119,7 +124,7 @@ def _setup(tmp_path: Path, monkeypatch) -> None:
 def _provider_result() -> ProviderResult:
     return ProviderResult(
         payload=_payload(),
-        model="gemini-3.1-flash-lite-preview",
+        model="gpt-test",
         usage={},
     )
 
@@ -136,7 +141,7 @@ def test_force_bypasses_reviewed_fast_path(tmp_path, monkeypatch):
 
     exit_code, _, results = run_pipeline(
         PdfRun(
-            provider="gemini",
+            provider="openai",
             slugs=(SLUG,),
             force=True,
             urls=ExpandFromDecisions(DecisionSet.from_items([])),
@@ -145,23 +150,4 @@ def test_force_bypasses_reviewed_fast_path(tmp_path, monkeypatch):
 
     assert exit_code == 0
     assert calls["n"] == 1, "--force must invoke the provider even when reviewed.json exists"
-    assert results[0].provider == "gemini"
-
-
-def test_compare_with_bypasses_reviewed_fast_path(tmp_path, monkeypatch):
-    _setup(tmp_path, monkeypatch)
-    calls = {"n": 0}
-
-    def fake_extract(provider, pdf_bytes, prompt, schema):
-        calls["n"] += 1
-        return _provider_result()
-
-    monkeypatch.setattr("schedules.pipeline.extract_with_provider", fake_extract)
-
-    exit_code, _, results = run_pipeline(
-        BakeoffRun(provider="gemini", compare_with="anthropic", slugs=(SLUG,), force=False),
-    )
-
-    assert exit_code == 0
-    # Primary + compare = two invocations.
-    assert calls["n"] == 2, "--compare-with must invoke both providers"
+    assert results[0].provider == "openai"
