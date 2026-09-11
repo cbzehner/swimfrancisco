@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from schedules.paths import slugify
-from schedules.review import ReviewCandidate, seed_draft
+from schedules.review import ReviewCandidate, draft_envelope
 
 
 def _write_provider(review_dir: Path, provider: str, model: str, pdf_sha256: str, sessions_count: int = 5) -> Path:
@@ -41,19 +41,15 @@ def _make_candidate(review_dir: Path, pdf_sha256: str, slug: str = "hamilton-poo
     )
 
 
-def test_seed_draft_envelope_fields(tmp_path):
+def test_draft_envelope_fields(tmp_path):
     artifact_dir = tmp_path / "artifacts" / "hamilton-pool" / ("a" * 12)
     _write_provider(artifact_dir, "openai", "gpt-5.5-2026-04-23", "a" * 64)
-    data_root = tmp_path / "data"
 
-    path = seed_draft(
+    envelope = draft_envelope(
         candidate=_make_candidate(artifact_dir, "a" * 64),
-        data_root=data_root,
         today=date(2026, 4, 19),
     )
 
-    assert path == data_root / "hamilton-pool" / "2026-04-01-aaaaaaaaaaaa" / "reviewed.json"
-    envelope = json.loads(path.read_text())
     assert envelope["slug"] == "hamilton-pool"
     assert envelope["pdf_sha256"] == "a" * 64
     assert envelope["reviewed_at"] == "2026-04-19"
@@ -61,23 +57,7 @@ def test_seed_draft_envelope_fields(tmp_path):
     assert envelope["payload"]["effective_start"] == "2026-03-17"
 
 
-def test_seed_draft_is_idempotent(tmp_path):
-    artifact_dir = tmp_path / "artifacts" / "hamilton-pool" / ("a" * 12)
-    _write_provider(artifact_dir, "openai", "gpt-5.5-2026-04-23", "a" * 64)
-    data_root = tmp_path / "data"
-    candidate = _make_candidate(artifact_dir, "a" * 64)
-
-    first = seed_draft(candidate=candidate, data_root=data_root, today=date(2026, 4, 19))
-    envelope = json.loads(first.read_text())
-    envelope["reviewed_by"] = "reviewer@example.com"
-    first.write_text(json.dumps(envelope, indent=2) + "\n")
-    second = seed_draft(candidate=candidate, data_root=data_root, today=date(2026, 4, 20))
-
-    assert first == second
-    assert '"reviewed_by": "reviewer@example.com"' in second.read_text()
-
-
-def test_seed_draft_uses_pacific_time_for_today(tmp_path, monkeypatch):
+def test_draft_envelope_uses_pacific_time_for_today(tmp_path, monkeypatch):
     from datetime import datetime
     from zoneinfo import ZoneInfo
 
@@ -94,20 +74,15 @@ def test_seed_draft_uses_pacific_time_for_today(tmp_path, monkeypatch):
 
     monkeypatch.setattr("schedules._time.datetime", _FixedDatetime)
 
-    path = seed_draft(
-        candidate=_make_candidate(artifact_dir, "a" * 64),
-        data_root=tmp_path / "data",
-    )
-    envelope = json.loads(path.read_text())
+    envelope = draft_envelope(candidate=_make_candidate(artifact_dir, "a" * 64))
     assert envelope["reviewed_at"] == "2026-04-19"
 
 
-def test_seed_draft_raises_when_no_provider_artifact(tmp_path):
+def test_draft_envelope_raises_when_no_provider_artifact(tmp_path):
     empty_dir = tmp_path / "artifacts" / "hamilton-pool" / ("a" * 12)
     empty_dir.mkdir(parents=True)
     with pytest.raises(FileNotFoundError):
-        seed_draft(
+        draft_envelope(
             candidate=_make_candidate(empty_dir, "a" * 64),
-            data_root=tmp_path / "data",
             today=date(2026, 4, 19),
         )

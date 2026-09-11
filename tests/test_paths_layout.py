@@ -84,19 +84,6 @@ def test_all_review_dirs_ignores_non_matching_subdirs(tmp_path):
     assert paths.all_review_dirs("hamilton-pool", root=tmp_path) == [kept]
 
 
-def test_latest_review_dir_returns_newest(tmp_path):
-    slug_dir = tmp_path / "hamilton-pool"
-    slug_dir.mkdir()
-    (slug_dir / "2026-04-01-aaaaaaaaaaaa").mkdir()
-    newest = slug_dir / "2026-04-19-bbbbbbbbbbbb"
-    newest.mkdir()
-    assert paths.latest_review_dir("hamilton-pool", root=tmp_path) == newest
-
-
-def test_latest_review_dir_returns_none_when_empty(tmp_path):
-    assert paths.latest_review_dir("ghost-pool", root=tmp_path) is None
-
-
 def test_latest_reviewed_dir_skips_newer_pending_capture(tmp_path):
     slug_dir = tmp_path / "hamilton-pool"
     slug_dir.mkdir()

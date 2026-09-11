@@ -553,7 +553,7 @@ def test_coffman_numeric_variability_keeps_literal_evidence_without_pool_identit
 
 
 def test_sava_current_original_preserves_notice_scope_and_highlighted_session_cancellation():
-    from schedules.grounding import source_closure_inventory, source_excluded_dates, source_slots
+    from schedules.grounding import source_closure_inventory, source_excluded_dates
     source = inspect_pdf_source((REPO_ROOT / 'tests/fixtures/sava-fall-30037.pdf').read_bytes())
     assert source.notices[0].text.startswith('All city pools will be CLOSED')
     closures = source_closure_inventory(source)

@@ -58,7 +58,6 @@ def load_source_reference(path: Path, reference_id: str, *, repo_root: Path) -> 
 def north_beach_pair():
     """Frozen fall originals and independent visual transcriptions; never production input."""
     from schedules.models import PoolEntry, PoolSource
-    from schedules.schema import pool_label_payload
     from schedules.providers import openai_provider
     from schedules.signals import inspect_pdf_source
     from schedules.grounding import source_publication_coverage
