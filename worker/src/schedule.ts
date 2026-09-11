@@ -10,6 +10,9 @@ export function isPtMidnight(scheduledTime: number): boolean {
       timeZone: "America/Los_Angeles",
       hour: "2-digit",
       hour12: false,
+      // Some ICU builds render midnight as "24" under hour12:false; h23
+      // pins the cycle to 00-23 so the equality below is portable.
+      hourCycle: "h23",
     }).format(new Date(scheduledTime)),
   );
   return ptHour === 0;

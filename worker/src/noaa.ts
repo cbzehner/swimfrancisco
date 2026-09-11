@@ -1,11 +1,11 @@
 // NOAA CO-OPS Tides & Currents fetches.
 // Docs: https://api.tidesandcurrents.noaa.gov/api/prod/
 
+import { fetchJson } from "./http.ts";
 import { readingFromF, type TempReading } from "./temp.ts";
 
 const BASE = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter";
 const APPLICATION = "SwimFrancisco";
-const FETCH_TIMEOUT_MS = 10_000;
 
 export interface NoaaTidePrediction {
   time: string; // Station-local time, zoneless ISO (NOAA lst_ldt)
@@ -53,12 +53,7 @@ async function noaaGet<T extends { error?: { message?: string } }>(
     application: APPLICATION,
     ...params,
   });
-  const res = await fetch(`${BASE}?${query}`, {
-    headers: { accept: "application/json" },
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-  });
-  if (!res.ok) throw new Error(`${label} ${stationId} HTTP ${res.status}`);
-  const body = (await res.json()) as T;
+  const body = (await fetchJson(`${label} ${stationId}`, `${BASE}?${query}`)) as T;
   if (body.error) throw new Error(`${label} ${stationId}: ${body.error.message ?? "unknown error"}`);
   return body;
 }

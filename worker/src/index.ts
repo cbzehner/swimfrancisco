@@ -8,7 +8,6 @@
 
 import { assembleAndPersist } from "./assemble.ts";
 import { readConditionsRaw } from "./kv.ts";
-import { corsHeaders, preflight } from "./cors.ts";
 import { triggerRebuild } from "./deploy.ts";
 import { isPtMidnight } from "./schedule.ts";
 import { handlePosthog, isPosthogPath } from "./posthog.ts";
@@ -21,9 +20,7 @@ export interface Env {
 
 // Data refreshes hourly via cron. The Worker writes successful conditions
 // responses to caches.default on miss, so most fetches in a given colo are
-// served straight from the edge without re-reading KV. The cached response is
-// header-neutral (no CORS); corsHeaders(request) is applied per-request after
-// cache.match, so correctness never depends on the Cache API honoring Vary.
+// served straight from the edge without re-reading KV.
 const JSON_CACHE_CONTROL = "public, max-age=900, s-maxage=3600";
 const NEGATIVE_CACHE_CONTROL = "public, max-age=60";
 
@@ -31,55 +28,31 @@ const NEGATIVE_CACHE_CONTROL = "public, max-age=60";
 // incoming request's URL shape (trailing slashes, etc.).
 const CONDITIONS_CACHE_KEY_URL = "https://swimfrancisco.com/api/conditions";
 
-function withCors(request: Request, response: Response): Response {
-  const out = new Response(response.body, response);
-  for (const [name, value] of Object.entries(corsHeaders(request))) {
-    out.headers.set(name, value);
-  }
-  return out;
-}
-
-function notFound(request: Request, message: string): Response {
+function errorResponse(status: number, message: string): Response {
   return new Response(message, {
-    status: 404,
+    status,
     headers: {
       "content-type": "text/plain; charset=utf-8",
       "cache-control": NEGATIVE_CACHE_CONTROL,
-      ...corsHeaders(request),
     },
   });
 }
 
-function serviceUnavailable(request: Request, message: string): Response {
-  return new Response(message, {
-    status: 503,
-    headers: {
-      "content-type": "text/plain; charset=utf-8",
-      "cache-control": NEGATIVE_CACHE_CONTROL,
-      ...corsHeaders(request),
-    },
-  });
-}
-
-async function handleConditions(
-  request: Request,
-  env: Env,
-  ctx: ExecutionContext,
-): Promise<Response> {
+async function handleConditions(env: Env, ctx: ExecutionContext): Promise<Response> {
   const cache = caches.default;
   const cacheKey = new Request(CONDITIONS_CACHE_KEY_URL);
 
   const cached = await cache.match(cacheKey);
-  if (cached) return withCors(request, cached);
+  if (cached) return cached;
 
   let raw: string | null;
   try {
     raw = await readConditionsRaw(env.CONDITIONS);
   } catch (err) {
     console.error("KV read failed:", err);
-    return serviceUnavailable(request, "conditions temporarily unavailable");
+    return errorResponse(503, "conditions temporarily unavailable");
   }
-  if (!raw) return serviceUnavailable(request, "conditions not yet available");
+  if (!raw) return errorResponse(503, "conditions not yet available");
 
   const response = new Response(raw, {
     headers: {
@@ -88,7 +61,7 @@ async function handleConditions(
     },
   });
   ctx.waitUntil(cache.put(cacheKey, response.clone()));
-  return withCors(request, response);
+  return response;
 }
 
 function handleMapConfig(request: Request, env: Env): Response {
@@ -114,8 +87,8 @@ function handleMapConfig(request: Request, env: Env): Response {
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     // Analytics proxy is same-origin and forwards every method (POST for
-    // ingestion, GET for the library), so it runs before the OPTIONS/GET
-    // gate below, which only governs the JSON API.
+    // ingestion, GET for the library), so it runs before the GET gate
+    // below, which only governs the JSON API.
     const url = new URL(request.url);
     const path = url.pathname.replace(/\/+$/, "");
 
@@ -124,21 +97,15 @@ export default {
     }
 
     if (path === "/api/conditions") {
-      if (request.method === "OPTIONS") return preflight(request);
-      if (request.method !== "GET") {
-        return new Response("method not allowed", {
-          status: 405,
-          headers: { "content-type": "text/plain; charset=utf-8", ...corsHeaders(request) },
-        });
-      }
-      return handleConditions(request, env, ctx);
+      if (request.method !== "GET") return errorResponse(405, "method not allowed");
+      return handleConditions(env, ctx);
     }
 
     if (path === "/api/map-config") {
       return handleMapConfig(request, env);
     }
 
-    return notFound(request, "not found");
+    return errorResponse(404, "not found");
   },
 
   async scheduled(event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {

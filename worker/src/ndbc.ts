@@ -5,6 +5,7 @@
 // Data rows: "2026 04 16 18 20 270 ... 12.3 ..."
 // Column 14 (0-indexed) is WTMP in Celsius; "MM" means missing.
 
+import { fetchText } from "./http.ts";
 import { readingFromC, type TempReading } from "./temp.ts";
 
 function parseTimestampUtc(year: string, mo: string, dy: string, hr: string, mn: string): string | null {
@@ -19,14 +20,10 @@ function parseTimestampUtc(year: string, mo: string, dy: string, hr: string, mn:
   return date.toISOString();
 }
 
-const FETCH_TIMEOUT_MS = 10_000;
-
 // observedAt is ISO 8601 UTC.
 export async function fetchNdbc(stationId: string): Promise<TempReading | null> {
   const url = `https://www.ndbc.noaa.gov/data/realtime2/${stationId}.txt`;
-  const res = await fetch(url, { headers: { accept: "text/plain" }, signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
-  if (!res.ok) throw new Error(`NDBC ${stationId} HTTP ${res.status}`);
-  const text = await res.text();
+  const text = await fetchText(`NDBC ${stationId}`, url);
   const lines = text.split("\n");
 
   // First non-comment line is the newest observation.

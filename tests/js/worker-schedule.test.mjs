@@ -1,7 +1,9 @@
 // Locks in the rebuild gate. The hourly cron `0 * * * *` fires every UTC
 // hour; the handler also triggers a rebuild on the tick that lands at
-// 00:00 PT. Inputs cover PDT midnight, PST midnight, an off-midnight PT
-// tick during PDT, and a midday non-rebuild tick.
+// 00:00 PT. Inputs cover PDT midnight, PST midnight, the hour either side
+// of each, and a midday non-rebuild tick. The hours either side also guard
+// the `hourCycle: "h23"` option: an ICU build that renders midnight as "24"
+// would report 23:00 PT as midnight.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -28,4 +30,12 @@ test("01:00 PT during PDT (2026-06-15 08:00 UTC) → no rebuild", () => {
 test("23:00 PT during PST (2026-01-15 07:00 UTC) → no rebuild", () => {
   // The PDT-midnight UTC hour (07:00) is 23:00 PT during PST — must not rebuild.
   assert.equal(isPtMidnight(Date.UTC(2026, 0, 15, 7, 0)), false);
+});
+
+test("23:00 PT during PDT (2026-06-15 06:00 UTC) → no rebuild", () => {
+  assert.equal(isPtMidnight(Date.UTC(2026, 5, 15, 6, 0)), false);
+});
+
+test("01:00 PT during PST (2026-01-15 09:00 UTC) → no rebuild", () => {
+  assert.equal(isPtMidnight(Date.UTC(2026, 0, 15, 9, 0)), false);
 });
