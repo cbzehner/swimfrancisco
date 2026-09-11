@@ -7,9 +7,8 @@ Per slug, keep a snapshot dir if ANY of: (a) it is the newest dir containing
 ``carried_from``; (d) its source is a PDF (Rec & Park corpus used by
 backtests); (e) a file under ``tests/`` or ``docs/`` names the dir. A dir
 whose source body hash does not match its ``source.sha256`` is deleted unless
-(a), (c), (d), or (e) protects it. Among byte-identical dirs within a slug
-the newest is kept. Everything else is deleted by ``schedules prune``, which
-``schedules automate`` runs before every commit.
+(a), (c), (d), or (e) protects it. Everything else is deleted by ``schedules
+prune``, which ``schedules automate`` runs before every commit.
 """
 
 from __future__ import annotations
