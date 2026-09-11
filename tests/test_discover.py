@@ -2599,3 +2599,62 @@ def test_discover_asks_for_identity_encoded_bodies(tmp_path, monkeypatch) -> Non
         report_dir=tmp_path,
     )
     assert seen["headers"]["Accept-Encoding"] == "identity"
+
+
+def test_discover_all_retries_a_transient_facility_page(tmp_path, monkeypatch) -> None:
+    """A 502 on the pool's page must be retried inside the run, not recorded."""
+    _freeze_today(monkeypatch)
+    registry = _copy_registry(tmp_path)
+    entry = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "hamilton-pool")
+    _install_http(
+        monkeypatch,
+        pages={entry.official_page_url: _fixture("hamilton-one-grid.html")},
+        views={
+            29800: {
+                "filename": "Hamilton Pool _ Fall 2026 _ August 18 to December 12.pdf",
+                "content": _grid_pdf(),
+            },
+            29599: {"filename": "Hamilton Pool Summer 2026.pdf", "content": _grid_pdf()},
+        },
+    )
+    inner_factory = httpx.Client  # _install_http already swapped in the fake
+    page_attempts: list[str] = []
+
+    class FlakyPage:
+        def __init__(self, inner):
+            self.inner = inner
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def get(self, url: str):
+            if "/DocumentCenter/View/" not in url:
+                page_attempts.append(url)
+                if len(page_attempts) == 1:
+                    return httpx.Response(
+                        502, content=b"bad gateway", request=httpx.Request("GET", url)
+                    )
+            return self.inner.get(url)
+
+        def stream(self, method: str, url: str):
+            return self.inner.stream(method, url)
+
+    monkeypatch.setattr(
+        "schedules.discover.httpx.Client",
+        lambda *args, **kwargs: FlakyPage(inner_factory(*args, **kwargs)),
+    )
+    decisions = discover_all(
+        [entry],
+        delay=0,
+        sleep=lambda _: None,
+        registry_path=registry,
+        report_dir=tmp_path,
+    )
+    assert len(page_attempts) == 2
+    assert decisions[0].reason != "fetch_error"
+    assert decisions[0].action == "adopt"
+    hamilton = next(item for item in load_registry(registry) if item.slug == "hamilton-pool")
+    assert hamilton.pdf_url.endswith("/29800")
