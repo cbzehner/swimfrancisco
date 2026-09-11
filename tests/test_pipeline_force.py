@@ -88,16 +88,10 @@ def _setup(tmp_path: Path, monkeypatch) -> None:
         lambda results, path=None: write_report(results, path=report_path),
     )
 
-    from schedules.models import GroundingResult
     monkeypatch.setattr("schedules.pipeline.extract_page_texts", lambda _bytes: [""])
     monkeypatch.setattr(
         "schedules.pipeline.analyze_page_texts",
         lambda _pages: [],
-    )
-    monkeypatch.setattr("schedules.pipeline.normalize_pdf_text", lambda _pages: "")
-    monkeypatch.setattr(
-        "schedules.pipeline.grounding_from_text",
-        lambda _text, _payload: GroundingResult(sessions=[]),
     )
     monkeypatch.setattr("schedules.pipeline.source_notes_for_signals", lambda _sig: [])
     monkeypatch.setattr("schedules.pipeline.check_delta", lambda _payload, _prior: [])

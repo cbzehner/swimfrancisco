@@ -18,9 +18,9 @@ from .discover import (
     rec_park_entries,
 )
 from .fetch import fetch_pdf
-from .grounding import grounding_from_text, normalize_pdf_text, source_publication_coverage
+from .grounding import source_publication_coverage
 from .merge import read_schedule_snapshot
-from .models import Aborted, Extracted, GroundingResult, PoolEntry, PoolResult, ReviewNote, Skipped, Unchanged, Violation
+from .models import Aborted, Extracted, PoolEntry, PoolResult, ReviewNote, Skipped, Unchanged, Violation
 from .paths import CONTENT_SPOTS_DIR, PROMPT_PATH, REPORT_PATHS, TMP_DIR, artifact_path, reviewed_path, relative_to_repo
 from .providers import extract as extract_with_provider
 from .providers.openai_provider import API_MODEL, ClosureReviewRequired, extraction_configuration, verify_artifact
@@ -32,7 +32,6 @@ from .schema import EXTRACTION_SCHEMA
 from .signals import analyze_page_texts, extract_page_texts, inspect_pdf_source, source_notes_for_signals
 from .validate import validate
 
-GROUNDING_MIN_RATIO = 0.9
 SourceMode = Literal["direct", "openai"]
 ProviderMode = Literal["openai"]
 
@@ -119,23 +118,6 @@ def _identity_kwargs(entry: PoolEntry) -> dict:
     }
 
 
-def _grounding_notes(provider: str, grounding: GroundingResult) -> list[ReviewNote]:
-    if grounding.total == 0 or grounding.ratio >= GROUNDING_MIN_RATIO:
-        return []
-
-    ungrounded_total = grounding.total - grounding.grounded_count
-    return [
-        ReviewNote(
-            kind="grounding_coverage_low",
-            message=(
-                f"{provider} grounding coverage is {grounding.ratio:.0%} "
-                f"({grounding.grounded_count}/{grounding.total} sessions grounded; "
-                f"{ungrounded_total} ungrounded)"
-            ),
-        )
-    ]
-
-
 def _build_unchanged(entry: PoolEntry, *, pdf_sha256: str, page_count: int, reviewed_file: Path) -> Unchanged:
     envelope = load_reviewed_snapshot_from_path(
         reviewed_file, expected_slug=entry.slug, expected_sha=pdf_sha256
@@ -194,12 +176,12 @@ def _process_entry(
         if entry.pool_sources:
             from .signals import north_beach_pool_identity
             expected_pool = next(source.pool for source in entry.pool_sources if source.url == entry.pdf_url)
-            if provider != "openai" or north_beach_pool_identity(inspect_pdf_source(fetch_result.bytes).text) != expected_pool:
-                raise ValueError("Paired component requires its printed pool identity and the production provider")
+            if north_beach_pool_identity(inspect_pdf_source(fetch_result.bytes).text) != expected_pool:
+                raise ValueError("Paired component requires its printed pool identity")
         date = fetch_result.path.parent.name[:10]
         reviewed_file = reviewed_path(entry.slug, date, fetch_result.sha256)
         default_model = API_MODEL
-        configuration = extraction_configuration(prompt) if provider == "openai" else None
+        configuration = extraction_configuration(prompt)
         use_cached = policy.provider_artifact and skip_if_fresh(
             slug=entry.slug, date=date, pdf_sha256=fetch_result.sha256,
             provider=provider, model=default_model, prompt=prompt,
@@ -207,8 +189,8 @@ def _process_entry(
         )
 
         # Reviewed-snapshot fast path: SHA matches a hand-approved snapshot.
-        reviewed_reusable = provider != "openai"
-        if provider == "openai" and use_cached:
+        reviewed_reusable = False
+        if use_cached:
             cached = json.loads(artifact_path(entry.slug, date, fetch_result.sha256, provider, default_model).read_text())
             verified = verify_artifact(cached, fetch_result.bytes, prompt)
             use_cached = verified["ok"]
@@ -225,9 +207,7 @@ def _process_entry(
             )
 
         # PDF text + signals.
-        page_texts = extract_page_texts(fetch_result.bytes)
-        pdf_signals = analyze_page_texts(page_texts)
-        pdf_text_normalized = normalize_pdf_text(page_texts)
+        pdf_signals = analyze_page_texts(extract_page_texts(fetch_result.bytes))
 
         # Primary extraction (LLM call or cached artifact).
         if use_cached:
@@ -244,20 +224,14 @@ def _process_entry(
             payload = primary.payload
             model = primary.model
             cost_estimate = primary.cost_estimate
-            artifact_paths = {}  # filled in once grounding is computed
+            artifact_paths = {}  # filled in once coverage is computed
             primary_usage = primary.usage
             details = primary.details
 
-        # Compute grounding once, used for both the artifact bundle (when fresh)
-        # and the review-note assembly. Cached artifacts already have their
-        # grounding section persisted; no need to re-save the bundle.
-        grounding = grounding_from_text(pdf_text_normalized, payload)
-        coverage = None
-        if provider == "openai":
-            source = inspect_pdf_source(fetch_result.bytes)
-            coverage = source_publication_coverage(source, payload, visual_pages=frozenset(details.get("visual_pages", [])))
-        if coverage is not None:
-            details = details | {"source_coverage": coverage}
+        # Independent cell-inventory coverage of the printed source.
+        source = inspect_pdf_source(fetch_result.bytes)
+        coverage = source_publication_coverage(source, payload, visual_pages=frozenset(details.get("visual_pages", [])))
+        details = details | {"source_coverage": coverage}
 
         if not use_cached:
             artifact_paths = save_artifact_bundle(
@@ -272,13 +246,12 @@ def _process_entry(
                 payload=payload,
                 usage=primary_usage or {},
                 cost_estimate=cost_estimate,
-                grounding=grounding,
                 details=details,
             )
 
         # A payload identical to the last human-reviewed one needs no new
         # review — carry the attestation to this capture.
-        if policy.carry_forward and not entry.pool_sources and (coverage is None or coverage["ok"]):
+        if policy.carry_forward and not entry.pool_sources and coverage["ok"]:
             carried = carry_forward_review(
                 slug=entry.slug,
                 review_dir=reviewed_file.parent,
@@ -295,10 +268,9 @@ def _process_entry(
                     reviewed_file=carried,
                 )
 
-        # Review notes from three sources: PDF signals, grounding, prior-vs-current delta.
+        # Review notes from PDF signals and the prior-vs-current delta.
         review_notes: list[ReviewNote] = [
             *source_notes_for_signals(pdf_signals),
-            *(_grounding_notes(provider, grounding) if coverage is None else []),
             *check_delta(payload, prior_snapshot),
         ]
 
@@ -306,7 +278,7 @@ def _process_entry(
         # catastrophic=True); advisory violations land on the result for the
         # operator to weigh during review.
         validation = validate(payload, prior_sessions_count=len(prior_snapshot["sessions"]))
-        coverage_failed = coverage is not None and not coverage["ok"]
+        coverage_failed = not coverage["ok"]
         violations = validation.violations + ([Violation(
             code="source_coverage_failed",
             message="Extraction does not match the independent PDF cell inventory",
@@ -419,7 +391,6 @@ def _process_direct_entry(
         payload=payload,
         usage={},
         cost_estimate="deterministic",
-        grounding=None,
         details={"direct_source": extracted.source, "source_coverage": extracted.coverage},
     )
     return Extracted(

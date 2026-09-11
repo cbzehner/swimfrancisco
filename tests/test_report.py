@@ -191,7 +191,7 @@ class TestPoolBlock:
             [
                 _proposed(
                     review_notes=[
-                        ReviewNote(kind="grounding_coverage_low", message="70% grounded"),
+                        ReviewNote(kind="delta_session_count_shift", message="12 -> 9 sessions"),
                         ReviewNote(
                             kind="direct_extractor_note",
                             message="koret sheet had no closures tab",
@@ -202,7 +202,7 @@ class TestPoolBlock:
             ],
             tmp_path,
         )
-        assert "- review_note[warning::grounding_coverage_low]: 70% grounded" in text
+        assert "- review_note[warning::delta_session_count_shift]: 12 -> 9 sessions" in text
         assert "- review_note[info::direct_extractor_note]: koret sheet had no closures tab" in text
 
     def test_no_notes_renders_none_marker(self, tmp_path: Path) -> None:

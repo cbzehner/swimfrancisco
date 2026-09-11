@@ -263,13 +263,6 @@ def _stub_extract_pipeline(monkeypatch, tmp_path: Path, registry: list[PoolEntry
     )
     monkeypatch.setattr("schedules.pipeline.extract_page_texts", lambda _bytes: [""])
     monkeypatch.setattr("schedules.pipeline.analyze_page_texts", lambda _pages: [])
-    monkeypatch.setattr("schedules.pipeline.normalize_pdf_text", lambda _pages: "")
-    from schedules.models import GroundingResult
-
-    monkeypatch.setattr(
-        "schedules.pipeline.grounding_from_text",
-        lambda _text, _payload: GroundingResult(sessions=[]),
-    )
     monkeypatch.setattr("schedules.pipeline.source_notes_for_signals", lambda _sig: [])
     monkeypatch.setattr("schedules.pipeline.check_delta", lambda _payload, _prior: [])
     monkeypatch.setattr("schedules.pipeline.inspect_pdf_source", lambda _bytes: None)

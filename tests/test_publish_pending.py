@@ -332,11 +332,11 @@ def test_incomplete_source_refuses(iso):
     assert result.code == "source_coverage_failed"
 
 
-def test_legacy_provider_refuses_even_with_perfect_grounding(iso):
+def test_legacy_provider_refuses_even_with_matching_coverage(iso):
     candidate = _write_candidate(iso.data)
     path = candidate.review_dir / "openai-fixture.json"
     artifact = json.loads(path.read_text())
-    artifact.update(provider="gemini", grounding={"ratio": 1.0, "total": 5, "grounded_count": 5})
+    artifact.update(provider="gemini")
     path.write_text(json.dumps(artifact))
     assert publish_eligible(**_kwargs(candidate)).code == "unsupported_provider"
 
@@ -377,7 +377,7 @@ def test_drop_to_zero_catastrophic_unless_temporarily_closed(iso):
     assert allowed.ok is True
 
 
-def test_closure_without_dates_refuses_even_with_perfect_grounding(iso):
+def test_closure_without_dates_refuses_even_with_matching_coverage(iso):
     candidate = _write_candidate(iso.data, payload=_payload(n=0, basis="temporarily_closed"))
     result = publish_eligible(**_kwargs(candidate))
     assert result.code == "closure_notice_missing_dates"
@@ -391,7 +391,7 @@ def test_closure_with_invented_sessions_refuses(iso):
     assert publish_eligible(**_kwargs(candidate)).code == "closure_notice_has_open_hours"
 
 
-def test_duplicate_sessions_refuse_even_with_perfect_grounding(iso):
+def test_duplicate_sessions_refuse_even_with_matching_coverage(iso):
     payload = _payload()
     payload["sessions"].append(payload["sessions"][0].copy())
     candidate = _write_candidate(iso.data, payload=payload)
@@ -813,7 +813,7 @@ def test_carry_hides_candidate_from_publish_pending(iso):
     carried = iso.data / "hamilton-pool" / f"2026-08-19-{SHA[:12]}"
     carried.mkdir(parents=True)
     (carried / "gemini-model.json").write_text(
-        json.dumps({"pdf_sha256": SHA, "payload": _payload(), "grounding": {"total": 5, "grounded_count": 5}})
+        json.dumps({"pdf_sha256": SHA, "payload": _payload()})
     )
     (carried / "reviewed.json").write_text(
         json.dumps(
@@ -985,14 +985,14 @@ def test_pager_flagged_set_omits_not_rec_park():
     flagged = pager_flagged_set(
         refused=[
             {"slug": "koret-center", "code": "not_rec_park"},
-            {"slug": "rossi-pool", "code": "grounding_coverage_low"},
+            {"slug": "rossi-pool", "code": "closure_dates_unparsed"},
             {"slug": "balboa-pool", "code": "sequential_partial"},
         ],
         blocking=[{"slug": "sava-pool", "reason": "windows_unparsed"}],
     )
     assert flagged == [
         ("balboa-pool", "sequential_partial"),
-        ("rossi-pool", "grounding_coverage_low"),
+        ("rossi-pool", "closure_dates_unparsed"),
         ("sava-pool", "windows_unparsed"),
     ]
 
