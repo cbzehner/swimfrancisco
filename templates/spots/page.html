@@ -183,14 +183,12 @@
 {%- endmacro access_window_label %}
 
 {% block site_chrome %}
-  {% if page.extra.localized_from %}{% set render_page = get_page(path="spots/" ~ page.extra.localized_from ~ ".md", lang=config.default_language) %}{% else %}{% set render_page = page %}{% endif %}
-  {% set spot_content_path = "@/spots/" ~ render_page.slug ~ ".md" %}
+  {% set spot_content_path = "@/spots/" ~ canonical_page.slug ~ ".md" %}
   {{ chrome::site_header(active_view='board', content_path=spot_content_path, active_lang=lang) }}
 {% endblock %}
 
 {% block content %}
-  {% if page.extra.localized_from %}{% set render_page = get_page(path="spots/" ~ page.extra.localized_from ~ ".md", lang=config.default_language) %}{% else %}{% set render_page = page %}{% endif %}
-  {% set extra = render_page.extra %}
+  {% set extra = canonical_page.extra %}
   {% set destination = extra.address | default(value="") %}
   {% if destination == "" %}{% set destination = extra.lat ~ "," ~ extra.lng %}{% endif %}
   {% set destination_enc = destination | urlencode %}
@@ -202,7 +200,7 @@
 
   <section class="spot-detail-head">
     <p class="back"><a href="{{ get_url(path='@/_index.md', lang=lang) }}">&larr; {{ trans(key='board', lang=lang) }}</a></p>
-    {% set title_parts = render_page.title | split(pat=' ') %}
+    {% set title_parts = canonical_page.title | split(pat=' ') %}
     <h1>
       {% for part in title_parts -%}
         {%- if loop.last -%}
@@ -575,7 +573,7 @@
       <p class="description">{{ open_water_summary }}</p>
     {% endif %}
 
-    <section class="conditions condition-slab" data-slug="{{ render_page.slug }}">
+    <section class="conditions condition-slab" data-slug="{{ canonical_page.slug }}">
       <p class="condition-label">{{ trans(key='water_temperature_live', lang=lang) }}</p>
       <p class="condition-temp"><span data-field="water_temp">—</span></p>
       <dl class="condition-grid">

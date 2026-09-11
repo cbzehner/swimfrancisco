@@ -28,14 +28,12 @@ const NEGATIVE_CACHE_CONTROL = "public, max-age=60";
 // incoming request's URL shape (trailing slashes, etc.).
 const CONDITIONS_CACHE_KEY_URL = "https://swimfrancisco.com/api/conditions";
 
-function errorResponse(status: number, message: string): Response {
-  return new Response(message, {
-    status,
-    headers: {
-      "content-type": "text/plain; charset=utf-8",
-      "cache-control": NEGATIVE_CACHE_CONTROL,
-    },
-  });
+// `cacheControl` is explicit per call site: the miss responses are worth
+// caching briefly at the edge, a rejected method is not.
+function errorResponse(status: number, message: string, cacheControl?: string): Response {
+  const headers: Record<string, string> = { "content-type": "text/plain; charset=utf-8" };
+  if (cacheControl) headers["cache-control"] = cacheControl;
+  return new Response(message, { status, headers });
 }
 
 async function handleConditions(env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -50,9 +48,9 @@ async function handleConditions(env: Env, ctx: ExecutionContext): Promise<Respon
     raw = await readConditionsRaw(env.CONDITIONS);
   } catch (err) {
     console.error("KV read failed:", err);
-    return errorResponse(503, "conditions temporarily unavailable");
+    return errorResponse(503, "conditions temporarily unavailable", NEGATIVE_CACHE_CONTROL);
   }
-  if (!raw) return errorResponse(503, "conditions not yet available");
+  if (!raw) return errorResponse(503, "conditions not yet available", NEGATIVE_CACHE_CONTROL);
 
   const response = new Response(raw, {
     headers: {
@@ -105,7 +103,7 @@ export default {
       return handleMapConfig(request, env);
     }
 
-    return errorResponse(404, "not found");
+    return errorResponse(404, "not found", NEGATIVE_CACHE_CONTROL);
   },
 
   async scheduled(event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {

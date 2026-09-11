@@ -1,9 +1,11 @@
 // Locks in the rebuild gate. The hourly cron `0 * * * *` fires every UTC
 // hour; the handler also triggers a rebuild on the tick that lands at
 // 00:00 PT. Inputs cover PDT midnight, PST midnight, the hour either side
-// of each, and a midday non-rebuild tick. The hours either side also guard
-// the `hourCycle: "h23"` option: an ICU build that renders midnight as "24"
-// would report 23:00 PT as midnight.
+// of each, and a midday non-rebuild tick. h23 and h24 differ only at hour
+// zero, so the two midnight cases are what guard the `hourCycle: "h23"`
+// option — under h24 midnight formats as "24" and the rebuild never fires.
+// The neighbouring hours guard the DST mapping instead: 07:00 and 08:00 UTC
+// are each midnight in one PT offset and not in the other.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
