@@ -715,10 +715,9 @@ def test_duplicate_grouped_closures_cannot_consume_other_notice(monkeypatch, sec
 @pytest.mark.parametrize("problem", ["exhausted", "missing", "blocked", "malformed", "missing_key", "missing_approval"])
 def test_unavailable_monthly_allowance_creates_free_only_receipt_without_ledger_write(monthly_budget, monkeypatch, tmp_path, problem):
     from click.testing import CliRunner
-    from schedules.cli import cli
-    from datetime import datetime, timezone
+    from schedules.cli import _budget_month, cli
     budget, git, remote = monthly_budget
-    month = datetime.now(timezone.utc).strftime("%Y-%m")
+    month = _budget_month()
     monkeypatch.setattr("schedules.cli.REPO_ROOT", budget.repo_root)
     monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_USD", "1")
     monkeypatch.setenv("OPENAI_API_KEY", "test-no-call")
@@ -844,11 +843,10 @@ def test_invalid_month_cap_override_fails_closed(monkeypatch, override):
 
 def test_explicit_cap_increase_preserves_all_runs_and_nonforce_history(monthly_budget, monkeypatch, tmp_path):
     from click.testing import CliRunner
-    from schedules.cli import cli
-    from datetime import datetime, timezone
+    from schedules.cli import _budget_month, cli
     budget, git, remote = monthly_budget
     budget.initialize()
-    month = datetime.now(timezone.utc).strftime("%Y-%m")
+    month = _budget_month()
     budget.reserve(month, "1-1")
     before, state = budget._load()
     monkeypatch.setattr("schedules.cli.REPO_ROOT", budget.repo_root)
@@ -875,11 +873,10 @@ def test_explicit_cap_increase_preserves_all_runs_and_nonforce_history(monthly_b
 @pytest.mark.parametrize("problem", ["missing", "blocked", "wrong_prior", "decrease", "approval_mismatch", "other_month"])
 def test_cap_increase_refuses_without_modifying_ledger(monthly_budget, monkeypatch, problem):
     from click.testing import CliRunner
-    from schedules.cli import cli
-    from datetime import datetime, timezone
+    from schedules.cli import _budget_month, cli
     budget, git, remote = monthly_budget
     budget.initialize()
-    month = datetime.now(timezone.utc).strftime("%Y-%m")
+    month = _budget_month()
     if problem != "missing":
         budget.reserve(month, "1-1")
     if problem == "blocked":
@@ -895,3 +892,97 @@ def test_cap_increase_refuses_without_modifying_ledger(monthly_budget, monkeypat
                  "0.5" if problem == "decrease" else "3" if problem == "approval_mismatch" else "2"]
     assert CliRunner().invoke(cli, arguments).exit_code != 0
     assert git("rev-parse", "schedule-budget", cwd=remote) == before
+
+
+def _pacific_month_clock(monkeypatch):
+    """Freeze the clock at 2026-09-30 23:30 Pacific (2026-10-01 06:30 UTC)."""
+    from datetime import datetime, timezone
+    from schedules import _time
+
+    instant = datetime(2026, 10, 1, 6, 30, tzinfo=timezone.utc)
+
+    class _Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return instant.astimezone(tz) if tz is not None else instant.replace(tzinfo=None)
+
+    monkeypatch.setattr(_time, "datetime", _Clock)
+    # Any UTC clock the CLI might still read is frozen at the same instant, so
+    # the assertions below turn on the time zone rather than on today's date.
+    monkeypatch.setattr("schedules.cli.datetime", _Clock, raising=False)
+    assert _time.pacific_today().isoformat() == "2026-09-30"
+    return instant
+
+
+def test_monthly_cap_uses_the_pacific_calendar_month(monkeypatch):
+    from schedules.cli import _monthly_budget
+    instant = _pacific_month_clock(monkeypatch)
+    assert instant.strftime("%Y-%m") == "2026-10"
+    monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_USD", "5")
+    monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_OVERRIDES", '{"2026-09":6}')
+    assert _monthly_budget().limit == 6000000
+
+
+def test_budget_reservation_records_the_pacific_month(monthly_budget, monkeypatch, tmp_path):
+    from click.testing import CliRunner
+    from schedules.cli import cli
+    budget, _, _ = monthly_budget
+    budget.initialize()
+    _pacific_month_clock(monkeypatch)
+    monkeypatch.setattr("schedules.cli.REPO_ROOT", budget.repo_root)
+    monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_USD", "1")
+    monkeypatch.setenv("OPENAI_API_KEY", "test-no-call")
+    output = tmp_path / "pacific-run"
+    result = CliRunner().invoke(cli, ["budget", "reserve", "--run-id", "2-1", "--output", str(output)])
+    assert result.exit_code == 0, result.output
+    receipt = json.loads((output / "reservation.json").read_text())
+    assert receipt["status"] == "reserved"
+    assert receipt["month"] == "2026-09"
+    assert set(budget._load()[1]["months"]) == {"2026-09"}
+
+
+@pytest.mark.parametrize("credentials", ["present", "absent"])
+@pytest.mark.parametrize("variable, value", [
+    ("SCHEDULES_MONTHLY_BUDGET_OVERRIDES", "{not json"),
+    ("SCHEDULES_MONTHLY_BUDGET_OVERRIDES", '{"2026-09": 0.5}'),
+    ("SCHEDULES_MONTHLY_BUDGET_OVERRIDES", "[]"),
+    ("SCHEDULES_MONTHLY_BUDGET_USD", "one dollar"),
+    ("SCHEDULES_MONTHLY_BUDGET_USD", "-1"),
+])
+def test_malformed_budget_configuration_stops_the_run(monthly_budget, monkeypatch, tmp_path, variable, value, credentials):
+    """A typo in an operator-set variable must never downgrade a run to free-only.
+
+    A missing API key is a reason to run free-only, not a reason to stop
+    checking the operator's configuration.
+    """
+    from click.testing import CliRunner
+    from schedules.cli import cli
+    budget, _, _ = monthly_budget
+    budget.initialize()
+    monkeypatch.setattr("schedules.cli.REPO_ROOT", budget.repo_root)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-no-call")
+    if credentials == "absent":
+        monkeypatch.delenv("OPENAI_API_KEY")
+    monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_USD", "1")
+    monkeypatch.setenv(variable, value)
+    output = tmp_path / "malformed"
+    result = CliRunner().invoke(cli, ["budget", "reserve", "--run-id", "2-1", "--output", str(output)])
+    assert result.exit_code != 0
+    assert variable in result.output
+    assert not output.exists()
+
+
+def test_unset_budget_variables_still_reserve_a_free_only_run(monthly_budget, monkeypatch, tmp_path):
+    """Unset or empty is "no approval", not a malformed value."""
+    from click.testing import CliRunner
+    from schedules.cli import cli
+    budget, _, _ = monthly_budget
+    budget.initialize()
+    monkeypatch.setattr("schedules.cli.REPO_ROOT", budget.repo_root)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-no-call")
+    monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_USD", "")
+    monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_OVERRIDES", "")
+    output = tmp_path / "free-only"
+    result = CliRunner().invoke(cli, ["budget", "reserve", "--run-id", "2-1", "--output", str(output)])
+    assert result.exit_code == 0, result.output
+    assert json.loads((output / "reservation.json").read_text())["status"] == "unavailable"

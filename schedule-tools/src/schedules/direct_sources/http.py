@@ -12,6 +12,7 @@ from urllib.parse import urlsplit, urlunsplit
 import httpx
 
 from .._time import pacific_today
+from ..fetch import get_with_retries
 from ..paths import DATA_DIR
 from .errors import DirectSourceError
 
@@ -61,20 +62,14 @@ def fetch_text(
         "Accept": "text/html,application/xhtml+xml,text/plain;q=0.9,*/*;q=0.8",
     }
     with httpx.Client(follow_redirects=True, timeout=timeout, headers=headers) as client:
-        for attempt in range(retries + 1):
-            try:
-                response = client.get(url)
-                response.raise_for_status()
-                return DirectTextResponse(response.text, response.content, str(response.url))
-            except httpx.HTTPStatusError as exc:
-                detail = _http_failure(exc.response)
-                if exc.response.status_code not in {408, 429, 500, 502, 503, 504}:
-                    break
-            except httpx.TransportError as exc:
-                detail = type(exc).__name__
-            if attempt >= retries:
-                break
-            time.sleep(0.25 * (attempt + 1))
+        try:
+            response = get_with_retries(client, url, retries=retries)
+        except httpx.HTTPStatusError as exc:
+            detail = _http_failure(exc.response)
+        except httpx.TransportError as exc:
+            detail = type(exc).__name__
+        else:
+            return DirectTextResponse(response.text, response.content, str(response.url))
     raise DirectSourceError(f"Failed to fetch {_safe_url(url)}: {detail}") from None
 
 

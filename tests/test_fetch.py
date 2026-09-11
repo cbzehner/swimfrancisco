@@ -153,7 +153,17 @@ def test_fetch_pdf_collision_regardless_of_sort_order(tmp_path, monkeypatch):
         fetch_pdf("test-pool", "http://example.test/x.pdf", cache_root=tmp_path)
 
 
-@pytest.mark.parametrize("status, expected_calls", [(404, 1), (403, 1), (429, 1), (500, 3), (503, 3)])
+def test_http_retries_have_one_implementation() -> None:
+    """discover and the direct sources share fetch.get_with_retries."""
+    from schedules import discover, fetch
+    from schedules.direct_sources import http as direct_http
+
+    assert discover.get_with_retries is fetch.get_with_retries
+    assert direct_http.get_with_retries is fetch.get_with_retries
+    assert not hasattr(discover, "_get_with_retries")
+
+
+@pytest.mark.parametrize("status, expected_calls", [(404, 1), (403, 1), (429, 3), (500, 3), (503, 3)])
 def test_fetch_retries_only_transient_http_errors(tmp_path, monkeypatch, status, expected_calls):
     client = httpx.Client
     calls = []

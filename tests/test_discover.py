@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
 
@@ -25,7 +26,6 @@ from schedules.discover import (
     discover_facility_documents,
     persisted_band_ids,
     rec_park_entries,
-    rewrite_registry_pdf_url,
 )
 from schedules.models import PoolEntry
 from schedules.registry import load_registry
@@ -172,6 +172,17 @@ def _install_http(
 
         def __exit__(self, exc_type, exc, tb):
             return False
+
+        @contextmanager
+        def stream(self, method: str, url: str):
+            # Bounded PDF reads stream; re-wrap so iter_raw() is available.
+            response = self.get(url)
+            yield httpx.Response(
+                response.status_code,
+                stream=httpx.ByteStream(response.content),
+                headers=response.headers,
+                request=response.request,
+            )
 
         def get(self, url: str):
             requested.append(url)
@@ -1138,16 +1149,6 @@ def test_adopt_split_part_on_published_sets_missing(tmp_path, monkeypatch) -> No
     assert hamilton.pdf_url.endswith("/29778")
 
 
-def test_rewrite_registry_pdf_url(tmp_path) -> None:
-    path = _copy_registry(tmp_path)
-    rewrite_registry_pdf_url(
-        path, "hamilton-pool", "https://sfrecpark.org/DocumentCenter/View/29800"
-    )
-    loaded = load_registry(path)
-    hamilton = next(entry for entry in loaded if entry.slug == "hamilton-pool")
-    assert hamilton.pdf_url.endswith("/29800")
-
-
 def test_machine_line_upsert_is_idempotent_ignoring_date(tmp_path, monkeypatch) -> None:
     path = _copy_registry(tmp_path)
     text = path.read_text()
@@ -1590,12 +1591,18 @@ def test_discover_all_hard_error_when_every_page_fails(tmp_path, monkeypatch) ->
             request = httpx.Request("GET", url)
             return httpx.Response(500, content=b"nope", request=request)
 
+        @contextmanager
+        def stream(self, method: str, url: str):
+            request = httpx.Request(method, url)
+            yield httpx.Response(500, stream=httpx.ByteStream(b"nope"), request=request)
+
     monkeypatch.setattr("schedules.discover.httpx.Client", FakeClient)
     with pytest.raises(DiscoverError, match="every Rec & Park"):
         discover_all(
             [entry],
             dry_run=True,
             delay=0,
+            sleep=lambda _: None,
             registry_path=tmp_path / "unused.toml",
             report_dir=tmp_path,
         )
@@ -2212,6 +2219,9 @@ def test_fetch_error_keeps_registry_notes_and_reports_persisted(tmp_path, monkey
                 return httpx.Response(503, content=b"down", request=request)
             return self.inner.get(url)
 
+        def stream(self, method: str, url: str):
+            return self.inner.stream(method, url)
+
     real_client = __import__("schedules.discover", fromlist=["httpx"]).httpx.Client
     monkeypatch.setattr(
         "schedules.discover.httpx.Client",
@@ -2267,3 +2277,384 @@ def test_north_beach_complete_original_pair_adopts(north_beach_pair, monkeypatch
         assert discover.choose_roll(entry, bad).blocking
     monkeypatch.setattr(discover, "pacific_today", lambda: date(2026, 12, 13))
     assert discover.choose_roll(entry, documents).blocking
+
+
+def _sava_adopt_setup(tmp_path):
+    registry = _copy_registry(tmp_path)
+    sava = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "sava-pool")
+    pages = {sava.official_page_url: _fixture("sava-two-session-grids.html")}
+    return registry, sava, pages
+
+
+def test_adopt_refuses_a_view_that_failed_to_fetch(tmp_path, monkeypatch) -> None:
+    import click
+
+    _freeze_today(monkeypatch)
+    registry, sava, pages = _sava_adopt_setup(tmp_path)
+    before = registry.read_text()
+    views = {29805: {"filename": "Sava Pool Fall 2 2026.pdf", "content": _pdf_bytes()}}
+    _install_http(monkeypatch, pages=pages, views=views)
+    with pytest.raises(click.ClickException, match="cannot adopt a source that failed to fetch"):
+        discover_all(
+            [sava],
+            delay=0,
+            registry_path=registry,
+            report_dir=tmp_path,
+            adopt=("sava-pool", 29815),
+        )
+    assert registry.read_text() == before
+
+
+def test_adopt_refuses_when_the_facility_page_failed(tmp_path, monkeypatch) -> None:
+    import click
+
+    _freeze_today(monkeypatch)
+    registry, sava, pages = _sava_adopt_setup(tmp_path)
+    before = registry.read_text()
+    views = {
+        29815: {
+            "filename": "Sava_Pool_Fall12026_Aug18toDec26_.pdf",
+            "content": _pdf_bytes(),
+        },
+    }
+    _install_http(monkeypatch, pages=pages, views=views)
+    real_client = httpx.Client
+
+    class FailPages:
+        def __init__(self, inner):
+            self.inner = inner
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def get(self, url: str):
+            if "/DocumentCenter/View/" not in url:
+                raise httpx.ConnectError("page down")
+            return self.inner.get(url)
+
+        def stream(self, method: str, url: str):
+            return self.inner.stream(method, url)
+
+    monkeypatch.setattr(
+        "schedules.discover.httpx.Client",
+        lambda *args, **kwargs: FailPages(real_client(*args, **kwargs)),
+    )
+    with pytest.raises(click.ClickException, match="cannot adopt a source that failed to fetch"):
+        discover_all(
+            [sava],
+            delay=0,
+            sleep=lambda _: None,
+            registry_path=registry,
+            report_dir=tmp_path,
+            adopt=("sava-pool", 29815),
+        )
+    assert registry.read_text() == before
+
+
+# --- persisted survivors must not be asserted as grids ---------------------
+
+_UNLABELLED_GRID_TEXT = (
+    "FALL 2026 SCHEDULE (SEPTEMBER 8- DECEMBER 10)\n"
+    "SUNDAY MONDAY TUESDAY WEDNESDAY THURSDAY"
+)
+
+
+def _persisted_survivor_run(tmp_path, monkeypatch, *, survivor: dict):
+    """Garfield with persisted 29799 whose PDF names no pool, so the band loop
+    cannot classify it and it reaches the persisted-survivor path."""
+    _freeze_today(monkeypatch)
+    registry = _garfield_registry_with_persisted_29799(tmp_path)
+    garfield = next(item for item in load_registry(registry) if item.slug == "garfield-pool")
+    pages = {garfield.official_page_url: _fixture("garfield-flyer-only.html")}
+    views = {
+        29564: {
+            "filename": "Garfield Pool Summer 2026.pdf",
+            "content": _pdf_with_text(_GARFIELD_SUMMER_TEXT),
+        },
+        29799: survivor,
+    }
+    _install_http(monkeypatch, pages=pages, views=views)
+    before = registry.read_text()
+    decisions = discover_all(
+        [garfield], delay=0, sleep=lambda _: None, registry_path=registry, report_dir=tmp_path
+    )
+    return registry, before, decisions[0]
+
+
+def test_persisted_survivor_carries_its_real_kind_and_hash(tmp_path, monkeypatch) -> None:
+    import hashlib
+
+    content = _pdf_with_text(_UNLABELLED_GRID_TEXT)
+    _, _, decision = _persisted_survivor_run(
+        tmp_path,
+        monkeypatch,
+        survivor={"filename": "Fall 2026 Schedule.pdf", "content": content},
+    )
+    survivor = next(item for item in decision.candidates if item.link.view_id == 29799)
+    assert survivor.source == "persisted"
+    assert survivor.pdf_sha256 == hashlib.sha256(content).hexdigest()
+    assert survivor.kind == classify_pdf(
+        DocumentLink(29799, survivor.link.href, "Fall 2026 Schedule.pdf"),
+        pool_slug="garfield-pool",
+        pdf_bytes=content,
+        filename="Fall 2026 Schedule.pdf",
+    ).kind
+
+
+def test_persisted_survivor_that_failed_to_fetch_is_not_asserted(tmp_path, monkeypatch) -> None:
+    registry, before, decision = _persisted_survivor_run(
+        tmp_path,
+        monkeypatch,
+        survivor={"status": 500, "content": b"down", "type": "text/plain"},
+    )
+    assert not any(item.link.view_id == 29799 for item in decision.candidates)
+    assert decision.reason == "persisted_fetch_error"
+    assert decision.unfetched_persisted == (29799,)
+    assert registry.read_text() == before
+    assert 29799 in persisted_band_ids(
+        next(item for item in load_registry(registry) if item.slug == "garfield-pool").notes
+    )
+
+
+def test_persisted_fetch_error_names_the_view_and_not_the_page(tmp_path, monkeypatch) -> None:
+    """The facility page fetched fine; the report must say what actually failed."""
+    _persisted_survivor_run(
+        tmp_path,
+        monkeypatch,
+        survivor={"status": 500, "content": b"down", "type": "text/plain"},
+    )
+    report = (tmp_path / "discovery-report.md").read_text()
+    unchanged = [line for line in report.splitlines() if line.startswith("- registry: unchanged")]
+    assert len(unchanged) == 1
+    assert "29799" in unchanged[0]
+    assert "facility page failed" not in report
+    decisions = json.loads((tmp_path / "discovery-decisions.json").read_text())
+    assert decisions[0]["reason"] == "persisted_fetch_error"
+    assert decisions[0]["unfetched_persisted"] == [29799]
+
+
+# --- page and view fetches retry transient failures and bound the body -----
+
+
+def _mock_client(handler) -> httpx.Client:
+    return httpx.Client(transport=httpx.MockTransport(handler))
+
+
+def test_page_fetch_retries_a_transient_status_then_succeeds() -> None:
+    from schedules import discover
+
+    statuses = [502, 200]
+
+    def handler(request):
+        return httpx.Response(statuses.pop(0), text="<html></html>")
+
+    with _mock_client(handler) as client:
+        response = discover.get_with_retries(
+            client, "https://example.test/page", sleep=lambda _: None
+        )
+    assert response.status_code == 200
+    assert statuses == []
+
+
+def test_page_fetch_does_not_retry_a_permanent_status() -> None:
+    from schedules import discover
+
+    calls: list[httpx.Request] = []
+
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(404, text="missing")
+
+    with _mock_client(handler) as client:
+        with pytest.raises(httpx.HTTPStatusError):
+            discover.get_with_retries(
+                client, "https://example.test/page", sleep=lambda _: None
+            )
+    assert len(calls) == 1
+
+
+def test_view_over_the_source_limit_degrades_to_an_unusable_view(monkeypatch) -> None:
+    """One outsized DocumentCenter ID must not end the run for every pool."""
+    from schedules import discover
+
+    monkeypatch.setattr(discover, "MAX_PDF_BYTES", 100)
+
+    def handler(request):
+        return httpx.Response(
+            200,
+            stream=httpx.ByteStream(b"%PDF-1.4" + b"x" * 500),
+            headers={"Content-Type": "application/pdf"},
+        )
+
+    with _mock_client(handler) as client:
+        fetched = discover._fetch_view(client, 29800, sleep=lambda _: None)
+    assert (fetched.status_code, fetched.is_pdf, fetched.content) == (0, False, b"")
+
+
+def test_oversized_view_does_not_abort_the_discover_run(tmp_path, monkeypatch) -> None:
+    from schedules import discover
+
+    _freeze_today(monkeypatch)
+    monkeypatch.setattr(discover, "MAX_PDF_BYTES", 100)
+    entry = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "hamilton-pool")
+    _install_http(
+        monkeypatch,
+        pages={entry.official_page_url: _fixture("hamilton-one-grid.html")},
+        views={29800: {"filename": "Hamilton Pool Fall 2026.pdf", "content": _grid_pdf()}},
+    )
+    decisions = discover_all(
+        [entry],
+        dry_run=True,
+        delay=0,
+        sleep=lambda _: None,
+        registry_path=tmp_path / "unused.toml",
+        report_dir=tmp_path,
+    )
+    assert [item.slug for item in decisions] == ["hamilton-pool"]
+    assert decisions[0].reason != "fetch_error"
+    assert (tmp_path / "discovery-report.md").exists()
+    assert (tmp_path / "discovery-decisions.json").exists()
+
+
+def test_view_fetch_retries_a_transient_status_then_succeeds() -> None:
+    from schedules import discover
+
+    statuses = [503, 200]
+
+    def handler(request):
+        status = statuses.pop(0)
+        return httpx.Response(
+            status,
+            stream=httpx.ByteStream(_pdf_bytes() if status == 200 else b"down"),
+            headers={"Content-Type": "application/pdf" if status == 200 else "text/plain"},
+        )
+
+    with _mock_client(handler) as client:
+        fetched = discover._fetch_view(client, 29800, sleep=lambda _: None)
+    assert fetched.status_code == 200
+    assert fetched.is_pdf is True
+    assert statuses == []
+
+
+# --- no dead code, no asserts for control flow ------------------------------
+
+
+def test_discover_raises_instead_of_asserting() -> None:
+    """`assert` vanishes under -O; discover must raise real errors."""
+    import ast
+    from pathlib import Path as _Path
+
+    from schedules import discover
+
+    source = _Path(discover.__file__).read_text()
+    assert not [
+        node for node in ast.walk(ast.parse(source)) if isinstance(node, ast.Assert)
+    ]
+
+
+def test_registry_source_status_is_rewritten_only_when_asked() -> None:
+    """Only "published" or an explicit insert may overwrite an existing status."""
+    from schedules.discover import _ensure_source_status
+
+    block = 'slug = "x"\nofficial_page_url = "https://example.test"\nsource_status = "published"\n'
+    assert _ensure_source_status(block, "published", insert=False) == block
+    assert 'source_status = "missing_current_schedule"' in _ensure_source_status(
+        block, "missing_current_schedule", insert=True
+    )
+    assert _ensure_source_status(block, "missing_current_schedule", insert=False) == block
+    flagged = block.replace("published", "missing_current_schedule")
+    assert 'source_status = "published"' in _ensure_source_status(
+        flagged, "published", insert=False
+    )
+    without = 'slug = "x"\nofficial_page_url = "https://example.test"\n'
+    assert _ensure_source_status(without, "published", insert=False) == without
+    assert 'source_status = "published"' in _ensure_source_status(
+        without, "published", insert=True
+    )
+
+
+def test_registry_pdf_url_rewrite_helper_is_gone() -> None:
+    from schedules import discover
+
+    assert not hasattr(discover, "rewrite_registry_pdf_url")
+
+
+def test_discover_asks_for_identity_encoded_bodies(tmp_path, monkeypatch) -> None:
+    """Bounded reads measure and return raw bytes, so a gzipped body is refused."""
+    _freeze_today(monkeypatch)
+    entry = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "hamilton-pool")
+    seen, _ = _install_http(
+        monkeypatch,
+        pages={entry.official_page_url: _fixture("hamilton-one-grid.html")},
+        views={29800: {"filename": "Hamilton Pool Fall 2026.pdf", "content": _grid_pdf()}},
+    )
+    discover_all(
+        [entry],
+        dry_run=True,
+        delay=0,
+        registry_path=tmp_path / "unused.toml",
+        report_dir=tmp_path,
+    )
+    assert seen["headers"]["Accept-Encoding"] == "identity"
+
+
+def test_discover_all_retries_a_transient_facility_page(tmp_path, monkeypatch) -> None:
+    """A 502 on the pool's page must be retried inside the run, not recorded."""
+    _freeze_today(monkeypatch)
+    registry = _copy_registry(tmp_path)
+    entry = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "hamilton-pool")
+    _install_http(
+        monkeypatch,
+        pages={entry.official_page_url: _fixture("hamilton-one-grid.html")},
+        views={
+            29800: {
+                "filename": "Hamilton Pool _ Fall 2026 _ August 18 to December 12.pdf",
+                "content": _grid_pdf(),
+            },
+            29599: {"filename": "Hamilton Pool Summer 2026.pdf", "content": _grid_pdf()},
+        },
+    )
+    inner_factory = httpx.Client  # _install_http already swapped in the fake
+    page_attempts: list[str] = []
+
+    class FlakyPage:
+        def __init__(self, inner):
+            self.inner = inner
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def get(self, url: str):
+            if "/DocumentCenter/View/" not in url:
+                page_attempts.append(url)
+                if len(page_attempts) == 1:
+                    return httpx.Response(
+                        502, content=b"bad gateway", request=httpx.Request("GET", url)
+                    )
+            return self.inner.get(url)
+
+        def stream(self, method: str, url: str):
+            return self.inner.stream(method, url)
+
+    monkeypatch.setattr(
+        "schedules.discover.httpx.Client",
+        lambda *args, **kwargs: FlakyPage(inner_factory(*args, **kwargs)),
+    )
+    decisions = discover_all(
+        [entry],
+        delay=0,
+        sleep=lambda _: None,
+        registry_path=registry,
+        report_dir=tmp_path,
+    )
+    assert len(page_attempts) == 2
+    assert decisions[0].reason != "fetch_error"
+    assert decisions[0].action == "adopt"
+    hamilton = next(item for item in load_registry(registry) if item.slug == "hamilton-pool")
+    assert hamilton.pdf_url.endswith("/29800")
