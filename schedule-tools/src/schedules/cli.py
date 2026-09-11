@@ -154,9 +154,12 @@ def budget_reserve_command(run_id: str, output: Path) -> None:
         raise click.ClickException("Budget reservation requires an Actions run/attempt ID")
     month = _budget_month()
     try:
+        # Configuration first: a missing key is a reason to run free-only, not
+        # a reason to stop checking what the operator approved.
+        budget = _monthly_budget(month)
         if not os.environ.get("OPENAI_API_KEY", "").strip():
             raise ValueError("Paid extraction credentials unavailable")
-        receipt = _monthly_budget(month).reserve(month, run_id) | {"status": "reserved"}
+        receipt = budget.reserve(month, run_id) | {"status": "reserved"}
     except BudgetConfigError:
         raise
     except (ValueError, RuntimeError, OSError, subprocess.TimeoutExpired, click.ClickException):

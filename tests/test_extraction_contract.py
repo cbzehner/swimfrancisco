@@ -941,6 +941,7 @@ def test_budget_reservation_records_the_pacific_month(monthly_budget, monkeypatc
     assert set(budget._load()[1]["months"]) == {"2026-09"}
 
 
+@pytest.mark.parametrize("credentials", ["present", "absent"])
 @pytest.mark.parametrize("variable, value", [
     ("SCHEDULES_MONTHLY_BUDGET_OVERRIDES", "{not json"),
     ("SCHEDULES_MONTHLY_BUDGET_OVERRIDES", '{"2026-09": 0.5}'),
@@ -948,14 +949,20 @@ def test_budget_reservation_records_the_pacific_month(monthly_budget, monkeypatc
     ("SCHEDULES_MONTHLY_BUDGET_USD", "one dollar"),
     ("SCHEDULES_MONTHLY_BUDGET_USD", "-1"),
 ])
-def test_malformed_budget_configuration_stops_the_run(monthly_budget, monkeypatch, tmp_path, variable, value):
-    """A typo in an operator-set variable must never downgrade a run to free-only."""
+def test_malformed_budget_configuration_stops_the_run(monthly_budget, monkeypatch, tmp_path, variable, value, credentials):
+    """A typo in an operator-set variable must never downgrade a run to free-only.
+
+    A missing API key is a reason to run free-only, not a reason to stop
+    checking the operator's configuration.
+    """
     from click.testing import CliRunner
     from schedules.cli import cli
     budget, _, _ = monthly_budget
     budget.initialize()
     monkeypatch.setattr("schedules.cli.REPO_ROOT", budget.repo_root)
     monkeypatch.setenv("OPENAI_API_KEY", "test-no-call")
+    if credentials == "absent":
+        monkeypatch.delenv("OPENAI_API_KEY")
     monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_USD", "1")
     monkeypatch.setenv(variable, value)
     output = tmp_path / "malformed"
