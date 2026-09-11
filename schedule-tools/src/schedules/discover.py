@@ -36,6 +36,8 @@ RollAction = Literal["adopt", "unchanged", "flag"]
 
 DOCUMENT_CENTER_BASE = "https://sfrecpark.org/DocumentCenter/View"
 VIEW_ID_RE = re.compile(r"/DocumentCenter/View/(\d+)", re.IGNORECASE)
+# Reasons that mean "this run learned too little to rewrite registry.toml".
+REGISTRY_PRESERVING_REASONS = frozenset({"fetch_error", "persisted_fetch_error"})
 BAND_WINDOW = 40
 BAND_DELAY_SECONDS = 0.2
 PAGE_TIMEOUT_SECONDS = 30.0
@@ -111,6 +113,9 @@ class DiscoverDecision:
     candidates: tuple[ClassifiedDocument, ...]
     extra_candidates: tuple[ClassifiedDocument, ...]
     blocking: bool
+    # Persisted view IDs this run could not fetch. Their presence is why the
+    # registry is left alone: rewriting the notes would forget them.
+    unfetched_persisted: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -494,7 +499,7 @@ def persisted_band_ids(notes: str | None) -> frozenset[int]:
 def apply_discover_decision(path: Path, decision: DiscoverDecision) -> None:
     # A page that failed to fetch tells us nothing about the pool. Never let
     # it overwrite persisted band IDs, sequential siblings, or extras.
-    if decision.reason == "fetch_error":
+    if decision.reason in REGISTRY_PRESERVING_REASONS:
         return
     text = path.read_text()
     start, end = _pool_block_span(text, slug=decision.slug)
@@ -695,7 +700,7 @@ def discover_all(
 
     if not dry_run:
         for decision in decisions:
-            apply_discover_decision(registry_path, decision)  # no-op on fetch_error
+            apply_discover_decision(registry_path, decision)  # no-op when a fetch failed
 
     report_dir.mkdir(parents=True, exist_ok=True)
     report_path = report_dir / "discovery-report.md"
@@ -815,8 +820,9 @@ def _with_persisted_survivors(
         return replace(
             decision,
             candidates=decision.candidates + tuple(survivors),
-            reason="fetch_error",
+            reason="persisted_fetch_error",
             blocking=True,
+            unfetched_persisted=tuple(unfetched),
         )
     if not survivors:
         return decision
@@ -1411,6 +1417,7 @@ def _decision_to_json(decision: DiscoverDecision) -> dict:
         "kind": decision.kind,
         "reason": decision.reason,
         "blocking": decision.blocking,
+        "unfetched_persisted": list(decision.unfetched_persisted),
         "candidates": [_classified_to_json(item) for item in decision.candidates],
         "extra_candidates": [
             _classified_to_json(item) for item in decision.extra_candidates
@@ -1519,6 +1526,12 @@ def _render_report(
         lines.append(f"- blocking: {decision.blocking}")
         if decision.reason == "fetch_error":
             lines.append("- registry: unchanged (facility page failed; prior notes kept)")
+        elif decision.reason == "persisted_fetch_error":
+            failed = ", ".join(str(view_id) for view_id in decision.unfetched_persisted)
+            lines.append(
+                f"- registry: unchanged (persisted view {failed} failed to fetch; "
+                "notes kept so the ID is not forgotten)"
+            )
         if decision.candidates:
             listed = ", ".join(
                 f"{item.link.view_id}:{item.kind}:{item.source}"

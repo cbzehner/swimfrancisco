@@ -2411,11 +2411,29 @@ def test_persisted_survivor_that_failed_to_fetch_is_not_asserted(tmp_path, monke
         survivor={"status": 500, "content": b"down", "type": "text/plain"},
     )
     assert not any(item.link.view_id == 29799 for item in decision.candidates)
-    assert decision.reason == "fetch_error"
+    assert decision.reason == "persisted_fetch_error"
+    assert decision.unfetched_persisted == (29799,)
     assert registry.read_text() == before
     assert 29799 in persisted_band_ids(
         next(item for item in load_registry(registry) if item.slug == "garfield-pool").notes
     )
+
+
+def test_persisted_fetch_error_names_the_view_and_not_the_page(tmp_path, monkeypatch) -> None:
+    """The facility page fetched fine; the report must say what actually failed."""
+    _persisted_survivor_run(
+        tmp_path,
+        monkeypatch,
+        survivor={"status": 500, "content": b"down", "type": "text/plain"},
+    )
+    report = (tmp_path / "discovery-report.md").read_text()
+    unchanged = [line for line in report.splitlines() if line.startswith("- registry: unchanged")]
+    assert len(unchanged) == 1
+    assert "29799" in unchanged[0]
+    assert "facility page failed" not in report
+    decisions = json.loads((tmp_path / "discovery-decisions.json").read_text())
+    assert decisions[0]["reason"] == "persisted_fetch_error"
+    assert decisions[0]["unfetched_persisted"] == [29799]
 
 
 # --- page and view fetches retry transient failures and bound the body -----
