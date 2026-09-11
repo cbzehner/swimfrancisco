@@ -2445,7 +2445,7 @@ def test_page_fetch_retries_a_transient_status_then_succeeds() -> None:
         return httpx.Response(statuses.pop(0), text="<html></html>")
 
     with _mock_client(handler) as client:
-        response = discover._get_with_retries(
+        response = discover.get_with_retries(
             client, "https://example.test/page", sleep=lambda _: None
         )
     assert response.status_code == 200
@@ -2463,7 +2463,7 @@ def test_page_fetch_does_not_retry_a_permanent_status() -> None:
 
     with _mock_client(handler) as client:
         with pytest.raises(httpx.HTTPStatusError):
-            discover._get_with_retries(
+            discover.get_with_retries(
                 client, "https://example.test/page", sleep=lambda _: None
             )
     assert len(calls) == 1

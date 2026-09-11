@@ -18,7 +18,7 @@ import httpx
 
 from ._time import pacific_today
 from .direct_sources.http import BOT_USER_AGENT
-from .fetch import MAX_PDF_BYTES, TRANSIENT_STATUSES, FetchError
+from .fetch import MAX_PDF_BYTES, get_with_retries
 from .models import PoolEntry
 from .paths import REGISTRY_PATH, TMP_DIR
 from .registry import load_registry
@@ -568,7 +568,9 @@ def discover_all(
     ) as client:
         for entry in selected:
             try:
-                page = _get_with_retries(client, entry.official_page_url, sleep=sleep)
+                page = get_with_retries(
+                    client, entry.official_page_url, sleep=sleep, retries=PAGE_RETRIES
+                )
                 table_links[entry.slug] = discover_facility_documents(page.text)
             except Exception:  # noqa: BLE001
                 fetch_errors.add(entry.slug)
@@ -963,66 +965,14 @@ def _max_pdf_view_id(entries: list[PoolEntry]) -> int | None:
     return max(ids) if ids else None
 
 
-def _get_with_retries(
-    client: httpx.Client,
-    url: str,
-    *,
-    sleep: Callable[[float], None],
-    retries: int = PAGE_RETRIES,
-    max_bytes: int | None = None,
-) -> httpx.Response:
-    """GET with bounded retries on transient failures, raising for other statuses."""
-    last_error: httpx.HTTPError
-    for attempt in range(retries + 1):
-        try:
-            return _get_once(client, url, max_bytes)
-        except httpx.HTTPError as exc:
-            last_error = exc
-            transient = isinstance(exc, httpx.TransportError) or (
-                isinstance(exc, httpx.HTTPStatusError)
-                and exc.response.status_code in TRANSIENT_STATUSES
-            )
-            if not transient or attempt >= retries:
-                break
-            sleep(0.25 * (attempt + 1))
-    raise last_error
-
-
-def _get_once(
-    client: httpx.Client, url: str, max_bytes: int | None
-) -> httpx.Response:
-    if max_bytes is None:
-        response = client.get(url)
-        response.raise_for_status()
-        return response
-    with client.stream("GET", url) as response:
-        response.raise_for_status()
-        length = response.headers.get("content-length")
-        if length is not None and (not length.isdecimal() or int(length) > max_bytes):
-            raise FetchError("PDF exceeds the 25 MiB source limit or has an invalid length")
-        chunks: list[bytes] = []
-        size = 0
-        for chunk in response.iter_raw(chunk_size=64 * 1024):
-            size += len(chunk)
-            if size > max_bytes:
-                raise FetchError("PDF exceeds the 25 MiB source limit")
-            chunks.append(chunk)
-        return httpx.Response(
-            status_code=response.status_code,
-            headers=response.headers,
-            content=b"".join(chunks),
-            request=response.request,
-            extensions=response.extensions,
-            history=response.history,
-        )
-
-
 def _fetch_view(
     client: httpx.Client, view_id: int, *, sleep: Callable[[float], None]
 ) -> _ViewFetch:
     url = absolute_view_url(view_id)
     try:
-        response = _get_with_retries(client, url, sleep=sleep, max_bytes=MAX_PDF_BYTES)
+        response = get_with_retries(
+            client, url, sleep=sleep, retries=PAGE_RETRIES, max_bytes=MAX_PDF_BYTES
+        )
         content = response.content or b""
     except httpx.HTTPStatusError as exc:
         # A 404 still tells discover the document is gone; the body does not.
