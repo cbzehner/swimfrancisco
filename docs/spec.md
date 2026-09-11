@@ -7,7 +7,7 @@ swimfrancisco.com — a live-updating database of all the places to swim in San 
 
 - **Static site:** Zola served by a single Cloudflare Worker in the Workers Builds model
 - **Live data:** Cloudflare Worker (TypeScript), hourly cron, KV storage
-- **Schedule extraction:** Python (devenv + uv) with Gemini/Anthropic PDF extraction, human-reviewed `reviewed.json`, and projection into `content/spots/*.md`
+- **Schedule extraction:** Python (devenv + uv) with OpenAI PDF extraction, reviewed `reviewed.json`, and projection into `content/spots/*.md`
 - **Domain:** swimfrancisco.com on Cloudflare
 - **Dev environment:** devenv + uv
 
@@ -206,6 +206,7 @@ Airport departure board aesthetic. Split-flap animation.
   - On the 00:00 PT tick, fires the Workers Builds deploy hook so date-sensitive HTML is rebuilt
 - **Endpoints:**
   - `GET /api/conditions` — slug-keyed conditions for every spot (board + detail pages)
+  - `GET /api/map-config` — public CARTO basemap configuration for the browser; `503` when `CARTO_BASEMAP_API_KEY` is not bound
   - `/ingest/*` — same-origin reverse proxy for PostHog analytics
   - Everything else is served from the Zola build as static assets
 - **Per-spot record shape** (`SpotConditions` in `worker/src/assemble.ts`):
@@ -228,18 +229,19 @@ See `worker/src/*.ts` for exact URLs and parsers.
 ## Schedule Extraction
 
 The pool schedule extractor is a local and CI-runnable Python CLI under
-`schedule-tools/`. It fetches SF Rec & Park PDFs, runs Gemini and/or Anthropic
-against the PDF with a JSON schema, stores source/provider/review artifacts
-under `data/<slug>/<date>-<sha12>/`, and projects `reviewed.json` into
+`schedule-tools/`. It fetches SF Rec & Park PDFs, runs OpenAI against the PDF
+with a JSON schema, stores source/provider/review artifacts under
+`data/<slug>/<date>-<sha12>/`, and projects `reviewed.json` into
 `content/spots/*.md`. Unique, unambiguous Rec & Park grids are attested by CI
 (`schedules publish-pending`); anything flagged waits for human review.
 See `docs/schedules.md`.
 
 ## Deploy
 
-- **On push to `main`:** Cloudflare Workers Builds runs the Zola build and deploys the Worker/static assets together
-- **Daily:** the hourly Worker cron also triggers a Workers Builds deploy hook on the tick at 00:00 PT so date-sensitive HTML stays current
-- **Schedules:** weekly GitHub Action (`schedules-extract.yml`, Mondays) refreshes one rolling auto PR; it auto-merges when every change was CI-attested, otherwise it is labeled `needs-schedule-review`. `workflow_dispatch` still runs on demand.
+See [`docs/deploy.md`](deploy.md) for the deploy runbook; it is the single
+description of how the site ships.
+
+- **Schedules:** a weekly GitHub Action (Mondays, 16:00 UTC) extracts, verifies, and pushes accepted changes straight to `main` behind exact-commit CI. Unclear closures get a draft review PR instead. `workflow_dispatch` still runs on demand. See [`docs/schedules.md`](schedules.md).
 
 ## Future (not v1)
 

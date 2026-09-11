@@ -1,5 +1,5 @@
 ---
-status: pending
+status: abandoned
 progress: []
 last_review: null
 iterations: 0

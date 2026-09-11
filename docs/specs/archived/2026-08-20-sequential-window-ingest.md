@@ -2,10 +2,10 @@
 
 **Author:** TBD
 **Date:** 2026-08-20
-**Status:** Draft
+**Status:** Implemented
 **Audience:** Operators of the schedule extract/review pipeline; engineers implementing after Key Decisions are approved
 
-This is the spec after unique-grid auto-publish ([`docs/specs/2026-08-20-schedule-auto-publish.md`](docs/specs/2026-08-20-schedule-auto-publish.md)). It closes that spec's Open Questions 1–2 for sequential windows, and it fixes classifier and persist bugs that keep FLAG pools dark after unique grids already ship.
+This is the spec after unique-grid auto-publish ([`2026-08-20-schedule-auto-publish.md`](2026-08-20-schedule-auto-publish.md)). It closes that spec's Open Questions 1–2 for sequential windows, and it fixes classifier and persist bugs that keep FLAG pools dark after unique grids already ship.
 
 Do not implement until the operator approves Key Decisions.
 
@@ -1059,8 +1059,8 @@ If the operator rejects Decision A (wants `--adopt` forever), stop; do not land 
 
 ## References
 
-- Prior spec (unique-grid auto-publish; OQ 1–2): `docs/specs/2026-08-20-schedule-auto-publish.md`
-- Discovery spec: `docs/specs/2026-08-19-rec-park-pdf-discovery.md`
+- Prior spec (unique-grid auto-publish; OQ 1–2): `docs/specs/archived/2026-08-20-schedule-auto-publish.md`
+- Discovery spec: `docs/specs/archived/2026-08-19-rec-park-pdf-discovery.md`
 - Operator manual: `docs/schedules.md` (FLAG operator path; update in the docs PR)
 - Workflow: `.github/workflows/schedules-extract.yml`
 - Discover: `schedule-tools/src/schedules/discover.py` (`classify_pdf`, `_classify_kind`, `_CLOSURE_RE`, `_SPLIT_RE`, `_token_re`, `choose_roll`, `persisted_band_ids`, `_operator_adopt_decision`, `_apply_decision_to_block`, `_desired_machine_line`, `_off_table_current_grids`)
