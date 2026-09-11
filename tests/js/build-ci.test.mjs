@@ -363,21 +363,38 @@ test("generated path allowlist excludes credentials, source code, and unexpected
   ]) assert.equal(generatedSchedulePath(path), false, path);
 });
 
+const command = (cwd, args) => execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+
+// One baseline repository for the whole module: building it costs a bare
+// init, a clone, and a commit, and every promotion test wants the same
+// starting point. Each test clones its own writable origin from it, so the
+// pushes one test makes are invisible to the next.
+const baselineRemote = (() => {
+  const directory = mkdtempSync(join(tmpdir(), "swim-promotion-baseline-"));
+  process.on("exit", () => rmSync(directory, { recursive: true, force: true }));
+  const remote = join(directory, "baseline.git");
+  const work = join(directory, "work");
+  command(directory, ["init", "--bare", "--initial-branch=main", remote]);
+  command(directory, ["clone", remote, work]);
+  command(work, ["config", "user.name", "Schedule test"]);
+  command(work, ["config", "user.email", "test@example.invalid"]);
+  writeFileSync(join(work, "seed.txt"), "baseline\n");
+  command(work, ["add", "seed.txt"]);
+  command(work, ["commit", "-m", "Baseline"]);
+  command(work, ["push", "origin", "main"]);
+  return remote;
+})();
+
 function promotionRepository(t, { path = "content/spots/test-pool.md", symlink = false, prune = false } = {}) {
   const directory = mkdtempSync(join(tmpdir(), "swim-promotion-test-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const remote = join(directory, "origin.git");
   const work = join(directory, "work");
-  const command = (cwd, args) => execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-  command(directory, ["init", "--bare", "--initial-branch=main", remote]);
+  command(directory, ["clone", "--bare", baselineRemote, remote]);
   command(directory, ["clone", remote, work]);
   const git = (args) => command(work, args);
   git(["config", "user.name", "Schedule test"]);
   git(["config", "user.email", "test@example.invalid"]);
-  writeFileSync(join(work, "seed.txt"), "baseline\n");
-  git(["add", "seed.txt"]);
-  git(["commit", "-m", "Baseline"]);
-  git(["push", "origin", "main"]);
   const prunedSnapshot = "data/test-pool/2026-09-02-67f2a420e8fc/reviewed.json";
   if (prune) {
     mkdirSync(join(work, "data/test-pool/2026-09-02-67f2a420e8fc"), { recursive: true });

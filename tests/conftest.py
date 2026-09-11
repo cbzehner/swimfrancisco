@@ -18,6 +18,7 @@ import jsonschema
 import pytest
 
 from schedules.eval import RowKey
+from schedules.providers import openai_provider
 from schedules.schema import EXTRACTION_SCHEMA
 
 
@@ -52,6 +53,67 @@ def load_source_reference(path: Path, reference_id: str, *, repo_root: Path) -> 
     if "as_of" in reference:
         date.fromisoformat(reference["as_of"])
     return reference
+
+
+def extraction_api_request() -> dict:
+    """The production extraction request, as the budget tests price it."""
+    return openai_provider.api_request("Extract this schedule", EXTRACTION_SCHEMA)
+
+
+def api_usage_result(input_tokens=100, output_tokens=200, **response_fields) -> dict:
+    """An OpenAI response envelope carrying trustworthy usage accounting."""
+    return {"status": "completed", "api_response": {
+        "model": openai_provider.API_MODEL, "service_tier": "default",
+        "usage": {"input_tokens": input_tokens, "output_tokens": output_tokens,
+                  "input_tokens_details": {"cached_tokens": input_tokens}},
+        **response_fields,
+    }}
+
+
+WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday")
+
+
+@pytest.fixture
+def schedule_payload():
+    """Build a minimal valid extraction payload: weekday lap-swim hours."""
+
+    def build(effective_start: str = "2026-03-17", *, days=WEEKDAYS, **overrides) -> dict:
+        return {
+            "effective_start": effective_start,
+            "schedule_basis": "swim_schedule",
+            "sessions": [
+                {"day": day, "type": "lap_swim", "start": "07:00", "end": "08:00",
+                 "evidence": "Lap Swim 7-8am"}
+                for day in days
+            ],
+            "closures": [],
+        } | overrides
+
+    return build
+
+
+@pytest.fixture
+def reviewed_envelope(schedule_payload):
+    """Build an attested-snapshot envelope around `schedule_payload`."""
+
+    def build(
+        slug: str = "hamilton-pool",
+        pdf_sha256: str = "a" * 64,
+        *,
+        reviewed_at: str = "2026-04-19",
+        source_pdf_url: str = "https://example.com/schedule.pdf",
+        payload: dict | None = None,
+        **overrides,
+    ) -> dict:
+        return {
+            "slug": slug,
+            "pdf_sha256": pdf_sha256,
+            "reviewed_at": reviewed_at,
+            "source_pdf_url": source_pdf_url,
+            "payload": schedule_payload() if payload is None else payload,
+        } | overrides
+
+    return build
 
 
 @pytest.fixture

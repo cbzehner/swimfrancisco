@@ -27,11 +27,13 @@ serve:
     npm run generate-agent-data
     zola serve --interface 127.0.0.1 --port 1111
 
+# The site, the worker, and every schedule are Pacific; pinning TZ keeps a
+# test that reads the local clock from passing only on a Pacific machine.
 test-python:
-    uv --project schedule-tools run pytest tests
+    TZ=America/Los_Angeles uv --project schedule-tools run pytest tests
 
 test-js:
-    node --test tests/js/*.test.mjs
+    TZ=America/Los_Angeles node --test tests/js/*.test.mjs
 
 typecheck-worker:
     npm --prefix worker run typecheck
@@ -43,7 +45,7 @@ test-i18n:
 # ephemeral port and drives the regressions that node:test can't see.
 # One-time setup per machine: `just browsers`.
 test-browser:
-    node --test tests/browser/*.test.mjs
+    TZ=America/Los_Angeles node --test tests/browser/*.test.mjs
 
 browsers:
     node node_modules/playwright-core/cli.js install webkit chromium

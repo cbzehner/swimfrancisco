@@ -1,3 +1,15 @@
+"""The attested-snapshot envelope: its schema file and its validator.
+
+`validate_envelope` is what every writer of a reviewed.json goes through;
+the tests at the bottom read the schema document directly, because the
+same file is the published contract and must stay in step with
+EXTRACTION_SCHEMA and keep rejecting the fields earlier versions carried.
+"""
+
+import json
+from pathlib import Path
+
+import jsonschema
 import pytest
 
 from schedules.envelope import (
@@ -10,6 +22,20 @@ from schedules.envelope import (
     parse_attestation,
     validate_envelope,
 )
+
+
+SCHEMA_PATH = (
+    Path(__file__).resolve().parents[1]
+    / "schedule-tools"
+    / "src"
+    / "schedules"
+    / "schemas"
+    / "reviewed-snapshot.json"
+)
+
+
+def _load_schema() -> dict:
+    return json.loads(SCHEMA_PATH.read_text())
 
 
 def _valid_envelope() -> dict:
@@ -109,3 +135,53 @@ def test_parse_attestation_four_states():
     parsed = parse_attestation(carried)
     assert isinstance(parsed, AttestationCarried)
     assert isinstance(parsed.origin, AttestationCi)
+
+
+# ---- the schema document itself ---------------------------------------------
+
+
+def test_extraction_schema_is_the_envelope_payload():
+    from schedules.schema import EXTRACTION_SCHEMA
+
+    schema = _load_schema()
+    assert EXTRACTION_SCHEMA["required"] == schema["properties"]["payload"]["required"]
+    assert "schedule_basis" in EXTRACTION_SCHEMA["required"]
+    closure = EXTRACTION_SCHEMA["properties"]["closures"]["items"]
+    assert closure["dependentRequired"] == schema["$defs"]["closure"]["dependentRequired"]
+    # Closures stay facility-wide and all-day by default: required is exactly
+    # the date range plus a reason, and the optional v2 partial-day times are
+    # the only extra fields either side knows about.
+    assert closure["required"] == schema["$defs"]["closure"]["required"] == ["start", "end", "reason"]
+    assert set(closure["properties"]) == set(schema["$defs"]["closure"]["properties"])
+    assert {"start_time", "end_time"} <= set(closure["properties"])
+    assert "pool" not in closure["properties"]
+
+
+def test_schema_accepts_minimal_envelope():
+    jsonschema.validate(instance=_valid_envelope(), schema=_load_schema())
+
+
+def test_schema_accepts_access_hours_without_sessions():
+    envelope = _valid_envelope()
+    envelope["payload"]["sessions"] = []
+    envelope["payload"]["access_hours"] = [
+        {"day": "monday", "start": "05:30", "end": "20:30", "label": "Facility hours"}
+    ]
+    jsonschema.validate(instance=envelope, schema=_load_schema())
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("$schema", "../schemas/reviewed-snapshot.json"),
+        ("version", 1),
+        ("reviewed_by", "reviewer@example.com"),
+        ("reviewed_against", [{"provider": "gemini", "model": "x"}]),
+        ("ratified_from_sha256", "b" * 64),
+    ],
+)
+def test_schema_rejects_removed_fields(field, value):
+    envelope = _valid_envelope()
+    envelope[field] = value
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(instance=envelope, schema=_load_schema())

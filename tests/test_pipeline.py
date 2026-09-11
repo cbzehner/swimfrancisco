@@ -1,11 +1,12 @@
-"""Tests for pipeline pure helpers.
+"""Tests for the extract pipeline.
 
-The pipeline itself has heavy external dependencies (network, provider APIs,
-filesystem). These tests cover the pure helper that gates its operator-trust
-property: honest exit codes — partial failures must not exit 0.
-
-Full-integration tests are out of scope; the invariant lives in the helper
-and is exercised here.
+Two layers live here. The pure helpers that gate the pipeline's
+operator-trust properties — honest exit codes, source-mode partitioning,
+report paths — are called directly. Everything above them runs through
+``run_pipeline`` against ``_stub_extract_pipeline``, a minimal world in
+which discover, the PDF fetch, and the provider call are all faked, so the
+adoption, caching, and force behaviour is exercised end to end without
+network or provider APIs.
 """
 
 from __future__ import annotations
@@ -17,7 +18,7 @@ from pathlib import Path
 import pytest
 
 from schedules.discover import DiscoverError
-from schedules.models import Aborted, Extracted, FetchResult, PoolResult, Skipped, Unchanged
+from schedules.models import Aborted, Extracted, FetchResult, PoolResult, ProviderResult, Skipped, Unchanged
 from schedules.models import PoolEntry
 from schedules.paths import REPORT_PATHS
 from schedules.pipeline import (
@@ -295,24 +296,26 @@ def _stub_extract_pipeline(monkeypatch, tmp_path: Path, registry: list[PoolEntry
     monkeypatch.setattr("schedules.pipeline.fetch_pdf", fake_fetch)
 
     def fake_extract(provider, pdf_bytes, prompt, schema):
-        from schedules.models import ProviderResult
-
-        return ProviderResult(
-            payload={
-                "effective_start": "2026-08-18",
-                "schedule_basis": "swim_schedule",
-                "sessions": [
-                    {"day": d, "type": "lap_swim", "start": "07:00", "end": "08:00"}
-                    for d in ("monday", "tuesday", "wednesday", "thursday", "friday")
-                ],
-                "closures": [],
-            },
-            model="openai-test",
-            usage={},
-        )
+        return _provider_result()
 
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", fake_extract)
     return state
+
+
+def _extracted_payload() -> dict:
+    return {
+        "effective_start": "2026-08-18",
+        "schedule_basis": "swim_schedule",
+        "sessions": [
+            {"day": d, "type": "lap_swim", "start": "07:00", "end": "08:00"}
+            for d in ("monday", "tuesday", "wednesday", "thursday", "friday")
+        ],
+        "closures": [],
+    }
+
+
+def _provider_result() -> ProviderResult:
+    return ProviderResult(payload=_extracted_payload(), model="openai-test", usage={})
 
 
 def _fake_discover(state: dict, *, new_url: str | None = None, decisions: list | None = None, tmp_path: Path):
@@ -422,6 +425,48 @@ def test_same_id_still_uses_unchanged_shortcut(monkeypatch, tmp_path) -> None:
     assert state["discover_calls"] == 1
     assert state["fetched"] == [("hamilton-pool", OLD_URL)]
     assert isinstance(results[0], Unchanged)
+
+
+def test_force_bypasses_reviewed_fast_path(monkeypatch, tmp_path) -> None:
+    """--force must invoke the provider even when reviewed.json exists.
+
+    Same world as the unchanged shortcut above, so the only difference is
+    the flag: a reviewed snapshot the SHA matches, and a verified cached
+    artifact that would otherwise short-circuit the run.
+    """
+    registry = [_pdf_entry("hamilton-pool", OLD_URL)]
+    state = _stub_extract_pipeline(monkeypatch, tmp_path, registry)
+    reviewed = tmp_path / "reviewed.json"
+    reviewed.write_text(
+        json.dumps(
+            {
+                "slug": "hamilton-pool",
+                "pdf_sha256": "a" * 64,
+                "reviewed_at": "2026-04-19",
+                "source_pdf_url": OLD_URL,
+                "payload": _extracted_payload(),
+            }
+        )
+    )
+    cached = tmp_path / "openai-cached.json"
+    cached.write_text(json.dumps({"model": "openai-test", "payload": _extracted_payload()}))
+    monkeypatch.setattr("schedules.pipeline.reviewed_path", lambda *args, **kwargs: reviewed)
+    monkeypatch.setattr("schedules.pipeline.artifact_path", lambda *args, **kwargs: cached)
+    monkeypatch.setattr("schedules.pipeline.skip_if_fresh", lambda **kwargs: True)
+    monkeypatch.setattr("schedules.pipeline.verify_artifact", lambda *args, **kwargs: {"ok": True})
+    providers = []
+
+    def counting_extract(provider, pdf_bytes, prompt, schema):
+        providers.append(provider)
+        return _provider_result()
+
+    monkeypatch.setattr("schedules.pipeline.extract_with_provider", counting_extract)
+
+    exit_code, _, results = run_pipeline(_pdf_run(slugs=["hamilton-pool"], force=True))
+
+    assert exit_code == 0
+    assert providers == ["openai"], "--force must invoke the provider even when reviewed.json exists"
+    assert results[0].provider == "openai"
 
 
 def test_direct_mode_never_calls_discover(monkeypatch, tmp_path) -> None:

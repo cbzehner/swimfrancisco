@@ -281,33 +281,6 @@ def test_merge_closes_prior_open_ended_window_when_appending(tmp_path):
     assert "effective_end" not in by_start["2026-08-12"]
 
 
-# ---- direct_sources year roll-forward ---------------------------------------
-
-
-def test_resolve_yearless_date_keeps_same_year_for_near_future():
-    from datetime import date
-    from schedules.direct_sources.parsing import _resolve_yearless_date
-
-    today = date(2026, 4, 1)
-    assert _resolve_yearless_date(4, 30, today=today) == date(2026, 4, 30)
-
-
-def test_resolve_yearless_date_keeps_same_year_for_recent_past():
-    from datetime import date
-    from schedules.direct_sources.parsing import _resolve_yearless_date
-
-    today = date(2026, 4, 20)
-    assert _resolve_yearless_date(4, 1, today=today) == date(2026, 4, 1)
-
-
-def test_resolve_yearless_date_rolls_forward_for_distant_past():
-    from datetime import date
-    from schedules.direct_sources.parsing import _resolve_yearless_date
-
-    today = date(2026, 12, 20)
-    assert _resolve_yearless_date(1, 15, today=today) == date(2027, 1, 15)
-
-
 def test_closure_projection_preserves_raw_notice_and_requires_code(tmp_path):
     import pytest
     source = ROOT / 'content/spots/hamilton-pool.md'

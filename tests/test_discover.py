@@ -487,6 +487,25 @@ def test_windows_disjoint_adjacent_days() -> None:
     )
 
 
+def test_numeric_page1_window_parses() -> None:
+    assert parse_window_dates(
+        page_text="SPRING 2026\n05/12/2026 - 06/06/2026\nAdditional Information",
+        anchor_text=None,
+        filename=None,
+        year_default=2026,
+    ) == (date(2026, 5, 12), date(2026, 6, 6))
+    # Two-digit years are closure notes, not windows.
+    assert (
+        parse_window_dates(
+            page_text="Closed 6/6/26 9am - 1pm In-Service",
+            anchor_text=None,
+            filename=None,
+            year_default=2026,
+        )
+        is None
+    )
+
+
 def test_parse_window_dates_end_before_start_is_unparseable() -> None:
     assert (
         parse_window_dates(

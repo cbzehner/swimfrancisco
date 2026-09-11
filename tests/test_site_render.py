@@ -15,6 +15,7 @@ from __future__ import annotations
 import html
 import json
 import hashlib
+import os
 import re
 import shutil
 import subprocess
@@ -37,10 +38,22 @@ TRANSLATABLE_SPOT_EXTRA_FIELDS = {
 TRANSLATABLE_PRICING_FIELDS = {"label", "price", "note", "url"}
 
 
+def _require_zola() -> None:
+    """A missing zola silently drops every assertion in this module.
+
+    Locally that is a reasonable trade; in CI it would hide template
+    regressions behind a green run, so there it is a failure.
+    """
+    if shutil.which("zola") is not None:
+        return
+    if os.environ.get("CI"):
+        pytest.fail("zola is required in CI")
+    pytest.skip("zola binary not available")
+
+
 @pytest.fixture(scope="session")
 def built_site(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    if shutil.which("zola") is None:
-        pytest.skip("zola binary not available")
+    _require_zola()
     out = tmp_path_factory.mktemp("zola-build")
     result = subprocess.run(
         ["zola", "build", "--output-dir", str(out), "--force"],
@@ -57,8 +70,7 @@ def _read(built_site: Path, slug: str) -> str:
 
 
 def test_schedule_attribute_round_trips_source_punctuation(tmp_path):
-    if shutil.which("zola") is None:
-        pytest.skip("zola binary not available")
+    _require_zola()
     (tmp_path / "templates/macros").mkdir(parents=True)
     (tmp_path / "content").mkdir()
     (tmp_path / "config.toml").write_text('base_url = "https://example.test"\n')
