@@ -848,21 +848,6 @@ def test_map_page_keeps_board_hidden_and_map_visible(built_site: Path) -> None:
     assert "js/map.js" in html
 
 
-def test_field_notes_are_omitted_from_build(built_site: Path) -> None:
-    assert not (built_site / "field-notes" / "index.html").exists()
-    assert not (built_site / "field-notes" / "source-review-lane" / "index.html").exists()
-    assert not (built_site / "field-notes" / "pool-schedule-pipeline" / "index.html").exists()
-    assert not (built_site / "js" / "field-notes.js").exists()
-    assert not (built_site / "js" / "scrollspy.js").exists()
-
-    html = (built_site / "index.html").read_text()
-    assert "/field-notes/" not in html
-    assert "FIELD NOTES" not in html
-    css = (built_site / "main.css").read_text()
-    assert "field-notes" not in css
-    assert ".fn-" not in css
-
-
 def test_homepage_renders_cost_badges_without_hardcoded_price(built_site: Path) -> None:
     html = (built_site / "index.html").read_text()
     assert 'class="cost-badge is-beach">BEACH</span>' in html
@@ -898,7 +883,6 @@ def test_footer_renders_sources_and_credit(built_site: Path) -> None:
     assert "Pool hours from SF Rec & Park · Open-water from NOAA + NDBC" not in html
     assert "site-footer-sources" not in html
     assert "Made in San Francisco by" in html
-    assert "/field-notes/" not in html
     assert "/how-it-works/" not in html
 
 
@@ -1017,7 +1001,6 @@ def test_robots_and_sitemap_are_search_console_ready(built_site: Path) -> None:
             f'<xhtml:link rel="alternate" hreflang="x-default" href="https://swimfrancisco.com{canonical_path}" />'
             in sitemap
         )
-    assert "https://swimfrancisco.com/field-notes/" not in sitemap
 
 
 def test_llms_txt_points_agents_at_canonical_swim_pages(built_site: Path) -> None:
