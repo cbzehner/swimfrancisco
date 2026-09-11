@@ -60,17 +60,55 @@ def _budget_month() -> str:
     return pacific_today().strftime("%Y-%m")
 
 
+class BudgetConfigError(click.ClickException):
+    """A malformed budget variable. Never downgraded to a free-only run."""
+
+
+def _approved_default_usd() -> float:
+    """Unset or empty means "no approval"; anything else must parse."""
+    raw = os.environ.get("SCHEDULES_MONTHLY_BUDGET_USD", "").strip()
+    if not raw:
+        return 0.0
+    try:
+        default = float(raw)
+    except ValueError as error:
+        raise BudgetConfigError(
+            f"SCHEDULES_MONTHLY_BUDGET_USD is not a number: {raw!r}"
+        ) from error
+    if not math.isfinite(default) or default < 0:
+        raise BudgetConfigError(
+            f"SCHEDULES_MONTHLY_BUDGET_USD must be a finite, non-negative cap: {raw!r}"
+        )
+    return default
+
+
+def _approved_overrides(default: float) -> dict[str, float]:
+    raw = (os.environ.get("SCHEDULES_MONTHLY_BUDGET_OVERRIDES") or "").strip()
+    if not raw:
+        return {}
+    try:
+        overrides = json.loads(raw)
+    except ValueError as error:
+        raise BudgetConfigError(
+            f"SCHEDULES_MONTHLY_BUDGET_OVERRIDES is not valid JSON: {error}"
+        ) from error
+    if not isinstance(overrides, dict) or any(
+        not re.fullmatch(r"20\d{2}-(?:0[1-9]|1[0-2])", key)
+        or type(value) not in (int, float) or not math.isfinite(value) or value < default
+        for key, value in overrides.items()
+    ):
+        raise BudgetConfigError(
+            "SCHEDULES_MONTHLY_BUDGET_OVERRIDES must map calendar months to approved "
+            "caps at least equal to the default"
+        )
+    return overrides
+
+
 def _monthly_budget(month: str | None = None) -> MonthlySpendBudget:
     month = month or _budget_month()
+    default = _approved_default_usd()
+    overrides = _approved_overrides(default)
     try:
-        default = float(os.environ.get("SCHEDULES_MONTHLY_BUDGET_USD", "0"))
-        overrides = json.loads(os.environ.get("SCHEDULES_MONTHLY_BUDGET_OVERRIDES") or "{}")
-        if not isinstance(overrides, dict) or any(
-            not re.fullmatch(r"20\d{2}-(?:0[1-9]|1[0-2])", key)
-            or type(value) not in (int, float) or not math.isfinite(value) or value < default
-            for key, value in overrides.items()
-        ):
-            raise ValueError("Monthly overrides must map calendar months to approved caps at least equal to the default")
         MonthlySpendBudget(REPO_ROOT, default)
         return MonthlySpendBudget(REPO_ROOT, overrides.get(month, default))
     except (ValueError, TypeError) as error:
@@ -119,6 +157,8 @@ def budget_reserve_command(run_id: str, output: Path) -> None:
         if not os.environ.get("OPENAI_API_KEY", "").strip():
             raise ValueError("Paid extraction credentials unavailable")
         receipt = _monthly_budget(month).reserve(month, run_id) | {"status": "reserved"}
+    except BudgetConfigError:
+        raise
     except (ValueError, RuntimeError, OSError, subprocess.TimeoutExpired, click.ClickException):
         receipt = {"month": month, "run_id": run_id, "limit_microusd": 0,
                    "status": "unavailable", "reason": "Paid extraction unavailable; free updates continue"}

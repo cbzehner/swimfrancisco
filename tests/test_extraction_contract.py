@@ -939,3 +939,43 @@ def test_budget_reservation_records_the_pacific_month(monthly_budget, monkeypatc
     assert receipt["status"] == "reserved"
     assert receipt["month"] == "2026-09"
     assert set(budget._load()[1]["months"]) == {"2026-09"}
+
+
+@pytest.mark.parametrize("variable, value", [
+    ("SCHEDULES_MONTHLY_BUDGET_OVERRIDES", "{not json"),
+    ("SCHEDULES_MONTHLY_BUDGET_OVERRIDES", '{"2026-09": 0.5}'),
+    ("SCHEDULES_MONTHLY_BUDGET_OVERRIDES", "[]"),
+    ("SCHEDULES_MONTHLY_BUDGET_USD", "one dollar"),
+    ("SCHEDULES_MONTHLY_BUDGET_USD", "-1"),
+])
+def test_malformed_budget_configuration_stops_the_run(monthly_budget, monkeypatch, tmp_path, variable, value):
+    """A typo in an operator-set variable must never downgrade a run to free-only."""
+    from click.testing import CliRunner
+    from schedules.cli import cli
+    budget, _, _ = monthly_budget
+    budget.initialize()
+    monkeypatch.setattr("schedules.cli.REPO_ROOT", budget.repo_root)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-no-call")
+    monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_USD", "1")
+    monkeypatch.setenv(variable, value)
+    output = tmp_path / "malformed"
+    result = CliRunner().invoke(cli, ["budget", "reserve", "--run-id", "2-1", "--output", str(output)])
+    assert result.exit_code != 0
+    assert variable in result.output
+    assert not output.exists()
+
+
+def test_unset_budget_variables_still_reserve_a_free_only_run(monthly_budget, monkeypatch, tmp_path):
+    """Unset or empty is "no approval", not a malformed value."""
+    from click.testing import CliRunner
+    from schedules.cli import cli
+    budget, _, _ = monthly_budget
+    budget.initialize()
+    monkeypatch.setattr("schedules.cli.REPO_ROOT", budget.repo_root)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-no-call")
+    monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_USD", "")
+    monkeypatch.setenv("SCHEDULES_MONTHLY_BUDGET_OVERRIDES", "")
+    output = tmp_path / "free-only"
+    result = CliRunner().invoke(cli, ["budget", "reserve", "--run-id", "2-1", "--output", str(output)])
+    assert result.exit_code == 0, result.output
+    assert json.loads((output / "reservation.json").read_text())["status"] == "unavailable"
