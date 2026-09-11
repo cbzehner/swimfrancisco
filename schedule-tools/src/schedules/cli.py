@@ -382,6 +382,16 @@ def automate_command(mode: str, run_id: str) -> None:
         raise click.ClickException(f"Automation stopped ({type(error).__name__}); inspect its evidence") from error
 
 
+@cli.command("prune")
+@click.option("--dry-run", is_flag=True, help="List the obsolete snapshot dirs without deleting them.")
+def prune_command(dry_run: bool) -> None:
+    """Delete snapshot dirs no review, backtest, test, or document still needs."""
+    from .paths import relative_to_repo
+    from .prune import prune
+    for snapshot in prune(DATA_DIR, REPO_ROOT, dry_run=dry_run):
+        click.echo(relative_to_repo(snapshot))
+
+
 @cli.command("closure-prs")
 @click.option("--evidence", type=click.Path(path_type=Path, exists=True), required=True)
 def closure_prs_command(evidence: Path) -> None:

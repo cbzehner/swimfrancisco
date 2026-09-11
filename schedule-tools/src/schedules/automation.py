@@ -269,6 +269,7 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
                 publication = json.loads((worktree / "tmp/publish-pending.json").read_text())
                 build["closure_reviews"].extend(item["closure_review"] for item in publication.get("refused", []) if item.get("closure_review"))
                 build["decisions"] = pager_job_payload(worktree / "tmp")
+                checked(schedules + ["prune"], worktree, command)
                 checked(["node", "scripts/generate-bulletin.mjs"], worktree, command)
                 checked(["node", "scripts/generate-i18n.mjs", "generate"], worktree, command)
                 staged = json.loads(checked(["node", "scripts/check-build-ci.mjs", "stage"], worktree, command))
