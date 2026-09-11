@@ -146,7 +146,7 @@
               </span>
             {% else %}
               <span class="spot-subtitle">
-                {% if page.extra.subtype %}{{ chrome::spot_label(label=page.extra.subtype, active_lang=lang) | upper }}{% else %}POOL{% endif %}
+                {{ chrome::spot_label(label=page.extra.subtype | default(value='pool'), active_lang=lang) | upper }}
               </span>
             {% endif %}
           </td>

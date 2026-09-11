@@ -2,7 +2,7 @@ import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { parse, stringify } from "smol-toml";
-import { isLocalizedSpotFile, splitFrontMatter } from "./lib/spot-frontmatter.mjs";
+import { isLocalizedSpotFile, listCanonicalSpotFiles, splitFrontMatter } from "./lib/spot-frontmatter.mjs";
 
 const ROOT = process.cwd();
 const CONFIG_PATH = path.join(ROOT, "config.toml");
@@ -159,19 +159,13 @@ function dynamicLabelData(dynamicLabels) {
   return dynamicLabelMap(dynamicLabels);
 }
 
-async function canonicalSpotExtras(localeCodes) {
-  const files = await readdir(CONTENT_SPOTS_DIR);
-  const extras = [];
-  for (const file of files) {
-    if (!file.endsWith(".md") || file.startsWith("_index.") || isLocalizedSpotFile(file, localeCodes)) continue;
-    const { front } = parseFrontMatter(await readFile(path.join(CONTENT_SPOTS_DIR, file), "utf8"), file);
-    extras.push({ file, extra: front.extra || {} });
-  }
-  return extras;
+async function canonicalSpotExtras() {
+  const files = await listCanonicalSpotFiles(CONTENT_SPOTS_DIR);
+  return files.map(({ fileName, front }) => ({ file: fileName, extra: front.extra || {} }));
 }
 
-async function canonicalSpotSlugs(localeCodes) {
-  return (await canonicalSpotExtras(localeCodes))
+async function canonicalSpotSlugs() {
+  return (await canonicalSpotExtras())
     .map(({ file }) => file.replace(/\.md$/, ""))
     .sort();
 }
@@ -395,7 +389,7 @@ async function validateDynamicLabels({ codes, ui, dynamicLabels }) {
   }
 
   const dynamicLabelsByKind = dynamicLabelMap(dynamicLabels);
-  const extras = await canonicalSpotExtras(codes);
+  const extras = await canonicalSpotExtras();
   const requirements = dynamicLabelRequirements(extras);
   const missingDynamicLabels = requirements.filter(
     (requirement) => requirement.coded
@@ -451,7 +445,7 @@ async function validateSectionCatalogs({ codes }) {
 }
 
 async function validateSpotCatalogs({ codes, defaultLocale }) {
-  const expectedSpotSlugs = await canonicalSpotSlugs(codes);
+  const expectedSpotSlugs = await canonicalSpotSlugs();
   const defaultSpotCatalog = await readToml(path.join(SPOTS_DIR, `${defaultLocale.code}.toml`));
   for (const code of codes) {
     const catalog = await readToml(path.join(SPOTS_DIR, `${code}.toml`));
