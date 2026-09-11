@@ -17,7 +17,7 @@ export function generatedSchedulePath(path) {
   return /^(?:data\/bulletin\.json|data\/i18n\/(?:dynamic-labels|en|es|fi|fil|vi|zh-Hant)\.json)$/.test(path)
     || /^schedule-tools\/src\/schedules\/(?:registry|quarantine)\.toml$/.test(path)
     || /^content\/spots\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\.(?:es|fi|fil|vi|zh-Hant))?\.md$/.test(path)
-    || /^data\/[a-z0-9]+(?:-[a-z0-9]+)*\/\d{4}-\d{2}-\d{2}-[a-f\d]{12}\/(?:source\.(?:pdf|html|csv|xlsx|sha256)|reviewed\.json|source-bundle\.json|openai-pool-bundle\.json|openai-gpt-5-5-2026-04-23\.json|direct-[a-z0-9-]+\.json)$/.test(path);
+    || /^data\/[a-z0-9]+(?:-[a-z0-9]+)*\/\d{4}-\d{2}-\d{2}-[a-f\d]{12}\/(?:source\.(?:pdf|html|csv|xlsx|sha256)|reviewed\.json|source-bundle\.json|openai-[a-z0-9-]+\.json|direct-[a-z0-9-]+\.json)$/.test(path);
 }
 
 export function stageScheduleChanges({ git = (args) => execFileSync("git", args, { cwd: repoRoot, encoding: "utf8" }) } = {}) {

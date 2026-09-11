@@ -154,7 +154,7 @@ def test_cache_never_copies_reviewed_decisions_or_overwrites_concurrent_source_e
     capture = Path("data/test-pool/2026-09-02-67f2a420e8fc")
     (previous / capture).mkdir(parents=True)
     (current / capture).mkdir(parents=True)
-    for name in ("reviewed.json", source_name, "openai-gpt-5-5-2026-04-23.json"):
+    for name in ("reviewed.json", source_name, "openai-gpt-6-2027-01-30.json"):
         (previous / capture / name).write_text("cached")
     (current / capture / source_name).write_text("concurrent edit")
     def command(args, root, **kwargs):
@@ -162,7 +162,7 @@ def test_cache_never_copies_reviewed_decisions_or_overwrites_concurrent_source_e
     copy_extraction_cache(previous, current, "a" * 40, command)
     assert not (current / capture / "reviewed.json").exists()
     assert (current / capture / source_name).read_text() == "concurrent edit"
-    assert (current / capture / "openai-gpt-5-5-2026-04-23.json").read_text() == "cached"
+    assert (current / capture / "openai-gpt-6-2027-01-30.json").read_text() == "cached"
 
 
 def test_live_verification_retries_then_succeeds_and_checks_browsers(tmp_path):
@@ -357,11 +357,13 @@ def test_browser_evidence_retained_with_narrow_filename_allowlist(tmp_path):
     ]
 
 
-def test_pdf_cache_copy_excludes_html_and_old_browser_receipts(tmp_path):
+def test_cache_copy_reuses_every_capture_kind_and_drops_old_browser_receipts(tmp_path):
+    """A retry re-uses the captures it already paid for, whatever their kind."""
     previous, current = tmp_path / "previous", tmp_path / "current"
     capture = Path("data/jccsf/2026-09-08-67f2a420e8fc")
     (previous / capture).mkdir(parents=True)
-    for name in ("source.html", "source.sha256", "openai-gpt-5-5-2026-04-23.json", "reviewed.json"):
+    for name in ("source.html", "source.xlsx", "source.csv", "source.pdf", "source.sha256",
+                 "openai-gpt-6-2027-01-30.json", "direct-jccsf-html-v1.json", "reviewed.json"):
         (previous / capture / name).write_text(name)
     browser = previous / "tmp/browser-capture/jccsf"
     browser.mkdir(parents=True)
@@ -369,7 +371,8 @@ def test_pdf_cache_copy_excludes_html_and_old_browser_receipts(tmp_path):
     copy_extraction_cache(previous, current, "a" * 40,
                           lambda args, cwd, **kwargs: subprocess.CompletedProcess(args, 0, "", ""))
     assert sorted(path.name for path in (current / capture).iterdir()) == [
-        "openai-gpt-5-5-2026-04-23.json", "source.sha256"]
+        "direct-jccsf-html-v1.json", "openai-gpt-6-2027-01-30.json", "source.csv", "source.html",
+        "source.pdf", "source.sha256", "source.xlsx"]
     assert not (current / "tmp/browser-capture").exists()
 
 

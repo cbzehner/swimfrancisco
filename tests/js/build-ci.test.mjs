@@ -350,6 +350,7 @@ test("generated path allowlist excludes credentials, source code, and unexpected
     "data/i18n/dynamic-labels.json",
     "data/mission-community-pool/2026-09-02-67f2a420e8fc/source.pdf",
     "data/mission-community-pool/2026-09-02-67f2a420e8fc/openai-gpt-5-5-2026-04-23.json",
+    "data/mission-community-pool/2026-09-02-67f2a420e8fc/openai-gpt-6-2027-01-30.json",
     "data/north-beach-pool/2026-09-06-67f2a420e8fc/source-bundle.json",
     "data/north-beach-pool/2026-09-06-67f2a420e8fc/openai-pool-bundle.json",
   ]) assert.equal(generatedSchedulePath(path), true, path);
