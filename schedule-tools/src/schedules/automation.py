@@ -26,12 +26,19 @@ def checked(arguments: list[str], root: Path, command=run_command, *, timeout: i
     return result.stdout.strip()
 
 
+# Every file a build attempt captured or extracted, so a retry pays for none
+# of it twice. reviewed.json is deliberately absent: a publication decision
+# carried into the retry would take its slug out of the review queue and the
+# retry would then never write its schedule page.
+REUSABLE_CAPTURE = re.compile(r"source\.(pdf|html|xlsx|csv|sha256)|openai-[a-z0-9-]+\.json|direct-[a-z0-9-]+\.json")
+
+
 def copy_extraction_cache(previous: Path, current: Path, previous_base: str, command=run_command) -> None:
     """Reuse source captures, never prior publication decisions or concurrent edits."""
     for source in (previous / "data").glob("*/*/*"):
         if source.is_symlink() or not source.is_file():
             continue
-        if not re.fullmatch(r"source\.(pdf|sha256)|openai-gpt-5-5-2026-04-23\.json", source.name):
+        if not REUSABLE_CAPTURE.fullmatch(source.name):
             continue
         relative = source.relative_to(previous)
         target = current / relative
@@ -61,7 +68,7 @@ def save_evidence(root: Path, destination: Path) -> None:
     for source in (root / "data").glob("*/*/*"):
         if source.is_symlink() or not source.is_file():
             continue
-        if not re.fullmatch(r"source\.(pdf|html|csv|xlsx|sha256)|reviewed\.json|source-bundle\.json|openai-pool-bundle\.json|openai-gpt-5-5-2026-04-23\.json|direct-[a-z0-9-]+\.json", source.name):
+        if not re.fullmatch(r"source\.(pdf|html|csv|xlsx|sha256)|reviewed\.json|source-bundle\.json|openai-[a-z0-9-]+\.json|direct-[a-z0-9-]+\.json", source.name):
             continue
         target = destination / source.relative_to(root)
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -262,6 +269,7 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
                 publication = json.loads((worktree / "tmp/publish-pending.json").read_text())
                 build["closure_reviews"].extend(item["closure_review"] for item in publication.get("refused", []) if item.get("closure_review"))
                 build["decisions"] = pager_job_payload(worktree / "tmp")
+                checked(schedules + ["prune"], worktree, command)
                 checked(["node", "scripts/generate-bulletin.mjs"], worktree, command)
                 checked(["node", "scripts/generate-i18n.mjs", "generate"], worktree, command)
                 staged = json.loads(checked(["node", "scripts/check-build-ci.mjs", "stage"], worktree, command))

@@ -21,7 +21,8 @@ def runner(tmp_path, monkeypatch):
     root = tmp_path / "repo"
     root.mkdir()
     calls = []
-    controls = {"stale": 0, "changed": True, "failure": None, "dirty": False, "verified": [], "closure_reviews": {}}
+    controls = {"stale": 0, "changed": True, "failure": None, "dirty": False, "verified": [],
+                "closure_reviews": {}, "seed": {}, "staged_captures": None}
 
     def command(arguments, cwd, **kwargs):
         calls.append(arguments)
@@ -32,8 +33,17 @@ def runner(tmp_path, monkeypatch):
         elif arguments[:2] == ["git", "rev-parse"]:
             output = "a" * 40
         elif arguments[:3] == ["git", "worktree", "add"]:
-            Path(arguments[-2]).mkdir(parents=True)
+            worktree = Path(arguments[-2])
+            worktree.mkdir(parents=True)
+            for relative, payload in controls["seed"].items():
+                (worktree / relative).parent.mkdir(parents=True, exist_ok=True)
+                (worktree / relative).write_text(payload)
+        elif arguments[-1] == "prune":
+            from schedules.prune import prune
+            prune(cwd / "data", cwd, dry_run=False)
         elif arguments[-1] == "stage":
+            controls["staged_captures"] = sorted(
+                str(path.relative_to(cwd)) for path in (cwd / "data").rglob("*") if path.is_file())
             output = json.dumps({"changed": controls["changed"], "paths": ["content/spots/test-pool.md"]})
         elif "promote" in arguments:
             if controls["stale"]:
@@ -72,9 +82,27 @@ def test_publish_orders_extraction_gate_commit_promotion_and_live_check(runner):
     assert result["published_slugs"] == ["test-pool"]
     assert controls["verified"] == ["b" * 40]
     positions = [next(i for i, args in enumerate(calls) if token in args) for token in
-                 ("discover", "--direct", "openai", "publish-pending", "stage", "commit", "promote")]
+                 ("discover", "--direct", "openai", "publish-pending", "prune", "stage", "commit", "promote")]
     assert positions == sorted(positions)
     assert json.loads((root / "tmp/automation/result.json").read_text()) == result
+
+
+def test_obsolete_snapshots_are_pruned_before_the_commit_is_staged(runner):
+    """The build commits the prune, so retention lands with the schedules it served."""
+    _, _, controls, run = runner
+    obsolete = "data/test-pool/2026-09-06-aaaaaaaaaaaa"
+    current = "data/test-pool/2026-09-07-bbbbbbbbbbbb"
+    controls["seed"] = {
+        f"{obsolete}/source.html": "old",
+        f"{obsolete}/source.sha256": hashlib.sha256(b"old").hexdigest(),
+        f"{obsolete}/reviewed.json": '{"slug": "test-pool"}',
+        f"{current}/source.html": "new",
+        f"{current}/source.sha256": hashlib.sha256(b"new").hexdigest(),
+        f"{current}/reviewed.json": '{"slug": "test-pool"}',
+    }
+    assert run()["status"] == "published"
+    assert controls["staged_captures"] == [
+        f"{current}/reviewed.json", f"{current}/source.html", f"{current}/source.sha256"]
 
 
 def test_extract_only_never_projects_commits_or_pushes(runner):
@@ -154,7 +182,7 @@ def test_cache_never_copies_reviewed_decisions_or_overwrites_concurrent_source_e
     capture = Path("data/test-pool/2026-09-02-67f2a420e8fc")
     (previous / capture).mkdir(parents=True)
     (current / capture).mkdir(parents=True)
-    for name in ("reviewed.json", source_name, "openai-gpt-5-5-2026-04-23.json"):
+    for name in ("reviewed.json", source_name, "openai-gpt-6-2027-01-30.json"):
         (previous / capture / name).write_text("cached")
     (current / capture / source_name).write_text("concurrent edit")
     def command(args, root, **kwargs):
@@ -162,7 +190,7 @@ def test_cache_never_copies_reviewed_decisions_or_overwrites_concurrent_source_e
     copy_extraction_cache(previous, current, "a" * 40, command)
     assert not (current / capture / "reviewed.json").exists()
     assert (current / capture / source_name).read_text() == "concurrent edit"
-    assert (current / capture / "openai-gpt-5-5-2026-04-23.json").read_text() == "cached"
+    assert (current / capture / "openai-gpt-6-2027-01-30.json").read_text() == "cached"
 
 
 def test_live_verification_retries_then_succeeds_and_checks_browsers(tmp_path):
@@ -357,11 +385,13 @@ def test_browser_evidence_retained_with_narrow_filename_allowlist(tmp_path):
     ]
 
 
-def test_pdf_cache_copy_excludes_html_and_old_browser_receipts(tmp_path):
+def test_cache_copy_reuses_every_capture_kind_and_drops_old_browser_receipts(tmp_path):
+    """A retry re-uses the captures it already paid for, whatever their kind."""
     previous, current = tmp_path / "previous", tmp_path / "current"
     capture = Path("data/jccsf/2026-09-08-67f2a420e8fc")
     (previous / capture).mkdir(parents=True)
-    for name in ("source.html", "source.sha256", "openai-gpt-5-5-2026-04-23.json", "reviewed.json"):
+    for name in ("source.html", "source.xlsx", "source.csv", "source.pdf", "source.sha256",
+                 "openai-gpt-6-2027-01-30.json", "direct-jccsf-html-v1.json", "reviewed.json"):
         (previous / capture / name).write_text(name)
     browser = previous / "tmp/browser-capture/jccsf"
     browser.mkdir(parents=True)
@@ -369,7 +399,8 @@ def test_pdf_cache_copy_excludes_html_and_old_browser_receipts(tmp_path):
     copy_extraction_cache(previous, current, "a" * 40,
                           lambda args, cwd, **kwargs: subprocess.CompletedProcess(args, 0, "", ""))
     assert sorted(path.name for path in (current / capture).iterdir()) == [
-        "openai-gpt-5-5-2026-04-23.json", "source.sha256"]
+        "direct-jccsf-html-v1.json", "openai-gpt-6-2027-01-30.json", "source.csv", "source.html",
+        "source.pdf", "source.sha256", "source.xlsx"]
     assert not (current / "tmp/browser-capture").exists()
 
 

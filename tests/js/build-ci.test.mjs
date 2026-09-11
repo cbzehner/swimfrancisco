@@ -350,6 +350,7 @@ test("generated path allowlist excludes credentials, source code, and unexpected
     "data/i18n/dynamic-labels.json",
     "data/mission-community-pool/2026-09-02-67f2a420e8fc/source.pdf",
     "data/mission-community-pool/2026-09-02-67f2a420e8fc/openai-gpt-5-5-2026-04-23.json",
+    "data/mission-community-pool/2026-09-02-67f2a420e8fc/openai-gpt-6-2027-01-30.json",
     "data/north-beach-pool/2026-09-06-67f2a420e8fc/source-bundle.json",
     "data/north-beach-pool/2026-09-06-67f2a420e8fc/openai-pool-bundle.json",
   ]) assert.equal(generatedSchedulePath(path), true, path);
@@ -362,7 +363,7 @@ test("generated path allowlist excludes credentials, source code, and unexpected
   ]) assert.equal(generatedSchedulePath(path), false, path);
 });
 
-function promotionRepository(t, { path = "content/spots/test-pool.md", symlink = false } = {}) {
+function promotionRepository(t, { path = "content/spots/test-pool.md", symlink = false, prune = false } = {}) {
   const directory = mkdtempSync(join(tmpdir(), "swim-promotion-test-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const remote = join(directory, "origin.git");
@@ -377,11 +378,20 @@ function promotionRepository(t, { path = "content/spots/test-pool.md", symlink =
   git(["add", "seed.txt"]);
   git(["commit", "-m", "Baseline"]);
   git(["push", "origin", "main"]);
+  const prunedSnapshot = "data/test-pool/2026-09-02-67f2a420e8fc/reviewed.json";
+  if (prune) {
+    mkdirSync(join(work, "data/test-pool/2026-09-02-67f2a420e8fc"), { recursive: true });
+    writeFileSync(join(work, prunedSnapshot), "{}\n");
+    git(["add", prunedSnapshot]);
+    git(["commit", "-m", "Obsolete capture"]);
+    git(["push", "origin", "main"]);
+  }
   const base = git(["rev-parse", "HEAD"]).trim();
   mkdirSync(join(work, "content/spots"), { recursive: true });
   if (symlink) symlinkSync("../../seed.txt", join(work, path));
   else writeFileSync(join(work, path), "generated schedule\n");
   git(["add", path]);
+  if (prune) git(["rm", "-q", prunedSnapshot]);
   git(["commit", "-m", "Accepted schedule"]);
   const candidate = git(["rev-parse", "HEAD"]).trim();
   const branch = "auto/schedules/123-1-1";
@@ -439,6 +449,43 @@ test("stage treats PDF dates as facts, not direct-source clock metadata", (t) =>
   repository.git(["commit", "-m", "PDF capture"]);
   writeFileSync(join(repository.work, path), JSON.stringify({ provider: "openai", payload: { effective_start: "2026-09-02" } }));
   assert.equal(stageScheduleChanges(repository).changed, true);
+});
+
+test("stage commits a pruned snapshot dir but no other deletion", (t) => {
+  const repository = promotionRepository(t);
+  const snapshot = "data/test-pool/2026-09-02-67f2a420e8fc";
+  mkdirSync(join(repository.work, snapshot), { recursive: true });
+  writeFileSync(join(repository.work, snapshot, "source.sha256"), "a".repeat(64) + "\n");
+  writeFileSync(join(repository.work, snapshot, "reviewed.json"), "{}\n");
+  repository.git(["add", snapshot]);
+  repository.git(["commit", "-m", "Obsolete capture"]);
+
+  rmSync(join(repository.work, snapshot), { recursive: true });
+  const staged = stageScheduleChanges(repository);
+  assert.deepEqual(staged.paths.sort(), [`${snapshot}/reviewed.json`, `${snapshot}/source.sha256`]);
+  assert.equal(staged.changed, true);
+  assert.equal(repository.git(["diff", "--cached", "--name-status"]).trim().split("\n").every((line) => line.startsWith("D\t")), true);
+});
+
+for (const path of ["content/spots/test-pool.md", "data/bulletin.json"]) {
+  test(`stage refuses to commit the deletion of ${path}`, (t) => {
+    const repository = promotionRepository(t);
+    if (path !== "content/spots/test-pool.md") {
+      mkdirSync(join(repository.work, "data"), { recursive: true });
+      writeFileSync(join(repository.work, path), "{}\n");
+      repository.git(["add", path]);
+      repository.git(["commit", "-m", "Generated artifact"]);
+    }
+    rmSync(join(repository.work, path));
+    assert.throws(() => stageScheduleChanges(repository), /without deletions/);
+  });
+}
+
+test("promotion accepts a commit that only prunes snapshot dirs", async (t) => {
+  const repository = promotionRepository(t, { prune: true });
+  const result = await promoteScheduleCommit(repository.options);
+  assert.equal(result.status, "promoted");
+  assert.equal(repository.remoteHead(), repository.candidate);
 });
 
 test("promotion checks the exact temporary-branch commit before fast-forwarding main", async (t) => {

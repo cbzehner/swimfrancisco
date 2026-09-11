@@ -8,12 +8,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile
 from urllib.parse import urlsplit, urlunsplit
+from xml.etree.ElementTree import ParseError
 
 import httpx
+from openpyxl.utils.exceptions import InvalidFileException
 
 from .._time import pacific_today
+from ..artifacts import canonical_source_sha256
 from ..fetch import get_with_retries
-from ..paths import DATA_DIR
+from ..paths import DATA_DIR, parse_review_dir_name
 from .errors import DirectSourceError
 
 BOT_USER_AGENT = "SwimFranciscoScheduleBot/0.1 (+https://swimfrancisco.com)"
@@ -25,6 +28,15 @@ class DirectFetchResult:
     sha256: str
     from_cache: bool
     response_url: str
+
+
+@dataclass(frozen=True)
+class CachedCapture:
+    """The stored capture of a document: its file, bytes, and byte identity."""
+    path: Path
+    content: bytes
+    sha256: str
+    from_cache: bool
 
 
 @dataclass(frozen=True)
@@ -105,41 +117,37 @@ def fetch_koret_workbook(slug: str, workbook_url: str, *, cache_root: Path = DAT
         with ZipFile(BytesIO(workbook_bytes)) as archive:
             if "xl/workbook.xml" not in archive.namelist():
                 raise BadZipFile("missing workbook")
+        # Reading the cells here keeps an unreadable export out of the corpus
+        # instead of failing later, in the parser, on a stored capture.
+        canonical = canonical_source_sha256("xlsx", workbook_bytes)
         sha256 = hashlib.sha256(workbook_bytes).hexdigest()
-    except BadZipFile as exc:
+    except (BadZipFile, KeyError, ValueError, InvalidFileException, ParseError) as exc:
         raise DirectSourceError(f"{slug} workbook export is not a valid XLSX (interstitial page?)") from exc
     slug_dir = cache_root / slug
     slug_dir.mkdir(parents=True, exist_ok=True)
-    prefix = sha256[:12]
-    matches = sorted(slug_dir.glob(f"*-{prefix}/source.xlsx"))
-    if matches:
-        path = matches[0]
-        if hashlib.sha256(path.read_bytes()).hexdigest() != sha256:
-            raise DirectSourceError(f"prefix collision under {slug_dir}: {prefix}")
-        from_cache = True
-    else:
-        review_dir = slug_dir / f"{pacific_today().isoformat()}-{prefix}"
-        review_dir.mkdir(parents=True, exist_ok=True)
-        path = review_dir / "source.xlsx"
-        path.write_bytes(workbook_bytes)
-        (review_dir / "source.sha256").write_text(f"{sha256}\n")
-        from_cache = False
-    pdf_path = path.parent / "source.pdf"
-    if not pdf_path.exists() or not from_cache:
+    capture = _cache_bytes(slug_dir, sha256, "xlsx", workbook_bytes, canonical)
+    pdf_path = capture.path.parent / "source.pdf"
+    if not capture.from_cache or not pdf_path.exists():
         pdf_path.write_bytes(pdf_bytes)
     return DirectFetchResult(
-        path=path,
-        sha256=sha256,
-        from_cache=from_cache,
+        path=capture.path,
+        sha256=capture.sha256,
+        from_cache=capture.from_cache,
         response_url=str(workbook_response.url),
     )
 
 
-def _cache_bytes(slug_dir: Path, sha256: str, extension: str, content: bytes) -> tuple[Path, bool]:
+def _cache_bytes(slug_dir: Path, sha256: str, extension: str, content: bytes,
+                 canonical: str | None = None) -> CachedCapture:
+    """Return the capture that holds this document, storing it on a first sight.
+
+    ``canonical`` is this document's canonical identity when the caller already
+    computed it; reading a workbook twice is not free.
+    """
     if hashlib.sha256(content).hexdigest() != sha256:
         raise DirectSourceError("source bytes do not match source hash")
     prefix = sha256[:12]
-    matches = sorted(slug_dir.glob(f"{pacific_today().isoformat()}-{prefix}/source.{extension}"))
+    matches = sorted(slug_dir.glob(f"*-{prefix}/source.{extension}"))
     for existing in matches:
         if hashlib.sha256(existing.read_bytes()).hexdigest() != sha256:
             raise DirectSourceError(f"prefix collision under {slug_dir}: {prefix}")
@@ -148,14 +156,44 @@ def _cache_bytes(slug_dir: Path, sha256: str, extension: str, content: bytes) ->
             raise DirectSourceError(f"source hash metadata mismatch under {slug_dir}: {prefix}")
         if not metadata.exists():
             metadata.write_text(f"{sha256}\n")
-        return existing, True
+        return CachedCapture(existing, content, sha256, True)
+
+    held = _held_capture(slug_dir, extension, canonical or canonical_source_sha256(extension, content))
+    if held is not None:
+        return held
 
     review_dir = slug_dir / f"{pacific_today().isoformat()}-{prefix}"
     review_dir.mkdir(parents=True, exist_ok=True)
     path = review_dir / f"source.{extension}"
     path.write_bytes(content)
     (review_dir / "source.sha256").write_text(f"{sha256}\n")
-    return path, False
+    return CachedCapture(path, content, sha256, False)
+
+
+def _held_capture(slug_dir: Path, extension: str, canonical: str) -> CachedCapture | None:
+    """The stored capture of the same document, when only noise bytes changed.
+
+    A raw-hash miss is not proof the schedule changed: Cloudflare rotates its
+    email obfuscation per response and the Google Sheets export reshuffles its
+    archive. The capture already on disk stays the evidence and the identity,
+    so an unchanged schedule never mints a second snapshot dir. The latest
+    matching capture wins, because that is the one retention keeps.
+    """
+    for directory in sorted(slug_dir.iterdir(), reverse=True) if slug_dir.is_dir() else []:
+        parsed = parse_review_dir_name(directory.name) if directory.is_dir() else None
+        stored_path = directory / f"source.{extension}"
+        metadata = directory / "source.sha256"
+        if parsed is None or not stored_path.is_file() or not metadata.is_file():
+            continue
+        stored = stored_path.read_bytes()
+        digest = hashlib.sha256(stored).hexdigest()
+        # A capture whose own sidecar or dir name disagrees with its bytes has
+        # no identity to reuse.
+        if metadata.read_text().strip() != digest or parsed[1] != digest[:12]:
+            continue
+        if canonical_source_sha256(extension, stored) == canonical:
+            return CachedCapture(stored_path, stored, digest, True)
+    return None
 
 
 def _extract_google_sheet_id(url: str) -> str:
