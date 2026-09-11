@@ -80,7 +80,6 @@ const ISO_DATE_FORMAT = {
   fil: "month_d_y",
   es: "dmy_slash",
   vi: "dmy_slash",
-  fi: "dmy_dot",
   "zh-Hant": "ymd_han",
 };
 
@@ -99,7 +98,6 @@ export function formatLocalizedISODate(isoDate) {
   const day = Number(match[3]);
   const format = ISO_DATE_FORMAT[activeLanguage()] || ISO_DATE_FORMAT.en;
   if (format === "ymd_han") return `${year}年${month}月${day}日`;
-  if (format === "dmy_dot") return `${day}.${month}.${year}`;
   if (format === "dmy_slash") return `${day}/${month}/${year}`;
   const label = monthLabel(month);
   return `${label} ${day}, ${year}`;

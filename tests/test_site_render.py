@@ -924,14 +924,6 @@ def test_localized_pages_render_hreflang_and_open_graph_locale(built_site: Path)
     assert "<meta content=zh_HK property=og:locale:alternate>" not in chinese
     _assert_hreflang_cluster(chinese, "/")
 
-    finnish = (built_site / "fi" / "spots" / "aquatic-park" / "index.html").read_text()
-    assert "<html lang=fi>" in finnish
-    assert "<meta content=fi_FI property=og:locale>" in finnish
-    assert "<meta content=fi_FI property=og:locale:alternate>" not in finnish
-    assert "Aquatic Park avovesiuinti San Franciscossa" in finnish
-    assert "Suojaisa poukama" in finnish
-    _assert_hreflang_cluster(finnish, "/spots/aquatic-park/")
-
 
 def test_spot_pages_render_valid_place_and_breadcrumb_json_ld(built_site: Path) -> None:
     aquatic = _read(built_site, "aquatic-park")
