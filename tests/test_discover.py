@@ -26,7 +26,6 @@ from schedules.discover import (
     discover_facility_documents,
     persisted_band_ids,
     rec_park_entries,
-    rewrite_registry_pdf_url,
 )
 from schedules.models import PoolEntry
 from schedules.registry import load_registry
@@ -1148,16 +1147,6 @@ def test_adopt_split_part_on_published_sets_missing(tmp_path, monkeypatch) -> No
     hamilton = next(entry for entry in loaded if entry.slug == "hamilton-pool")
     assert hamilton.source_status == "missing_current_schedule"
     assert hamilton.pdf_url.endswith("/29778")
-
-
-def test_rewrite_registry_pdf_url(tmp_path) -> None:
-    path = _copy_registry(tmp_path)
-    rewrite_registry_pdf_url(
-        path, "hamilton-pool", "https://sfrecpark.org/DocumentCenter/View/29800"
-    )
-    loaded = load_registry(path)
-    hamilton = next(entry for entry in loaded if entry.slug == "hamilton-pool")
-    assert hamilton.pdf_url.endswith("/29800")
 
 
 def test_machine_line_upsert_is_idempotent_ignoring_date(tmp_path, monkeypatch) -> None:
@@ -2505,3 +2494,46 @@ def test_view_fetch_retries_a_transient_status_then_succeeds() -> None:
     assert fetched.status_code == 200
     assert fetched.is_pdf is True
     assert statuses == []
+
+
+# --- no dead code, no asserts for control flow ------------------------------
+
+
+def test_discover_raises_instead_of_asserting() -> None:
+    """`assert` vanishes under -O; discover must raise real errors."""
+    import ast
+    from pathlib import Path as _Path
+
+    from schedules import discover
+
+    source = _Path(discover.__file__).read_text()
+    assert not [
+        node for node in ast.walk(ast.parse(source)) if isinstance(node, ast.Assert)
+    ]
+
+
+def test_registry_source_status_is_rewritten_only_when_asked() -> None:
+    """Only "published" or an explicit insert may overwrite an existing status."""
+    from schedules.discover import _ensure_source_status
+
+    block = 'slug = "x"\nofficial_page_url = "https://example.test"\nsource_status = "published"\n'
+    assert _ensure_source_status(block, "published", insert=False) == block
+    assert 'source_status = "missing_current_schedule"' in _ensure_source_status(
+        block, "missing_current_schedule", insert=True
+    )
+    assert _ensure_source_status(block, "missing_current_schedule", insert=False) == block
+    flagged = block.replace("published", "missing_current_schedule")
+    assert 'source_status = "published"' in _ensure_source_status(
+        flagged, "published", insert=False
+    )
+    without = 'slug = "x"\nofficial_page_url = "https://example.test"\n'
+    assert _ensure_source_status(without, "published", insert=False) == without
+    assert 'source_status = "published"' in _ensure_source_status(
+        without, "published", insert=True
+    )
+
+
+def test_registry_pdf_url_rewrite_helper_is_gone() -> None:
+    from schedules import discover
+
+    assert not hasattr(discover, "rewrite_registry_pdf_url")

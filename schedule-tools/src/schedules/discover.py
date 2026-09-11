@@ -390,9 +390,11 @@ def _sequential_roll(
     if any(item.window_start is None or item.window_end is None for item in kept):
         return decide("flag", "windows_unparsed", kind="session_grid", blocking=True)
     for index, left in enumerate(kept):
-        assert left.window_start is not None and left.window_end is not None
+        if left.window_start is None or left.window_end is None:
+            raise ValueError("sequential roll needs parsed windows")
         for right in kept[index + 1 :]:
-            assert right.window_start is not None and right.window_end is not None
+            if right.window_start is None or right.window_end is None:
+                raise ValueError("sequential roll needs parsed windows")
             if not windows_disjoint(
                 (left.window_start, left.window_end),
                 (right.window_start, right.window_end),
@@ -487,16 +489,6 @@ def persisted_band_ids(notes: str | None) -> frozenset[int]:
         if kind == "session_grid" and source in {"band", "persisted"}:
             ids.add(view_id)
     return frozenset(ids)
-
-
-def rewrite_registry_pdf_url(path: Path, slug: str, url: str) -> None:
-    text = path.read_text()
-    start, end = _pool_block_span(text, slug)
-    block = text[start:end]
-    updated = _replace_quoted_field(block, "pdf_url", url)
-    if updated == block:
-        return
-    path.write_text(text[:start] + updated + text[end:])
 
 
 def apply_discover_decision(path: Path, decision: DiscoverDecision) -> None:
@@ -1283,7 +1275,7 @@ def _ensure_source_status(block: str, status: str, *, insert: bool) -> str:
     if match:
         if match.group(1) == status:
             return block
-        if status == "published" or insert or match.group(1) != status:
+        if status == "published" or insert:
             return pattern.sub(f'source_status = "{status}"', block, count=1)
         return block
     if not insert:
