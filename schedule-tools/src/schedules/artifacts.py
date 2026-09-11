@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from datetime import datetime, timezone
+from io import BytesIO
 from pathlib import Path
 
 from .models import GroundingResult
@@ -72,6 +74,45 @@ def _sha256_text(value: str) -> str:
 
 def _sha256_json(value: dict) -> str:
     return hashlib.sha256(json.dumps(value, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+# Cloudflare rewrites its email obfuscation on every response, so these two
+# payloads carry no schedule and must not change a capture's identity.
+_CFEMAIL_ATTRIBUTE = re.compile(rb"""\s*data-cfemail=["'][0-9a-fA-F]*["']""")
+_CFEMAIL_HREF = re.compile(rb"/cdn-cgi/l/email-protection#[0-9a-fA-F]*")
+
+
+def workbook_cell_values(content: bytes) -> dict[str, list[list[str | None]]]:
+    """Every sheet's cell values: the part of an XLSX export that means something.
+
+    The Google Sheets export reorders ``sharedStrings.xml`` and ``styles.xml``
+    between downloads of an unchanged sheet, so the archive bytes are not an
+    identity. The values a reader sees are.
+    """
+    from openpyxl import load_workbook
+    workbook = load_workbook(BytesIO(content), data_only=True)
+    return {
+        sheet.title: [[None if cell.value is None else str(cell.value) for cell in row]
+                      for row in sheet.iter_rows()]
+        for sheet in workbook.worksheets
+    }
+
+
+def canonical_source_sha256(kind: str, content: bytes) -> str:
+    """The identity of a captured document, ignoring per-response noise.
+
+    Raw bytes stay the published identity: ``source.sha256`` and every
+    artifact's ``pdf_sha256`` keep hashing the file as it was stored. This hash
+    answers a narrower question — is this fetch the document we already hold? —
+    so a rotating Cloudflare token or a reshuffled spreadsheet archive cannot
+    mint a new snapshot for an unchanged schedule.
+    """
+    if kind == "html":
+        content = _CFEMAIL_HREF.sub(b"/cdn-cgi/l/email-protection",
+                                    _CFEMAIL_ATTRIBUTE.sub(b"", content))
+    elif kind == "xlsx":
+        content = json.dumps(workbook_cell_values(content), sort_keys=True).encode("utf-8")
+    return hashlib.sha256(content).hexdigest()
 
 
 def save_artifact_bundle(

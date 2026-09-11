@@ -27,10 +27,12 @@ def test_cache_bytes_preserves_encoding_and_rejects_corruption(tmp_path):
     from schedules.direct_sources.http import _cache_bytes
     content = b"first\r\nsecond\xff"
     digest = hashlib.sha256(content).hexdigest()
-    path, cached = _cache_bytes(tmp_path, digest, "html", content)
-    assert not cached
+    capture = _cache_bytes(tmp_path, digest, "html", content)
+    assert not capture.from_cache
+    path = capture.path
     assert path.read_bytes() == content
-    assert _cache_bytes(tmp_path, digest, "html", content) == (path, True)
+    reused = _cache_bytes(tmp_path, digest, "html", content)
+    assert (reused.path, reused.sha256, reused.content, reused.from_cache) == (path, digest, content, True)
     path.write_bytes(b"corrupt")
     with pytest.raises(DirectSourceError, match="prefix collision"):
         _cache_bytes(tmp_path, digest, "html", content)
@@ -45,9 +47,74 @@ def test_cache_bytes_reuses_a_capture_from_an_earlier_day(tmp_path):
     earlier = tmp_path / f"{yesterday}-{digest[:12]}"
     earlier.mkdir()
     (earlier / "source.html").write_bytes(content)
-    path, cached = _cache_bytes(tmp_path, digest, "html", content)
-    assert (path, cached) == (earlier / "source.html", True)
+    capture = _cache_bytes(tmp_path, digest, "html", content)
+    assert (capture.path, capture.from_cache) == (earlier / "source.html", True)
     assert [directory.name for directory in sorted(tmp_path.iterdir())] == [earlier.name]
+
+
+def _cfemail_page(payload: str) -> bytes:
+    """A Cloudflare-obfuscated page; the payload rotates on every response."""
+    return (
+        f'<html><body><p>Lap swim 6am-8pm</p>'
+        f'<a href="/cdn-cgi/l/email-protection#{payload}">'
+        f'<span class="__cf_email__" data-cfemail="{payload}">[email&#160;protected]</span></a>'
+        f'</body></html>'
+    ).encode()
+
+
+def _workbook_bytes(creator: str, hours: str = "Hours: 6am-8pm") -> bytes:
+    book = Workbook()
+    sheet = book.active
+    sheet.title = "Monday"
+    sheet["A1"] = hours
+    sheet["A2"] = time(6, 0)
+    book.properties.creator = creator
+    buffer = io.BytesIO()
+    book.save(buffer)
+    return buffer.getvalue()
+
+
+def test_canonical_html_identity_ignores_rotating_cfemail(tmp_path):
+    from schedules.artifacts import canonical_source_sha256
+    from schedules.direct_sources.http import _cache_bytes
+    first, second = _cfemail_page("a1b2c3d4"), _cfemail_page("9f8e7d6c")
+    assert first != second
+    assert canonical_source_sha256("html", first) == canonical_source_sha256("html", second)
+
+    stored = _cache_bytes(tmp_path, hashlib.sha256(first).hexdigest(), "html", first)
+    reused = _cache_bytes(tmp_path, hashlib.sha256(second).hexdigest(), "html", second)
+    assert reused.from_cache
+    assert (reused.path, reused.content, reused.sha256) == (stored.path, first, stored.sha256)
+    assert [directory.name for directory in sorted(tmp_path.iterdir())] == [stored.path.parent.name]
+
+
+def test_canonical_xlsx_identity_ignores_export_nondeterminism(tmp_path):
+    from schedules.artifacts import canonical_source_sha256
+    from schedules.direct_sources.http import _cache_bytes
+    first, second = _workbook_bytes("first export"), _workbook_bytes("second export")
+    assert first != second
+    assert canonical_source_sha256("xlsx", first) == canonical_source_sha256("xlsx", second)
+
+    stored = _cache_bytes(tmp_path, hashlib.sha256(first).hexdigest(), "xlsx", first)
+    reused = _cache_bytes(tmp_path, hashlib.sha256(second).hexdigest(), "xlsx", second)
+    assert (reused.path, reused.content, reused.from_cache) == (stored.path, first, True)
+    assert [directory.name for directory in sorted(tmp_path.iterdir())] == [stored.path.parent.name]
+
+
+def test_canonical_identity_keeps_pdf_and_csv_on_raw_bytes():
+    from schedules.artifacts import canonical_source_sha256
+    body = b"%PDF-1.4 lap swim"
+    assert canonical_source_sha256("pdf", body) == hashlib.sha256(body).hexdigest()
+    assert canonical_source_sha256("csv", b"day,start\n") == hashlib.sha256(b"day,start\n").hexdigest()
+
+
+def test_cache_bytes_keeps_a_changed_document_apart(tmp_path):
+    from schedules.direct_sources.http import _cache_bytes
+    first, second = _cfemail_page("a1b2c3d4"), _cfemail_page("a1b2c3d4").replace(b"6am-8pm", b"7am-9pm")
+    _cache_bytes(tmp_path, hashlib.sha256(first).hexdigest(), "html", first)
+    changed = _cache_bytes(tmp_path, hashlib.sha256(second).hexdigest(), "html", second)
+    assert not changed.from_cache
+    assert len(list(tmp_path.iterdir())) == 2
 
 
 def test_cache_bytes_rejects_semantic_hash(tmp_path):
@@ -477,14 +544,9 @@ def test_koret_cache_identity_includes_original_zip_bytes(monkeypatch, tmp_path)
     import httpx
     from schedules.direct_sources import http
 
-    def workbook(timestamp):
-        output = io.BytesIO()
-        with zipfile.ZipFile(output, "w") as archive:
-            archive.writestr(zipfile.ZipInfo("xl/workbook.xml", date_time=timestamp), b"<workbook/>")
-        return output.getvalue()
-
-    first_bytes = workbook((2026, 7, 10, 10, 0, 0))
-    second_bytes = workbook((2026, 7, 10, 11, 0, 0))
+    first_bytes = _workbook_bytes("first export")
+    second_bytes = _workbook_bytes("second export")
+    changed_bytes = _workbook_bytes("first export", hours="Hours: 7am-9pm")
     current = [first_bytes]
     def respond(request):
         return httpx.Response(200, content=current[0] if request.url.params["format"] == "xlsx" else b"%PDF-1.4")
@@ -497,14 +559,38 @@ def test_koret_cache_identity_includes_original_zip_bytes(monkeypatch, tmp_path)
     assert first.path.read_bytes() == first_bytes
     assert "format=xlsx" in first.response_url
     assert http.fetch_koret_workbook("koret-center", url, cache_root=tmp_path).from_cache
+
+    # A re-export of the same cells keeps the original capture and its identity.
     current[0] = second_bytes
-    second = http.fetch_koret_workbook("koret-center", url, cache_root=tmp_path)
-    assert second.sha256 != first.sha256
-    assert not second.from_cache
+    assert second_bytes != first_bytes
+    reused = http.fetch_koret_workbook("koret-center", url, cache_root=tmp_path)
+    assert (reused.path, reused.sha256, reused.from_cache) == (first.path, first.sha256, True)
+    assert reused.path.read_bytes() == first_bytes
+
+    current[0] = changed_bytes
+    changed = http.fetch_koret_workbook("koret-center", url, cache_root=tmp_path)
+    assert changed.sha256 != first.sha256
+    assert not changed.from_cache
+
     first.path.write_bytes(b"corrupt")
     current[0] = first_bytes
     with pytest.raises(DirectSourceError, match="prefix collision"):
         http.fetch_koret_workbook("koret-center", url, cache_root=tmp_path)
+
+
+def test_koret_rejects_an_unreadable_workbook_export(monkeypatch, tmp_path):
+    import httpx
+    from schedules.direct_sources import http
+    output = io.BytesIO()
+    with zipfile.ZipFile(output, "w") as archive:
+        archive.writestr("xl/workbook.xml", b"<workbook/>")
+    client_class = httpx.Client
+    monkeypatch.setattr(http.httpx, "Client", lambda **kwargs: client_class(
+        transport=httpx.MockTransport(lambda request: httpx.Response(200, content=output.getvalue()))))
+    with pytest.raises(DirectSourceError, match="not a valid XLSX"):
+        http.fetch_koret_workbook("koret-center", "https://docs.google.com/spreadsheets/d/official/edit",
+                                  cache_root=tmp_path)
+    assert not list(tmp_path.iterdir())
 
 
 def test_fetch_text_reports_sanitized_redirect_destination(monkeypatch):
