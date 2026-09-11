@@ -20,6 +20,13 @@ export function generatedSchedulePath(path) {
     || /^data\/[a-z0-9]+(?:-[a-z0-9]+)*\/\d{4}-\d{2}-\d{2}-[a-f\d]{12}\/(?:source\.(?:pdf|html|csv|xlsx|sha256)|reviewed\.json|source-bundle\.json|openai-[a-z0-9-]+\.json|direct-[a-z0-9-]+\.json)$/.test(path);
 }
 
+// Retention deletes whole snapshot dirs, so the automation commits deletions
+// there and nowhere else: a published page or a generated artifact may only
+// ever be rewritten.
+export function prunedSnapshotPath(path) {
+  return /^data\/[^/]+\/\d{4}-\d{2}-\d{2}-[0-9a-f]{12}\//.test(path);
+}
+
 export function stageScheduleChanges({ git = (args) => execFileSync("git", args, { cwd: repoRoot, encoding: "utf8" }) } = {}) {
   const paths = [...new Set([
     ...git(["ls-files", "--modified", "--others", "--deleted", "--exclude-standard", "-z"]).split("\0"),
@@ -29,7 +36,9 @@ export function stageScheduleChanges({ git = (args) => execFileSync("git", args,
   if (!paths.length) return { changed: false, paths: [] };
   git(["add", "--", ...paths]);
   for (const path of paths) {
-    if (!/^100644 [a-f\d]{40} 0\t[^\0]+\0$/.test(git(["ls-files", "--stage", "-z", "--", path]))) {
+    if (/^100644 [a-f\d]{40} 0\t[^\0]+\0$/.test(git(["ls-files", "--stage", "-z", "--", path]))) continue;
+    const deleted = git(["diff", "--cached", "--name-status", "-z", "--", path]).split("\0")[0] === "D";
+    if (!deleted || !prunedSnapshotPath(path)) {
       throw new Error("Staging only permits regular generated files, without deletions");
     }
   }
@@ -239,7 +248,10 @@ export async function promoteScheduleCommit({
   if (!paths.length || paths.some((path) => !generatedSchedulePath(path))) throw new Error("Promotion contains unexpected generated paths");
   for (const path of paths) {
     const entry = git(["ls-tree", "-z", commit, "--", path]);
-    if (!/^100644 blob [a-f\d]{40}\t[^\0]+\0$/.test(entry)) throw new Error("Promotion only permits regular generated files, without deletions");
+    if (/^100644 blob [a-f\d]{40}\t[^\0]+\0$/.test(entry)) continue;
+    // Absent from the commit's tree while present in its diff: the path was
+    // deleted, which only a pruned snapshot dir may be.
+    if (entry !== "" || !prunedSnapshotPath(path)) throw new Error("Promotion only permits regular generated files, without deletions");
   }
   const readRemote = (ref) => git(["ls-remote", "--heads", "origin", `refs/heads/${ref}`]).trim().split(/\s/)[0];
   const existing = readRemote(branch);
