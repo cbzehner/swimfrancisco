@@ -2267,3 +2267,75 @@ def test_north_beach_complete_original_pair_adopts(north_beach_pair, monkeypatch
         assert discover.choose_roll(entry, bad).blocking
     monkeypatch.setattr(discover, "pacific_today", lambda: date(2026, 12, 13))
     assert discover.choose_roll(entry, documents).blocking
+
+
+def _sava_adopt_setup(tmp_path):
+    registry = _copy_registry(tmp_path)
+    sava = next(item for item in load_registry(FIXTURE_REGISTRY) if item.slug == "sava-pool")
+    pages = {sava.official_page_url: _fixture("sava-two-session-grids.html")}
+    return registry, sava, pages
+
+
+def test_adopt_refuses_a_view_that_failed_to_fetch(tmp_path, monkeypatch) -> None:
+    import click
+
+    _freeze_today(monkeypatch)
+    registry, sava, pages = _sava_adopt_setup(tmp_path)
+    before = registry.read_text()
+    views = {29805: {"filename": "Sava Pool Fall 2 2026.pdf", "content": _pdf_bytes()}}
+    _install_http(monkeypatch, pages=pages, views=views)
+    with pytest.raises(click.ClickException, match="cannot adopt a source that failed to fetch"):
+        discover_all(
+            [sava],
+            delay=0,
+            registry_path=registry,
+            report_dir=tmp_path,
+            adopt=("sava-pool", 29815),
+        )
+    assert registry.read_text() == before
+
+
+def test_adopt_refuses_when_the_facility_page_failed(tmp_path, monkeypatch) -> None:
+    import click
+
+    _freeze_today(monkeypatch)
+    registry, sava, pages = _sava_adopt_setup(tmp_path)
+    before = registry.read_text()
+    views = {
+        29815: {
+            "filename": "Sava_Pool_Fall12026_Aug18toDec26_.pdf",
+            "content": _pdf_bytes(),
+        },
+    }
+    _install_http(monkeypatch, pages=pages, views=views)
+    real_client = httpx.Client
+
+    class FailPages:
+        def __init__(self, inner):
+            self.inner = inner
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def get(self, url: str):
+            if "/DocumentCenter/View/" not in url:
+                raise httpx.ConnectError("page down")
+            return self.inner.get(url)
+
+    monkeypatch.setattr(
+        "schedules.discover.httpx.Client",
+        lambda *args, **kwargs: FailPages(real_client(*args, **kwargs)),
+    )
+    with pytest.raises(click.ClickException, match="cannot adopt a source that failed to fetch"):
+        discover_all(
+            [sava],
+            delay=0,
+            sleep=lambda _: None,
+            registry_path=registry,
+            report_dir=tmp_path,
+            adopt=("sava-pool", 29815),
+        )
+    assert registry.read_text() == before

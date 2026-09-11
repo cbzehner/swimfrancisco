@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Literal
 from urllib.parse import unquote, urlparse
 
+import click
 import httpx
 
 from ._time import pacific_today
@@ -684,7 +685,9 @@ def discover_all(
                 entry, classified, pin_window=_pin_window(entry, views)
             )
         if adopt is not None and adopt[0] == entry.slug:
-            decision = _operator_adopt_decision(entry, classified, views, adopt[1])
+            decision = _operator_adopt_decision(
+                entry, classified, views, adopt[1], reason=decision.reason
+            )
         decision = _with_persisted_survivors(
             decision,
             persisted_by_slug.get(entry.slug, frozenset()),
@@ -730,20 +733,29 @@ def _operator_adopt_decision(
     classified: list[ClassifiedDocument],
     views: dict[int, _ViewFetch],
     view_id: int,
+    *,
+    reason: str,
 ) -> DiscoverDecision:
+    # Adopt asserts "this PDF is the pool's current schedule". A failed page or
+    # PDF fetch proves nothing, so refuse instead of relabelling the failure.
+    fetched = views.get(view_id)
+    pdf_bytes = fetched.content if fetched is not None and fetched.is_pdf else None
+    if pdf_bytes is None or reason == "fetch_error":
+        raise click.ClickException(
+            f"{entry.slug}: cannot adopt a source that failed to fetch"
+        )
     match = next((item for item in classified if item.link.view_id == view_id), None)
     if match is None:
-        fetched = views.get(view_id)
         link = DocumentLink(
             view_id=view_id,
             href=absolute_view_url(view_id),
-            anchor_text=(fetched.filename if fetched else None) or "",
+            anchor_text=fetched.filename or "",
         )
         match = classify_pdf(
             link,
             pool_slug=entry.slug,
-            pdf_bytes=fetched.content if fetched and fetched.is_pdf else None,
-            filename=fetched.filename if fetched else None,
+            pdf_bytes=pdf_bytes,
+            filename=fetched.filename,
             source="persisted",
         )
         classified = [*classified, match]
