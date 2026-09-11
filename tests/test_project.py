@@ -1,4 +1,5 @@
 import json
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -54,10 +55,12 @@ def test_project_writes_sessions_to_content_md(tmp_path):
     assert "[[extra.schedules]]" in rendered
 
 
-def test_project_appends_later_schedules_into_coexisting_array(tmp_path):
+def test_project_appends_later_schedules_into_coexisting_array(tmp_path, monkeypatch):
     # Pre-array versions of these flows had queue/promote semantics; today
     # every reviewed schedule simply coexists in [[extra.schedules]] and the
     # render-time predicate picks the active one. One test pins that model.
+    # The publish date is pinned so none of the windows is long-expired.
+    monkeypatch.setattr("schedules.merge.pacific_today", lambda: date(2026, 6, 10))
     data = tmp_path / "data"
     content = tmp_path / "content" / "spots"
     current = _valid_envelope("hamilton-pool", "a" * 64)
@@ -141,3 +144,30 @@ def test_project_rejects_invalid_payload(tmp_path):
 
     with pytest.raises(ProjectError, match="fewer than 5"):
         project(slug="hamilton-pool", reviewed_json_path=reviewed, content_spots_dir=content)
+
+
+def test_project_drops_long_expired_windows_but_keeps_the_recent_one(tmp_path, monkeypatch):
+    """The publish path, not a separate cleanup, retires stale windows."""
+    monkeypatch.setattr("schedules.merge.pacific_today", lambda: date(2026, 9, 11))
+    data = tmp_path / "data"
+    content = tmp_path / "content" / "spots"
+    _seed_content_md(content, "hamilton-pool")
+    for index, (sha, start, end) in enumerate(
+        [
+            ("a" * 64, "2026-01-05", "2026-07-13"),  # ended 60 days before publish
+            ("b" * 64, "2026-07-14", "2026-08-31"),  # ended 11 days before publish
+            ("c" * 64, "2026-09-01", "2026-12-12"),  # current
+        ]
+    ):
+        envelope = _valid_envelope("hamilton-pool", sha)
+        envelope["payload"]["effective_start"] = start
+        envelope["payload"]["effective_end"] = end
+        envelope["payload"]["sessions"][0]["start"] = f"0{index + 5}:00"
+        reviewed = _write_reviewed_json(data, "hamilton-pool", sha, envelope)
+        project(slug="hamilton-pool", reviewed_json_path=reviewed, content_spots_dir=content)
+
+    rendered = (content / "hamilton-pool.md").read_text()
+    assert rendered.count("[[extra.schedules]]") == 2
+    assert 'effective_start = "2026-01-05"' not in rendered
+    assert 'effective_start = "2026-07-14"' in rendered
+    assert 'effective_start = "2026-09-01"' in rendered
