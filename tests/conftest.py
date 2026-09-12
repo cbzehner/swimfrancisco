@@ -55,11 +55,6 @@ def load_source_reference(path: Path, reference_id: str, *, repo_root: Path) -> 
     return reference
 
 
-def extraction_api_request() -> dict:
-    """The production extraction request, as the budget tests price it."""
-    return openai_provider.api_request("Extract this schedule", EXTRACTION_SCHEMA)
-
-
 def api_usage_result(input_tokens=100, output_tokens=200, **response_fields) -> dict:
     """An OpenAI response envelope carrying trustworthy usage accounting."""
     return {"status": "completed", "api_response": {

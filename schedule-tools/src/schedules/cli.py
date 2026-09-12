@@ -1,14 +1,9 @@
 from __future__ import annotations
 
 import json
-import math
-import os
-import re
-import subprocess
 from pathlib import Path
 import click
 
-from ._time import pacific_today
 from .discover import DiscoverError, discover_all, rec_park_entries
 from .models import PoolResult
 from .paths import (
@@ -35,154 +30,11 @@ from .report import result_counts
 from .project import ProjectError, project as _project
 from .review import DecisionSet
 from .review_server import ReviewApp, serve_review_app
-from .providers.openai_provider import MonthlySpendBudget, SpendBudget
 
 
 @click.group()
 def cli() -> None:
     """Pool schedule extraction tools."""
-
-
-@cli.group("budget")
-def budget_command() -> None:
-    """Durable API accounting; never grants permission to enable automation."""
-
-
-def _budget_month() -> str:
-    """The Pacific calendar month; every other date in this system is Pacific."""
-    return pacific_today().strftime("%Y-%m")
-
-
-class BudgetConfigError(click.ClickException):
-    """A malformed budget variable. Never downgraded to a free-only run."""
-
-
-def _approved_default_usd() -> float:
-    """Unset or empty means "no approval"; anything else must parse."""
-    raw = os.environ.get("SCHEDULES_MONTHLY_BUDGET_USD", "").strip()
-    if not raw:
-        return 0.0
-    try:
-        default = float(raw)
-    except ValueError as error:
-        raise BudgetConfigError(
-            f"SCHEDULES_MONTHLY_BUDGET_USD is not a number: {raw!r}"
-        ) from error
-    if not math.isfinite(default) or default < 0:
-        raise BudgetConfigError(
-            f"SCHEDULES_MONTHLY_BUDGET_USD must be a finite, non-negative cap: {raw!r}"
-        )
-    return default
-
-
-def _approved_overrides(default: float) -> dict[str, float]:
-    raw = (os.environ.get("SCHEDULES_MONTHLY_BUDGET_OVERRIDES") or "").strip()
-    if not raw:
-        return {}
-    try:
-        overrides = json.loads(raw)
-    except ValueError as error:
-        raise BudgetConfigError(
-            f"SCHEDULES_MONTHLY_BUDGET_OVERRIDES is not valid JSON: {error}"
-        ) from error
-    if not isinstance(overrides, dict) or any(
-        not re.fullmatch(r"20\d{2}-(?:0[1-9]|1[0-2])", key)
-        or type(value) not in (int, float) or not math.isfinite(value) or value < default
-        for key, value in overrides.items()
-    ):
-        raise BudgetConfigError(
-            "SCHEDULES_MONTHLY_BUDGET_OVERRIDES must map calendar months to approved "
-            "caps at least equal to the default"
-        )
-    return overrides
-
-
-def _monthly_budget(month: str | None = None) -> MonthlySpendBudget:
-    month = month or _budget_month()
-    default = _approved_default_usd()
-    overrides = _approved_overrides(default)
-    try:
-        MonthlySpendBudget(REPO_ROOT, default)
-        return MonthlySpendBudget(REPO_ROOT, overrides.get(month, default))
-    except (ValueError, TypeError) as error:
-        raise click.ClickException(str(error)) from error
-
-
-@budget_command.command("increase")
-@click.option("--month", required=True)
-@click.option("--from-usd", type=float, required=True)
-@click.option("--to-usd", type=float, required=True)
-def budget_increase_command(month: str, from_usd: float, to_usd: float) -> None:
-    """Apply an explicitly approved increase without changing runs or history."""
-    if month != _budget_month():
-        raise click.ClickException("Only the current calendar month's cap can be increased")
-    budget = _monthly_budget(month)
-    expected = MonthlySpendBudget(REPO_ROOT, from_usd).limit
-    target = MonthlySpendBudget(REPO_ROOT, to_usd).limit
-    if target <= expected or target != budget.limit:
-        raise click.ClickException("Increase must match the configured approval and exceed the prior cap")
-    parent, state = budget._load()
-    period = state["months"].get(month)
-    if state["blocked"] or period is None or period["limit_microusd"] != expected:
-        raise click.ClickException("Budget is blocked, missing, or differs from the expected prior cap")
-    period["limit_microusd"] = target
-    budget._save(parent, state, f"Increase approved {month} schedule API cap from {expected} to {target} microusd")
-    click.echo(json.dumps({"month": month, "previous_limit_microusd": expected, "limit_microusd": target}))
-
-
-@budget_command.command("initialize")
-def budget_initialize_command() -> None:
-    """Create the separate accounting branch once, after operator approval."""
-    _monthly_budget().initialize()
-
-
-@budget_command.command("reserve")
-@click.option("--run-id", required=True)
-@click.option("--output", type=click.Path(path_type=Path), required=True)
-def budget_reserve_command(run_id: str, output: Path) -> None:
-    """Reserve at most $1 for this run before creating its local request ledger."""
-    if output.exists() and any(output.iterdir()):
-        raise click.ClickException("Budget output directory must be empty")
-    if not re.fullmatch(r"\d+-\d+", run_id):
-        raise click.ClickException("Budget reservation requires an Actions run/attempt ID")
-    month = _budget_month()
-    try:
-        # Configuration first: a missing key is a reason to run free-only, not
-        # a reason to stop checking what the operator approved.
-        budget = _monthly_budget(month)
-        if not os.environ.get("OPENAI_API_KEY", "").strip():
-            raise ValueError("Paid extraction credentials unavailable")
-        receipt = budget.reserve(month, run_id) | {"status": "reserved"}
-    except BudgetConfigError:
-        raise
-    except (ValueError, RuntimeError, OSError, subprocess.TimeoutExpired, click.ClickException):
-        receipt = {"month": month, "run_id": run_id, "limit_microusd": 0,
-                   "status": "unavailable", "reason": "Paid extraction unavailable; free updates continue"}
-    output.mkdir(parents=True, exist_ok=True)
-    (output / "reservation.json").write_text(json.dumps(receipt, indent=2) + "\n")
-    if receipt["status"] == "unavailable":
-        (output / "budget.json").write_text(json.dumps({"limit_microusd": 0, "requests": []}) + "\n")
-    else:
-        SpendBudget(output / "budget.json", receipt["limit_microusd"] / 1_000_000)._update(lambda _: None)
-    click.echo(json.dumps(receipt))
-
-
-@budget_command.command("settle")
-@click.option("--directory", type=click.Path(path_type=Path, exists=True), required=True)
-def budget_settle_command(directory: Path) -> None:
-    """Settle conservative run charges; missing usage keeps its reservation."""
-    receipt = json.loads((directory / "reservation.json").read_text())
-    if receipt.get("status") == "unavailable":
-        ledger = json.loads((directory / "budget.json").read_text())
-        if (type(receipt.get("limit_microusd")) is not int or receipt["limit_microusd"] != 0
-                or ledger != {"limit_microusd": 0, "requests": []}
-                or type(ledger.get("limit_microusd")) is not int):
-            raise click.ClickException("Unavailable paid budget must have no requests or charges")
-        click.echo("Paid extraction unavailable; no durable reservation settled")
-        return
-    if receipt.get("status") != "reserved":
-        raise click.ClickException("Unknown budget reservation status")
-    _monthly_budget(receipt["month"]).settle(receipt, directory / "budget.json")
 
 
 def _parse_slugs(only: str | None) -> list[str] | None:
