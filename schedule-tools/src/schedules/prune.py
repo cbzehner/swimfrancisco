@@ -1,9 +1,11 @@
 """Retention for captured schedule snapshots.
 
 Per slug, keep a snapshot dir if ANY of: (a) it is the newest dir containing
-``reviewed.json``; (b) it contains provider or direct JSON but no
-``reviewed.json``, and its date equals the slug's newest capture date
-(pending review); (c) another dir's ``reviewed.json`` names it in
+``reviewed.json``; (b) it lacks ``reviewed.json`` and either (i) it contains a
+provider or direct artifact and no reviewed dir of the slug is dated after it
+(a pending extraction, not yet superseded by a review), or (ii) its date
+equals the slug's newest capture date (a fresh capture awaiting extraction or
+closure review); (c) another dir's ``reviewed.json`` names it in
 ``carried_from``; (d) its source is a PDF (Rec & Park corpus used by
 backtests); (e) a file under ``tests/`` or ``docs/`` names the dir. A dir
 whose source body hash does not match its ``source.sha256`` is deleted unless
@@ -84,12 +86,20 @@ def keep_reason(
         return "named by a test or document"
     if not _proves_its_own_identity(snapshot):
         return None
+    if (snapshot / "reviewed.json").is_file():
+        return None
+    captured_on = parse_review_dir_name(snapshot.name)[0]
     extracted = any(PROVIDER_ARTIFACT.fullmatch(path.name) for path in snapshot.iterdir() if path.is_file())
-    # Only the newest day's captures are still waiting for the queue; an
-    # older one it never reviewed is a re-capture of a schedule it did.
-    if extracted and not (snapshot / "reviewed.json").is_file() \
-            and parse_review_dir_name(snapshot.name)[0] == newest_date:
+    # An extraction nobody reviewed is still a question the queue owes an
+    # answer to; only a review of a later capture answers it. A newer capture
+    # on its own extracts nothing and so supersedes nothing.
+    if extracted and (newest_reviewed is None
+                      or parse_review_dir_name(newest_reviewed.name)[0] <= captured_on):
         return "pending review"
+    # Source bytes with no artifact: the newest day's are awaiting extraction
+    # or a closure review that reads them back; older ones were left behind.
+    if captured_on == newest_date:
+        return "capture awaiting extraction"
     return None
 
 

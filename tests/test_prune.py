@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from pathlib import Path
 
 import pytest
 
@@ -52,14 +53,42 @@ def test_keeps_a_snapshot_pending_review_from_the_newest_capture_date(repo):
     assert plan_prune(data, repo) == []
 
 
-def test_deletes_a_pending_capture_older_than_the_newest_capture_date(repo):
-    """A capture the queue passed over is not pending, it is stale."""
+def test_deletes_a_pending_extraction_a_later_review_superseded(repo):
+    """A review of a later capture answers the question the older one asked."""
     data = repo / "data"
-    stale = snapshot(data, "sava-pool", "2026-08-19-aaaaaaaaaaaa",
-                     **{"source.html": "stale", "direct-pomeroy-html-v1.json": {"provider": "direct"}})
+    superseded = snapshot(data, "sava-pool", "2026-08-19-aaaaaaaaaaaa",
+                          **{"source.html": "stale", "direct-pomeroy-html-v1.json": {"provider": "direct"}})
     current = snapshot(data, "sava-pool", "2026-08-21-cccccccccccc",
+                       **{"source.html": "reviewed", "reviewed.json": {"slug": "sava-pool"}})
+    assert plan_prune(data, repo) == [superseded]
+    assert current.is_dir()
+
+
+def test_keeps_an_unreviewed_extraction_a_later_bare_capture_did_not_supersede(repo):
+    """A failed extraction on the newer day reviews nothing, so both wait."""
+    data = repo / "data"
+    pending = snapshot(data, "sava-pool", "2026-08-19-aaaaaaaaaaaa",
                        **{"source.html": "pending", "direct-pomeroy-html-v1.json": {"provider": "direct"}})
-    assert plan_prune(data, repo) == [stale]
+    bare = snapshot(data, "sava-pool", "2026-08-21-cccccccccccc", **{"source.html": "captured"})
+    assert plan_prune(data, repo) == []
+    assert pending.is_dir() and bare.is_dir()
+
+
+def test_keeps_a_bare_capture_on_the_newest_capture_date(repo):
+    """Source bytes with no artifact yet are awaiting extraction or closure review."""
+    data = repo / "data"
+    bare = snapshot(data, "sava-pool", "2026-08-21-cccccccccccc",
+                    **{"source.html": "captured", "source.sha256": hashlib.sha256(b"captured").hexdigest()})
+    assert plan_prune(data, repo) == []
+    assert bare.is_dir()
+
+
+def test_deletes_a_bare_capture_a_newer_one_replaced(repo):
+    """Nothing extracted it and a newer capture of the slug arrived; it is spent."""
+    data = repo / "data"
+    spent = snapshot(data, "sava-pool", "2026-08-19-aaaaaaaaaaaa", **{"source.html": "captured"})
+    current = snapshot(data, "sava-pool", "2026-08-21-cccccccccccc", **{"source.html": "recaptured"})
+    assert plan_prune(data, repo) == [spent]
     assert current.is_dir()
 
 
@@ -196,3 +225,9 @@ def test_prune_ignores_paths_that_are_not_snapshots(repo):
     (data / "sava-pool" / "notes").mkdir()
     assert plan_prune(data, repo) == []
     assert (data / "sava-pool" / "notes").is_dir()
+
+
+def test_the_committed_capture_tree_needs_every_dir_it_holds():
+    """Retention is a rule the repository already satisfies, not a pending sweep."""
+    root = Path(__file__).parents[1]
+    assert plan_prune(root / "data", root) == []
