@@ -269,6 +269,11 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
                 publication = json.loads((worktree / "tmp/publish-pending.json").read_text())
                 build["closure_reviews"].extend(item["closure_review"] for item in publication.get("refused", []) if item.get("closure_review"))
                 build["decisions"] = pager_job_payload(worktree / "tmp")
+                # Retention deletes whole capture dirs, and a capture held for
+                # closure review is source bytes with no artifact. Its evidence
+                # is on disk before prune runs, so the review PR can still read
+                # those bytes back whatever retention decides about the dir.
+                save_evidence(worktree, evidence / f"build-{build_number}")
                 checked(schedules + ["prune"], worktree, command)
                 checked(["node", "scripts/generate-bulletin.mjs"], worktree, command)
                 checked(["node", "scripts/generate-i18n.mjs", "generate"], worktree, command)
@@ -279,7 +284,6 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
                     return state
                 checked(["git", "-c", "user.name=Schedule automation", "-c", "user.email=schedules@swimfrancisco.com",
                          "commit", "-m", "Refresh verified swimming schedules"], worktree, command)
-                save_evidence(worktree, evidence / f"build-{build_number}")
                 save_state()
                 result = command(["node", "scripts/check-build-ci.mjs", "promote", base, build["branch"]], worktree, timeout=900)
                 if result.returncode not in (0, 2):

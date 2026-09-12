@@ -22,7 +22,7 @@ def runner(tmp_path, monkeypatch):
     root.mkdir()
     calls = []
     controls = {"stale": 0, "changed": True, "failure": None, "dirty": False, "verified": [],
-                "closure_reviews": {}, "seed": {}, "staged_captures": None}
+                "closure_reviews": {}, "seed": {}, "staged_captures": None, "evidence_at_prune": []}
 
     def command(arguments, cwd, **kwargs):
         calls.append(arguments)
@@ -40,6 +40,9 @@ def runner(tmp_path, monkeypatch):
                 (worktree / relative).write_text(payload)
         elif arguments[-1] == "prune":
             from schedules.prune import prune
+            controls["evidence_at_prune"] = sorted(
+                str(path.relative_to(root / "tmp/automation"))
+                for path in (root / "tmp/automation").rglob("*") if path.is_file())
             prune(cwd / "data", cwd, dry_run=False)
         elif arguments[-1] == "stage":
             controls["staged_captures"] = sorted(
@@ -103,6 +106,23 @@ def test_obsolete_snapshots_are_pruned_before_the_commit_is_staged(runner):
     assert run()["status"] == "published"
     assert controls["staged_captures"] == [
         f"{current}/reviewed.json", f"{current}/source.html", f"{current}/source.sha256"]
+
+
+def test_closure_capture_is_retained_and_its_bytes_saved_before_prune_runs(runner):
+    """A capture awaiting closure review holds source bytes and no artifact.
+    `open_closure_review_prs` reads those bytes back out of the retained
+    evidence, so the evidence is written before prune may touch the tree."""
+    root, _, controls, run = runner
+    capture = "data/test-pool/2026-09-07-bbbbbbbbbbbb"
+    controls["seed"] = {
+        f"{capture}/source.html": "closure notice",
+        f"{capture}/source.sha256": hashlib.sha256(b"closure notice").hexdigest(),
+    }
+    controls["closure_reviews"] = {"openai": [{"slug": "test-pool", "source_path": f"{capture}/source.html"}]}
+    assert run()["status"] == "published"
+    assert controls["staged_captures"] == [f"{capture}/source.html", f"{capture}/source.sha256"]
+    assert f"build-1/{capture}/source.html" in controls["evidence_at_prune"]
+    assert (root / "tmp/automation/build-1" / capture / "source.html").read_text() == "closure notice"
 
 
 def test_extract_only_never_projects_commits_or_pushes(runner):
