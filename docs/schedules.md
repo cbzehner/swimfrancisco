@@ -236,6 +236,23 @@ change does not:
   nothing to `registry.toml`; persisted band IDs and sequential siblings
   survive the outage. The report says `registry: unchanged`.
 
+- **Persisted view fetch failure.** A persisted `session_grid` ID that no
+  longer fetches gives a blocking `persisted_fetch_error` decision whose
+  report entry reads:
+
+  ```
+  - registry: unchanged (persisted view 29803 failed to fetch; notes kept so the ID is not forgotten)
+  ```
+
+  The registry is left alone on purpose: rewriting the notes would drop
+  the persisted IDs, and a transient DocumentCenter outage would silently
+  forget a sibling grid. Auto-publish stays blocked until the view fetches
+  again. When Rec & Park has genuinely withdrawn the document, the operator
+  retires it by deleting its `id=29803:session_grid:persisted` token (or its
+  `band_session_grid id=29803` token) from that pool's `discover:` line in
+  the `notes` of `registry.toml`, then re-runs
+  `just schedules discover --only <slug>`; the next run no longer looks for it.
+
 `--adopt` of a `session_grid` writes `pdf_url` and sets
 `source_status = published`. It persists remaining sibling `session_grid`
 IDs. `--adopt` of a `split_part` writes `pdf_url` but does not publish.

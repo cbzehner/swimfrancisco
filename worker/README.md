@@ -9,9 +9,8 @@ Cloudflare Worker that fetches water conditions (USGS, NOAA CO-OPS, NDBC, ERDDAP
   returns `503` when `CARTO_BASEMAP_API_KEY` is not bound
 
 Conditions responses use `cache-control: public, max-age=900, s-maxage=3600`
-(15 min in the browser, 1 h at the edge). Conditions CORS allows
-`swimfrancisco.com`, `*.swimfrancisco.pages.dev`, and `localhost`. Map
-configuration is same-origin and uses `cache-control: no-store`.
+(15 min in the browser, 1 h at the edge). The API is same-origin and sends no
+CORS headers. Map configuration uses `cache-control: no-store`.
 
 ## Scheduled trigger
 
