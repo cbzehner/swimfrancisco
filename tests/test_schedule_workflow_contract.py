@@ -1,3 +1,5 @@
+import posixpath
+import re
 from pathlib import Path
 
 WORKFLOW = (Path(__file__).parents[1] / ".github/workflows/schedules-extract.yml").read_text()
@@ -40,11 +42,45 @@ def test_no_spend_ledger_bounds_the_paid_model_calls():
     assert "GOOGLE_API_KEY" not in WORKFLOW
 
 
+def _uploaded_evidence_paths() -> list[str]:
+    """The extract job's upload-artifact search paths, in order."""
+    extract = WORKFLOW.split("\n  review-closures:", 1)[0]
+    block = extract.split("          path: |\n", 1)[1].split("\n          retention-days:", 1)[0]
+    return [line.strip() for line in block.split("\n") if line.strip()]
+
+
+def _artifact_root(paths: list[str]) -> str:
+    """What upload-artifact@v4 strips: the least common ancestor of its search
+    paths. A directory contributes itself, a file its parent."""
+    roots = [path[:-1] if path.endswith("/") else posixpath.dirname(path) for path in paths]
+    return roots[0] if len(roots) == 1 else posixpath.commonpath(roots)
+
+
 def test_evidence_and_live_browser_dependencies():
     assert "install --with-deps webkit chromium" in WORKFLOW
     assert "retention-days: 90" in WORKFLOW
-    assert "tmp/automation/" in WORKFLOW
+    assert _uploaded_evidence_paths() == ["tmp/automation/"]
     assert "path: tmp/" not in WORKFLOW
+
+
+def test_downloaded_evidence_paths_start_at_the_stripped_artifact_root():
+    """upload-artifact@v4 roots the artifact at the least common ancestor of its
+    search paths, so that directory's own name is gone from the download. Every
+    `evidence/...` consumer must name a path relative to it, not through it."""
+    uploaded = _uploaded_evidence_paths()
+    root = _artifact_root(uploaded)
+    assert root == "tmp/automation"
+    assert all(path.rstrip("/") == root or path.startswith(root + "/") for path in uploaded)
+
+    stripped = posixpath.basename(root)
+    consumers = set(re.findall(r"evidence(?:/[A-Za-z0-9_.*-]+)*", WORKFLOW))
+    for reference in consumers:
+        relative = reference[len("evidence"):].lstrip("/")
+        assert relative.split("/", 1)[0] != stripped, (
+            f"{reference} names the {stripped}/ directory that upload-artifact "
+            f"strips when it roots the artifact at {root}"
+        )
+    assert {"evidence", "evidence/result.json", "evidence/closure-prs.json"} <= consumers
 
 
 def test_operator_issue_is_deduplicated_and_requires_live_confirmation():

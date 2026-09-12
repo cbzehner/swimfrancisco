@@ -106,12 +106,12 @@ jobs:
           name: schedule-automation-${{ github.run_id }}-${{ github.run_attempt }}
           path: evidence
       - name: Open deduplicated draft closure reviews
-        run: uv --project schedule-tools run --locked schedules closure-prs --evidence evidence/automation
+        run: uv --project schedule-tools run --locked schedules closure-prs --evidence evidence
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: closure-review-receipts-${{ github.run_id }}-${{ github.run_attempt }}
-          path: evidence/automation/closure-prs.json
+          path: evidence/closure-prs.json
           retention-days: 90
           if-no-files-found: warn
 
@@ -138,7 +138,7 @@ jobs:
           script: |
             const fs = require('node:fs');
             let result = {};
-            try { result = JSON.parse(fs.readFileSync('evidence/automation/result.json', 'utf8')); } catch {}
+            try { result = JSON.parse(fs.readFileSync('evidence/result.json', 'utf8')); } catch {}
             const builds = result.builds || [];
             const last = builds.at(-1) || {};
             const flags = last.decisions?.flagged_set || [];

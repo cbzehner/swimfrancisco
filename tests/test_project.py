@@ -16,12 +16,7 @@ from click.testing import CliRunner
 
 from schedules.cli import cli
 from schedules.project import ProjectError, project
-
-
-def _pin_publish_clock(monkeypatch, today: date) -> None:
-    """Freeze the merge clock: publish prunes windows that expired relative to it,
-    so a test with fixed 2026 fixture dates must say which day it is publishing on."""
-    monkeypatch.setattr("schedules.merge.pacific_today", lambda: today)
+from conftest import pin_publish_clock
 
 
 def _valid_envelope(slug: str, pdf_sha256: str) -> dict:
@@ -58,7 +53,7 @@ def _seed_content_md(content_dir: Path, slug: str) -> Path:
 
 
 def test_project_writes_sessions_to_content_md(tmp_path, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 4, 18))
+    pin_publish_clock(monkeypatch, date(2026, 4, 18))
     data = tmp_path / "data"
     content = tmp_path / "content" / "spots"
     reviewed = _write_reviewed_json(data, "hamilton-pool", "a" * 64, _valid_envelope("hamilton-pool", "a" * 64))
@@ -116,7 +111,7 @@ def test_project_drops_long_expired_windows_but_keeps_the_recent_one(tmp_path, m
 
 
 def test_cli_project_happy_path(tmp_path, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 4, 18))
+    pin_publish_clock(monkeypatch, date(2026, 4, 18))
     data = tmp_path / "data"
     content = tmp_path / "content" / "spots"
     _write_reviewed_json(data, "hamilton-pool", "a" * 64, _valid_envelope("hamilton-pool", "a" * 64))

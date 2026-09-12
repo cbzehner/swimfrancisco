@@ -213,22 +213,42 @@ def open_closure_review_prs(root: Path, evidence: Path, command=run_command) -> 
     return published
 
 
+def _archived_usage(response: Path) -> tuple[int, int] | None:
+    """Token counts from one archived response, or None when it is unusable."""
+    try:
+        body = json.loads(response.read_text())
+    except (OSError, ValueError):
+        return None
+    usage = body.get("usage") if isinstance(body, dict) else None
+    if not isinstance(usage, dict):
+        return None
+    counts = [usage.get("input_tokens"), usage.get("output_tokens")]
+    if any(type(count) is not int or count < 0 for count in counts):
+        return None
+    return counts[0], counts[1]
+
+
 def report_openai_usage(evidence: Path) -> None:
-    """Summarize the run's paid requests from their archived usage, when GitHub asks."""
+    """Summarize the run's paid requests from their archived usage, when GitHub asks.
+
+    This runs in automate's finally, so it reports what the evidence supports and
+    never raises: an unusable archive must not replace the failure that got here.
+    A failed attempt archives its request and no response, so the request tally
+    counts requests and only the answered ones contribute tokens.
+    """
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if not summary:
         return
-    requests = input_tokens = output_tokens = 0
-    for response in sorted(evidence.glob("build-*/api-attempts/*/response.json")):
-        try:
-            usage = (json.loads(response.read_text()) or {}).get("usage") or {}
-        except (OSError, ValueError):
-            continue
-        requests += 1
-        input_tokens += usage.get("input_tokens") or 0
-        output_tokens += usage.get("output_tokens") or 0
-    with Path(summary).open("a") as stream:
-        stream.write(f"OpenAI usage: {input_tokens} in / {output_tokens} out across {requests} requests\n")
+    requests = sum(1 for _ in evidence.glob("build-*/api-attempts/*/request.json"))
+    usages = [_archived_usage(response)
+              for response in sorted(evidence.glob("build-*/api-attempts/*/response.json"))]
+    input_tokens = sum(usage[0] for usage in usages if usage)
+    output_tokens = sum(usage[1] for usage in usages if usage)
+    try:
+        with Path(summary).open("a") as stream:
+            stream.write(f"OpenAI usage: {input_tokens} in / {output_tokens} out across {requests} requests\n")
+    except OSError:
+        pass
 
 
 def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=wait_for_deployment) -> dict:

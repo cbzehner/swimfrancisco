@@ -545,19 +545,42 @@ def test_failed_paid_extraction_still_captures_and_publishes_free_updates(runner
 
 @pytest.mark.parametrize("in_actions", [True, False])
 def test_openai_usage_is_reported_only_into_a_github_step_summary(runner, tmp_path, monkeypatch, in_actions):
+    """A failed attempt archives a request and no response, so the request tally
+    comes from the requests and only the answered ones carry tokens."""
     root, _, controls, run = runner
-    attempt = "a" * 32
+    answered, failed = "a" * 32, "b" * 32
     controls["seed"] = {
-        f"tmp/api-attempts/{attempt}/request.json": '{"model": "gpt-5.5-2026-04-23"}',
-        f"tmp/api-attempts/{attempt}/response.json": json.dumps(
+        f"tmp/api-attempts/{answered}/request.json": '{"model": "gpt-5.5-2026-04-23"}',
+        f"tmp/api-attempts/{answered}/response.json": json.dumps(
             {"usage": {"input_tokens": 1200, "output_tokens": 340}}),
+        f"tmp/api-attempts/{failed}/request.json": '{"model": "gpt-5.5-2026-04-23"}',
     }
     summary = tmp_path / "step-summary.md"
     if in_actions:
         monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
     assert run()["status"] == "published"
-    assert (root / f"tmp/automation/build-1/api-attempts/{attempt}/request.json").is_file()
+    assert (root / f"tmp/automation/build-1/api-attempts/{answered}/request.json").is_file()
+    assert (root / f"tmp/automation/build-1/api-attempts/{failed}/request.json").is_file()
     if in_actions:
-        assert summary.read_text() == "OpenAI usage: 1200 in / 340 out across 1 requests\n"
+        assert summary.read_text() == "OpenAI usage: 1200 in / 340 out across 2 requests\n"
     else:
         assert not summary.exists()
+
+
+def test_malformed_api_evidence_never_replaces_the_run_failure(runner, tmp_path, monkeypatch):
+    """The usage summary runs in automate's finally; it must not raise there."""
+    _, _, controls, run = runner
+    controls["seed"] = {
+        f"tmp/api-attempts/{'a' * 32}/request.json": "{}",
+        f"tmp/api-attempts/{'a' * 32}/response.json": '["not", "an", "object"]',
+        f"tmp/api-attempts/{'b' * 32}/request.json": "{}",
+        f"tmp/api-attempts/{'b' * 32}/response.json": '{"usage": {"input_tokens": "many"}}',
+        f"tmp/api-attempts/{'c' * 32}/request.json": "{}",
+        f"tmp/api-attempts/{'c' * 32}/response.json": "{ truncated",
+    }
+    controls["failure"] = "discover"
+    summary = tmp_path / "step-summary.md"
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
+    with pytest.raises(RuntimeError, match="discover failed"):
+        run()
+    assert summary.read_text() == "OpenAI usage: 0 in / 0 out across 3 requests\n"

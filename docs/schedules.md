@@ -136,16 +136,16 @@ auto-publish still use `just schedules-review`.
 
 1. Run `just schedules-extract --direct` and, when needed, the PDF provider mode.
 2. Read the report for the selected pass under `tmp/extraction-report-<mode>.md`.
-2. Review `git diff content/spots/`.
-3. For any pool with `review_note[...]` lines, inspect the provider
+3. Review `git diff content/spots/`.
+4. For any pool with `review_note[...]` lines, inspect the provider
    output under `data/<slug>/<fetch-date>-<sha12>/`.
-4. Run `just schedules-review` to open the local review site. Select each
+5. Run `just schedules-review` to open the local review site. Select each
    pending pool, compare its source with the structured rows, then choose
    **Save & next pool**. The site validates the result, projects it into
    `content/spots/<slug>.md`, and leaves `reviewed.json` on disk.
-5. Spot-check flagged pools against the source PDF before accepting a
+6. Spot-check flagged pools against the source PDF before accepting a
    content diff.
-6. Run `just release`. If the reviewed schedule fingerprint changed, the
+7. Run `just release`. If the reviewed schedule fingerprint changed, the
    visible bulletin number bumps automatically.
 8. Commit `content/spots/`, `data/bulletin.json`, the registry change if
    the PDF URL moved, and the per-review directory (`source.pdf` /

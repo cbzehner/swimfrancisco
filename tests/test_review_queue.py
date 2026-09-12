@@ -12,12 +12,7 @@ import pytest
 from schedules.models import PoolEntry
 from schedules.publish import PublishRefuse
 from schedules.review_server import ReviewApp, make_handler
-
-
-def _pin_publish_clock(monkeypatch, today: date) -> None:
-    """Freeze the merge clock: publish prunes windows that expired relative to it,
-    so a test with fixed 2026 fixture dates must say which day it is publishing on."""
-    monkeypatch.setattr("schedules.merge.pacific_today", lambda: today)
+from conftest import pin_publish_clock
 
 
 DAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
@@ -260,7 +255,7 @@ def _seed_balboa(data: Path) -> None:
 
 
 def test_save_all_edited_effective_end_lands_in_content(queue_env, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 8, 20))
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     data, content, tmp = queue_env
     _seed_balboa(data)
     _seed_content(content, "balboa-pool")
@@ -335,7 +330,7 @@ def test_per_card_sequential_post_does_not_write_reviewed_json(queue_env, monkey
 
 
 def test_hamilton_unique_grid_save_projects_one_dir(queue_env, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 8, 20))
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     data, content, tmp = queue_env
     review_dir = _write_capture(
         data,
@@ -517,7 +512,7 @@ def test_sequential_queue_lists_every_unpublished_sibling(queue_env, monkeypatch
 def test_sequential_refresh_keeps_latest_per_view_id_and_save_all_writes_new(
     queue_env, monkeypatch
 ):
-    _pin_publish_clock(monkeypatch, date(2026, 8, 20))
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     data, content, tmp = queue_env
     _seed_balboa(data)
     _seed_content(content, "balboa-pool")

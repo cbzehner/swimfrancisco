@@ -28,12 +28,7 @@ from schedules.review import (
     find_review_candidates,
 )
 from schedules.validate import validate
-
-
-def _pin_publish_clock(monkeypatch, today: date) -> None:
-    """Freeze the merge clock: publish prunes windows that expired relative to it,
-    so a test with fixed 2026 fixture dates must say which day it is publishing on."""
-    monkeypatch.setattr("schedules.merge.pacific_today", lambda: today)
+from conftest import pin_publish_clock
 
 
 SHA = "a" * 64
@@ -103,7 +98,7 @@ def test_pomeroy_acceptance_rejects_changed_evidence(tmp_path, monkeypatch, muta
 
 
 def test_pomeroy_failed_current_extraction_cannot_publish_prior_candidate(tmp_path, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 9, 7))
+    pin_publish_clock(monkeypatch, date(2026, 9, 7))
     import schedules.publish as module
     candidate, artifact, path = _pomeroy_candidate(tmp_path, monkeypatch)
     content = tmp_path / "content"
@@ -128,7 +123,7 @@ def test_pomeroy_failed_current_extraction_cannot_publish_prior_candidate(tmp_pa
 
 @pytest.mark.parametrize("current_ready", [False, True])
 def test_pomeroy_superseded_candidate_is_skipped_only_with_current_ready_artifact(tmp_path, monkeypatch, current_ready):
-    _pin_publish_clock(monkeypatch, date(2026, 9, 7))
+    pin_publish_clock(monkeypatch, date(2026, 9, 7))
     import shutil
     import schedules.publish as module
 
@@ -442,7 +437,7 @@ def test_quarantine_refuses(iso):
 
 
 def test_human_finalize_allows_quarantined_sha(iso, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 8, 20))
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     from schedules.review import finalize_draft
 
     envelope = {
@@ -535,7 +530,7 @@ def test_multi_grid_source_pdf_refuses(iso, monkeypatch):
 
 
 def test_publish_candidate_writes_ci_attestation(iso, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 8, 20))
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     candidate = _write_candidate(iso.data)
     _seed_content(iso.content, "hamilton-pool")
     path = publish_candidate(
@@ -587,7 +582,7 @@ def test_reviewed_pdf_refresh_requires_current_success(iso, monkeypatch):
 
 
 def test_second_run_has_no_candidate(iso, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 8, 20))
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     candidate = _write_candidate(iso.data)
     _seed_content(iso.content, "hamilton-pool")
     publish_candidate(
@@ -652,7 +647,7 @@ def _flyer(*, view_id: int = 29808, source: str = "table", text: str | None = No
 
 
 def test_closure_window_from_anchor_text_matches_source_pdf(iso, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 8, 20))
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     source_bytes = (Path(__file__).parents[1] / "data/garfield-pool/2026-08-20-241f3a02fd75/source.pdf").read_bytes()
     flyer_sha = hashlib.sha256(source_bytes).hexdigest()
     flyer_dir = iso.data / "garfield-pool" / f"2026-08-20-{flyer_sha[:12]}"
@@ -852,7 +847,7 @@ def test_carry_hides_candidate_from_publish_pending(iso):
 
 
 def test_publish_pending_all_eligible_unique_grid(iso, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 8, 20))
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     _write_candidate(iso.data)
     _seed_content(iso.content, "hamilton-pool")
     count, report = publish_pending_all(
@@ -922,7 +917,7 @@ def test_unique_grid_refuses_sibling_session_grids(iso, monkeypatch):
 
 
 def test_unique_grid_refuses_not_current_pin(iso, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 8, 20))
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     _write_candidate(
         iso.data,
         source_pdf_url="https://sfrecpark.org/DocumentCenter/View/29799",
@@ -940,7 +935,7 @@ def test_unique_grid_refuses_not_current_pin(iso, monkeypatch):
 
 
 def test_incomplete_source_does_not_write(iso, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 8, 20))
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     _write_candidate(
         iso.data,
         source_verified=False,
@@ -968,7 +963,7 @@ def test_kill_switch_noops(iso, monkeypatch):
 
 
 def test_cli_mixed_published_and_refused(iso, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 8, 20))
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     _write_candidate(iso.data, slug="hamilton-pool")
     _seed_content(iso.content, "hamilton-pool")
     _write_candidate(iso.data, slug="koret-center")
@@ -1062,7 +1057,7 @@ def _sava_sequential_decision() -> dict:
 
 
 def test_sequential_sitting_does_not_refuse_not_current_pin(iso, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 8, 20))
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     _write_candidate(
         iso.data,
         slug="sava-pool",
@@ -1103,7 +1098,7 @@ def test_sequential_sitting_does_not_refuse_not_current_pin(iso, monkeypatch):
 
 
 def test_sequential_incomplete_source_writes_nothing(iso, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 8, 20))
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     _write_candidate(
         iso.data,
         slug="sava-pool",
@@ -1167,7 +1162,7 @@ def test_sequential_incomplete_single_extracted(iso, monkeypatch):
 
 
 def test_sequential_recovery_publishes_remaining_window(iso, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 8, 20))
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     attested = iso.data / "sava-pool" / f"2026-08-19-{SHA[:12]}"
     attested.mkdir(parents=True)
     (attested / "reviewed.json").write_text(
@@ -1240,7 +1235,7 @@ def test_sequential_overlapping_payload_writes_nothing(iso, monkeypatch):
 
 
 def test_band_session_grid_flag_does_not_sequential_publish(iso, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 8, 20))
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     band1 = "https://sfrecpark.org/DocumentCenter/View/29799"
     band2 = "https://sfrecpark.org/DocumentCenter/View/29796"
     _write_candidate(
@@ -1324,7 +1319,7 @@ def test_band_session_grid_flag_does_not_sequential_publish(iso, monkeypatch):
 
 
 def test_dated_sibling_grids_publish_as_sequential(iso, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 8, 20))
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     _write_candidate(
         iso.data,
         slug="sava-pool",
@@ -1393,7 +1388,7 @@ def test_dated_sibling_grids_publish_as_sequential(iso, monkeypatch):
 
 @pytest.mark.parametrize("existing_reviews", [False, True])
 def test_sequential_second_finalize_rolls_back_window_1(iso, monkeypatch, existing_reviews):
-    _pin_publish_clock(monkeypatch, date(2026, 8, 20))
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     _write_candidate(
         iso.data,
         slug="sava-pool",
@@ -1451,7 +1446,7 @@ def test_sequential_second_finalize_rolls_back_window_1(iso, monkeypatch, existi
 
 
 def test_drop_to_zero_does_not_write(iso, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 8, 20))
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     _write_candidate(iso.data, payload=_payload(n=0, basis="swim_schedule"))
     _seed_content(iso.content, "hamilton-pool", sessions=8)
     count, report = publish_pending_all(
@@ -1565,7 +1560,7 @@ def test_pair_bundle_reverifies_every_original(tmp_path, north_beach_pair, membe
 
 
 def test_pair_publish_is_atomic_and_requires_current_discovery(tmp_path, north_beach_pair, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 9, 6))
+    pin_publish_clock(monkeypatch, date(2026, 9, 6))
     from schedules import publish, discover
     from schedules.review import DecisionSet
     entry, components, paths, bundle, candidate = _frozen_pool_bundle(tmp_path, north_beach_pair)
@@ -1625,7 +1620,7 @@ def test_malformed_pair_refuses_before_content_write(tmp_path, north_beach_pair,
 
 
 def test_pair_review_opens_both_originals_and_saves_one_bundle(tmp_path, north_beach_pair, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 9, 6))
+    pin_publish_clock(monkeypatch, date(2026, 9, 6))
     from schedules import review_server
     from schedules.review_server import ReviewApp
     from schedules.review import draft_envelope
@@ -1776,7 +1771,7 @@ def test_jccsf_cannot_silently_become_access_hours(tmp_path, monkeypatch):
 
 @pytest.mark.parametrize("ready", [False, True])
 def test_browser_html_refresh_uses_current_direct_receipt_and_preserves_provenance(tmp_path, monkeypatch, ready):
-    _pin_publish_clock(monkeypatch, date(2026, 9, 7))
+    pin_publish_clock(monkeypatch, date(2026, 9, 7))
     import schedules.publish as module
     from schedules.review import draft_envelope
     candidate, artifact, path, kind, url = _browser_html_candidate(tmp_path, monkeypatch)
@@ -1809,7 +1804,7 @@ def test_browser_html_refresh_uses_current_direct_receipt_and_preserves_provenan
 
 
 def test_access_transition_finalize_requires_independent_evidence(tmp_path, monkeypatch):
-    _pin_publish_clock(monkeypatch, date(2026, 9, 7))
+    pin_publish_clock(monkeypatch, date(2026, 9, 7))
     from schedules.review import draft_envelope
     import schedules.direct_sources as direct
     candidate, artifact, _, _, _ = _browser_html_candidate(tmp_path, monkeypatch)
@@ -1828,7 +1823,7 @@ def test_access_transition_finalize_requires_independent_evidence(tmp_path, monk
 
 @pytest.mark.parametrize('existing_review', [False, True])
 def test_invalid_closure_projection_rolls_back_candidate_and_reports_finalize_error(tmp_path, monkeypatch, existing_review):
-    _pin_publish_clock(monkeypatch, date(2026, 9, 7))
+    pin_publish_clock(monkeypatch, date(2026, 9, 7))
     candidate, artifact, path = _pomeroy_candidate(tmp_path, monkeypatch)
     artifact['payload']['closures'][0].pop('reason_code', None)
     path.write_text(json.dumps(artifact))

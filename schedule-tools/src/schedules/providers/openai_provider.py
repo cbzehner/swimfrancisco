@@ -26,6 +26,8 @@ from ..signals import MAX_PAGE_POINTS, MAX_PDF_BYTES, MAX_PDF_PAGES, PdfSource, 
 API_MODEL = "gpt-5.5-2026-04-23"
 API_ENDPOINT = "https://api.openai.com/v1/responses"
 API_MAX_OUTPUT_TOKENS = 8192
+
+
 def api_transport_schema(schema: dict) -> dict:
     """Require nullable optional fields; enforce dependentRequired after mapping."""
     result = {key: value for key, value in schema.items() if key not in {"dependentRequired", "uniqueItems"}}
