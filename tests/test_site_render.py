@@ -15,6 +15,7 @@ from __future__ import annotations
 import html
 import json
 import hashlib
+import os
 import re
 import shutil
 import subprocess
@@ -37,10 +38,22 @@ TRANSLATABLE_SPOT_EXTRA_FIELDS = {
 TRANSLATABLE_PRICING_FIELDS = {"label", "price", "note", "url"}
 
 
+def _require_zola() -> None:
+    """A missing zola silently drops every assertion in this module.
+
+    Locally that is a reasonable trade; in CI it would hide template
+    regressions behind a green run, so there it is a failure.
+    """
+    if shutil.which("zola") is not None:
+        return
+    if os.environ.get("CI"):
+        pytest.fail("zola is required in CI")
+    pytest.skip("zola binary not available")
+
+
 @pytest.fixture(scope="session")
 def built_site(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    if shutil.which("zola") is None:
-        pytest.skip("zola binary not available")
+    _require_zola()
     out = tmp_path_factory.mktemp("zola-build")
     result = subprocess.run(
         ["zola", "build", "--output-dir", str(out), "--force"],
@@ -57,8 +70,7 @@ def _read(built_site: Path, slug: str) -> str:
 
 
 def test_schedule_attribute_round_trips_source_punctuation(tmp_path):
-    if shutil.which("zola") is None:
-        pytest.skip("zola binary not available")
+    _require_zola()
     (tmp_path / "templates/macros").mkdir(parents=True)
     (tmp_path / "content").mkdir()
     (tmp_path / "config.toml").write_text('base_url = "https://example.test"\n')
@@ -848,21 +860,6 @@ def test_map_page_keeps_board_hidden_and_map_visible(built_site: Path) -> None:
     assert "js/map.js" in html
 
 
-def test_field_notes_are_omitted_from_build(built_site: Path) -> None:
-    assert not (built_site / "field-notes" / "index.html").exists()
-    assert not (built_site / "field-notes" / "source-review-lane" / "index.html").exists()
-    assert not (built_site / "field-notes" / "pool-schedule-pipeline" / "index.html").exists()
-    assert not (built_site / "js" / "field-notes.js").exists()
-    assert not (built_site / "js" / "scrollspy.js").exists()
-
-    html = (built_site / "index.html").read_text()
-    assert "/field-notes/" not in html
-    assert "FIELD NOTES" not in html
-    css = (built_site / "main.css").read_text()
-    assert "field-notes" not in css
-    assert ".fn-" not in css
-
-
 def test_homepage_renders_cost_badges_without_hardcoded_price(built_site: Path) -> None:
     html = (built_site / "index.html").read_text()
     assert 'class="cost-badge is-beach">BEACH</span>' in html
@@ -898,7 +895,6 @@ def test_footer_renders_sources_and_credit(built_site: Path) -> None:
     assert "Pool hours from SF Rec & Park · Open-water from NOAA + NDBC" not in html
     assert "site-footer-sources" not in html
     assert "Made in San Francisco by" in html
-    assert "/field-notes/" not in html
     assert "/how-it-works/" not in html
 
 
@@ -939,14 +935,6 @@ def test_localized_pages_render_hreflang_and_open_graph_locale(built_site: Path)
     assert "<meta content=zh_HK property=og:locale>" in chinese
     assert "<meta content=zh_HK property=og:locale:alternate>" not in chinese
     _assert_hreflang_cluster(chinese, "/")
-
-    finnish = (built_site / "fi" / "spots" / "aquatic-park" / "index.html").read_text()
-    assert "<html lang=fi>" in finnish
-    assert "<meta content=fi_FI property=og:locale>" in finnish
-    assert "<meta content=fi_FI property=og:locale:alternate>" not in finnish
-    assert "Aquatic Park avovesiuinti San Franciscossa" in finnish
-    assert "Suojaisa poukama" in finnish
-    _assert_hreflang_cluster(finnish, "/spots/aquatic-park/")
 
 
 def test_spot_pages_render_valid_place_and_breadcrumb_json_ld(built_site: Path) -> None:
@@ -1017,7 +1005,6 @@ def test_robots_and_sitemap_are_search_console_ready(built_site: Path) -> None:
             f'<xhtml:link rel="alternate" hreflang="x-default" href="https://swimfrancisco.com{canonical_path}" />'
             in sitemap
         )
-    assert "https://swimfrancisco.com/field-notes/" not in sitemap
 
 
 def test_llms_txt_points_agents_at_canonical_swim_pages(built_site: Path) -> None:

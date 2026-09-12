@@ -15,6 +15,7 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "erasableSyntaxOnly": true,
     "verbatimModuleSyntax": false,
     "forceConsistentCasingInFileNames": true,
     "allowImportingTsExtensions": true

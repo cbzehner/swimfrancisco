@@ -21,11 +21,11 @@ def test_artifact_path_includes_provider_and_model(tmp_path):
         "hamilton-pool",
         "2026-04-19",
         "a" * 64,
-        "gemini",
-        "gemini-3.1-flash-lite-preview",
+        "openai",
+        "gpt-5.5-2026-04-23",
         root=tmp_path,
     )
-    assert p.name == "gemini-gemini-3-1-flash-lite-preview.json"
+    assert p.name == "openai-gpt-5-5-2026-04-23.json"
     assert p.parent.name == "2026-04-19-aaaaaaaaaaaa"
 
 
@@ -82,19 +82,6 @@ def test_all_review_dirs_ignores_non_matching_subdirs(tmp_path):
     (slug_dir / "2026-04-19-aaaaaaaaaaaag").mkdir()
     (slug_dir / "scratch.txt").write_text("nope\n")
     assert paths.all_review_dirs("hamilton-pool", root=tmp_path) == [kept]
-
-
-def test_latest_review_dir_returns_newest(tmp_path):
-    slug_dir = tmp_path / "hamilton-pool"
-    slug_dir.mkdir()
-    (slug_dir / "2026-04-01-aaaaaaaaaaaa").mkdir()
-    newest = slug_dir / "2026-04-19-bbbbbbbbbbbb"
-    newest.mkdir()
-    assert paths.latest_review_dir("hamilton-pool", root=tmp_path) == newest
-
-
-def test_latest_review_dir_returns_none_when_empty(tmp_path):
-    assert paths.latest_review_dir("ghost-pool", root=tmp_path) is None
 
 
 def test_latest_reviewed_dir_skips_newer_pending_capture(tmp_path):

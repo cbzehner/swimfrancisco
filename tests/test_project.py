@@ -1,8 +1,20 @@
+"""Projecting a reviewed envelope into a spot's content file.
+
+`project` validates the envelope's payload and hands it to `merge`, so
+the append/replace/prune semantics of the schedules array are asserted
+against `merge` directly in test_merge.py; what lives here is the
+envelope-to-content path and the `schedules project` CLI wrapped around
+it.
+"""
+
 import json
+from datetime import date
 from pathlib import Path
 
 import pytest
+from click.testing import CliRunner
 
+from schedules.cli import cli
 from schedules.project import ProjectError, project
 
 
@@ -54,83 +66,6 @@ def test_project_writes_sessions_to_content_md(tmp_path):
     assert "[[extra.schedules]]" in rendered
 
 
-def test_project_appends_later_schedules_into_coexisting_array(tmp_path):
-    # Pre-array versions of these flows had queue/promote semantics; today
-    # every reviewed schedule simply coexists in [[extra.schedules]] and the
-    # render-time predicate picks the active one. One test pins that model.
-    data = tmp_path / "data"
-    content = tmp_path / "content" / "spots"
-    current = _valid_envelope("hamilton-pool", "a" * 64)
-    current["payload"]["effective_end"] = "2026-06-06"
-    reviewed_current = _write_reviewed_json(data, "hamilton-pool", "a" * 64, current)
-    _seed_content_md(content, "hamilton-pool")
-    project(slug="hamilton-pool", reviewed_json_path=reviewed_current, content_spots_dir=content)
-
-    summer = _valid_envelope("hamilton-pool", "b" * 64)
-    summer["reviewed_at"] = "2026-06-06"
-    summer["payload"]["effective_start"] = "2026-06-09"
-    summer["payload"]["effective_end"] = "2026-08-15"
-    summer["payload"]["sessions"][0]["start"] = "06:30"
-    reviewed_summer = _write_reviewed_json(data, "hamilton-pool", "b" * 64, summer)
-    project(slug="hamilton-pool", reviewed_json_path=reviewed_summer, content_spots_dir=content)
-
-    fall = _valid_envelope("hamilton-pool", "c" * 64)
-    fall["reviewed_at"] = "2026-06-07"
-    fall["payload"]["effective_start"] = "2026-08-18"
-    fall["payload"]["effective_end"] = "2026-11-15"
-    fall["payload"]["sessions"][0]["start"] = "07:30"
-    reviewed_fall = _write_reviewed_json(data, "hamilton-pool", "c" * 64, fall)
-    project(slug="hamilton-pool", reviewed_json_path=reviewed_fall, content_spots_dir=content)
-
-    rendered = (content / "hamilton-pool.md").read_text()
-    assert rendered.count("[[extra.schedules]]") == 3
-    assert "effective_start = \"2026-03-17\"" in rendered
-    assert "effective_start = \"2026-06-09\"" in rendered
-    assert "effective_end = \"2026-08-15\"" in rendered
-    assert "effective_start = \"2026-08-18\"" in rendered
-    assert "start = \"06:30\"" in rendered
-    assert "last_verified_at = \"2026-06-06\"" in rendered
-    assert "[extra.upcoming_schedule]" not in rendered  # obsolete shape gone
-
-
-def test_project_preserves_timed_closures(tmp_path):
-    data = tmp_path / "data"
-    content = tmp_path / "content" / "spots"
-    envelope = _valid_envelope("hamilton-pool", "a" * 64)
-    envelope["payload"]["closures"] = [
-        {
-            "start": "2026-05-21",
-            "end": "2026-05-21",
-            "reason": "Staff training",
-            "reason_code": "staff_training",
-            "start_time": "11:00",
-            "end_time": "15:00",
-        }
-    ]
-    reviewed = _write_reviewed_json(data, "hamilton-pool", "a" * 64, envelope)
-    _seed_content_md(content, "hamilton-pool")
-
-    project(slug="hamilton-pool", reviewed_json_path=reviewed, content_spots_dir=content)
-
-    rendered = (content / "hamilton-pool.md").read_text()
-    assert "reason = \"Staff training\"" in rendered
-    assert "start_time = \"11:00\"" in rendered
-    assert "end_time = \"15:00\"" in rendered
-
-
-def test_project_is_idempotent(tmp_path):
-    data = tmp_path / "data"
-    content = tmp_path / "content" / "spots"
-    reviewed = _write_reviewed_json(data, "hamilton-pool", "a" * 64, _valid_envelope("hamilton-pool", "a" * 64))
-    _seed_content_md(content, "hamilton-pool")
-
-    project(slug="hamilton-pool", reviewed_json_path=reviewed, content_spots_dir=content)
-    first = (content / "hamilton-pool.md").read_text()
-    project(slug="hamilton-pool", reviewed_json_path=reviewed, content_spots_dir=content)
-    second = (content / "hamilton-pool.md").read_text()
-    assert first == second
-
-
 def test_project_rejects_invalid_payload(tmp_path):
     data = tmp_path / "data"
     content = tmp_path / "content" / "spots"
@@ -141,3 +76,59 @@ def test_project_rejects_invalid_payload(tmp_path):
 
     with pytest.raises(ProjectError, match="fewer than 5"):
         project(slug="hamilton-pool", reviewed_json_path=reviewed, content_spots_dir=content)
+
+
+def test_project_drops_long_expired_windows_but_keeps_the_recent_one(tmp_path, monkeypatch):
+    """The publish path, not a separate cleanup, retires stale windows."""
+    monkeypatch.setattr("schedules.merge.pacific_today", lambda: date(2026, 9, 11))
+    data = tmp_path / "data"
+    content = tmp_path / "content" / "spots"
+    _seed_content_md(content, "hamilton-pool")
+    for index, (sha, start, end) in enumerate(
+        [
+            ("a" * 64, "2026-01-05", "2026-07-13"),  # ended 60 days before publish
+            ("b" * 64, "2026-07-14", "2026-08-31"),  # ended 11 days before publish
+            ("c" * 64, "2026-09-01", "2026-12-12"),  # current
+        ]
+    ):
+        envelope = _valid_envelope("hamilton-pool", sha)
+        envelope["payload"]["effective_start"] = start
+        envelope["payload"]["effective_end"] = end
+        envelope["payload"]["sessions"][0]["start"] = f"0{index + 5}:00"
+        reviewed = _write_reviewed_json(data, "hamilton-pool", sha, envelope)
+        project(slug="hamilton-pool", reviewed_json_path=reviewed, content_spots_dir=content)
+
+    rendered = (content / "hamilton-pool.md").read_text()
+    assert rendered.count("[[extra.schedules]]") == 2
+    assert 'effective_start = "2026-01-05"' not in rendered
+    assert 'effective_start = "2026-07-14"' in rendered
+    assert 'effective_start = "2026-09-01"' in rendered
+
+
+# ---- the `schedules project` CLI wrapper ------------------------------------
+
+
+def test_cli_project_happy_path(tmp_path, monkeypatch):
+    data = tmp_path / "data"
+    content = tmp_path / "content" / "spots"
+    _write_reviewed_json(data, "hamilton-pool", "a" * 64, _valid_envelope("hamilton-pool", "a" * 64))
+    _seed_content_md(content, "hamilton-pool")
+
+    monkeypatch.setattr("schedules.cli.DATA_DIR", data)
+    monkeypatch.setattr("schedules.cli.CONTENT_SPOTS_DIR", content)
+
+    result = CliRunner().invoke(cli, ["project", "hamilton-pool"])
+
+    assert result.exit_code == 0, result.output
+    assert "hamilton-pool.md" in result.output
+    assert "[[extra.schedules.sessions]]" in (content / "hamilton-pool.md").read_text()
+
+
+def test_cli_project_missing_slug_exits_nonzero(tmp_path, monkeypatch):
+    monkeypatch.setattr("schedules.cli.DATA_DIR", tmp_path / "data")
+    monkeypatch.setattr("schedules.cli.CONTENT_SPOTS_DIR", tmp_path / "content" / "spots")
+
+    result = CliRunner().invoke(cli, ["project", "ghost-pool"])
+
+    assert result.exit_code != 0
+    assert "no review dir" in result.output

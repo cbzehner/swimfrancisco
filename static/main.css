@@ -94,15 +94,7 @@
   --red:     #b03222; /* 5.10:1 on paper, 4.83:1 on paper-2 — AA over the 4.5:1 floor */
   --red-soft:#f3c9b8;
   --teal:    #14535f; /* 6.97:1 on paper, 7.66:1 on foam */
-  --teal-soft:#c2d6db;
   --ochre:   #d39b2a;
-
-  /* legacy aliases — keep old JS happy if anything reads --fg / --bg */
-  --bg:      var(--paper);
-  --fg:      var(--ink);
-  --fg-dim:  var(--muted);
-  --row-sep: var(--rule);
-  --accent:  var(--red);
 
   --display: "Archivo Black", "Archivo", sans-serif;
   --body:    "Archivo", system-ui, sans-serif;
@@ -163,7 +155,6 @@ h1, h2, h3 {
   margin: 0;
 }
 .num  { font-variant-numeric: tabular-nums; }
-.label,
 .eyebrow {
   font-family: var(--mono);
   font-size: 10.5px;
@@ -171,6 +162,15 @@ h1, h2, h3 {
   text-transform: uppercase;
   color: var(--muted);
   font-weight: 700;
+}
+/* The small-caps mono run used by the access panel, the club cards, and the
+   map popup. Apply it in the markup rather than repeating the four
+   declarations per component. */
+.mono-caps {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 /* ── Site header (templates/index.html .site-header) ───────────────────── */
@@ -356,20 +356,6 @@ h1, h2, h3 {
   text-transform: uppercase;
   transform: rotate(-6deg);
 }
-.bulletin-hero .stamp {
-  display: inline-block;
-  margin-top: 16px;
-  padding: 6px 12px;
-  border: 2.5px solid var(--red);
-  color: var(--red);
-  font-family: var(--display);
-  font-size: 14px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  transform: rotate(-3deg);
-  white-space: nowrap;
-}
-
 /* ── Meta strip (NEW — bay / ocean / tide / updated) ───────────────────── */
 /* CONTRACT: this strip is exactly six <div> children in this order
    (today / time / bay / ocean / tide / updated). The mobile responsive
@@ -815,79 +801,6 @@ table.board tbody tr.is-closed td:nth-child(3) {
   color: var(--muted);
 }
 
-/* Hide table columns the existing CSS hid on phones, but keep desktop. */
-/* NOTE: there is a second @media (max-width: 640px) block much further down
-   (search for "Phone tweaks"). This one owns the table reflow; the other
-   owns chrome, hero, and global phone polish. Add phone rules to whichever
-   block matches the concern. */
-@media (max-width: 640px) {
-  table.board,
-  table.board thead,
-  table.board tbody,
-  table.board tr,
-  table.board td {
-    display: block;
-    width: 100%;
-  }
-  table.board thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-  table.board tr {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    border-left: 4px solid transparent;
-    border-bottom: 2px solid var(--ink);
-    background: var(--paper);
-  }
-  table.board tbody tr:nth-child(odd) { background: rgba(183,54,36,0.065); }
-  table.board tbody tr:hover,
-  table.board tbody tr:focus-within { background: rgba(183,54,36,0.13); }
-  table.board tbody tr:nth-child(odd) td,
-  table.board tbody tr:hover td,
-  table.board tbody tr:focus-within td { background: transparent; }
-  table.board tbody tr.is-open {
-    border-left-color: var(--red);
-  }
-  table.board tbody tr.is-open td:first-child {
-    box-shadow: none;
-  }
-  table.board td {
-    border: 0;
-    padding: 10px 16px;
-    background: transparent;
-  }
-  table.board td:not(:last-child) { border-right: 0; }
-  table.board [data-cell="spot"] {
-    grid-column: 1;
-    grid-row: 1;
-    font-size: 20px;
-  }
-  table.board [data-cell="water"] {
-    grid-column: 2;
-    grid-row: 1;
-    align-self: start;
-    text-align: right;
-  }
-  table.board [data-cell="status"] {
-    grid-column: 1;
-    grid-row: 2;
-    padding-top: 0;
-  }
-  table.board [data-cell="next"] {
-    grid-column: 2;
-    grid-row: 2;
-    padding-top: 0;
-    text-align: right;
-  }
-  table.board [data-cell="locale"] { display: none; }
-}
-
 /* ── Split-flap → bulletin "stamp pulse" — keep the JS contract ───────── */
 @keyframes stamp-pulse {
   0%   { transform: translateY(2px); opacity: 0.5; }
@@ -1269,14 +1182,6 @@ table.weekly-grid tr { display: contents; }
   padding: 10px 0;
   border-bottom: 2px solid var(--ink);
 }
-.pricing-list dt,
-.pricing-list dd,
-.access-notes {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
 .pricing-list dt { color: var(--muted); }
 .pricing-list dd {
   display: flex;
@@ -1343,15 +1248,6 @@ table.weekly-grid tr { display: contents; }
   font-family: var(--display);
   font-size: 16px;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-.club-access,
-.club-links,
-.club-meta,
-.club-card p {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 .club-access {
@@ -1546,12 +1442,6 @@ body.map-page .site-footer {
 .leaflet-container a.leaflet-popup-close-button { color: var(--ink); }
 .leaflet-container a.leaflet-popup-close-button:hover { color: var(--red); }
 
-#map-view .sf-map-popup {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
 #map-view a.sf-map-popup-title {
   display: inline-flex;
   align-items: baseline;
@@ -1645,9 +1535,74 @@ body.map-page .site-footer {
 .site-footer-credit { margin: 0; }
 
 /* ── Phone tweaks ──────────────────────────────────────────────────────── */
-/* See also the earlier @media (max-width: 640px) block that owns the
-   table.board reflow. This one covers chrome, hero, controls, and footer. */
+/* One block owns every ≤640px rule: the table.board reflow first, then
+   chrome, hero, controls, and footer. */
 @media (max-width: 640px) {
+  table.board,
+  table.board thead,
+  table.board tbody,
+  table.board tr,
+  table.board td {
+    display: block;
+    width: 100%;
+  }
+  table.board thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  table.board tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    border-left: 4px solid transparent;
+    border-bottom: 2px solid var(--ink);
+    background: var(--paper);
+  }
+  table.board tbody tr:nth-child(odd) { background: rgba(183,54,36,0.065); }
+  table.board tbody tr:hover,
+  table.board tbody tr:focus-within { background: rgba(183,54,36,0.13); }
+  table.board tbody tr:nth-child(odd) td,
+  table.board tbody tr:hover td,
+  table.board tbody tr:focus-within td { background: transparent; }
+  table.board tbody tr.is-open {
+    border-left-color: var(--red);
+  }
+  table.board tbody tr.is-open td:first-child {
+    box-shadow: none;
+  }
+  table.board td {
+    border: 0;
+    padding: 10px 16px;
+    background: transparent;
+  }
+  table.board td:not(:last-child) { border-right: 0; }
+  table.board [data-cell="spot"] {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  table.board [data-cell="water"] {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+    text-align: right;
+  }
+  table.board [data-cell="status"] {
+    grid-column: 1;
+    grid-row: 2;
+    padding-top: 0;
+  }
+  table.board [data-cell="next"] {
+    grid-column: 2;
+    grid-row: 2;
+    padding-top: 0;
+    text-align: right;
+  }
+  table.board [data-cell="locale"] { display: none; }
+
   body { padding-bottom: calc(58px + env(safe-area-inset-bottom)); }
   body.map-page {
     padding-bottom: 0;
@@ -1793,7 +1748,6 @@ body.map-page .site-footer {
     position: sticky;
     top: 56px;
     z-index: 70;
-    display: grid;
     grid-template-columns: minmax(0, 0.85fr) repeat(2, minmax(0, 1fr));
     grid-template-areas:
       "when sort sort"
@@ -1805,18 +1759,13 @@ body.map-page .site-footer {
     isolation: isolate;
   }
   .when-group {
-    grid-area: when;
     display: block;
   }
   .sort-group {
-    grid-area: sort;
-    display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
   }
   .filters {
-    grid-area: filters;
-    display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 4px;
   }
@@ -1836,13 +1785,11 @@ body.map-page .site-footer {
   }
   .sort-group button {
     width: 100%;
-    justify-content: center;
   }
   .filters button {
     justify-content: center;
     min-width: 0;
     padding: 6px 5px;
-    font-size: 10.5px;
     letter-spacing: 0.035em;
     white-space: nowrap;
   }
@@ -1857,7 +1804,6 @@ body.map-page .site-footer {
     gap: 3px;
   }
   .bulletin-strip {
-    display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .bulletin-strip > div,
@@ -1868,9 +1814,6 @@ body.map-page .site-footer {
     border-right: 1px solid var(--rule);
     padding: 8px;
     font-size: 9.5px;
-  }
-  .bulletin-strip > div:nth-child(n+4) {
-    border-top: 1px solid var(--rule);
   }
   .bulletin-strip .k,
   .bulletin-strip .v {

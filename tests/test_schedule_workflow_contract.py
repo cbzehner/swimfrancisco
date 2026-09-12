@@ -83,3 +83,11 @@ def test_month_specific_approval_is_passed_without_raising_default():
     assert 'SCHEDULES_MONTHLY_BUDGET_OVERRIDES: ${{ vars.SCHEDULES_MONTHLY_BUDGET_OVERRIDES }}' in WORKFLOW
     assert 'SCHEDULES_MONTHLY_BUDGET_USD: ${{ vars.SCHEDULES_MONTHLY_BUDGET_USD }}' in WORKFLOW
     assert 'schedules budget increase' not in WORKFLOW
+
+
+def test_ci_runs_on_the_automation_branches_promotion_waits_for():
+    """`promoteScheduleCommit` pushes to `auto/schedules/<run>-<build>` and then
+    polls for a push-event `ci.yml` run on that branch; without the pattern in
+    the push trigger no run is ever created and promotion times out."""
+    ci = (Path(__file__).parents[1] / ".github/workflows/ci.yml").read_text()
+    assert "auto/schedules/**" in ci.split("\npermissions:", 1)[0]

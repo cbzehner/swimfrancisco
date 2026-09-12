@@ -127,14 +127,18 @@ def extract_direct(entry: PoolEntry, *, cache_root: Path | None = None) -> Direc
     cache_root = fetch_kwargs.get("cache_root") or DATA_DIR
     response = fetch_text(entry.pdf_url)
     observed_on = pacific_today()
-    sha256 = hashlib.sha256(response.content).hexdigest()
     slug_dir = cache_root / entry.slug
     slug_dir.mkdir(parents=True, exist_ok=True)
-    path, from_cache = _cache_bytes(slug_dir, sha256, "html", response.content)
+    capture = _cache_bytes(slug_dir, hashlib.sha256(response.content).hexdigest(), "html", response.content)
+    # The stored capture is the evidence, so extract from its bytes: a reused
+    # capture differs from this response only in bytes that carry no schedule.
+    # One undecodable byte is replaced rather than raised, so a single
+    # malformed page cannot abort the whole direct run.
+    path, sha256, text = capture.path, capture.sha256, capture.content.decode("utf-8", errors="replace")
     fetched = DirectFetchResult(
         path=path,
         sha256=sha256,
-        from_cache=from_cache,
+        from_cache=capture.from_cache,
         response_url=response.response_url,
     )
     source = _source_metadata(entry, fetched, observed_on)
@@ -142,13 +146,13 @@ def extract_direct(entry: PoolEntry, *, cache_root: Path | None = None) -> Direc
     from .html_facts import HtmlClosureReviewRequired
     from .errors import CapturedClosureReviewRequired
     try:
-        payload = extractor(response.text, observed_on=observed_on) if entry.source_kind in {"pomeroy_html", "ucsf_fitness_html", "ucsf_bakar_html"} else extractor(response.text)
+        payload = extractor(text, observed_on=observed_on) if entry.source_kind in {"pomeroy_html", "ucsf_fitness_html", "ucsf_bakar_html"} else extractor(text)
     except HtmlClosureReviewRequired as error:
         raise CapturedClosureReviewRequired(slug=entry.slug, source_path=relative_to_repo(path),
             source_sha256=sha256, issues=error.issues, notices=error.notices) from error
     payload = observation_window(payload, source["observed_on"])
     from .providers.pomeroy import verify_pomeroy
-    coverage = verify_pomeroy(response.text, payload, observed_on) if entry.source_kind == "pomeroy_html" else None
+    coverage = verify_pomeroy(text, payload, observed_on) if entry.source_kind == "pomeroy_html" else None
     if entry.source_kind in {"ucsf_fitness_html", "ucsf_bakar_html", "fitness_sf_html", "city_sports_html", "equinox_html", "bayclub_html"}:
         coverage = {"ok": True, "issues": []}
     return DirectExtraction(
@@ -221,13 +225,13 @@ def _extract_browser_entry(entry: PoolEntry, *, cache_root: Path) -> DirectExtra
     response, capture = read_browser_capture(entry)
     observed = datetime.fromisoformat(capture["captured_at"].replace("Z", "+00:00")).astimezone(
         ZoneInfo("America/Los_Angeles")).date()
-    sha256 = hashlib.sha256(response.content).hexdigest()
     directory = cache_root / entry.slug
     directory.mkdir(parents=True, exist_ok=True)
-    path, from_cache = _cache_bytes(directory, sha256, "html", response.content)
-    fetched = DirectFetchResult(path, sha256, from_cache, response.response_url)
+    stored = _cache_bytes(directory, hashlib.sha256(response.content).hexdigest(), "html", response.content)
+    path, sha256 = stored.path, stored.sha256
+    fetched = DirectFetchResult(path, sha256, stored.from_cache, response.response_url)
     try:
-        inventory = inspect_html_source(entry.slug, response.text)
+        inventory = inspect_html_source(entry.slug, stored.content.decode("utf-8", errors="replace"))
         payload = html_source_payload(inventory, observed)
     except HtmlClosureReviewRequired as error:
         raise CapturedClosureReviewRequired(slug=entry.slug, source_path=relative_to_repo(path),
@@ -264,7 +268,9 @@ def _verify_browser_artifact(artifact: dict, source_path: Path, *, today: date) 
     entry = PoolEntry(slug=slug, official_page_url=url, pdf_url=url, source_kind=kind,
                       capture_method="cloudflare_browser")
     response, receipt = read_browser_capture(entry)
-    if response.content != content or source.get("configuration") != direct_configuration() | {"capture": receipt}:
+    from ..artifacts import canonical_source_sha256
+    if (canonical_source_sha256("html", response.content) != canonical_source_sha256("html", content)
+            or source.get("configuration") != direct_configuration() | {"capture": receipt}):
         raise DirectSourceError("HTML artifact does not match the current capture and configuration")
     observed = datetime.fromisoformat(receipt["captured_at"].replace("Z", "+00:00")).astimezone(
         ZoneInfo("America/Los_Angeles")).date()

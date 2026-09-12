@@ -77,7 +77,7 @@ function createPopupHTML(spot) {
   }
 
   return (
-    `<div class="sf-map-popup">` +
+    `<div class="sf-map-popup mono-caps">` +
     `<a class="sf-map-popup-title" href="${detailsHref}">` +
     `<strong>${name}</strong>` +
     `<span class="sf-map-popup-title-arrow" aria-hidden="true">→</span>` +
@@ -220,6 +220,7 @@ async function init() {
   try {
     await loadBasemap(L, map);
   } catch {
+    capture("map_config_fetch_failed");
     console.error("[swimfrancisco] basemap unavailable");
   }
 }

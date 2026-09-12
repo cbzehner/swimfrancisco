@@ -5,7 +5,6 @@ import html
 import hashlib
 import json
 import mimetypes
-import os
 import re
 import tempfile
 import threading
@@ -21,7 +20,7 @@ from .discover import view_id_from_url
 from .paths import CONTENT_SPOTS_DIR, DATA_DIR, TMP_DIR, all_review_dirs, reviewed_path
 from .direct_sources import DirectSourceError, extract_direct
 from .fetch import FetchError, fetch_pdf
-from .pipeline import DirectRun, ExpandFromDecisions, PdfRun, PinOverride, parse_provider, run_pipeline
+from .pipeline import DirectRun, ExpandFromDecisions, PdfRun, PinOverride, run_pipeline
 from .publish import (
     PublishRefuse,
     _unpublished_kept_windows,
@@ -206,7 +205,7 @@ class ReviewApp:
                 else ExpandFromDecisions(self._decisions())
             )
             command = PdfRun(
-                provider=parse_provider("openai" if entry.pool_sources else os.getenv("SCHEDULES_PROVIDER", "gemini")),
+                provider="openai",
                 slugs=(slug,),
                 force=not bool(entry.pool_sources),
                 urls=urls,

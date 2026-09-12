@@ -14,10 +14,19 @@ const workflowStatuses = new Set(["queued", "in_progress", "completed", "waiting
 const automationBranch = /^auto\/schedules\/\d+-\d+-[12]$/;
 
 export function generatedSchedulePath(path) {
-  return /^(?:data\/bulletin\.json|data\/i18n\/(?:dynamic-labels|en|es|fi|fil|vi|zh-Hant)\.json)$/.test(path)
+  return /^(?:data\/bulletin\.json|data\/i18n\/(?:dynamic-labels|en|es|fil|vi|zh-Hant)\.json)$/.test(path)
     || /^schedule-tools\/src\/schedules\/(?:registry|quarantine)\.toml$/.test(path)
-    || /^content\/spots\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\.(?:es|fi|fil|vi|zh-Hant))?\.md$/.test(path)
-    || /^data\/[a-z0-9]+(?:-[a-z0-9]+)*\/\d{4}-\d{2}-\d{2}-[a-f\d]{12}\/(?:source\.(?:pdf|html|csv|xlsx|sha256)|reviewed\.json|source-bundle\.json|openai-pool-bundle\.json|openai-gpt-5-5-2026-04-23\.json|direct-[a-z0-9-]+\.json)$/.test(path);
+    || /^content\/spots\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\.(?:es|fil|vi|zh-Hant))?\.md$/.test(path)
+    || /^data\/[a-z0-9]+(?:-[a-z0-9]+)*\/\d{4}-\d{2}-\d{2}-[a-f\d]{12}\/(?:source\.(?:pdf|html|csv|xlsx|sha256)|reviewed\.json|source-bundle\.json|openai-[a-z0-9-]+\.json|direct-[a-z0-9-]+\.json)$/.test(path);
+}
+
+// Retention deletes whole snapshot dirs, so the automation commits deletions
+// there and nowhere else: a published page or a generated artifact may only
+// ever be rewritten. Deleting part of a dir is a different act — dropping
+// reviewed.json alone returns a reviewed capture to the pending queue — so a
+// deletion is only accepted once nothing of its dir is left.
+export function prunedSnapshotDir(path) {
+  return /^(data\/[^/]+\/\d{4}-\d{2}-\d{2}-[0-9a-f]{12})\//.exec(path)?.[1] ?? null;
 }
 
 export function stageScheduleChanges({ git = (args) => execFileSync("git", args, { cwd: repoRoot, encoding: "utf8" }) } = {}) {
@@ -28,9 +37,19 @@ export function stageScheduleChanges({ git = (args) => execFileSync("git", args,
   if (paths.some((path) => !generatedSchedulePath(path))) throw new Error("Unexpected generated paths; nothing may be committed");
   if (!paths.length) return { changed: false, paths: [] };
   git(["add", "--", ...paths]);
+  const emptied = new Set();
   for (const path of paths) {
-    if (!/^100644 [a-f\d]{40} 0\t[^\0]+\0$/.test(git(["ls-files", "--stage", "-z", "--", path]))) {
+    if (/^100644 [a-f\d]{40} 0\t[^\0]+\0$/.test(git(["ls-files", "--stage", "-z", "--", path]))) continue;
+    const deleted = git(["diff", "--cached", "--name-status", "-z", "--", path]).split("\0")[0] === "D";
+    const directory = deleted ? prunedSnapshotDir(path) : null;
+    if (!directory) {
       throw new Error("Staging only permits regular generated files, without deletions");
+    }
+    if (!emptied.has(directory)) {
+      if (git(["ls-files", "-z", "--", `${directory}/`])) {
+        throw new Error("Staging only permits the deletion of a whole snapshot dir");
+      }
+      emptied.add(directory);
     }
   }
   const changed = paths.some((path) => {
@@ -237,9 +256,20 @@ export async function promoteScheduleCommit({
   if (git(["status", "--porcelain", "--untracked-files=no"]).trim()) throw new Error("Promotion requires a clean tracked worktree");
   const paths = git(["diff", "--name-only", "-z", base, commit]).split("\0").filter(Boolean);
   if (!paths.length || paths.some((path) => !generatedSchedulePath(path))) throw new Error("Promotion contains unexpected generated paths");
+  const emptied = new Set();
   for (const path of paths) {
     const entry = git(["ls-tree", "-z", commit, "--", path]);
-    if (!/^100644 blob [a-f\d]{40}\t[^\0]+\0$/.test(entry)) throw new Error("Promotion only permits regular generated files, without deletions");
+    if (/^100644 blob [a-f\d]{40}\t[^\0]+\0$/.test(entry)) continue;
+    // Absent from the commit's tree while present in its diff: the path was
+    // deleted, which only a whole pruned snapshot dir may be.
+    const directory = entry === "" ? prunedSnapshotDir(path) : null;
+    if (!directory) throw new Error("Promotion only permits regular generated files, without deletions");
+    if (!emptied.has(directory)) {
+      if (git(["ls-tree", "-r", "-z", commit, "--", `${directory}/`])) {
+        throw new Error("Promotion only permits the deletion of a whole snapshot dir");
+      }
+      emptied.add(directory);
+    }
   }
   const readRemote = (ref) => git(["ls-remote", "--heads", "origin", `refs/heads/${ref}`]).trim().split(/\s/)[0];
   const existing = readRemote(branch);

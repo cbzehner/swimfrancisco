@@ -18,7 +18,6 @@ from .paths import (
     all_review_dirs,
     parse_review_dir_name,
     relative_to_repo,
-    reviewed_path,
 )
 from .project import ProjectError, project
 from .validate import validate
@@ -280,11 +279,11 @@ def _source_path(review_dir: Path) -> Path:
     return review_dir / "source.pdf"
 
 
-_PROVIDER_PREFERENCE = ("openai", "gemini", "anthropic")
+_PROVIDER_PREFERENCE = ("openai",)
 
 
 def _pick_provider_artifact(review_dir: Path) -> Path:
-    """Prefer the production provider, then manual comparators, then newest mtime."""
+    """Prefer the production provider, then the newest artifact by mtime."""
     provider_paths: dict[str, list[Path]] = {}
     for path in _provider_json_paths(review_dir):
         provider = path.name.split("-", 1)[0]
@@ -298,30 +297,6 @@ def _pick_provider_artifact(review_dir: Path) -> Path:
     if not all_paths:
         raise FileNotFoundError(f"No provider artifacts found in {review_dir}")
     return max(all_paths, key=lambda p: p.stat().st_mtime)
-
-
-def seed_draft(
-    *,
-    candidate: ReviewCandidate,
-    data_root: Path = DATA_DIR,
-    today: _date | None = None,
-) -> Path:
-    """Write `reviewed.json` under the per-review dir if it does not exist.
-
-    Returns the target path regardless of whether a write happened. Reviewers
-    who want to discard WIP use `git restore`; to start over from raw
-    extraction, remove the file and re-run `schedules review`.
-    """
-    today = today or pacific_today()
-    target = reviewed_path(candidate.slug, candidate.fetch_date, candidate.source_identity, root=data_root)
-    if target.exists():
-        return target
-
-    envelope = draft_envelope(candidate=candidate, today=today)
-
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps(envelope, indent=2) + "\n")
-    return target
 
 
 def draft_envelope(

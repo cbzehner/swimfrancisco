@@ -1,12 +1,15 @@
 // Swim Francisco open-water live conditions.
 // Fetches /api/conditions from the Worker and injects water temp into
 // matching rows on the board and the detail page panel.
-// Fails silently — missing data leaves the existing em-dash placeholders.
+// The UI fails silently — missing data leaves the existing em-dash
+// placeholders — but every failure is reported as `conditions_fetch_failed`
+// so a dead endpoint is visible in analytics instead of invisible on screen.
 
 import { formatPacificDate, formatPacificTime, pacificWallClockDate } from "./helpers/pacific.mjs";
 import { formatTideSummary } from "./helpers/tide.mjs";
 import { t } from "./helpers/i18n.mjs";
 import { OPEN_STATUSES, PLACEHOLDER } from "./helpers/board.mjs";
+import { capture } from "./helpers/analytics.mjs";
 
 const DEFAULT_ENDPOINT = "/api/conditions";
 // The hero count excludes ACCESS: access hours mean the building is open,
@@ -139,11 +142,18 @@ function applyBulletinStrip(root, conditions) {
 async function fetchConditions(url) {
   try {
     const response = await fetch(url, { headers: { accept: "application/json" } });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      capture("conditions_fetch_failed", { reason: "http_status", status: response.status });
+      return null;
+    }
     const data = await response.json();
-    if (!data || typeof data !== "object") return null;
+    if (!data || typeof data !== "object") {
+      capture("conditions_fetch_failed", { reason: "invalid_payload" });
+      return null;
+    }
     return data;
   } catch (_err) {
+    capture("conditions_fetch_failed", { reason: "network" });
     return null;
   }
 }
@@ -222,14 +232,15 @@ document.addEventListener("sf:horizon-changed", () => applyBoardSummary(document
 document.addEventListener("sf:filters-applied", () => applyBoardSummary(document));
 document.addEventListener("sf:board-refreshed", () => applyBoardSummary(document));
 
+function reportInitFailure() {
+  // Placeholders remain on screen; the event is the only signal.
+  capture("conditions_fetch_failed", { reason: "init" });
+}
+
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
-    init().catch(() => {
-      /* swallow — placeholders remain */
-    });
+    init().catch(reportInitFailure);
   });
 } else {
-  init().catch(() => {
-    /* swallow — placeholders remain */
-  });
+  init().catch(reportInitFailure);
 }

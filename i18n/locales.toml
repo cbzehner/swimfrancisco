@@ -42,12 +42,3 @@ og_locale = "vi_VN"
 is_default = false
 title = "Swim Francisco"
 description = "Nơi có thể bơi ngay bây giờ ở San Francisco"
-
-[[locales]]
-code = "fi"
-label = "FI"
-name = "Suomi"
-og_locale = "fi_FI"
-is_default = false
-title = "Swim Francisco"
-description = "Missä voi uida juuri nyt San Franciscossa"

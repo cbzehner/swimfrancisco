@@ -10,8 +10,8 @@ def _call_save(tmp_path, **overrides):
     kwargs = dict(
         slug="hamilton-pool",
         date="2026-04-19",
-        provider="gemini",
-        model="gemini-3.1-flash-lite-preview",
+        provider="openai",
+        model="gpt-5.5-2026-04-23",
         source_pdf_url="https://example.com/hamilton.pdf",
         pdf_sha256="a" * 64,
         prompt="extract schedule",
@@ -28,7 +28,7 @@ def _call_save(tmp_path, **overrides):
 def test_artifact_bundle_writes_self_describing_provider_json(tmp_path):
     _call_save(tmp_path)
     target = artifact_path(
-        "hamilton-pool", "2026-04-19", "a" * 64, "gemini", "gemini-3.1-flash-lite-preview", root=tmp_path
+        "hamilton-pool", "2026-04-19", "a" * 64, "openai", "gpt-5.5-2026-04-23", root=tmp_path
     )
     assert target.exists()
     data = json.loads(target.read_text())
@@ -53,8 +53,8 @@ def test_skip_if_fresh_returns_true_when_hashes_match(tmp_path):
         slug="hamilton-pool",
         date="2026-04-19",
         pdf_sha256="a" * 64,
-        provider="gemini",
-        model="gemini-3.1-flash-lite-preview",
+        provider="openai",
+        model="gpt-5.5-2026-04-23",
         prompt="P",
         schema={"x": 1},
         root=tmp_path,
@@ -67,8 +67,8 @@ def test_skip_if_fresh_false_on_prompt_change(tmp_path):
         slug="hamilton-pool",
         date="2026-04-19",
         pdf_sha256="a" * 64,
-        provider="gemini",
-        model="gemini-3.1-flash-lite-preview",
+        provider="openai",
+        model="gpt-5.5-2026-04-23",
         prompt="P-NEW",
         schema={"x": 1},
         root=tmp_path,
@@ -80,8 +80,8 @@ def test_skip_if_fresh_false_when_missing(tmp_path):
         slug="hamilton-pool",
         date="2026-04-19",
         pdf_sha256="a" * 64,
-        provider="gemini",
-        model="gemini-3.1-flash-lite-preview",
+        provider="openai",
+        model="gpt-5.5-2026-04-23",
         prompt="P",
         schema={"x": 1},
         root=tmp_path,
@@ -95,7 +95,7 @@ def test_extraction_cache_requires_exact_configuration(tmp_path, changed):
     requested = configuration if changed is None else configuration | {changed: "changed"}
     assert skip_if_fresh(
         slug="hamilton-pool", date="2026-04-19", pdf_sha256="a" * 64,
-        provider="gemini", model="gemini-3.1-flash-lite-preview", prompt="P",
+        provider="openai", model="gpt-5.5-2026-04-23", prompt="P",
         schema={"x": 1}, root=tmp_path, configuration=requested,
     ) is (changed is None)
 

@@ -13,10 +13,12 @@ from pathlib import Path
 from typing import Literal
 from urllib.parse import unquote, urlparse
 
+import click
 import httpx
 
 from ._time import pacific_today
 from .direct_sources.http import BOT_USER_AGENT
+from .fetch import MAX_PDF_BYTES, FetchError, get_with_retries
 from .models import PoolEntry
 from .paths import REGISTRY_PATH, TMP_DIR
 from .registry import load_registry
@@ -34,6 +36,8 @@ RollAction = Literal["adopt", "unchanged", "flag"]
 
 DOCUMENT_CENTER_BASE = "https://sfrecpark.org/DocumentCenter/View"
 VIEW_ID_RE = re.compile(r"/DocumentCenter/View/(\d+)", re.IGNORECASE)
+# Reasons that mean "this run learned too little to rewrite registry.toml".
+REGISTRY_PRESERVING_REASONS = frozenset({"fetch_error", "persisted_fetch_error"})
 BAND_WINDOW = 40
 BAND_DELAY_SECONDS = 0.2
 PAGE_TIMEOUT_SECONDS = 30.0
@@ -109,6 +113,9 @@ class DiscoverDecision:
     candidates: tuple[ClassifiedDocument, ...]
     extra_candidates: tuple[ClassifiedDocument, ...]
     blocking: bool
+    # Persisted view IDs this run could not fetch. Their presence is why the
+    # registry is left alone: rewriting the notes would forget them.
+    unfetched_persisted: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -388,9 +395,11 @@ def _sequential_roll(
     if any(item.window_start is None or item.window_end is None for item in kept):
         return decide("flag", "windows_unparsed", kind="session_grid", blocking=True)
     for index, left in enumerate(kept):
-        assert left.window_start is not None and left.window_end is not None
+        if left.window_start is None or left.window_end is None:
+            raise ValueError("sequential roll needs parsed windows")
         for right in kept[index + 1 :]:
-            assert right.window_start is not None and right.window_end is not None
+            if right.window_start is None or right.window_end is None:
+                raise ValueError("sequential roll needs parsed windows")
             if not windows_disjoint(
                 (left.window_start, left.window_end),
                 (right.window_start, right.window_end),
@@ -487,20 +496,10 @@ def persisted_band_ids(notes: str | None) -> frozenset[int]:
     return frozenset(ids)
 
 
-def rewrite_registry_pdf_url(path: Path, slug: str, url: str) -> None:
-    text = path.read_text()
-    start, end = _pool_block_span(text, slug)
-    block = text[start:end]
-    updated = _replace_quoted_field(block, "pdf_url", url)
-    if updated == block:
-        return
-    path.write_text(text[:start] + updated + text[end:])
-
-
 def apply_discover_decision(path: Path, decision: DiscoverDecision) -> None:
     # A page that failed to fetch tells us nothing about the pool. Never let
     # it overwrite persisted band IDs, sequential siblings, or extras.
-    if decision.reason == "fetch_error":
+    if decision.reason in REGISTRY_PRESERVING_REASONS:
         return
     text = path.read_text()
     start, end = _pool_block_span(text, slug=decision.slug)
@@ -556,6 +555,9 @@ def discover_all(
     headers = {
         "User-Agent": BOT_USER_AGENT,
         "Accept": "text/html,application/xhtml+xml,application/pdf;q=0.9,*/*;q=0.8",
+        # Bounded PDF reads measure and return raw bytes, so the body must
+        # arrive undecoded.
+        "Accept-Encoding": "identity",
     }
     table_links: dict[str, list[DocumentLink]] = {}
     fetch_errors: set[str] = set()
@@ -566,8 +568,9 @@ def discover_all(
     ) as client:
         for entry in selected:
             try:
-                page = _get_with_retries(client, entry.official_page_url, sleep=sleep)
-                page.raise_for_status()
+                page = get_with_retries(
+                    client, entry.official_page_url, sleep=sleep, retries=PAGE_RETRIES
+                )
                 table_links[entry.slug] = discover_facility_documents(page.text)
             except Exception:  # noqa: BLE001
                 fetch_errors.add(entry.slug)
@@ -584,13 +587,13 @@ def discover_all(
             current_ids.add(adopt[1])
         immediate_ids = sorted(table_ids | current_ids)
         for view_id in immediate_ids:
-            views[view_id] = _fetch_view(client, view_id)
+            views[view_id] = _fetch_view(client, view_id, sleep=sleep)
 
         remaining = sorted(view_id for view_id in probe if view_id not in views)
         for index, view_id in enumerate(remaining):
             if index and delay:
                 sleep(delay)
-            views[view_id] = _fetch_view(client, view_id)
+            views[view_id] = _fetch_view(client, view_id, sleep=sleep)
 
     dropped_persisted = {
         view_id
@@ -684,7 +687,9 @@ def discover_all(
                 entry, classified, pin_window=_pin_window(entry, views)
             )
         if adopt is not None and adopt[0] == entry.slug:
-            decision = _operator_adopt_decision(entry, classified, views, adopt[1])
+            decision = _operator_adopt_decision(
+                entry, classified, views, adopt[1], reason=decision.reason
+            )
         decision = _with_persisted_survivors(
             decision,
             persisted_by_slug.get(entry.slug, frozenset()),
@@ -695,7 +700,7 @@ def discover_all(
 
     if not dry_run:
         for decision in decisions:
-            apply_discover_decision(registry_path, decision)  # no-op on fetch_error
+            apply_discover_decision(registry_path, decision)  # no-op when a fetch failed
 
     report_dir.mkdir(parents=True, exist_ok=True)
     report_path = report_dir / "discovery-report.md"
@@ -730,20 +735,29 @@ def _operator_adopt_decision(
     classified: list[ClassifiedDocument],
     views: dict[int, _ViewFetch],
     view_id: int,
+    *,
+    reason: str,
 ) -> DiscoverDecision:
+    # Adopt asserts "this PDF is the pool's current schedule". A failed page or
+    # PDF fetch proves nothing, so refuse instead of relabelling the failure.
+    fetched = views.get(view_id)
+    pdf_bytes = fetched.content if fetched is not None and fetched.is_pdf else None
+    if pdf_bytes is None or reason == "fetch_error":
+        raise click.ClickException(
+            f"{entry.slug}: cannot adopt a source that failed to fetch"
+        )
     match = next((item for item in classified if item.link.view_id == view_id), None)
     if match is None:
-        fetched = views.get(view_id)
         link = DocumentLink(
             view_id=view_id,
             href=absolute_view_url(view_id),
-            anchor_text=(fetched.filename if fetched else None) or "",
+            anchor_text=fetched.filename or "",
         )
         match = classify_pdf(
             link,
             pool_slug=entry.slug,
-            pdf_bytes=fetched.content if fetched and fetched.is_pdf else None,
-            filename=fetched.filename if fetched else None,
+            pdf_bytes=pdf_bytes,
+            filename=fetched.filename,
             source="persisted",
         )
         classified = [*classified, match]
@@ -777,28 +791,38 @@ def _with_persisted_survivors(
     adopted_id = (
         view_id_from_url(decision.new_url or "") if decision.action == "adopt" else None
     )
+    unfetched: list[int] = []
     for view_id in sorted(previous):
         if view_id in dropped or view_id in current_ids or view_id == adopted_id:
             continue
         fetched = views.get(view_id)
-        filename = fetched.filename if fetched else None
-        page_text = (
-            _first_page_text(fetched.content)
-            if fetched is not None and fetched.is_pdf
-            else ""
-        )
+        if fetched is None or not fetched.is_pdf:
+            # No bytes, no claim: asserting an unfetched ID is a session_grid
+            # hides it from expiry and makes the pipeline re-fetch it forever.
+            unfetched.append(view_id)
+            continue
         survivors.append(
-            _classified_with_window(
-                link=DocumentLink(
+            classify_pdf(
+                DocumentLink(
                     view_id=view_id,
                     href=absolute_view_url(view_id),
-                    anchor_text=filename or "",
+                    anchor_text=fetched.filename or "",
                 ),
-                kind="session_grid",
-                filename=filename,
+                pool_slug=decision.slug,
+                pdf_bytes=fetched.content,
+                filename=fetched.filename,
                 source="persisted",
-                page_text=page_text,
             )
+        )
+    if unfetched:
+        # Leave registry.toml alone so the persisted IDs we could not fetch
+        # survive in the notes rather than being silently forgotten.
+        return replace(
+            decision,
+            candidates=decision.candidates + tuple(survivors),
+            reason="persisted_fetch_error",
+            blocking=True,
+            unfetched_persisted=tuple(unfetched),
         )
     if not survivors:
         return decision
@@ -942,31 +966,21 @@ def _max_pdf_view_id(entries: list[PoolEntry]) -> int | None:
     return max(ids) if ids else None
 
 
-def _get_with_retries(
-    client: httpx.Client,
-    url: str,
-    *,
-    sleep: Callable[[float], None],
-    retries: int = PAGE_RETRIES,
-) -> httpx.Response:
-    last_error: Exception | None = None
-    for attempt in range(retries + 1):
-        try:
-            return client.get(url)
-        except httpx.HTTPError as exc:
-            last_error = exc
-            if attempt >= retries:
-                break
-            sleep(0.25 * (attempt + 1))
-    assert last_error is not None
-    raise last_error
-
-
-def _fetch_view(client: httpx.Client, view_id: int) -> _ViewFetch:
+def _fetch_view(
+    client: httpx.Client, view_id: int, *, sleep: Callable[[float], None]
+) -> _ViewFetch:
     url = absolute_view_url(view_id)
     try:
-        response = client.get(url)
-    except httpx.HTTPError:
+        response = get_with_retries(
+            client, url, sleep=sleep, retries=PAGE_RETRIES, max_bytes=MAX_PDF_BYTES
+        )
+        content = response.content or b""
+    except httpx.HTTPStatusError as exc:
+        # A 404 still tells discover the document is gone; the body does not.
+        response, content = exc.response, b""
+    except (httpx.HTTPError, FetchError):
+        # Transport failure, oversized body, unreadable encoding: the document
+        # is unusable, but one bad DocumentCenter ID must not end the run.
         return _ViewFetch(
             view_id=view_id,
             status_code=0,
@@ -977,7 +991,6 @@ def _fetch_view(client: httpx.Client, view_id: int) -> _ViewFetch:
         )
     content_type = response.headers.get("content-type", "")
     filename = _filename_from_headers(response.headers)
-    content = response.content or b""
     is_pdf = response.status_code == 200 and (
         "pdf" in content_type.lower() or content.lstrip().startswith(b"%PDF")
     )
@@ -1273,7 +1286,7 @@ def _ensure_source_status(block: str, status: str, *, insert: bool) -> str:
     if match:
         if match.group(1) == status:
             return block
-        if status == "published" or insert or match.group(1) != status:
+        if status == "published" or insert:
             return pattern.sub(f'source_status = "{status}"', block, count=1)
         return block
     if not insert:
@@ -1404,6 +1417,7 @@ def _decision_to_json(decision: DiscoverDecision) -> dict:
         "kind": decision.kind,
         "reason": decision.reason,
         "blocking": decision.blocking,
+        "unfetched_persisted": list(decision.unfetched_persisted),
         "candidates": [_classified_to_json(item) for item in decision.candidates],
         "extra_candidates": [
             _classified_to_json(item) for item in decision.extra_candidates
@@ -1512,6 +1526,12 @@ def _render_report(
         lines.append(f"- blocking: {decision.blocking}")
         if decision.reason == "fetch_error":
             lines.append("- registry: unchanged (facility page failed; prior notes kept)")
+        elif decision.reason == "persisted_fetch_error":
+            failed = ", ".join(str(view_id) for view_id in decision.unfetched_persisted)
+            lines.append(
+                f"- registry: unchanged (persisted view {failed} failed to fetch; "
+                "notes kept so the ID is not forgotten)"
+            )
         if decision.candidates:
             listed = ", ".join(
                 f"{item.link.view_id}:{item.kind}:{item.source}"

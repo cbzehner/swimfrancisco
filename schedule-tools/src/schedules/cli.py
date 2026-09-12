@@ -5,13 +5,11 @@ import math
 import os
 import re
 import subprocess
-import zipfile
 from pathlib import Path
-from datetime import datetime, timezone
 import click
 
+from ._time import pacific_today
 from .discover import DiscoverError, discover_all, rec_park_entries
-from .benchmark import archive_benchmark, benchmark_models, check_model, prepare_benchmark, replay_benchmark, run_benchmark, run_api_benchmark
 from .models import PoolResult
 from .paths import (
     CONTENT_SPOTS_DIR,
@@ -22,9 +20,8 @@ from .paths import (
 )
 from .publish import publish_pending_all
 from .registry import load_registry
-from .eval import collect_pool_evals, load_benchmark_reference, render_report, score_benchmark_run, write_report
+from .eval import collect_pool_evals, render_report, write_report
 from .pipeline import (
-    BakeoffRun,
     DirectRun,
     DiscoverAndExpand,
     ExpandFromDecisions,
@@ -41,10 +38,6 @@ from .review_server import ReviewApp, serve_review_app
 from .providers.openai_provider import MonthlySpendBudget, SpendBudget
 
 
-def _default_provider() -> str:
-    return os.getenv("SCHEDULES_PROVIDER", "openai")
-
-
 @click.group()
 def cli() -> None:
     """Pool schedule extraction tools."""
@@ -55,17 +48,60 @@ def budget_command() -> None:
     """Durable API accounting; never grants permission to enable automation."""
 
 
-def _monthly_budget(month: str | None = None) -> MonthlySpendBudget:
-    month = month or datetime.now(timezone.utc).strftime("%Y-%m")
+def _budget_month() -> str:
+    """The Pacific calendar month; every other date in this system is Pacific."""
+    return pacific_today().strftime("%Y-%m")
+
+
+class BudgetConfigError(click.ClickException):
+    """A malformed budget variable. Never downgraded to a free-only run."""
+
+
+def _approved_default_usd() -> float:
+    """Unset or empty means "no approval"; anything else must parse."""
+    raw = os.environ.get("SCHEDULES_MONTHLY_BUDGET_USD", "").strip()
+    if not raw:
+        return 0.0
     try:
-        default = float(os.environ.get("SCHEDULES_MONTHLY_BUDGET_USD", "0"))
-        overrides = json.loads(os.environ.get("SCHEDULES_MONTHLY_BUDGET_OVERRIDES") or "{}")
-        if not isinstance(overrides, dict) or any(
-            not re.fullmatch(r"20\d{2}-(?:0[1-9]|1[0-2])", key)
-            or type(value) not in (int, float) or not math.isfinite(value) or value < default
-            for key, value in overrides.items()
-        ):
-            raise ValueError("Monthly overrides must map calendar months to approved caps at least equal to the default")
+        default = float(raw)
+    except ValueError as error:
+        raise BudgetConfigError(
+            f"SCHEDULES_MONTHLY_BUDGET_USD is not a number: {raw!r}"
+        ) from error
+    if not math.isfinite(default) or default < 0:
+        raise BudgetConfigError(
+            f"SCHEDULES_MONTHLY_BUDGET_USD must be a finite, non-negative cap: {raw!r}"
+        )
+    return default
+
+
+def _approved_overrides(default: float) -> dict[str, float]:
+    raw = (os.environ.get("SCHEDULES_MONTHLY_BUDGET_OVERRIDES") or "").strip()
+    if not raw:
+        return {}
+    try:
+        overrides = json.loads(raw)
+    except ValueError as error:
+        raise BudgetConfigError(
+            f"SCHEDULES_MONTHLY_BUDGET_OVERRIDES is not valid JSON: {error}"
+        ) from error
+    if not isinstance(overrides, dict) or any(
+        not re.fullmatch(r"20\d{2}-(?:0[1-9]|1[0-2])", key)
+        or type(value) not in (int, float) or not math.isfinite(value) or value < default
+        for key, value in overrides.items()
+    ):
+        raise BudgetConfigError(
+            "SCHEDULES_MONTHLY_BUDGET_OVERRIDES must map calendar months to approved "
+            "caps at least equal to the default"
+        )
+    return overrides
+
+
+def _monthly_budget(month: str | None = None) -> MonthlySpendBudget:
+    month = month or _budget_month()
+    default = _approved_default_usd()
+    overrides = _approved_overrides(default)
+    try:
         MonthlySpendBudget(REPO_ROOT, default)
         return MonthlySpendBudget(REPO_ROOT, overrides.get(month, default))
     except (ValueError, TypeError) as error:
@@ -78,7 +114,7 @@ def _monthly_budget(month: str | None = None) -> MonthlySpendBudget:
 @click.option("--to-usd", type=float, required=True)
 def budget_increase_command(month: str, from_usd: float, to_usd: float) -> None:
     """Apply an explicitly approved increase without changing runs or history."""
-    if month != datetime.now(timezone.utc).strftime("%Y-%m"):
+    if month != _budget_month():
         raise click.ClickException("Only the current calendar month's cap can be increased")
     budget = _monthly_budget(month)
     expected = MonthlySpendBudget(REPO_ROOT, from_usd).limit
@@ -109,11 +145,16 @@ def budget_reserve_command(run_id: str, output: Path) -> None:
         raise click.ClickException("Budget output directory must be empty")
     if not re.fullmatch(r"\d+-\d+", run_id):
         raise click.ClickException("Budget reservation requires an Actions run/attempt ID")
-    month = datetime.now(timezone.utc).strftime("%Y-%m")
+    month = _budget_month()
     try:
+        # Configuration first: a missing key is a reason to run free-only, not
+        # a reason to stop checking what the operator approved.
+        budget = _monthly_budget(month)
         if not os.environ.get("OPENAI_API_KEY", "").strip():
             raise ValueError("Paid extraction credentials unavailable")
-        receipt = _monthly_budget(month).reserve(month, run_id) | {"status": "reserved"}
+        receipt = budget.reserve(month, run_id) | {"status": "reserved"}
+    except BudgetConfigError:
+        raise
     except (ValueError, RuntimeError, OSError, subprocess.TimeoutExpired, click.ClickException):
         receipt = {"month": month, "run_id": run_id, "limit_microusd": 0,
                    "status": "unavailable", "reason": "Paid extraction unavailable; free updates continue"}
@@ -176,8 +217,8 @@ def _summary_line(results: list[PoolResult]) -> str:
 )
 @click.option(
     "--provider",
-    type=click.Choice(["openai", "anthropic", "gemini"]),
-    help="Process only configured sfrecpark_pdf sources with this provider.",
+    type=click.Choice(["openai"]),
+    help="Process configured sfrecpark_pdf sources with the OpenAI extractor.",
 )
 @click.option("--force", is_flag=True, help="Re-fetch PDFs and bypass the unchanged shortcut.")
 @click.option(
@@ -382,6 +423,16 @@ def automate_command(mode: str, run_id: str) -> None:
         raise click.ClickException(f"Automation stopped ({type(error).__name__}); inspect its evidence") from error
 
 
+@cli.command("prune")
+@click.option("--dry-run", is_flag=True, help="List the obsolete snapshot dirs without deleting them.")
+def prune_command(dry_run: bool) -> None:
+    """Delete snapshot dirs no review, backtest, test, or document still needs."""
+    from .paths import relative_to_repo
+    from .prune import prune
+    for snapshot in prune(DATA_DIR, REPO_ROOT, dry_run=dry_run):
+        click.echo(relative_to_repo(snapshot))
+
+
 @cli.command("closure-prs")
 @click.option("--evidence", type=click.Path(path_type=Path, exists=True), required=True)
 def closure_prs_command(evidence: Path) -> None:
@@ -419,163 +470,3 @@ def eval_command(stdout: bool, all_dirs: bool) -> None:
         return
     path = write_report(evals)
     click.echo(f"Wrote {path}")
-
-
-@cli.command("benchmark")
-@click.argument("attempt", type=click.Path(exists=True, dir_okay=False, path_type=Path))
-@click.option("--reference", "reference_id", required=True, help="Checked development document ID.")
-def benchmark_command(attempt: Path, reference_id: str) -> None:
-    """Score one recorded attempt against checked PDF facts. No API calls or writes."""
-    try:
-        reference = load_benchmark_reference(
-            REPO_ROOT / "tests/fixtures/schedule-benchmark.json", reference_id, repo_root=REPO_ROOT,
-        )
-        run = json.loads(attempt.read_text())
-        if not isinstance(run, dict):
-            raise ValueError("Benchmark attempt must be an object.")
-        result = score_benchmark_run(reference, run)
-    except (OSError, ValueError, KeyError) as exc:
-        raise click.ClickException(str(exc)) from exc
-    click.echo(json.dumps(result, indent=2))
-
-
-@cli.command("benchmark-prepare")
-@click.option("--poppler", type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--comparison", default="source-inventory", type=click.Choice(["source-inventory", "source-holdout", "development", "finalists", "literal-pool-labels"]))
-def benchmark_prepare_command(poppler: Path | None, comparison: str) -> None:
-    """Prepare label-free comparison inputs in a fresh temporary directory. No model calls."""
-    try:
-        root = prepare_benchmark(REPO_ROOT / "tests/fixtures/schedule-benchmark.json", REPO_ROOT, poppler, comparison)
-    except (OSError, ValueError) as exc:
-        raise click.ClickException(str(exc)) from exc
-    click.echo(str(root))
-
-
-@cli.command("benchmark-check")
-@click.option("--candidate", required=True, help="Exact candidate ID from the benchmark manifest.")
-@click.option("--output", required=True, type=click.Path(file_okay=False, path_type=Path))
-@click.option("--pi-extension", type=click.Path(exists=True, dir_okay=False, path_type=Path))
-@click.option("--timeout", default=60, type=click.IntRange(1, 180))
-def benchmark_check_command(candidate: str, output: Path, pi_extension: Path | None, timeout: int) -> None:
-    """Make ONE CLI inference call to check text/JSON readiness. Uses account quota."""
-    try:
-        models = benchmark_models(REPO_ROOT / "tests/fixtures/schedule-benchmark.json")
-        matches = [model for model in models if model["id"] == candidate]
-        if not matches:
-            raise ValueError("Unknown benchmark candidate.")
-        result = check_model(matches[0], output.resolve(), pi_extension, timeout)
-    except (OSError, ValueError) as exc:
-        raise click.ClickException(str(exc)) from exc
-    click.echo(json.dumps(result, indent=2))
-    if result["status"] != "text_ready":
-        raise click.exceptions.Exit(1)
-
-
-@cli.command("benchmark-run")
-@click.option("--inputs", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--output", required=True, type=click.Path(file_okay=False, path_type=Path))
-@click.option("--pi-extension", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path))
-@click.option("--blocked-candidate", multiple=True, help="Record an authentication-blocked candidate without calling it.")
-@click.option("--timeout", default=180, type=click.IntRange(1, 300))
-def benchmark_run_command(inputs: Path, output: Path, pi_extension: Path,
-                          blocked_candidate: tuple[str, ...], timeout: int) -> None:
-    """Run and score the frozen development matrix. Uses CLI account quota; never publishes."""
-    try:
-        results = run_benchmark(inputs.resolve(), output.resolve(),
-                                REPO_ROOT / "tests/fixtures/schedule-benchmark.json", REPO_ROOT,
-                                pi_extension.resolve(), blocked_candidate, timeout, progress=click.echo)
-    except (OSError, ValueError) as exc:
-        raise click.ClickException(str(exc)) from exc
-    click.echo(f"Recorded {len(results)} cells. Report: {output / 'report.md'}")
-
-
-@cli.command("benchmark-api-run")
-@click.option("--inputs", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--output", required=True, type=click.Path(file_okay=False, path_type=Path))
-@click.option("--budget-usd", required=True, type=click.FloatRange(min=0, max=10, min_open=True))
-@click.option("--timeout", default=240, type=click.IntRange(1, 300))
-def benchmark_api_run_command(inputs: Path, output: Path, budget_usd: float, timeout: int) -> None:
-    """Run the frozen API comparison with a maximum reservation before each call. Never publishes."""
-    try:
-        results = run_api_benchmark(inputs.resolve(), output.resolve(),
-                                    REPO_ROOT / "tests/fixtures/schedule-benchmark.json", REPO_ROOT,
-                                    budget_usd, timeout, progress=click.echo)
-    except (OSError, ValueError) as exc:
-        raise click.ClickException(str(exc)) from exc
-    click.echo(f"Recorded {len(results)} cells. Report: {output / 'report.md'}")
-
-
-@cli.command("benchmark-archive")
-@click.option("--inputs", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--results", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option("--output", required=True, type=click.Path(dir_okay=False, path_type=Path))
-def benchmark_archive_command(inputs: Path, results: Path, output: Path) -> None:
-    """Preserve frozen inputs, final responses and scores in a new ZIP. No model calls."""
-    try:
-        archive_benchmark(inputs, results, output, REPO_ROOT / "tests/fixtures/schedule-benchmark.json", REPO_ROOT)
-    except (OSError, ValueError, KeyError) as exc:
-        raise click.ClickException(str(exc)) from exc
-    click.echo(f"Verified and archived benchmark: {output}")
-
-
-@cli.command("benchmark-replay")
-@click.argument("archive", type=click.Path(exists=True, dir_okay=False, path_type=Path))
-@click.option("--output", required=True, type=click.Path(file_okay=False, path_type=Path))
-def benchmark_replay_command(archive: Path, output: Path) -> None:
-    """Verify checksums and reproduce all recorded scores offline. Never calls models."""
-    try:
-        report = replay_benchmark(archive, output, REPO_ROOT)
-    except (OSError, ValueError, KeyError, zipfile.BadZipFile) as exc:
-        raise click.ClickException(str(exc)) from exc
-    click.echo(f"Verified all archived cells and reproduced both reports: {report}")
-
-
-@cli.group()
-def debug() -> None:
-    """Research tools that never mutate content or state."""
-
-
-@debug.command("bakeoff")
-@click.option(
-    "--only",
-    required=True,
-    help="Comma-separated pool slugs to process.",
-)
-@click.option(
-    "--provider",
-    type=click.Choice(["openai", "anthropic", "gemini"]),
-    default=_default_provider(),
-    show_default="env SCHEDULES_PROVIDER or gemini",
-)
-@click.option(
-    "--compare-with",
-    type=click.Choice(["openai", "anthropic", "gemini"]),
-    required=True,
-    help="Second provider to run against the same PDFs and diff.",
-)
-@click.option("--force", is_flag=True, help="Re-fetch PDFs and bypass the unchanged shortcut.")
-def debug_bakeoff(
-    only: str,
-    provider: str,
-    compare_with: str,
-    force: bool,
-) -> None:
-    """Run two providers on the same PDFs and surface disagreements.
-
-    Writes provider artifact bundles under data/, never content/spots."""
-
-    if compare_with == provider:
-        raise click.ClickException("--compare-with must differ from --provider.")
-
-    slugs = _parse_slugs(only)
-    exit_code, report_path, results = run_pipeline(
-        BakeoffRun(
-            provider=parse_provider(provider),
-            compare_with=parse_provider(compare_with),
-            slugs=tuple(slugs) if slugs is not None else None,
-            force=force,
-        )
-    )
-    click.echo(f"Wrote {report_path}")
-    click.echo(_summary_line(results))
-    raise SystemExit(exit_code)

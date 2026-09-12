@@ -32,9 +32,6 @@ test("formatLocalizedISODate uses active page language date order", () => {
 
     globalThis.window = { SWIMFRANCISCO_LANG: "vi", SWIMFRANCISCO_I18N: { month_jun: "THG 6" } };
     assert.equal(formatLocalizedISODate("2026-06-07"), "7/6/2026");
-
-    globalThis.window = { SWIMFRANCISCO_LANG: "fi", SWIMFRANCISCO_I18N: { month_jun: "KESÄ" } };
-    assert.equal(formatLocalizedISODate("2026-06-07"), "7.6.2026");
   } finally {
     if (previousWindow === undefined) {
       delete globalThis.window;
