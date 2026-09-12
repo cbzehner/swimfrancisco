@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import re
-import time
 from io import BytesIO
 from dataclasses import dataclass
 from pathlib import Path

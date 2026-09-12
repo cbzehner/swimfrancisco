@@ -11,6 +11,7 @@ into content. Envelopes and payloads come from the shared
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -498,3 +499,19 @@ def test_finalize_accepts_payload_with_any_diff_from_provider(tmp_path, reviewed
         content_spots_dir=tmp_path / "content" / "spots",
     )
     assert result == reviewed
+
+
+def test_provider_artifact_falls_back_to_the_newest_unpreferred_extraction(tmp_path):
+    """With no production-provider artifact, the most recent one is the payload's source."""
+    from schedules.review import _pick_provider_artifact
+
+    review_dir = tmp_path / "data" / "hamilton-pool" / "2026-08-20-bbbbbbbbbbbb"
+    review_dir.mkdir(parents=True)
+    older = review_dir / "direct-pomeroy-html-v1.json"
+    newer = review_dir / "gemini-2-5-pro.json"
+    for path in (older, newer):
+        path.write_text("{}")
+    os.utime(older, (1_700_000_000, 1_700_000_000))
+    os.utime(newer, (1_700_086_400, 1_700_086_400))
+
+    assert _pick_provider_artifact(review_dir) == newer

@@ -19,10 +19,13 @@ import hashlib
 import json
 import re
 import shutil
+from collections.abc import Collection
 from pathlib import Path
 
 from .paths import all_review_dirs, parse_review_dir_name
 
+# The gemini- and anthropic- prefixes are retired for new extractions and
+# kept here because committed PDF capture dirs still hold those artifacts.
 PROVIDER_ARTIFACT = re.compile(r"(?:openai|direct|gemini|anthropic)-[a-z0-9.-]+\.json")
 SNAPSHOT_DIR_NAME = re.compile(rb"\d{4}-\d{2}-\d{2}-[0-9a-f]{12}")
 
@@ -133,7 +136,7 @@ def _names_in_tests_and_docs(repo_root: Path) -> set[str]:
     return names
 
 
-def _carried_from_dirs(data_root: Path, *, deleted: set[Path] = frozenset()) -> set[Path]:
+def _carried_from_dirs(data_root: Path, *, deleted: Collection[Path] = frozenset()) -> set[Path]:
     """The snapshot dirs a surviving review says it carried a decision from."""
     carried: set[Path] = set()
     for reviewed in sorted(data_root.glob("*/*/reviewed.json")):

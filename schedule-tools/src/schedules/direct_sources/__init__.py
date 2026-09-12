@@ -132,7 +132,9 @@ def extract_direct(entry: PoolEntry, *, cache_root: Path | None = None) -> Direc
     capture = _cache_bytes(slug_dir, hashlib.sha256(response.content).hexdigest(), "html", response.content)
     # The stored capture is the evidence, so extract from its bytes: a reused
     # capture differs from this response only in bytes that carry no schedule.
-    path, sha256, text = capture.path, capture.sha256, capture.content.decode("utf-8")
+    # One undecodable byte is replaced rather than raised, so a single
+    # malformed page cannot abort the whole direct run.
+    path, sha256, text = capture.path, capture.sha256, capture.content.decode("utf-8", errors="replace")
     fetched = DirectFetchResult(
         path=path,
         sha256=sha256,
@@ -229,7 +231,7 @@ def _extract_browser_entry(entry: PoolEntry, *, cache_root: Path) -> DirectExtra
     path, sha256 = stored.path, stored.sha256
     fetched = DirectFetchResult(path, sha256, stored.from_cache, response.response_url)
     try:
-        inventory = inspect_html_source(entry.slug, stored.content.decode("utf-8"))
+        inventory = inspect_html_source(entry.slug, stored.content.decode("utf-8", errors="replace"))
         payload = html_source_payload(inventory, observed)
     except HtmlClosureReviewRequired as error:
         raise CapturedClosureReviewRequired(slug=entry.slug, source_path=relative_to_repo(path),

@@ -197,7 +197,7 @@ def test_fetch_text_retries_transient_errors_and_keeps_bytes(monkeypatch, failur
     client = httpx.Client(transport=httpx.MockTransport(respond))
     monkeypatch.setattr(http.httpx, "Client", lambda **kwargs: client)
     sleeps = []
-    monkeypatch.setattr(http.time, "sleep", sleeps.append)
+    monkeypatch.setattr("schedules.fetch.time.sleep", sleeps.append)
     result = http.fetch_text("https://example.org/pool")
     assert len(requests) == 2
     assert sleeps == [0.25]
@@ -215,7 +215,7 @@ def test_fetch_text_transient_attempts_are_bounded(monkeypatch):
         return httpx.Response(503)
     client = httpx.Client(transport=httpx.MockTransport(respond))
     monkeypatch.setattr(http.httpx, "Client", lambda **kwargs: client)
-    monkeypatch.setattr(http.time, "sleep", lambda delay: None)
+    monkeypatch.setattr("schedules.fetch.time.sleep", lambda delay: None)
     with pytest.raises(DirectSourceError, match="HTTP 503"):
         http.fetch_text("https://example.org/pool")
     assert len(requests) == 3
@@ -890,6 +890,25 @@ def test_browser_capture_rejects_invalid_evidence_without_http_fallback(browser_
     monkeypatch.setattr(direct_sources, 'fetch_text', lambda *_: pytest.fail('No fallback on capture failure'))
     with pytest.raises(DirectSourceError, match='valid current Cloudflare capture required'):
         direct_sources.extract_direct(entry, cache_root=root / 'data')
+
+
+def test_http_capture_replaces_an_undecodable_byte_instead_of_failing(tmp_path, monkeypatch):
+    """The stored bytes stay the evidence; only the text handed to the extractor is repaired."""
+    from schedules import direct_sources
+    from schedules.direct_sources.http import DirectTextResponse
+    from schedules.models import PoolEntry
+    content = b'<html><body>Lap swim \xff 6am</body></html>'
+    monkeypatch.setattr(direct_sources, 'fetch_text',
+                        lambda url: DirectTextResponse('', content, 'https://www.fitnesssf.com/pool'))
+    seen = []
+    monkeypatch.setitem(direct_sources._HTML_EXTRACTORS, 'fitness_sf_html',
+                        (lambda text: seen.append(text) or {'sessions': [], 'closures': []},
+                         'fitness-sf-html-v1', 'Access hours only.'))
+    entry = PoolEntry(slug='fitness-sf', pdf_url='https://www.fitnesssf.com/pool',
+                      official_page_url='https://www.fitnesssf.com/pool', source_kind='fitness_sf_html')
+    result = direct_sources.extract_direct(entry, cache_root=tmp_path / 'data')
+    assert seen == ['<html><body>Lap swim \ufffd 6am</body></html>']
+    assert result.fetch_result.path.read_bytes() == content
 
 
 def test_browser_parser_failure_retains_original_source_and_capture(browser_capture, monkeypatch):
