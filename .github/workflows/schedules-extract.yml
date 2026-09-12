@@ -27,8 +27,6 @@ jobs:
       actions: read
     env:
       SCHEDULES_AUTOMATION_ENABLED: ${{ vars.SCHEDULES_AUTOMATION_ENABLED }}
-      SCHEDULES_MONTHLY_BUDGET_USD: ${{ vars.SCHEDULES_MONTHLY_BUDGET_USD }}
-      SCHEDULES_MONTHLY_BUDGET_OVERRIDES: ${{ vars.SCHEDULES_MONTHLY_BUDGET_OVERRIDES }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       CLOUDFLARE_BROWSER_API_TOKEN: ${{ secrets.CLOUDFLARE_BROWSER_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
@@ -67,33 +65,11 @@ jobs:
       - name: Install live browser checks
         run: node node_modules/playwright-core/cli.js install --with-deps webkit chromium
 
-      - name: Check paid allowance before any model call
-        id: reserve
-        env:
-          RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
-        run: |
-          uv --project schedule-tools run --locked schedules budget reserve --run-id "$RUN_ID" --output tmp/api-budget
-          node --input-type=module -e '
-            import { readFileSync, appendFileSync, writeFileSync } from "node:fs";
-            import { resolve } from "node:path";
-            const receipt = JSON.parse(readFileSync("tmp/api-budget/reservation.json", "utf8"));
-            appendFileSync(process.env.GITHUB_STEP_SUMMARY, "Paid extraction allowance: " + receipt.status + "\n");
-            writeFileSync("tmp/browser-budget.json", JSON.stringify({limit_seconds: 300, used_seconds: 0, blocked: false}), {flag: "wx"});
-            appendFileSync(process.env.GITHUB_ENV,
-              "SCHEDULES_API_BUDGET_FILE=" + resolve("tmp/api-budget/budget.json") + "\n" +
-              "SCHEDULES_BROWSER_BUDGET_FILE=" + resolve("tmp/browser-budget.json") + "\n" +
-              "SCHEDULES_API_BUDGET_USD=" + receipt.limit_microusd / 1000000 + "\n");
-          '
-
       - name: Extract and check publication
         env:
           RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
           RUN_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'publish' }}
         run: uv --project schedule-tools run --locked schedules automate --mode "$RUN_MODE" --run-id "$RUN_ID"
-
-      - name: Settle charges, keeping reservations for missing usage
-        if: always() && steps.reserve.outcome == 'success'
-        run: uv --project schedule-tools run --locked schedules budget settle --directory tmp/api-budget
 
       - name: Preserve source evidence and publication receipts
         if: always()
@@ -102,10 +78,6 @@ jobs:
           name: schedule-automation-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             tmp/automation/
-            tmp/api-budget/reservation.json
-            tmp/api-budget/budget.json
-            tmp/api-budget/api-attempts/
-            tmp/browser-budget.json
           retention-days: 90
           if-no-files-found: warn
 
@@ -172,8 +144,7 @@ jobs:
             const flags = last.decisions?.flagged_set || [];
             const commandFailures = Object.entries(last.commands || {}).filter(([, exit]) => exit !== 0).map(([name]) => name);
             const failed = process.env.EXTRACT_RESULT !== 'success' || process.env.CLOSURE_REVIEW_RESULT === 'failure' || result.status === 'failed' || !result.status;
-            const paidUnavailable = result.paid_budget_status === 'unavailable';
-            const needsAttention = failed || flags.length || commandFailures.length || paidUnavailable;
+            const needsAttention = failed || flags.length || commandFailures.length;
             const marker = '<!-- schedule-automation-status -->';
             const { owner, repo } = context.repo;
             const issues = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: 'open', creator: 'github-actions[bot]', per_page: 100 });
@@ -182,14 +153,13 @@ jobs:
               if (issue) await github.rest.issues.update({ owner, repo, issue_number: issue.number, state: 'closed' });
               return;
             }
-            const fingerprint = JSON.stringify({ failed, paidUnavailable, flags: [...flags].sort(), commandFailures: commandFailures.sort() });
+            const fingerprint = JSON.stringify({ failed, flags: [...flags].sort(), commandFailures: commandFailures.sort() });
             const statusMarker = '<!-- state:' + Buffer.from(fingerprint).toString('base64') + ' -->';
             if (issue?.body?.includes(statusMarker)) return;
             const runUrl = context.serverUrl + '/' + owner + '/' + repo + '/actions/runs/' + context.runId;
             const body = [marker, statusMarker, 'Schedule automation needs attention.',
               '', 'Publication status: ' + (result.status || process.env.EXTRACT_RESULT),
               'Held pools: ' + (flags.join(', ') || 'see run evidence'),
-              'Paid extraction allowance: ' + (result.paid_budget_status || 'unknown'),
               'Extraction commands with held or failed sources: ' + (commandFailures.join(', ') || 'none'),
               'Confirmed live updates: ' + (result.status === 'published' ? result.published_slugs.join(', ') || 'none' : 'none'),
               '', '[Run and retained evidence](' + runUrl + ')'].join('\n');

@@ -32,14 +32,10 @@ def test_split_permissions_with_closure_only_review_job():
     assert "token: ${{ secrets.SCHEDULES_BOT_TOKEN }}" in extract
 
 
-def test_budget_reserved_before_runner_and_always_settled():
-    assert WORKFLOW.index("schedules budget reserve") < WORKFLOW.index("schedules automate")
-    assert "SCHEDULES_API_BUDGET_FILE=" in WORKFLOW
-    assert "SCHEDULES_API_BUDGET_USD=" in WORKFLOW
-    assert "SCHEDULES_MONTHLY_BUDGET_USD:" in WORKFLOW
-    assert "always() && steps.reserve.outcome == 'success'" in WORKFLOW
-    assert "schedules budget settle" in WORKFLOW
-    assert "budget initialize" not in WORKFLOW
+def test_no_spend_ledger_bounds_the_paid_model_calls():
+    """The OpenAI project spend limit is the only cap; nothing reserves or settles."""
+    assert "budget" not in WORKFLOW.lower()
+    assert "allowance" not in WORKFLOW.lower()
     assert "OPENAI_API_KEY:" in WORKFLOW
     assert "GOOGLE_API_KEY" not in WORKFLOW
 
@@ -48,9 +44,6 @@ def test_evidence_and_live_browser_dependencies():
     assert "install --with-deps webkit chromium" in WORKFLOW
     assert "retention-days: 90" in WORKFLOW
     assert "tmp/automation/" in WORKFLOW
-    assert "tmp/api-budget/budget.json" in WORKFLOW
-    assert "tmp/api-budget/reservation.json" in WORKFLOW
-    assert "tmp/api-budget/api-attempts/" in WORKFLOW
     assert "path: tmp/" not in WORKFLOW
 
 
@@ -62,27 +55,16 @@ def test_operator_issue_is_deduplicated_and_requires_live_confirmation():
     assert "needs.extract.result != 'skipped'" in WORKFLOW
 
 
-def test_browser_credentials_budget_and_evidence_are_scoped_to_extraction():
+def test_browser_credentials_and_evidence_are_scoped_to_extraction():
     extract, rest = WORKFLOW.split('\n  review-closures:', 1)
     assert 'CLOUDFLARE_BROWSER_API_TOKEN: ${{ secrets.CLOUDFLARE_BROWSER_API_TOKEN }}' in extract
     assert 'CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}' in extract
     assert 'test -n "$CLOUDFLARE_BROWSER_API_TOKEN"' in extract
-    assert 'SCHEDULES_BROWSER_BUDGET_FILE=' in extract
-    assert 'tmp/browser-budget.json' in extract
     assert 'CLOUDFLARE_BROWSER_API_TOKEN' not in rest
 
 
 def test_missing_paid_credentials_do_not_block_free_updates():
     assert 'test -n "$OPENAI_API_KEY"' not in WORKFLOW
-    assert 'test -n "$SCHEDULES_MONTHLY_BUDGET_USD"' not in WORKFLOW
-    assert 'Paid extraction allowance: ' in WORKFLOW
-    assert 'receipt.status' in WORKFLOW
-
-
-def test_month_specific_approval_is_passed_without_raising_default():
-    assert 'SCHEDULES_MONTHLY_BUDGET_OVERRIDES: ${{ vars.SCHEDULES_MONTHLY_BUDGET_OVERRIDES }}' in WORKFLOW
-    assert 'SCHEDULES_MONTHLY_BUDGET_USD: ${{ vars.SCHEDULES_MONTHLY_BUDGET_USD }}' in WORKFLOW
-    assert 'schedules budget increase' not in WORKFLOW
 
 
 def test_ci_runs_on_the_automation_branches_promotion_waits_for():
