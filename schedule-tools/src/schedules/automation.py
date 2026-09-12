@@ -60,6 +60,15 @@ def save_evidence(root: Path, destination: Path) -> None:
         target = destination / "browser-capture" / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, target)
+    attempts = root / "tmp/api-attempts"
+    for source in attempts.glob("*/*.json"):
+        if source.is_symlink() or source.parent.is_symlink() or not source.is_file():
+            continue
+        if not re.fullmatch(r"[a-f0-9]{32}/(request|response)\.json", source.relative_to(attempts).as_posix()):
+            continue
+        target = destination / "api-attempts" / source.relative_to(attempts)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, target)
     for name in ("discovery-decisions.json", "discovery-report.md", "publish-pending.json", "publish-pending-report.md",
                  "extraction-report-direct.md", "extraction-report-direct.json", "extraction-report-openai.md", "extraction-report-openai.json"):
         source = root / "tmp" / name
@@ -204,6 +213,44 @@ def open_closure_review_prs(root: Path, evidence: Path, command=run_command) -> 
     return published
 
 
+def _archived_usage(response: Path) -> tuple[int, int] | None:
+    """Token counts from one archived response, or None when it is unusable."""
+    try:
+        body = json.loads(response.read_text())
+    except (OSError, ValueError):
+        return None
+    usage = body.get("usage") if isinstance(body, dict) else None
+    if not isinstance(usage, dict):
+        return None
+    counts = [usage.get("input_tokens"), usage.get("output_tokens")]
+    if any(type(count) is not int or count < 0 for count in counts):
+        return None
+    return counts[0], counts[1]
+
+
+def report_openai_usage(evidence: Path) -> None:
+    """Summarize the run's paid requests from their archived usage, when GitHub asks.
+
+    This runs in automate's finally, so it reports what the evidence supports and
+    never raises: an unusable archive must not replace the failure that got here.
+    A failed attempt archives its request and no response, so the request tally
+    counts requests and only the answered ones contribute tokens.
+    """
+    summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not summary:
+        return
+    requests = sum(1 for _ in evidence.glob("build-*/api-attempts/*/request.json"))
+    usages = [_archived_usage(response)
+              for response in sorted(evidence.glob("build-*/api-attempts/*/response.json"))]
+    input_tokens = sum(usage[0] for usage in usages if usage)
+    output_tokens = sum(usage[1] for usage in usages if usage)
+    try:
+        with Path(summary).open("a") as stream:
+            stream.write(f"OpenAI usage: {input_tokens} in / {output_tokens} out across {requests} requests\n")
+    except OSError:
+        pass
+
+
 def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=wait_for_deployment) -> dict:
     if mode not in {"extract-only", "publish"} or not re.fullmatch(r"\d+-\d+", run_id):
         raise ValueError("Expected a supported mode and GitHub run-attempt identifier")
@@ -211,19 +258,13 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
         raise ValueError("Automation is disabled; operator approval is required")
     if mode == "publish" and os.environ.get("SCHEDULES_AUTO_PROJECT") == "false":
         raise ValueError("Publication kill switch is active")
-    ledger = Path(os.environ.get("SCHEDULES_API_BUDGET_FILE", ""))
-    if not ledger.is_absolute() or not ledger.is_file():
-        raise ValueError("Automation requires an existing absolute run budget ledger")
     if checked(["git", "status", "--porcelain"], root, command):
         raise ValueError("Automation requires a clean checkout")
     evidence = root / "tmp" / "automation"
     if evidence.exists():
         raise ValueError("Automation evidence directory already exists; use a fresh checkout")
     evidence.mkdir(parents=True)
-    allowance = ledger.with_name("reservation.json")
-    paid_budget_status = json.loads(allowance.read_text()).get("status", "unknown") if allowance.is_file() else "unknown"
-    state: dict = {"run_id": run_id, "mode": mode, "status": "running", "builds": [], "published_slugs": [],
-                   "paid_budget_status": paid_budget_status}
+    state: dict = {"run_id": run_id, "mode": mode, "status": "running", "builds": [], "published_slugs": []}
     def save_state() -> None:
         (evidence / "result.json").write_text(json.dumps(state, indent=2) + "\n")
 
@@ -311,3 +352,4 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
         raise
     finally:
         save_state()
+        report_openai_usage(evidence)

@@ -393,41 +393,39 @@ ends. A late change can take up to seven days to appear; manual runs remain
 available. Manual runs default to `extract-only`. Both modes require
 `SCHEDULES_AUTOMATION_ENABLED=true`; unset means disabled.
 
-Keep the $1 per-run limit within the $5 monthly ceiling. Scheduled runs, trials,
-and manual reruns share the same monthly allowance; a new run does not reset it.
-Unchanged source/configuration pairs reuse cached extraction
-without model calls. Failed or interrupted requests can retain their maximum
-reservation, so the accounting total can exceed the eventual API invoice.
+Unchanged source/configuration pairs reuse cached extraction without model
+calls.
 
 ### Run contract
 
-1. Reserve at most $1 from the approved UTC calendar-month allowance on the
-   separate `schedule-budget` accounting branch. Missing accounting stops the
-   run. The local request ledger reserves worst-case cost before each API call.
-2. Fetch current main into an isolated worktree. Discover once, run structured
+Paid calls are bounded only by the OpenAI project spend limit; this repository
+keeps no ledger of its own. An OpenAI quota or authentication error fails that
+pool's paid extraction for the week like any other provider failure, and the
+operator issue reports the failed command.
+
+1. Fetch current main into an isolated worktree. Discover once, run structured
    sources, then run the pinned OpenAI provider without a second discovery.
    Cache reuse requires matching source bytes and the full extraction configuration.
-3. In `extract-only` mode, retain evidence and stop without projecting content,
-   committing, or pushing a candidate. Accounting updates still occur.
-4. In `publish` mode, independently verify source sessions, dates, and closures.
+2. In `extract-only` mode, retain evidence and stop without projecting content,
+   committing, or pushing a candidate.
+3. In `publish` mode, independently verify source sessions, dates, and closures.
    Hold unclear pools and retain prior valid data; never extend expired hours.
    Non-production PDF artifacts cannot use the old percentage-based grounding
    check to obtain automatic approval. Human review remains an explicit repair path.
-5. Validate the generated-file allowlist before staging and committing. Direct
+4. Validate the generated-file allowlist before staging and committing. Direct
    source changes to capture time and clock-derived start alone do not create
    content commits. PDF dates remain substantive facts.
-6. Push one generated commit to `auto/schedules/<run>-<attempt>-<build>`, wait for
+5. Push one generated commit to `auto/schedules/<run>-<attempt>-<build>`, wait for
    its exact successful CI run, and fast-forward main only if its head still
    matches the recorded base. No PR and no force push. If main moves, rebuild
    once in a new worktree. Reuse only source/extraction cache files, not previous
    publication decisions or concurrently edited files.
-7. Verify the deployed commit, all canonical spot records, live conditions, and
+6. Verify the deployed commit, all canonical spot records, live conditions, and
    all pool pages in WebKit and Chromium. The browser checks use a non-Pacific
    visitor timezone, check Today rows and weekly windows, and require map tiles
    to load. A watermark does not fail the map check. Stop after twenty minutes
    if deployment cannot be verified. Only then report a live publication.
-8. Settle valid request charges. Canceled runs and missing usage retain their
-   reservations; malformed accounting blocks further paid execution.
+7. Append the run's OpenAI token usage to the GitHub step summary.
 
 The content-writing job cannot write issues. A separate read-only-evidence job
 updates one operator issue when failures or held pools change. It closes that
@@ -462,14 +460,10 @@ as well as Contents read/write. PR receipts are retained with the run evidence.
 
 ### Enablement checklist
 
-Budget approval and accounting setup are complete. Keep these requirements
-in place for enabled runs:
+Keep these requirements in place for enabled runs:
 
-- `SCHEDULES_MONTHLY_BUDGET_USD=5` is configured in GitHub, matching the
-  recurring ceiling. `SCHEDULES_MONTHLY_BUDGET_OVERRIDES` carries explicit
-  single-month approvals; an operator applies the matching durable amendment
-  with `schedules budget increase`. A changed variable alone never changes the
-  ledger.
+- Set the cap on paid extraction in the OpenAI project's spend limit. Cloudflare
+  plan limits bound the browser captures.
 - Store `OPENAI_API_KEY` and a repository-scoped `SCHEDULES_BOT_TOKEN` as Actions
   secrets. The publication token needs Contents read/write and must trigger CI;
   the built-in Actions token is not its publication fallback. The workflow uses
@@ -479,33 +473,29 @@ in place for enabled runs:
 - Keep main's required `check` status, strict updates, administrator enforcement,
   and no force pushes. Permit the publication token to create closure-review PRs;
   auto-merge is not used.
-- Accounting was initialized on 2026-09-06 with `schedules budget initialize`.
-  Do not initialize it again. Missing accounting in later runs must be repaired,
-  not reset.
 - Set `SCHEDULES_AUTOMATION_ENABLED=true`, dispatch an `extract-only` trial, inspect
-  its evidence and charges, then run a checked publication trial. Confirm hosted
+  its evidence and usage, then run a checked publication trial. Confirm hosted
   CI, main promotion, and the exact live deployment before declaring autonomy.
 
 ### Evidence and recovery
 
 Each run retains `tmp/automation/result.json`, per-build discovery and publication
 reports, source PDFs, provider artifacts, accepted snapshots, request/response
-files under `api-budget/api-attempts/`, browser-capture evidence, and sanitized
-budget ledgers as a GitHub artifact for 90 days. The receipt records base and
-candidate commits, changed paths, CI URL, outcomes, and confirmed live updates.
+files under `api-attempts/`, and browser-capture evidence as a GitHub artifact
+for 90 days. The receipt records base and candidate commits, changed paths,
+CI URL, outcomes, and confirmed live updates.
 Run artifacts exclude credentials and raw transport logs.
 
 Set `SCHEDULES_AUTOMATION_ENABLED=false` to stop future runs. This does not cancel
-a run already started: cancel that run separately when needed. Its full spend
-reservation remains conservative. `SCHEDULES_AUTO_PROJECT=false` also rejects
-local publication mode.
+a run already started: cancel that run separately when needed.
+`SCHEDULES_AUTO_PROJECT=false` also rejects local publication mode.
 
 For incorrect published data, keep automation disabled, inspect the retained
 source and receipt, and prepare a scoped corrective commit. Quarantine each
 incorrect PDF SHA so a later run cannot automatically accept it again. Use
 `just schedules-review` for explicit human correction; save all related
 sequential windows together. Test and verify the corrective deployment before
-enabling automation again. Do not reset main or erase accounting to recover.
+enabling automation again. Do not reset main to recover.
 
 Past trial runs, their spend, and the source exceptions they exposed are in
 [`schedules-decision-log.md`](schedules-decision-log.md).

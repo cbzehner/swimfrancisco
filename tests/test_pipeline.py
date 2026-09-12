@@ -1069,10 +1069,6 @@ def test_openai_cache_reuses_only_independently_verified_results(tmp_path, north
         cached_path.write_text(json.dumps(stored))
     cached_bytes = cached_path.read_bytes()
     if state == 'valid':
-        budget = tmp_path / 'budget.json'
-        budget.write_text(json.dumps({'limit_microusd': 0, 'requests': []}))
-        monkeypatch.setenv('SCHEDULES_API_BUDGET_FILE', str(budget))
-        monkeypatch.setenv('SCHEDULES_API_BUDGET_USD', '0')
         monkeypatch.delenv('OPENAI_API_KEY', raising=False)
     monkeypatch.setattr(pipeline, 'read_schedule_snapshot', lambda _: good['payload'])
     monkeypatch.setattr(pipeline, 'fetch_pdf', lambda *args: FetchResult(original, good['pdf_sha256'], component['document'], True, 1))
@@ -1100,7 +1096,6 @@ def test_openai_cache_reuses_only_independently_verified_results(tmp_path, north
     elif state == 'valid':
         assert isinstance(result, Unchanged)
         assert not calls
-        assert json.loads(budget.read_text()) == {'limit_microusd': 0, 'requests': []}
     else:
         assert isinstance(result, Aborted)
         assert calls == (['openai'] if state == 'retry_failure' else [])

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, writeFile, open, unlink } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,7 +16,6 @@ export const CAPTURE_SOURCES = Object.freeze({
   'chinatown-ymca': 'https://www.ymcasf.org/location/chinatown-ymca/',
   'sfsu-mashouf': 'https://campusrec.sfsu.edu/Aquatics',
 });
-const RESERVATION = 150;
 const DEADLINE = 80_000;
 export const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const fail = code => { throw new Error(code); };
@@ -33,16 +32,6 @@ export function connectionUrl(value, account, session) {
   if (url.protocol !== 'wss:' || url.host !== 'api.cloudflare.com' || url.username || url.password || url.search || url.hash
       || url.pathname !== `/client/v4/accounts/${account}/browser-rendering/devtools/browser/${session}`) fail('invalid_connection_url');
   return url.href;
-}
-
-export function reserveBudget(budget) {
-  if (budget.limit_seconds !== 300 || !Number.isInteger(budget.used_seconds) || budget.used_seconds < 0
-      || typeof budget.blocked !== 'boolean' || budget.blocked || budget.used_seconds + RESERVATION > 300) fail('browser_budget_unavailable');
-  return { ...budget, used_seconds: budget.used_seconds + RESERVATION, blocked: true };
-}
-
-export function settleBudget(budget, elapsed, closed) {
-  return closed ? { ...budget, used_seconds: budget.used_seconds - RESERVATION + Math.ceil(elapsed / 1000) + 1, blocked: false } : budget;
 }
 
 export async function captureScreenshot(context, page) {
@@ -73,8 +62,7 @@ export async function runCapture({ root = path.resolve(path.dirname(scriptPath),
   setTimer = setTimeout, clearTimer = clearTimeout } = {}) {
   const token = env.CLOUDFLARE_BROWSER_API_TOKEN;
   const account = env.CLOUDFLARE_ACCOUNT_ID;
-  const budgetFile = env.SCHEDULES_BROWSER_BUDGET_FILE;
-  if (!token || !/^[a-f0-9]{32}$/.test(account || '') || !budgetFile || !path.isAbsolute(budgetFile)) fail('browser_configuration_missing');
+  if (!token || !/^[a-f0-9]{32}$/.test(account || '')) fail('browser_configuration_missing');
   const entries = parse(await readFile(path.join(root, 'schedule-tools/src/schedules/registry.toml'), 'utf8')).pool
     .filter(entry => entry.capture_method === 'cloudflare_browser');
   if (entries.length !== 6 || new Set(entries.map(entry => entry.slug)).size !== 6) fail('invalid_capture_registry');
@@ -85,15 +73,12 @@ export async function runCapture({ root = path.resolve(path.dirname(scriptPath),
   const output = path.join(root, 'tmp/browser-capture');
   await mkdir(path.dirname(output), { recursive: true });
   await mkdir(output);
-  const lockPath = budgetFile + '.lock';
-  const lock = await open(lockPath, 'wx', 0o600);
-  let budget;
   let session;
   let browser;
   let timer;
   let closePromise;
   let expired = false;
-  let started;
+  const started = now();
   const manifest = { results: [], closed: false };
   const headers = { Authorization: `Bearer ${token}` };
   const endpoint = `https://api.cloudflare.com/client/v4/accounts/${account}/browser-rendering/devtools/browser`;
@@ -112,9 +97,6 @@ export async function runCapture({ root = path.resolve(path.dirname(scriptPath),
   }
   const checkDeadline = () => { if (expired || now() - started >= DEADLINE) fail('browser_deadline'); };
   try {
-    budget = reserveBudget(JSON.parse(await readFile(budgetFile, 'utf8')));
-    await writeJson(budgetFile, budget);
-    started = now();
     timer = setTimer(() => { expired = true; void closeSession(); void browser?.close().catch(() => {}); }, DEADLINE);
     const response = await fetchApi(`${endpoint}?keep_alive=60000`, { method: 'POST', headers, redirect: 'error', signal: AbortSignal.timeout(10000) });
     if (!response.ok) fail('browser_create_failed');
@@ -180,10 +162,7 @@ export async function runCapture({ root = path.resolve(path.dirname(scriptPath),
     clearTimer(timer);
     manifest.closed = await closeSession();
     await browser?.close().catch(() => {});
-    if (budget) await writeJson(budgetFile, settleBudget(budget, now() - started, manifest.closed));
     await writeJson(path.join(output, 'results.json'), manifest);
-    await lock.close();
-    await unlink(lockPath);
   }
   return manifest;
 }

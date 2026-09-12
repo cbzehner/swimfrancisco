@@ -501,22 +501,18 @@ def test_source_drop_in_session_duration_is_bounded_without_rewriting_midnight(c
             source_slots(source)
 
 
-def test_sava_printed_daytime_to_midnight_session_holds_before_paid_call(tmp_path, monkeypatch):
+def test_sava_printed_daytime_to_midnight_session_holds_before_paid_call(monkeypatch):
     from schedules.paths import PROMPT_PATH
     from schedules.schema import EXTRACTION_SCHEMA
     from schedules.providers import openai_provider
 
     monkeypatch.setenv("OPENAI_API_KEY", "unit-test-not-a-key")
-    ledger = tmp_path / "budget.json"
-    monkeypatch.setenv("SCHEDULES_API_BUDGET_FILE", str(ledger))
-    monkeypatch.setenv("SCHEDULES_API_BUDGET_USD", "1")
     def unexpected_call(*args, **kwargs):
         pytest.fail("Ambiguous Sava midnight session reached the paid API")
-    monkeypatch.setattr(openai_provider, "budgeted_call", unexpected_call)
+    monkeypatch.setattr(openai_provider, "call_api", unexpected_call)
     original = (REPO_ROOT / "data/sava-pool/2026-08-20-946a112b3f43/source.pdf").read_bytes()
     with pytest.raises(ValueError, match="unsupported_session_duration"):
         openai_provider.extract(original, PROMPT_PATH.read_text(), EXTRACTION_SCHEMA)
-    assert not ledger.exists()
 
 
 @pytest.mark.parametrize('label,expected_pool', [

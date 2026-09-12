@@ -25,6 +25,12 @@ from schedules.schema import EXTRACTION_SCHEMA
 SOURCE_REFERENCES = ROOT / "tests/fixtures/source-references.json"
 
 
+def pin_publish_clock(monkeypatch, today: date) -> None:
+    """Freeze the merge clock: publish prunes windows that expired relative to it,
+    so a test with fixed 2026 fixture dates must say which day it is publishing on."""
+    monkeypatch.setattr("schedules.merge.pacific_today", lambda: today)
+
+
 def load_source_reference(path: Path, reference_id: str, *, repo_root: Path) -> dict:
     """Load one checked source reference and re-verify its PDF bytes."""
     references = json.loads(path.read_text())["documents"]
@@ -53,11 +59,6 @@ def load_source_reference(path: Path, reference_id: str, *, repo_root: Path) -> 
     if "as_of" in reference:
         date.fromisoformat(reference["as_of"])
     return reference
-
-
-def extraction_api_request() -> dict:
-    """The production extraction request, as the budget tests price it."""
-    return openai_provider.api_request("Extract this schedule", EXTRACTION_SCHEMA)
 
 
 def api_usage_result(input_tokens=100, output_tokens=200, **response_fields) -> dict:

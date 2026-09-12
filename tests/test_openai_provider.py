@@ -1,4 +1,4 @@
-"""Transport, schema-mapping and budget behaviour of the production provider."""
+"""Transport and schema-mapping behaviour of the production provider."""
 
 import copy
 import json
@@ -122,22 +122,6 @@ def test_api_closure_pairs_are_checked_after_null_mapping():
     with pytest.raises(jsonschema.ValidationError):
         jsonschema.validate(result["payload"], EXTRACTION_SCHEMA,
                             format_checker=jsonschema.FormatChecker())
-
-
-@pytest.mark.parametrize("limit", [0, -1, float("nan"), float("inf")])
-def test_budget_requires_an_explicit_positive_limit(tmp_path, limit):
-    with pytest.raises(ValueError, match="positive API budget"):
-        openai_provider.SpendBudget(tmp_path / "budget.json", limit)
-
-
-def test_budgeted_call_reserves_before_paying_and_stops_when_exhausted(tmp_path, monkeypatch):
-    monkeypatch.setattr(openai_provider, "call_api",
-                        lambda *args: pytest.fail("Budget guard made a paid call"))
-    request = openai_provider.api_request("extract", CHECK_SCHEMA, max_output_tokens=1024)
-    budget = openai_provider.SpendBudget(tmp_path / "budget.json", 0.000001)
-    with pytest.raises(ValueError, match="budget exhausted"):
-        openai_provider.budgeted_call(request, tmp_path / "call", 10, budget)
-    assert not (tmp_path / "call").exists()
 
 
 @pytest.mark.parametrize("failure", [401, 429, "timeout"])
