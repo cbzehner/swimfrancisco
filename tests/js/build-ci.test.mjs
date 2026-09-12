@@ -385,7 +385,7 @@ const baselineRemote = (() => {
   return remote;
 })();
 
-function promotionRepository(t, { path = "content/spots/test-pool.md", symlink = false, prune = false } = {}) {
+function promotionRepository(t, { path = "content/spots/test-pool.md", symlink = false, prune = false, partialPrune = false } = {}) {
   const directory = mkdtempSync(join(tmpdir(), "swim-promotion-test-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const remote = join(directory, "origin.git");
@@ -396,10 +396,16 @@ function promotionRepository(t, { path = "content/spots/test-pool.md", symlink =
   git(["config", "user.name", "Schedule test"]);
   git(["config", "user.email", "test@example.invalid"]);
   const prunedSnapshot = "data/test-pool/2026-09-02-67f2a420e8fc/reviewed.json";
-  if (prune) {
+  if (prune || partialPrune) {
     mkdirSync(join(work, "data/test-pool/2026-09-02-67f2a420e8fc"), { recursive: true });
     writeFileSync(join(work, prunedSnapshot), "{}\n");
     git(["add", prunedSnapshot]);
+    // The partial case leaves a sibling behind, so deleting the review alone
+    // would turn a reviewed capture back into a pending one.
+    if (partialPrune) {
+      writeFileSync(join(work, "data/test-pool/2026-09-02-67f2a420e8fc/source.sha256"), "a".repeat(64) + "\n");
+      git(["add", "data/test-pool/2026-09-02-67f2a420e8fc/source.sha256"]);
+    }
     git(["commit", "-m", "Obsolete capture"]);
     git(["push", "origin", "main"]);
   }
@@ -408,7 +414,7 @@ function promotionRepository(t, { path = "content/spots/test-pool.md", symlink =
   if (symlink) symlinkSync("../../seed.txt", join(work, path));
   else writeFileSync(join(work, path), "generated schedule\n");
   git(["add", path]);
-  if (prune) git(["rm", "-q", prunedSnapshot]);
+  if (prune || partialPrune) git(["rm", "-q", prunedSnapshot]);
   git(["commit", "-m", "Accepted schedule"]);
   const candidate = git(["rev-parse", "HEAD"]).trim();
   const branch = "auto/schedules/123-1-1";
@@ -497,6 +503,25 @@ for (const path of ["content/spots/test-pool.md", "data/bulletin.json"]) {
     assert.throws(() => stageScheduleChanges(repository), /without deletions/);
   });
 }
+
+test("stage refuses to delete part of a snapshot dir", (t) => {
+  const repository = promotionRepository(t);
+  const snapshot = "data/test-pool/2026-09-02-67f2a420e8fc";
+  mkdirSync(join(repository.work, snapshot), { recursive: true });
+  writeFileSync(join(repository.work, snapshot, "source.sha256"), "a".repeat(64) + "\n");
+  writeFileSync(join(repository.work, snapshot, "reviewed.json"), "{}\n");
+  repository.git(["add", snapshot]);
+  repository.git(["commit", "-m", "Reviewed capture"]);
+
+  rmSync(join(repository.work, snapshot, "reviewed.json"));
+  assert.throws(() => stageScheduleChanges(repository), /whole snapshot dir/);
+});
+
+test("promotion refuses a commit that deletes part of a snapshot dir", async (t) => {
+  const repository = promotionRepository(t, { partialPrune: true });
+  await assert.rejects(promoteScheduleCommit(repository.options), /whole snapshot dir/);
+  assert.equal(repository.remoteHead(), repository.base);
+});
 
 test("promotion accepts a commit that only prunes snapshot dirs", async (t) => {
   const repository = promotionRepository(t, { prune: true });
