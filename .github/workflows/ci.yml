@@ -1,13 +1,14 @@
 name: ci
 
 # Runs full verification. Production Workers Builds waits for this
-# workflow's successful push run for its exact commit before building.
+# workflow's successful push run for its exact commit before building,
+# and schedule promotion waits for one on its auto/schedules branch.
 #
 # Public-repo safety: read-only permissions, no secrets used.
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'auto/schedules/**']
   pull_request:
 
 permissions:
