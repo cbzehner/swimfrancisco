@@ -47,7 +47,7 @@ def test_prompt_separates_session_cancellations_from_facility_closures() -> None
     assert "A date list inside a session cell does not limit a separate facility recurring closure" in prompt
 
 
-def test_ambiguous_source_requires_original_image_and_reserves_its_cost() -> None:
+def test_ambiguous_source_requires_its_original_rendered_page() -> None:
     cell = SourceCell("p1-c1-b1", 1, "monday", "Family Swim 3:30pm-5:30pm (s (small pool)", (0, 0, 100, 100))
     source = PdfSource("schedule", (cell,), ("p1-c1-b1:unbalanced_text",), 1, ())
     with pytest.raises(ValueError, match="rendered page"):
@@ -56,44 +56,27 @@ def test_ambiguous_source_requires_original_image_and_reserves_its_cost() -> Non
     part = request["input"][0]["content"][-1]
     assert part["detail"] == "original"
     assert part["image_url"].startswith("data:image/png;base64,")
-    assert openai_provider.api_reservation_microusd(request) > 12_001 * 5 + 8192 * 30
-    part["detail"] = "auto"
-    with pytest.raises(ValueError, match="explicit original"):
-        openai_provider.api_reservation_microusd(request)
 
 
-@pytest.mark.parametrize("allowance", ["approved", "zero", "missing_key", "missing_ledger"])
-def test_unresolved_closure_scope_stops_before_spend(tmp_path, monkeypatch, allowance):
+@pytest.mark.parametrize("credentials", ["configured", "missing_key"])
+def test_unresolved_closure_scope_stops_before_spend(monkeypatch, credentials):
     from schedules.paths import REPO_ROOT
 
     monkeypatch.setenv("OPENAI_API_KEY", "unit-test-not-a-key")
-    monkeypatch.setenv("SCHEDULES_API_BUDGET_FILE", str(tmp_path / "budget.json"))
-    monkeypatch.setenv("SCHEDULES_API_BUDGET_USD", "1")
 
     def unexpected_call(*args, **kwargs):
         pytest.fail("An unresolved source reached the paid API")
 
-    if allowance == "zero":
-        monkeypatch.setenv("SCHEDULES_API_BUDGET_USD", "0")
-        (tmp_path / "budget.json").write_text('{"limit_microusd":0,"requests":[]}')
-    elif allowance == "missing_key":
+    if credentials == "missing_key":
         monkeypatch.delenv("OPENAI_API_KEY")
-    elif allowance == "missing_ledger":
-        monkeypatch.delenv("SCHEDULES_API_BUDGET_FILE")
-    original_ledger = (tmp_path / "budget.json").read_bytes() if (tmp_path / "budget.json").exists() else None
-    monkeypatch.setattr(openai_provider, "SpendBudget", unexpected_call)
     monkeypatch.setattr(openai_provider, "render_source_pages", unexpected_call)
     monkeypatch.setattr(openai_provider, "source_request", unexpected_call)
-    monkeypatch.setattr(openai_provider, "budgeted_call", unexpected_call)
+    monkeypatch.setattr(openai_provider, "call_api", unexpected_call)
     pdf = REPO_ROOT / "data/balboa-pool/2026-08-20-d6f218710372/source.pdf"
     with pytest.raises(openai_provider.ClosureReviewRequired, match="Unresolved source closures") as held:
         openai_provider.extract(pdf.read_bytes(), PROMPT_PATH.read_text(), EXTRACTION_SCHEMA)
     assert held.value.issues
     assert all({"id", "text", "facility"}.issubset(notice) for notice in held.value.notices)
-    if original_ledger is None:
-        assert not (tmp_path / "budget.json").exists()
-    else:
-        assert (tmp_path / "budget.json").read_bytes() == original_ledger
 
 
 @pytest.mark.parametrize("pages,selected", [(0, {1}), (13, {1}), (1, {0}), (1, {2})])
@@ -121,11 +104,8 @@ def test_render_rejects_oversized_evidence_before_decoding(monkeypatch, width, h
     (500, False, 2), (503, False, 2), (408, False, 2), (None, True, 2),
     (401, False, 1), (403, False, 1), (429, False, 1), (400, False, 1),
 ])
-def test_production_retry_is_bounded_and_reserves_each_attempt(tmp_path, monkeypatch, http_status, timed_out, expected_calls):
-    path = tmp_path / "budget.json"
+def test_production_retry_is_bounded(monkeypatch, http_status, timed_out, expected_calls):
     monkeypatch.setenv("OPENAI_API_KEY", "unit-test-not-a-key")
-    monkeypatch.setenv("SCHEDULES_API_BUDGET_FILE", str(path))
-    monkeypatch.setenv("SCHEDULES_API_BUDGET_USD", "2")
     source = PdfSource("Schedule August 11-August 29, 2026", (), (), 1, ())
     monkeypatch.setattr(openai_provider, "inspect_pdf_source", lambda _: source)
     monkeypatch.setattr(openai_provider, "time", type("Clock", (), {"sleep": staticmethod(lambda _: None)}))
@@ -133,7 +113,6 @@ def test_production_retry_is_bounded_and_reserves_each_attempt(tmp_path, monkeyp
 
     def call(*args):
         calls.append(args)
-        assert len(json.loads(path.read_text())["requests"]) == len(calls)
         return {"api_response": None, "status": "timeout" if timed_out else "execution_error",
                 "timed_out": timed_out, "http_status": http_status}
 
@@ -141,16 +120,12 @@ def test_production_retry_is_bounded_and_reserves_each_attempt(tmp_path, monkeyp
     with pytest.raises(ValueError, match="Extraction failed"):
         openai_provider.extract(b"pdf", "extract", EXTRACTION_SCHEMA)
     assert len(calls) == expected_calls
-    requests = json.loads(path.read_text())["requests"]
-    assert all(item["charged_microusd"] == item["reserved_microusd"] for item in requests)
 
 
-def test_production_maps_raw_labels_and_preserves_failed_coverage(tmp_path, monkeypatch):
+def test_production_maps_raw_labels_and_preserves_failed_coverage(monkeypatch):
     from schedules.schema import SOURCE_FACTS_SCHEMA
 
     monkeypatch.setenv("OPENAI_API_KEY", "unit-test-not-a-key")
-    monkeypatch.setenv("SCHEDULES_API_BUDGET_FILE", str(tmp_path / "budget.json"))
-    monkeypatch.setenv("SCHEDULES_API_BUDGET_USD", "1")
     cell = SourceCell("p1-c1-b1", 1, "monday", "Family Swim 3:30pm-5:30pm (small pool)", (0, 0, 100, 100))
     source = PdfSource("Schedule August 11-August 29, 2026", (cell,), (), 1, ())
     monkeypatch.setattr(openai_provider, "inspect_pdf_source", lambda _: source)
@@ -247,13 +222,11 @@ def test_session_exclusions_resolve_year_rollover_without_guessing(monkeypatch):
 
 
 @pytest.mark.parametrize("member", [0, 1])
-def test_paired_original_uses_production_request_with_mocked_model_response(tmp_path, north_beach_pair, monkeypatch, member):
+def test_paired_original_uses_production_request_with_mocked_model_response(north_beach_pair, monkeypatch, member):
     from schedules.schema import SOURCE_FACTS_SCHEMA
     _, components = north_beach_pair
     component = components[member]
     monkeypatch.setenv("OPENAI_API_KEY", "unit-test-not-a-key")
-    monkeypatch.setenv("SCHEDULES_API_BUDGET_FILE", str(tmp_path / "budget.json"))
-    monkeypatch.setenv("SCHEDULES_API_BUDGET_USD", "1")
     def transport(value, schema):
         if isinstance(value, dict):
             return {key: transport(value.get(key), child) for key, child in schema["properties"].items()}

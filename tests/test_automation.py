@@ -12,11 +12,9 @@ from schedules.automation import automate, copy_extraction_cache, open_closure_r
 
 @pytest.fixture
 def runner(tmp_path, monkeypatch):
-    ledger = tmp_path / "budget.json"
-    ledger.write_text("{}")
     monkeypatch.setenv("SCHEDULES_AUTOMATION_ENABLED", "true")
-    monkeypatch.setenv("SCHEDULES_API_BUDGET_FILE", str(ledger))
     monkeypatch.delenv("SCHEDULES_AUTO_PROJECT", raising=False)
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
     monkeypatch.setattr("schedules.automation.tempfile.mkdtemp", lambda **_: str(tmp_path / f"work-{len(calls)}"))
     root = tmp_path / "repo"
     root.mkdir()
@@ -535,17 +533,31 @@ def test_closure_pr_preserves_conflicting_source_hash_before_push(closure_reposi
     assert sidecar.is_symlink() if existing_hash == "symlink" else sidecar.read_text() == existing_hash
 
 
-def test_zero_model_allowance_still_captures_extracts_and_publishes_free_updates(runner, monkeypatch):
+def test_failed_paid_extraction_still_captures_and_publishes_free_updates(runner):
     root, calls, controls, run = runner
-    ledger = root.parent / "budget.json"
-    ledger.write_text(json.dumps({"limit_microusd": 0, "requests": []}))
-    ledger.with_name("reservation.json").write_text(json.dumps({"status": "unavailable", "limit_microusd": 0}))
-    monkeypatch.setenv("SCHEDULES_API_BUDGET_USD", "0")
     controls["failure"] = "openai"
     result = run()
     assert result["status"] == "published"
-    assert result["paid_budget_status"] == "unavailable"
     assert result["builds"][0]["commands"] == {"discover": 0, "browser": 0, "direct": 0, "openai": 1}
     assert any(args == ["node", "scripts/capture-schedules.mjs"] for args in calls)
     assert controls["verified"] == ["b" * 40]
-    assert json.loads(ledger.read_text()) == {"limit_microusd": 0, "requests": []}
+
+
+@pytest.mark.parametrize("in_actions", [True, False])
+def test_openai_usage_is_reported_only_into_a_github_step_summary(runner, tmp_path, monkeypatch, in_actions):
+    root, _, controls, run = runner
+    attempt = "a" * 32
+    controls["seed"] = {
+        f"tmp/api-attempts/{attempt}/request.json": '{"model": "gpt-5.5-2026-04-23"}',
+        f"tmp/api-attempts/{attempt}/response.json": json.dumps(
+            {"usage": {"input_tokens": 1200, "output_tokens": 340}}),
+    }
+    summary = tmp_path / "step-summary.md"
+    if in_actions:
+        monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
+    assert run()["status"] == "published"
+    assert (root / f"tmp/automation/build-1/api-attempts/{attempt}/request.json").is_file()
+    if in_actions:
+        assert summary.read_text() == "OpenAI usage: 1200 in / 340 out across 1 requests\n"
+    else:
+        assert not summary.exists()
