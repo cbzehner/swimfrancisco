@@ -892,6 +892,54 @@ def test_browser_capture_rejects_invalid_evidence_without_http_fallback(browser_
         direct_sources.extract_direct(entry, cache_root=root / 'data')
 
 
+def test_browser_capture_extracts_undecodable_byte_leniently(browser_capture, monkeypatch):
+    """The stored bytes stay the evidence; the extractor sees a repaired byte, not a rejected capture."""
+    from schedules import direct_sources
+    from schedules.direct_sources.browser import read_browser_capture
+    from schedules.direct_sources import html_facts
+    root, directory, entry, receipt = browser_capture
+    content = b'<html><body>Official pool schedule \xff more</body></html>'
+    (directory / 'source.html').write_bytes(content)
+    receipt['hashes']['source'] = hashlib.sha256(content).hexdigest()
+    (directory / 'capture.json').write_text(json.dumps(receipt))
+    monkeypatch.setattr('schedules.direct_sources.browser.read_browser_capture', lambda entry: read_browser_capture(entry, root=root))
+    monkeypatch.setattr(direct_sources, 'fetch_text', lambda *_: pytest.fail('Browser source must never use HTTP fallback'))
+    seen = []
+    monkeypatch.setattr(html_facts, 'inspect_html_source',
+                        lambda slug, text: seen.append(text) or {'lines': [{'id': 'row', 'text': 'Official pool schedule'}]})
+    monkeypatch.setattr(html_facts, 'html_source_payload', lambda *_: {'sessions': [], 'closures': [], 'schedule_basis': 'swim_schedule'})
+    result = direct_sources.extract_direct(entry, cache_root=root / 'data')
+    assert seen == ['<html><body>Official pool schedule � more</body></html>']
+    assert result.fetch_result.path.read_bytes() == content
+
+
+def test_access_verification_of_undecodable_capture_does_not_raise_unicode_decode_error(tmp_path, monkeypatch):
+    """Verification must fail, if at all, with the module's own error — never a bare UnicodeDecodeError."""
+    from schedules import direct_sources
+    from schedules.direct_sources.http import DirectTextResponse
+    from schedules.models import PoolEntry
+    content = b'<html><body>Fri: 5 am - 11 pm \xff</body></html>'
+    monkeypatch.setattr(direct_sources, 'fetch_text',
+                        lambda url: DirectTextResponse('', content, 'https://fitnesssf.com/location/fillmore'))
+    monkeypatch.setitem(direct_sources._HTML_EXTRACTORS, 'fitness_sf_html',
+                        (lambda text: {'sessions': [], 'closures': []}, 'fitness-sf-html-v1', 'Access hours only.'))
+    entry = PoolEntry(slug='fitness-sf-fillmore', pdf_url='https://fitnesssf.com/location/fillmore',
+                      official_page_url='https://fitnesssf.com/location/fillmore', source_kind='fitness_sf_html')
+    result = direct_sources.extract_direct(entry, cache_root=tmp_path / 'data')
+    artifact = {'provider': 'direct', 'model': result.model, 'source_pdf_url': entry.pdf_url,
+                'pdf_sha256': result.fetch_result.sha256, 'payload': result.payload,
+                'details': {'direct_source': result.source}}
+    today = date.fromisoformat(result.source['observed_on'])
+    try:
+        outcome = direct_sources.verify_direct_artifact(artifact, result.fetch_result.path, today=today)
+    except UnicodeDecodeError:
+        pytest.fail('Verification leaked a bare UnicodeDecodeError instead of DirectSourceError')
+    except DirectSourceError:
+        pass
+    else:
+        assert outcome['ok']
+
+
 def test_http_capture_replaces_an_undecodable_byte_instead_of_failing(tmp_path, monkeypatch):
     """The stored bytes stay the evidence; only the text handed to the extractor is repaired."""
     from schedules import direct_sources

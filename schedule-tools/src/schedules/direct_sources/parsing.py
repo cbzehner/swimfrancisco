@@ -10,6 +10,11 @@ from ..models import DAY_ORDER, ScheduleBasis
 from .errors import DirectSourceError
 
 
+def decode_source(content: bytes) -> str:
+    """Captured bytes are the evidence; text is derived from them leniently so one bad byte cannot fail a whole pool."""
+    return content.decode("utf-8", errors="replace")
+
+
 def _payload(
     schedule_basis: ScheduleBasis,
     sessions: list[dict],
