@@ -164,7 +164,6 @@ def test_north_beach_originals_pass_independent_coverage(north_beach_pair):
 @pytest.mark.parametrize("damage", ["omission", "duplicate", "exclusion", "window", "closure", "configuration"])
 def test_north_beach_each_original_rejects_bad_model_output(north_beach_pair, member, damage):
     import copy
-    from schedules.schema import pool_label_payload
     _, components = north_beach_pair
     component = components[member]
     artifact = copy.deepcopy(component["artifact"])
