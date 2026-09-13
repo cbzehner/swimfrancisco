@@ -19,6 +19,7 @@ from .http import (
     fetch_koret_workbook,
     fetch_text,
 )
+from .parsing import decode_source
 from .providers.fitness_clubs import (
     _extract_24_hour_fitness,
     _extract_city_sports,
@@ -102,7 +103,7 @@ def verify_direct_artifact(artifact: dict, source_path: Path, *, today: date) ->
         observed.isoformat(), (observed + timedelta(days=13)).isoformat()
     ):
         raise DirectSourceError("Undated source must use exactly the approved observation lifetime")
-    return verify_pomeroy(content.decode("utf-8"), payload, observed)
+    return verify_pomeroy(decode_source(content), payload, observed)
 
 
 def extract_direct(entry: PoolEntry, *, cache_root: Path | None = None) -> DirectExtraction:
@@ -134,7 +135,7 @@ def extract_direct(entry: PoolEntry, *, cache_root: Path | None = None) -> Direc
     # capture differs from this response only in bytes that carry no schedule.
     # One undecodable byte is replaced rather than raised, so a single
     # malformed page cannot abort the whole direct run.
-    path, sha256, text = capture.path, capture.sha256, capture.content.decode("utf-8", errors="replace")
+    path, sha256, text = capture.path, capture.sha256, decode_source(capture.content)
     fetched = DirectFetchResult(
         path=path,
         sha256=sha256,
@@ -231,7 +232,7 @@ def _extract_browser_entry(entry: PoolEntry, *, cache_root: Path) -> DirectExtra
     path, sha256 = stored.path, stored.sha256
     fetched = DirectFetchResult(path, sha256, stored.from_cache, response.response_url)
     try:
-        inventory = inspect_html_source(entry.slug, stored.content.decode("utf-8", errors="replace"))
+        inventory = inspect_html_source(entry.slug, decode_source(stored.content))
         payload = html_source_payload(inventory, observed)
     except HtmlClosureReviewRequired as error:
         raise CapturedClosureReviewRequired(slug=entry.slug, source_path=relative_to_repo(path),
@@ -277,7 +278,7 @@ def _verify_browser_artifact(artifact: dict, source_path: Path, *, today: date) 
     if (source.get("observed_on") != observed.isoformat() or source.get("freshness_days") != 14
             or not observed <= today <= observed + timedelta(days=13)):
         raise DirectSourceError("HTML observation is expired or future-dated")
-    inventory = inspect_html_source(slug, content.decode("utf-8"))
+    inventory = inspect_html_source(slug, decode_source(content))
     payload = html_source_payload(inventory, observed)
     if payload != artifact.get("payload"):
         raise DirectSourceError("Published HTML payload differs from verified source facts")
@@ -308,8 +309,8 @@ def _verify_access_artifact(artifact: dict, source_path: Path, *, today: date) -
     observed = date.fromisoformat(source["observed_on"])
     if not observed <= today <= observed + timedelta(days=13):
         raise DirectSourceError("HTTP access observation is expired or future-dated")
-    payload = (extractor(content.decode("utf-8"), observed_on=observed)
-               if kind in {"ucsf_fitness_html", "ucsf_bakar_html"} else extractor(content.decode("utf-8")))
+    payload = (extractor(decode_source(content), observed_on=observed)
+               if kind in {"ucsf_fitness_html", "ucsf_bakar_html"} else extractor(decode_source(content)))
     payload = observation_window(payload, observed.isoformat())
     if payload != artifact.get("payload"):
         raise DirectSourceError("HTTP access payload differs from the complete official source")
