@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 from schedules.discover import DiscoverError
-from schedules.models import Aborted, Extracted, FetchResult, PoolResult, ProviderResult, Skipped, Unchanged
+from schedules.models import Aborted, DiscoveryDocument, DiscoveryState, Extracted, FetchResult, PoolResult, ProviderResult, Skipped, Unchanged
 from schedules.models import PoolEntry
 from schedules.paths import REPORT_PATHS
 from schedules.pipeline import (
@@ -235,7 +235,7 @@ SAVA_ADOPTED = "https://sfrecpark.org/DocumentCenter/View/29815"
 FLYER_URL = "https://sfrecpark.org/DocumentCenter/View/29808"
 
 
-def _pdf_entry(slug: str, pdf_url: str, *, status: str = "published", notes: str | None = None) -> PoolEntry:
+def _pdf_entry(slug: str, pdf_url: str, *, status: str = "published", notes: str | None = None, discovery: DiscoveryState | None = None) -> PoolEntry:
     return PoolEntry(
         slug=slug,
         pdf_url=pdf_url,
@@ -243,6 +243,18 @@ def _pdf_entry(slug: str, pdf_url: str, *, status: str = "published", notes: str
         source_status=status,  # type: ignore[arg-type]
         source_kind="sfrecpark_pdf",
         notes=notes,
+        discovery=discovery,
+    )
+
+
+def _discovery(action: str, reason: str, *documents: tuple[int, str, str]) -> DiscoveryState:
+    return DiscoveryState(
+        action=action,  # type: ignore[arg-type]
+        reason=reason,
+        documents=tuple(
+            DiscoveryDocument(view_id=view_id, kind=kind, origin=origin)  # type: ignore[arg-type]
+            for view_id, kind, origin in documents
+        ),
     )
 
 
@@ -552,11 +564,8 @@ def test_force_still_discovers_once(monkeypatch, tmp_path) -> None:
 
 
 def test_garfield_adopt_then_extract_fetches_adopted_url(monkeypatch, tmp_path) -> None:
-    notes = (
-        "discover: 2026-08-19 extra id=29808:closure_notice:table "
-        "band_session_grid id=29799:session_grid:persisted"
-    )
-    registry = [_pdf_entry("garfield-pool", GARFIELD_ADOPTED, notes=notes)]
+    discovery = _discovery("adopt", "session_grid", (29808, "closure_notice", "table"), (29799, "session_grid", "persisted"))
+    registry = [_pdf_entry("garfield-pool", GARFIELD_ADOPTED, discovery=discovery)]
     state = _stub_extract_pipeline(monkeypatch, tmp_path, registry)
     monkeypatch.setattr(
         "schedules.pipeline.discover_all",
@@ -722,8 +731,8 @@ def test_split_part_adopt_does_not_extract(monkeypatch, tmp_path) -> None:
 
 
 def test_flag_does_not_skip_published_extract(monkeypatch, tmp_path) -> None:
-    notes = "discover: 2026-08-19 flag overlapping_windows id=29815:session_grid:table id=29805:session_grid:band"
-    registry = [_pdf_entry("sava-pool", SAVA_SUMMER, notes=notes)]
+    discovery = _discovery("flag", "overlapping_windows", (29815, "session_grid", "table"), (29805, "session_grid", "band"))
+    registry = [_pdf_entry("sava-pool", SAVA_SUMMER, discovery=discovery)]
     state = _stub_extract_pipeline(monkeypatch, tmp_path, registry)
     fall1 = "https://sfrecpark.org/DocumentCenter/View/29815"
     fall2 = "https://sfrecpark.org/DocumentCenter/View/29805"

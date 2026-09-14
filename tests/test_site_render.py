@@ -580,7 +580,7 @@ def test_pool_meta_dates_render_in_human_format(built_site: Path) -> None:
     assert "REVIEWED" not in html
     assert "PDF REVIEWED" not in html
     assert "LAST VERIFIED" not in html
-    assert html.index("recently reopened after a $9M renovation") < html.index(effective_copy)
+    assert html.index(effective_copy) < html.index("SOURCE OFFICIAL SITE")
 
 
 _EN_MONTH_LABELS = [
@@ -594,30 +594,24 @@ def _en_date_label(iso: str) -> str:
     return f"{_EN_MONTH_LABELS[month - 1]} {day}"
 
 
-def _expected_banner_date_labels(schedules: list, today_iso: str, window_end_iso: str) -> list[str]:
-    from schedules.merge import pick_active_schedule
-
-    active = pick_active_schedule(schedules, today_iso)
-    if not active:
-        return []
-    effective_start = active.get("effective_start") or "0000-00-00"
-    effective_end = active.get("effective_end") or "9999-12-31"
+def _expected_static_banner_date_labels(schedules: list) -> list[str]:
     labels = []
-    for closure in active.get("closures") or []:
-        in_window = closure["start"] <= window_end_iso and closure["end"] >= today_iso
-        in_effective = closure["end"] >= effective_start and closure["start"] <= effective_end
-        if not (in_window and in_effective):
-            continue
-        if closure["start"] == closure["end"]:
-            label = _en_date_label(closure["start"])
-            if closure.get("start_time") and closure.get("end_time"):
-                label += f" {closure['start_time']}–{closure['end_time']}"
-        else:
-            label = f"{_en_date_label(closure['start'])} – {_en_date_label(closure['end'])}"
-        labels.append(label)
-    for exception in active.get("access_exceptions") or []:
-        if today_iso <= exception["date"] <= window_end_iso and effective_start <= exception["date"] <= effective_end:
-            labels.append(f"{_en_date_label(exception['date'])} {exception['start']}–{exception['end']}")
+    for schedule in schedules:
+        effective_start = schedule.get("effective_start") or "0000-00-00"
+        effective_end = schedule.get("effective_end") or "9999-12-31"
+        for closure in schedule.get("closures") or []:
+            if closure["end"] < effective_start or closure["start"] > effective_end:
+                continue
+            if closure["start"] == closure["end"]:
+                label = _en_date_label(closure["start"])
+                if closure.get("start_time") and closure.get("end_time"):
+                    label += f" {closure['start_time']}–{closure['end_time']}"
+            else:
+                label = f"{_en_date_label(closure['start'])} – {_en_date_label(closure['end'])}"
+            labels.append(label)
+        for exception in schedule.get("access_exceptions") or []:
+            if effective_start <= exception["date"] <= effective_end:
+                labels.append(f"{_en_date_label(exception['date'])} {exception['start']}–{exception['end']}")
     return labels
 
 
@@ -635,10 +629,8 @@ def test_board_water_cells_render_in_every_locale(built_site: Path) -> None:
         assert empty == 0, f"{code}: {empty}/{len(cells)} water cells empty"
 
 
-def test_expected_banner_labels_flag_only_active_window_closures() -> None:
-    """Fixed-date fixture for the expectation builder used below: a closure
-    in the expired schedule must not surface, one inside the active window
-    must."""
+def test_expected_static_banner_labels_keep_every_window_scoped_notice() -> None:
+    """Static notice selection depends only on its owning schedule window."""
     schedules = [
         {
             "effective_start": "2026-03-17",
@@ -651,28 +643,11 @@ def test_expected_banner_labels_flag_only_active_window_closures() -> None:
             "closures": [{"start": "2026-07-04", "end": "2026-07-04", "reason": "Independence Day", "reason_code": "holiday"}],
         },
     ]
-    assert _expected_banner_date_labels(schedules, "2026-07-01", "2026-07-15") == ["JUL 4"]
+    assert _expected_static_banner_date_labels(schedules) == ["JUL 4"]
 
 
-def test_closure_banners_match_active_schedule_window(built_site: Path) -> None:
-    """Pin the template's upcoming-closure banners to the frontmatter data.
-
-    The template shows closure and access-exception banners only for the
-    active schedule and only inside [today, today+14d]. Other windows stay
-    inside inert templates; later notices stay hidden until a refresh. Recompute that
-    selection in Python for every spot and require the rendered banners to
-    match exactly: in-window closures must render, and closures from
-    expired or upcoming-but-inactive schedules must never leak. (An earlier
-    version asserted a literal "JUL 4" banner and rotted once the date
-    passed.)
-    """
-    from datetime import timedelta
-
-    from schedules._time import pacific_today
-
-    today = pacific_today()
-    today_iso = today.isoformat()
-    window_end_iso = (today + timedelta(days=14)).isoformat()
+def test_static_closure_banners_include_every_window_without_build_date_filter(built_site: Path) -> None:
+    """Every applicable notice ships in ordinary, visible HTML."""
     for spot_md in sorted((ROOT / "content" / "spots").glob("*.md")):
         if len(spot_md.suffixes) != 1 or spot_md.stem.startswith("_"):
             continue
@@ -681,41 +656,27 @@ def test_closure_banners_match_active_schedule_window(built_site: Path) -> None:
             continue
         frontmatter, _ = _markdown_frontmatter_and_body(spot_md)
         schedules = frontmatter.get("extra", {}).get("schedules") or []
-        expected = _expected_banner_date_labels(schedules, today_iso, window_end_iso)
-        active_html = re.sub(r"<template\b[^>]*>.*?</template>", "", page.read_text(), flags=re.S)
+        expected = _expected_static_banner_date_labels(schedules)
+        rendered_html = page.read_text()
         rendered = [
             " ".join(label.split())
             for attributes, label in re.findall(
                 r'<div\b([^>]*\bdata-notice-start\b[^>]*)>\s*<span class="?closure-banner-date"?>(.*?)</span>',
-                active_html,
+                rendered_html,
                 flags=re.S,
             )
-            if not re.search(r"\shidden(?:\s|=|$)", attributes)
         ]
         assert sorted(rendered) == sorted(expected), spot_md.stem
+        assert all(not re.search(r"\shidden(?:\s|=|$)", attrs) for attrs, _ in re.findall(
+            r'<div\b([^>]*\bdata-notice-start\b[^>]*)>(.*?)</div>', rendered_html, flags=re.S
+        )), spot_md.stem
 
 
 @pytest.mark.parametrize("slug", ["balboa-pool", "north-beach-pool"])
-def test_rendered_active_schedule_matches_python_predicate(built_site: Path, slug: str) -> None:
-    """Pin the template's `active_extra` predicate to schedules.merge.pick_active_schedule.
-
-    The template chooses between current and upcoming schedules for the
-    rendered "today" view; board.mjs makes the same choice for client-side
-    horizon queries; pick_active_schedule encodes the canonical Python
-    version. If they ever drift, the rendered effective-range footer will
-    not match what the Python predicate selects for the build's "today".
-    """
-    from schedules._time import pacific_today
-    from schedules.merge import pick_active_schedule
-
+def test_every_schedule_window_renders_as_open_dated_html(built_site: Path, slug: str) -> None:
     frontmatter, _ = _markdown_frontmatter_and_body(ROOT / "content" / "spots" / f"{slug}.md")
     extra = frontmatter["extra"]
     schedules = extra.get("schedules") or []
-    if len(schedules) < 2:
-        pytest.skip(f"{slug} has only one schedule entry; no current/upcoming distinction to test")
-
-    active = pick_active_schedule(schedules, pacific_today().isoformat())
-    assert active is not None
     rendered_html = _read(built_site, slug)
     month_short = {
         "01": "JAN", "02": "FEB", "03": "MAR", "04": "APR",
@@ -727,15 +688,21 @@ def test_rendered_active_schedule_matches_python_predicate(built_site: Path, slu
         year, month, day = iso.split("-")
         return f"{month_short[month]} {int(day)}, {year}"
 
-    expected_start = _fmt(active["effective_start"])
-    expected_end = _fmt(active["effective_end"]) if active.get("effective_end") else None
-    expected = f"SCHEDULE EFFECTIVE FROM {expected_start}"
-    if expected_end:
-        expected += f" TO {expected_end}"
-    assert expected in rendered_html, (
-        f"Template's active_extra and pick_active_schedule disagree for {slug}: "
-        f"expected {expected!r} in rendered HTML"
-    )
+    assert "<template data-schedule-window-template" not in rendered_html
+    rendered_keys = re.findall(r'<section class=schedule-window data-schedule-window="?([^" >]*)"?>', rendered_html)
+    expected_keys = [f"{schedule.get('effective_start', '')}/{schedule.get('effective_end', '')}" for schedule in schedules]
+    assert rendered_keys == expected_keys
+    for schedule in schedules:
+        expected = f"SCHEDULE EFFECTIVE FROM {_fmt(schedule['effective_start'])}"
+        if schedule.get("effective_end"):
+            expected += f" TO {_fmt(schedule['effective_end'])}"
+        assert expected in rendered_html
+
+
+def test_pool_schedule_template_has_no_build_clock_dependency() -> None:
+    template = (ROOT / "templates" / "spots" / "page.html").read_text()
+    assert "now(" not in template
+    assert "1209600" not in template
 
 
 def test_temporary_closure_page_does_not_render_not_verified_fallback(built_site: Path) -> None:

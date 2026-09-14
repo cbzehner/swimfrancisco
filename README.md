@@ -4,6 +4,25 @@ A "departure board" for San Francisco swim spots — 9 public city pools, 5 open
 
 Pool hours are derived from official facility sources and may be wrong. The board marks unverified rows; treat it as a starting point, not a guarantee.
 
+## Operator entry point
+
+Use [`docs/schedules.md`](docs/schedules.md) for the current schedule runbook:
+`content/spots/*.md` is the canonical schedule data, while `data/<slug>/...`
+retains source and attestation evidence. The normal local checks are
+`just schedules-extract --direct` for free sources, optional
+`just schedules-extract --provider openai` for PDF extraction, and `just check`
+before a content change is published. Current blocking decisions are listed by
+After discovery, current blocking decisions are listed by
+`just schedules discover-blocking`; captures still awaiting human review are
+listed by `just schedules pending-reviews`.
+
+Use `just schedules-review` for an explicit correction, then
+`just schedules project <slug>` when a reviewed snapshot needs projection.
+Follow the exact source, review, and deployment evidence in the schedules
+runbook; [`docs/deploy.md`](docs/deploy.md) is the deployment boundary and
+labels the pending production-release design separately from the current
+Workers Builds path.
+
 ## Architecture
 
 A [Zola](https://www.getzola.org/) static site served by a single Cloudflare Worker in the Workers Builds model. The Worker serves the built Zola assets, handles `/api/*`, reverse-proxies PostHog analytics at `/ingest/*` so the same origin serves both, fetches NOAA and NDBC conditions on an hourly cron, and caches them in KV. The frontend is plain vanilla JS (no bundler, no framework). The UI uses an amber-on-navy departure-board aesthetic with split-flap row animations on load. Only map pages load Leaflet.

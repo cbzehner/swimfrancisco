@@ -234,7 +234,7 @@ def test_extract_reruns_after_prompt_change(tmp_path, monkeypatch):
     assert isinstance(results[0], Extracted)
 
 
-def test_flag_notes_do_not_skip_published_extract(tmp_path, monkeypatch):
+def test_flag_discovery_does_not_skip_published_extract(tmp_path, monkeypatch):
     _, fetched = _setup_world(
         tmp_path,
         monkeypatch,
@@ -243,8 +243,8 @@ def test_flag_notes_do_not_skip_published_extract(tmp_path, monkeypatch):
         prompt_text="P",
         registry_extra=(
             'source_status = "published"\n'
-            'notes = """discover: 2026-08-19 flag closure_notice '
-            'id=29808:closure_notice:table"""\n'
+            'discovery = { action = "flag", reason = "closure_notice", '
+            'documents = [{ id = 29808, kind = "closure_notice", origin = "table" }] }\n'
         ),
     )
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", _raise_if_called)

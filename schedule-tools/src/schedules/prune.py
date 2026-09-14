@@ -7,10 +7,10 @@ provider or direct artifact and no reviewed dir of the slug is dated after it
 equals the slug's newest capture date (a fresh capture awaiting extraction or
 closure review); (c) another dir's ``reviewed.json`` names it in
 ``carried_from``; (d) its source is a PDF (Rec & Park corpus used by
-backtests); (e) a file under ``tests/`` or ``docs/`` names the dir. A dir
+backtests); or (e) an explicit corpus-retention pin names the dir. A dir
 whose source body hash does not match its ``source.sha256`` is deleted unless
-(a), (c), (d), or (e) protects it. Everything else is deleted by ``schedules
-prune``, which ``schedules automate`` runs before every commit.
+(a), (c), (d), or (e) protects it. Everything else is deleted by
+``schedules prune``, which ``schedules automate`` runs before every commit.
 """
 
 from __future__ import annotations
@@ -19,6 +19,7 @@ import hashlib
 import json
 import re
 import shutil
+import tomllib
 from collections.abc import Collection
 from pathlib import Path
 
@@ -27,14 +28,16 @@ from .paths import all_review_dirs, parse_review_dir_name
 # The gemini- and anthropic- prefixes are retired for new extractions and
 # kept here because committed PDF capture dirs still hold those artifacts.
 PROVIDER_ARTIFACT = re.compile(r"(?:openai|direct|gemini|anthropic)-[a-z0-9.-]+\.json")
-SNAPSHOT_DIR_NAME = re.compile(rb"\d{4}-\d{2}-\d{2}-[0-9a-f]{12}")
+RETENTION_FIXTURE = Path("tests/fixtures/corpus-retention.toml")
 
 
 def plan_prune(data_root: Path, repo_root: Path) -> list[Path]:
-    """The snapshot dirs no review, backtest, test, or document still needs."""
+    """The snapshot dirs no retention rule still needs."""
+    data_root = data_root.resolve()
+    repo_root = repo_root.resolve()
+    pinned = _explicit_pins(repo_root, data_root)
     if not data_root.is_dir():
         return []
-    documented = _names_in_tests_and_docs(repo_root)
     obsolete: set[Path] = set()
     while True:
         # A deleted review carries nothing forward, so dropping one can leave
@@ -56,7 +59,7 @@ def plan_prune(data_root: Path, repo_root: Path) -> list[Path]:
             found.update(
                 snapshot for snapshot in snapshots
                 if keep_reason(snapshot, newest_reviewed=reviewed[-1] if reviewed else None,
-                               newest_date=newest_date, carried=carried, documented=documented) is None
+                               newest_date=newest_date, carried=carried, pinned=pinned) is None
             )
         if found == obsolete:
             return sorted(obsolete)
@@ -74,7 +77,7 @@ def prune(data_root: Path, repo_root: Path, *, dry_run: bool) -> list[Path]:
 
 def keep_reason(
     snapshot: Path, *, newest_reviewed: Path | None, newest_date: str,
-    carried: set[Path], documented: set[str]
+    carried: set[Path], pinned: set[Path]
 ) -> str | None:
     """Why this snapshot stays, or None when nothing needs it any more."""
     if snapshot == newest_reviewed:
@@ -85,8 +88,8 @@ def keep_reason(
     # backtest corpus is the documents whose source is the PDF itself.
     if (snapshot / "source.pdf").is_file() and not (snapshot / "source.xlsx").is_file():
         return "PDF backtest corpus"
-    if snapshot.name in documented:
-        return "named by a test or document"
+    if snapshot in pinned:
+        return "explicit corpus retention pin"
     if not _proves_its_own_identity(snapshot):
         return None
     if (snapshot / "reviewed.json").is_file():
@@ -125,15 +128,49 @@ def _sidecar_sha256(snapshot: Path) -> str | None:
     return sidecar.read_text().strip() if sidecar.is_file() else None
 
 
-def _names_in_tests_and_docs(repo_root: Path) -> set[str]:
-    """Every snapshot dir name a file under tests/ or docs/ mentions."""
-    names: set[str] = set()
-    for root in (repo_root / "tests", repo_root / "docs"):
-        for path in sorted(root.rglob("*")) if root.is_dir() else []:
-            if path.is_symlink() or not path.is_file():
-                continue
-            names.update(match.group().decode() for match in SNAPSHOT_DIR_NAME.finditer(path.read_bytes()))
-    return names
+def _explicit_pins(repo_root: Path, data_root: Path) -> set[Path]:
+    """Load and validate repository-relative capture directories to retain."""
+    fixture = repo_root / RETENTION_FIXTURE
+    if not fixture.is_file():
+        return set()
+    try:
+        document = tomllib.loads(fixture.read_text())
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        raise ValueError(f"Invalid corpus retention fixture {fixture}: {exc}") from exc
+    if set(document) != {"pins"}:
+        raise ValueError(f"Invalid corpus retention fixture {fixture}: unsupported fields")
+    pins = document.get("pins")
+    if not isinstance(pins, list):
+        raise ValueError(f"Invalid corpus retention fixture {fixture}: pins must be an array")
+    repo_root = repo_root.resolve()
+    data_root = data_root.resolve()
+    validated: set[Path] = set()
+    for index, pin in enumerate(pins):
+        if not isinstance(pin, dict) or set(pin) != {"path", "reason"}:
+            raise ValueError(f"Invalid corpus retention pin {index} in {fixture}")
+        relative = pin["path"]
+        reason = pin["reason"]
+        if not isinstance(relative, str) or not relative or Path(relative).is_absolute():
+            raise ValueError(f"Retention pin {index} has an invalid relative path: {relative!r}")
+        if not isinstance(reason, str) or not reason.strip():
+            raise ValueError(f"Retention pin {index} must explain why it is retained")
+        candidate = repo_root / relative
+        if candidate.is_symlink():
+            raise ValueError(f"Retention pin target must not be a symlink: {relative}")
+        target = candidate.resolve()
+        try:
+            target.relative_to(repo_root)
+            target.relative_to(data_root)
+        except ValueError as exc:
+            raise ValueError(f"Retention pin {relative!r} escapes the repository data root") from exc
+        if not target.is_dir():
+            raise ValueError(f"Retention pin target does not exist as a capture directory: {relative}")
+        if parse_review_dir_name(target.name) is None:
+            raise ValueError(f"Retention pin target is not a capture directory: {relative}")
+        if target in validated:
+            raise ValueError(f"Duplicate retention pin: {relative}")
+        validated.add(target)
+    return validated
 
 
 def _carried_from_dirs(data_root: Path, *, deleted: Collection[Path] = frozenset()) -> set[Path]:

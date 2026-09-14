@@ -24,6 +24,13 @@ def snapshot(data_root, slug, name, **files):
     return directory
 
 
+def retention_fixture(repo, *paths):
+    pins = "\n".join(f'[[pins]]\npath = "{path}"\nreason = "test evidence"\n' for path in paths)
+    (repo / "tests" / "fixtures").mkdir(parents=True, exist_ok=True)
+    content = pins if paths else "pins = []\n"
+    (repo / "tests" / "fixtures" / "corpus-retention.toml").write_text(content)
+
+
 @pytest.fixture
 def repo(tmp_path):
     (tmp_path / "tests").mkdir()
@@ -151,20 +158,60 @@ def test_deletes_a_workbook_snapshot_even_though_it_renders_a_pdf(repo):
     assert plan_prune(data, repo) == [stale]
 
 
-def test_keeps_a_snapshot_a_test_or_document_names(repo):
+def test_keeps_explicit_pins_independently_of_test_or_document_text(repo):
     data = repo / "data"
-    snapshot(data, "sava-pool", "2026-08-17-dddddddddddd",
-             **{"source.html": "fixture", "reviewed.json": {"slug": "sava-pool"}})
-    snapshot(data, "sava-pool", "2026-08-18-eeeeeeeeeeee",
-             **{"source.html": "documented", "reviewed.json": {"slug": "sava-pool"}})
+    pinned = snapshot(data, "sava-pool", "2026-08-17-dddddddddddd",
+                      **{"source.html": "fixture", "reviewed.json": {"slug": "sava-pool"}})
+    citation = snapshot(data, "sava-pool", "2026-08-18-eeeeeeeeeeee",
+                        **{"source.html": "documented", "reviewed.json": {"slug": "sava-pool"}})
     unnamed = snapshot(data, "sava-pool", "2026-08-19-ffffffffffff",
                        **{"source.html": "orphan", "reviewed.json": {"slug": "sava-pool"}})
     snapshot(data, "sava-pool", "2026-08-20-bbbbbbbbbbbb",
              **{"source.html": "new", "reviewed.json": {"slug": "sava-pool"}})
-    (repo / "tests" / "test_frozen.py").write_text(
-        'CAPTURE = "data/sava-pool/2026-08-17-dddddddddddd/source.html"\n')
-    (repo / "docs" / "schedules.md").write_text("The 2026-08-18-eeeeeeeeeeee capture shows this.\n")
-    assert plan_prune(data, repo) == [unnamed]
+    retention_fixture(repo, "data/sava-pool/2026-08-17-dddddddddddd")
+    (repo / "tests" / "test_frozen.py").write_text("The citation can change without changing retention.\n")
+    (repo / "docs" / "schedules.md").write_text("The citation was removed.\n")
+    assert plan_prune(data, repo) == [citation, unnamed]
+    assert pinned.is_dir()
+    assert citation.is_dir()
+
+
+def test_adding_or_removing_a_pin_changes_only_its_target(repo):
+    data = repo / "data"
+    pinned = snapshot(data, "sava-pool", "2026-08-18-eeeeeeeeeeee", source_html="pinned")
+    stale = snapshot(data, "sava-pool", "2026-08-19-ffffffffffff", source_html="stale")
+    newest = snapshot(data, "sava-pool", "2026-08-20-bbbbbbbbbbbb", source_html="new")
+    retention_fixture(repo, "data/sava-pool/2026-08-18-eeeeeeeeeeee")
+    assert plan_prune(data, repo) == [stale]
+    retention_fixture(repo)
+    assert plan_prune(data, repo) == [pinned, stale]
+    assert newest.is_dir()
+
+
+def test_explicit_pins_work_with_relative_roots(repo, monkeypatch):
+    data = repo / "data"
+    pinned = snapshot(data, "sava-pool", "2026-08-18-eeeeeeeeeeee", source_html="pinned")
+    stale = snapshot(data, "sava-pool", "2026-08-19-ffffffffffff", source_html="stale")
+    snapshot(data, "sava-pool", "2026-08-20-bbbbbbbbbbbb", source_html="new")
+    retention_fixture(repo, "data/sava-pool/2026-08-18-eeeeeeeeeeee")
+    monkeypatch.chdir(repo)
+
+    assert plan_prune(Path("data"), Path(".")) == [stale]
+    assert pinned.is_dir()
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "../outside",
+        "data/missing/2026-08-18-eeeeeeeeeeee",
+        "data/sava-pool/not-a-capture",
+    ],
+)
+def test_invalid_retention_pin_fails_clearly(repo, path):
+    retention_fixture(repo, path)
+    with pytest.raises(ValueError, match="Retention pin"):
+        plan_prune(repo / "data", repo)
 
 
 def test_prune_removes_whole_dirs_only_when_it_is_not_a_dry_run(repo):

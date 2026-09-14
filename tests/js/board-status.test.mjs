@@ -1027,3 +1027,40 @@ test("single-document session cancellation applies before a narrower facility cl
   assert.equal(sessionsForDate(schedule, new Date("2026-09-17T11:30:00")).length, 2);
   assert.equal(computeStatus(schedule, new Date("2026-10-22T11:30:00")).status, "CHECK");
 });
+
+const SEPTEMBER_14_ANSWER_CASES = [
+  {
+    name: "a full-day closure overrides the 07:00-08:00 lap session",
+    closures: [{
+      start: "2026-09-14",
+      end: "2026-09-14",
+      reason: "Staff training",
+      reason_code: "staff_training",
+    }],
+    expectedBoard: "CLOSED",
+    expectedDetail: "CLOSED_TODAY",
+  },
+  {
+    name: "the same independently specified session is open without the closure",
+    closures: [],
+    expectedBoard: "OPEN",
+    expectedDetail: "OPEN",
+  },
+];
+
+for (const answerCase of SEPTEMBER_14_ANSWER_CASES) {
+  test(`Monday 2026-09-14 07:30 Pacific: ${answerCase.name}`, () => {
+    // Synthetic answer fixture: the expected result is stated above rather
+    // than derived from a source artifact or from the helper under test.
+    const schedule = {
+      effective_start: "2026-09-01",
+      effective_end: "2026-12-12",
+      sessions: [{ day: "monday", type: "lap_swim", start: "07:00", end: "08:00" }],
+      closures: answerCase.closures,
+    };
+    const now = new Date("2026-09-14T07:30:00");
+
+    assert.equal(computeStatus(schedule, now).status, answerCase.expectedBoard);
+    assert.equal(computeDetailStatus(schedule, now).kind, answerCase.expectedDetail);
+  });
+}

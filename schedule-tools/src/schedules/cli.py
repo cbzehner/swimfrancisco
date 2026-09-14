@@ -15,7 +15,7 @@ from .paths import (
 )
 from .publish import publish_pending_all
 from .registry import load_registry
-from .eval import collect_pool_evals, render_report, write_report
+from .eval import EvaluationArtifactError, collect_pool_evals, render_report, write_report
 from .pipeline import (
     DirectRun,
     DiscoverAndExpand,
@@ -314,7 +314,10 @@ def eval_command(stdout: bool, all_dirs: bool) -> None:
     No API calls. Output is a per-pool / per-provider scorecard with
     aggregate precision/recall/F1.
     """
-    evals = collect_pool_evals(all_dirs=all_dirs)
+    try:
+        evals = collect_pool_evals(all_dirs=all_dirs)
+    except EvaluationArtifactError as exc:
+        raise click.ClickException(str(exc)) from exc
     if not evals:
         raise click.ClickException("no (review_dir, provider) pairs found.")
     if stdout:

@@ -3,7 +3,15 @@ from __future__ import annotations
 import tomllib
 from typing import get_args
 
-from .models import CaptureMethod, PoolEntry, PoolSource, SourceKind, SourceStatus
+from .models import (
+    CaptureMethod,
+    DiscoveryDocument,
+    DiscoveryState,
+    PoolEntry,
+    PoolSource,
+    SourceKind,
+    SourceStatus,
+)
 from .paths import CONTENT_SPOTS_DIR, REGISTRY_PATH
 
 
@@ -84,6 +92,7 @@ def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
         source_status = raw_entry.get("source_status", "published")
         source_kind = raw_entry.get("source_kind", "sfrecpark_pdf")
         notes = raw_entry.get("notes")
+        discovery = parse_discovery(raw_entry.get("discovery"), slug)
         capture_method = raw_entry.get("capture_method", "http")
         if not isinstance(capture_method, str) or capture_method not in _VALID_CAPTURE_METHODS:
             raise ValueError("capture_method must be http or cloudflare_browser")
@@ -125,6 +134,7 @@ def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
                 capture_method=capture_method,
                 notes=notes,
                 pool_sources=pool_sources,
+                discovery=discovery,
             )
         )
 
@@ -136,3 +146,34 @@ def _require_string(raw_entry: dict, field: str, index: int) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"Registry entry #{index} is missing required field {field!r}.")
     return value.strip()
+
+
+def parse_discovery(raw: object, slug: str) -> DiscoveryState | None:
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise ValueError(f"discovery for {slug!r} must be a table.")
+    action = raw.get("action")
+    if not isinstance(action, str) or action not in {"adopt", "unchanged", "flag"}:
+        raise ValueError(f"discovery action for {slug!r} is invalid.")
+    reason = raw.get("reason")
+    if not isinstance(reason, str) or not reason.strip():
+        raise ValueError(f"discovery reason for {slug!r} must be a non-empty string.")
+    documents = raw.get("documents", [])
+    if not isinstance(documents, list):
+        raise ValueError(f"discovery documents for {slug!r} must be an array.")
+    parsed: list[DiscoveryDocument] = []
+    for index, item in enumerate(documents, start=1):
+        if not isinstance(item, dict):
+            raise ValueError(f"discovery document #{index} for {slug!r} must be a table.")
+        view_id = item.get("id")
+        if isinstance(view_id, bool) or not isinstance(view_id, int) or view_id <= 0:
+            raise ValueError(f"discovery document #{index} for {slug!r} has an invalid id.")
+        kind = item.get("kind")
+        if not isinstance(kind, str) or kind not in {"session_grid", "closure_notice", "split_part", "other"}:
+            raise ValueError(f"discovery document #{index} for {slug!r} has an invalid kind.")
+        origin = item.get("origin")
+        if not isinstance(origin, str) or origin not in {"table", "band", "persisted"}:
+            raise ValueError(f"discovery document #{index} for {slug!r} has an invalid origin.")
+        parsed.append(DiscoveryDocument(view_id=view_id, kind=kind, origin=origin))
+    return DiscoveryState(action=action, reason=reason.strip(), documents=tuple(parsed))

@@ -330,8 +330,7 @@ function initHorizonControl(now) {
 
 const REFRESH_INTERVAL_MS = 60_000;
 
-// Intra-day refresh. Day tick-over is server-rendered by the 00:00 PT
-// rebuild; client JS owns the minute-level updates within the day, so a tab
+// Periodic refresh. Client JS owns date and minute-level updates, so a tab
 // left open doesn't keep asserting "OPEN" hours after closing. filters.js
 // listens for sf:board-refreshed and re-applies filter/sort state on top of
 // the fresh statuses; conditions.js refreshes the bulletin clock and count.

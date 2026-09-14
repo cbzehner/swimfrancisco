@@ -138,6 +138,127 @@ for (const engine of ["webkit", "chromium"]) {
     await assert.rejects(verifyPoolPage(page, expected, instant), /wrong Pacific weekday/);
   });
 
+  test(`[${engine}] Pacific answers agree for Los Angeles and Tokyo visitors`, async (t) => {
+    const syntheticCases = [
+      {
+        name: "September 14 full-day closure",
+        instant: "2026-09-14T14:30:00Z",
+        schedule: {
+          effective_start: "2026-09-01",
+          effective_end: "2026-12-12",
+          sessions: [{ day: "monday", type: "lap_swim", start: "07:00", end: "08:00" }],
+          closures: [{
+            start: "2026-09-14",
+            end: "2026-09-14",
+            reason: "Staff training",
+            reason_code: "staff_training",
+          }],
+        },
+        expected: "CLOSED",
+        expectedBoardText: "CLOSED",
+        expectedDetailText: "CLOSED TODAY — STAFF TRAINING",
+      },
+      {
+        name: "September 14 session without the closure",
+        instant: "2026-09-14T14:30:00Z",
+        schedule: {
+          effective_start: "2026-09-01",
+          effective_end: "2026-12-12",
+          sessions: [{ day: "monday", type: "lap_swim", start: "07:00", end: "08:00" }],
+          closures: [],
+        },
+        expected: "OPEN",
+        expectedBoardText: "OPEN",
+        expectedDetailText: "OPEN — LAP SWIM UNTIL 08:00",
+      },
+      {
+        name: "Pacific midnight during daylight time",
+        instant: "2026-09-15T07:00:00Z",
+        schedule: {
+          effective_start: "2026-09-01",
+          effective_end: "2026-12-12",
+          sessions: [{ day: "tuesday", type: "lap_swim", start: "00:00", end: "01:00" }],
+          closures: [],
+        },
+        expected: "OPEN",
+        expectedBoardText: "OPEN",
+        expectedDetailText: "OPEN — LAP SWIM UNTIL 01:00",
+      },
+      {
+        name: "spring-forward Pacific wall time",
+        instant: "2026-03-08T10:30:00Z",
+        schedule: {
+          effective_start: "2026-01-01",
+          effective_end: "2026-12-31",
+          sessions: [{ day: "sunday", type: "lap_swim", start: "03:00", end: "04:00" }],
+          closures: [],
+        },
+        expected: "OPEN",
+        expectedBoardText: "OPEN",
+        expectedDetailText: "OPEN — LAP SWIM UNTIL 04:00",
+      },
+      {
+        name: "fall-back repeated Pacific hour",
+        instant: "2026-11-01T09:30:00Z",
+        schedule: {
+          effective_start: "2026-01-01",
+          effective_end: "2026-12-31",
+          sessions: [{ day: "sunday", type: "lap_swim", start: "01:00", end: "02:00" }],
+          closures: [],
+        },
+        expected: "OPEN",
+        expectedBoardText: "OPEN",
+        expectedDetailText: "OPEN — LAP SWIM UNTIL 02:00",
+      },
+    ];
+
+    for (const answerCase of syntheticCases) {
+      for (const timezoneId of ["America/Los_Angeles", "Asia/Tokyo"]) {
+        const scheduleJson = JSON.stringify(answerCase.schedule);
+        const page = await fixturePage(t, engine, `
+          <script>window.SWIMFRANCISCO_I18N = { lap: "LAP SWIM" };</script>
+          <table class="board"><tbody><tr data-type="pool" data-slug="answer-fixture" data-schedule='${scheduleJson}'>
+            <td data-cell="status"></td><td data-cell="next"></td>
+          </tr></tbody></table>
+          <div class="detail-root" data-schedule='${scheduleJson}'>
+            <span data-field="status"></span><span data-field="next"></span>
+            <section class="today-block"><ul class="today-block-list"></ul></section>
+          </div>
+          <script type="module" src="/js/status.js"></script>
+          <script type="module" src="/js/detail.js"></script>`, {
+          time: answerCase.instant,
+          timezoneId,
+        });
+        await page.goto(`${baseURL}/fixture`);
+        const boardStatus = page.locator('[data-cell="status"]');
+        const boardLabel = boardStatus.locator(".status-pill");
+        const detailStatus = page.locator('[data-field="status"]');
+        await boardLabel.waitFor({ state: "visible" });
+        await detailStatus.waitFor({ state: "visible" });
+        assert.equal(
+          await boardStatus.getAttribute("data-status-value"),
+          answerCase.expected,
+          `${answerCase.name} in ${timezoneId}`,
+        );
+        assert.equal(
+          await boardLabel.textContent(),
+          answerCase.expectedBoardText,
+          `${answerCase.name} must show the expected board label in ${timezoneId}`,
+        );
+        assert.equal(
+          await detailStatus.textContent(),
+          answerCase.expectedDetailText,
+          `${answerCase.name} must show the expected detail answer in ${timezoneId}`,
+        );
+        assert.deepEqual(
+          JSON.parse(await page.locator(".detail-root").getAttribute("data-schedule")),
+          answerCase.schedule,
+          `${answerCase.name} must use the embedded schedule unchanged`,
+        );
+      }
+    }
+  });
+
   for (const viewport of [{ width: 1280, height: 900 }, { width: 320, height: 700 }]) {
     test(`[${engine}/${viewport.width}px] real map fills the viewport and markers open popups`, async (t) => {
       const context = await browsers[engine].newContext({ viewport, reducedMotion: "reduce" });
@@ -368,7 +489,9 @@ for (const engine of ["webkit", "chromium"]) {
           <p class="today-block-heading">TODAY · THURSDAY</p>
           <ul class="today-block-list"><li>stale Thursday sessions</li></ul>
         </section>
-        <div data-schedule-window="2026-09-01/2026-09-05">
+        <section class="schedule-window" data-schedule-window="2026-09-01/2026-09-05">
+        <button class="schedule-window-summary" aria-expanded="true">Sep 1–5</button>
+        <div class="schedule-window-content">
         <table class="weekly-grid"><thead><tr>
           <th data-day="thursday" data-today="true">THU</th>
           <th data-day="friday">FRI</th><th data-day="saturday">SAT</th>
@@ -378,13 +501,18 @@ for (const engine of ["webkit", "chromium"]) {
         </tr></tbody></table>
         <section data-dated-notices><div data-notice-start="2026-09-04" data-notice-end="2026-09-04">Old notice</div></section>
         </div>
-        <template data-schedule-window-template="2026-09-07/2026-09-30">
-          <div data-schedule-window="2026-09-07/2026-09-30">
+        </section>
+        <section class="schedule-window" data-schedule-window="2026-09-07/2026-09-30">
+        <button class="schedule-window-summary" aria-expanded="true">Sep 7–30</button>
+        <div class="schedule-window-content">
             <table class="weekly-grid"><thead><tr><th data-day="monday">MON</th></tr></thead>
               <tbody><tr><td data-day="monday">10:00–11:00</td></tr></tbody></table>
-            <section data-dated-notices><div data-notice-start="2026-09-08" data-notice-end="2026-09-08">New notice</div></section>
-          </div>
-        </template>
+            <section data-dated-notices>
+              <div data-notice-start="2026-09-08" data-notice-end="2026-09-08">New notice</div>
+              <div data-notice-start="2026-09-25" data-notice-end="2026-09-25">Later notice</div>
+            </section>
+        </div>
+        </section>
         <p class="meta-effective">Stale window dates</p>
       </div><script type="module" src="/js/detail.js"></script>`, {
       time: "2026-09-05T06:59:00Z", timezoneId: "Asia/Tokyo",
@@ -404,9 +532,11 @@ for (const engine of ["webkit", "chromium"]) {
 
     await page.clock.fastForward(24 * 60 * 60_000);
     assert.equal(await page.locator(".today-block").isHidden(), true, "a gap after the old schedule expires must not show its rows");
-    assert.equal(await page.locator("[data-schedule-window]").getAttribute("data-schedule-window"), "2026-09-07/2026-09-30");
-    assert.equal(await page.locator(".weekly-grid td").textContent(), "10:00–11:00", "the weekly grid must change with the selected window");
-    assert.equal(await page.locator("[data-notice-start]").textContent(), "New notice");
+    const activeWindow = page.locator('[data-schedule-window] .schedule-window-summary[aria-expanded="true"]').locator("..");
+    assert.equal(await activeWindow.getAttribute("data-schedule-window"), "2026-09-07/2026-09-30");
+    assert.equal(await activeWindow.locator(".weekly-grid td").textContent(), "10:00–11:00", "the weekly grid must change with the selected window");
+    assert.equal(await page.locator('[data-notice-start="2026-09-08"]').isVisible(), true);
+    assert.equal(await page.locator('[data-notice-start="2026-09-25"]').getAttribute("hidden"), "", "a notice beyond fourteen days stays compact");
     assert.match(await page.locator(".meta-effective").textContent(), /Sep 7, 2026.*Sep 30, 2026/i);
     assert.doesNotMatch(await page.locator('[data-field="status"]').textContent(), /CLOSED/);
     assert.equal(await page.locator('[data-today="true"]').count(), 0, "a day absent from the grid must clear the old highlight");
@@ -416,12 +546,16 @@ for (const engine of ["webkit", "chromium"]) {
     assert.deepEqual(await page.locator(".today-block .time").allTextContents(), ["10:00–11:00"]);
     assert.equal(await page.locator(".today-block").isVisible(), true, "a new schedule window must supply today's rows");
 
+    await page.clock.setSystemTime(new Date("2026-09-11T19:00:00Z"));
+    await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+    assert.equal(await page.locator('[data-notice-start="2026-09-25"]').getAttribute("hidden"), null, "the same build reveals a notice when it enters the fourteen-day horizon");
+
     await page.clock.setSystemTime(new Date("2026-09-06T03:54:00Z"));
     await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
     assert.equal(await page.locator(".today-block-heading").textContent(), "TODAY · SATURDAY", "restoring a tab must refresh the date without waiting for the timer");
     assert.deepEqual(await page.locator(".today-block .time").allTextContents(), ["11:30–12:45", "14:00–15:30"]);
-    assert.equal(await page.locator("[data-schedule-window]").getAttribute("data-schedule-window"), "2026-09-01/2026-09-05");
-    assert.equal(await page.locator("[data-dated-notices]").isHidden(), true, "yesterday's notice must disappear when a tab is restored");
+    assert.equal(await page.locator('[data-schedule-window] .schedule-window-summary[aria-expanded="true"]').locator("..").getAttribute("data-schedule-window"), "2026-09-01/2026-09-05");
+    assert.equal(await page.locator('[data-schedule-window="2026-09-01/2026-09-05"] [data-dated-notices]').getAttribute("hidden"), "", "yesterday's notice must disappear when a tab is restored");
     assert.deepEqual(errors, []);
   });
 
@@ -444,8 +578,66 @@ for (const engine of ["webkit", "chromium"]) {
     const staticPage = await withoutScripts.newPage();
     await staticPage.goto(`${baseURL}/spots/mission-community-pool/`);
     assert.equal(await staticPage.locator(".today-block").isHidden(), true, "static HTML must not claim the build weekday is today");
+    assert.equal(await staticPage.locator('[data-field="status"]').textContent(), "—", "static HTML must not flash an OPEN claim");
     assert.equal(await staticPage.locator('[data-today="true"]').count(), 0);
-    assert.equal(await staticPage.locator("table.weekly-grid").isVisible(), true, "the weekly timetable must remain available without scripts");
+    assert.equal(
+      await staticPage.locator("[data-schedule-window]").evaluateAll((windows) => windows.every((window) => window.querySelector("table.weekly-grid"))),
+      true,
+      "every weekly timetable must remain in the document without scripts",
+    );
+    assert.equal(
+      await staticPage.locator("[data-schedule-window]").evaluateAll((windows) => windows.every((window) => window.querySelector(".schedule-window-summary")?.getAttribute("aria-expanded") === "true")),
+      true,
+      "every dated schedule window must remain expanded without scripts",
+    );
+    const staticWindow = staticPage.locator("[data-schedule-window]").first();
+    await staticWindow.locator(".schedule-window-summary").evaluate((button) => button.setAttribute("aria-expanded", "false"));
+    await staticWindow.locator(".schedule-window-content").evaluate((content) => { content.hidden = true; });
+    await staticPage.emulateMedia({ media: "print" });
+    assert.equal(
+      await staticWindow.locator(".schedule-window-content").isVisible(),
+      true,
+      "print CSS must include a collapsed schedule window without scripts",
+    );
+  });
+
+  test(`[${engine}] print exposes every dated notice and restores screen state`, async (t) => {
+    const schedule = { schedules: [{
+      effective_start: "2026-09-01", effective_end: "2026-09-30",
+      sessions: [{ day: "saturday", type: "lap_swim", start: "10:00", end: "11:00" }],
+      closures: [], access_exceptions: [],
+    }] };
+    const page = await fixturePage(t, engine, `
+      <div class="detail-root" data-schedule='${JSON.stringify(schedule)}'>
+        <section class="schedule-window" data-schedule-window="2026-09-01/2026-09-30">
+          <button class="schedule-window-summary" aria-expanded="true">Sep 1–30</button>
+          <div class="schedule-window-content">
+            <table class="weekly-grid"><tbody><tr><td>10:00–11:00</td></tr></tbody></table>
+            <section class="closure-banners" data-dated-notices>
+              <div class="closure-banner" data-notice-kind="closure" data-notice-start="2026-09-25" data-notice-end="2026-09-25">Closure beyond the horizon</div>
+              <div class="closure-banner" data-notice-kind="access-exception" data-notice-start="2026-09-25" data-notice-end="2026-09-25">Access change beyond the horizon</div>
+            </section>
+          </div>
+        </section>
+      </div><script type="module" src="/js/detail.js"></script>`, {
+      time: "2026-09-05T18:00:00Z", timezoneId: "Asia/Tokyo",
+    });
+    await page.goto(`${baseURL}/fixture`);
+    const scheduleWindow = page.locator("[data-schedule-window]");
+    const notices = page.locator("[data-notice-kind]");
+    assert.equal(await notices.first().getAttribute("hidden"), "", "future notices start outside the screen horizon");
+    await scheduleWindow.locator(".schedule-window-summary").evaluate((button) => button.setAttribute("aria-expanded", "false"));
+    await scheduleWindow.locator(".schedule-window-content").evaluate((content) => { content.hidden = true; });
+    await page.emulateMedia({ media: "print" });
+    await page.evaluate(() => window.dispatchEvent(new Event("beforeprint")));
+    assert.equal(await scheduleWindow.locator(".schedule-window-summary").getAttribute("aria-expanded"), "true", "print must expand collapsed windows");
+    assert.equal(await scheduleWindow.locator(".schedule-window-content").isVisible(), true);
+    assert.equal(await notices.first().isVisible(), true, "print must include a closure beyond fourteen days");
+    assert.equal(await notices.nth(1).isVisible(), true, "print must include an access exception beyond fourteen days");
+    await page.evaluate(() => window.dispatchEvent(new Event("afterprint")));
+    assert.equal(await scheduleWindow.locator(".schedule-window-summary").getAttribute("aria-expanded"), "false", "print must restore the collapsed window");
+    assert.equal(await notices.first().getAttribute("hidden"), "", "print must restore the closure horizon");
+    assert.equal(await notices.nth(1).getAttribute("hidden"), "", "print must restore the access exception horizon");
   });
 
   test(`[${engine}] detail conditions retry, refresh, and clear withdrawn readings`, async (t) => {

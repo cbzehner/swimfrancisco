@@ -113,3 +113,47 @@ def test_browser_capture_rejects_unapproved_sources(tmp_path, slug):
     _capture_registry(path, slug=slug, kind=entry.source_kind, url=entry.pdf_url, method='"cloudflare_browser"')
     with pytest.raises(ValueError, match="six approved HTML sources"):
         load_registry(path)
+
+
+@pytest.mark.parametrize(
+    "discovery",
+    [
+        '{ action = "flag", reason = "x", documents = [{ id = 0, kind = "session_grid", origin = "band" }] }',
+        '{ action = "flag", reason = "x", documents = [{ id = "29799", kind = "session_grid", origin = "band" }] }',
+        '{ action = "flag", reason = "x", documents = [{ id = 29799, kind = "unknown", origin = "band" }] }',
+        '{ action = "flag", reason = "x", documents = [{ id = 29799, kind = "session_grid", origin = "unknown" }] }',
+        '{ action = "flag", reason = "x", documents = [{ id = 29799, kind = [], origin = "band" }] }',
+        '{ action = "flag", reason = "x", documents = [{ id = 29799, kind = "session_grid", origin = [] }] }',
+    ],
+)
+def test_registry_rejects_invalid_structured_discovery_document(tmp_path, discovery):
+    path = tmp_path / "registry.toml"
+    path.write_text(
+        '[[pool]]\nslug = "jccsf"\npdf_url = "https://www.jccsf.org/fitness/aquatics/"\n'
+        'official_page_url = "https://www.jccsf.org/fitness/aquatics/"\n'
+        f"discovery = {discovery}\n"
+    )
+    with pytest.raises(ValueError, match="discovery document"):
+        load_registry(path)
+
+
+def test_registry_rejects_invalid_structured_discovery_state(tmp_path):
+    path = tmp_path / "registry.toml"
+    path.write_text(
+        '[[pool]]\nslug = "jccsf"\npdf_url = "https://www.jccsf.org/fitness/aquatics/"\n'
+        'official_page_url = "https://www.jccsf.org/fitness/aquatics/"\n'
+        'discovery = { action = "unknown", reason = "x", documents = [] }\n'
+    )
+    with pytest.raises(ValueError, match="discovery action"):
+        load_registry(path)
+
+
+def test_registry_rejects_non_string_discovery_action(tmp_path):
+    path = tmp_path / "registry.toml"
+    path.write_text(
+        '[[pool]]\nslug = "jccsf"\npdf_url = "https://www.jccsf.org/fitness/aquatics/"\n'
+        'official_page_url = "https://www.jccsf.org/fitness/aquatics/"\n'
+        'discovery = { action = [], reason = "x", documents = [] }\n'
+    )
+    with pytest.raises(ValueError, match="discovery action"):
+        load_registry(path)

@@ -203,7 +203,6 @@ Airport departure board aesthetic. Split-flap animation.
   - Walks each open-water spot's `temp_sources` chain (USGS, NOAA, NDBC, ERDDAP, satellite SST) until one returns a fresh reading
   - Fetches per-spot NOAA tide predictions
   - Writes the slug-keyed bulk record to KV under the single `conditions` key
-  - On the 00:00 PT tick, fires the Workers Builds deploy hook so date-sensitive HTML is rebuilt
 - **Endpoints:**
   - `GET /api/conditions` — slug-keyed conditions for every spot (board + detail pages)
   - `GET /api/map-config` — public CARTO basemap configuration for the browser; `503` when `CARTO_BASEMAP_API_KEY` is not bound

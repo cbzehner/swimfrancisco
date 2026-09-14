@@ -1012,6 +1012,47 @@ table.board tbody tr.flap td {
 .today-block-list .time { font-family: var(--mono); }
 .today-block-list .row-label { color: var(--red); }
 
+.schedule-window {
+  margin: 16px 0 0;
+}
+.schedule-window-summary {
+  display: block;
+  width: calc(100% - 28px);
+  appearance: none;
+  margin: 0 14px;
+  padding: 10px 14px;
+  border: 2px solid var(--ink);
+  background: var(--paper-2);
+  color: var(--ink);
+  cursor: pointer;
+  font-family: var(--display);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+}
+.schedule-window-summary[aria-expanded="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+.schedule-window-summary:focus-visible {
+  outline: 3px solid var(--red);
+  outline-offset: 3px;
+}
+.schedule-window-content[hidden] {
+  display: none;
+}
+
+@media print {
+  .schedule-window-content {
+    display: block !important;
+  }
+  .schedule-window-summary {
+    background: transparent !important;
+    color: var(--ink) !important;
+  }
+}
+
 /* ── Weekly grid (spot detail · pools) ─────────────────────────────────── */
 /* <caption> instead of preceding <h2> — gives the table a programmatic
    accessible name (WCAG H39) so it surfaces in screen-reader table rotors
