@@ -66,9 +66,6 @@ Subsequent changes are single-phase: `terraform plan` → `terraform apply`.
   not yet expose Workers Builds git source (see
   [cloudflare/terraform-provider-cloudflare#6924]). Created once in the
   dashboard; see `docs/deploy.md` for the field values.
-- **Workers Builds deploy hook URL.** Generated in the dashboard,
-  stored as the `WORKERS_BUILDS_DEPLOY_HOOK` Worker secret via
-  `wrangler secret put`.
 - **Worker code, cron triggers.** `wrangler deploy` and
   `wrangler triggers deploy` own these.
 

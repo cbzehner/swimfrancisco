@@ -9,6 +9,32 @@ Dated evidence and past decisions live in
 [`schedules-decision-log.md`](schedules-decision-log.md). This file is the
 runbook.
 
+## Current state (2026-09-12)
+
+`content/spots/*.md` remains the only canonical schedule data. Accepted
+snapshots, source bytes, hashes, provider/direct artifacts, and attestation
+chains under `data/<slug>/...` are retained evidence and regeneration inputs.
+They do not become a second authority. Local extraction and review write
+artifacts first; `schedules review` or the documented `publish-pending` gates
+are the paths that can project accepted data into Markdown.
+
+The normal recovery loop is: run the direct lane, inspect
+`tmp/extraction-report-direct.md`, run the provider lane only when needed,
+inspect the relevant source and provider artifact, review or publish through
+the gates, run `just check`, and retain the exact source/evidence diff. After
+discovery, use `just schedules discover-blocking` for current discovery holds;
+use `just schedules pending-reviews` for captures still awaiting human review.
+For an incorrect publication, disable future automation, preserve the source
+and receipt, make a scoped reviewed correction, and verify the exact
+deployment; do not reset `main` or hand-edit published schedules to hide the
+failure.
+
+Static schedule pages are date-independent. The Worker runs only the hourly
+conditions refresh, and no daily rebuild hook or build-age check is required.
+The current production owner is still Workers Builds; the separately dated
+release design in [`deploy.md`](deploy.md) is pending staging and cutover and
+has changed no production setting.
+
 ## Setup
 
 Use `uv` for package management in the extractor project:
@@ -69,13 +95,15 @@ Useful flags on `extract`:
 - `--url` to fetch one PDF URL for a single `--only` slug without rewriting the
   registry
 
-`extract` never writes `content/spots/*.md` or `reviewed.json` — those
-only change through `schedules review`. The pipeline produces direct or
-provider artifacts under `data/<slug>/<date>-<sha12>/` and writes one fixed
-report per pass: `tmp/extraction-report-direct.md` or
-`tmp/extraction-report-openai.md`. Each report labels the run `success` or
-`partial success`, includes the failure count, and retains failed pool
-identities and complete errors. The operator approves changes by hand.
+`extract` never projects `content/spots/*.md`, but it may carry an existing
+attestation into a new capture when the extracted payload is unchanged.
+Human review and gated `publish-pending` publication can write approvals and
+project accepted content. The pipeline produces direct or provider artifacts
+under `data/<slug>/<date>-<sha12>/` and writes one fixed report per pass:
+`tmp/extraction-report-direct.md` or `tmp/extraction-report-openai.md`. Each
+report labels the run `success` or `partial success`, includes the failure
+count, and retains failed pool identities and complete errors. The operator
+approves changes by hand when a gate does not establish publication.
 
 **Exit codes:** the `extract` command exits non-zero when any pool failed
 (hard-blocked or errored). Partial failure never exits 0; shell automation
@@ -176,10 +204,13 @@ provider or direct artifact and no reviewed dir of the slug is dated after it
 (a pending extraction, not yet superseded by a review), or (ii) its date
 equals the slug's newest capture date (a fresh capture awaiting extraction or
 closure review); (c) another dir's `reviewed.json` names it in `carried_from`;
-(d) its source is a PDF (Rec & Park corpus used by backtests); (e) a file
-under `tests/` or `docs/` names the dir. A dir whose source body hash does
-not match its `source.sha256` is deleted unless (a), (c), (d), or (e)
-protects it.
+(d) its source is a PDF (Rec & Park corpus used by backtests); (e) the
+repository's explicit retention fixture
+[`tests/fixtures/corpus-retention.toml`](../tests/fixtures/corpus-retention.toml)
+pins the relative capture path with a reason. A dir whose source body hash
+does not match its `source.sha256` is deleted unless (a), (c), (d), or (e)
+protects it. References in tests or documents do not protect a non-PDF
+capture by themselves.
 Everything else is deleted by `schedules prune`, which `schedules automate`
 runs before every commit.
 
@@ -189,13 +220,17 @@ Run it by hand with `just schedules prune`.
 
 The source registry lives at `schedule-tools/src/schedules/registry.toml`.
 
-CI discovers Rec & Park `DocumentCenter` IDs daily from each pool's
-`official_page_url`. `schedules discover` rewrites `pdf_url` to the
+The weekly hosted `schedules automate` run discovers Rec & Park
+`DocumentCenter` IDs from each pool's `official_page_url`. `schedules discover`
+rewrites `pdf_url` to the
 table-linked current `session_grid` (a unique table grid, or the current
 window of a date-disjoint sequential set). Extract then fetches one href
 per collapsed window. Discover never writes `content/spots/`.
 `publish-pending` writes eligible unique grids, sequential sittings, and
-unique table closure flyers. The live site updates when that PR merges.
+unique table closure flyers directly into the generated candidate and its
+checked `main` promotion. The live site updates only after the exact CI,
+deployment, and browser checks in the automation receipt pass; unclear
+closure notices use the separate draft review PR path below.
 
 Happy path is cron. `--adopt` remains Garfield band-only URL confirmation.
 North Beach uses complete-pair discovery. Unique-grid and sequential payload
@@ -241,17 +276,21 @@ change does not:
   report entry reads:
 
   ```
-  - registry: unchanged (persisted view 29803 failed to fetch; notes kept so the ID is not forgotten)
+  - registry: unchanged (persisted view 29803 failed to fetch; discovery state kept so the ID is not forgotten)
   ```
 
-  The registry is left alone on purpose: rewriting the notes would drop
-  the persisted IDs, and a transient DocumentCenter outage would silently
-  forget a sibling grid. Auto-publish stays blocked until the view fetches
-  again. When Rec & Park has genuinely withdrawn the document, the operator
-  retires it by deleting its `id=29803:session_grid:persisted` token (or its
-  `band_session_grid id=29803` token) from that pool's `discover:` line in
-  the `notes` of `registry.toml`, then re-runs
-  `just schedules discover --only <slug>`; the next run no longer looks for it.
+  The registry is left alone on purpose: changing discovery state during a
+  transient DocumentCenter outage would silently forget a sibling grid.
+  Auto-publish stays blocked until the view fetches again. When Rec & Park has
+  genuinely withdrawn the document, the operator retires it by removing only
+  the matching object from that pool's structured `discovery.documents` array
+  in `schedule-tools/src/schedules/registry.toml`, preserving every remaining
+  sequential or paired sibling. For example, remove
+  `{ id = 29803, kind = "session_grid", origin = "persisted" }` from the MLK
+  array, then run `just schedules discover --only martin-luther-king-jr-pool`
+  and inspect `tmp/discovery-report.md` plus
+  `just schedules discover-blocking`. Do not delete the whole discovery state
+  or the pool's notes.
 
 `--adopt` of a `session_grid` writes `pdf_url` and sets
 `source_status = published`. It persists remaining sibling `session_grid`
@@ -374,12 +413,138 @@ The eval reads existing per-review artifacts — no API calls. Quality baseline
 is same-dir provider JSON vs a human Save or omitted `attested_by` (legacy).
 CI-attested dirs, including carried CI attestations, are not same-dir truth
 and are never scored CI vs CI. Copying an approval does not change its origin.
-When the latest dir is `attested_by: ci`, eval may look
-back to an older human envelope and list that pair in a **seasonal-delta**
-table only. Seasonal-delta F1 is not the quality aggregate.
+Agent-reference snapshots are development evidence, not human approval, and
+are kept distinct from legacy, human, and CI origins. When the latest dir is
+`attested_by: ci` or `attested_by: agent-reference`, eval may look
+back to an older human or legacy envelope and list that pair in a
+**seasonal-delta** table only. Seasonal-delta F1 is not the quality aggregate.
+The evaluator recognizes `reviewed.json` and `source-bundle.json` as evidence
+files, so they are not provider predictions. Recorded provider failures and
+unsupported historical artifacts are listed as unscored; malformed eligible
+provider artifacts fail the command with their path and reason.
+The semantic table also compares effective windows, schedule basis, closures,
+access hours, access exceptions, physical pools, and exclusions. Missing
+reference coverage is `unknown/unmeasured`, not a match; session F1 remains a
+narrow session-only diagnostic.
 
 Run before and after any prompt or schema tweak as an observational check.
 Do not gate on "require improvement" against a CI-attested fall grid.
+
+## Operating evidence (2026-09-12)
+
+This review used 82 committed capture directories dated 2026-04-19 through
+2026-09-09 and the retained decision log through 2026-09-09. Hosted temporary
+automation artifacts are not present locally, and the repository does not have
+operator-minute, per-source elapsed-time, or intervention records. The run
+history therefore describes workflow behavior, not recurring labor cost.
+
+The site defines PostHog events for page views, filters, pool opens, outbound
+links, maps, language changes, web vitals, and conditions failures. No local
+aggregate or historical export is available, so visitors, pool and locale
+usage, planning demand, and user impact are unknown. Outbound clicks remain
+intent signals rather than completed visits. Events are dropped when PostHog
+is unavailable; the Worker does not retain local aggregates.
+
+The strongest operational evidence is the weekly Monday 16:00 UTC schedule,
+source/configuration cache reuse, retained capture corpus, and receipts that
+record run status, builds, commands, changed paths, promotion, published
+slugs, and deployment URL. Receipts do not record start/end timestamps,
+per-source elapsed time, operator minutes, or intervention. Browser batches,
+paid calls, holds, cached runs, and deployment outcomes remain in the dated
+decision log; individual trials were manual or hosted workflow observations,
+not a controlled unattended labor study.
+
+A bounded sample from the decision log separates capture work from schedule
+publication. The 2026-09-06 extraction-only cutover made no model requests,
+settled at $0, held ten PDF inputs for closure review, and returned one direct
+success, seven unchanged direct results, and seven direct failures; it changed
+evidence and registry state, not published swimming hours. The 2026-09-08
+hosted six-source capture used 33 of a 300-second browser budget, made no model
+requests, settled at $0, produced two manual access-hours candidates and four
+holds, and published only the separately approved Pomeroy source. The later
+deterministic publication run `34413507767` published five supported source
+families after exact-commit CI, deployment, and live browser checks; its
+retained artifact records the source captures, hashes, reports, and budget
+receipts. Browser seconds are run accounting, not an invoice, and none of
+these records measures operator minutes or unattended human effort.
+
+| Source family | Current recommendation | Benefit and cost | Evidence and reconsideration trigger |
+|---|---|---|---|
+| City PDFs and discovery | Retain weekly; simplify cache reuse and deterministic prechecks | Finds changed documents without adding a second scheduler; PDF review and closure holds remain costly | 82 captures and repeated hosted trials support workflow value. Reconsider after source-change and missed-update rates are measured. |
+| Browser HTML sources | Retain weekly capture and deterministic parsing | Preserves blocked-source evidence; browser seconds and parser maintenance are ongoing costs | Retained HTML/rendered captures and publication outcomes support the path. Reconsider if change frequency or missed updates does not justify browser work. |
+| Structured direct HTML/workbooks | Retain weekly detection and avoid model calls | Low extraction cost; manual publication remains for ambiguous sources | Existing direct artifacts show the path works. Reconsider with source-change and correction rates. |
+| Product analytics | Retain instrumentation; defer cadence or product claims | No new machinery or privacy exposure; interpretation waits for aggregates | Request read-only weekly aggregates by pool, locale, event, and result count before changing investment. |
+| Conditions | Retain hourly refresh | Protects freshness; user impact is not measured locally | Mechanism and failure logging are present. Reconsider with Worker freshness and failure aggregates. |
+| Midnight static rebuild | Superseded on 2026-09-12; retain the hourly conditions refresh only | Date-independent pages and Pacific rollover/print checks removed the need for a calendar rebuild; conditions freshness remains runtime work | The completed date-independent-page and daily-rebuild tasks, `worker/src/index.ts`, and `worker/wrangler.toml` define the current behavior. Revisit only if a new static calendar dependency is introduced. |
+
+The smallest missing measurements are a read-only analytics aggregate, a
+receipt export with timestamps and per-source outcomes, an operator-minute
+ledger, and source-change/missed-update rates. No cadence, telemetry, external
+issue, or production setting was changed by this review.
+
+## Schedule ownership decision (2026-09-12)
+
+At the fixed Pacific date 2026-09-12, the registry contains 25 canonical pools
+and the current/upcoming Markdown contains 26 schedule windows. The inventory
+below maps every live or future window to retained accepted evidence. “Exact”
+means the repository’s canonical comparison matches; that comparison ignores
+formatting, evidence prose, and notes. North Beach is operationally equivalent
+but has a metadata/provenance mismatch.
+
+| Pool | Current/upcoming window(s) | Accepted evidence | Result |
+|---|---|---|---|
+| Balboa | 2026-09-01–12-12 | `data/balboa-pool/2026-08-20-d6f218710372/reviewed.json` | Exact |
+| Coffman | 2026-08-18–12-12 | `data/coffman-pool/2026-08-20-0345cb25881b/reviewed.json` | Exact |
+| Garfield | 2026-09-08–12-10 | `data/garfield-pool/2026-08-20-7f5c0074e8dd/reviewed.json` | Exact |
+| Hamilton | 2026-08-18–12-12 | `data/hamilton-pool/2026-08-20-c8e193806d9e/reviewed.json` | Exact |
+| Martin Luther King Jr. | 2026-08-18–09-26; 2026-09-29–12-12 | `data/martin-luther-king-jr-pool/2026-08-20-838c12e25ad1/reviewed.json` and `data/martin-luther-king-jr-pool/2026-08-20-2e1c7d942a7a/reviewed.json`; document IDs 29802/29803 | Exact |
+| Mission | 2026-08-18–10-17 | `data/mission-community-pool/2026-09-02-67f2a420e8fc/reviewed.json` | Exact |
+| North Beach | 2026-09-01–12-12 | `data/north-beach-pool/2026-09-06-e494dea3b5f8/reviewed.json` paired bundle | Operational only; metadata/provenance differs |
+| Rossi | 2026-08-16–12-10 | `data/rossi-pool/2026-08-20-cb8abdbbedda/reviewed.json` | Exact |
+| Sava | 2026-08-29–12-12 | `data/sava-pool/2026-09-09-4b1055669e1d/reviewed.json`; document IDs 30037/29806/29815 | Exact |
+| JCCSF | 2026-09-09–09-22 | `data/jccsf/2026-09-09-f1baf58cd35c/reviewed.json` | Exact |
+| Koret | 2026-08-12–open | `data/koret-center/2026-08-23-890e0daca506/reviewed.json` | Exact; six equivalent reviews |
+| Pomeroy | 2026-09-09–09-22 | `data/pomeroy-pool/2026-09-09-e786c784f602/reviewed.json` | Exact |
+| 24 Hour Fitness Potrero | 2026-05-17–open | `data/24-hour-fitness-potrero/2026-05-17-c884d75c863b/reviewed.json` | Exact; two equivalent reviews |
+| Bay Club Gateway | 2026-09-09–09-22 | `data/bay-club-gateway/2026-09-09-9ae8b6715d45/reviewed.json` | Exact |
+| Presidio YMCA Letterman | 2026-09-09–09-13 | `data/presidio-ymca-letterman/2026-09-09-f0f8836ffee8/reviewed.json` | Exact |
+| Stonestown YMCA | 2026-08-12–open | `data/stonestown-ymca/2026-08-12-02ae777b67ce/reviewed.json` | Exact |
+| Embarcadero YMCA | 2026-09-09–09-22 | `data/embarcadero-ymca/2026-09-09-fe95a6a56f7e/reviewed.json` | Exact |
+| Chinatown YMCA | 2026-09-09–09-22 | `data/chinatown-ymca/2026-09-09-fa16884f0c67/reviewed.json` | Exact |
+| Fitness SF Fillmore | 2026-09-09–09-22 | `data/fitness-sf-fillmore/2026-09-09-eb19802b51f5/reviewed.json` | Exact |
+| City Sports 20th Ave | 2026-09-09–09-22 | `data/city-sports-20th-ave/2026-09-09-e5e94d9f6afd/reviewed.json` | Exact |
+| 24 Hour Fitness Ocean | 2026-07-06–open | `data/24-hour-fitness-ocean/2026-06-15-05a7be9dc1fb/reviewed.json` | Exact |
+| Equinox | 2026-09-09–09-22 | `data/equinox-sports-club-sf/2026-09-09-bd0fcd0ccae2/reviewed.json` | Exact |
+| SFSU Mashouf | 2026-09-09–09-22 | `data/sfsu-mashouf/2026-09-09-7c086f2f60cd/reviewed.json` | Exact |
+| UCSF Millberry | 2026-09-09–09-22 | `data/ucsf-millberry/2026-09-09-8f7f3cbf0bf4/reviewed.json` | Exact |
+| UCSF Bakar | 2026-09-09–09-22 | `data/ucsf-bakar/2026-09-09-8f7f3cbf0bf4/reviewed.json` | Exact |
+
+Canonical Markdown remains authoritative. Reviewed snapshots support
+regeneration, verification, and correction; publication writes them and then
+projects them through the stateful window merge. Manual corrections, such as
+Sava’s noon repair and Balboa’s December 12 correction, remain represented in
+human-attested snapshots. Sequential windows are saved and projected as a
+complete set, and North Beach retains ordered Cool/Warm identities, hashes,
+URLs, captures, and configurations.
+
+The fixed-date temporary reconstruction found zero operational fact
+mismatches, with 24 pools and 25 windows matching full canonical fields and
+North Beach the only remaining operational-only case. A latest-only
+reconstruction loses MLK’s 2026-09-29 window. North Beach also contains
+Markdown enrichment (`reason_code` and source notices) that its accepted bundle
+does not reproduce. Retention based only on latest capture recency is therefore
+insufficient for simultaneous live windows.
+
+The decision is to keep Markdown authority. A future migration would first
+need a read-only verifier that accepts an explicit Pacific `--as-of` date,
+indexes accepted envelopes by `(slug, effective_start)`, requires complete
+paired/sequential identities, reconstructs only in temporary files, compares
+operational and canonical facts, and fails on the North Beach enrichment gap.
+Before that verifier exists, retain every accepted envelope supporting a
+live/future window, its source bytes and hash, provider/direct artifact,
+configuration, attestation/carry chain, sequential siblings, paired bundle
+members, and supplemental originals cited by corrections. The ownership rule
+does not change in this task.
 
 ## Autonomous extraction and publication
 
@@ -491,11 +656,24 @@ a run already started: cancel that run separately when needed.
 `SCHEDULES_AUTO_PROJECT=false` also rejects local publication mode.
 
 For incorrect published data, keep automation disabled, inspect the retained
-source and receipt, and prepare a scoped corrective commit. Quarantine each
-incorrect PDF SHA so a later run cannot automatically accept it again. Use
-`just schedules-review` for explicit human correction; save all related
-sequential windows together. Test and verify the corrective deployment before
-enabling automation again. Do not reset main to recover.
+source and receipt, and prepare a scoped corrective commit. Add each incorrect
+PDF SHA to
+[`schedule-tools/src/schedules/quarantine.toml`](../schedule-tools/src/schedules/quarantine.toml)
+so a later `publish-pending` run cannot automatically accept it:
+
+```toml
+[[quarantine]]
+pdf_sha256 = "<64 lowercase hex characters>"
+slug = "hamilton-pool"
+reason = "wrong Saturday family swim"
+added = "2026-09-12"
+```
+
+The quarantine applies to automatic publication; human review may still
+attest a corrected source. Remove the row only after the corrected evidence
+has been reviewed. Use `just schedules-review` for explicit human correction;
+save all related sequential windows together. Test and verify the corrective
+deployment before enabling automation again. Do not reset main to recover.
 
 Past trial runs, their spend, and the source exceptions they exposed are in
 [`schedules-decision-log.md`](schedules-decision-log.md).

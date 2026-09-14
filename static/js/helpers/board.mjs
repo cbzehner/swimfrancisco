@@ -176,8 +176,8 @@ function scheduleInWindow(schedule, dateISO) {
 //   4. null if no schedules at all.
 //
 // Must stay in sync with `pick_active_schedule` in
-// schedule-tools/src/schedules/merge.py and the `active_schedule` block in
-// templates/spots/page.html. All three impls share the same predicate.
+// schedule-tools/src/schedules/merge.py. The detail template renders every
+// window; detail.js uses this predicate to select the initially open one.
 function resolveScheduleForDate(schedule, dateISO) {
   if (!schedule || typeof schedule !== "object") return null;
   // Accept either an envelope (`{schedules: [...]}`) or a flat schedule

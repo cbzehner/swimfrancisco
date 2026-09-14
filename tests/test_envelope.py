@@ -15,6 +15,7 @@ import pytest
 from schedules.envelope import (
     AttestationCarried,
     AttestationCi,
+    AttestationAgentReference,
     AttestationHuman,
     AttestationLegacy,
     EnvelopeValidationError,
@@ -113,6 +114,12 @@ def test_validate_envelope_accepts_attested_by_ci():
     validate_envelope(envelope)
 
 
+def test_validate_envelope_accepts_agent_reference():
+    envelope = _valid_envelope()
+    envelope["attested_by"] = "agent-reference"
+    validate_envelope(envelope)
+
+
 def test_validate_envelope_accepts_omitted_attested_by():
     validate_envelope(_valid_envelope())
     assert "attested_by" not in _valid_envelope()
@@ -125,12 +132,14 @@ def test_validate_envelope_rejects_attested_by_robot():
         validate_envelope(envelope)
 
 
-def test_parse_attestation_four_states():
+def test_parse_attestation_five_states():
     assert isinstance(parse_attestation(_valid_envelope()), AttestationLegacy)
     human = {**_valid_envelope(), "attested_by": "human"}
     assert isinstance(parse_attestation(human), AttestationHuman)
     ci = {**_valid_envelope(), "attested_by": "ci"}
     assert isinstance(parse_attestation(ci), AttestationCi)
+    agent_reference = {**_valid_envelope(), "attested_by": "agent-reference"}
+    assert isinstance(parse_attestation(agent_reference), AttestationAgentReference)
     carried = {**_valid_envelope(), "attested_by": "ci", "carried_from": "data/hamilton-pool/reviewed.json"}
     parsed = parse_attestation(carried)
     assert isinstance(parsed, AttestationCarried)

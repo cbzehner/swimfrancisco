@@ -82,6 +82,11 @@ ScheduleBasis = Literal[
 ]
 
 
+DiscoveryAction = Literal["adopt", "unchanged", "flag"]
+DiscoveryDocumentKind = Literal["session_grid", "closure_notice", "split_part", "other"]
+DiscoveryDocumentOrigin = Literal["table", "band", "persisted"]
+
+
 @dataclass(frozen=True)
 class Violation:
     code: ViolationCode
@@ -95,6 +100,20 @@ class PoolSource:
 
 
 @dataclass(frozen=True)
+class DiscoveryDocument:
+    view_id: int
+    kind: DiscoveryDocumentKind
+    origin: DiscoveryDocumentOrigin
+
+
+@dataclass(frozen=True)
+class DiscoveryState:
+    action: DiscoveryAction
+    reason: str
+    documents: tuple[DiscoveryDocument, ...] = ()
+
+
+@dataclass(frozen=True)
 class PoolEntry:
     slug: str
     pdf_url: str
@@ -105,6 +124,7 @@ class PoolEntry:
     pool_sources: tuple[PoolSource, ...] = ()
     auto_publish: bool = False
     capture_method: CaptureMethod = "http"
+    discovery: DiscoveryState | None = None
 
 
 @dataclass(frozen=True)

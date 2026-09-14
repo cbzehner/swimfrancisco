@@ -22,9 +22,8 @@ official_page_url = "https://sfrecpark.org/facilities/facility/details/Hamilton-
 slug = "martin-luther-king-jr-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/29802"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Martin-Luther-King-Jr-Pool-216"
-notes = """
-discover: 2026-08-21 unchanged sequential_windows id=29802:session_grid:table band_session_grid id=29803:session_grid:persisted
-"""
+notes = "Discovery state migrated from the 2026-08-21 record; sequential document identities remain structured below."
+discovery = { action = "unchanged", reason = "sequential_windows", documents = [{ id = 29802, kind = "session_grid", origin = "table" }, { id = 29803, kind = "session_grid", origin = "persisted" }] }
 
 [[pool]]
 slug = "mission-community-pool"
@@ -48,9 +47,8 @@ official_page_url = "https://sfrecpark.org/Facilities/Facility/Details/Rossi-Poo
 slug = "sava-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/30037"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Sava-Pool-220"
-notes = """
-discover: 2026-09-09 unchanged sequential_windows id=30037:session_grid:table band_session_grid id=29806:session_grid:persisted band_session_grid id=29815:session_grid:persisted
-"""
+notes = "Discovery state migrated from the 2026-09-09 record; sequential document identities remain structured below."
+discovery = { action = "unchanged", reason = "sequential_windows", documents = [{ id = 30037, kind = "session_grid", origin = "table" }, { id = 29806, kind = "session_grid", origin = "persisted" }, { id = 29815, kind = "session_grid", origin = "persisted" }] }
 
 [[pool]]
 slug = "jccsf"

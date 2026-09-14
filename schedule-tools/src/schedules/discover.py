@@ -15,13 +15,14 @@ from urllib.parse import unquote, urlparse
 
 import click
 import httpx
+import tomlkit
 
 from ._time import pacific_today
 from .direct_sources.http import BOT_USER_AGENT
 from .fetch import MAX_PDF_BYTES, FetchError, get_with_retries
-from .models import PoolEntry
+from .models import DiscoveryDocument, DiscoveryState, PoolEntry
 from .paths import REGISTRY_PATH, TMP_DIR
-from .registry import load_registry
+from .registry import load_registry, parse_discovery
 from .signals import _has_grid_header, extract_page_texts
 from .window_dates import (
     WindowSource,
@@ -67,9 +68,6 @@ _SPLIT_RE = re.compile(
     r"(?i)(?:cool\s+pool|warm\s+pool|(?<![A-Za-z])(?:cool|warm)(?-i:(?![a-z])))"
 )
 _NON_PDF_NAME_RE = re.compile(r"(?i)\.(?:jpe?g|png|gif|webp|html?)\s*$")
-_DISCOVER_LINE_RE = re.compile(r"^discover:\s+(\d{4}-\d{2}-\d{2})\s+(\S+)(?:\s+(.*))?$")
-_ID_KIND_SOURCE_RE = re.compile(r"id=(\d+):([a-z_]+):(table|band|persisted)\b")
-_BAND_SESSION_GRID_RE = re.compile(r"band_session_grid\s+id=(\d+)")
 _FILENAME_QUOTED_RE = re.compile(r'filename\s*=\s*"([^"]+)"', re.IGNORECASE)
 _FILENAME_STAR_RE = re.compile(
     r"filename\*\s*=\s*(?:UTF-8''|utf-8'')([^;]+)", re.IGNORECASE
@@ -114,7 +112,7 @@ class DiscoverDecision:
     extra_candidates: tuple[ClassifiedDocument, ...]
     blocking: bool
     # Persisted view IDs this run could not fetch. Their presence is why the
-    # registry is left alone: rewriting the notes would forget them.
+    # registry is left alone: rewriting the discovery state would forget them.
     unfetched_persisted: tuple[int, ...] = ()
 
 
@@ -479,21 +477,14 @@ def collapse_grid_candidates(items: list[dict]) -> list[dict]:
     return kept
 
 
-def persisted_band_ids(notes: str | None) -> frozenset[int]:
-    line = _discover_machine_line(notes)
-    if line is None:
+def persisted_discovery_ids(discovery: DiscoveryState | None) -> frozenset[int]:
+    if discovery is None:
         return frozenset()
-    match = _DISCOVER_LINE_RE.match(line)
-    if match is None or match.group(2) == "extra":
-        return frozenset()
-    ids: set[int] = set()
-    for token in _BAND_SESSION_GRID_RE.finditer(line):
-        ids.add(int(token.group(1)))
-    for token in _ID_KIND_SOURCE_RE.finditer(line):
-        view_id, kind, source = int(token.group(1)), token.group(2), token.group(3)
-        if kind == "session_grid" and source in {"band", "persisted"}:
-            ids.add(view_id)
-    return frozenset(ids)
+    return frozenset(
+        document.view_id
+        for document in discovery.documents
+        if document.kind == "session_grid" and document.origin in {"band", "persisted"}
+    )
 
 
 def apply_discover_decision(path: Path, decision: DiscoverDecision) -> None:
@@ -543,7 +534,7 @@ def discover_all(
     band_scope = _band_scope_entries(rec_park, registry_path)
     max_id = _max_pdf_view_id(band_scope)
     persisted_by_slug = {
-        entry.slug: persisted_band_ids(entry.notes) for entry in band_scope
+        entry.slug: persisted_discovery_ids(entry.discovery) for entry in band_scope
     }
     all_persisted = (
         set().union(*persisted_by_slug.values()) if persisted_by_slug else set()
@@ -766,7 +757,7 @@ def _operator_adopt_decision(
         for item in classified
         if item.kind != "session_grid" and item.link.view_id != view_id
     )
-    # Sibling session_grids stay on candidates so adopt notes keep them.
+    # Sibling session_grids stay on candidates so adopted discovery state keeps them.
     return DiscoverDecision(
         slug=entry.slug,
         action="adopt",
@@ -816,7 +807,7 @@ def _with_persisted_survivors(
         )
     if unfetched:
         # Leave registry.toml alone so the persisted IDs we could not fetch
-        # survive in the notes rather than being silently forgotten.
+        # survive in structured discovery state rather than being forgotten.
         return replace(
             decision,
             candidates=decision.candidates + tuple(survivors),
@@ -1164,17 +1155,11 @@ def _apply_decision_to_block(block: str, decision: DiscoverDecision) -> str:
             updated, "missing_current_schedule", insert=True
         )
 
-    existing_notes = _block_notes(updated)
-    machine, human = _split_notes(existing_notes)
-    desired = _desired_machine_line(decision)
-    if (
-        desired is not None
-        and machine is not None
-        and _machine_key(machine) == _machine_key(desired)
-    ):
-        desired = machine
-    composed = _compose_notes(desired, human)
-    return _replace_or_insert_notes(updated, composed)
+    existing_discovery = _block_discovery(updated, decision.slug)
+    desired = _desired_discovery(decision)
+    if desired == existing_discovery:
+        return updated
+    return _replace_or_insert_discovery(updated, desired)
 
 
 def _off_table_current_grids(decision: DiscoverDecision) -> list[ClassifiedDocument]:
@@ -1211,8 +1196,7 @@ def _sibling_session_grids(decision: DiscoverDecision) -> list[ClassifiedDocumen
     return out
 
 
-def _desired_machine_line(decision: DiscoverDecision) -> str | None:
-    date = pacific_today().isoformat()
+def _desired_discovery(decision: DiscoverDecision) -> DiscoveryState | None:
     extras = [item for item in decision.extra_candidates if item.kind != "session_grid"]
     persist = _off_table_current_grids(decision)
     siblings = _sibling_session_grids(decision)
@@ -1239,45 +1223,48 @@ def _desired_machine_line(decision: DiscoverDecision) -> str | None:
                     continue
                 seen_listed.add(item.link.view_id)
                 listed.append(item)
-            tokens = " ".join(
-                [_id_token(item, prefix_band=True) for item in listed]
-                + [_id_token(item) for item in extras]
+            documents = listed + extras
+            return DiscoveryState(
+                action=decision.action,
+                reason=decision.reason,
+                documents=tuple(
+                    DiscoveryDocument(
+                        view_id=item.link.view_id,
+                        kind=item.kind,
+                        origin=item.source,
+                    )
+                    for item in documents
+                ),
             )
-            return (
-                f"discover: {date} {decision.action} {decision.reason} {tokens}"
-            ).rstrip()
         if not extras:
             return None
-        tokens = " ".join(_id_token(item) for item in extras)
-        return f"discover: {date} extra {tokens}".rstrip()
+        return DiscoveryState(
+            action=decision.action,
+            reason=decision.reason,
+            documents=tuple(
+                DiscoveryDocument(
+                    view_id=item.link.view_id,
+                    kind=item.kind,
+                    origin=item.source,
+                )
+                for item in extras
+            ),
+        )
 
-    tokens = _flag_tokens(decision)
-    reason = decision.reason
-    return f"discover: {date} flag {reason}{tokens}".rstrip()
-
-
-def _flag_tokens(decision: DiscoverDecision) -> str:
-    parts: list[str] = []
+    documents: list[DiscoveryDocument] = []
     seen: set[int] = set()
     for item in decision.candidates:
         if item.link.view_id in seen:
             continue
         seen.add(item.link.view_id)
-        parts.append(_id_token(item, prefix_band=True))
-    if not parts:
-        return ""
-    return " " + " ".join(parts)
-
-
-def _id_token(item: ClassifiedDocument, *, prefix_band: bool = False) -> str:
-    token = f"id={item.link.view_id}:{item.kind}:{item.source}"
-    if (
-        prefix_band
-        and item.kind == "session_grid"
-        and item.source in {"band", "persisted"}
-    ):
-        return f"band_session_grid {token}"
-    return token
+        documents.append(
+            DiscoveryDocument(
+                view_id=item.link.view_id,
+                kind=item.kind,
+                origin=item.source,
+            )
+        )
+    return DiscoveryState(action="flag", reason=decision.reason, documents=tuple(documents))
 
 
 def _ensure_source_status(block: str, status: str, *, insert: bool) -> str:
@@ -1311,7 +1298,7 @@ def _insert_field_after(block: str, after_field: str, field: str, value: str) ->
     return block[: match.end()] + f'{field} = "{value}"\n' + block[match.end() :]
 
 
-def _block_notes(block: str) -> str | None:
+def _block_discovery(block: str, slug: str) -> DiscoveryState | None:
     try:
         parsed = tomllib.loads(block)
     except tomllib.TOMLDecodeError:
@@ -1319,93 +1306,41 @@ def _block_notes(block: str) -> str | None:
     pool = parsed.get("pool")
     raw = None
     if isinstance(pool, list) and pool:
-        raw = pool[0].get("notes")
+        raw = pool[0].get("discovery")
     elif isinstance(pool, dict):
-        raw = pool.get("notes")
-    return raw if isinstance(raw, str) else None
+        raw = pool.get("discovery")
+    return parse_discovery(raw, slug)
 
 
-def _notes_span(block: str) -> tuple[int, int] | None:
-    triple = re.search(r'^notes\s*=\s*"""', block, re.MULTILINE)
-    if triple:
-        close = block.find('"""', triple.end())
-        if close == -1:
-            raise DiscoverError("unterminated triple-quoted notes")
-        return triple.start(), close + 3
-    single = re.search(r'^notes\s*=\s*"(?:[^"\\]|\\.)*"', block, re.MULTILINE)
-    if single:
-        return single.start(), single.end()
-    return None
-
-
-def _replace_or_insert_notes(block: str, notes: str | None) -> str:
-    span = _notes_span(block)
-    if notes is None:
-        if span is None:
+def _replace_or_insert_discovery(block: str, discovery: DiscoveryState | None) -> str:
+    try:
+        document = tomlkit.parse(block)
+    except tomlkit.exceptions.ParseError as exc:
+        raise DiscoverError("cannot update invalid registry TOML block") from exc
+    pools = document.get("pool")
+    if not isinstance(pools, list) or not pools:
+        raise DiscoverError("registry block does not contain a pool entry")
+    pool = pools[0]
+    if discovery is None:
+        if "discovery" not in pool:
             return block
-        start, end = span
-        if end < len(block) and block[end] == "\n":
-            end += 1
-        return block[:start] + block[end:]
-    rendered = _render_notes_assignment(notes)
-    if span is None:
-        return _insert_notes(block, rendered)
-    start, end = span
-    return block[:start] + rendered + block[end:]
+        del pool["discovery"]
+        return tomlkit.dumps(document)
+
+    value = tomlkit.parse(_render_discovery_assignment(discovery))["discovery"]
+    pool["discovery"] = value
+    return tomlkit.dumps(document)
 
 
-def _insert_notes(block: str, assignment: str) -> str:
-    for field in ("source_status", "official_page_url"):
-        match = re.search(
-            rf'^({re.escape(field)}\s*=\s*".*?"[ \t]*)(\n)', block, re.MULTILINE
-        )
-        if match:
-            return block[: match.end()] + assignment + "\n" + block[match.end() :]
-    return block.rstrip() + "\n" + assignment + "\n"
-
-
-def _render_notes_assignment(notes: str) -> str:
-    if "\n" in notes or notes.startswith("discover:"):
-        return f'notes = """\n{notes}\n"""'
-    escaped = notes.replace("\\", "\\\\").replace('"', '\\"')
-    return f'notes = "{escaped}"'
-
-
-def _split_notes(notes: str | None) -> tuple[str | None, str]:
-    if not notes:
-        return None, ""
-    lines = notes.splitlines()
-    index = 0
-    while index < len(lines) and not lines[index].strip():
-        index += 1
-    machine: str | None = None
-    if index < len(lines) and lines[index].lstrip().startswith("discover:"):
-        machine = lines[index].strip()
-        index += 1
-        if index < len(lines) and not lines[index].strip():
-            index += 1
-    human = "\n".join(lines[index:]).strip("\n")
-    return machine, human
-
-
-def _compose_notes(machine: str | None, human: str) -> str | None:
-    human = human.strip("\n")
-    if machine and human:
-        return f"{machine}\n\n{human}"
-    if machine:
-        return machine
-    if human:
-        return human
-    return None
-
-
-def _discover_machine_line(notes: str | None) -> str | None:
-    machine, _human = _split_notes(notes)
-    return machine
-
-
-def _machine_key(line: str) -> str:
-    return re.sub(r"^discover:\s+\d{4}-\d{2}-\d{2}\s+", "discover: ", line.strip())
+def _render_discovery_assignment(discovery: DiscoveryState) -> str:
+    documents = ", ".join(
+        f'{{ id = {item.view_id}, kind = "{item.kind}", origin = "{item.origin}" }}'
+        for item in discovery.documents
+    )
+    return (
+        f'discovery = {{ action = "{discovery.action}", '
+        f'reason = "{discovery.reason}", documents = [{documents}] }}'
+    )
 
 
 def _decision_to_json(decision: DiscoverDecision) -> dict:
@@ -1525,12 +1460,12 @@ def _render_report(
         lines.append(f"- reason: {decision.reason}")
         lines.append(f"- blocking: {decision.blocking}")
         if decision.reason == "fetch_error":
-            lines.append("- registry: unchanged (facility page failed; prior notes kept)")
+            lines.append("- registry: unchanged (facility page failed; prior discovery state kept)")
         elif decision.reason == "persisted_fetch_error":
             failed = ", ".join(str(view_id) for view_id in decision.unfetched_persisted)
             lines.append(
                 f"- registry: unchanged (persisted view {failed} failed to fetch; "
-                "notes kept so the ID is not forgotten)"
+                "discovery state kept so the ID is not forgotten)"
             )
         if decision.candidates:
             listed = ", ".join(

@@ -35,20 +35,27 @@ class AttestationCi:
 
 
 @dataclass(frozen=True)
+class AttestationAgentReference:
+    pass
+
+
+@dataclass(frozen=True)
 class AttestationCarried:
     from_path: str
-    origin: AttestationLegacy | AttestationHuman | AttestationCi
+    origin: AttestationLegacy | AttestationHuman | AttestationAgentReference | AttestationCi
 
 
-def _origin(attested_by: object) -> AttestationLegacy | AttestationHuman | AttestationCi:
+def _origin(attested_by: object) -> AttestationLegacy | AttestationHuman | AttestationAgentReference | AttestationCi:
     if attested_by == "ci":
         return AttestationCi()
     if attested_by == "human":
         return AttestationHuman()
+    if attested_by == "agent-reference":
+        return AttestationAgentReference()
     return AttestationLegacy()
 
 
-def parse_attestation(envelope: dict) -> AttestationLegacy | AttestationHuman | AttestationCi | AttestationCarried:
+def parse_attestation(envelope: dict) -> AttestationLegacy | AttestationHuman | AttestationAgentReference | AttestationCi | AttestationCarried:
     carried = envelope.get("carried_from")
     origin = _origin(envelope.get("attested_by"))
     if isinstance(carried, str) and carried:

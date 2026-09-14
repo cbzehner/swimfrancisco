@@ -1,20 +1,17 @@
 // Swim Francisco conditions Worker.
 // - Cron (hourly): walk each open-water spot's temp-source chain (USGS,
 //   NOAA, NDBC, ERDDAP, MUR SST) and NOAA tide predictions; assemble
-//   per-spot records; write KV. The 00:00 PT tick also triggers a rebuild.
+//   per-spot records; write KV.
 // - HTTP: GET /api/conditions → slug-keyed bulk record from KV.
 // - HTTP: GET /api/map-config → public browser map configuration.
 // - HTTP: /ingest/* → PostHog reverse proxy.
 
 import { assembleAndPersist } from "./assemble.ts";
 import { readConditionsRaw } from "./kv.ts";
-import { triggerRebuild } from "./deploy.ts";
-import { isPtMidnight } from "./schedule.ts";
 import { handlePosthog, isPosthogPath } from "./posthog.ts";
 
 export interface Env {
   CONDITIONS: KVNamespace;
-  WORKERS_BUILDS_DEPLOY_HOOK: string;
   CARTO_BASEMAP_API_KEY?: string;
 }
 
@@ -106,25 +103,14 @@ export default {
     return errorResponse(404, "not found", NEGATIVE_CACHE_CONTROL);
   },
 
-  async scheduled(event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
-    // Every hourly tick refreshes data. The tick that lands at 00:00 PT
-    // also triggers a rebuild so the day-of-week rendered in static HTML
-    // turns over with the calendar day. PT midnight maps to exactly one
-    // UTC hour per day (DST-aware via Intl), so the rebuild fires once.
+  async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+    // Every hourly tick refreshes conditions. Static schedule pages are
+    // date-independent, so this path has no build or calendar-day side effect.
     ctx.waitUntil(
       assembleAndPersist(env.CONDITIONS).catch((err) => {
         console.error("assembleAndPersist failed:", err);
         throw err;
       }),
     );
-
-    if (isPtMidnight(event.scheduledTime)) {
-      ctx.waitUntil(
-        triggerRebuild(env.WORKERS_BUILDS_DEPLOY_HOOK, event.scheduledTime).catch((err) => {
-          console.error("triggerRebuild failed:", err);
-          throw err;
-        }),
-      );
-    }
   },
 } satisfies ExportedHandler<Env>;

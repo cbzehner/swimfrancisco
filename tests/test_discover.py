@@ -24,10 +24,10 @@ from schedules.discover import (
     classify_pdf,
     discover_all,
     discover_facility_documents,
-    persisted_band_ids,
+    persisted_discovery_ids,
     rec_park_entries,
 )
-from schedules.models import PoolEntry
+from schedules.models import DiscoveryDocument, DiscoveryState, PoolEntry
 from schedules.registry import load_registry
 from schedules.window_dates import parse_window_dates, windows_disjoint
 
@@ -130,6 +130,17 @@ def _entry(
         source_status=status,  # type: ignore[arg-type]
         source_kind="sfrecpark_pdf",
         notes=notes,
+    )
+
+
+def _discovery(action: str, reason: str, *documents: tuple[int, str, str]) -> DiscoveryState:
+    return DiscoveryState(
+        action=action,  # type: ignore[arg-type]
+        reason=reason,
+        documents=tuple(
+            DiscoveryDocument(view_id=view_id, kind=kind, origin=origin)  # type: ignore[arg-type]
+            for view_id, kind, origin in documents
+        ),
     )
 
 
@@ -932,25 +943,11 @@ def test_choose_roll_empty_table() -> None:
     assert decision.blocking is True
 
 
-def test_persisted_band_ids_reads_flag_and_adopt_not_extra() -> None:
-    notes = (
-        "discover: 2026-08-19 flag closure_notice "
-        "id=29808:closure_notice:table band_session_grid id=29799:session_grid:band\n\n"
-        "human note"
-    )
-    assert persisted_band_ids(notes) == frozenset({29799})
-    extra = "discover: 2026-08-19 extra id=29808:closure_notice:table"
-    assert persisted_band_ids(extra) == frozenset()
-    adopt = (
-        "discover: 2026-08-19 adopt session_grid "
-        "band_session_grid id=29799:session_grid:persisted"
-    )
-    assert persisted_band_ids(adopt) == frozenset({29799})
-    unchanged = (
-        "discover: 2026-08-19 unchanged current_session_grid "
-        "band_session_grid id=29805:session_grid:band"
-    )
-    assert persisted_band_ids(unchanged) == frozenset({29805})
+def test_persisted_discovery_ids_reads_structured_state() -> None:
+    assert persisted_discovery_ids(_discovery("flag", "closure_notice", (29808, "closure_notice", "table"), (29799, "session_grid", "band"))) == frozenset({29799})
+    assert persisted_discovery_ids(_discovery("adopt", "session_grid", (29808, "closure_notice", "table"))) == frozenset()
+    assert persisted_discovery_ids(_discovery("adopt", "session_grid", (29799, "session_grid", "persisted"))) == frozenset({29799})
+    assert persisted_discovery_ids(_discovery("unchanged", "current_session_grid", (29805, "session_grid", "band"))) == frozenset({29805})
 
 
 def test_selection_is_exactly_nine_rec_park_pools() -> None:
@@ -977,18 +974,12 @@ def test_apply_flag_hamilton_inserts_notes_after_official_page_url(
     )
     apply_discover_decision(path, decision)
     text = path.read_text()
-    assert (
-        'official_page_url = "https://sfrecpark.org/facilities/facility/details/Hamilton-Pool-215"\n'
-        'notes = """\n'
-        "discover: 2026-08-19 flag empty_table\n"
-        '"""'
-    ) in text
+    assert 'official_page_url = "https://sfrecpark.org/facilities/facility/details/Hamilton-Pool-215"\n' in text
+    assert 'discovery = { action = "flag", reason = "empty_table", documents = [] }' in text
     loaded = load_registry(path)
     hamilton = next(entry for entry in loaded if entry.slug == "hamilton-pool")
     coffman = next(entry for entry in loaded if entry.slug == "coffman-pool")
-    assert hamilton.notes is not None and hamilton.notes.startswith(
-        "discover: 2026-08-19 flag empty_table"
-    )
+    assert hamilton.discovery == _discovery("flag", "empty_table")
     assert hamilton.pdf_url.endswith("/29599")
     assert coffman.pdf_url.endswith("/29563")
     assert coffman.notes is None
@@ -1043,12 +1034,78 @@ def test_apply_north_beach_converts_single_line_notes(tmp_path, monkeypatch) -> 
     north = next(entry for entry in loaded if entry.slug == "north-beach-pool")
     assert north.source_status == "missing_current_schedule"
     assert north.pdf_url.endswith("/29778")
-    assert north.notes is not None
-    assert north.notes.startswith("discover: 2026-08-19 flag split_part")
-    assert "id=29778:split_part:table" in north.notes
-    assert "id=29779:split_part:table" in north.notes
+    assert north.discovery == _discovery("flag", "split_part", (29778, "split_part", "table"), (29779, "split_part", "table"))
     assert "Official page split the current North Beach" in north.notes
-    assert 'notes = """' in path.read_text()
+    assert 'discovery = { action = "flag", reason = "split_part"' in path.read_text()
+
+
+def test_discovery_writer_ignores_examples_inside_human_notes(tmp_path, monkeypatch) -> None:
+    path = _copy_registry(tmp_path)
+    marker = (
+        'official_page_url = "https://sfrecpark.org/facilities/facility/details/Hamilton-Pool-215"\n'
+    )
+    notes = (
+        'notes = """\n'
+        'Human example: discovery = { action = "flag", reason = "example", documents = [] }\n'
+        'Keep this explanation.\n"""\n'
+    )
+    text = path.read_text()
+    assert marker in text
+    path.write_text(text.replace(marker, marker + notes, 1))
+    decision = DiscoverDecision(
+        slug="hamilton-pool",
+        action="adopt",
+        old_url="https://sfrecpark.org/DocumentCenter/View/29599",
+        new_url="https://sfrecpark.org/DocumentCenter/View/29800",
+        kind="session_grid",
+        reason="session_grid",
+        candidates=(_classified(29800, "session_grid"),),
+        extra_candidates=(),
+        blocking=False,
+    )
+
+    apply_discover_decision(path, decision)
+
+    hamilton = next(entry for entry in load_registry(path) if entry.slug == "hamilton-pool")
+    assert 'Human example: discovery = { action = "flag", reason = "example", documents = [] }' in hamilton.notes
+    assert hamilton.discovery is None
+    assert hamilton.pdf_url.endswith("/29800")
+
+
+def test_discovery_writer_preserves_trailing_comments(tmp_path, monkeypatch) -> None:
+    path = _copy_registry(tmp_path)
+    marker = (
+        'slug = "garfield-pool"\n'
+        'pdf_url = "https://sfrecpark.org/DocumentCenter/View/29564"\n'
+        'official_page_url = "https://sfrecpark.org/facilities/facility/details/Garfield-Pool-214"\n'
+    )
+    assignment = (
+        'discovery = { action = "flag", reason = "old", documents = [] } '
+        '  # preserve {old} this comment\n'
+    )
+    text = path.read_text()
+    assert marker in text
+    path.write_text(text.replace(marker, marker + assignment, 1))
+    decision = DiscoverDecision(
+        slug="garfield-pool",
+        action="flag",
+        old_url="https://sfrecpark.org/DocumentCenter/View/29564",
+        new_url=None,
+        kind="closure_notice",
+        reason="closure_notice",
+        candidates=(_classified(29808, "closure_notice"),),
+        extra_candidates=(),
+        blocking=True,
+    )
+
+    apply_discover_decision(path, decision)
+
+    garfield = next(entry for entry in load_registry(path) if entry.slug == "garfield-pool")
+    assert garfield.discovery is not None
+    assert garfield.discovery.reason == "closure_notice"
+    updated = path.read_text()
+    assert updated.count("discovery = {") == 1
+    assert "# preserve {old} this comment" in updated
 
 
 def test_apply_sequential_windows_adopts_table_and_persists_sibling(
@@ -1075,11 +1132,7 @@ def test_apply_sequential_windows_adopts_table_and_persists_sibling(
     sava = next(entry for entry in loaded if entry.slug == "sava-pool")
     assert sava.source_status == "published"
     assert sava.pdf_url.endswith("/29815")
-    assert sava.notes is not None
-    assert "sequential_windows" in sava.notes
-    assert "id=29815:session_grid:table" in sava.notes
-    assert "id=29805:session_grid:band" in sava.notes
-    assert " extra " not in sava.notes
+    assert sava.discovery == _discovery("adopt", "sequential_windows", (29815, "session_grid", "table"), (29805, "session_grid", "band"))
 
 
 def test_apply_split_part_sets_missing_current_schedule(tmp_path, monkeypatch) -> None:
@@ -1176,10 +1229,7 @@ def test_machine_line_upsert_is_idempotent_ignoring_date(tmp_path, monkeypatch) 
         'official_page_url = "https://sfrecpark.org/facilities/facility/details/Garfield-Pool-214"\n',
         'slug = "garfield-pool"\npdf_url = "https://sfrecpark.org/DocumentCenter/View/29564"\n'
         'official_page_url = "https://sfrecpark.org/facilities/facility/details/Garfield-Pool-214"\n'
-        'notes = """\n'
-        "discover: 2026-08-01 flag closure_notice id=29808:closure_notice:table "
-        "band_session_grid id=29799:session_grid:band\n"
-        '"""\n',
+        'discovery = { action = "flag", reason = "closure_notice", documents = [{ id = 29808, kind = "closure_notice", origin = "table" }, { id = 29799, kind = "session_grid", origin = "band" }] }\n',
     )
     path.write_text(text)
     _freeze_today(monkeypatch)
@@ -1198,11 +1248,10 @@ def test_machine_line_upsert_is_idempotent_ignoring_date(tmp_path, monkeypatch) 
         blocking=True,
     )
     apply_discover_decision(path, decision)
-    notes = next(
+    discovery = next(
         entry for entry in load_registry(path) if entry.slug == "garfield-pool"
-    ).notes
-    assert notes is not None
-    assert notes.startswith("discover: 2026-08-01 flag closure_notice")
+    ).discovery
+    assert discovery == _discovery("flag", "closure_notice", (29808, "closure_notice", "table"), (29799, "session_grid", "band"))
 
 
 def test_discover_all_hamilton_adopts(tmp_path, monkeypatch) -> None:
@@ -1320,9 +1369,7 @@ def test_discover_all_sava_two_windows_sequential_not_extra(tmp_path, monkeypatc
     loaded = next(item for item in load_registry(registry) if item.slug == "sava-pool")
     assert loaded.source_status == "published"
     assert loaded.pdf_url.endswith("/29815")
-    assert "id=29805:session_grid:band" in (loaded.notes or "")
-    assert "sequential_windows" in (loaded.notes or "")
-    assert " extra " not in (loaded.notes or "")
+    assert loaded.discovery == _discovery("adopt", "sequential_windows", (29815, "session_grid", "table"), (29805, "session_grid", "band"))
 
 
 def test_only_sava_still_uses_global_band_and_adopts_table_fall1(
@@ -1494,17 +1541,16 @@ def test_persist_after_max_jump(tmp_path, monkeypatch) -> None:
         'official_page_url = "https://sfrecpark.org/facilities/facility/details/Garfield-Pool-214"\n',
         'slug = "garfield-pool"\npdf_url = "https://sfrecpark.org/DocumentCenter/View/29564"\n'
         'official_page_url = "https://sfrecpark.org/facilities/facility/details/Garfield-Pool-214"\n'
-        'notes = """\n'
-        "discover: 2026-08-19 flag closure_notice id=29808:closure_notice:table "
-        "band_session_grid id=29799:session_grid:band\n"
-        '"""\n',
+        'discovery = { action = "flag", reason = "closure_notice", documents = '
+        '[{ id = 29808, kind = "closure_notice", origin = "table" }, '
+        '{ id = 29799, kind = "session_grid", origin = "band" }] }\n',
     )
     registry.write_text(text)
     loaded = load_registry(registry)
     garfield = next(item for item in loaded if item.slug == "garfield-pool")
     sava = next(item for item in loaded if item.slug == "sava-pool")
     assert sava.pdf_url.endswith("/29815")
-    assert 29799 in persisted_band_ids(garfield.notes)
+    assert 29799 in persisted_discovery_ids(garfield.discovery)
     pages = {
         garfield.official_page_url: _fixture("garfield-flyer-only.html"),
         sava.official_page_url: _fixture("sava-two-session-grids.html"),
@@ -1545,7 +1591,8 @@ def test_persist_after_max_jump(tmp_path, monkeypatch) -> None:
     reloaded = next(
         item for item in load_registry(registry) if item.slug == "garfield-pool"
     )
-    assert "id=29799:session_grid:" in (reloaded.notes or "")
+    assert reloaded.discovery is not None
+    assert any(document.view_id == 29799 for document in reloaded.discovery.documents)
 
 
 def test_non_pdf_200_is_not_a_candidate(tmp_path, monkeypatch) -> None:
@@ -1655,7 +1702,8 @@ def test_discover_all_operator_adopt(tmp_path, monkeypatch) -> None:
     loaded = next(item for item in load_registry(registry) if item.slug == "sava-pool")
     assert loaded.pdf_url.endswith("/29815")
     assert loaded.source_status == "published"
-    assert "id=29805" in (loaded.notes or "")
+    assert loaded.discovery is not None
+    assert any(document.view_id == 29805 for document in loaded.discovery.documents)
 
 
 def test_adopt_persists_sibling_absent_from_later_html(tmp_path, monkeypatch) -> None:
@@ -1681,7 +1729,8 @@ def test_adopt_persists_sibling_absent_from_later_html(tmp_path, monkeypatch) ->
     )
     loaded = next(item for item in load_registry(registry) if item.slug == "sava-pool")
     assert loaded.pdf_url.endswith("/29815")
-    assert "id=29805" in (loaded.notes or "")
+    assert loaded.discovery is not None
+    assert any(document.view_id == 29805 for document in loaded.discovery.documents)
 
     requested: list[str] = []
     _install_http(monkeypatch, pages=pages, views=views, requested=requested)
@@ -1844,7 +1893,7 @@ def test_adopt_band_only_then_flyer_table_is_unchanged(tmp_path, monkeypatch) ->
     garfield = next(item for item in after_adopt if item.slug == "garfield-pool")
     sava = next(item for item in after_adopt if item.slug == "sava-pool")
     assert garfield.pdf_url.endswith("/29799")
-    assert 29799 in persisted_band_ids(garfield.notes)
+    assert 29799 in persisted_discovery_ids(garfield.discovery)
 
     second = discover_all(
         [garfield, sava],
@@ -1860,9 +1909,9 @@ def test_adopt_band_only_then_flyer_table_is_unchanged(tmp_path, monkeypatch) ->
     )
     assert reloaded.pdf_url.endswith("/29799")
     assert reloaded.source_status == "published"
-    assert 29799 in persisted_band_ids(reloaded.notes)
-    notes = reloaded.notes or ""
-    assert "flag" not in notes.split("\n")[0]
+    assert 29799 in persisted_discovery_ids(reloaded.discovery)
+    assert reloaded.discovery is not None
+    assert reloaded.discovery.action == "unchanged"
 
 
 def test_persist_kept_on_non_404_miss(tmp_path, monkeypatch) -> None:
@@ -1878,10 +1927,9 @@ def test_persist_kept_on_non_404_miss(tmp_path, monkeypatch) -> None:
         'official_page_url = "https://sfrecpark.org/facilities/facility/details/Garfield-Pool-214"\n',
         'slug = "garfield-pool"\npdf_url = "https://sfrecpark.org/DocumentCenter/View/29564"\n'
         'official_page_url = "https://sfrecpark.org/facilities/facility/details/Garfield-Pool-214"\n'
-        'notes = """\n'
-        "discover: 2026-08-19 flag closure_notice id=29808:closure_notice:table "
-        "band_session_grid id=29799:session_grid:band\n"
-        '"""\n',
+        'discovery = { action = "flag", reason = "closure_notice", documents = '
+        '[{ id = 29808, kind = "closure_notice", origin = "table" }, '
+        '{ id = 29799, kind = "session_grid", origin = "band" }] }\n',
     )
     registry.write_text(text)
     loaded = load_registry(registry)
@@ -1916,7 +1964,8 @@ def test_persist_kept_on_non_404_miss(tmp_path, monkeypatch) -> None:
     reloaded = next(
         item for item in load_registry(registry) if item.slug == "garfield-pool"
     )
-    assert "id=29799:session_grid:" in (reloaded.notes or "")
+    assert reloaded.discovery is not None
+    assert any(document.view_id == 29799 for document in reloaded.discovery.documents)
 
 
 def test_adopt_slug_must_be_in_selected_slugs(tmp_path) -> None:
@@ -2010,10 +2059,9 @@ _GARFIELD_SUMMER_TEXT = (
     "SUNDAY MONDAY TUESDAY WEDNESDAY THURSDAY"
 )
 _GARFIELD_PERSIST_NOTES = (
-    'notes = """\n'
-    "discover: 2026-08-20 flag band_session_grid id=29808:closure_notice:table "
-    "band_session_grid id=29799:session_grid:persisted\n"
-    '"""\n'
+    'discovery = { action = "flag", reason = "band_session_grid", '
+    'documents = [{ id = 29808, kind = "closure_notice", origin = "table" }, '
+    '{ id = 29799, kind = "session_grid", origin = "persisted" }] }\n'
 )
 
 
@@ -2128,7 +2176,7 @@ def test_discover_all_adopts_persisted_garfield_grid_then_holds(tmp_path, monkey
     _freeze_today(monkeypatch)
     registry = _garfield_registry_with_persisted_29799(tmp_path)
     garfield = next(item for item in load_registry(registry) if item.slug == "garfield-pool")
-    assert 29799 in persisted_band_ids(garfield.notes)
+    assert 29799 in persisted_discovery_ids(garfield.discovery)
     pages = {garfield.official_page_url: _fixture("garfield-flyer-only.html")}
     views = {
         29564: {
@@ -2158,9 +2206,11 @@ def test_discover_all_adopts_persisted_garfield_grid_then_holds(tmp_path, monkey
     adopted = next(item for item in load_registry(registry) if item.slug == "garfield-pool")
     assert adopted.pdf_url.endswith("/29799")
     assert adopted.source_status == "published"
-    assert "adopt band_session_grid" in (adopted.notes or "")
-    assert 29799 in persisted_band_ids(adopted.notes)
-    assert "id=29808:closure_notice:table" in (adopted.notes or "")
+    assert adopted.discovery is not None
+    assert adopted.discovery.action == "adopt"
+    assert 29799 in persisted_discovery_ids(adopted.discovery)
+    assert adopted.discovery is not None
+    assert any(document.view_id == 29808 for document in adopted.discovery.documents)
 
     # Next pass: table is still flyer-only; the adopted pin must hold.
     _install_http(monkeypatch, pages=pages, views=views)
@@ -2172,7 +2222,7 @@ def test_discover_all_adopts_persisted_garfield_grid_then_holds(tmp_path, monkey
     assert decisions[0].blocking is False
     held = next(item for item in load_registry(registry) if item.slug == "garfield-pool")
     assert held.pdf_url.endswith("/29799")
-    assert 29799 in persisted_band_ids(held.notes)
+    assert 29799 in persisted_discovery_ids(held.discovery)
 
 
 def test_discover_all_flags_band_grid_that_overlaps_pin(tmp_path, monkeypatch) -> None:
@@ -2201,7 +2251,7 @@ def test_discover_all_flags_band_grid_that_overlaps_pin(tmp_path, monkeypatch) -
     assert decisions[0].reason == "band_session_grid"
     reloaded = next(item for item in load_registry(registry) if item.slug == "garfield-pool")
     assert reloaded.pdf_url.endswith("/29564")
-    assert 29799 in persisted_band_ids(reloaded.notes)
+    assert 29799 in persisted_discovery_ids(reloaded.discovery)
 
 
 # --- fetch_error must not erase registry state -----------------------------
@@ -2433,8 +2483,8 @@ def test_persisted_survivor_that_failed_to_fetch_is_not_asserted(tmp_path, monke
     assert decision.reason == "persisted_fetch_error"
     assert decision.unfetched_persisted == (29799,)
     assert registry.read_text() == before
-    assert 29799 in persisted_band_ids(
-        next(item for item in load_registry(registry) if item.slug == "garfield-pool").notes
+    assert 29799 in persisted_discovery_ids(
+        next(item for item in load_registry(registry) if item.slug == "garfield-pool").discovery
     )
 
 

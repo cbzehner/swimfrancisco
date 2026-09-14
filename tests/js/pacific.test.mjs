@@ -41,6 +41,39 @@ test("pacificWallClockDate straddles midnight PT correctly", () => {
   assert.equal(justBefore.getMinutes(), 59);
 });
 
+const PACIFIC_TRANSITION_CASES = [
+  {
+    name: "spring-forward last PST minute",
+    instant: "2026-03-08T09:59:00Z",
+    expected: [2026, 2, 8, 0, 1, 59],
+  },
+  {
+    name: "spring-forward first PDT minute",
+    instant: "2026-03-08T10:00:00Z",
+    expected: [2026, 2, 8, 0, 3, 0],
+  },
+  {
+    name: "fall-back last PDT minute",
+    instant: "2026-11-01T08:59:00Z",
+    expected: [2026, 10, 1, 0, 1, 59],
+  },
+  {
+    name: "fall-back first repeated PST minute",
+    instant: "2026-11-01T09:00:00Z",
+    expected: [2026, 10, 1, 0, 1, 0],
+  },
+];
+
+for (const transition of PACIFIC_TRANSITION_CASES) {
+  test(`pacificWallClockDate resolves ${transition.name}`, () => {
+    const pt = pacificWallClockDate(new Date(transition.instant));
+    assert.deepEqual(
+      [pt.getFullYear(), pt.getMonth(), pt.getDate(), pt.getDay(), pt.getHours(), pt.getMinutes()],
+      transition.expected,
+    );
+  });
+}
+
 test("formatPacificTime renders a real UTC instant as Pacific time", () => {
   assert.equal(formatPacificTime(new Date("2026-04-19T06:59:00Z")), "11:59 PM PT");
 });
