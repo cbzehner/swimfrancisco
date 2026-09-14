@@ -1,0 +1,94 @@
+{
+  "cost_estimate": "deterministic",
+  "details": {
+    "direct_source": {
+      "configuration": {
+        "freshness_days": 14,
+        "libraries": {
+          "httpx": "0.28.1",
+          "openpyxl": "3.1.5"
+        },
+        "parser_sha256": "9245e06e2229752047aaba1751039838af82ef712e92181292551a5381e90e57",
+        "python": "3.13.15",
+        "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+        "source_identity": "original_bytes"
+      },
+      "freshness_days": 14,
+      "observed_on": "2026-09-14",
+      "requested_url": "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/news/2026-fitness-and-recreation-holiday-schedule",
+      "sha256": "9532ae05725c857eac948ad9de964fd0911ed3ea6296186e21d6d8ff26458549",
+      "url": "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/news/2026-fitness-and-recreation-holiday-schedule"
+    },
+    "source_coverage": {
+      "issues": [],
+      "ok": true
+    }
+  },
+  "extracted_at": "2026-09-14T20:09:53.858973+00:00",
+  "model": "ucsf-fitness-html-v1",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "21:00",
+        "evidence": "Monday-Friday 6:00 am-9:00 pm (Bakar and Millberry)",
+        "label": "Facility hours",
+        "start": "06:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "21:00",
+        "evidence": "Monday-Friday 6:00 am-9:00 pm (Bakar and Millberry)",
+        "label": "Facility hours",
+        "start": "06:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "21:00",
+        "evidence": "Monday-Friday 6:00 am-9:00 pm (Bakar and Millberry)",
+        "label": "Facility hours",
+        "start": "06:00"
+      },
+      {
+        "day": "thursday",
+        "end": "21:00",
+        "evidence": "Monday-Friday 6:00 am-9:00 pm (Bakar and Millberry)",
+        "label": "Facility hours",
+        "start": "06:00"
+      },
+      {
+        "day": "friday",
+        "end": "21:00",
+        "evidence": "Monday-Friday 6:00 am-9:00 pm (Bakar and Millberry)",
+        "label": "Facility hours",
+        "start": "06:00"
+      },
+      {
+        "day": "saturday",
+        "end": "16:00",
+        "evidence": "Saturday-Sunday 8:00 am-4:00 pm (Millberry)",
+        "label": "Facility hours",
+        "start": "08:00"
+      },
+      {
+        "day": "sunday",
+        "end": "16:00",
+        "evidence": "Saturday-Sunday 8:00 am-4:00 pm (Millberry)",
+        "label": "Facility hours",
+        "start": "08:00"
+      }
+    ],
+    "closures": [],
+    "effective_end": "2026-09-27",
+    "effective_start": "2026-09-14",
+    "schedule_basis": "facility_hours",
+    "sessions": []
+  },
+  "pdf_sha256": "9532ae05725c857eac948ad9de964fd0911ed3ea6296186e21d6d8ff26458549",
+  "prompt_sha256": "f06afb94b556370f708cdd9aeb55856314c460037982430d77b4639024d077ab",
+  "provider": "direct",
+  "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+  "source_pdf_url": "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/news/2026-fitness-and-recreation-holiday-schedule",
+  "usage": {}
+}

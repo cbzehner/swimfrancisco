@@ -15,159 +15,6 @@ access_mode = "public"
 payment_model = "session"
 
 [[extra.schedules]]
-effective_start = "2026-06-07"
-schedule_basis = "swim_schedule"
-effective_end = "2026-08-13"
-last_verified_at = "2026-07-02"
-
-[[extra.schedules.sessions]]
-day = "monday"
-type = "lap_swim"
-start = "07:00"
-end = "08:30"
-pool = "main"
-
-[[extra.schedules.sessions]]
-day = "monday"
-type = "senior_swim"
-start = "11:30"
-end = "12:45"
-pool = "main"
-
-[[extra.schedules.sessions]]
-day = "monday"
-type = "family_swim"
-start = "13:15"
-end = "15:15"
-
-[[extra.schedules.sessions]]
-day = "monday"
-type = "family_swim"
-start = "17:30"
-end = "19:00"
-pool = "shallow"
-
-[[extra.schedules.sessions]]
-day = "monday"
-type = "lap_swim"
-start = "17:30"
-end = "19:00"
-pool = "main"
-
-[[extra.schedules.sessions]]
-day = "tuesday"
-type = "lap_swim"
-start = "07:00"
-end = "08:30"
-pool = "main"
-
-[[extra.schedules.sessions]]
-day = "tuesday"
-type = "senior_swim"
-start = "11:30"
-end = "12:45"
-pool = "main"
-
-[[extra.schedules.sessions]]
-day = "tuesday"
-type = "family_swim"
-start = "13:15"
-end = "15:15"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
-type = "lap_swim"
-start = "07:00"
-end = "08:30"
-pool = "main"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
-type = "senior_swim"
-start = "11:30"
-end = "12:45"
-pool = "main"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
-type = "family_swim"
-start = "13:15"
-end = "15:15"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
-type = "family_swim"
-start = "17:30"
-end = "19:00"
-pool = "shallow"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
-type = "lap_swim"
-start = "17:30"
-end = "19:00"
-pool = "main"
-
-[[extra.schedules.sessions]]
-day = "thursday"
-type = "lap_swim"
-start = "07:00"
-end = "08:30"
-pool = "main"
-
-[[extra.schedules.sessions]]
-day = "thursday"
-type = "senior_swim"
-start = "11:30"
-end = "12:45"
-pool = "main-2 lanes"
-
-[[extra.schedules.sessions]]
-day = "thursday"
-type = "family_swim"
-start = "13:15"
-end = "15:15"
-
-[[extra.schedules.sessions]]
-day = "sunday"
-type = "lap_swim"
-start = "08:30"
-end = "10:30"
-pool = "main"
-
-[[extra.schedules.sessions]]
-day = "sunday"
-type = "family_swim"
-start = "12:30"
-end = "14:00"
-pool = "shallow"
-
-[[extra.schedules.sessions]]
-day = "sunday"
-type = "lap_swim"
-start = "12:30"
-end = "14:00"
-pool = "main"
-
-[[extra.schedules.sessions]]
-day = "sunday"
-type = "family_swim"
-start = "14:30"
-end = "16:30"
-
-[[extra.schedules.closures]]
-start = "2026-06-19"
-end = "2026-06-19"
-reason = "Juneteenth"
-reason_code = "juneteenth"
-
-[[extra.schedules.closures]]
-start = "2026-07-04"
-end = "2026-07-04"
-reason = "Independence Day"
-reason_code = "independence_day"
-
-[[extra.schedules]]
 sessions = []
 effective_start = "2026-08-14"
 schedule_basis = "temporarily_closed"
@@ -184,7 +31,7 @@ reason_code = "garfield_maintenance"
 effective_start = "2026-09-08"
 schedule_basis = "swim_schedule"
 effective_end = "2026-12-10"
-last_verified_at = "2026-09-09"
+last_verified_at = "2026-09-14"
 
 [[extra.schedules.sessions]]
 day = "monday"
@@ -192,6 +39,7 @@ type = "family_swim"
 start = "07:00"
 end = "08:45"
 pool = "small"
+notes = "Shared cell with Lap Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "monday"
@@ -199,6 +47,7 @@ type = "lap_swim"
 start = "07:00"
 end = "08:45"
 pool = "main"
+notes = "Shared cell with Rec/Family Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "monday"
@@ -220,6 +69,7 @@ type = "family_swim"
 start = "14:00"
 end = "15:45"
 pool = "small"
+notes = "Shared cell with Lap Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "monday"
@@ -227,6 +77,7 @@ type = "lap_swim"
 start = "14:00"
 end = "15:45"
 pool = "main"
+notes = "Shared cell with Rec/Family Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "monday"
@@ -234,6 +85,7 @@ type = "family_swim"
 start = "17:30"
 end = "19:00"
 pool = "small"
+notes = "Shared cell with Lap Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "monday"
@@ -241,6 +93,7 @@ type = "lap_swim"
 start = "17:30"
 end = "19:00"
 pool = "main"
+notes = "Shared cell with Rec/Family Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -248,6 +101,7 @@ type = "family_swim"
 start = "07:00"
 end = "08:45"
 pool = "small"
+notes = "Shared cell with Lap Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -255,6 +109,7 @@ type = "lap_swim"
 start = "07:00"
 end = "08:45"
 pool = "main"
+notes = "Shared cell with Rec/Family Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -283,6 +138,7 @@ type = "family_swim"
 start = "14:00"
 end = "15:30"
 pool = "small"
+notes = "Shared cell with Lap Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -290,6 +146,7 @@ type = "lap_swim"
 start = "14:00"
 end = "15:30"
 pool = "main"
+notes = "Shared cell with Rec/Family Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -297,6 +154,7 @@ type = "family_swim"
 start = "07:00"
 end = "08:45"
 pool = "small"
+notes = "Shared cell with Lap Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -304,6 +162,7 @@ type = "lap_swim"
 start = "07:00"
 end = "08:45"
 pool = "main"
+notes = "Shared cell with Rec/Family Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -318,6 +177,7 @@ type = "family_swim"
 start = "11:00"
 end = "13:00"
 pool = "small"
+notes = "Shared cell with Lap Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -325,6 +185,7 @@ type = "lap_swim"
 start = "11:00"
 end = "13:00"
 pool = "main"
+notes = "Shared cell with Rec/Family Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -332,6 +193,7 @@ type = "family_swim"
 start = "17:30"
 end = "19:00"
 pool = "small"
+notes = "Shared cell with Lap Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -339,6 +201,7 @@ type = "lap_swim"
 start = "17:30"
 end = "19:00"
 pool = "main"
+notes = "Shared cell with Rec/Family Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -346,6 +209,7 @@ type = "family_swim"
 start = "07:00"
 end = "08:45"
 pool = "small"
+notes = "Shared cell with Lap Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -353,6 +217,7 @@ type = "lap_swim"
 start = "07:00"
 end = "08:45"
 pool = "main"
+notes = "Shared cell with Rec/Family Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -367,6 +232,7 @@ type = "family_swim"
 start = "11:00"
 end = "13:00"
 pool = "small"
+notes = "Shared cell with Lap Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -374,6 +240,7 @@ type = "lap_swim"
 start = "11:00"
 end = "13:00"
 pool = "main"
+notes = "Shared cell with Rec/Family Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -381,6 +248,7 @@ type = "family_swim"
 start = "14:00"
 end = "15:30"
 pool = "small"
+notes = "Shared cell with Lap Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -388,6 +256,7 @@ type = "lap_swim"
 start = "14:00"
 end = "15:30"
 pool = "main"
+notes = "Shared cell with Rec/Family Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "sunday"
@@ -402,6 +271,7 @@ type = "family_swim"
 start = "12:30"
 end = "14:00"
 pool = "small"
+notes = "Shared cell with Lap Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "sunday"
@@ -409,6 +279,7 @@ type = "lap_swim"
 start = "12:30"
 end = "14:00"
 pool = "main"
+notes = "Shared cell with Rec/Family Swim; each program has its own printed pool allocation."
 
 [[extra.schedules.sessions]]
 day = "sunday"

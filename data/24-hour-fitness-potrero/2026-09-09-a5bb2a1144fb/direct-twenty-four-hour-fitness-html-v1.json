@@ -8,20 +8,20 @@
           "httpx": "0.28.1",
           "openpyxl": "3.1.5"
         },
-        "parser_sha256": "6cd01601c60a98529fd8f866d164e3e9a1bb85bb249c9267b9cb2f6e39894d51",
+        "parser_sha256": "9245e06e2229752047aaba1751039838af82ef712e92181292551a5381e90e57",
         "python": "3.13.15",
         "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
         "source_identity": "original_bytes"
       },
       "freshness_days": 14,
-      "observed_on": "2026-09-09",
+      "observed_on": "2026-09-14",
       "requested_url": "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport",
       "sha256": "a5bb2a1144fb24b8d3d6d1214f8277e812e19958da882196e16a69f2c6f8a230",
       "url": "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
     },
     "source_coverage": null
   },
-  "extracted_at": "2026-09-10T05:35:17.693415+00:00",
+  "extracted_at": "2026-09-14T20:09:49.857459+00:00",
   "model": "twenty-four-hour-fitness-html-v1",
   "payload": {
     "access_exceptions": [],
@@ -77,8 +77,8 @@
       }
     ],
     "closures": [],
-    "effective_end": "2026-09-22",
-    "effective_start": "2026-09-09",
+    "effective_end": "2026-09-27",
+    "effective_start": "2026-09-14",
     "schedule_basis": "facility_hours",
     "sessions": []
   },

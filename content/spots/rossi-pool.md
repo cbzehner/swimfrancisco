@@ -15,154 +15,10 @@ access_mode = "public"
 payment_model = "session"
 
 [[extra.schedules]]
-effective_start = "2026-06-07"
-schedule_basis = "swim_schedule"
-effective_end = "2026-08-13"
-last_verified_at = "2026-07-02"
-
-[[extra.schedules.sessions]]
-day = "monday"
-type = "lap_swim"
-start = "07:00"
-end = "08:15"
-
-[[extra.schedules.sessions]]
-day = "monday"
-type = "family_swim"
-start = "11:00"
-end = "13:30"
-
-[[extra.schedules.sessions]]
-day = "monday"
-type = "lap_swim"
-start = "14:00"
-end = "15:45"
-
-[[extra.schedules.sessions]]
-day = "monday"
-type = "lap_swim"
-start = "18:15"
-end = "19:30"
-
-[[extra.schedules.sessions]]
-day = "tuesday"
-type = "lap_swim"
-start = "07:00"
-end = "08:15"
-
-[[extra.schedules.sessions]]
-day = "tuesday"
-type = "senior_swim"
-start = "11:00"
-end = "12:30"
-
-[[extra.schedules.sessions]]
-day = "tuesday"
-type = "lap_swim"
-start = "12:45"
-end = "13:45"
-
-[[extra.schedules.sessions]]
-day = "tuesday"
-type = "family_swim"
-start = "14:00"
-end = "15:30"
-
-[[extra.schedules.sessions]]
-day = "tuesday"
-type = "family_swim"
-start = "18:15"
-end = "19:30"
-
-[[extra.schedules.sessions]]
-day = "tuesday"
-type = "lap_swim"
-start = "18:15"
-end = "19:30"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
-type = "family_swim"
-start = "11:00"
-end = "13:30"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
-type = "lap_swim"
-start = "14:00"
-end = "15:45"
-
-[[extra.schedules.sessions]]
-day = "thursday"
-type = "lap_swim"
-start = "07:00"
-end = "08:15"
-
-[[extra.schedules.sessions]]
-day = "thursday"
-type = "senior_swim"
-start = "11:00"
-end = "12:30"
-
-[[extra.schedules.sessions]]
-day = "thursday"
-type = "lap_swim"
-start = "12:45"
-end = "13:45"
-
-[[extra.schedules.sessions]]
-day = "thursday"
-type = "family_swim"
-start = "14:00"
-end = "15:30"
-
-[[extra.schedules.sessions]]
-day = "thursday"
-type = "family_swim"
-start = "18:15"
-end = "19:30"
-
-[[extra.schedules.sessions]]
-day = "thursday"
-type = "lap_swim"
-start = "18:15"
-end = "19:30"
-
-[[extra.schedules.sessions]]
-day = "sunday"
-type = "lap_swim"
-start = "07:30"
-end = "08:30"
-
-[[extra.schedules.sessions]]
-day = "sunday"
-type = "family_swim"
-start = "12:30"
-end = "14:00"
-
-[[extra.schedules.sessions]]
-day = "sunday"
-type = "family_swim"
-start = "14:30"
-end = "15:30"
-
-[[extra.schedules.closures]]
-start = "2026-06-19"
-end = "2026-06-19"
-reason = "All city pools will be closed on June 19 in observance of Juneteenth"
-reason_code = "juneteenth"
-
-[[extra.schedules.closures]]
-start = "2026-07-04"
-end = "2026-07-04"
-reason = "closed on July 4 for Independence Day"
-reason_code = "independence_day"
-
-[[extra.schedules]]
 effective_start = "2026-08-16"
 schedule_basis = "swim_schedule"
 effective_end = "2026-12-10"
-last_verified_at = "2026-09-09"
+last_verified_at = "2026-09-14"
 
 [[extra.schedules.sessions]]
 day = "monday"
@@ -211,14 +67,14 @@ day = "tuesday"
 type = "family_swim"
 start = "18:15"
 end = "19:30"
-notes = "Printed “(3)” is a numeric lane count only and is not copied as a pool allocation."
+notes = "Printed '(3)' appears to be only a numeric lane count, not a pool allocation."
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "lap_swim"
 start = "18:15"
 end = "19:30"
-notes = "Printed “(3)” is a numeric lane count only and is not copied as a pool allocation."
+notes = "Printed '(3)' appears to be only a numeric lane count, not a pool allocation."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -237,14 +93,14 @@ day = "wednesday"
 type = "family_swim"
 start = "14:00"
 end = "15:30"
-notes = "Printed “(3)” is a numeric lane count only and is not copied as a pool allocation."
+notes = "Printed '(3)' appears to be only a numeric lane count, not a pool allocation."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "14:00"
 end = "15:30"
-notes = "Printed “(3)” is a numeric lane count only and is not copied as a pool allocation."
+notes = "Printed '(3)' appears to be only a numeric lane count, not a pool allocation."
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -269,14 +125,14 @@ day = "thursday"
 type = "family_swim"
 start = "18:15"
 end = "19:30"
-notes = "Printed “(3)” is a numeric lane count only and is not copied as a pool allocation."
+notes = "Printed '(3)' appears to be only a numeric lane count, not a pool allocation."
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "18:15"
 end = "19:30"
-notes = "Printed “(3)” is a numeric lane count only and is not copied as a pool allocation."
+notes = "Printed '(3)' appears to be only a numeric lane count, not a pool allocation."
 
 [[extra.schedules.sessions]]
 day = "sunday"
@@ -299,7 +155,7 @@ end = "15:30"
 [[extra.schedules.closures]]
 start = "2026-08-27"
 end = "2026-08-27"
-reason = "training"
+reason = "Pool closed for training"
 start_time = "12:00"
 end_time = "14:00"
 reason_code = "staff_training"
@@ -311,7 +167,7 @@ text = "Pool closed 12pm-2pm 8/27,\n9/24, 10/22 for training"
 [[extra.schedules.closures]]
 start = "2026-09-07"
 end = "2026-09-07"
-reason = "holiday"
+reason = "All city pools closed for holiday"
 reason_code = "holiday"
 
 [[extra.schedules.closures.source_notices]]
@@ -321,7 +177,7 @@ text = "All city pools will be closed for\nholidays 9/7, 10/12,11/11,\n11/26 and
 [[extra.schedules.closures]]
 start = "2026-09-24"
 end = "2026-09-24"
-reason = "training"
+reason = "Pool closed for training"
 start_time = "12:00"
 end_time = "14:00"
 reason_code = "staff_training"
@@ -333,7 +189,7 @@ text = "Pool closed 12pm-2pm 8/27,\n9/24, 10/22 for training"
 [[extra.schedules.closures]]
 start = "2026-10-12"
 end = "2026-10-12"
-reason = "holiday"
+reason = "All city pools closed for holiday"
 reason_code = "holiday"
 
 [[extra.schedules.closures.source_notices]]
@@ -343,7 +199,7 @@ text = "All city pools will be closed for\nholidays 9/7, 10/12,11/11,\n11/26 and
 [[extra.schedules.closures]]
 start = "2026-10-22"
 end = "2026-10-22"
-reason = "training"
+reason = "Pool closed for training"
 start_time = "12:00"
 end_time = "14:00"
 reason_code = "staff_training"
@@ -355,7 +211,7 @@ text = "Pool closed 12pm-2pm 8/27,\n9/24, 10/22 for training"
 [[extra.schedules.closures]]
 start = "2026-11-02"
 end = "2026-11-21"
-reason = "annual maintenance"
+reason = "Closed for annual maintenance"
 reason_code = "maintenance"
 
 [[extra.schedules.closures.source_notices]]
@@ -365,7 +221,7 @@ text = "Closed for annual maintenance\n11/2-11/21 reopen 11/22"
 [[extra.schedules.closures]]
 start = "2026-11-11"
 end = "2026-11-11"
-reason = "holiday"
+reason = "All city pools closed for holiday"
 reason_code = "holiday"
 
 [[extra.schedules.closures.source_notices]]
@@ -375,7 +231,7 @@ text = "All city pools will be closed for\nholidays 9/7, 10/12,11/11,\n11/26 and
 [[extra.schedules.closures]]
 start = "2026-11-26"
 end = "2026-11-26"
-reason = "holiday"
+reason = "All city pools closed for holiday"
 reason_code = "holiday"
 
 [[extra.schedules.closures.source_notices]]
@@ -385,7 +241,7 @@ text = "All city pools will be closed for\nholidays 9/7, 10/12,11/11,\n11/26 and
 [[extra.schedules.closures]]
 start = "2026-11-27"
 end = "2026-11-27"
-reason = "holiday"
+reason = "All city pools closed for holiday"
 reason_code = "holiday"
 
 [[extra.schedules.closures.source_notices]]

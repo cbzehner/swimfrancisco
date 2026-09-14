@@ -19,50 +19,6 @@ access_summary = "SFSU Mashouf Wellness Center publishes natatorium hours and de
 [[extra.schedules]]
 sessions = []
 closures = []
-effective_start = "2026-05-17"
-schedule_basis = "pool_hours"
-effective_end = "2026-08-11"
-last_verified_at = "2026-05-17"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "10:00"
-end = "20:00"
-label = "Natatorium hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "10:00"
-end = "20:00"
-label = "Natatorium hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "10:00"
-end = "20:00"
-label = "Natatorium hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "10:00"
-end = "20:00"
-label = "Natatorium hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "12:00"
-end = "16:00"
-label = "Natatorium hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "12:00"
-end = "16:00"
-label = "Natatorium hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
 effective_start = "2026-08-12"
 schedule_basis = "pool_hours"
 effective_end = "2026-09-08"
@@ -103,8 +59,52 @@ sessions = []
 closures = []
 effective_start = "2026-09-09"
 schedule_basis = "pool_hours"
-effective_end = "2026-09-22"
+effective_end = "2026-09-13"
 last_verified_at = "2026-09-09"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "10:00"
+end = "20:00"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "10:00"
+end = "20:00"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "10:00"
+end = "20:00"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "10:00"
+end = "20:00"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "12:00"
+end = "16:00"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "12:00"
+end = "16:00"
+label = "Pool hours"
+
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-09-14"
+schedule_basis = "pool_hours"
+effective_end = "2026-09-27"
+last_verified_at = "2026-09-14"
 
 [[extra.schedules.access_hours]]
 day = "monday"

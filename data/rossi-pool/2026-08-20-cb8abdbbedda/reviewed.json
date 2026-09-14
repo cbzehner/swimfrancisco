@@ -2,13 +2,13 @@
   "pdf_sha256": "cb8abdbbedda075c85b1a8f1400345efb2d9b022eee6f452bf6b21d4876d80bc",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29804",
   "slug": "rossi-pool",
-  "reviewed_at": "2026-09-09",
+  "reviewed_at": "2026-09-14",
   "attested_by": "ci",
   "payload": {
     "closures": [
       {
         "end": "2026-09-07",
-        "reason": "holiday",
+        "reason": "All city pools closed for holiday",
         "reason_code": "holiday",
         "source_notices": [
           {
@@ -20,7 +20,7 @@
       },
       {
         "end": "2026-10-12",
-        "reason": "holiday",
+        "reason": "All city pools closed for holiday",
         "reason_code": "holiday",
         "source_notices": [
           {
@@ -32,7 +32,7 @@
       },
       {
         "end": "2026-11-11",
-        "reason": "holiday",
+        "reason": "All city pools closed for holiday",
         "reason_code": "holiday",
         "source_notices": [
           {
@@ -44,7 +44,7 @@
       },
       {
         "end": "2026-11-26",
-        "reason": "holiday",
+        "reason": "All city pools closed for holiday",
         "reason_code": "holiday",
         "source_notices": [
           {
@@ -56,7 +56,7 @@
       },
       {
         "end": "2026-11-27",
-        "reason": "holiday",
+        "reason": "All city pools closed for holiday",
         "reason_code": "holiday",
         "source_notices": [
           {
@@ -69,7 +69,7 @@
       {
         "end": "2026-08-27",
         "end_time": "14:00",
-        "reason": "training",
+        "reason": "Pool closed for training",
         "reason_code": "staff_training",
         "source_notices": [
           {
@@ -83,7 +83,7 @@
       {
         "end": "2026-09-24",
         "end_time": "14:00",
-        "reason": "training",
+        "reason": "Pool closed for training",
         "reason_code": "staff_training",
         "source_notices": [
           {
@@ -97,7 +97,7 @@
       {
         "end": "2026-10-22",
         "end_time": "14:00",
-        "reason": "training",
+        "reason": "Pool closed for training",
         "reason_code": "staff_training",
         "source_notices": [
           {
@@ -110,7 +110,7 @@
       },
       {
         "end": "2026-11-21",
-        "reason": "annual maintenance",
+        "reason": "Closed for annual maintenance",
         "reason_code": "maintenance",
         "source_notices": [
           {
@@ -199,7 +199,7 @@
         "day": "tuesday",
         "end": "19:30",
         "evidence": "Lap Swim 6:15pm-7:30pm (3)",
-        "notes": "Printed \u201c(3)\u201d is a numeric lane count only and is not copied as a pool allocation.",
+        "notes": "Printed '(3)' appears to be only a numeric lane count, not a pool allocation.",
         "start": "18:15",
         "type": "lap_swim"
       },
@@ -207,7 +207,7 @@
         "day": "tuesday",
         "end": "19:30",
         "evidence": "Rec/Family Swim 6:15pm-7:30pm (3)",
-        "notes": "Printed \u201c(3)\u201d is a numeric lane count only and is not copied as a pool allocation.",
+        "notes": "Printed '(3)' appears to be only a numeric lane count, not a pool allocation.",
         "start": "18:15",
         "type": "family_swim"
       },
@@ -229,7 +229,7 @@
         "day": "wednesday",
         "end": "15:30",
         "evidence": "Rec/Family Swim 2:00pm-3:30 (3)",
-        "notes": "Printed \u201c(3)\u201d is a numeric lane count only and is not copied as a pool allocation.",
+        "notes": "Printed '(3)' appears to be only a numeric lane count, not a pool allocation.",
         "start": "14:00",
         "type": "family_swim"
       },
@@ -237,7 +237,7 @@
         "day": "wednesday",
         "end": "15:30",
         "evidence": "Lap Swim 2:00pm-3:30pm (3)",
-        "notes": "Printed \u201c(3)\u201d is a numeric lane count only and is not copied as a pool allocation.",
+        "notes": "Printed '(3)' appears to be only a numeric lane count, not a pool allocation.",
         "start": "14:00",
         "type": "lap_swim"
       },
@@ -266,7 +266,7 @@
         "day": "thursday",
         "end": "19:30",
         "evidence": "Lap Swim 6:15pm-7:30pm (3)",
-        "notes": "Printed \u201c(3)\u201d is a numeric lane count only and is not copied as a pool allocation.",
+        "notes": "Printed '(3)' appears to be only a numeric lane count, not a pool allocation.",
         "start": "18:15",
         "type": "lap_swim"
       },
@@ -274,7 +274,7 @@
         "day": "thursday",
         "end": "19:30",
         "evidence": "Rec/Family Swim 6:15pm-7:30pm (3)",
-        "notes": "Printed \u201c(3)\u201d is a numeric lane count only and is not copied as a pool allocation.",
+        "notes": "Printed '(3)' appears to be only a numeric lane count, not a pool allocation.",
         "start": "18:15",
         "type": "family_swim"
       }

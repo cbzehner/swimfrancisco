@@ -15,286 +15,10 @@ access_mode = "public"
 payment_model = "session"
 
 [[extra.schedules]]
-effective_start = "2026-04-21"
-schedule_basis = "swim_schedule"
-effective_end = "2026-06-06"
-last_verified_at = "2026-04-20"
-
-[[extra.schedules.sessions]]
-day = "tuesday"
-type = "lap_swim"
-start = "07:00"
-end = "08:30"
-
-[[extra.schedules.sessions]]
-day = "tuesday"
-type = "senior_swim"
-start = "08:45"
-end = "10:00"
-
-[[extra.schedules.sessions]]
-day = "tuesday"
-type = "lap_swim"
-start = "11:30"
-end = "13:00"
-
-[[extra.schedules.sessions]]
-day = "tuesday"
-type = "family_swim"
-start = "14:00"
-end = "16:00"
-pool = "shared"
-
-[[extra.schedules.sessions]]
-day = "tuesday"
-type = "senior_swim"
-start = "14:00"
-end = "16:00"
-pool = "shared"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
-type = "senior_swim"
-start = "09:00"
-end = "10:30"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
-type = "lap_swim"
-start = "11:00"
-end = "13:00"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
-type = "family_swim"
-start = "13:30"
-end = "14:30"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
-type = "family_swim"
-start = "18:00"
-end = "19:00"
-pool = "shared"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
-type = "lap_swim"
-start = "18:00"
-end = "19:00"
-pool = "shared"
-
-[[extra.schedules.sessions]]
-day = "thursday"
-type = "lap_swim"
-start = "07:00"
-end = "08:30"
-
-[[extra.schedules.sessions]]
-day = "thursday"
-type = "senior_swim"
-start = "08:45"
-end = "10:00"
-
-[[extra.schedules.sessions]]
-day = "thursday"
-type = "lap_swim"
-start = "11:30"
-end = "13:00"
-
-[[extra.schedules.sessions]]
-day = "thursday"
-type = "lap_swim"
-start = "14:30"
-end = "16:00"
-
-[[extra.schedules.sessions]]
-day = "friday"
-type = "senior_swim"
-start = "09:00"
-end = "10:30"
-
-[[extra.schedules.sessions]]
-day = "friday"
-type = "senior_swim"
-start = "10:30"
-end = "11:15"
-
-[[extra.schedules.sessions]]
-day = "friday"
-type = "lap_swim"
-start = "11:30"
-end = "13:00"
-
-[[extra.schedules.sessions]]
-day = "friday"
-type = "family_swim"
-start = "14:00"
-end = "15:00"
-
-[[extra.schedules.sessions]]
-day = "saturday"
-type = "family_swim"
-start = "09:00"
-end = "10:30"
-
-[[extra.schedules.sessions]]
-day = "saturday"
-type = "senior_swim"
-start = "11:45"
-end = "12:45"
-
-[[extra.schedules.sessions]]
-day = "saturday"
-type = "family_swim"
-start = "13:00"
-end = "14:00"
-
-[[extra.schedules.sessions]]
-day = "saturday"
-type = "family_swim"
-start = "14:30"
-end = "15:45"
-
-[[extra.schedules.sessions]]
-day = "saturday"
-type = "lap_swim"
-start = "16:00"
-end = "17:00"
-
-[[extra.schedules.closures]]
-start = "2026-05-21"
-end = "2026-05-21"
-reason = "Pool closed Thursday 5/21 11:30am–1pm"
-reason_code = "pool_closed_5_21"
-
-[[extra.schedules.closures]]
-start = "2026-06-06"
-end = "2026-06-06"
-reason = "In-Service (9am–1pm)"
-start_time = "09:00"
-end_time = "13:00"
-reason_code = "in_service_9_1"
-
-[[extra.schedules]]
-effective_start = "2026-06-09"
-schedule_basis = "swim_schedule"
-effective_end = "2026-08-15"
-last_verified_at = "2026-07-02"
-
-[[extra.schedules.sessions]]
-day = "tuesday"
-type = "lap_swim"
-start = "07:00"
-end = "08:15"
-
-[[extra.schedules.sessions]]
-day = "tuesday"
-type = "senior_swim"
-start = "10:30"
-end = "12:15"
-
-[[extra.schedules.sessions]]
-day = "tuesday"
-type = "family_swim"
-start = "13:30"
-end = "15:00"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
-type = "lap_swim"
-start = "10:30"
-end = "12:15"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
-type = "family_swim"
-start = "13:30"
-end = "15:00"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
-type = "family_swim"
-start = "17:30"
-end = "19:00"
-
-[[extra.schedules.sessions]]
-day = "wednesday"
-type = "lap_swim"
-start = "17:30"
-end = "19:00"
-
-[[extra.schedules.sessions]]
-day = "thursday"
-type = "lap_swim"
-start = "07:00"
-end = "08:15"
-
-[[extra.schedules.sessions]]
-day = "thursday"
-type = "senior_swim"
-start = "10:30"
-end = "12:15"
-
-[[extra.schedules.sessions]]
-day = "thursday"
-type = "family_swim"
-start = "13:30"
-end = "15:00"
-
-[[extra.schedules.sessions]]
-day = "friday"
-type = "lap_swim"
-start = "10:30"
-end = "12:15"
-
-[[extra.schedules.sessions]]
-day = "friday"
-type = "family_swim"
-start = "13:30"
-end = "15:00"
-
-[[extra.schedules.sessions]]
-day = "saturday"
-type = "senior_swim"
-start = "11:45"
-end = "12:45"
-
-[[extra.schedules.sessions]]
-day = "saturday"
-type = "family_swim"
-start = "13:00"
-end = "14:00"
-
-[[extra.schedules.sessions]]
-day = "saturday"
-type = "family_swim"
-start = "14:30"
-end = "15:45"
-
-[[extra.schedules.sessions]]
-day = "saturday"
-type = "lap_swim"
-start = "16:00"
-end = "17:00"
-
-[[extra.schedules.closures]]
-start = "2026-06-19"
-end = "2026-06-19"
-reason = "Juneteenth"
-reason_code = "juneteenth"
-
-[[extra.schedules.closures]]
-start = "2026-07-04"
-end = "2026-07-04"
-reason = "Independence Day"
-reason_code = "independence_day"
-
-[[extra.schedules]]
 effective_start = "2026-08-18"
 schedule_basis = "swim_schedule"
 effective_end = "2026-12-12"
-last_verified_at = "2026-09-09"
+last_verified_at = "2026-09-14"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -319,21 +43,21 @@ day = "tuesday"
 type = "family_swim"
 start = "14:00"
 end = "16:00"
-notes = "Lane count only; no pool allocation extracted."
+notes = "Printed lane count is not a pool allocation."
 
 [[extra.schedules.sessions]]
 day = "tuesday"
 type = "senior_swim"
 start = "14:00"
 end = "16:00"
-notes = "Lane count only; no pool allocation extracted."
+notes = "Printed lane count is not a pool allocation."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "senior_swim"
 start = "09:00"
 end = "10:30"
-notes = "Shared cell also lists Self-Guided Exercise; only senior_swim extracted."
+notes = "Shared cell includes Self-Guided Exercise; only Senior Swim extracted."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
@@ -346,21 +70,21 @@ day = "wednesday"
 type = "family_swim"
 start = "13:30"
 end = "14:30"
-notes = "Shared cell includes Sfusd; Rec Swim extracted as family_swim."
+notes = "Shared cell includes Sfusd; only Rec Swim extracted."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "family_swim"
 start = "18:00"
 end = "19:00"
-notes = "Lane count only; no pool allocation extracted."
+notes = "Printed lane count is not a pool allocation."
 
 [[extra.schedules.sessions]]
 day = "wednesday"
 type = "lap_swim"
 start = "18:00"
 end = "19:00"
-notes = "Lane count only; no pool allocation extracted."
+notes = "Printed lane count is not a pool allocation."
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -379,7 +103,7 @@ day = "thursday"
 type = "lap_swim"
 start = "11:30"
 end = "13:00"
-notes = "Session cell marks closed on listed dates for training."
+notes = "Session cell lists closed dates for this weekly session."
 excluded_dates = [ "2026-08-27", "2026-09-24", "2026-10-22" ]
 
 [[extra.schedules.sessions]]
@@ -393,7 +117,7 @@ day = "friday"
 type = "senior_swim"
 start = "09:00"
 end = "10:30"
-notes = "Shared cell also lists Self-Guided Exercise; only senior_swim extracted."
+notes = "Shared cell includes Self-Guided Exercise; only Senior Swim extracted."
 
 [[extra.schedules.sessions]]
 day = "friday"
@@ -418,7 +142,7 @@ day = "saturday"
 type = "family_swim"
 start = "13:00"
 end = "14:00"
-notes = "Shared cell also lists Parent and Tots; Family Swim extracted."
+notes = "Shared cell includes Parent and Tots; only Family Swim extracted."
 
 [[extra.schedules.sessions]]
 day = "saturday"
@@ -435,7 +159,7 @@ end = "17:00"
 [[extra.schedules.closures]]
 start = "2026-08-22"
 end = "2026-08-22"
-reason = "Closed for In-Service"
+reason = "In-Service"
 start_time = "09:00"
 end_time = "13:00"
 reason_code = "staff_training"
@@ -467,7 +191,7 @@ text = "All city pools will be closed on\n11/11/2026 in observance of\nVeterans 
 [[extra.schedules.closures]]
 start = "2026-12-12"
 end = "2026-12-12"
-reason = "Closed for In-Service"
+reason = "In-Service"
 start_time = "09:00"
 end_time = "14:00"
 reason_code = "staff_training"

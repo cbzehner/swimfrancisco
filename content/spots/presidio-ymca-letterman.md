@@ -83,6 +83,56 @@ reason_code = "maintenance"
 id = "2b571723626d2f56-1"
 text = "Letterman Aquatics Center Maintenance Notice: Closure starting on Saturday, 08/22, through Sunday, 09/13"
 
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-09-14"
+schedule_basis = "facility_hours"
+effective_end = "2026-09-27"
+last_verified_at = "2026-09-14"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "05:30"
+end = "20:30"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "05:30"
+end = "20:30"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "05:30"
+end = "20:30"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "05:30"
+end = "20:30"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "05:30"
+end = "20:30"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "07:00"
+end = "16:30"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "sunday"
+start = "07:00"
+end = "16:30"
+label = "Facility hours"
+
 [[extra.pricing]]
 label = "YMCA member"
 price = "Membership"

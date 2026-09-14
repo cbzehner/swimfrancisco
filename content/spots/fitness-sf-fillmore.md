@@ -71,8 +71,58 @@ sessions = []
 closures = []
 effective_start = "2026-09-09"
 schedule_basis = "facility_hours"
-effective_end = "2026-09-22"
+effective_end = "2026-09-13"
 last_verified_at = "2026-09-09"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "05:00"
+end = "23:59"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "05:00"
+end = "23:59"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "05:00"
+end = "23:59"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "05:00"
+end = "23:59"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "05:00"
+end = "23:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "07:00"
+end = "20:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "sunday"
+start = "07:00"
+end = "20:00"
+label = "Club hours"
+
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-09-14"
+schedule_basis = "facility_hours"
+effective_end = "2026-09-27"
+last_verified_at = "2026-09-14"
 
 [[extra.schedules.access_hours]]
 day = "monday"
