@@ -5,20 +5,20 @@
       "configuration": {
         "capture": {
           "browser_version": "128.0.6613.137",
-          "captured_at": "2026-09-21T20:17:11.946Z",
+          "captured_at": "2026-09-21T20:17:07.528Z",
           "configuration": {
             "playwright_version": "1.60.0",
             "script_sha256": "8e5c24db09d052cd63888ed77acc3a6a5273434b12f71ed7a2ac03e786535ae4"
           },
           "hashes": {
-            "rendered": "3d8a9e6b614428113ac3d8a9d58a060b84ae3981aba5fb05e554169e5730875b",
-            "screenshot": "e4888d4fc908d303262d109578004b378e18ba9450fe4b06618a9534a380798f",
-            "source": "7c086f2f60cd34190cdcd7c66b5ef3ec2fc6848c43b4c77f871c0c8fb81a9ca3"
+            "rendered": "7861a474bdd0be10af94c797f33f5a2ee4f7ea34603e08992fe719053e1264f2",
+            "screenshot": "a6b5ed6242918befde3d9027d74298d9e0246509c8c1207e95fe69560044276b",
+            "source": "8636a02dd3b6c2c047e731c2e00439f3936a63706118ab0aa17045294b4c9cc5"
           },
           "method": "cloudflare_browser",
-          "requested_url": "https://campusrec.sfsu.edu/Aquatics",
+          "requested_url": "https://www.ymcasf.org/location/chinatown-ymca/",
           "status": 200,
-          "url": "https://campusrec.sfsu.edu/Aquatics"
+          "url": "https://www.ymcasf.org/location/chinatown-ymca/"
         },
         "freshness_days": 14,
         "libraries": {
@@ -32,61 +32,68 @@
       },
       "freshness_days": 14,
       "observed_on": "2026-09-21",
-      "requested_url": "https://campusrec.sfsu.edu/Aquatics",
-      "sha256": "7c086f2f60cd34190cdcd7c66b5ef3ec2fc6848c43b4c77f871c0c8fb81a9ca3",
-      "url": "https://campusrec.sfsu.edu/Aquatics"
+      "requested_url": "https://www.ymcasf.org/location/chinatown-ymca/",
+      "sha256": "8636a02dd3b6c2c047e731c2e00439f3936a63706118ab0aa17045294b4c9cc5",
+      "url": "https://www.ymcasf.org/location/chinatown-ymca/"
     },
     "source_coverage": {
       "issues": [],
       "ok": true
     }
   },
-  "extracted_at": "2026-09-21T20:17:19.061818+00:00",
+  "extracted_at": "2026-09-21T20:17:16.293978+00:00",
   "model": "browser-html",
   "payload": {
     "access_exceptions": [],
     "access_hours": [
       {
         "day": "monday",
-        "end": "20:00",
-        "evidence": "Monday - Thursday: 10 a.m. - 8 p.m.",
+        "end": "19:30",
+        "evidence": "Monday: 8:00 am \u2013 7:30 pm",
         "label": "Pool hours",
-        "start": "10:00"
+        "start": "08:00"
       },
       {
         "day": "tuesday",
-        "end": "20:00",
-        "evidence": "Monday - Thursday: 10 a.m. - 8 p.m.",
+        "end": "19:30",
+        "evidence": "Tuesday: 8:00 am \u2013 7:30 pm",
         "label": "Pool hours",
-        "start": "10:00"
+        "start": "08:00"
       },
       {
         "day": "wednesday",
-        "end": "20:00",
-        "evidence": "Monday - Thursday: 10 a.m. - 8 p.m.",
+        "end": "19:30",
+        "evidence": "Wednesday: 8:00 am \u2013 7:30 pm",
         "label": "Pool hours",
-        "start": "10:00"
+        "start": "08:00"
       },
       {
         "day": "thursday",
-        "end": "20:00",
-        "evidence": "Monday - Thursday: 10 a.m. - 8 p.m.",
+        "end": "19:30",
+        "evidence": "Thursday: 8:00 am \u2013 7:30 pm",
         "label": "Pool hours",
-        "start": "10:00"
+        "start": "08:00"
       },
       {
         "day": "friday",
-        "end": "16:00",
-        "evidence": "Friday - Saturday: Noon - 4 p.m.",
+        "end": "19:30",
+        "evidence": "Friday: 8:00 am \u2013 7:30 pm",
         "label": "Pool hours",
-        "start": "12:00"
+        "start": "08:00"
       },
       {
         "day": "saturday",
-        "end": "16:00",
-        "evidence": "Friday - Saturday: Noon - 4 p.m.",
+        "end": "15:30",
+        "evidence": "Saturday: 8:00 am \u2013 3:30 pm",
         "label": "Pool hours",
-        "start": "12:00"
+        "start": "08:00"
+      },
+      {
+        "day": "sunday",
+        "end": "15:30",
+        "evidence": "Sunday: 8:00 am \u2013 3:30 pm",
+        "label": "Pool hours",
+        "start": "08:00"
       }
     ],
     "closures": [],
@@ -95,10 +102,10 @@
     "schedule_basis": "pool_hours",
     "sessions": []
   },
-  "pdf_sha256": "7c086f2f60cd34190cdcd7c66b5ef3ec2fc6848c43b4c77f871c0c8fb81a9ca3",
-  "prompt_sha256": "cdbd4d363ed9e37f4d2f295dc4876375f125b25695442fcedc8e7f6863385617",
+  "pdf_sha256": "8636a02dd3b6c2c047e731c2e00439f3936a63706118ab0aa17045294b4c9cc5",
+  "prompt_sha256": "f61aea063461b7d02e6e993bc9cf3962503e1b69da06bee1ae5d2f1210a81de9",
   "provider": "direct",
   "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
-  "source_pdf_url": "https://campusrec.sfsu.edu/Aquatics",
+  "source_pdf_url": "https://www.ymcasf.org/location/chinatown-ymca/",
   "usage": {}
 }

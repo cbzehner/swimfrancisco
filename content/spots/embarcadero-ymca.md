@@ -19,64 +19,6 @@ access_summary = "Embarcadero YMCA is a membership YMCA branch on the waterfront
 [[extra.schedules]]
 sessions = []
 closures = []
-effective_start = "2026-05-17"
-schedule_basis = "pool_hours"
-effective_end = "2026-08-11"
-last_verified_at = "2026-05-17"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "06:00"
-end = "20:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "06:00"
-end = "20:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "06:00"
-end = "20:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "06:00"
-end = "20:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "18:00"
-end = "20:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "07:30"
-end = "16:30"
-label = "Pool hours"
-
-[[extra.schedules.access_exceptions]]
-date = "2026-05-25"
-start = "07:30"
-end = "13:30"
-label = "Holiday pool hours"
-reason = "Memorial Day"
-
-[[extra.schedules.access_exceptions]]
-date = "2026-06-19"
-start = "07:30"
-end = "13:30"
-label = "Holiday pool hours"
-reason = "Juneteenth"
-
-[[extra.schedules]]
-sessions = []
-closures = []
 effective_start = "2026-08-12"
 schedule_basis = "pool_hours"
 effective_end = "2026-09-08"
@@ -186,8 +128,52 @@ sessions = []
 closures = []
 effective_start = "2026-09-09"
 schedule_basis = "pool_hours"
-effective_end = "2026-09-22"
+effective_end = "2026-09-20"
 last_verified_at = "2026-09-09"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "06:00"
+end = "20:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "06:00"
+end = "20:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "06:00"
+end = "20:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "06:00"
+end = "20:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "06:00"
+end = "20:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "07:30"
+end = "16:30"
+label = "Pool hours"
+
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-09-21"
+schedule_basis = "pool_hours"
+effective_end = "2026-10-04"
+last_verified_at = "2026-09-21"
 
 [[extra.schedules.access_hours]]
 day = "monday"

@@ -18,7 +18,7 @@ payment_model = "session"
 effective_start = "2026-09-01"
 schedule_basis = "swim_schedule"
 effective_end = "2026-12-12"
-last_verified_at = "2026-09-14"
+last_verified_at = "2026-09-21"
 
 [[extra.schedules.sessions]]
 day = "tuesday"

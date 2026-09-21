@@ -177,8 +177,58 @@ sessions = []
 closures = []
 effective_start = "2026-09-14"
 schedule_basis = "pool_hours"
-effective_end = "2026-09-27"
+effective_end = "2026-09-20"
 last_verified_at = "2026-09-14"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "08:00"
+end = "19:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "08:00"
+end = "19:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "08:00"
+end = "19:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "08:00"
+end = "19:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "08:00"
+end = "19:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "08:00"
+end = "15:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "sunday"
+start = "08:00"
+end = "15:30"
+label = "Pool hours"
+
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-09-21"
+schedule_basis = "pool_hours"
+effective_end = "2026-10-04"
+last_verified_at = "2026-09-21"
 
 [[extra.schedules.access_hours]]
 day = "monday"
