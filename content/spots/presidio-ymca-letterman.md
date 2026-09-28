@@ -19,73 +19,6 @@ access_summary = "Letterman Pool is part of the Presidio Community YMCA. The off
 [[extra.schedules]]
 sessions = []
 closures = []
-effective_start = "2026-05-17"
-schedule_basis = "facility_hours"
-effective_end = "2026-09-08"
-last_verified_at = "2026-05-17"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "05:30"
-end = "20:30"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "05:30"
-end = "20:30"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "05:30"
-end = "20:30"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "05:30"
-end = "20:30"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "05:30"
-end = "20:30"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "07:00"
-end = "16:30"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "07:00"
-end = "16:30"
-label = "Facility hours"
-
-[[extra.schedules]]
-sessions = []
-effective_start = "2026-09-09"
-schedule_basis = "temporarily_closed"
-effective_end = "2026-09-13"
-last_verified_at = "2026-09-09"
-
-[[extra.schedules.closures]]
-start = "2026-09-09"
-end = "2026-09-13"
-reason = "Letterman Aquatics Center Maintenance Notice: Closure starting on Saturday, 08/22, through Sunday, 09/13"
-reason_code = "maintenance"
-
-[[extra.schedules.closures.source_notices]]
-id = "2b571723626d2f56-1"
-text = "Letterman Aquatics Center Maintenance Notice: Closure starting on Saturday, 08/22, through Sunday, 09/13"
-
-[[extra.schedules]]
-sessions = []
-closures = []
 effective_start = "2026-09-14"
 schedule_basis = "facility_hours"
 effective_end = "2026-09-20"
@@ -138,8 +71,58 @@ sessions = []
 closures = []
 effective_start = "2026-09-21"
 schedule_basis = "facility_hours"
-effective_end = "2026-10-04"
+effective_end = "2026-09-27"
 last_verified_at = "2026-09-21"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "05:30"
+end = "20:30"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "05:30"
+end = "20:30"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "05:30"
+end = "20:30"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "05:30"
+end = "20:30"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "05:30"
+end = "20:30"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "07:00"
+end = "16:30"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "sunday"
+start = "07:00"
+end = "16:30"
+label = "Facility hours"
+
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-09-28"
+schedule_basis = "facility_hours"
+effective_end = "2026-10-11"
+last_verified_at = "2026-09-28"
 
 [[extra.schedules.access_hours]]
 day = "monday"

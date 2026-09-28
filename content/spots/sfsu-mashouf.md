@@ -19,88 +19,6 @@ access_summary = "SFSU Mashouf Wellness Center publishes natatorium hours and de
 [[extra.schedules]]
 sessions = []
 closures = []
-effective_start = "2026-08-12"
-schedule_basis = "pool_hours"
-effective_end = "2026-09-08"
-last_verified_at = "2026-08-12"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "12:00"
-end = "16:00"
-label = "Natatorium hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "10:00"
-end = "13:30"
-label = "Natatorium hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "12:00"
-end = "16:00"
-label = "Natatorium hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "12:00"
-end = "16:00"
-label = "Natatorium hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "10:00"
-end = "13:30"
-label = "Natatorium hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
-effective_start = "2026-09-09"
-schedule_basis = "pool_hours"
-effective_end = "2026-09-13"
-last_verified_at = "2026-09-09"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "10:00"
-end = "20:00"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "10:00"
-end = "20:00"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "10:00"
-end = "20:00"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "10:00"
-end = "20:00"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "12:00"
-end = "16:00"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "12:00"
-end = "16:00"
-label = "Pool hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
 effective_start = "2026-09-14"
 schedule_basis = "pool_hours"
 effective_end = "2026-09-20"
@@ -147,8 +65,52 @@ sessions = []
 closures = []
 effective_start = "2026-09-21"
 schedule_basis = "pool_hours"
-effective_end = "2026-10-04"
+effective_end = "2026-09-27"
 last_verified_at = "2026-09-21"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "10:00"
+end = "20:00"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "10:00"
+end = "20:00"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "10:00"
+end = "20:00"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "10:00"
+end = "20:00"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "12:00"
+end = "16:00"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "12:00"
+end = "16:00"
+label = "Pool hours"
+
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-09-28"
+schedule_basis = "pool_hours"
+effective_end = "2026-10-11"
+last_verified_at = "2026-09-28"
 
 [[extra.schedules.access_hours]]
 day = "monday"
