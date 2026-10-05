@@ -23,7 +23,7 @@ slug = "martin-luther-king-jr-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/30210"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Martin-Luther-King-Jr-Pool-216"
 notes = "Discovery state migrated from the 2026-08-21 record; sequential document identities remain structured below."
-discovery = { action = "adopt", reason = "sequential_windows", documents = [{ id = 30210, kind = "session_grid", origin = "table" }, { id = 29802, kind = "session_grid", origin = "table" }, { id = 29803, kind = "session_grid", origin = "persisted" }] }
+discovery = { action = "unchanged", reason = "sequential_windows", documents = [{ id = 30210, kind = "session_grid", origin = "table" }, { id = 29802, kind = "session_grid", origin = "table" }, { id = 29803, kind = "session_grid", origin = "persisted" }, { id = 30211, kind = "closure_notice", origin = "band" }] }
 
 [[pool]]
 slug = "mission-community-pool"

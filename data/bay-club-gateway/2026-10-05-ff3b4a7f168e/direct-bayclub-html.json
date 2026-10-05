@@ -15,66 +15,66 @@
       },
       "freshness_days": 14,
       "observed_on": "2026-10-05",
-      "requested_url": "https://fitnesssf.com/location/fillmore",
-      "sha256": "64bb09139e4545d2d0c8c8a9d5c4b1fd1d2253a071040aacbc38834a6f889e87",
-      "url": "https://fitnesssf.com/location/fillmore"
+      "requested_url": "https://www.bayclubs.com/clubs/thegateway",
+      "sha256": "ff3b4a7f168e2cc6088044612b939d3654ded689a7eb545d2016a53f61d448f9",
+      "url": "https://www.bayclubs.com/clubs/thegateway"
     },
     "source_coverage": {
       "issues": [],
       "ok": true
     }
   },
-  "extracted_at": "2026-10-05T22:20:38.681862+00:00",
-  "model": "fitness-sf-html-v1",
+  "extracted_at": "2026-10-05T22:20:38.106092+00:00",
+  "model": "bayclub-html",
   "payload": {
     "access_exceptions": [],
     "access_hours": [
       {
         "day": "monday",
-        "end": "23:59",
-        "evidence": "Mon - Thu: 5 am - 12 am",
+        "end": "21:00",
+        "evidence": "Mon: 6:00 am - 9:00 pm",
         "label": "Club hours",
-        "start": "05:00"
+        "start": "06:00"
       },
       {
         "day": "tuesday",
-        "end": "23:59",
-        "evidence": "Mon - Thu: 5 am - 12 am",
+        "end": "21:00",
+        "evidence": "Tue: 6:00 am - 9:00 pm",
         "label": "Club hours",
-        "start": "05:00"
+        "start": "06:00"
       },
       {
         "day": "wednesday",
-        "end": "23:59",
-        "evidence": "Mon - Thu: 5 am - 12 am",
+        "end": "21:00",
+        "evidence": "Wed: 6:00 am - 9:00 pm",
         "label": "Club hours",
-        "start": "05:00"
+        "start": "06:00"
       },
       {
         "day": "thursday",
-        "end": "23:59",
-        "evidence": "Mon - Thu: 5 am - 12 am",
+        "end": "21:00",
+        "evidence": "Thu: 6:00 am - 9:00 pm",
         "label": "Club hours",
-        "start": "05:00"
+        "start": "06:00"
       },
       {
         "day": "friday",
-        "end": "23:00",
-        "evidence": "Fri: 5 am - 11 pm",
+        "end": "21:00",
+        "evidence": "Fri: 6:00 am - 9:00 pm",
         "label": "Club hours",
-        "start": "05:00"
+        "start": "06:00"
       },
       {
         "day": "saturday",
         "end": "20:00",
-        "evidence": "Sat - Sun: 7 am - 8 pm",
+        "evidence": "Sat: 7:00 am - 8:00 pm",
         "label": "Club hours",
         "start": "07:00"
       },
       {
         "day": "sunday",
         "end": "20:00",
-        "evidence": "Sat - Sun: 7 am - 8 pm",
+        "evidence": "Sun: 7:00 am - 8:00 pm",
         "label": "Club hours",
         "start": "07:00"
       }
@@ -85,10 +85,10 @@
     "schedule_basis": "facility_hours",
     "sessions": []
   },
-  "pdf_sha256": "64bb09139e4545d2d0c8c8a9d5c4b1fd1d2253a071040aacbc38834a6f889e87",
-  "prompt_sha256": "2529b3401aac7f9b94d213be7af2b27264162b7f0941f293330790026c3b8ae7",
+  "pdf_sha256": "ff3b4a7f168e2cc6088044612b939d3654ded689a7eb545d2016a53f61d448f9",
+  "prompt_sha256": "926c164b0c3c8a4f4217c3732bcc5c9a0af11423e1de728132dddc8d0d6b4843",
   "provider": "direct",
   "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
-  "source_pdf_url": "https://fitnesssf.com/location/fillmore",
+  "source_pdf_url": "https://www.bayclubs.com/clubs/thegateway",
   "usage": {}
 }

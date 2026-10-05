@@ -1,6 +1,6 @@
 {
-  "pdf_sha256": "64bb09139e4545d2d0c8c8a9d5c4b1fd1d2253a071040aacbc38834a6f889e87",
-  "source_pdf_url": "https://fitnesssf.com/location/fillmore",
+  "pdf_sha256": "ff3b4a7f168e2cc6088044612b939d3654ded689a7eb545d2016a53f61d448f9",
+  "source_pdf_url": "https://www.bayclubs.com/clubs/thegateway",
   "direct_source": {
     "configuration": {
       "freshness_days": 14,
@@ -15,11 +15,11 @@
     },
     "freshness_days": 14,
     "observed_on": "2026-10-05",
-    "requested_url": "https://fitnesssf.com/location/fillmore",
-    "sha256": "64bb09139e4545d2d0c8c8a9d5c4b1fd1d2253a071040aacbc38834a6f889e87",
-    "url": "https://fitnesssf.com/location/fillmore"
+    "requested_url": "https://www.bayclubs.com/clubs/thegateway",
+    "sha256": "ff3b4a7f168e2cc6088044612b939d3654ded689a7eb545d2016a53f61d448f9",
+    "url": "https://www.bayclubs.com/clubs/thegateway"
   },
-  "slug": "fitness-sf-fillmore",
+  "slug": "bay-club-gateway",
   "reviewed_at": "2026-10-05",
   "attested_by": "ci",
   "payload": {
@@ -27,50 +27,50 @@
     "access_hours": [
       {
         "day": "monday",
-        "end": "23:59",
-        "evidence": "Mon - Thu: 5 am - 12 am",
+        "end": "21:00",
+        "evidence": "Mon: 6:00 am - 9:00 pm",
         "label": "Club hours",
-        "start": "05:00"
+        "start": "06:00"
       },
       {
         "day": "tuesday",
-        "end": "23:59",
-        "evidence": "Mon - Thu: 5 am - 12 am",
+        "end": "21:00",
+        "evidence": "Tue: 6:00 am - 9:00 pm",
         "label": "Club hours",
-        "start": "05:00"
+        "start": "06:00"
       },
       {
         "day": "wednesday",
-        "end": "23:59",
-        "evidence": "Mon - Thu: 5 am - 12 am",
+        "end": "21:00",
+        "evidence": "Wed: 6:00 am - 9:00 pm",
         "label": "Club hours",
-        "start": "05:00"
+        "start": "06:00"
       },
       {
         "day": "thursday",
-        "end": "23:59",
-        "evidence": "Mon - Thu: 5 am - 12 am",
+        "end": "21:00",
+        "evidence": "Thu: 6:00 am - 9:00 pm",
         "label": "Club hours",
-        "start": "05:00"
+        "start": "06:00"
       },
       {
         "day": "friday",
-        "end": "23:00",
-        "evidence": "Fri: 5 am - 11 pm",
+        "end": "21:00",
+        "evidence": "Fri: 6:00 am - 9:00 pm",
         "label": "Club hours",
-        "start": "05:00"
+        "start": "06:00"
       },
       {
         "day": "saturday",
         "end": "20:00",
-        "evidence": "Sat - Sun: 7 am - 8 pm",
+        "evidence": "Sat: 7:00 am - 8:00 pm",
         "label": "Club hours",
         "start": "07:00"
       },
       {
         "day": "sunday",
         "end": "20:00",
-        "evidence": "Sat - Sun: 7 am - 8 pm",
+        "evidence": "Sun: 7:00 am - 8:00 pm",
         "label": "Club hours",
         "start": "07:00"
       }
