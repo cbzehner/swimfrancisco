@@ -66,6 +66,8 @@ def seed(name, agent, template):
     run(SBX, "exec", "-w", WORKSPACE, name, "devenv", "shell", "--", "npm", "ci")
     run(SBX, "exec", "-w", WORKSPACE, name, "devenv", "shell", "--", "node",
         "node_modules/playwright-core/cli.js", "install", "--with-deps", "chromium", "webkit")
+    run(SBX, "exec", "-w", WORKSPACE, name, "devenv", "shell", "--",
+        "./node_modules/.bin/e2e-web", "install", "--with-deps", "chromium", "webkit")
     # Pin the project's Node for browser startup without concurrent devenv evaluation.
     run(SBX, "exec", "-w", WORKSPACE, name, "devenv", "shell", "--", "bash", "-ec", '''
         node_package=$(dirname "$(dirname "$(readlink -f "$(command -v node)")")")

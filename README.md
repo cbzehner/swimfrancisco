@@ -15,7 +15,7 @@ content/spots/   one .md per spot (TOML frontmatter)
 i18n/            source translation catalogs and locale registry
 data/i18n/       generated runtime/Zola localization artifacts
 templates/       Zola/Tera templates (base, index, spots/page)
-static/          plain JS (conditions, detail, filters, map, status), main.css, _redirects
+static/          plain JS (app, board, conditions, detail, map), main.css, _redirects
 worker/          Cloudflare Worker source (TypeScript)
 schedule-tools/  uv-managed Python pool schedule extractor
 docs/            spec.md, deploy.md, design-concepts.md, testing-webkit.md, …
@@ -57,16 +57,20 @@ repository's devenv and dependency lockfiles.
 
 ```sh
 just test-python      # Python pipeline + site-render tests
-just test-js          # pure JS helpers (node:test)
+just test-js          # pure rules/controllers + isolated Worker HTTP contracts (node:test)
 just typecheck-worker # Worker TypeScript
-just test-browser     # WebKit + Chromium integration smoke tests (~20s)
-just check            # full local verification: tests + browser smoke + build
+just test-browser     # WebKit + Chromium regressions and swim-decision rules
+just test-e2e         # user journeys through a fresh local Worker (e2e)
+just check            # tests + browser regressions + e2e + build
 ```
 
 `just test-browser` drives a freshly built site in real browser engines —
 the WebKit-only regressions nothing else can catch (see
 `docs/testing-webkit.md`). One-time setup per machine: `just browsers`.
-A devenv-managed pre-push hook runs `just test test-browser`; bypass
+See [e2e user journeys](docs/testing-e2e.md) for coverage, reports, and the
+first-pass framework evaluation. These tests use exact interactions and
+assertions, so they need no model login or API key.
+A devenv-managed pre-push hook runs `just test test-browser test-e2e`; bypass
 deliberately with `git push --no-verify`.
 
 ## Deploy

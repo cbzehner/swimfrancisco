@@ -5,21 +5,16 @@
 
 import { capture } from "./helpers/analytics.mjs";
 
-function initLanguageTracking() {
-  const switcher = document.querySelector(".language-switcher");
-  if (!switcher) return;
-  switcher.addEventListener("click", (event) => {
+export function mountChrome(root = document) {
+  const controller = new AbortController();
+  const switcher = root.querySelector(".language-switcher");
+  switcher?.addEventListener("click", (event) => {
     const link = event.target.closest("a[lang]");
     if (!link) return;
     capture("language_switched", {
       to: link.getAttribute("lang") || "",
       from: document.documentElement.lang || "",
     });
-  });
-}
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initLanguageTracking);
-} else {
-  initLanguageTracking();
+  }, { signal: controller.signal });
+  return { dispose() { controller.abort(); } };
 }

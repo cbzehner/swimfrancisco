@@ -30,7 +30,7 @@
   # browsers`. Bypass deliberately with `git push --no-verify`.
   git-hooks.hooks.integration-tests = {
     enable = true;
-    entry = "just test test-browser";
+    entry = "just test test-browser test-e2e";
     pass_filenames = false;
     stages = [ "pre-push" ];
   };

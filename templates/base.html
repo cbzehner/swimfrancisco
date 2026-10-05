@@ -59,8 +59,8 @@
       advanced_disable_feature_flags: true
     });
   </script>
-  <script type="module" src="{{ get_url(path='js/chrome.js') }}"></script>
   {% endif %}
   {% block scripts %}{% endblock %}
+  <script type="module" src="{{ get_url(path='js/app.js') }}"></script>
 </body>
 </html>

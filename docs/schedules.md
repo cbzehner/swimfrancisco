@@ -589,6 +589,13 @@ envelopes and projects both windows or none (`attested_by: human`; no
 10-day trap. Ordinary Save+project stays for Hamilton-class unique-grid
 repair.
 
+Human saves, automatic publication, closure notices, and sequential sittings
+share `publish_reviewed` in `publish.py`. Callers retain their eligibility and
+live-source checks and explicitly choose human or CI attestation. The shared
+boundary writes and projects the whole sitting; any write, validation, or
+projection failure restores both content and prior reviewed files byte for byte.
+Files newly created during a failed sitting are removed.
+
 Use `just schedules-review --no-open` to print the URL without opening a browser,
 or `just schedules-review --port 4317` to choose a fixed local port.
 

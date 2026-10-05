@@ -610,12 +610,3 @@
     </footer>
   {% endif %}
 {% endblock %}
-{% block scripts %}
-  {% if page.extra.localized_from %}{% set render_page = get_page(path="spots/" ~ page.extra.localized_from ~ ".md", lang=config.default_language) %}{% else %}{% set render_page = page %}{% endif %}
-  {% if render_page.extra.type == "open_water" %}
-    <script type="module" src="{{ get_url(path='js/conditions.js') }}"></script>
-  {% elif render_page.extra.type == "pool" %}
-    <script type="module" src="{{ get_url(path='js/conditions.js') }}"></script>
-    <script type="module" src="{{ get_url(path='js/detail.js') }}"></script>
-  {% endif %}
-{% endblock %}

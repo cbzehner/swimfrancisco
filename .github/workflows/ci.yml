@@ -25,7 +25,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: npm
 
       - uses: actions/setup-python@v5
@@ -83,5 +83,17 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: node node_modules/playwright-core/cli.js install-deps webkit chromium
 
+      - name: Install e2e engine browsers
+        run: ./node_modules/.bin/e2e-web install --with-deps webkit chromium
+
       - name: Run full verification
         run: just check
+
+      - name: Upload e2e failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report-and-traces
+          path: .e2e/
+          include-hidden-files: true
+          if-no-files-found: ignore

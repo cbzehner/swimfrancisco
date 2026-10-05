@@ -53,3 +53,6 @@ test-results/
 
 # Worker build artifacts
 worker/out/
+
+# e2e reports, traces, replay cache and app logs
+.e2e/

@@ -288,6 +288,40 @@ def test_save_all_edited_effective_end_lands_in_content(queue_env, monkeypatch):
     assert envelope["attested_by"] == "human"
 
 
+@pytest.mark.parametrize("existing_review", [False, True])
+def test_human_save_restores_content_and_review_after_projection_failure(queue_env, monkeypatch, existing_review):
+    from schedules.review import FinalizeError, find_review_candidates
+
+    data, content, tmp = queue_env
+    review_dir = _write_capture(data, "hamilton-pool", SHA_HAM, fetch_date="2026-08-19",
+                               source_pdf_url="https://sfrecpark.org/DocumentCenter/View/29798")
+    md = _seed_content(content, "hamilton-pool")
+    original_md = md.read_bytes()
+    app = _app(data, content, tmp)
+    envelope = app.review("hamilton-pool")["envelope"]
+    candidates = find_review_candidates(data_root=data)
+    monkeypatch.setattr("schedules.review_server.find_review_candidates", lambda **kwargs: candidates)
+    monkeypatch.setattr("schedules.review_server.current_source_identity", _identities(("hamilton-pool", SHA_HAM)))
+    reviewed = review_dir / "reviewed.json"
+    original_review = b'{"previous": "review bytes retained exactly"}\n'
+    if existing_review:
+        reviewed.write_bytes(original_review)
+
+    def fail_projection(**kwargs):
+        assert json.loads(reviewed.read_text())["attested_by"] == "human"
+        md.write_text("partially projected")
+        raise FinalizeError("projection interrupted")
+
+    monkeypatch.setattr("schedules.publish.finalize_draft", fail_projection)
+    with pytest.raises(FinalizeError, match="projection interrupted"):
+        app.save("hamilton-pool", envelope, SHA_HAM)
+    assert md.read_bytes() == original_md
+    if existing_review:
+        assert reviewed.read_bytes() == original_review
+    else:
+        assert not reviewed.exists()
+
+
 def test_per_card_sequential_post_does_not_write_reviewed_json(queue_env, monkeypatch):
     data, content, tmp = queue_env
     _seed_balboa(data)

@@ -561,6 +561,36 @@ def test_finalize_failure_unlinks_reviewed_json(iso, monkeypatch):
     assert not (candidate.review_dir / "reviewed.json").exists()
 
 
+def test_publication_restores_all_files_when_a_review_write_fails(iso, monkeypatch):
+    from schedules.publish import publish_reviewed
+    from schedules.review import draft_envelope
+
+    first = _write_candidate(iso.data)
+    second = _write_candidate(iso.data, sha=SHA2, fetch_date="2026-08-21")
+    _seed_content(iso.content, "hamilton-pool")
+    md = iso.content / "hamilton-pool.md"
+    original = md.read_bytes()
+    first_path, second_path = (item.review_dir / "reviewed.json" for item in (first, second))
+    second_path.write_bytes(b"previous reviewed bytes\n")
+    write_text = Path.write_text
+
+    def interrupted_write(path, text, *args, **kwargs):
+        if path == second_path:
+            path.write_bytes(b"partial write")
+            raise OSError("disk write interrupted")
+        return write_text(path, text, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "write_text", interrupted_write)
+    with pytest.raises(OSError, match="disk write interrupted"):
+        publish_reviewed(
+            {first_path: draft_envelope(candidate=first), second_path: draft_envelope(candidate=second)},
+            attested_by="ci", content_spots_dir=iso.content,
+        )
+    assert md.read_bytes() == original
+    assert not first_path.exists()
+    assert second_path.read_bytes() == b"previous reviewed bytes\n"
+
+
 def test_reviewed_pdf_refresh_requires_current_success(iso, monkeypatch):
     candidate = _write_candidate(iso.data)
     _seed_content(iso.content, "hamilton-pool")

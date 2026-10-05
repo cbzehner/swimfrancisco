@@ -38,11 +38,12 @@ counts as verified.
 
 ## Setup (one-time per machine)
 
-Playwright-core is already vendored under `.browser-artifacts/node_modules`.
-Install the WebKit build:
+Use the [project sandbox](sandboxes.md), which installs the locked browsers.
+Outside the sandbox, Playwright-core is a root npm dependency; install both
+suites' browsers once:
 
 ```sh
-node .browser-artifacts/node_modules/playwright-core/cli.js install webkit
+devenv shell -- just browsers
 ```
 
 ## Build and serve locally — the base_url trap
@@ -73,7 +74,7 @@ destructure:
 
 ```js
 // /tmp/repro.mjs — run with: node /tmp/repro.mjs
-import pw from "<repo>/.browser-artifacts/node_modules/playwright-core/index.js";
+import pw from "<repo>/node_modules/playwright-core/index.js";
 const { webkit, chromium, devices } = pw;
 
 const browser = await webkit.launch();
@@ -125,3 +126,5 @@ verified green for the horizon control as of `e530880`:
 ```sh
 pkill -f "http.server 8923"
 ```
+
+The additional [e2e journey suite](testing-e2e.md) runs against a real local Worker.

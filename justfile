@@ -62,12 +62,16 @@ test-i18n:
 test-browser:
     node --test tests/browser/*.test.mjs
 
+test-e2e:
+    npm run test:e2e
+
 browsers:
     node node_modules/playwright-core/cli.js install webkit chromium
+    ./node_modules/.bin/e2e-web install webkit chromium
 
 test: test-i18n test-python test-js typecheck-worker
 
-check: test test-browser build
+check: test test-browser test-e2e build
 
 smoke-production *args:
     node scripts/smoke-production.mjs {{args}}

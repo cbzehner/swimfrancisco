@@ -6,27 +6,23 @@
 import { formatPacificDate, formatPacificTime, pacificWallClockDate } from "./helpers/pacific.mjs";
 import { formatTideSummary } from "./helpers/tide.mjs";
 import { t } from "./helpers/i18n.mjs";
-import { OPEN_STATUSES, PLACEHOLDER } from "./helpers/board.mjs";
+import { PLACEHOLDER } from "./helpers/board.mjs";
+
+import { createConditionsClient } from "./helpers/conditions-client.mjs";
 
 const DEFAULT_ENDPOINT = "/api/conditions";
-// The hero count excludes ACCESS: access hours mean the building is open,
-// not that a swim session is verified.
-const AVAILABLE_STATUSES = new Set([...OPEN_STATUSES].filter((status) => status !== "ACCESS"));
-
 // The bulletin-strip macro (templates/macros/bulletin.html) emits the bay
 // and ocean slug lists from open-water frontmatter (water_body), so adding
 // a spot updates this module without touching JS.
-function stripSlugs(attr) {
-  const raw = document.querySelector(".bulletin-strip")?.getAttribute(attr) || "";
+function stripSlugs(root, attr) {
+  const raw = root.querySelector(".bulletin-strip")?.getAttribute(attr) || "";
   return raw.split(/\s+/).filter(Boolean);
 }
-const BAY_SLUGS = stripSlugs("data-bay-slugs");
-const OCEAN_SLUGS = stripSlugs("data-ocean-slugs");
 
 // Format a Fahrenheit temperature from a conditions record.
 // Accepts `water_temp_f` directly, or converts from `water_temp_c`.
 // Returns a string like "58°F" or null when unavailable/invalid.
-function extractTemp(record) {
+export function formatWaterTemp(record) {
   if (!record || typeof record !== "object") return null;
   let fahrenheit = null;
   if (typeof record.water_temp_f === "number" && Number.isFinite(record.water_temp_f)) {
@@ -41,7 +37,7 @@ function extractTemp(record) {
 function firstRecordWithTemp(conditions, slugs) {
   for (const slug of slugs) {
     const record = conditions[slug];
-    if (extractTemp(record)) return record;
+    if (formatWaterTemp(record)) return record;
   }
   return null;
 }
@@ -64,7 +60,7 @@ function setText(root, selector, value) {
 // Write a temp reading into matching nodes, flagging carried-forward
 // (stale) readings so CSS can dim them instead of presenting them as live.
 function setTemp(root, selector, record) {
-  const temp = extractTemp(record);
+  const temp = formatWaterTemp(record);
   root.querySelectorAll(selector).forEach((node) => {
     node.textContent = temp || PLACEHOLDER;
     if (temp && record.temp_stale) {
@@ -83,47 +79,17 @@ function formatUpdatedAt(conditions) {
   return formatPacificTime(new Date(Math.max(...timestamps)));
 }
 
-function openCountLabel(count) {
-  // status.js mirrors the active horizon into the `?when=` URL param
-  // (writeHorizonParam); reading it avoids inferring state by comparing
-  // translated button text, which breaks across locales.
-  // The label is a per-locale pattern, not concatenation: word order
-  // differs by language (zh-Hant puts the time before the verb, fil needs
-  // the linker "na"), so each catalog owns the full phrase shape.
-  const horizonId = new URLSearchParams(window.location.search).get("when") || "now";
-  const unit = count === 1 ? t("place_singular", "place") : t("place_plural", "places");
-  if (horizonId !== "now") {
-    const horizon = document.querySelector("[data-horizon-button]")?.textContent.trim().toLowerCase() || "";
-    return t("open_count_horizon", "%{unit} available %{horizon}")
-      .replace("%{unit}", unit)
-      .replace("%{horizon}", horizon);
-  }
-  return t("open_count_now", "%{unit} open now").replace("%{unit}", unit);
-}
-
-function applyBoardSummary(root) {
-  const rows = Array.from(root.querySelectorAll("table.board tbody tr:not([hidden])"));
-  if (rows.length === 0) return;
-  const count = rows.filter((row) => {
-    const status = row.querySelector('[data-cell="status"]')?.dataset.statusValue || "";
-    return AVAILABLE_STATUSES.has(status);
-  }).length;
-  setText(root, "[data-open-count]", String(count));
-  setText(root, "[data-open-count-label]", openCountLabel(count));
-}
-
-function applyBulletinStrip(root, conditions) {
-  const instant = new Date();
+function applyBulletinStrip(root, conditions, instant, { bay, ocean }) {
   const now = pacificWallClockDate(instant);
   setText(root, "[data-today-date]", formatPacificDate(instant));
   setText(root, "[data-pt-time]", formatPacificTime(instant));
 
   if (!conditions || typeof conditions !== "object") return;
-  const bayRecord = firstRecordWithTemp(conditions, BAY_SLUGS);
-  const oceanRecord = firstRecordWithTemp(conditions, OCEAN_SLUGS);
+  const bayRecord = firstRecordWithTemp(conditions, bay);
+  const oceanRecord = firstRecordWithTemp(conditions, ocean);
   const tideRecord =
-    firstRecordWithTide(conditions, BAY_SLUGS, now) ||
-    firstRecordWithTide(conditions, OCEAN_SLUGS, now);
+    firstRecordWithTide(conditions, bay, now) ||
+    firstRecordWithTide(conditions, ocean, now);
   const tideSummary = formatTideSummary(tideRecord, now);
   const updated = formatUpdatedAt(conditions);
 
@@ -135,24 +101,11 @@ function applyBulletinStrip(root, conditions) {
   setText(root, "[data-conditions-updated]", updated || PLACEHOLDER);
 }
 
-// Fetch and parse the conditions bulk endpoint. Returns null on any failure.
-async function fetchConditions(url) {
-  try {
-    const response = await fetch(url, { headers: { accept: "application/json" } });
-    if (!response.ok) return null;
-    const data = await response.json();
-    if (!data || typeof data !== "object") return null;
-    return data;
-  } catch (_err) {
-    return null;
-  }
-}
-
 // Inject water temps into the board's TEMP column (5th <td>) and
 // the detail-page conditions panel, when present. `conditions` is keyed by slug.
-function applyConditions(root, conditions) {
+function applyConditions(root, conditions, instant, slugs) {
   if (!conditions || typeof conditions !== "object") return;
-  applyBulletinStrip(root, conditions);
+  applyBulletinStrip(root, conditions, instant, slugs);
 
   const rows = root.querySelectorAll(
     'table.board tbody tr[data-type="open_water"]',
@@ -166,7 +119,7 @@ function applyConditions(root, conditions) {
   // Tide predictions arrive as zoneless station-local (Pacific) ISO strings.
   // Pinning `now` to PT wall-clock keeps the "past" filter correct for
   // visitors whose browser is outside Pacific time.
-  const now = pacificWallClockDate();
+  const now = pacificWallClockDate(instant);
   const panels = root.querySelectorAll("section.conditions[data-slug]");
   panels.forEach((panel) => {
     const slug = panel.getAttribute("data-slug");
@@ -179,57 +132,37 @@ function applyConditions(root, conditions) {
   });
 }
 
-const REFETCH_INTERVAL_MS = 15 * 60 * 1000;
-let lastFetchedAt = 0;
-// Only advanced on success so a failed fetch retries on the next minute tick;
-// the in-flight flag keeps overlapping ticks from stacking requests.
-let fetchInFlight = false;
-
-async function loadConditions({ force = false } = {}) {
-  if (fetchInFlight) return;
-  if (!force && Date.now() - lastFetchedAt < REFETCH_INTERVAL_MS) return;
-  const endpoint = (typeof window !== "undefined" && window.SWIMFRANCISCO_API) || DEFAULT_ENDPOINT;
-  fetchInFlight = true;
-  let conditions = null;
-  try {
-    conditions = await fetchConditions(endpoint);
-  } finally {
-    fetchInFlight = false;
+export function mountConditions(root = document, {
+  now = () => new Date(), fetch: fetcher = globalThis.fetch,
+  endpoint = globalThis.window?.SWIMFRANCISCO_API || DEFAULT_ENDPOINT,
+  onChange = () => {},
+} = {}) {
+  const controller = new AbortController();
+  const slugs = { bay: stripSlugs(root, "data-bay-slugs"), ocean: stripSlugs(root, "data-ocean-slugs") };
+  const client = createConditionsClient({
+    now: () => now().getTime(),
+    load: async (signal) => {
+      const response = await fetcher(endpoint, { signal, headers: { accept: "application/json" } });
+      return response.ok ? response.json() : null;
+    },
+    onChange: () => paint(),
+  });
+  function paint() {
+    const instant = now();
+    const conditions = client.data || {};
+    applyConditions(root, conditions, instant, slugs);
+    onChange(conditions, instant);
   }
-  if (!conditions) return;
-  lastFetchedAt = Date.now();
-  window.SWIMFRANCISCO_CONDITIONS = conditions;
-  applyConditions(document, conditions);
-  document.dispatchEvent(new CustomEvent("sf:conditions-loaded"));
-}
-
-async function init() {
-  applyBoardSummary(document);
-  applyBulletinStrip(document, null);
-  setInterval(refreshConditions, 60_000);
-  document.addEventListener("visibilitychange", refreshConditions);
-  await loadConditions({ force: true });
-}
-
-function refreshConditions() {
-  if (document.hidden) return;
-  applyConditions(document, window.SWIMFRANCISCO_CONDITIONS || {});
-  loadConditions();
-}
-
-document.addEventListener("sf:status-applied", () => applyBoardSummary(document));
-document.addEventListener("sf:horizon-changed", () => applyBoardSummary(document));
-document.addEventListener("sf:filters-applied", () => applyBoardSummary(document));
-document.addEventListener("sf:board-refreshed", () => applyBoardSummary(document));
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => {
-    init().catch(() => {
-      /* swallow — placeholders remain */
-    });
-  });
-} else {
-  init().catch(() => {
-    /* swallow — placeholders remain */
-  });
+  function refresh() {
+    if (controller.signal.aborted || document.hidden) return Promise.resolve(client.data);
+    paint();
+    return client.refresh();
+  }
+  const timer = setInterval(refresh, 60_000);
+  document.addEventListener("visibilitychange", refresh, { signal: controller.signal });
+  refresh();
+  return {
+    refresh,
+    dispose() { controller.abort(); client.dispose(); clearInterval(timer); },
+  };
 }

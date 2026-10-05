@@ -179,11 +179,7 @@
 
 {% endblock %}
 {% block scripts %}
-  <script type="module" src="{{ get_url(path='js/status.js') }}"></script>
-  <script type="module" src="{{ get_url(path='js/conditions.js') }}"></script>
-  <script type="module" src="{{ get_url(path='js/filters.js') }}"></script>
   {% if is_map_view %}
     <script src="{{ get_url(path='vendor/leaflet.js') }}"></script>
-    <script type="module" src="{{ get_url(path='js/map.js') }}"></script>
   {% endif %}
 {% endblock %}

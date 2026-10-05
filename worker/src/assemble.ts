@@ -101,8 +101,9 @@ function tideToSummary(data: NoaaTideData | null): TideSummary | null {
 }
 
 type TempFetcher = (id: string) => Promise<TempReading | null>;
+type TempFetchers = Record<TempStationType, TempFetcher>;
 
-const TEMP_FETCHERS: Record<TempStationType, TempFetcher> = {
+const TEMP_FETCHERS: TempFetchers = {
   usgs: fetchUsgsTemp,
   noaa: fetchNoaaTemp,
   ndbc: fetchNdbc,
@@ -117,7 +118,7 @@ const TEMP_FETCHERS: Record<TempStationType, TempFetcher> = {
 export async function firstTempFromSources(
   slug: string,
   sources: TempSource[],
-  fetchers: Record<TempStationType, TempFetcher> = TEMP_FETCHERS,
+  fetchers: TempFetchers = TEMP_FETCHERS,
   cache?: Map<string, Promise<TempReading | null>>,
   now: number = Date.now(),
 ): Promise<{ reading: TempReading; sourceType: TempStationType } | null> {
@@ -126,7 +127,7 @@ export async function firstTempFromSources(
     try {
       let pending = cache?.get(key);
       if (!pending) {
-        pending = fetchers[source.type](source.id);
+        pending = Promise.resolve().then(() => fetchers[source.type](source.id));
         cache?.set(key, pending);
       }
       const reading = await pending;
@@ -143,10 +144,11 @@ export async function firstTempFromSources(
 function getOrFetchTide(
   tideCache: Map<string, Promise<TideSummary | null>>,
   stationId: string,
+  fetchTides: typeof fetchNoaaTides,
 ): Promise<TideSummary | null> {
   const cached = tideCache.get(stationId);
   if (cached) return cached;
-  const promise = fetchNoaaTides(stationId)
+  const promise = Promise.resolve().then(() => fetchTides(stationId))
     .then(tideToSummary)
     .catch((err) => {
       console.error(`Tide fetch failed for station ${stationId}:`, err);
@@ -234,49 +236,75 @@ function flattenObservation<T>(
   return { value: null, stale: false, carriedSince: null };
 }
 
-// For a single spot: fetch temp (primary path based on station type) and the
-// shared NOAA tide prediction in parallel. Reuse last-good KV values on any failure.
-async function assembleSpot(
-  spot: SpotConfig,
-  tideCache: Map<string, Promise<TideSummary | null>>,
-  tempCache: Map<string, Promise<TempReading | null>>,
-  updatedAt: string,
-  previous: SpotConditions | null,
-): Promise<SpotConditions> {
-  const updatedAtMs = Date.parse(updatedAt);
-  const [tempResult, tideFromApi] = await Promise.all([
-    firstTempFromSources(spot.slug, spot.tempSources, TEMP_FETCHERS, tempCache, updatedAtMs),
-    getOrFetchTide(tideCache, spot.tideStationId),
-  ]);
-  const temp = flattenObservation(coalesceTemp(tempFromReading(tempResult), previous, updatedAtMs));
-  const tide = flattenObservation(coalesceTide(tideFromApi, previous, updatedAtMs));
-
-  return {
-    slug: spot.slug,
-    ...(temp.value ?? NULL_TEMP_FIELDS),
-    tide: tide.value,
-    updated_at: updatedAt,
-    temp_stale: temp.stale,
-    tide_stale: tide.stale,
-    temp_carried_since: temp.carriedSince,
-    tide_carried_since: tide.carriedSince,
-  };
+export interface SpotObservations {
+  slug: string;
+  temp: TempFields | null;
+  tide: TideSummary | null;
 }
 
-// Assemble every spot and write the single conditions key.
-export async function assembleAndPersist(kv: KVNamespace): Promise<Conditions> {
-  const updatedAt = new Date().toISOString();
+interface ConditionProviders {
+  tempFetchers: TempFetchers;
+  fetchTides: typeof fetchNoaaTides;
+}
+
+// Source caches belong to one refresh, including failed requests shared by spots.
+export async function collectObservations(
+  spots: readonly SpotConfig[],
+  providers: ConditionProviders,
+  now: number,
+): Promise<SpotObservations[]> {
   const tideCache = new Map<string, Promise<TideSummary | null>>();
   const tempCache = new Map<string, Promise<TempReading | null>>();
+  return Promise.all(spots.map(async (spot) => {
+    const [tempResult, tide] = await Promise.all([
+      firstTempFromSources(spot.slug, spot.tempSources, providers.tempFetchers, tempCache, now),
+      getOrFetchTide(tideCache, spot.tideStationId, providers.fetchTides),
+    ]);
+    return { slug: spot.slug, temp: tempFromReading(tempResult), tide };
+  }));
+}
+
+// Pure freshness/carry resolution; no provider or storage access.
+export function resolveConditions(
+  observations: readonly SpotObservations[],
+  previous: Conditions,
+  instant: Date,
+): Conditions {
+  const now = instant.getTime();
+  const updatedAt = instant.toISOString();
+  return Object.fromEntries(observations.map((observation) => {
+    const prior = previous[observation.slug] ?? null;
+    const temp = flattenObservation(coalesceTemp(observation.temp, prior, now));
+    const tide = flattenObservation(coalesceTide(observation.tide, prior, now));
+    return [observation.slug, {
+      slug: observation.slug,
+      ...(temp.value ?? NULL_TEMP_FIELDS),
+      tide: tide.value,
+      updated_at: updatedAt,
+      temp_stale: temp.stale,
+      tide_stale: tide.stale,
+      temp_carried_since: temp.carriedSince,
+      tide_carried_since: tide.carriedSince,
+    }];
+  }));
+}
+
+interface RefreshOptions extends Partial<ConditionProviders> {
+  now?: () => Date;
+  spots?: readonly SpotConfig[];
+}
+
+// Read first; only persist after a complete collection and resolution succeeds.
+export async function assembleAndPersist(kv: KVNamespace, {
+  now = () => new Date(),
+  spots = SPOTS,
+  tempFetchers = TEMP_FETCHERS,
+  fetchTides = fetchNoaaTides,
+}: RefreshOptions = {}): Promise<Conditions> {
+  const instant = now();
   const previous = (await readConditions(kv)) ?? {};
-
-  const records = await Promise.all(
-    SPOTS.map((spot) => assembleSpot(spot, tideCache, tempCache, updatedAt, previous[spot.slug] ?? null)),
-  );
-
-  const next: Conditions = Object.fromEntries(records.map((r) => [r.slug, r]));
-
+  const observations = await collectObservations(spots, { tempFetchers, fetchTides }, instant.getTime());
+  const next = resolveConditions(observations, previous, instant);
   await writeConditions(kv, next);
-
   return next;
 }

@@ -1,6 +1,5 @@
 // Pure helpers for the board. Node's built-in node:test runner —
-// no Vitest, no Jest, no jsdom. DOM-mutating logic is kept in status.js /
-// filters.js; the branching that matters lives in board.mjs and is tested
+// no Vitest, no Jest, no jsdom. DOM-mutating logic is kept in board.js; the branching that matters lives in board.mjs and is tested
 // against plain arrays.
 
 import { test } from "node:test";
@@ -12,10 +11,7 @@ import {
   computeAccessStatus,
   computeAccessWindowAvailability,
   computeDetailStatus,
-  computeStatusRunKey,
   computeWindowAvailability,
-  sortByRank,
-  captureBaselineRanks,
   computeNextOpenOffset,
   findActiveClosure,
   findNextDropIn,
@@ -162,41 +158,6 @@ test("computeAccessWindowAvailability uses access exceptions for plan-ahead wind
   assert.equal(holiday.sortRank, 2);
   assert.equal(holiday.openOffset, 2);
   assert.equal(holiday.bestWindow.start, 7 * 60 + 30);
-});
-
-test("captureBaselineRanks + sortByRank restores baseline order after reshuffle", () => {
-  // Baseline: status.js sorts by OPEN-first + alpha, then captures ranks.
-  const baseline = [
-    { id: "A" },
-    { id: "B" },
-    { id: "C" },
-    { id: "D" },
-  ];
-  captureBaselineRanks(baseline, (row, rank) => {
-    row.baselineRank = rank;
-  });
-
-  // Distance sort reshuffles into distance order.
-  const reshuffled = [baseline[2], baseline[0], baseline[3], baseline[1]];
-
-  // Distance sort off → restore baseline.
-  const restored = sortByRank(reshuffled, (row) => row.baselineRank);
-  assert.deepEqual(
-    restored.map((r) => r.id),
-    ["A", "B", "C", "D"],
-    "baseline order must be recoverable from captured ranks",
-  );
-});
-
-test("sortByRank is stable and keeps unknown ranks at the tail", () => {
-  const items = [
-    { id: "A", rank: 2 },
-    { id: "B", rank: 0 },
-    { id: "C" }, // no rank
-    { id: "D", rank: 1 },
-  ];
-  const sorted = sortByRank(items, (x) => x.rank);
-  assert.deepEqual(sorted.map((x) => x.id), ["B", "D", "A", "C"]);
 });
 
 test("computeStatus honors closures", () => {
@@ -890,68 +851,6 @@ test("expired access and plan-ahead windows do not imply a facility closure", ()
     assert.equal(result.nextKind, "schedule_ended");
     assert.deepEqual(result.nextArgs, { iso: "2026-06-06" });
   }
-});
-
-// computeStatusRunKey backs the memoization in status.js's applyStatuses:
-// filters.js reruns renderBoard on every filter/sort click (it needs to,
-// to pick up the active program-type filter), but a full status recompute
-// (parsing every row's data-schedule, running computeStatus /
-// computeWindowAvailability) should only actually happen when the key
-// changes — i.e. when horizon, the current minute, or the allowed program
-// types genuinely changed. These tests pin that contract.
-test("computeStatusRunKey is stable across calls within the same minute and allowed types", () => {
-  const horizon = { id: "now", kind: "point" };
-  const a = computeStatusRunKey(horizon, new Date("2026-04-14T10:00:05"), ["lap_swim"]);
-  const b = computeStatusRunKey(horizon, new Date("2026-04-14T10:00:55"), ["lap_swim"]);
-  assert.equal(a, b, "same minute + same allowed types must not force a recompute");
-});
-
-test("computeStatusRunKey changes when the minute advances", () => {
-  const horizon = { id: "now", kind: "point" };
-  const a = computeStatusRunKey(horizon, new Date("2026-04-14T10:00:59"), null);
-  const b = computeStatusRunKey(horizon, new Date("2026-04-14T10:01:00"), null);
-  assert.notEqual(a, b, "the minute tick must force a recompute");
-});
-
-test("computeStatusRunKey changes when the allowed program types change", () => {
-  const horizon = { id: "now", kind: "point" };
-  const now = new Date("2026-04-14T10:00:00");
-  const unfiltered = computeStatusRunKey(horizon, now, null);
-  const lapOnly = computeStatusRunKey(horizon, now, ["lap_swim"]);
-  const familyOnly = computeStatusRunKey(horizon, now, ["family_swim"]);
-  assert.notEqual(unfiltered, lapOnly, "selecting a type filter must force a recompute");
-  assert.notEqual(lapOnly, familyOnly, "switching type filters must force a recompute");
-});
-
-test("computeStatusRunKey is order-independent for allowed program types", () => {
-  const horizon = { id: "now", kind: "point" };
-  const now = new Date("2026-04-14T10:00:00");
-  const a = computeStatusRunKey(horizon, now, ["lap_swim", "family_swim"]);
-  const b = computeStatusRunKey(horizon, now, ["family_swim", "lap_swim"]);
-  assert.equal(a, b, "the same set of allowed types must not force a recompute regardless of order");
-});
-
-test("computeStatusRunKey treats null and empty allowed types the same", () => {
-  const horizon = { id: "now", kind: "point" };
-  const now = new Date("2026-04-14T10:00:00");
-  assert.equal(
-    computeStatusRunKey(horizon, now, null),
-    computeStatusRunKey(horizon, now, []),
-  );
-});
-
-test("computeStatusRunKey for window horizons ignores the clock and keys off the horizon date", () => {
-  const horizon = { id: "this-afternoon", kind: "window", date: "2026-04-14" };
-  const a = computeStatusRunKey(horizon, new Date("2026-04-14T09:00:00"), null);
-  const b = computeStatusRunKey(horizon, new Date("2026-04-14T16:00:00"), null);
-  assert.equal(a, b, "a plan-ahead window's key must not depend on the current minute");
-});
-
-test("computeStatusRunKey changes when the horizon id changes", () => {
-  const now = new Date("2026-04-14T10:00:00");
-  const a = computeStatusRunKey({ id: "now", kind: "point" }, now, null);
-  const b = computeStatusRunKey({ id: "this-afternoon", kind: "window", date: "2026-04-14" }, now, null);
-  assert.notEqual(a, b);
 });
 
 test("queued reopening schedule handles Sava repair closure through June 8", () => {

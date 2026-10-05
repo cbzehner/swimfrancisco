@@ -1,8 +1,7 @@
 // Pure helpers for the Swim Francisco board.
 //
-// Extracted from status.js / filters.js so they can be exercised under
-// node:test without a DOM. DOM-facing wrappers live in the parent files and
-// delegate to these.
+// Schedule and board decisions run without a DOM. The board.js adapter
+// decodes the catalog once and renders snapshots from these functions.
 
 import { isDropInType } from "./programs.mjs";
 import { pacificWallClockDate } from "./pacific.mjs";
@@ -92,26 +91,7 @@ export function resolveHorizon(id, now = pacificWallClockDate()) {
   return options.find((option) => option.id === id) ?? options[0];
 }
 
-// Memoization key for a full board status pass (status.js's applyStatuses).
-// Status text/rank for every row is a pure function of (horizon, the current
-// minute for point-in-time horizons, allowed program types) — nothing else
-// varies between renders of the same DOM. renderBoard is invoked far more
-// often than those inputs actually change (every filter/sort click reruns it
-// to pick up the active program-type filter), so callers compare this key
-// against the last one they computed and skip re-parsing every row's
-// data-schedule + recomputing status when it's unchanged.
-export function computeStatusRunKey(horizon, now, allowedTypes = null) {
-  const asOf = horizon?.kind === "window"
-    ? horizon.date
-    : `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}T${now.getHours()}:${now.getMinutes()}`;
-  const values = allowedTypes instanceof Set
-    ? Array.from(allowedTypes)
-    : Array.isArray(allowedTypes)
-      ? allowedTypes
-      : [];
-  const typesKey = values.filter(Boolean).sort().join(",");
-  return `${horizon?.id}|${asOf}|${typesKey}`;
-}
+
 
 function formatISODateHuman(isoDate) {
   if (typeof isoDate !== "string") return "";
@@ -855,36 +835,6 @@ export function computeAccessWindowAvailability(schedule, horizon) {
   });
 }
 
-// Assign a baseline rank to each item via the provided setter. Keeps this
-// pure (no DOM knowledge here); status.js passes a setter that writes to
-// `row.dataset.baselineRank`.
-export function captureBaselineRanks(items, setRank) {
-  items.forEach((item, index) => setRank(item, index));
-  return items;
-}
-
-// Sort by ascending rank, pulling items without a rank (undefined/NaN) to
-// the tail. Stable for equal ranks.
-export function sortByRank(items, getRank) {
-  const decorated = items.map((item, index) => ({
-    item,
-    index,
-    rank: normalizeRank(getRank(item)),
-  }));
-  decorated.sort((a, b) => {
-    if (a.rank !== b.rank) return a.rank - b.rank;
-    return a.index - b.index;
-  });
-  return decorated.map((d) => d.item);
-}
-
-function normalizeRank(rank) {
-  if (typeof rank !== "number" || !Number.isFinite(rank)) {
-    return Number.POSITIVE_INFINITY;
-  }
-  return rank;
-}
-
 export { PLACEHOLDER };
 
 // Statuses that render as "open-ish" (green pill / is-open row class).
@@ -1016,4 +966,85 @@ export function sessionsForDate(schedule, now) {
     .flatMap((session) => availableSegmentsAfterClosures(session.start, session.end, allClosures(active), dateISO, session)
       .map((segment) => ({ ...session, ...segment })))
     .sort((left, right) => left.start - right.start);
+}
+
+function distanceMiles(origin, spot) {
+  if (!Number.isFinite(spot.lat) || !Number.isFinite(spot.lng)) return Infinity;
+  const radians = (degrees) => degrees * Math.PI / 180;
+  const latitude = radians(spot.lat - origin.latitude);
+  const longitude = radians(spot.lng - origin.longitude);
+  const arc = Math.sin(latitude / 2) ** 2
+    + Math.cos(radians(origin.latitude)) * Math.cos(radians(spot.lat)) * Math.sin(longitude / 2) ** 2;
+  return 3958.8 * 2 * Math.atan2(Math.sqrt(arc), Math.sqrt(1 - arc));
+}
+
+function evaluateSpot(spot, horizon, now, allowedTypes) {
+  if (spot.type === "open_water") {
+    const window = horizon.kind === "window";
+    return { status: "OCEAN", next: window ? "CHECK CONDITIONS" : PLACEHOLDER,
+      sortRank: window ? 2 : 0, openOffset: window ? 2 : 0 };
+  }
+  const asOf = horizon.kind === "window" ? horizon.date : now;
+  if (horizon.kind === "window") {
+    return scheduleHasSessions(spot.schedule, asOf)
+      ? computeWindowAvailability(spot.schedule, horizon, allowedTypes)
+      : computeAccessWindowAvailability(spot.schedule, horizon);
+  }
+  if (scheduleHasSessions(spot.schedule, asOf)) return computeStatus(spot.schedule, now, allowedTypes);
+  if (scheduleHasAccessHours(spot.schedule, asOf)) return computeAccessStatus(spot.schedule, now);
+  return spot.accessMode !== "public"
+    ? { status: "CHECK", next: "OFFICIAL SITE", nextKind: "official_site", sortRank: 2, openOffset: Infinity }
+    : { status: PLACEHOLDER, next: PLACEHOLDER, sortRank: 2, openOffset: Infinity };
+}
+
+// A board decision is derived from a decoded catalog, query, and absolute
+// instant. DOM renderers, map markers, and the hero count share this snapshot.
+// The schedule helpers still own date-window selection and closure policy.
+export function evaluateBoard(spots, query, instant) {
+  const now = pacificWallClockDate(instant);
+  const horizon = resolveHorizon(query.horizon, now);
+  const asOf = horizon.kind === "window" ? horizon.date : now;
+  const allowedTypes = isDropInType(query.type) ? [query.type] : null;
+  const baseline = spots.map((spot, index) => {
+    const active = resolveActiveSchedule(spot.schedule, asOf);
+    const matchesType = !query.type || (query.type === "open_water"
+      ? spot.type === "open_water"
+      : spot.type === "pool" && isDropInType(query.type)
+        && Array.isArray(active?.sessions) && active.sessions.some((session) => session?.type === query.type));
+    const result = evaluateSpot({ accessMode: "public", ...spot }, horizon, now, allowedTypes);
+    return {
+      ...spot, result, index,
+      sessionBased: scheduleHasSessions(spot.schedule, asOf),
+      hidden: !matchesType || (!query.includeMemberships && (spot.accessMode || "public") !== "public"),
+    };
+  });
+  const poolFirst = (left, right) => Number(left.type !== "pool") - Number(right.type !== "pool");
+  baseline.sort((left, right) => {
+    const group = poolFirst(left, right);
+    if (group) return group;
+    if (left.result.sortRank !== right.result.sortRank) return left.result.sortRank - right.result.sortRank;
+    const a = (left.label || left.name || "").toUpperCase();
+    const b = (right.label || right.name || "").toUpperCase();
+    return a < b ? -1 : a > b ? 1 : left.index - right.index;
+  });
+  const ranked = baseline.map((entry, baselineRank) => ({ ...entry, baselineRank }));
+  const visible = ranked.filter((entry) => !entry.hidden);
+  if (query.sort?.kind === "distance") {
+    visible.sort((left, right) => poolFirst(left, right)
+      || distanceMiles(query.sort.coords, left) - distanceMiles(query.sort.coords, right)
+      || left.baselineRank - right.baselineRank);
+  } else if (query.sort?.kind === "open") {
+    visible.sort((left, right) => poolFirst(left, right)
+      || left.result.openOffset - right.result.openOffset
+      || left.baselineRank - right.baselineRank);
+  }
+  return {
+    instant, horizon,
+    entries: [...visible, ...ranked.filter((entry) => entry.hidden)],
+    summary: {
+      visibleCount: visible.length,
+      // Facility access is not a verified swim session.
+      openCount: visible.filter(({ result }) => result.status !== "ACCESS" && OPEN_STATUSES.has(result.status)).length,
+    },
+  };
 }

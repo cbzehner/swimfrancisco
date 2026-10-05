@@ -1,12 +1,17 @@
 // Horizon-picker combobox: an ARIA menu (role="menu" / menuitemradio) with
 // open/close state, positioning, and full keyboard navigation. Extracted from
-// status.js, which owns the horizon domain logic (options, labels, applying a
+// board.js, which owns the horizon domain logic (options, labels, applying a
 // selection) and drives this widget through the small interface below.
 
 export function initHorizonMenu(control, { onSelect, refresh } = {}) {
+  const document = control.ownerDocument;
+  const window = document.defaultView;
+  const controller = new AbortController();
+  const listen = (target, event, handler) => target.addEventListener(event, handler, { signal: controller.signal });
   const button = control.querySelector("[data-horizon-button]");
   const menu = document.querySelector("[data-horizon-menu]");
   if (!button || !menu) return null;
+  let rendered = null;
 
   function items() {
     return Array.from(menu.querySelectorAll("button[role='menuitemradio']"));
@@ -79,6 +84,11 @@ export function initHorizonMenu(control, { onSelect, refresh } = {}) {
   }
 
   function render({ buttonLabel, items: itemData }) {
+    if (controller.signal.aborted) return;
+    const signature = JSON.stringify([buttonLabel, itemData]);
+    if (signature === rendered) return;
+    rendered = signature;
+    const focused = menu.contains(document.activeElement) ? document.activeElement.value : null;
     button.textContent = buttonLabel;
     menu.replaceChildren(
       ...itemData.map((item) => {
@@ -88,18 +98,28 @@ export function initHorizonMenu(control, { onSelect, refresh } = {}) {
         el.value = item.id;
         el.textContent = item.label;
         el.setAttribute("aria-checked", String(item.selected));
-        el.addEventListener("click", () => selectItem(item.id, "click"));
         return el;
       }),
     );
+    if (focused) {
+      const list = items();
+      (list.find((item) => item.value === focused)
+        || list.find((item) => item.getAttribute("aria-checked") === "true")
+        || button).focus();
+    }
   }
 
-  button.addEventListener("click", () => {
+  listen(menu, "click", (event) => {
+    const item = event.target.closest("button[role=menuitemradio]");
+    if (item) selectItem(item.value, "click");
+  });
+
+  listen(button, "click", () => {
     refresh();
     toggleMenu();
   });
 
-  button.addEventListener("keydown", (event) => {
+  listen(button, "keydown", (event) => {
     if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
     event.preventDefault();
     refresh();
@@ -107,7 +127,7 @@ export function initHorizonMenu(control, { onSelect, refresh } = {}) {
     focusMenuItem(event.key === "ArrowUp" ? -1 : 1);
   });
 
-  document.addEventListener("click", (event) => {
+  listen(document, "click", (event) => {
     if (control.contains(event.target)) return;
     if (menu.contains(event.target)) return;
     closeMenu();
@@ -123,7 +143,7 @@ export function initHorizonMenu(control, { onSelect, refresh } = {}) {
   // Tab-out and closed the menu before the tap's click could land on the
   // item. A real Tab always stops on tabIndex >= 0. Outside-tap closing is
   // owned by the document click listener above.
-  document.addEventListener("focusout", (event) => {
+  listen(document, "focusout", (event) => {
     if (menu.hidden) return;
     const next = event.relatedTarget;
     if (!next || next.tabIndex < 0) return;
@@ -131,7 +151,7 @@ export function initHorizonMenu(control, { onSelect, refresh } = {}) {
     closeMenu();
   });
 
-  document.addEventListener("keydown", (event) => {
+  listen(document, "keydown", (event) => {
     if (menu.hidden) return;
     if (event.key === "Escape") {
       event.preventDefault();
@@ -157,13 +177,13 @@ export function initHorizonMenu(control, { onSelect, refresh } = {}) {
     }
   });
 
-  window.addEventListener("resize", () => {
+  listen(window, "resize", () => {
     if (button.getAttribute("aria-expanded") === "true") positionMenu();
   });
 
-  window.addEventListener("scroll", () => {
+  listen(window, "scroll", () => {
     if (button.getAttribute("aria-expanded") === "true") positionMenu();
   });
 
-  return { render };
+  return { render, dispose() { controller.abort(); closeMenu(); } };
 }

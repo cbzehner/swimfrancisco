@@ -1,15 +1,10 @@
 import { test } from "node:test";
 import { execFileSync } from "node:child_process";
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
 
-const ENTRYPOINTS = [
-  "static/js/status.js",
-  "static/js/detail.js",
-  "static/js/conditions.js",
-  "static/js/map.js",
-];
-
-test("browser entrypoints parse", () => {
-  for (const entrypoint of ENTRYPOINTS) {
-    execFileSync(process.execPath, ["--check", entrypoint], { stdio: "pipe" });
+test("all browser modules parse", () => {
+  for (const module of readdirSync("static/js", { recursive: true }).filter((name) => /\.m?js$/.test(name))) {
+    execFileSync(process.execPath, ["--check", join("static/js", module)], { stdio: "pipe" });
   }
 });

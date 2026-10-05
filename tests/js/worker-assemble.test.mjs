@@ -10,6 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  assembleAndPersist,
   coalesceTemp,
   coalesceTide,
   tempReadingIsFresh,
@@ -54,6 +55,96 @@ test("withinFreshnessCeiling accepts recent ISO and rejects old or garbage input
   assert.equal(withinFreshnessCeiling(hoursAgo(23), NOW), true);
   assert.equal(withinFreshnessCeiling(hoursAgo(25), NOW), false);
   assert.equal(withinFreshnessCeiling("not-a-date", NOW), false);
+});
+
+test("a complete refresh shares source requests, carries outages, expires data, and recovers", async () => {
+  let instant = new Date("2026-04-17T12:00:00Z");
+  let stored = null;
+  const calls = [];
+  const writes = [];
+  const kv = {
+    async get(key, type) {
+      assert.equal(key, "conditions");
+      assert.equal(type, "json");
+      calls.push("read");
+      return stored;
+    },
+    async put(key, value) {
+      assert.equal(key, "conditions");
+      calls.push("write");
+      stored = JSON.parse(value);
+      writes.push(stored);
+    },
+  };
+  const spots = ["bay-one", "bay-two"].map((slug) => ({
+    slug, tideStationId: "shared-tide",
+    tempSources: [{ type: "usgs", id: "dark" }, { type: "noaa", id: "old" }, { type: "erddap", id: "live" }],
+  }));
+  let available = true;
+  const tempFetchers = {
+    usgs: async (id) => { calls.push(id); return null; },
+    noaa: async (id) => {
+      calls.push(id);
+      return readingFromF(id, 70, "2026-04-15T12:00:00Z");
+    },
+    erddap: async (id) => {
+      calls.push(id);
+      return available ? readingFromF(id, 60, instant.toISOString()) : null;
+    },
+  };
+  const fetchTides = async (id) => {
+    calls.push(id);
+    return available ? { stationId: id, predictions: [{ time: "2026-04-17T08:00:00", type: "H", valueFt: 4.5 }] } : null;
+  };
+  const refresh = () => assembleAndPersist(kv, { spots, now: () => instant, tempFetchers, fetchTides });
+  const first = await refresh();
+  assert.equal(calls[0], "read");
+  assert.equal(calls.at(-1), "write");
+  for (const id of ["dark", "old", "live", "shared-tide"]) assert.equal(calls.filter((call) => call === id).length, 1);
+  assert.deepEqual(first["bay-one"], {
+    slug: "bay-one", water_temp_f: 60, water_temp_c: 15.6,
+    temp_observed_at: "2026-04-17T12:00:00.000Z", temp_station_id: "live", temp_station_type: "erddap",
+    tide: { station_id: "shared-tide", predictions: [{ time: "2026-04-17T08:00:00", type: "H", value_ft: 4.5 }] },
+    updated_at: "2026-04-17T12:00:00.000Z", temp_stale: false, tide_stale: false,
+    temp_carried_since: null, tide_carried_since: null,
+  });
+  assert.deepEqual(first["bay-two"], { ...first["bay-one"], slug: "bay-two" });
+
+  available = false;
+  for (const hour of [13, 14]) {
+    instant = new Date(`2026-04-17T${hour}:00:00Z`);
+    const next = await refresh();
+    assert.equal(next["bay-one"].water_temp_f, 60);
+    assert.equal(next["bay-one"].temp_stale, true);
+    assert.equal(next["bay-one"].tide_stale, true);
+    assert.equal(next["bay-one"].temp_carried_since, "2026-04-17T12:00:00.000Z");
+    assert.equal(next["bay-one"].tide_carried_since, "2026-04-17T12:00:00.000Z");
+  }
+  assert.equal(calls.filter((call) => call === "shared-tide").length, 3, "each refresh gets its own cache");
+  instant = new Date("2026-04-18T12:00:00Z");
+  const expired = await refresh();
+  assert.equal(expired["bay-one"].water_temp_f, null);
+  assert.equal(expired["bay-one"].tide, null);
+  assert.equal(expired["bay-one"].temp_stale, false);
+  available = true;
+  const recovered = await refresh();
+  assert.equal(recovered["bay-one"].water_temp_f, 60);
+  assert.equal(recovered["bay-one"].temp_carried_since, null);
+  assert.equal(recovered["bay-one"].tide_stale, false);
+  assert.equal(writes.length, 5);
+});
+
+test("storage failures propagate and an unreadable previous record prevents collection and writes", async () => {
+  const failIfCalled = async () => assert.fail("must not run after a failed read");
+  await assert.rejects(assembleAndPersist({
+    get: async () => { throw new Error("read failed"); }, put: failIfCalled,
+  }, { fetchTides: failIfCalled, tempFetchers: { usgs: failIfCalled } }), /read failed/);
+  let writes = 0;
+  await assert.rejects(assembleAndPersist({
+    get: async () => null,
+    put: async () => { writes += 1; throw new Error("write failed"); },
+  }, { spots: [], now: () => new Date(NOW) }), /write failed/);
+  assert.equal(writes, 1);
 });
 
 test("tempReadingIsFresh rejects timestamps without an explicit zone", () => {

@@ -56,6 +56,17 @@ def _read(built_site: Path, slug: str) -> str:
     return (built_site / "spots" / slug / "index.html").read_text()
 
 
+def _tags(rendered: str) -> list[tuple[str, dict[str, str | None]]]:
+    """Inspect attributes without depending on minifier quoting or order."""
+    class Tags(HTMLParser):
+        def handle_starttag(self, tag, attrs):
+            found.append((tag, dict(attrs)))
+
+    found = []
+    Tags().feed(rendered)
+    return found
+
+
 def test_schedule_attribute_round_trips_source_punctuation(tmp_path):
     if shutil.which("zola") is None:
         pytest.skip("zola binary not available")
@@ -270,13 +281,13 @@ def test_js_translation_keys_are_exported_to_runtime_payload() -> None:
         for path in (ROOT / "static" / "js").rglob(pattern)
     )
     runtime_i18n = (ROOT / "static" / "js" / "helpers" / "i18n.mjs").read_text()
-    status_js = (ROOT / "static" / "js" / "status.js").read_text()
+    board_js = (ROOT / "static" / "js" / "board.js").read_text()
 
     used_translation_keys = set(re.findall(r'(?<![A-Za-z0-9_$])t\("([^"]+)"', js_sources))
     used_translation_keys.update(set(re.findall(r'"([a-z][a-z0-9_]+)"', runtime_i18n)) & translation_keys)
     used_translation_keys.update(
         key
-        for key in re.findall(r'"([a-z][a-z0-9_]+)"', status_js)
+        for key in re.findall(r'"([a-z][a-z0-9_]+)"', board_js)
         if key.startswith("horizon_") or key == "now"
     )
     assert used_translation_keys <= exported_keys
@@ -759,12 +770,10 @@ def test_bulletin_strip_emits_water_body_slug_lists(built_site: Path) -> None:
     # they come from open-water frontmatter (water_body) via the bulletin
     # macro, so a new open-water spot joins the strip without a JS change.
     for html_path in (built_site / "index.html", built_site / "spots" / "aquatic-park" / "index.html"):
-        rendered = html_path.read_text()
-        bay = re.search(r'data-bay-slugs="([^"]*)"', rendered)
-        ocean = re.search(r'data-ocean-slugs="([^"]*)"', rendered)
-        assert bay and ocean, f"{html_path}: bulletin strip missing slug attributes"
-        assert set(bay.group(1).split()) == {"aquatic-park", "crissy-field"}
-        assert set(ocean.group(1).split()) == {"ocean-beach", "baker-beach", "china-beach"}
+        strips = [attrs for _, attrs in _tags(html_path.read_text()) if "bulletin-strip" in attrs.get("class", "").split()]
+        assert len(strips) == 1
+        assert set(strips[0]["data-bay-slugs"].split()) == {"aquatic-park", "crissy-field"}
+        assert set(strips[0]["data-ocean-slugs"].split()) == {"ocean-beach", "baker-beach", "china-beach"}
 
 
 def test_bulletin_number_matches_reviewed_schedule_snapshots() -> None:
@@ -818,34 +827,34 @@ def test_bulletin_generator_bumps_number_when_reviewed_schedules_change(tmp_path
 
 def test_homepage_preserves_redesign_dom_contract(built_site: Path) -> None:
     html = (built_site / "index.html").read_text()
+    tags = _tags(html)
     assert "OPEN NEXT" in html
     assert ">PRIVATE</button>" in html
     assert "OPEN FIRST" not in html
-    # filters.js hides every row whose access_mode isn't "public" until the
+    # board.js hides every row whose access_mode isn't "public" until the
     # PRIVATE toggle opts in; the rows must carry the attribute it reads.
-    assert "data-access-mode=membership" in html
-    assert "data-access-mode=public" in html
+    access_modes = {attrs.get("data-access-mode") for tag, attrs in tags if tag == "tr"}
+    assert {"membership", "public"} <= access_modes
     controls_start = html.index("class=board-controls")
     menu_start = html.index("class=horizon-menu", controls_start)
     assert "data-horizon-menu" not in html[controls_start:menu_start]
-    filters = html.index('class="filters control-cluster"')
-    filter_group = html[filters : filters + 120]
-    assert "aria-label=Filters" in filter_group
-    assert "role=group" in filter_group
-    spot = html.index("data-cell=spot")
-    status = html.index("data-cell=status")
-    next_cell = html.index("data-cell=next")
-    water = html.index("data-cell=water")
-    locale = html.index("data-cell=locale")
-    assert spot < status < next_cell < water < locale
+    filter_group = next(attrs for _, attrs in tags if "filters" in attrs.get("class", "").split())
+    assert filter_group["aria-label"] == "Filters"
+    assert filter_group["role"] == "group"
+    cells = [attrs["data-cell"] for _, attrs in tags if "data-cell" in attrs]
+    assert cells[:5] == ["spot", "status", "next", "water", "locale"]
 
 
 def test_map_page_keeps_board_hidden_and_map_visible(built_site: Path) -> None:
-    html = (built_site / "map" / "index.html").read_text()
-    assert "<body class=map-page>" in html
-    assert "class=board hidden" in html
-    assert "id=map-view hidden" not in html
-    assert "js/map.js" in html
+    tags = _tags((built_site / "map" / "index.html").read_text())
+    body = next(attrs for tag, attrs in tags if tag == "body")
+    assert "map-page" in body["class"].split()
+    board = next(attrs for tag, attrs in tags if tag == "table" and "board" in attrs.get("class", "").split())
+    assert "hidden" in board
+    map_view = next(attrs for _, attrs in tags if attrs.get("id") == "map-view")
+    assert "hidden" not in map_view
+    modules = [attrs["src"] for tag, attrs in tags if tag == "script" and attrs.get("type") == "module"]
+    assert modules == ["https://swimfrancisco.com/js/app.js"]
 
 
 def test_field_notes_are_omitted_from_build(built_site: Path) -> None:

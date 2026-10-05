@@ -190,11 +190,23 @@ Airport departure board aesthetic. Split-flap animation.
 
 ### Progressive Enhancement
 - Zola renders full static HTML departure board with schedule data embedded (inline JSON or `data-` attributes)
-- Small inline `<script>` does two things:
-  1. Computes STATUS/NEXT client-side by checking current time against the embedded schedule + closures
-  2. Fetches `/api/conditions` and injects water temp/conditions into rows by `data-slug`
+- `app.js` mounts the page components through `site.js` and disposes them on
+  full page exit. Back/forward-cache restoration refreshes time while retaining
+  controls, map position, and open popups.
+- `board.js` decodes the embedded catalog once per mount. The pure
+  `evaluateBoard(spots, query, instant)` function reuses the schedule rules to
+  produce one snapshot for rows, map markers, and summary counts. `ACCESS`
+  never contributes to the verified-swimming count; an empty result counts zero.
+- `transitionBoard(state, action)` owns program, membership, horizon, sort, and
+  geolocation request identity. The browser adapter owns URL writes, analytics,
+  listeners, and minute refreshes. Distance permission requires a gesture;
+  stale replies are ignored and denial preserves the prior sort.
+- The conditions client owns in-flight deduplication, last-good data, and a
+  15-minute success throttle. The page adapter fetches `/api/conditions`, updates
+  temperature/tide displays, and passes records directly to the map. Failed
+  fetches retry on the next visible minute without discarding last-good data.
 - Without JS: full schedule table is visible, but no computed STATUS/NEXT columns and no live water temp
-- Open-water rows show `OPEN` as access status and leave safety decisions to condition details (temp, tide, hazards)
+- Open-water rows show `OCEAN` and leave safety decisions to condition details (temp, tide, hazards)
 
 ## Cloudflare Worker
 
@@ -204,6 +216,10 @@ Airport departure board aesthetic. Split-flap animation.
   - Fetches per-spot NOAA tide predictions
   - Writes the slug-keyed bulk record to KV under the single `conditions` key
   - On the 00:00 PT tick, fires the Workers Builds deploy hook so date-sensitive HTML is rebuilt
+- `assembleAndPersist` reads last-good KV data before collecting observations.
+  Collection shares source requests within that refresh; `resolveConditions`
+  applies the pure freshness/carry policy before the completed record is written.
+  Time and providers are explicit orchestration inputs for deterministic tests.
 - **Endpoints:**
   - `GET /api/conditions` — slug-keyed conditions for every spot (board + detail pages)
   - `/ingest/*` — same-origin reverse proxy for PostHog analytics

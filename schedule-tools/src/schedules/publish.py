@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import tomllib
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from datetime import date
 from pathlib import Path
@@ -11,6 +12,7 @@ import tomlkit
 
 from ._time import pacific_today
 from .discover import view_id_from_url
+from .envelope import EnvelopeValidationError, validate_envelope
 from .fetch import fetch_pdf
 from .grounding import source_publication_coverage
 from .merge import _split_frontmatter, read_schedule_snapshot
@@ -367,6 +369,43 @@ def _source_pdf_gate(source_pdf_path: Path | None) -> Eligibility:
     return _ok()
 
 
+def publish_reviewed(
+    envelopes: Mapping[Path, dict],
+    *,
+    attested_by: str,
+    content_spots_dir: Path,
+) -> list[Path]:
+    """Publish a sitting, restoring every touched file if any write or projection fails.
+
+    Callers own eligibility and live-source checks. This boundary owns attestation,
+    reviewed-file writes, validation/projection, and rollback for both single
+    reviews and sequential windows. Existing files are restored byte for byte;
+    files absent before the sitting are removed on failure.
+    """
+    prepared = {path: {**envelope, "attested_by": attested_by} for path, envelope in envelopes.items()}
+    for envelope in prepared.values():
+        try:
+            validate_envelope(envelope)
+        except EnvelopeValidationError as exc:
+            raise FinalizeError(f"schema: {exc}") from exc
+    paths = set(prepared) | {
+        content_spots_dir / f"{envelope['slug']}.md" for envelope in prepared.values()
+    }
+    backups = {path: path.read_bytes() if path.exists() else None for path in paths}
+    try:
+        for target, envelope in prepared.items():
+            target.write_text(json.dumps(envelope, indent=2) + "\n")
+            finalize_draft(reviewed_json_path=target, content_spots_dir=content_spots_dir)
+    except Exception:
+        for path, backup in backups.items():
+            if backup is None:
+                path.unlink(missing_ok=True)
+            else:
+                path.write_bytes(backup)
+        raise
+    return list(prepared)
+
+
 def publish_candidate(
     *,
     candidate: ReviewCandidate,
@@ -374,29 +413,14 @@ def publish_candidate(
     attested_at: date,
     eligibility: Eligibility,
 ) -> Path:
-    """Write reviewed.json (attested_by=ci) and finalize_draft. Unlink on failure."""
+    """Publish an eligible CI review through the shared publication boundary."""
     if not eligibility.ok:
         raise PublishRefuse(eligibility.code or "refused", eligibility.message)
     envelope = draft_envelope(
         candidate=candidate, today=attested_at, attested_by="ci"
     )
     target = candidate.review_dir / "reviewed.json"
-    md_path = content_spots_dir / f"{candidate.slug}.md"
-    backup = md_path.read_bytes()
-    reviewed_backup = target.read_bytes() if target.exists() else None
-    target.write_text(json.dumps(envelope, indent=2) + "\n")
-    try:
-        finalize_draft(
-            reviewed_json_path=target,
-            content_spots_dir=content_spots_dir,
-        )
-    except Exception:
-        md_path.write_bytes(backup)
-        if reviewed_backup is None:
-            target.unlink(missing_ok=True)
-        else:
-            target.write_bytes(reviewed_backup)
-        raise
+    publish_reviewed({target: envelope}, attested_by="ci", content_spots_dir=content_spots_dir)
     return target
 
 
@@ -487,15 +511,7 @@ def publish_closure_notice(
         "payload": payload,
     }
     target = fetched.path.parent / "reviewed.json"
-    target.write_text(json.dumps(envelope, indent=2) + "\n")
-    try:
-        finalize_draft(
-            reviewed_json_path=target,
-            content_spots_dir=content_spots_dir,
-        )
-    except Exception:
-        target.unlink(missing_ok=True)
-        raise
+    publish_reviewed({target: envelope}, attested_by="ci", content_spots_dir=content_spots_dir)
     return target
 
 
@@ -747,7 +763,7 @@ def publish_sequential_slug(
 ) -> list[dict]:
     """All-or-nothing project of unpublished date-disjoint windows.
 
-    Restores content markdown and unlinks reviewed.json on failure.
+    Restores content markdown and every reviewed.json on failure.
     Calls publish_eligible(..., require_unique_pin=False).
     """
     data_root = DATA_DIR if data_root is None else data_root
@@ -762,7 +778,7 @@ def publish_sequential_slug(
             f"{slug} has {len(kept_ids)} kept session_grid windows",
         )
 
-    unpublished = _unpublished_kept_windows(candidates, kept_ids)
+    unpublished = unpublished_kept_windows(candidates, kept_ids)
     # CI only: a window that already ended cannot reach the board. Treat it
     # as covered so a late re-export of a past window (Sava Fall 1 at a second
     # View ID) neither blocks the sitting nor refuses forever as a regression.
@@ -823,7 +839,6 @@ def publish_sequential_slug(
         snapshot = read_schedule_snapshot(md_path)
         prior_sessions_count = len(snapshot.get("sessions") or [])
     frozen_latest = latest_effective_start(md_path)
-    backup = md_path.read_text() if md_path.exists() else None
 
     prepared: list[tuple[ReviewCandidate, dict, Eligibility]] = []
     for candidate in ordered:
@@ -853,9 +868,7 @@ def publish_sequential_slug(
     if failed is not None:
         raise PublishRefuse("sequential_partial", failed[2].code or "refused")
 
-    written: list[Path] = []
-    reviewed_backups = {candidate.review_dir / "reviewed.json": (candidate.review_dir / "reviewed.json").read_bytes()
-                        for candidate in ordered if (candidate.review_dir / "reviewed.json").exists()}
+    publications: dict[Path, dict] = {}
     windows: list[dict] = []
     try:
         for candidate, payload, eligibility in prepared:
@@ -867,21 +880,15 @@ def publish_sequential_slug(
                         "sequential_incomplete",
                         f"{slug} missing posted envelope for {sha12}",
                     )
-                path = _write_posted_envelope(
-                    candidate=candidate,
-                    envelope=envelope,
-                    attested_at=attested_at,
-                    attested_by=attested_by,
-                    content_spots_dir=content_spots_dir,
-                )
+                envelope = {
+                    **envelope,
+                    "slug": candidate.slug,
+                    "pdf_sha256": candidate.source_identity,
+                    "reviewed_at": attested_at.isoformat(),
+                }
             else:
-                path = publish_candidate(
-                    candidate=candidate,
-                    content_spots_dir=content_spots_dir,
-                    attested_at=attested_at,
-                    eligibility=eligibility,
-                )
-            written.append(path)
+                envelope = draft_envelope(candidate=candidate, today=attested_at, attested_by=attested_by)
+            publications[candidate.review_dir / "reviewed.json"] = envelope
             windows.append(
                 {
                     "slug": slug,
@@ -890,42 +897,10 @@ def publish_sequential_slug(
                     "view_id": candidate.view_id,
                 }
             )
+        publish_reviewed(publications, attested_by=attested_by, content_spots_dir=content_spots_dir)
     except Exception as exc:
-        if backup is not None:
-            md_path.write_text(backup)
-        for path in written:
-            if path in reviewed_backups:
-                path.write_bytes(reviewed_backups[path])
-            else:
-                path.unlink(missing_ok=True)
         raise PublishRefuse("sequential_partial", str(exc)) from exc
     return windows
-
-
-def _write_posted_envelope(
-    *,
-    candidate: ReviewCandidate,
-    envelope: dict,
-    attested_at: date,
-    attested_by: str,
-    content_spots_dir: Path,
-) -> Path:
-    target = candidate.review_dir / "reviewed.json"
-    payload = dict(envelope)
-    payload["slug"] = candidate.slug
-    payload["pdf_sha256"] = candidate.source_identity
-    payload["reviewed_at"] = attested_at.isoformat()
-    payload["attested_by"] = attested_by
-    target.write_text(json.dumps(payload, indent=2) + "\n")
-    try:
-        finalize_draft(
-            reviewed_json_path=target,
-            content_spots_dir=content_spots_dir,
-        )
-    except Exception:
-        target.unlink(missing_ok=True)
-        raise
-    return target
 
 
 def _publish_closure_for_decision(
@@ -988,7 +963,7 @@ def _payload_window(payload: dict) -> tuple[date, date] | None:
         return None
 
 
-def _unpublished_kept_windows(
+def unpublished_kept_windows(
     candidates: list[ReviewCandidate], kept_ids: set[int]
 ) -> dict[int, ReviewCandidate]:
     by_id: dict[int, ReviewCandidate] = {}

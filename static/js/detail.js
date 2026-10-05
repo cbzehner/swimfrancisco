@@ -7,7 +7,6 @@ import {
   computeAccessStatus,
   computeDetailStatus,
   formatHHMM,
-  parseHHMM,
   readScheduleAttribute,
   resolveActiveSchedule,
   scheduleHasAccessHours,
@@ -185,8 +184,7 @@ function refreshWindowDates(root, active, now) {
   }
 }
 
-function refresh(root, schedule) {
-  const now = pacificWallClockDate();
+function refresh(root, schedule, now) {
   const active = resolveActiveSchedule(schedule, now);
   selectScheduleWindow(root, active);
   refreshWindowDates(root, active, now);
@@ -199,19 +197,21 @@ function refresh(root, schedule) {
   }
 }
 
-function init() {
+export function mountDetail(document = globalThis.document, { now = () => new Date() } = {}) {
+  const controller = new AbortController();
   const root = document.querySelector(".detail-root");
-  if (!root) return;
   const schedule = readScheduleAttribute(root);
-  if (!schedule) return;
-  // Every SF pool is in Pacific — reason about time in PT regardless of the
-  // visitor's browser timezone or the date this static page was built.
-  refresh(root, schedule);
-  // Refresh the date as well as the time in long-lived and restored tabs.
-  setInterval(() => refresh(root, schedule), REFRESH_INTERVAL_MS);
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) refresh(root, schedule);
-  });
+  const update = () => {
+    if (!controller.signal.aborted && root && schedule) refresh(root, schedule, pacificWallClockDate(now()));
+  };
+  update();
+  const timer = root && schedule ? setInterval(update, REFRESH_INTERVAL_MS) : null;
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) update(); }, { signal: controller.signal });
+  initOutboundTracking(document, controller.signal);
+  return {
+    refresh: update,
+    dispose() { controller.abort(); if (timer !== null) clearInterval(timer); },
+  };
 }
 
 // Outbound link tracking — the clearest signal that a visit "converted" into
@@ -233,7 +233,7 @@ function classifyOutbound(link) {
   return "external";
 }
 
-function initOutboundTracking() {
+function initOutboundTracking(document, signal) {
   const slug = spotSlug();
   document.addEventListener("click", (event) => {
     const link = event.target.closest('a[target="_blank"]');
@@ -243,15 +243,5 @@ function initOutboundTracking() {
       destination: classifyOutbound(link),
       href: link.getAttribute("href") || "",
     });
-  });
-}
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => {
-    init();
-    initOutboundTracking();
-  });
-} else {
-  init();
-  initOutboundTracking();
+  }, { signal });
 }

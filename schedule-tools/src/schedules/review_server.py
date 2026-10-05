@@ -17,14 +17,15 @@ from urllib.parse import unquote, urlparse
 
 from ._time import pacific_today
 from .discover import view_id_from_url
-from .paths import CONTENT_SPOTS_DIR, DATA_DIR, TMP_DIR, all_review_dirs, reviewed_path
+from .paths import CONTENT_SPOTS_DIR, DATA_DIR, TMP_DIR, all_review_dirs
 from .direct_sources import DirectSourceError, extract_direct
 from .fetch import FetchError, fetch_pdf
 from .pipeline import DirectRun, ExpandFromDecisions, PdfRun, PinOverride, parse_provider, run_pipeline
 from .publish import (
     PublishRefuse,
-    _unpublished_kept_windows,
+    unpublished_kept_windows,
     load_quarantine,
+    publish_reviewed,
     publish_sequential_slug,
 )
 from .registry import load_registry
@@ -33,7 +34,6 @@ from .review import (
     FinalizeError,
     ReviewCandidate,
     draft_envelope,
-    finalize_draft,
     find_review_candidates,
     kept_grid_ids,
 )
@@ -109,7 +109,7 @@ class ReviewApp:
             if slug in sequential:
                 decision = decisions.get(slug)
                 kept = kept_grid_ids(decision)
-                selected.extend(_unpublished_kept_windows(items, kept).values())
+                selected.extend(unpublished_kept_windows(items, kept).values())
             else:
                 selected.append(items[-1])
         priority = {"koret-center": 0, "pomeroy-pool": 1}
@@ -249,29 +249,14 @@ class ReviewApp:
         if source_identity != candidate.source_identity or current_source_identity(slug) != source_identity:
             raise FinalizeError("Official source changed after this review opened. Refresh before saving.")
 
-        target = reviewed_path(
-            candidate.slug,
-            candidate.fetch_date,
-            candidate.source_identity,
-            root=self.data_root,
-        )
+        target = candidate.review_dir / "reviewed.json"
         if candidate.bundle_sha256:
             original = draft_envelope(candidate=candidate)
             if envelope.get("source_bundle") != original["source_bundle"]:
                 raise FinalizeError("Bundle sources cannot change during review")
-        md_path = self.content_spots_dir / f"{slug}.md"
-        backup = md_path.read_bytes()
-        envelope = {**envelope, "attested_by": "human"}
-        target.write_text(json.dumps(envelope, indent=2) + "\n")
-        try:
-            return finalize_draft(
-                reviewed_json_path=target,
-                content_spots_dir=self.content_spots_dir,
-            )
-        except Exception:
-            md_path.write_bytes(backup)
-            target.unlink(missing_ok=True)
-            raise
+        return publish_reviewed(
+            {target: envelope}, attested_by="human", content_spots_dir=self.content_spots_dir,
+        )[0]
 
     def confirm(self, slug: str, sha12: str, envelope: dict, source_identity: str) -> None:
         # UI-only: the sitting writes on save-sequential, not per card.

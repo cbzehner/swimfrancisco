@@ -706,7 +706,7 @@ table.board [data-cell="spot"] a {
    absolutely-positioned ::after. The containing block must be the <td>:
    WebKit does not treat <tr position:relative> as a containing block, so a
    row-wide inset-0 overlay escaped the row and blanketed the page,
-   swallowing clicks on the controls above the table. status.js extends the
+   swallowing clicks on the controls above the table. board.js extends the
    click target to the rest of the row; the anchor remains the sole
    accessible name + focus stop. */
 table.board [data-cell="spot"] a::after {

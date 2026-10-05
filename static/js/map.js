@@ -1,43 +1,16 @@
 // Swim Francisco map view.
-// Only loaded on /map/. Initializes Leaflet, renders one marker per spot
-// that is visible under the current filters, and re-renders on
-// `sf:filters-applied`. No client-side view toggling — the VIEW BOARD link
-// is a plain <a href="/"> and the browser handles navigation.
+// Explicitly mounted on /map/. Markers consume the same board snapshot as
+// the table and summary; updates preserve retained markers and open popups.
 
-import { OPEN_STATUSES, readNumberAttribute } from "./helpers/board.mjs";
+import { OPEN_STATUSES } from "./helpers/board.mjs";
 import { pacificWallClockDate } from "./helpers/pacific.mjs";
 import { formatTideSummary } from "./helpers/tide.mjs";
 import { statusLabel, t } from "./helpers/i18n.mjs";
+import { formatWaterTemp } from "./conditions.js";
 import { capture } from "./helpers/analytics.mjs";
 
 const SF_CENTER = [37.7749, -122.4459];
 const SF_ZOOM = 12;
-
-// Visible rows only — filters.js sets [hidden] on rows that don't match.
-function collectVisibleSpots() {
-  const rows = document.querySelectorAll("table.board tbody tr:not([hidden])");
-  const spots = [];
-  rows.forEach((row) => {
-    const lat = readNumberAttribute(row, "data-lat");
-    const lng = readNumberAttribute(row, "data-lng");
-    if (lat === null || lng === null) return;
-    const slug = row.getAttribute("data-slug") || "";
-    const type = row.getAttribute("data-type") || "";
-    const spotLink = row.querySelector('[data-cell="spot"] a');
-    const name = spotLink?.textContent.trim() ?? "";
-    const href = spotLink?.getAttribute("href") ?? "";
-    const typeLabel =
-      row.querySelector('[data-cell="spot"] .spot-subtitle')?.textContent.trim() ||
-      row.getAttribute("data-subtype") ||
-      type;
-    const statusCell = row.querySelector('[data-cell="status"]');
-    const status = statusCell?.dataset.statusValue || "";
-    const next = row.querySelector('[data-cell="next"]')?.textContent.trim() ?? "";
-    const temp = row.querySelector('[data-cell="water"]')?.textContent.trim() ?? "";
-    spots.push({ slug, type, name, href, lat, lng, typeLabel, status, next, temp });
-  });
-  return spots;
-}
 
 function escapeHTML(value) {
   return String(value)
@@ -58,7 +31,7 @@ function popupRow(label, value) {
   );
 }
 
-function createPopupHTML(spot) {
+function createPopupHTML(spot, conditions, instant) {
   const name = escapeHTML(spot.name);
   const detailsHref = spot.href;
   const appleHref = `https://maps.apple.com/?daddr=${spot.lat},${spot.lng}`;
@@ -66,14 +39,14 @@ function createPopupHTML(spot) {
   const rows = [popupRow(t("type", "TYPE"), spot.typeLabel)];
 
   if (spot.type === "open_water") {
-    const record = window.SWIMFRANCISCO_CONDITIONS?.[spot.slug];
-    const tide = formatTideSummary(record, pacificWallClockDate());
+    const record = conditions[spot.slug];
+    const tide = formatTideSummary(record, pacificWallClockDate(instant));
     rows.push(popupRow(t("status", "STATUS"), statusLabel(spot.status || "OPEN")));
-    rows.push(popupRow(t("water", "WATER"), spot.temp));
+    rows.push(popupRow(t("water", "WATER"), formatWaterTemp(record)));
     rows.push(popupRow(t("tide", "TIDE"), tide));
   } else {
     rows.push(popupRow(t("status", "STATUS"), statusLabel(spot.status)));
-    rows.push(popupRow(t("next", "NEXT"), spot.next));
+    rows.push(popupRow(t("next", "NEXT"), spot.nextText));
   }
 
   return (
@@ -114,7 +87,7 @@ function createMarkerIcon(L, spot) {
 // lost (e.g. nearby beaches relative to a pool).
 const FOCUS_ZOOM = 15;
 
-function renderMarkers(L, map, markers, spots) {
+function renderMarkers(L, map, markers, spots, conditions, instant) {
   const visibleSlugs = new Set(spots.map((spot) => spot.slug));
   for (const [slug, entry] of markers) {
     if (visibleSlugs.has(slug)) continue;
@@ -123,7 +96,7 @@ function renderMarkers(L, map, markers, spots) {
   }
   spots.forEach((spot) => {
     const icon = createMarkerIcon(L, spot);
-    const popupHTML = createPopupHTML(spot);
+    const popupHTML = createPopupHTML(spot, conditions, instant);
     const existing = markers.get(spot.slug);
     if (existing) {
       if (existing.iconClass !== icon.options.className) existing.marker.setIcon(icon);
@@ -154,42 +127,53 @@ function renderMarkers(L, map, markers, spots) {
   });
 }
 
-async function loadBasemap(L, map) {
-  const response = await fetch("/api/map-config", { signal: AbortSignal.timeout(10_000) });
-  if (!response.ok) throw new Error("Map configuration unavailable");
-  const config = await response.json();
-  const key = config?.carto_basemap_key;
-  if (typeof key !== "string" || !key.trim()) throw new Error("Map configuration invalid");
+async function loadBasemap(L, map, signal, fetcher) {
+  const request = new AbortController();
+  const abort = () => request.abort();
+  if (signal.aborted) abort();
+  else signal.addEventListener("abort", abort, { once: true });
+  const timeout = setTimeout(abort, 10_000);
+  try {
+    const response = await fetcher("/api/map-config", { signal: request.signal });
+    if (!response.ok) throw new Error("Map configuration unavailable");
+    const config = await response.json();
+    if (request.signal.aborted) return;
+    const key = config?.carto_basemap_key;
+    if (typeof key !== "string" || !key.trim()) throw new Error("Map configuration invalid");
 
-  // CartoDB Voyager: warm cream basemap that keeps SF's neighborhoods,
-  // parks, and the bay legible without overwhelming the brand palette.
-  L.tileLayer(`https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(key.trim())}`, {
-    maxZoom: 19,
-    subdomains: "abcd",
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-  }).addTo(map);
+    // CartoDB Voyager keeps SF's neighborhoods and bay legible.
+    L.tileLayer(`https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(key.trim())}`, {
+      maxZoom: 19,
+      subdomains: "abcd",
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    }).addTo(map);
+  } finally {
+    clearTimeout(timeout);
+    signal.removeEventListener("abort", abort);
+  }
 }
 
-async function init() {
-  const container = document.getElementById("map-view");
-  if (!container) return;
-
-  const L = window.L;
+export function mountMap(root = document, {
+  L = globalThis.window?.L, snapshot, conditions = {}, instant = new Date(),
+  fetch: fetcher = globalThis.fetch,
+} = {}) {
+  const container = root.querySelector("#map-view");
+  if (!container) return null;
   if (!L) {
     console.error("[swimfrancisco] map load failed");
-    return;
+    return null;
   }
-
+  const controller = new AbortController();
   const map = L.map(container).setView(SF_CENTER, SF_ZOOM);
   const markers = new Map();
-  const refresh = () => renderMarkers(L, map, markers, collectVisibleSpots());
-  refresh();
-
-  // The map is lazy-loaded only when someone opens /map/, so a successful
-  // init is itself the adoption signal. `spots_visible` records how many
-  // markers were shown under the inbound filter state.
-  capture("map_opened", { spots_visible: collectVisibleSpots().length });
+  function update(nextSnapshot, nextConditions = {}, nextInstant = new Date()) {
+    if (controller.signal.aborted) return;
+    const spots = (nextSnapshot?.entries || []).filter((entry) => !entry.hidden && Number.isFinite(entry.lat) && Number.isFinite(entry.lng));
+    renderMarkers(L, map, markers, spots, nextConditions, nextInstant);
+  }
+  update(snapshot, conditions, instant);
+  capture("map_opened", { spots_visible: markers.size });
 
   // Popups are injected HTML, so delegate from the container. Directions
   // links are outbound conversions; the popup title opens a spot detail.
@@ -211,21 +195,18 @@ async function init() {
         source: "map_popup",
       });
     }
+  }, { signal: controller.signal });
+
+  const ready = loadBasemap(L, map, controller.signal, fetcher).catch(() => {
+    if (!controller.signal.aborted) console.error("[swimfrancisco] basemap unavailable");
   });
-
-  // Filters update row.hidden; we re-render markers to match.
-  document.addEventListener("sf:filters-applied", refresh);
-  // Conditions arrive async — re-render so beach popups pick up temp/tide.
-  document.addEventListener("sf:conditions-loaded", refresh);
-  try {
-    await loadBasemap(L, map);
-  } catch {
-    console.error("[swimfrancisco] basemap unavailable");
-  }
-}
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
-} else {
-  init();
+  return {
+    update, ready,
+    dispose() {
+      if (controller.signal.aborted) return;
+      controller.abort();
+      markers.clear();
+      map.remove();
+    },
+  };
 }

@@ -1,11 +1,12 @@
 // Real-browser integration smoke tests — the regressions that node:test and
-// zola-render tests structurally cannot catch live here. Every scenario in
-// this file is a bug that actually shipped:
+// zola-render tests structurally cannot catch live here. The original
+// regressions below came from bugs that actually shipped:
 //   - horizon menu taps swallowed on iOS (WebKit focus semantics)
 //   - row-link overlay blanketing the page controls (WebKit containing block)
 //   - CJK language labels stacking vertically on narrow screens
 // plus a hydration canary for the silent base_url failure mode documented in
-// docs/testing-webkit.md.
+// docs/testing-webkit.md. Hand-authored swim-decision fixtures also verify
+// program/access filtering, displayed recommendations, and exact ordering.
 //
 // Runs WebKit (the engine that catches these) and Chromium. The site is
 // built fresh with a local base-url and served on an ephemeral port, so a
@@ -23,11 +24,13 @@ import { tmpdir } from "node:os";
 import { join, extname, resolve } from "node:path";
 
 import { webkit, chromium, devices } from "playwright-core";
+import { programSpots } from "../fixtures/board-spots.mjs";
 import { verifyPoolPage } from "../../scripts/smoke-production.mjs";
 import { buildSpotRecord } from "../../scripts/generate-agent-data.mjs";
 import { splitFrontMatter } from "../../scripts/lib/spot-frontmatter.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..", "..");
+const englishLabels = JSON.parse(readFileSync(join(ROOT, "data/i18n/en.json"), "utf8"));
 const MIME = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css",
@@ -108,14 +111,110 @@ async function fixturePage(t, engineName, html, { time = "2026-09-24T18:59:00Z",
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.clock.install({ time: new Date(new Date(time).getTime() - 60_000) });
   await page.clock.pauseAt(new Date(time));
-  await page.route("**/fixture", (route) => route.fulfill({
+  await page.route((url) => url.pathname === "/fixture", (route) => route.fulfill({
     contentType: "text/html",
     body: `<!doctype html><html><head><meta charset="utf-8"></head><body>${html}</body></html>`,
   }));
   return page;
 }
 
+// Synthetic inputs isolate swimming rules from the changing facility catalog.
+// Expected results below are hand-written, never computed with board.mjs.
+// Use the same schedule envelope and control attributes as Zola's board.
+async function decisionPage(t, engine, spots, { path = "/fixture", time = "2026-09-24T18:59:00Z" } = {}) {
+  const rows = spots.map(({ slug, name = slug, type = "pool", access = "public", schedules = [] }) => `
+    <tr data-slug="${slug}" data-type="${type}" data-access-mode="${access}"
+        data-schedule='${JSON.stringify({ schedules }).replaceAll("&", "&amp;").replaceAll("'", "&#39;")}'>
+      <td data-cell="spot">${name}</td><td data-cell="status"><span class="status-pill">—</span></td><td data-cell="next">—</td>
+    </tr>`).join("");
+  const page = await fixturePage(t, engine, `
+    <script>window.SWIMFRANCISCO_I18N = ${JSON.stringify(englishLabels)};</script>
+    <div class="horizon-control"><button data-horizon-button>Now</button></div>
+    <div data-horizon-menu role="menu" hidden></div>
+    <div data-time-banner hidden><button data-time-banner-reset>Back to now</button></div>
+    <div class="filters">
+      <button data-filter="type" data-type="none">All</button>
+      <button data-filter="type" data-type="lap_swim">Lap</button>
+      <button data-filter="type" data-type="family_swim">Family</button>
+      <button data-filter="type" data-type="senior_swim">Senior</button>
+      <button data-filter="type" data-type="open_water">Beach</button>
+      <button data-filter="access" data-access="memberships">Memberships</button>
+    </div>
+    <button data-filter="open-now">Open/Next</button>
+    <table class="board"><tbody>${rows}</tbody></table>
+    <script type="module" src="/js/app.js"></script>`, { timezoneId: "Asia/Tokyo", time });
+  const errors = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  t.after(() => assert.deepEqual(errors, [], "decision fixture must hydrate without JavaScript errors"));
+  // Initialize at exactly the requested instant, including session boundaries.
+  // Wait for completed initialization without advancing the clock.
+  await page.clock.setFixedTime(new Date(time));
+  await page.goto(`${baseURL}${path}`);
+  await page.locator('button[data-type="none"][aria-pressed]').waitFor();
+  await page.clock.setSystemTime(new Date(time));
+  return page;
+}
+
+function visibleDecisions(page) {
+  return page.locator("table.board tbody tr:not([hidden])").evaluateAll((rows) => rows.map((row) => [
+    row.dataset.slug,
+    row.querySelector('[data-cell="status"] .status-pill')?.textContent ?? null,
+    row.querySelector('[data-cell="next"]').textContent,
+  ]));
+}
+
+
 for (const engine of ["webkit", "chromium"]) {
+  test(`[${engine}] swim decisions: program and membership choices determine exact recommendations`, async (t) => {
+    const page = await decisionPage(t, engine, programSpots);
+    await page.getByRole("button", { name: "Family", exact: true }).click();
+    assert.deepEqual(await visibleDecisions(page), [["mixed-programs", "CLOSED", "Opens 15:00"]]);
+    await page.getByRole("button", { name: "Memberships", exact: true }).click();
+    assert.deepEqual(await visibleDecisions(page), [
+      ["members-family", "OPEN", "Closes 13:00"],
+      ["mixed-programs", "CLOSED", "Opens 15:00"],
+    ]);
+    await page.getByRole("button", { name: "Memberships", exact: true }).click();
+    assert.deepEqual(await visibleDecisions(page), [["mixed-programs", "CLOSED", "Opens 15:00"]]);
+    await page.getByRole("button", { name: "Lap", exact: true }).click();
+    assert.deepEqual(await visibleDecisions(page), [
+      ["lap-only", "OPEN", "Closes 14:00"],
+      ["mixed-programs", "OPEN", "Closes 14:00"],
+    ]);
+    await page.getByRole("button", { name: "Senior", exact: true }).click();
+    assert.deepEqual(await visibleDecisions(page), [["mixed-programs", "CLOSED", "Opens THU 09:00"]]);
+  });
+
+  test(`[${engine}] swim decisions: family selection uses exact session boundaries on load and refresh`, async (t) => {
+    const page = await decisionPage(t, engine, programSpots, { path: "/fixture#family" });
+    assert.deepEqual(await visibleDecisions(page), [["mixed-programs", "CLOSED", "Opens 15:00"]]);
+    await page.clock.fastForward(60_000); // 12:00 PT: lap is still open, family is not.
+    assert.deepEqual(await visibleDecisions(page), [["mixed-programs", "CLOSED", "Opens 15:00"]]);
+    await page.clock.fastForward(3 * 60 * 60_000); // Start is inclusive.
+    assert.deepEqual(await visibleDecisions(page), [["mixed-programs", "OPEN", "Closes 16:00"]]);
+    await page.clock.fastForward(60 * 60_000); // End is exclusive.
+    assert.deepEqual(await visibleDecisions(page), [["mixed-programs", "CLOSED", "Opens THU 15:00"]]);
+    assert.equal(new URL(page.url()).hash, "#family");
+    for (const [time, expected] of [
+      ["2026-09-24T22:00:00Z", [["mixed-programs", "OPEN", "Closes 16:00"]]],
+      ["2026-09-24T23:00:00Z", [["mixed-programs", "CLOSED", "Opens THU 15:00"]]],
+    ]) {
+      const openedAtBoundary = await decisionPage(t, engine, programSpots, { path: "/fixture#family", time });
+      assert.deepEqual(await visibleDecisions(openedAtBoundary), expected, `opening the page at ${time}`);
+    }
+  });
+
+  test(`[${engine}] swim decisions: planning and returning to now preserve the selected program`, async (t) => {
+    const page = await decisionPage(t, engine, programSpots, { path: "/fixture?when=this-afternoon#family" });
+    assert.deepEqual(await visibleDecisions(page), [["mixed-programs", "AVAILABLE", "FAMILY 15:00–16:00"]]);
+    await page.getByRole("button", { name: "Back to now", exact: true }).click();
+    assert.deepEqual(await visibleDecisions(page), [["mixed-programs", "CLOSED", "Opens 15:00"]]);
+    await page.locator("[data-horizon-button]").click();
+    await page.locator('[data-horizon-menu] button[value="this-afternoon"]').click();
+    assert.deepEqual(await visibleDecisions(page), [["mixed-programs", "AVAILABLE", "FAMILY 15:00–16:00"]]);
+    assert.equal(new URL(page.url()).hash, "#family");
+  });
+
   test(`[${engine}] production browser verifier checks every pool against canonical content`, async (t) => {
     const context = await browsers[engine].newContext({ timezoneId: "Asia/Tokyo" });
     t.after(() => context.close());
@@ -178,8 +277,15 @@ for (const engine of ["webkit", "chromium"]) {
       await page.locator(".sf-marker").nth(markerIndex).click();
       await page.locator(".sf-map-popup").waitFor({ state: "visible" });
       assert.match(await page.locator(".sf-map-popup-title").getAttribute("href"), /\/spots\/[^/]+\//);
-      await page.evaluate(() => document.dispatchEvent(new CustomEvent("sf:conditions-loaded")));
+      await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
       assert.equal(await page.locator(".sf-map-popup").isVisible(), true);
+      const markerPosition = await page.locator(".sf-marker").first().getAttribute("style");
+      await page.evaluate(() => {
+        window.dispatchEvent(new PageTransitionEvent("pagehide", { persisted: true }));
+        window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true }));
+      });
+      assert.equal(await page.locator(".sf-map-popup").isVisible(), true, "cached navigation preserves the open popup");
+      assert.equal(await page.locator(".sf-marker").first().getAttribute("style"), markerPosition, "cached navigation preserves the map viewport");
       await page.locator(`.site-nav-link[data-target-path="${baseURL}/"]`).click();
       await page.waitForURL(`${baseURL}/`);
       assert.deepEqual(errors, []);
@@ -220,7 +326,7 @@ for (const engine of ["webkit", "chromium"]) {
       <div class="detail-root" data-schedule='${JSON.stringify(schedule)}'>
         <span data-field="status"></span><span data-field="next"></span>
         <section class="today-block"><ul class="today-block-list"></ul></section>
-      </div><script type="module" src="/js/detail.js"></script>`, { timezoneId: "Asia/Tokyo" });
+      </div><script type="module" src="/js/app.js"></script>`, { timezoneId: "Asia/Tokyo" });
     await page.goto(`${baseURL}/fixture`);
     await page.waitForFunction(() => document.querySelectorAll(".today-block-list li").length === 2);
     assert.deepEqual(await page.locator(".today-block-list li").evaluateAll((rows) => rows.map((row) => [row.dataset.pool, row.dataset.start])), [["cool", "14:15"], ["warm", "14:15"]]);
@@ -245,7 +351,7 @@ for (const engine of ["webkit", "chromium"]) {
       <div class="detail-root" data-schedule='${JSON.stringify(schedule)}'>
         <span data-field="status"></span><span data-field="next"></span>
         <section class="today-block"><ul class="today-block-list"></ul></section>
-      </div><script type="module" src="/js/status.js"></script><script type="module" src="/js/detail.js"></script>`, {
+      </div><script type="module" src="/js/app.js"></script>`, {
       time: "2026-09-24T18:30:00Z", timezoneId: "Asia/Tokyo",
     });
     await page.goto(`${baseURL}/fixture`);
@@ -278,7 +384,7 @@ for (const engine of ["webkit", "chromium"]) {
       <div class="detail-root" data-schedule='${JSON.stringify(schedule)}'>
         <span data-field="status"></span><span data-field="next"></span>
         <section class="today-block"><ul class="today-block-list"></ul></section>
-      </div><script type="module" src="/js/status.js"></script><script type="module" src="/js/detail.js"></script>`, {
+      </div><script type="module" src="/js/app.js"></script>`, {
       time: "2026-09-15T06:58:00Z", timezoneId: "Asia/Tokyo",
     });
     await page.goto(`${baseURL}/fixture`);
@@ -303,7 +409,7 @@ for (const engine of ["webkit", "chromium"]) {
         <section class="today-block"><ul class="today-block-list">
           <li data-start="11:00" data-end="15:00"><span class="time">11:00–15:00</span><span class="row-label"></span></li>
         </ul></section>
-      </div><script type="module" src="/js/detail.js"></script>`);
+      </div><script type="module" src="/js/app.js"></script>`);
     await page.goto(`${baseURL}/fixture`);
     assert.match(await page.locator('[data-field="status"]').textContent(), /UNTIL 12:00/);
     await page.clock.fastForward(60_000);
@@ -355,7 +461,7 @@ for (const engine of ["webkit", "chromium"]) {
           </div>
         </template>
         <p class="meta-effective">Stale window dates</p>
-      </div><script type="module" src="/js/detail.js"></script>`, {
+      </div><script type="module" src="/js/app.js"></script>`, {
       time: "2026-09-05T06:59:00Z", timezoneId: "Asia/Tokyo",
     });
     const errors = [];
@@ -421,7 +527,7 @@ for (const engine of ["webkit", "chromium"]) {
     const page = await fixturePage(t, engine, `
       <div class="bulletin-strip" data-bay-slugs="aquatic-park"><span data-bay-temp-strip>—</span></div>
       <section class="conditions" data-slug="aquatic-park"><span data-field="water_temp">—</span><span data-field="tide">—</span></section>
-      <script type="module" src="/js/conditions.js"></script>`);
+      <script type="module" src="/js/app.js"></script>`);
     let requests = 0;
     let conditions = { "aquatic-park": {
       water_temp_f: 58, temp_stale: true,
@@ -462,14 +568,16 @@ for (const engine of ["webkit", "chromium"]) {
 
   test(`[${engine}] map refresh preserves markers and open popups`, async (t) => {
     const page = await fixturePage(t, engine, `
-      <table class="board" hidden><tbody><tr data-slug="test-pool" data-type="pool" data-lat="37.7749" data-lng="-122.4459">
-        <td data-cell="spot"><a href="/spots/test-pool/">Test Pool</a></td>
-        <td data-cell="status" data-status-value="AVAILABLE"></td><td data-cell="next">LAP 12:00–15:00</td>
-      </tr></tbody></table>
       <div id="map-view" style="height:600px;width:800px"></div>
       <link rel="stylesheet" href="/vendor/leaflet.css">
       <script src="/vendor/leaflet.js"></script>
-      <script type="module" src="/js/map.js"></script>`);
+      <script type="module">
+        import { mountMap } from "/js/map.js";
+        window.mapSnapshot = { entries: [{ slug: "test-pool", type: "pool", lat: 37.7749, lng: -122.4459,
+          name: "Test Pool", href: "/spots/test-pool/", typeLabel: "Pool", status: "AVAILABLE", nextText: "LAP 12:00–15:00" }] };
+        window.mountTestMap = (options = {}) => mountMap(document, { snapshot: window.mapSnapshot, ...options });
+        window.mapController = window.mountTestMap();
+      </script>`);
     await page.route("**/api/map-config", (route) => route.fulfill({ json: { carto_basemap_key: "test-carto-key" } }));
     await page.route("https://*.basemaps.cartocdn.com/**", (route) => route.abort());
     await page.goto(`${baseURL}/fixture`);
@@ -478,29 +586,51 @@ for (const engine of ["webkit", "chromium"]) {
     await page.locator(".sf-marker").click();
     assert.equal(await page.locator(".sf-map-popup").isVisible(), true);
     await page.evaluate(() => {
-      document.dispatchEvent(new CustomEvent("sf:filters-applied"));
-      document.dispatchEvent(new CustomEvent("sf:conditions-loaded"));
+      window.mapController.update(window.mapSnapshot);
     });
     assert.equal(await page.evaluate(() => window.retainedMarker === document.querySelector(".sf-marker")), true);
     assert.equal(await page.locator(".sf-map-popup").isVisible(), true);
     await page.evaluate(() => {
-      document.querySelector('[data-cell="next"]').textContent = "LAP 14:00–15:00";
-      document.dispatchEvent(new CustomEvent("sf:filters-applied"));
+      window.mapSnapshot.entries[0].nextText = "LAP 14:00–15:00";
+      window.mapController.update(window.mapSnapshot);
     });
     assert.match(await page.locator(".sf-map-popup").textContent(), /14:00–15:00/);
     assert.equal(await page.locator(".sf-map-popup").isVisible(), true);
     for (const status of ["LIMITED", "ACCESS", "CLOSED"]) {
       await page.evaluate((value) => {
-        document.querySelector('[data-cell="status"]').dataset.statusValue = value;
-        document.dispatchEvent(new CustomEvent("sf:filters-applied"));
+        window.mapSnapshot.entries[0].status = value;
+        window.mapController.update(window.mapSnapshot);
       }, status);
       assert.equal(await page.locator(".sf-marker-open").count(), status === "CLOSED" ? 0 : 1);
     }
     await page.evaluate(() => {
-      document.querySelector("tbody tr").hidden = true;
-      document.dispatchEvent(new CustomEvent("sf:filters-applied"));
+      window.mapSnapshot.entries[0].hidden = true;
+      window.mapController.update(window.mapSnapshot);
     });
     assert.equal(await page.locator(".sf-marker").count(), 0);
+    await page.evaluate(() => {
+      window.mapController.dispose();
+      window.mapController.dispose();
+      window.mapSnapshot.entries[0].hidden = false;
+      window.mapController.update(window.mapSnapshot);
+    });
+    assert.equal(await page.locator(".sf-marker").count(), 0, "a disposed map ignores updates");
+    await page.evaluate(() => { window.mapController = window.mountTestMap(); });
+    assert.equal(await page.locator(".sf-marker").count(), 1, "the same container can be mounted again");
+    const lateLayers = await page.evaluate(async () => {
+      window.mapController.dispose();
+      let finish;
+      let layers = 0;
+      const pendingMap = window.mountTestMap({
+        fetch: () => new Promise((resolve) => { finish = resolve; }),
+        L: { ...window.L, tileLayer(...args) { layers++; return window.L.tileLayer(...args); } },
+      });
+      pendingMap.dispose();
+      finish({ ok: true, json: async () => ({ carto_basemap_key: "late-key" }) });
+      await pendingMap.ready;
+      return layers;
+    });
+    assert.equal(lateLayers, 0, "configuration completing after disposal must not create a basemap layer");
   });
 
   test(`[${engine}] board hydrates: statuses computed, no page errors`, async (t) => {
@@ -510,30 +640,87 @@ for (const engine of ["webkit", "chromium"]) {
     assert.deepEqual(errors, []);
   });
 
-  test(`[${engine}] default board shows only access_mode=public rows; PRIVATE reveals the rest`, async (t) => {
-    const { page } = await boardPage(t, engine);
-    const counts = () =>
-      page.evaluate(() => ({
-        visible: document.querySelectorAll("table.board tbody tr:not([hidden])").length,
-        publicRows: document.querySelectorAll('table.board tbody tr[data-access-mode="public"]').length,
-        total: document.querySelectorAll("table.board tbody tr").length,
-      }));
-    const before = await counts();
-    assert.equal(before.visible, before.publicRows, "default visible set must equal the public rows");
-    await page.locator('button[data-access="memberships"]').click();
-    const afterToggle = await counts();
-    assert.equal(afterToggle.visible, afterToggle.total, "toggle must reveal every row");
+  test(`[${engine}] a decorative bulletin does not request conditions`, async (t) => {
+    const page = await fixturePage(t, engine, '<div class="bulletin-strip">Field notes</div><script type="module" src="/js/app.js"></script>');
+    let requests = 0;
+    await page.route("**/api/conditions", (route) => { requests++; return route.fulfill({ json: {} }); });
+    await page.goto(`${baseURL}/fixture`, { waitUntil: "networkidle" });
+    await page.clock.fastForward(16 * 60_000);
+    assert.equal(requests, 0);
   });
 
-  test(`[${engine}] BACK TO NOW resets the horizon without navigating`, async (t) => {
-    const { page } = await boardPage(t, engine);
-    await page.goto(`${baseURL}/?when=tomorrow-morning`, { waitUntil: "networkidle" });
-    await page.locator("[data-time-banner-reset]").click();
-    await page.waitForTimeout(200);
-    const url = new URL(page.url());
-    assert.equal(url.pathname, "/", "reset must not navigate away from the board");
-    assert.equal(url.searchParams.get("when"), null, "?when= must be cleared");
-    assert.equal((await page.locator("[data-horizon-button]").textContent()).trim(), "Now");
+  test(`[${engine}] browser components import without effects and dispose cleanly before remount`, async (t) => {
+    const schedule = { sessions: [{ day: "thursday", type: "lap_swim", start: "11:00", end: "14:00" }] };
+    const page = await fixturePage(t, engine, `
+      <div class="horizon-control"><button data-horizon-button>Now</button></div>
+      <div data-horizon-menu hidden></div>
+      <div class="filters"><button data-filter="access" data-access="memberships">Memberships</button></div>
+      <button data-action="sort-distance">Distance</button>
+      <span data-open-count></span>
+      <table class="board"><tbody><tr data-slug="pool" data-type="pool" data-schedule='${JSON.stringify(schedule)}'>
+        <td data-cell="spot">Pool</td><td data-cell="status">unmounted</td><td data-cell="next"></td>
+      </tr></tbody></table>
+      <div class="detail-root" data-schedule='${JSON.stringify(schedule)}'><span data-field="status">unmounted</span></div>
+      <section class="conditions" data-slug="bay"><span data-field="water_temp">unmounted</span></section>
+      <script type="module">
+        import { mountBoard } from "/js/board.js";
+        import { mountConditions } from "/js/conditions.js";
+        import { mountDetail } from "/js/detail.js";
+        window.snapshots = 0;
+        window.requests = 0;
+        Object.defineProperty(navigator, "geolocation", { configurable: true,
+          value: { getCurrentPosition(success) { window.geoReply = success; } } });
+        window.mountComponents = () => {
+          const board = mountBoard(document, { onChange() { window.snapshots++; } });
+          const detail = mountDetail();
+          const conditions = mountConditions(document, { fetch: async () => {
+            window.requests++;
+            return { ok: true, json: async () => ({ bay: { water_temp_f: 60 } }) };
+          } });
+          return () => { board.dispose(); detail.dispose(); conditions.dispose(); };
+        };
+      </script>`);
+    await page.goto(`${baseURL}/fixture`);
+    await page.waitForFunction(() => Boolean(window.mountComponents));
+    assert.equal(await page.locator('[data-cell="status"]').textContent(), "unmounted");
+    assert.equal(await page.locator('[data-field="status"]').textContent(), "unmounted");
+    assert.equal(await page.evaluate(() => window.requests), 0);
+    await page.evaluate(() => { window.disposeComponents = window.mountComponents(); });
+    await page.waitForFunction(() => document.querySelector('[data-field="water_temp"]').textContent === "60°F");
+    assert.equal(await page.locator('[data-cell="status"]').getAttribute("data-status-value"), "OPEN");
+    await page.locator("[data-horizon-button]").click();
+    assert.equal(await page.locator("[data-horizon-menu]").isHidden(), false);
+    const selectedMenuItem = page.locator('[data-horizon-menu] button[value="tomorrow-morning"]');
+    await selectedMenuItem.focus();
+    await page.clock.fastForward(60_000);
+    assert.equal(await selectedMenuItem.evaluate((item) => document.activeElement === item), true,
+      "minute refresh must retain keyboard focus in an open menu");
+    await selectedMenuItem.press("Escape");
+    await page.getByRole("button", { name: "Distance", exact: true }).click();
+    assert.equal(await page.evaluate(() => typeof window.geoReply), "function");
+    await page.evaluate(() => {
+      window.disposeComponents();
+      window.disposeComponents();
+      window.disposedSnapshots = window.snapshots;
+      document.querySelector('[data-field="status"]').textContent = "disposed";
+    });
+    assert.equal(await page.locator("[data-horizon-menu]").isHidden(), true);
+    await page.locator("[data-horizon-button]").click();
+    await page.getByRole("button", { name: "Memberships", exact: true }).click();
+    await page.clock.fastForward(60_000);
+    await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+    await page.evaluate(() => window.geoReply({ coords: { latitude: 37, longitude: -122 } }));
+    assert.equal(await page.evaluate(() => window.snapshots === window.disposedSnapshots), true);
+    assert.equal(await page.locator('[data-field="status"]').textContent(), "disposed");
+    assert.equal(await page.locator("[data-horizon-menu]").isHidden(), true);
+    await page.evaluate(() => { window.disposeComponents = window.mountComponents(); window.remountedSnapshots = window.snapshots; });
+    await page.getByRole("button", { name: "Memberships", exact: true }).click();
+    assert.equal(await page.getByRole("button", { name: "Memberships", exact: true }).getAttribute("aria-pressed"), "true");
+    assert.equal(await page.evaluate(() => window.snapshots - window.remountedSnapshots), 1, "remount must not duplicate click handlers");
+    assert.equal(await page.evaluate(() => window.requests), 2);
+    const count = await page.evaluate(() => window.snapshots);
+    await page.clock.fastForward(60_000);
+    assert.equal(await page.evaluate(() => window.snapshots), count + 1, "remount must not retain the old interval");
   });
 
   test(`[${engine}] whole-row click navigates; spot link and filters still work`, async (t) => {
@@ -556,7 +743,7 @@ test("[webkit/iPhone] horizon menu tap applies the selection", async (t) => {
   const items = page.locator("[data-horizon-menu] button[role='menuitemradio']");
   const label = (await items.nth(2).textContent()).trim();
   await items.nth(2).tap();
-  await page.waitForTimeout(300);
+  await page.waitForFunction(() => new URL(location.href).searchParams.has("when"));
   assert.ok(new URL(page.url()).searchParams.get("when"), "tap must set ?when=");
   assert.equal((await page.locator("[data-horizon-button]").textContent()).trim(), label);
   assert.equal(await page.locator("[data-time-banner]").isHidden(), false);
