@@ -30,7 +30,7 @@ can run alone or in any order without leaving data for another journey.
 Worker HTTP contracts. Wrangler's `createTestHarness` runs the production Worker
 and routing configuration with disposable static asset fixtures. Every case
 resets both local KV and Cache API storage. It verifies populated responses,
-empty-store recovery, same-origin API behavior across alternating origins, methods, and API/static
+empty-store recovery, same-origin responses, rejected methods, and API/static
 404 routing without running the same API assertions in two browsers. No extra
 test framework or dependency is needed. To focus these checks:
 
@@ -163,3 +163,7 @@ late location result replaced a newer Open Next selection. The fixes preserve
 the previous sort on denial and invalidate stale request callbacks. The new
 suite includes regressions for both, plus hash navigation and a subsequent
 location request.
+
+The root npm override pins Miniflare’s Sharp dependency to 0.35.5, the fix for
+[GHSA-wq5f-xc86-pv6w](https://github.com/advisories/GHSA-wq5f-xc86-pv6w).
+Remove that override when Wrangler’s dependency tree includes the patched release.
