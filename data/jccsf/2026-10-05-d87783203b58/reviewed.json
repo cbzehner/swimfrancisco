@@ -1,0 +1,242 @@
+{
+  "pdf_sha256": "d87783203b58dcb5857a9edb7bc71452c6a73e0f830691887ef48c979cd5f420",
+  "source_pdf_url": "https://www.jccsf.org/fitness/aquatics/",
+  "direct_source": {
+    "configuration": {
+      "capture": {
+        "browser_version": "128.0.6613.137",
+        "captured_at": "2026-10-05T22:20:09.568Z",
+        "configuration": {
+          "playwright_version": "1.60.0",
+          "script_sha256": "8e5c24db09d052cd63888ed77acc3a6a5273434b12f71ed7a2ac03e786535ae4"
+        },
+        "hashes": {
+          "rendered": "892df63886a5ae74ddb8a85458ca9859434fd2eb14e321b619f1ab4658ff5d3f",
+          "screenshot": "4401eb89b9252696ba7558925f34145f24c8a90753bb2ce14e48cb0b129af502",
+          "source": "d87783203b58dcb5857a9edb7bc71452c6a73e0f830691887ef48c979cd5f420"
+        },
+        "method": "cloudflare_browser",
+        "requested_url": "https://www.jccsf.org/fitness/aquatics/",
+        "status": 200,
+        "url": "https://www.jccsf.org/fitness/aquatics/"
+      },
+      "freshness_days": 14,
+      "libraries": {
+        "httpx": "0.28.1",
+        "openpyxl": "3.1.5"
+      },
+      "parser_sha256": "9245e06e2229752047aaba1751039838af82ef712e92181292551a5381e90e57",
+      "python": "3.13.15",
+      "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+      "source_identity": "original_bytes"
+    },
+    "freshness_days": 14,
+    "observed_on": "2026-10-05",
+    "requested_url": "https://www.jccsf.org/fitness/aquatics/",
+    "sha256": "d87783203b58dcb5857a9edb7bc71452c6a73e0f830691887ef48c979cd5f420",
+    "url": "https://www.jccsf.org/fitness/aquatics/"
+  },
+  "slug": "jccsf",
+  "reviewed_at": "2026-10-05",
+  "attested_by": "ci",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [],
+    "closures": [],
+    "effective_end": "2026-10-18",
+    "effective_start": "2026-10-05",
+    "schedule_basis": "swim_schedule",
+    "sessions": [
+      {
+        "day": "monday",
+        "end": "12:00",
+        "evidence": "Monday & Wednesday: 5:30 am \u2013 Noon, 1:30 \u2013 9:45 pm",
+        "pool": "rec",
+        "start": "05:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "monday",
+        "end": "21:45",
+        "evidence": "Monday \u2013 Friday: 5:30 am \u2013 9:45 pm",
+        "pool": "lap",
+        "start": "05:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "monday",
+        "end": "21:45",
+        "evidence": "Monday & Wednesday: 5:30 am \u2013 Noon, 1:30 \u2013 9:45 pm",
+        "pool": "rec",
+        "start": "13:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "11:30",
+        "evidence": "Tuesday: 5:30 \u2013 11:30 am, 12:30 \u2013 9:45 pm",
+        "pool": "rec",
+        "start": "05:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "21:45",
+        "evidence": "Monday \u2013 Friday: 5:30 am \u2013 9:45 pm",
+        "pool": "lap",
+        "start": "05:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "21:45",
+        "evidence": "Tuesday: 5:30 \u2013 11:30 am, 12:30 \u2013 9:45 pm",
+        "pool": "rec",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "12:00",
+        "evidence": "Monday & Wednesday: 5:30 am \u2013 Noon, 1:30 \u2013 9:45 pm",
+        "pool": "rec",
+        "start": "05:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "21:45",
+        "evidence": "Monday \u2013 Friday: 5:30 am \u2013 9:45 pm",
+        "pool": "lap",
+        "start": "05:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "21:45",
+        "evidence": "Monday & Wednesday: 5:30 am \u2013 Noon, 1:30 \u2013 9:45 pm",
+        "pool": "rec",
+        "start": "13:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "12:00",
+        "evidence": "Thursday: 5:30 am \u2013 Noon, 1:00 \u2013 9:45 pm",
+        "pool": "rec",
+        "start": "05:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "21:45",
+        "evidence": "Monday \u2013 Friday: 5:30 am \u2013 9:45 pm",
+        "pool": "lap",
+        "start": "05:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "21:45",
+        "evidence": "Thursday: 5:30 am \u2013 Noon, 1:00 \u2013 9:45 pm",
+        "pool": "rec",
+        "start": "13:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "12:00",
+        "evidence": "Friday: 5:30 \u2013 Noon, 1:30 \u2013 9:45 pm",
+        "pool": "rec",
+        "start": "05:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "21:45",
+        "evidence": "Monday \u2013 Friday: 5:30 am \u2013 9:45 pm",
+        "pool": "lap",
+        "start": "05:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "21:45",
+        "evidence": "Friday: 5:30 \u2013 Noon, 1:30 \u2013 9:45 pm",
+        "pool": "rec",
+        "start": "13:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "08:00",
+        "evidence": "Saturday & Sunday: 7:00 \u2013 8:00 am, 2:00 \u2013 6:45 pm",
+        "pool": "rec",
+        "start": "07:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "18:45",
+        "evidence": "Saturday & Sunday: 7:00 am \u2013 6:45 pm*",
+        "pool": "lap",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "18:45",
+        "evidence": "Saturday & Sunday: 7:00 \u2013 8:00 am, 2:00 \u2013 6:45 pm",
+        "pool": "rec",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "08:00",
+        "evidence": "Saturday & Sunday: 7:00 \u2013 8:00 am, 2:00 \u2013 6:45 pm",
+        "pool": "rec",
+        "start": "07:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "18:00",
+        "evidence": "Saturday & Sunday: 7:00 am \u2013 6:45 pm*",
+        "pool": "lap",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "18:00",
+        "evidence": "Saturday & Sunday: 7:00 \u2013 8:00 am, 2:00 \u2013 6:45 pm",
+        "pool": "rec",
+        "start": "14:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "18:45",
+        "evidence": "Saturday & Sunday: 7:00 \u2013 8:00 am, 2:00 \u2013 6:45 pm",
+        "excluded_dates": [
+          "2026-10-18"
+        ],
+        "pool": "rec",
+        "start": "18:00",
+        "type": "family_swim"
+      },
+      {
+        "day": "sunday",
+        "end": "18:45",
+        "evidence": "Saturday & Sunday: 7:00 am \u2013 6:45 pm*",
+        "excluded_dates": [
+          "2026-10-18"
+        ],
+        "pool": "lap",
+        "start": "18:00",
+        "type": "lap_swim"
+      }
+    ]
+  }
+}
