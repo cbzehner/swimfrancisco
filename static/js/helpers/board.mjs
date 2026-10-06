@@ -156,8 +156,8 @@ function scheduleInWindow(schedule, dateISO) {
 //   4. null if no schedules at all.
 //
 // Must stay in sync with `pick_active_schedule` in
-// schedule-tools/src/schedules/merge.py and the `active_schedule` block in
-// templates/spots/page.html. All three impls share the same predicate.
+// schedule-tools/src/schedules/merge.py. The detail template renders every
+// window; detail.js uses this predicate to select the initially open one.
 function resolveScheduleForDate(schedule, dateISO) {
   if (!schedule || typeof schedule !== "object") return null;
   // Accept either an envelope (`{schedules: [...]}`) or a flat schedule
@@ -985,12 +985,14 @@ function evaluateSpot(spot, horizon, now, allowedTypes) {
       sortRank: window ? 2 : 0, openOffset: window ? 2 : 0 };
   }
   const asOf = horizon.kind === "window" ? horizon.date : now;
+  const hasSwimStatus = scheduleHasSessions(spot.schedule, asOf)
+    || resolveActiveSchedule(spot.schedule, asOf)?.schedule_basis === "temporarily_closed";
   if (horizon.kind === "window") {
-    return scheduleHasSessions(spot.schedule, asOf)
+    return hasSwimStatus
       ? computeWindowAvailability(spot.schedule, horizon, allowedTypes)
       : computeAccessWindowAvailability(spot.schedule, horizon);
   }
-  if (scheduleHasSessions(spot.schedule, asOf)) return computeStatus(spot.schedule, now, allowedTypes);
+  if (hasSwimStatus) return computeStatus(spot.schedule, now, allowedTypes);
   if (scheduleHasAccessHours(spot.schedule, asOf)) return computeAccessStatus(spot.schedule, now);
   return spot.accessMode !== "public"
     ? { status: "CHECK", next: "OFFICIAL SITE", nextKind: "official_site", sortRank: 2, openOffset: Infinity }

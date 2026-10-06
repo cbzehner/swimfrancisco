@@ -31,9 +31,10 @@
       "type": "string",
       "enum": [
         "human",
-        "ci"
+        "ci",
+        "agent-reference"
       ],
-      "description": "Who signed this snapshot. Omit on legacy files. Carry copies the prior value and sets carried_from."
+      "description": "Who signed or produced this snapshot. Agent references are development evidence, not human approval. Omit on legacy files. Carry copies the prior value and sets carried_from."
     },
     "carried_from": {
       "type": "string",

@@ -13,13 +13,16 @@ from pathlib import Path
 from typing import Literal
 from urllib.parse import unquote, urlparse
 
+import click
 import httpx
+import tomlkit
 
 from ._time import pacific_today
 from .direct_sources.http import BOT_USER_AGENT
-from .models import PoolEntry
+from .fetch import MAX_PDF_BYTES, FetchError, get_with_retries
+from .models import DiscoveryDocument, DiscoveryState, PoolEntry
 from .paths import REGISTRY_PATH, TMP_DIR
-from .registry import load_registry
+from .registry import load_registry, parse_discovery
 from .signals import _has_grid_header, extract_page_texts
 from .window_dates import (
     WindowSource,
@@ -34,6 +37,8 @@ RollAction = Literal["adopt", "unchanged", "flag"]
 
 DOCUMENT_CENTER_BASE = "https://sfrecpark.org/DocumentCenter/View"
 VIEW_ID_RE = re.compile(r"/DocumentCenter/View/(\d+)", re.IGNORECASE)
+# Reasons that mean "this run learned too little to rewrite registry.toml".
+REGISTRY_PRESERVING_REASONS = frozenset({"fetch_error", "persisted_fetch_error"})
 BAND_WINDOW = 40
 BAND_DELAY_SECONDS = 0.2
 PAGE_TIMEOUT_SECONDS = 30.0
@@ -63,9 +68,6 @@ _SPLIT_RE = re.compile(
     r"(?i)(?:cool\s+pool|warm\s+pool|(?<![A-Za-z])(?:cool|warm)(?-i:(?![a-z])))"
 )
 _NON_PDF_NAME_RE = re.compile(r"(?i)\.(?:jpe?g|png|gif|webp|html?)\s*$")
-_DISCOVER_LINE_RE = re.compile(r"^discover:\s+(\d{4}-\d{2}-\d{2})\s+(\S+)(?:\s+(.*))?$")
-_ID_KIND_SOURCE_RE = re.compile(r"id=(\d+):([a-z_]+):(table|band|persisted)\b")
-_BAND_SESSION_GRID_RE = re.compile(r"band_session_grid\s+id=(\d+)")
 _FILENAME_QUOTED_RE = re.compile(r'filename\s*=\s*"([^"]+)"', re.IGNORECASE)
 _FILENAME_STAR_RE = re.compile(
     r"filename\*\s*=\s*(?:UTF-8''|utf-8'')([^;]+)", re.IGNORECASE
@@ -109,6 +111,9 @@ class DiscoverDecision:
     candidates: tuple[ClassifiedDocument, ...]
     extra_candidates: tuple[ClassifiedDocument, ...]
     blocking: bool
+    # Persisted view IDs this run could not fetch. Their presence is why the
+    # registry is left alone: rewriting the discovery state would forget them.
+    unfetched_persisted: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -388,9 +393,11 @@ def _sequential_roll(
     if any(item.window_start is None or item.window_end is None for item in kept):
         return decide("flag", "windows_unparsed", kind="session_grid", blocking=True)
     for index, left in enumerate(kept):
-        assert left.window_start is not None and left.window_end is not None
+        if left.window_start is None or left.window_end is None:
+            raise ValueError("sequential roll needs parsed windows")
         for right in kept[index + 1 :]:
-            assert right.window_start is not None and right.window_end is not None
+            if right.window_start is None or right.window_end is None:
+                raise ValueError("sequential roll needs parsed windows")
             if not windows_disjoint(
                 (left.window_start, left.window_end),
                 (right.window_start, right.window_end),
@@ -470,37 +477,20 @@ def collapse_grid_candidates(items: list[dict]) -> list[dict]:
     return kept
 
 
-def persisted_band_ids(notes: str | None) -> frozenset[int]:
-    line = _discover_machine_line(notes)
-    if line is None:
+def persisted_discovery_ids(discovery: DiscoveryState | None) -> frozenset[int]:
+    if discovery is None:
         return frozenset()
-    match = _DISCOVER_LINE_RE.match(line)
-    if match is None or match.group(2) == "extra":
-        return frozenset()
-    ids: set[int] = set()
-    for token in _BAND_SESSION_GRID_RE.finditer(line):
-        ids.add(int(token.group(1)))
-    for token in _ID_KIND_SOURCE_RE.finditer(line):
-        view_id, kind, source = int(token.group(1)), token.group(2), token.group(3)
-        if kind == "session_grid" and source in {"band", "persisted"}:
-            ids.add(view_id)
-    return frozenset(ids)
-
-
-def rewrite_registry_pdf_url(path: Path, slug: str, url: str) -> None:
-    text = path.read_text()
-    start, end = _pool_block_span(text, slug)
-    block = text[start:end]
-    updated = _replace_quoted_field(block, "pdf_url", url)
-    if updated == block:
-        return
-    path.write_text(text[:start] + updated + text[end:])
+    return frozenset(
+        document.view_id
+        for document in discovery.documents
+        if document.kind == "session_grid" and document.origin in {"band", "persisted"}
+    )
 
 
 def apply_discover_decision(path: Path, decision: DiscoverDecision) -> None:
     # A page that failed to fetch tells us nothing about the pool. Never let
     # it overwrite persisted band IDs, sequential siblings, or extras.
-    if decision.reason == "fetch_error":
+    if decision.reason in REGISTRY_PRESERVING_REASONS:
         return
     text = path.read_text()
     start, end = _pool_block_span(text, slug=decision.slug)
@@ -544,7 +534,7 @@ def discover_all(
     band_scope = _band_scope_entries(rec_park, registry_path)
     max_id = _max_pdf_view_id(band_scope)
     persisted_by_slug = {
-        entry.slug: persisted_band_ids(entry.notes) for entry in band_scope
+        entry.slug: persisted_discovery_ids(entry.discovery) for entry in band_scope
     }
     all_persisted = (
         set().union(*persisted_by_slug.values()) if persisted_by_slug else set()
@@ -556,6 +546,9 @@ def discover_all(
     headers = {
         "User-Agent": BOT_USER_AGENT,
         "Accept": "text/html,application/xhtml+xml,application/pdf;q=0.9,*/*;q=0.8",
+        # Bounded PDF reads measure and return raw bytes, so the body must
+        # arrive undecoded.
+        "Accept-Encoding": "identity",
     }
     table_links: dict[str, list[DocumentLink]] = {}
     fetch_errors: set[str] = set()
@@ -566,8 +559,9 @@ def discover_all(
     ) as client:
         for entry in selected:
             try:
-                page = _get_with_retries(client, entry.official_page_url, sleep=sleep)
-                page.raise_for_status()
+                page = get_with_retries(
+                    client, entry.official_page_url, sleep=sleep, retries=PAGE_RETRIES
+                )
                 table_links[entry.slug] = discover_facility_documents(page.text)
             except Exception:  # noqa: BLE001
                 fetch_errors.add(entry.slug)
@@ -584,13 +578,13 @@ def discover_all(
             current_ids.add(adopt[1])
         immediate_ids = sorted(table_ids | current_ids)
         for view_id in immediate_ids:
-            views[view_id] = _fetch_view(client, view_id)
+            views[view_id] = _fetch_view(client, view_id, sleep=sleep)
 
         remaining = sorted(view_id for view_id in probe if view_id not in views)
         for index, view_id in enumerate(remaining):
             if index and delay:
                 sleep(delay)
-            views[view_id] = _fetch_view(client, view_id)
+            views[view_id] = _fetch_view(client, view_id, sleep=sleep)
 
     dropped_persisted = {
         view_id
@@ -684,7 +678,9 @@ def discover_all(
                 entry, classified, pin_window=_pin_window(entry, views)
             )
         if adopt is not None and adopt[0] == entry.slug:
-            decision = _operator_adopt_decision(entry, classified, views, adopt[1])
+            decision = _operator_adopt_decision(
+                entry, classified, views, adopt[1], reason=decision.reason
+            )
         decision = _with_persisted_survivors(
             decision,
             persisted_by_slug.get(entry.slug, frozenset()),
@@ -695,7 +691,7 @@ def discover_all(
 
     if not dry_run:
         for decision in decisions:
-            apply_discover_decision(registry_path, decision)  # no-op on fetch_error
+            apply_discover_decision(registry_path, decision)  # no-op when a fetch failed
 
     report_dir.mkdir(parents=True, exist_ok=True)
     report_path = report_dir / "discovery-report.md"
@@ -730,20 +726,29 @@ def _operator_adopt_decision(
     classified: list[ClassifiedDocument],
     views: dict[int, _ViewFetch],
     view_id: int,
+    *,
+    reason: str,
 ) -> DiscoverDecision:
+    # Adopt asserts "this PDF is the pool's current schedule". A failed page or
+    # PDF fetch proves nothing, so refuse instead of relabelling the failure.
+    fetched = views.get(view_id)
+    pdf_bytes = fetched.content if fetched is not None and fetched.is_pdf else None
+    if pdf_bytes is None or reason == "fetch_error":
+        raise click.ClickException(
+            f"{entry.slug}: cannot adopt a source that failed to fetch"
+        )
     match = next((item for item in classified if item.link.view_id == view_id), None)
     if match is None:
-        fetched = views.get(view_id)
         link = DocumentLink(
             view_id=view_id,
             href=absolute_view_url(view_id),
-            anchor_text=(fetched.filename if fetched else None) or "",
+            anchor_text=fetched.filename or "",
         )
         match = classify_pdf(
             link,
             pool_slug=entry.slug,
-            pdf_bytes=fetched.content if fetched and fetched.is_pdf else None,
-            filename=fetched.filename if fetched else None,
+            pdf_bytes=pdf_bytes,
+            filename=fetched.filename,
             source="persisted",
         )
         classified = [*classified, match]
@@ -752,7 +757,7 @@ def _operator_adopt_decision(
         for item in classified
         if item.kind != "session_grid" and item.link.view_id != view_id
     )
-    # Sibling session_grids stay on candidates so adopt notes keep them.
+    # Sibling session_grids stay on candidates so adopted discovery state keeps them.
     return DiscoverDecision(
         slug=entry.slug,
         action="adopt",
@@ -777,28 +782,38 @@ def _with_persisted_survivors(
     adopted_id = (
         view_id_from_url(decision.new_url or "") if decision.action == "adopt" else None
     )
+    unfetched: list[int] = []
     for view_id in sorted(previous):
         if view_id in dropped or view_id in current_ids or view_id == adopted_id:
             continue
         fetched = views.get(view_id)
-        filename = fetched.filename if fetched else None
-        page_text = (
-            _first_page_text(fetched.content)
-            if fetched is not None and fetched.is_pdf
-            else ""
-        )
+        if fetched is None or not fetched.is_pdf:
+            # No bytes, no claim: asserting an unfetched ID is a session_grid
+            # hides it from expiry and makes the pipeline re-fetch it forever.
+            unfetched.append(view_id)
+            continue
         survivors.append(
-            _classified_with_window(
-                link=DocumentLink(
+            classify_pdf(
+                DocumentLink(
                     view_id=view_id,
                     href=absolute_view_url(view_id),
-                    anchor_text=filename or "",
+                    anchor_text=fetched.filename or "",
                 ),
-                kind="session_grid",
-                filename=filename,
+                pool_slug=decision.slug,
+                pdf_bytes=fetched.content,
+                filename=fetched.filename,
                 source="persisted",
-                page_text=page_text,
             )
+        )
+    if unfetched:
+        # Leave registry.toml alone so the persisted IDs we could not fetch
+        # survive in structured discovery state rather than being forgotten.
+        return replace(
+            decision,
+            candidates=decision.candidates + tuple(survivors),
+            reason="persisted_fetch_error",
+            blocking=True,
+            unfetched_persisted=tuple(unfetched),
         )
     if not survivors:
         return decision
@@ -942,31 +957,21 @@ def _max_pdf_view_id(entries: list[PoolEntry]) -> int | None:
     return max(ids) if ids else None
 
 
-def _get_with_retries(
-    client: httpx.Client,
-    url: str,
-    *,
-    sleep: Callable[[float], None],
-    retries: int = PAGE_RETRIES,
-) -> httpx.Response:
-    last_error: Exception | None = None
-    for attempt in range(retries + 1):
-        try:
-            return client.get(url)
-        except httpx.HTTPError as exc:
-            last_error = exc
-            if attempt >= retries:
-                break
-            sleep(0.25 * (attempt + 1))
-    assert last_error is not None
-    raise last_error
-
-
-def _fetch_view(client: httpx.Client, view_id: int) -> _ViewFetch:
+def _fetch_view(
+    client: httpx.Client, view_id: int, *, sleep: Callable[[float], None]
+) -> _ViewFetch:
     url = absolute_view_url(view_id)
     try:
-        response = client.get(url)
-    except httpx.HTTPError:
+        response = get_with_retries(
+            client, url, sleep=sleep, retries=PAGE_RETRIES, max_bytes=MAX_PDF_BYTES
+        )
+        content = response.content or b""
+    except httpx.HTTPStatusError as exc:
+        # A 404 still tells discover the document is gone; the body does not.
+        response, content = exc.response, b""
+    except (httpx.HTTPError, FetchError):
+        # Transport failure, oversized body, unreadable encoding: the document
+        # is unusable, but one bad DocumentCenter ID must not end the run.
         return _ViewFetch(
             view_id=view_id,
             status_code=0,
@@ -977,7 +982,6 @@ def _fetch_view(client: httpx.Client, view_id: int) -> _ViewFetch:
         )
     content_type = response.headers.get("content-type", "")
     filename = _filename_from_headers(response.headers)
-    content = response.content or b""
     is_pdf = response.status_code == 200 and (
         "pdf" in content_type.lower() or content.lstrip().startswith(b"%PDF")
     )
@@ -1151,17 +1155,11 @@ def _apply_decision_to_block(block: str, decision: DiscoverDecision) -> str:
             updated, "missing_current_schedule", insert=True
         )
 
-    existing_notes = _block_notes(updated)
-    machine, human = _split_notes(existing_notes)
-    desired = _desired_machine_line(decision)
-    if (
-        desired is not None
-        and machine is not None
-        and _machine_key(machine) == _machine_key(desired)
-    ):
-        desired = machine
-    composed = _compose_notes(desired, human)
-    return _replace_or_insert_notes(updated, composed)
+    existing_discovery = _block_discovery(updated, decision.slug)
+    desired = _desired_discovery(decision)
+    if desired == existing_discovery:
+        return updated
+    return _replace_or_insert_discovery(updated, desired)
 
 
 def _off_table_current_grids(decision: DiscoverDecision) -> list[ClassifiedDocument]:
@@ -1198,8 +1196,7 @@ def _sibling_session_grids(decision: DiscoverDecision) -> list[ClassifiedDocumen
     return out
 
 
-def _desired_machine_line(decision: DiscoverDecision) -> str | None:
-    date = pacific_today().isoformat()
+def _desired_discovery(decision: DiscoverDecision) -> DiscoveryState | None:
     extras = [item for item in decision.extra_candidates if item.kind != "session_grid"]
     persist = _off_table_current_grids(decision)
     siblings = _sibling_session_grids(decision)
@@ -1226,45 +1223,48 @@ def _desired_machine_line(decision: DiscoverDecision) -> str | None:
                     continue
                 seen_listed.add(item.link.view_id)
                 listed.append(item)
-            tokens = " ".join(
-                [_id_token(item, prefix_band=True) for item in listed]
-                + [_id_token(item) for item in extras]
+            documents = listed + extras
+            return DiscoveryState(
+                action=decision.action,
+                reason=decision.reason,
+                documents=tuple(
+                    DiscoveryDocument(
+                        view_id=item.link.view_id,
+                        kind=item.kind,
+                        origin=item.source,
+                    )
+                    for item in documents
+                ),
             )
-            return (
-                f"discover: {date} {decision.action} {decision.reason} {tokens}"
-            ).rstrip()
         if not extras:
             return None
-        tokens = " ".join(_id_token(item) for item in extras)
-        return f"discover: {date} extra {tokens}".rstrip()
+        return DiscoveryState(
+            action=decision.action,
+            reason=decision.reason,
+            documents=tuple(
+                DiscoveryDocument(
+                    view_id=item.link.view_id,
+                    kind=item.kind,
+                    origin=item.source,
+                )
+                for item in extras
+            ),
+        )
 
-    tokens = _flag_tokens(decision)
-    reason = decision.reason
-    return f"discover: {date} flag {reason}{tokens}".rstrip()
-
-
-def _flag_tokens(decision: DiscoverDecision) -> str:
-    parts: list[str] = []
+    documents: list[DiscoveryDocument] = []
     seen: set[int] = set()
     for item in decision.candidates:
         if item.link.view_id in seen:
             continue
         seen.add(item.link.view_id)
-        parts.append(_id_token(item, prefix_band=True))
-    if not parts:
-        return ""
-    return " " + " ".join(parts)
-
-
-def _id_token(item: ClassifiedDocument, *, prefix_band: bool = False) -> str:
-    token = f"id={item.link.view_id}:{item.kind}:{item.source}"
-    if (
-        prefix_band
-        and item.kind == "session_grid"
-        and item.source in {"band", "persisted"}
-    ):
-        return f"band_session_grid {token}"
-    return token
+        documents.append(
+            DiscoveryDocument(
+                view_id=item.link.view_id,
+                kind=item.kind,
+                origin=item.source,
+            )
+        )
+    return DiscoveryState(action="flag", reason=decision.reason, documents=tuple(documents))
 
 
 def _ensure_source_status(block: str, status: str, *, insert: bool) -> str:
@@ -1273,7 +1273,7 @@ def _ensure_source_status(block: str, status: str, *, insert: bool) -> str:
     if match:
         if match.group(1) == status:
             return block
-        if status == "published" or insert or match.group(1) != status:
+        if status == "published" or insert:
             return pattern.sub(f'source_status = "{status}"', block, count=1)
         return block
     if not insert:
@@ -1298,7 +1298,7 @@ def _insert_field_after(block: str, after_field: str, field: str, value: str) ->
     return block[: match.end()] + f'{field} = "{value}"\n' + block[match.end() :]
 
 
-def _block_notes(block: str) -> str | None:
+def _block_discovery(block: str, slug: str) -> DiscoveryState | None:
     try:
         parsed = tomllib.loads(block)
     except tomllib.TOMLDecodeError:
@@ -1306,93 +1306,41 @@ def _block_notes(block: str) -> str | None:
     pool = parsed.get("pool")
     raw = None
     if isinstance(pool, list) and pool:
-        raw = pool[0].get("notes")
+        raw = pool[0].get("discovery")
     elif isinstance(pool, dict):
-        raw = pool.get("notes")
-    return raw if isinstance(raw, str) else None
+        raw = pool.get("discovery")
+    return parse_discovery(raw, slug)
 
 
-def _notes_span(block: str) -> tuple[int, int] | None:
-    triple = re.search(r'^notes\s*=\s*"""', block, re.MULTILINE)
-    if triple:
-        close = block.find('"""', triple.end())
-        if close == -1:
-            raise DiscoverError("unterminated triple-quoted notes")
-        return triple.start(), close + 3
-    single = re.search(r'^notes\s*=\s*"(?:[^"\\]|\\.)*"', block, re.MULTILINE)
-    if single:
-        return single.start(), single.end()
-    return None
-
-
-def _replace_or_insert_notes(block: str, notes: str | None) -> str:
-    span = _notes_span(block)
-    if notes is None:
-        if span is None:
+def _replace_or_insert_discovery(block: str, discovery: DiscoveryState | None) -> str:
+    try:
+        document = tomlkit.parse(block)
+    except tomlkit.exceptions.ParseError as exc:
+        raise DiscoverError("cannot update invalid registry TOML block") from exc
+    pools = document.get("pool")
+    if not isinstance(pools, list) or not pools:
+        raise DiscoverError("registry block does not contain a pool entry")
+    pool = pools[0]
+    if discovery is None:
+        if "discovery" not in pool:
             return block
-        start, end = span
-        if end < len(block) and block[end] == "\n":
-            end += 1
-        return block[:start] + block[end:]
-    rendered = _render_notes_assignment(notes)
-    if span is None:
-        return _insert_notes(block, rendered)
-    start, end = span
-    return block[:start] + rendered + block[end:]
+        del pool["discovery"]
+        return tomlkit.dumps(document)
+
+    value = tomlkit.parse(_render_discovery_assignment(discovery))["discovery"]
+    pool["discovery"] = value
+    return tomlkit.dumps(document)
 
 
-def _insert_notes(block: str, assignment: str) -> str:
-    for field in ("source_status", "official_page_url"):
-        match = re.search(
-            rf'^({re.escape(field)}\s*=\s*".*?"[ \t]*)(\n)', block, re.MULTILINE
-        )
-        if match:
-            return block[: match.end()] + assignment + "\n" + block[match.end() :]
-    return block.rstrip() + "\n" + assignment + "\n"
-
-
-def _render_notes_assignment(notes: str) -> str:
-    if "\n" in notes or notes.startswith("discover:"):
-        return f'notes = """\n{notes}\n"""'
-    escaped = notes.replace("\\", "\\\\").replace('"', '\\"')
-    return f'notes = "{escaped}"'
-
-
-def _split_notes(notes: str | None) -> tuple[str | None, str]:
-    if not notes:
-        return None, ""
-    lines = notes.splitlines()
-    index = 0
-    while index < len(lines) and not lines[index].strip():
-        index += 1
-    machine: str | None = None
-    if index < len(lines) and lines[index].lstrip().startswith("discover:"):
-        machine = lines[index].strip()
-        index += 1
-        if index < len(lines) and not lines[index].strip():
-            index += 1
-    human = "\n".join(lines[index:]).strip("\n")
-    return machine, human
-
-
-def _compose_notes(machine: str | None, human: str) -> str | None:
-    human = human.strip("\n")
-    if machine and human:
-        return f"{machine}\n\n{human}"
-    if machine:
-        return machine
-    if human:
-        return human
-    return None
-
-
-def _discover_machine_line(notes: str | None) -> str | None:
-    machine, _human = _split_notes(notes)
-    return machine
-
-
-def _machine_key(line: str) -> str:
-    return re.sub(r"^discover:\s+\d{4}-\d{2}-\d{2}\s+", "discover: ", line.strip())
+def _render_discovery_assignment(discovery: DiscoveryState) -> str:
+    documents = ", ".join(
+        f'{{ id = {item.view_id}, kind = "{item.kind}", origin = "{item.origin}" }}'
+        for item in discovery.documents
+    )
+    return (
+        f'discovery = {{ action = "{discovery.action}", '
+        f'reason = "{discovery.reason}", documents = [{documents}] }}'
+    )
 
 
 def _decision_to_json(decision: DiscoverDecision) -> dict:
@@ -1404,6 +1352,7 @@ def _decision_to_json(decision: DiscoverDecision) -> dict:
         "kind": decision.kind,
         "reason": decision.reason,
         "blocking": decision.blocking,
+        "unfetched_persisted": list(decision.unfetched_persisted),
         "candidates": [_classified_to_json(item) for item in decision.candidates],
         "extra_candidates": [
             _classified_to_json(item) for item in decision.extra_candidates
@@ -1511,7 +1460,13 @@ def _render_report(
         lines.append(f"- reason: {decision.reason}")
         lines.append(f"- blocking: {decision.blocking}")
         if decision.reason == "fetch_error":
-            lines.append("- registry: unchanged (facility page failed; prior notes kept)")
+            lines.append("- registry: unchanged (facility page failed; prior discovery state kept)")
+        elif decision.reason == "persisted_fetch_error":
+            failed = ", ".join(str(view_id) for view_id in decision.unfetched_persisted)
+            lines.append(
+                f"- registry: unchanged (persisted view {failed} failed to fetch; "
+                "discovery state kept so the ID is not forgotten)"
+            )
         if decision.candidates:
             listed = ", ".join(
                 f"{item.link.view_id}:{item.kind}:{item.source}"

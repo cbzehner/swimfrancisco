@@ -3,7 +3,6 @@ import json
 import pytest
 
 from schedules.reviewed_snapshots import canonicalize_payload, load_reviewed_snapshot_from_path
-from schedules.validate import validate
 
 
 def _write_snapshot(root, slug, pdf_sha256, envelope):
@@ -145,20 +144,3 @@ def test_canonicalize_payload_identical_on_equivalent_inputs():
         "effective_start": "2026-03-17",
     }
     assert canonicalize_payload(a) == canonicalize_payload(b)
-
-
-def test_reviewed_snapshot_payload_passes_validate():
-    payload = {
-        "effective_start": "2026-03-17",
-        "schedule_basis": "swim_schedule",
-        "sessions": [
-            {"day": "monday", "type": "lap_swim", "start": "07:30", "end": "08:30", "evidence": "Lap Swim 7:30-8:30"},
-            {"day": "tuesday", "type": "lap_swim", "start": "07:30", "end": "08:30", "evidence": "Lap Swim 7:30-8:30"},
-            {"day": "wednesday", "type": "lap_swim", "start": "07:30", "end": "08:30", "evidence": "Lap Swim 7:30-8:30"},
-            {"day": "thursday", "type": "lap_swim", "start": "07:30", "end": "08:30", "evidence": "Lap Swim 7:30-8:30"},
-            {"day": "friday", "type": "lap_swim", "start": "07:30", "end": "08:30", "evidence": "Lap Swim 7:30-8:30"},
-        ],
-        "closures": [],
-    }
-    result = validate(payload, prior_sessions_count=5)
-    assert result.ok

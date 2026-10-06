@@ -11,11 +11,11 @@
 //   pick water cells (nearshore land cells return null). ~1 day latency,
 //   known cold bias inside the bay — last-resort layer only.
 
+import { fetchWithTimeout } from "./http.ts";
 import { readingFromC, type TempReading } from "./temp.ts";
 
 const STATION_BASE = "https://erddap.sensors.ioos.us/erddap/tabledap";
 const SST_BASE = "https://coastwatch.pfeg.noaa.gov/erddap/griddap/jplMURSST41.json";
-const FETCH_TIMEOUT_MS = 10_000;
 
 // observedAt is ISO 8601 UTC for both fetchers.
 
@@ -27,10 +27,7 @@ interface ErddapTable {
 }
 
 async function erddapGet(label: string, url: string): Promise<ErddapTable | null> {
-  const res = await fetch(url, {
-    headers: { accept: "application/json" },
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-  });
+  const res = await fetchWithTimeout(url, "application/json");
   if (res.status === 404) {
     // Distinguish "query matched nothing" from a genuinely missing dataset:
     // both are 404, but the empty-result body names nRows.

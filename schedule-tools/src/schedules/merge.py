@@ -12,11 +12,18 @@ from .models import DAY_ORDER
 _DAY_INDEX = {day: index for index, day in enumerate(DAY_ORDER)}
 
 
+# A window that ended within this many days of the publish date still gets
+# shipped, so a reader landing on the site right after a season change can
+# still see the schedule that just ended.
+EXPIRED_WINDOW_GRACE_DAYS = 14
+
+
 def merge(
     pool_md_path: Path,
     extracted: dict[str, Any],
     *,
     last_verified_at: str | None = None,
+    today: date | None = None,
 ) -> bool:
     """Merge an extracted schedule into a spot's [[extra.schedules]] array.
 
@@ -57,6 +64,8 @@ def merge(
     else:
         stored = _close_overlapping(stored, target_start)
         stored[target_start] = _StoredSchedule(after, last_verified_at)
+
+    stored = _without_expired_windows(stored, today or pacific_today())
 
     new_aot = tomlkit.aot()
     for start in sorted(stored):
@@ -194,6 +203,34 @@ def _close_overlapping(
         else:
             closed[start] = item
     return closed
+
+
+def _without_expired_windows(
+    stored: dict[str, _StoredSchedule], today: date
+) -> dict[str, _StoredSchedule]:
+    """Drop long-expired windows, but never the last current or unbounded one.
+
+    Spot files otherwise accumulate every window ever published and the
+    template ships them all.
+    """
+    today_iso = today.isoformat()
+    cutoff = (today - timedelta(days=EXPIRED_WINDOW_GRACE_DAYS)).isoformat()
+
+    def window_end(item: _StoredSchedule) -> str | None:
+        end = item.payload.get("effective_end")
+        return end if isinstance(end, str) and end else None
+
+    def still_running(item: _StoredSchedule) -> bool:
+        end = window_end(item)
+        return end is None or end >= today_iso
+
+    if not any(still_running(item) for item in stored.values()):
+        return stored
+    return {
+        start: item
+        for start, item in stored.items()
+        if still_running(item) or (window_end(item) or "") >= cutoff
+    }
 
 
 def _day_before(iso: str) -> str:

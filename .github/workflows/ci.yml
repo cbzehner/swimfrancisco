@@ -1,7 +1,8 @@
 name: ci
 
 # Runs full verification. Production Workers Builds waits for this
-# workflow's successful push run for its exact commit before building.
+# workflow's successful push run for its exact commit before building,
+# and schedule promotion waits for one on its auto/schedules branch.
 #
 # Public-repo safety: read-only permissions, no secrets used.
 
@@ -20,6 +21,10 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    # Matches the timezone the justfile pins locally, so a clock-reading
+    # test cannot pass in one place and fail in the other.
+    env:
+      TZ: America/Los_Angeles
     steps:
       - uses: actions/checkout@v4
 

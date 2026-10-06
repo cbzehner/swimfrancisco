@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from datetime import datetime, timezone
+from io import BytesIO
 from pathlib import Path
 
-from .models import GroundingResult
 from .paths import DATA_DIR, all_review_dirs, artifact_path, parse_review_dir_name, relative_to_repo
 
 
@@ -74,6 +75,51 @@ def _sha256_json(value: dict) -> str:
     return hashlib.sha256(json.dumps(value, sort_keys=True).encode("utf-8")).hexdigest()
 
 
+# Cloudflare rewrites its email obfuscation on every response, so these two
+# payloads carry no schedule and must not change a capture's identity.
+_CFEMAIL_ATTRIBUTE = re.compile(rb"""\s*data-cfemail=["'][0-9a-fA-F]*["']""")
+_CFEMAIL_HREF = re.compile(rb"/cdn-cgi/l/email-protection#[0-9a-fA-F]*")
+
+
+def workbook_facts(content: bytes) -> dict[str, dict]:
+    """Everything the workbook parser reads: cell values, visibility, merges.
+
+    The Google Sheets export reorders ``sharedStrings.xml`` and ``styles.xml``
+    between downloads of an unchanged sheet, so the archive bytes are not an
+    identity. What the parser reads is: values, which sheets are visible
+    (``providers/koret.py`` skips the hidden ones), and the merged ranges it
+    reads closures and banners from.
+    """
+    from openpyxl import load_workbook
+    workbook = load_workbook(BytesIO(content), data_only=True)
+    return {
+        sheet.title: {
+            "state": sheet.sheet_state,
+            "merges": sorted(str(area) for area in sheet.merged_cells.ranges),
+            "cells": [[None if cell.value is None else str(cell.value) for cell in row]
+                      for row in sheet.iter_rows()],
+        }
+        for sheet in workbook.worksheets
+    }
+
+
+def canonical_source_sha256(kind: str, content: bytes) -> str:
+    """The identity of a captured document, ignoring per-response noise.
+
+    Raw bytes stay the published identity: ``source.sha256`` and every
+    artifact's ``pdf_sha256`` keep hashing the file as it was stored. This hash
+    answers a narrower question — is this fetch the document we already hold? —
+    so a rotating Cloudflare token or a reshuffled spreadsheet archive cannot
+    mint a new snapshot for an unchanged schedule.
+    """
+    if kind == "html":
+        content = _CFEMAIL_HREF.sub(b"/cdn-cgi/l/email-protection",
+                                    _CFEMAIL_ATTRIBUTE.sub(b"", content))
+    elif kind == "xlsx":
+        content = json.dumps(workbook_facts(content), sort_keys=True).encode("utf-8")
+    return hashlib.sha256(content).hexdigest()
+
+
 def save_artifact_bundle(
     *,
     slug: str,
@@ -87,7 +133,6 @@ def save_artifact_bundle(
     payload: dict,
     usage: dict,
     cost_estimate: str,
-    grounding: GroundingResult | None = None,
     details: dict | None = None,
     root: Path = DATA_DIR,
 ) -> dict[str, str]:
@@ -106,23 +151,6 @@ def save_artifact_bundle(
         "cost_estimate": cost_estimate,
         "payload": payload,
     }
-    if grounding is not None:
-        provider_payload["grounding"] = {
-            "grounded_count": grounding.grounded_count,
-            "total": grounding.total,
-            "ratio": round(grounding.ratio, 4),
-            "sessions": [
-                {
-                    "index": entry.index,
-                    "grounded": entry.grounded,
-                    "missing_evidence": entry.missing_evidence,
-                    "evidence_in_pdf": entry.evidence_in_pdf,
-                    "start_in_evidence": entry.start_in_evidence,
-                    "type_in_evidence": entry.type_in_evidence,
-                }
-                for entry in grounding.sessions
-            ],
-        }
     if details is not None:
         provider_payload["details"] = details
     target.write_text(json.dumps(provider_payload, indent=2, sort_keys=True) + "\n")

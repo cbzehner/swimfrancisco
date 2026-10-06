@@ -33,15 +33,9 @@ ViolationCode = Literal[
 
 ReviewNoteKind = Literal[
     "multi_grid_suspected",
-    "provider_session_count_disagreement",
-    "provider_session_diff",
-    "provider_closure_diff",
-    "provider_schedule_effective_diff",
     "delta_session_count_shift",
     "delta_session_types_missing",
     "delta_schedule_effective_regressed",
-    "grounding_coverage_low",
-    "compare_provider_failed",
     "direct_extractor_note",
     "review_carried_forward",
     "url_rolled",
@@ -67,6 +61,7 @@ SourceKind = Literal[
     "pomeroy_html",
     "city_sports_html",
     "equinox_html",
+    "bayclub_html",
     "fitness_sf_html",
     "sfsu_aquatics_html",
     "ucsf_fitness_html",
@@ -87,6 +82,11 @@ ScheduleBasis = Literal[
 ]
 
 
+DiscoveryAction = Literal["adopt", "unchanged", "flag"]
+DiscoveryDocumentKind = Literal["session_grid", "closure_notice", "split_part", "other"]
+DiscoveryDocumentOrigin = Literal["table", "band", "persisted"]
+
+
 @dataclass(frozen=True)
 class Violation:
     code: ViolationCode
@@ -100,6 +100,20 @@ class PoolSource:
 
 
 @dataclass(frozen=True)
+class DiscoveryDocument:
+    view_id: int
+    kind: DiscoveryDocumentKind
+    origin: DiscoveryDocumentOrigin
+
+
+@dataclass(frozen=True)
+class DiscoveryState:
+    action: DiscoveryAction
+    reason: str
+    documents: tuple[DiscoveryDocument, ...] = ()
+
+
+@dataclass(frozen=True)
 class PoolEntry:
     slug: str
     pdf_url: str
@@ -110,6 +124,7 @@ class PoolEntry:
     pool_sources: tuple[PoolSource, ...] = ()
     auto_publish: bool = False
     capture_method: CaptureMethod = "http"
+    discovery: DiscoveryState | None = None
 
 
 @dataclass(frozen=True)
@@ -160,45 +175,6 @@ class ReviewNote:
     kind: ReviewNoteKind
     message: str
     severity: Severity = "warning"
-
-
-@dataclass(frozen=True)
-class SessionGrounding:
-    index: int
-    grounded: bool
-    missing_evidence: bool
-    evidence_in_pdf: bool
-    start_in_evidence: bool
-    type_in_evidence: bool
-    type_in_pdf_text: bool
-    session: dict[str, Any]
-
-
-@dataclass(frozen=True)
-class GroundingSummary:
-    grounded_count: int
-    total: int
-
-    @property
-    def ratio(self) -> float:
-        return self.grounded_count / self.total if self.total else 1.0
-
-
-@dataclass(frozen=True)
-class GroundingResult:
-    sessions: list[SessionGrounding]
-
-    @property
-    def grounded_count(self) -> int:
-        return sum(1 for session in self.sessions if session.grounded)
-
-    @property
-    def total(self) -> int:
-        return len(self.sessions)
-
-    @property
-    def ratio(self) -> float:
-        return self.grounded_count / self.total if self.total else 1.0
 
 
 @dataclass(frozen=True)

@@ -9,21 +9,20 @@ Cloudflare Worker that fetches water conditions (USGS, NOAA CO-OPS, NDBC, ERDDAP
   returns `503` when `CARTO_BASEMAP_API_KEY` is not bound
 
 Conditions responses use `cache-control: public, max-age=900, s-maxage=3600`
-(15 min in the browser, 1 h at the edge). Conditions CORS allows
-`swimfrancisco.com`, `*.swimfrancisco.pages.dev`, and `localhost`. Map
-configuration is same-origin and uses `cache-control: no-store`.
+(15 min in the browser, 1 h at the edge). The API is same-origin and sends no
+CORS headers. Map configuration uses `cache-control: no-store`.
 
 ## Scheduled trigger
 
-A cron trigger runs hourly (`0 * * * *`, see `wrangler.toml`). The scheduled handler calls `assembleAndPersist`, which fetches upstream data and writes the single `conditions` key to KV. The tick that lands at 00:00 PT also fires the Workers Builds deploy hook so date-sensitive rendered HTML turns over.
+A cron trigger runs hourly (`0 * * * *`, see `wrangler.toml`). The scheduled handler calls `assembleAndPersist`, which fetches upstream data and writes the single `conditions` key to KV. Static schedule pages do not depend on the calendar day of the build, so the cron has no build side effect.
 
 Temperature selection rejects station observations that are 24 hours old
 and daily MUR satellite observations that are 72 hours old. Missing,
 invalid, future, or expired readings fall through to the next source.
 Temperature timestamps include a UTC offset; NOAA temperatures use GMT,
 while tide predictions retain station-local times. Cached observations
-must also meet the source age limit before reuse. KV and rebuild failures
-remain failed scheduled tasks after logging.
+must also meet the source age limit before reuse. KV failures remain failed
+scheduled tasks after logging.
 
 The analytics proxy buffers at most 1 MiB per event request and returns
 HTTP 413 for larger payloads, including requests without Content-Length.

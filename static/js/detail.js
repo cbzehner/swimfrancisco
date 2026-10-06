@@ -148,19 +148,22 @@ function renderTodayBlock(root, schedule, now, view, day) {
 
 const REFRESH_INTERVAL_MS = 60_000;
 
+function setScheduleWindowExpanded(scheduleWindow, expanded) {
+  const toggle = scheduleWindow.querySelector(".schedule-window-summary");
+  const content = scheduleWindow.querySelector(".schedule-window-content");
+  if (toggle) toggle.setAttribute("aria-expanded", String(expanded));
+  if (content) content.hidden = !expanded;
+}
+
 function selectScheduleWindow(root, active) {
-  const current = root.querySelector("[data-schedule-window]");
   const key = `${active?.effective_start || ""}/${active?.effective_end || ""}`;
-  if (!current || current.dataset.scheduleWindow === key) return;
-  const templates = [...root.querySelectorAll("template[data-schedule-window-template]")];
-  const selected = templates.find((template) => template.dataset.scheduleWindowTemplate === key);
-  if (!selected) return;
-  current.replaceWith(selected.content.firstElementChild.cloneNode(true));
-  if (!templates.some((template) => template.dataset.scheduleWindowTemplate === current.dataset.scheduleWindow)) {
-    const previous = document.createElement("template");
-    previous.dataset.scheduleWindowTemplate = current.dataset.scheduleWindow;
-    previous.content.append(current);
-    root.append(previous);
+  if (root.dataset.activeScheduleWindow === key) return;
+  root.dataset.activeScheduleWindow = key;
+  const windows = [...root.querySelectorAll("[data-schedule-window]")];
+  const selected = windows.find((window) => window.dataset.scheduleWindow === key);
+  if (selected && windows[0] !== selected) windows[0].before(selected);
+  for (const window of windows) {
+    setScheduleWindowExpanded(window, window.dataset.scheduleWindow === key);
   }
 }
 
@@ -169,18 +172,30 @@ function refreshWindowDates(root, active, now) {
   const today = isoDate(now);
   const windowEnd = new Date(now);
   windowEnd.setDate(windowEnd.getDate() + 14);
-  for (const section of root.querySelectorAll("[data-dated-notices]")) {
+  const activeKey = `${active?.effective_start || ""}/${active?.effective_end || ""}`;
+  for (const scheduleWindow of root.querySelectorAll("[data-schedule-window]")) {
+    const isActive = scheduleWindow.dataset.scheduleWindow === activeKey;
+    for (const section of scheduleWindow.querySelectorAll("[data-dated-notices]")) {
+      if (!isActive) {
+        section.hidden = false;
+        for (const notice of section.querySelectorAll("[data-notice-start]")) notice.hidden = false;
+        continue;
+      }
     for (const notice of section.querySelectorAll("[data-notice-start]")) {
       const { noticeStart: start, noticeEnd: end } = notice.dataset;
       notice.hidden = start > isoDate(windowEnd) || end < today
         || end < (active?.effective_start || "0001-01-01") || start > (active?.effective_end || "9999-12-31");
     }
     section.hidden = ![...section.children].some((notice) => !notice.hidden);
+    }
   }
   const effective = root.querySelector(".meta-effective");
   if (effective && active?.effective_start) {
     effective.textContent = `${t("schedule_effective_from", "Schedule effective from")} ${formatLocalizedISODate(active.effective_start)}`
       + (active.effective_end ? ` ${t("to", "to")} ${formatLocalizedISODate(active.effective_end)}` : "");
+    effective.hidden = false;
+  } else if (effective) {
+    effective.hidden = true;
   }
 }
 
@@ -191,8 +206,10 @@ function refresh(root, schedule, now) {
   const day = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"][now.getDay()];
   const result = applyStatusSlab(root, schedule, now);
   renderTodayBlock(root, schedule, now, result, day);
-  for (const cell of root.querySelectorAll(".weekly-grid [data-day]")) {
-    if (cell.dataset.day === day) cell.dataset.today = "true";
+  const activeKey = `${active?.effective_start || ""}/${active?.effective_end || ""}`;
+  for (const cell of root.querySelectorAll("[data-schedule-window] .weekly-grid [data-day]")) {
+    const inActiveWindow = cell.closest("[data-schedule-window]")?.dataset.scheduleWindow === activeKey;
+    if (inActiveWindow && cell.dataset.day === day) cell.dataset.today = "true";
     else delete cell.dataset.today;
   }
 }
@@ -201,6 +218,13 @@ export function mountDetail(document = globalThis.document, { now = () => new Da
   const controller = new AbortController();
   const root = document.querySelector(".detail-root");
   const schedule = readScheduleAttribute(root);
+  for (const scheduleWindow of root?.querySelectorAll("[data-schedule-window]") || []) {
+    const toggle = scheduleWindow.querySelector(".schedule-window-summary");
+    toggle?.addEventListener("click", () => {
+      setScheduleWindowExpanded(scheduleWindow, toggle.getAttribute("aria-expanded") !== "true");
+    }, { signal: controller.signal });
+  }
+  initPrintWindows(document, controller.signal);
   const update = () => {
     if (!controller.signal.aborted && root && schedule) refresh(root, schedule, pacificWallClockDate(now()));
   };
@@ -212,6 +236,35 @@ export function mountDetail(document = globalThis.document, { now = () => new Da
     refresh: update,
     dispose() { controller.abort(); if (timer !== null) clearInterval(timer); },
   };
+}
+
+function initPrintWindows(document, signal) {
+  let windowStates = [];
+  let noticeStates = [];
+  window.addEventListener("beforeprint", () => {
+    const windows = [...document.querySelectorAll("[data-schedule-window]")];
+    windowStates = windows.map((window) => {
+      const toggle = window.querySelector(".schedule-window-summary");
+      const content = window.querySelector(".schedule-window-content");
+      return [toggle, toggle?.getAttribute("aria-expanded"), content, content?.hidden];
+    });
+    for (const [toggle, , content] of windowStates) {
+      toggle?.setAttribute("aria-expanded", "true");
+      if (content) content.hidden = false;
+    }
+    const notices = [...document.querySelectorAll("[data-schedule-window] [data-dated-notices], [data-schedule-window] [data-notice-start]")];
+    noticeStates = notices.map((notice) => [notice, notice.hidden]);
+    for (const notice of notices) notice.hidden = false;
+  }, { signal });
+  window.addEventListener("afterprint", () => {
+    for (const [toggle, expanded, content, hidden] of windowStates) {
+      if (toggle) toggle.setAttribute("aria-expanded", expanded ?? "true");
+      if (content) content.hidden = hidden;
+    }
+    windowStates = [];
+    for (const [notice, hidden] of noticeStates) notice.hidden = hidden;
+    noticeStates = [];
+  }, { signal });
 }
 
 // Outbound link tracking — the clearest signal that a visit "converted" into

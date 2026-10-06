@@ -350,38 +350,71 @@ test("generated path allowlist excludes credentials, source code, and unexpected
     "data/i18n/dynamic-labels.json",
     "data/mission-community-pool/2026-09-02-67f2a420e8fc/source.pdf",
     "data/mission-community-pool/2026-09-02-67f2a420e8fc/openai-gpt-5-5-2026-04-23.json",
+    "data/mission-community-pool/2026-09-02-67f2a420e8fc/openai-gpt-6-2027-01-30.json",
     "data/north-beach-pool/2026-09-06-67f2a420e8fc/source-bundle.json",
     "data/north-beach-pool/2026-09-06-67f2a420e8fc/openai-pool-bundle.json",
   ]) assert.equal(generatedSchedulePath(path), true, path);
   for (const path of [
     ".env", ".github/workflows/ci.yml", "schedule-tools/src/schedules/publish.py",
     "content/spots/../../.env", "content/spots/pool.md\n", "data/i18n/private.json",
-    "data/dynamic-labels.json",
-    "data/pool/2026-09-02-67f2a420e8fc/request.json", "data/pool/2026-09-02-67f2a420e8fc/gemini-model.json",
+    "data/dynamic-labels.json", "data/i18n/fi.json", "content/spots/mission-community-pool.fi.md",
+    "data/pool/2026-09-02-67f2a420e8fc/request.json", "data/pool/2026-09-02-67f2a420e8fc/other-model.json",
     "data/north-beach-pool/2026-09-06-67f2a420e8fc/bundle.json",
   ]) assert.equal(generatedSchedulePath(path), false, path);
 });
 
-function promotionRepository(t, { path = "content/spots/test-pool.md", symlink = false } = {}) {
+const command = (cwd, args) => execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+
+// One baseline repository for the whole module: building it costs a bare
+// init, a clone, and a commit, and every promotion test wants the same
+// starting point. Each test clones its own writable origin from it, so the
+// pushes one test makes are invisible to the next.
+const baselineRemote = (() => {
+  const directory = mkdtempSync(join(tmpdir(), "swim-promotion-baseline-"));
+  process.on("exit", () => rmSync(directory, { recursive: true, force: true }));
+  const remote = join(directory, "baseline.git");
+  const work = join(directory, "work");
+  command(directory, ["init", "--bare", "--initial-branch=main", remote]);
+  command(directory, ["clone", remote, work]);
+  command(work, ["config", "user.name", "Schedule test"]);
+  command(work, ["config", "user.email", "test@example.invalid"]);
+  writeFileSync(join(work, "seed.txt"), "baseline\n");
+  command(work, ["add", "seed.txt"]);
+  command(work, ["commit", "-m", "Baseline"]);
+  command(work, ["push", "origin", "main"]);
+  return remote;
+})();
+
+function promotionRepository(t, { path = "content/spots/test-pool.md", symlink = false, prune = false, partialPrune = false } = {}) {
   const directory = mkdtempSync(join(tmpdir(), "swim-promotion-test-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const remote = join(directory, "origin.git");
   const work = join(directory, "work");
-  const command = (cwd, args) => execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-  command(directory, ["init", "--bare", "--initial-branch=main", remote]);
+  command(directory, ["clone", "--bare", baselineRemote, remote]);
   command(directory, ["clone", remote, work]);
   const git = (args) => command(work, args);
   git(["config", "user.name", "Schedule test"]);
   git(["config", "user.email", "test@example.invalid"]);
-  writeFileSync(join(work, "seed.txt"), "baseline\n");
-  git(["add", "seed.txt"]);
-  git(["commit", "-m", "Baseline"]);
-  git(["push", "origin", "main"]);
+  const prunedSnapshot = "data/test-pool/2026-09-02-67f2a420e8fc/reviewed.json";
+  if (prune || partialPrune) {
+    mkdirSync(join(work, "data/test-pool/2026-09-02-67f2a420e8fc"), { recursive: true });
+    writeFileSync(join(work, prunedSnapshot), "{}\n");
+    git(["add", prunedSnapshot]);
+    // The partial case leaves a sibling behind, so deleting the review alone
+    // would turn a reviewed capture back into a pending one.
+    if (partialPrune) {
+      writeFileSync(join(work, "data/test-pool/2026-09-02-67f2a420e8fc/source.sha256"), "a".repeat(64) + "\n");
+      git(["add", "data/test-pool/2026-09-02-67f2a420e8fc/source.sha256"]);
+    }
+    git(["commit", "-m", "Obsolete capture"]);
+    git(["push", "origin", "main"]);
+  }
   const base = git(["rev-parse", "HEAD"]).trim();
   mkdirSync(join(work, "content/spots"), { recursive: true });
   if (symlink) symlinkSync("../../seed.txt", join(work, path));
   else writeFileSync(join(work, path), "generated schedule\n");
   git(["add", path]);
+  if (prune || partialPrune) git(["rm", "-q", prunedSnapshot]);
   git(["commit", "-m", "Accepted schedule"]);
   const candidate = git(["rev-parse", "HEAD"]).trim();
   const branch = "auto/schedules/123-1-1";
@@ -439,6 +472,62 @@ test("stage treats PDF dates as facts, not direct-source clock metadata", (t) =>
   repository.git(["commit", "-m", "PDF capture"]);
   writeFileSync(join(repository.work, path), JSON.stringify({ provider: "openai", payload: { effective_start: "2026-09-02" } }));
   assert.equal(stageScheduleChanges(repository).changed, true);
+});
+
+test("stage commits a pruned snapshot dir but no other deletion", (t) => {
+  const repository = promotionRepository(t);
+  const snapshot = "data/test-pool/2026-09-02-67f2a420e8fc";
+  mkdirSync(join(repository.work, snapshot), { recursive: true });
+  writeFileSync(join(repository.work, snapshot, "source.sha256"), "a".repeat(64) + "\n");
+  writeFileSync(join(repository.work, snapshot, "reviewed.json"), "{}\n");
+  repository.git(["add", snapshot]);
+  repository.git(["commit", "-m", "Obsolete capture"]);
+
+  rmSync(join(repository.work, snapshot), { recursive: true });
+  const staged = stageScheduleChanges(repository);
+  assert.deepEqual(staged.paths.sort(), [`${snapshot}/reviewed.json`, `${snapshot}/source.sha256`]);
+  assert.equal(staged.changed, true);
+  assert.equal(repository.git(["diff", "--cached", "--name-status"]).trim().split("\n").every((line) => line.startsWith("D\t")), true);
+});
+
+for (const path of ["content/spots/test-pool.md", "data/bulletin.json"]) {
+  test(`stage refuses to commit the deletion of ${path}`, (t) => {
+    const repository = promotionRepository(t);
+    if (path !== "content/spots/test-pool.md") {
+      mkdirSync(join(repository.work, "data"), { recursive: true });
+      writeFileSync(join(repository.work, path), "{}\n");
+      repository.git(["add", path]);
+      repository.git(["commit", "-m", "Generated artifact"]);
+    }
+    rmSync(join(repository.work, path));
+    assert.throws(() => stageScheduleChanges(repository), /without deletions/);
+  });
+}
+
+test("stage refuses to delete part of a snapshot dir", (t) => {
+  const repository = promotionRepository(t);
+  const snapshot = "data/test-pool/2026-09-02-67f2a420e8fc";
+  mkdirSync(join(repository.work, snapshot), { recursive: true });
+  writeFileSync(join(repository.work, snapshot, "source.sha256"), "a".repeat(64) + "\n");
+  writeFileSync(join(repository.work, snapshot, "reviewed.json"), "{}\n");
+  repository.git(["add", snapshot]);
+  repository.git(["commit", "-m", "Reviewed capture"]);
+
+  rmSync(join(repository.work, snapshot, "reviewed.json"));
+  assert.throws(() => stageScheduleChanges(repository), /whole snapshot dir/);
+});
+
+test("promotion refuses a commit that deletes part of a snapshot dir", async (t) => {
+  const repository = promotionRepository(t, { partialPrune: true });
+  await assert.rejects(promoteScheduleCommit(repository.options), /whole snapshot dir/);
+  assert.equal(repository.remoteHead(), repository.base);
+});
+
+test("promotion accepts a commit that only prunes snapshot dirs", async (t) => {
+  const repository = promotionRepository(t, { prune: true });
+  const result = await promoteScheduleCommit(repository.options);
+  assert.equal(result.status, "promoted");
+  assert.equal(repository.remoteHead(), repository.candidate);
 });
 
 test("promotion checks the exact temporary-branch commit before fast-forwarding main", async (t) => {

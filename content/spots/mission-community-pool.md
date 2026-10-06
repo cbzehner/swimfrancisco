@@ -320,7 +320,7 @@ reason_code = "independence_day"
 effective_start = "2026-08-18"
 schedule_basis = "swim_schedule"
 effective_end = "2026-10-17"
-last_verified_at = "2026-09-08"
+last_verified_at = "2026-09-09"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -333,7 +333,7 @@ day = "tuesday"
 type = "senior_swim"
 start = "09:15"
 end = "11:00"
-notes = "Shared cell also includes Parent & Tot; only Senior Swim is emitted."
+notes = "Allowed Senior Swim extracted from shared cell; Parent & Tot ignored. Numeric lane count not retained as pool allocation."
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -388,6 +388,7 @@ day = "wednesday"
 type = "lap_swim"
 start = "17:00"
 end = "19:00"
+notes = "Trailing “--” is printed in the source cell and is not a pool allocation."
 
 [[extra.schedules.sessions]]
 day = "thursday"
@@ -400,14 +401,14 @@ day = "thursday"
 type = "senior_swim"
 start = "09:15"
 end = "11:00"
-notes = "Shared cell also includes Parent & Tot; only Senior Swim is emitted."
+notes = "Allowed Senior Swim extracted from shared cell; Parent & Tot ignored. Numeric lane count not retained as pool allocation."
 
 [[extra.schedules.sessions]]
 day = "thursday"
 type = "lap_swim"
 start = "11:15"
 end = "13:30"
-notes = "Cell states closed every 4th Thursday of the Month for Training."
+notes = "Session cell states closed every 4th Thursday of the Month for Training."
 excluded_dates = [ "2026-08-27", "2026-09-24" ]
 
 [[extra.schedules.sessions]]
@@ -457,6 +458,7 @@ day = "friday"
 type = "family_swim"
 start = "17:00"
 end = "19:00"
+notes = "Trailing “--” is printed in the source cell and is not a pool allocation."
 
 [[extra.schedules.sessions]]
 day = "saturday"
@@ -475,6 +477,7 @@ day = "saturday"
 type = "lap_swim"
 start = "16:00"
 end = "17:30"
+notes = "Trailing “--” is printed in the source cell and is not a pool allocation."
 
 [[extra.schedules.closures]]
 start = "2026-08-22"

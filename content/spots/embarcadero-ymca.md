@@ -19,10 +19,10 @@ access_summary = "Embarcadero YMCA is a membership YMCA branch on the waterfront
 [[extra.schedules]]
 sessions = []
 closures = []
-effective_start = "2026-05-17"
-effective_end = "2026-08-11"
+effective_start = "2026-09-09"
 schedule_basis = "pool_hours"
-last_verified_at = "2026-05-17"
+effective_end = "2026-09-20"
+last_verified_at = "2026-09-09"
 
 [[extra.schedules.access_hours]]
 day = "monday"
@@ -50,7 +50,7 @@ label = "Pool hours"
 
 [[extra.schedules.access_hours]]
 day = "friday"
-start = "18:00"
+start = "06:00"
 end = "20:30"
 label = "Pool hours"
 
@@ -59,27 +59,14 @@ day = "saturday"
 start = "07:30"
 end = "16:30"
 label = "Pool hours"
-
-[[extra.schedules.access_exceptions]]
-date = "2026-05-25"
-start = "07:30"
-end = "13:30"
-label = "Holiday pool hours"
-reason = "Memorial Day"
-
-[[extra.schedules.access_exceptions]]
-date = "2026-06-19"
-start = "07:30"
-end = "13:30"
-label = "Holiday pool hours"
-reason = "Juneteenth"
 
 [[extra.schedules]]
 sessions = []
 closures = []
-effective_start = "2026-08-12"
+effective_start = "2026-09-21"
 schedule_basis = "pool_hours"
-last_verified_at = "2026-08-12"
+effective_end = "2026-09-27"
+last_verified_at = "2026-09-21"
 
 [[extra.schedules.access_hours]]
 day = "monday"
@@ -117,68 +104,49 @@ start = "07:30"
 end = "16:30"
 label = "Pool hours"
 
-[[extra.schedules.access_exceptions]]
-date = "2026-09-07"
-start = "07:30"
-end = "13:30"
-label = "Holiday pool hours"
-reason = "Labor Day"
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-09-28"
+schedule_basis = "pool_hours"
+effective_end = "2026-10-11"
+last_verified_at = "2026-09-28"
 
-[[extra.schedules.access_exceptions]]
-date = "2026-11-26"
-start = "07:30"
-end = "13:30"
-label = "Holiday pool hours"
-reason = "Thanksgiving"
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "06:00"
+end = "20:30"
+label = "Pool hours"
 
-[[extra.schedules.access_exceptions]]
-date = "2026-11-27"
-start = "07:30"
-end = "13:30"
-label = "Holiday pool hours"
-reason = "Holiday Hours"
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "06:00"
+end = "20:30"
+label = "Pool hours"
 
-[[extra.schedules.access_exceptions]]
-date = "2026-12-24"
-start = "07:30"
-end = "13:30"
-label = "Holiday pool hours"
-reason = "Christmas Eve"
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "06:00"
+end = "20:30"
+label = "Pool hours"
 
-[[extra.schedules.access_exceptions]]
-date = "2026-12-31"
-start = "07:30"
-end = "13:30"
-label = "Holiday pool hours"
-reason = "New Year’s Eve"
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "06:00"
+end = "20:30"
+label = "Pool hours"
 
-[[extra.schedules.access_exceptions]]
-date = "2027-01-01"
-start = "10:30"
-end = "15:30"
-label = "Holiday pool hours"
-reason = "New Year’s Day"
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "06:00"
+end = "20:30"
+label = "Pool hours"
 
-[[extra.schedules.access_exceptions]]
-date = "2027-01-18"
+[[extra.schedules.access_hours]]
+day = "saturday"
 start = "07:30"
-end = "13:30"
-label = "Holiday pool hours"
-reason = "Martin Luther King Jr. Day"
-
-[[extra.schedules.access_exceptions]]
-date = "2027-02-06"
-start = "07:30"
-end = "13:30"
-label = "Holiday pool hours"
-reason = "Lunar New Year"
-
-[[extra.schedules.access_exceptions]]
-date = "2027-07-04"
-start = "07:30"
-end = "13:30"
-label = "Holiday pool hours"
-reason = "Independence Day"
+end = "16:30"
+label = "Pool hours"
 +++
 
 Embarcadero YMCA adds a downtown waterfront YMCA pool to the membership-only layer of the board.

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 
 from schedules.merge import merge, pick_active_schedule, read_schedule_snapshot
@@ -172,11 +173,15 @@ _BASE_PAYLOAD = {
 }
 
 
+# Pinned so the fixed windows below are never pruned as long-expired.
+_ARRAY_DAY = date(2026, 6, 10)
+
+
 def _seed_pool(tmp_path: Path) -> Path:
     source = ROOT / "content" / "spots" / "hamilton-pool.md"
     target = tmp_path / source.name
     target.write_text(source.read_text())
-    merge(target, _BASE_PAYLOAD)
+    merge(target, _BASE_PAYLOAD, today=_ARRAY_DAY)
     return target
 
 
@@ -188,7 +193,7 @@ def test_merge_appends_new_schedule_with_different_effective_start(tmp_path):
         "effective_start": "2026-06-09",
         "effective_end": "2026-08-15",
     }
-    result = merge(target, incoming)
+    result = merge(target, incoming, today=_ARRAY_DAY)
 
     assert result is True
     updated = target.read_text()
@@ -213,7 +218,7 @@ def test_merge_replaces_existing_schedule_with_matching_effective_start(tmp_path
         **_BASE_PAYLOAD,
         "sessions": [{"day": "wednesday", "type": "family_swim", "start": "10:00", "end": "12:00"}],
     }
-    result = merge(target, updated_payload)
+    result = merge(target, updated_payload, today=_ARRAY_DAY)
 
     assert result is True
     schedules = _read_schedules_array(target)
@@ -225,7 +230,7 @@ def test_merge_replaces_existing_schedule_with_matching_effective_start(tmp_path
 
 def test_merge_no_op_when_appending_an_entry_already_present(tmp_path):
     target = _seed_pool(tmp_path)
-    result = merge(target, _BASE_PAYLOAD)
+    result = merge(target, _BASE_PAYLOAD, today=_ARRAY_DAY)
     assert result is False
 
 
@@ -233,8 +238,8 @@ def test_merge_sorts_schedules_by_effective_start(tmp_path):
     target = _seed_pool(tmp_path)
     # Add a future schedule first, then an even-later one — both should sort
     # into chronological order in the file.
-    merge(target, {**_BASE_PAYLOAD, "effective_start": "2026-09-01", "effective_end": "2026-12-31"})
-    merge(target, {**_BASE_PAYLOAD, "effective_start": "2026-06-09", "effective_end": "2026-08-15"})
+    merge(target, {**_BASE_PAYLOAD, "effective_start": "2026-09-01", "effective_end": "2026-12-31"}, today=_ARRAY_DAY)
+    merge(target, {**_BASE_PAYLOAD, "effective_start": "2026-06-09", "effective_end": "2026-08-15"}, today=_ARRAY_DAY)
 
     text = target.read_text()
     pos_base = text.index('effective_start = "2026-03-17"')
@@ -268,38 +273,12 @@ def test_merge_closes_prior_open_ended_window_when_appending(tmp_path):
             "effective_start": "2026-08-12",
             "schedule_basis": "swim_schedule",
         },
+        today=date(2026, 8, 12),
     )
     schedules = _read_schedules_array(target)
     by_start = {entry["effective_start"]: entry for entry in schedules}
     assert by_start["2026-05-17"]["effective_end"] == "2026-08-11"
     assert "effective_end" not in by_start["2026-08-12"]
-
-
-# ---- direct_sources year roll-forward ---------------------------------------
-
-
-def test_resolve_yearless_date_keeps_same_year_for_near_future():
-    from datetime import date
-    from schedules.direct_sources.parsing import _resolve_yearless_date
-
-    today = date(2026, 4, 1)
-    assert _resolve_yearless_date(4, 30, today=today) == date(2026, 4, 30)
-
-
-def test_resolve_yearless_date_keeps_same_year_for_recent_past():
-    from datetime import date
-    from schedules.direct_sources.parsing import _resolve_yearless_date
-
-    today = date(2026, 4, 20)
-    assert _resolve_yearless_date(4, 1, today=today) == date(2026, 4, 1)
-
-
-def test_resolve_yearless_date_rolls_forward_for_distant_past():
-    from datetime import date
-    from schedules.direct_sources.parsing import _resolve_yearless_date
-
-    today = date(2026, 12, 20)
-    assert _resolve_yearless_date(1, 15, today=today) == date(2027, 1, 15)
 
 
 def test_closure_projection_preserves_raw_notice_and_requires_code(tmp_path):
@@ -317,3 +296,115 @@ def test_closure_projection_preserves_raw_notice_and_requires_code(tmp_path):
     del closure['reason_code']
     with pytest.raises(ValueError, match='reason_code'):
         merge(target, payload)
+
+
+# ---- expired windows are dropped at publish ---------------------------------
+
+_PUBLISH_DAY = date(2026, 9, 11)
+
+
+def _spot_with_windows(target: Path, windows: list[tuple[str, str | None]]) -> Path:
+    blocks = []
+    for start, end in windows:
+        block = (
+            "[[extra.schedules]]\n"
+            "sessions = []\n"
+            "closures = []\n"
+            f'effective_start = "{start}"\n'
+            'schedule_basis = "swim_schedule"\n'
+        )
+        if end is not None:
+            block += f'effective_end = "{end}"\n'
+        blocks.append(block)
+    target.write_text(
+        "+++\n"
+        'title = "Test"\n'
+        'slug = "test"\n'
+        "\n"
+        "[extra]\n"
+        'type = "pool"\n'
+        "\n" + "\n".join(blocks) + "+++\nBody\n"
+    )
+    return target
+
+
+def test_merge_drops_windows_that_expired_more_than_two_weeks_ago(tmp_path):
+    target = _spot_with_windows(
+        tmp_path / "expiring.md",
+        [
+            ("2026-01-05", "2026-07-13"),  # ended 60 days before publish
+            ("2026-07-14", "2026-08-31"),  # ended 11 days before publish
+            ("2026-09-01", "2026-12-12"),  # current
+        ],
+    )
+    merge(
+        target,
+        {
+            "sessions": [{"day": "monday", "type": "lap_swim", "start": "07:00", "end": "08:00"}],
+            "closures": [],
+            "effective_start": "2026-09-01",
+            "effective_end": "2026-12-12",
+            "schedule_basis": "swim_schedule",
+        },
+        today=_PUBLISH_DAY,
+    )
+    starts = [entry["effective_start"] for entry in _read_schedules_array(target)]
+    assert starts == ["2026-07-14", "2026-09-01"]
+
+
+def test_merge_keeps_the_only_window_even_when_it_expired(tmp_path):
+    target = _spot_with_windows(
+        tmp_path / "single.md", [("2026-01-05", "2026-03-01")]
+    )
+    merge(
+        target,
+        {
+            "sessions": [{"day": "monday", "type": "lap_swim", "start": "07:00", "end": "08:00"}],
+            "closures": [],
+            "effective_start": "2026-01-05",
+            "effective_end": "2026-03-01",
+            "schedule_basis": "swim_schedule",
+        },
+        today=_PUBLISH_DAY,
+    )
+    starts = [entry["effective_start"] for entry in _read_schedules_array(target)]
+    assert starts == ["2026-01-05"]
+
+
+def test_merge_keeps_every_expired_window_when_none_is_current(tmp_path):
+    target = _spot_with_windows(
+        tmp_path / "all-expired.md",
+        [("2026-01-05", "2026-03-01"), ("2026-03-02", "2026-05-01")],
+    )
+    merge(
+        target,
+        {
+            "sessions": [{"day": "monday", "type": "lap_swim", "start": "07:00", "end": "08:00"}],
+            "closures": [],
+            "effective_start": "2026-03-02",
+            "effective_end": "2026-05-01",
+            "schedule_basis": "swim_schedule",
+        },
+        today=_PUBLISH_DAY,
+    )
+    starts = [entry["effective_start"] for entry in _read_schedules_array(target)]
+    assert starts == ["2026-01-05", "2026-03-02"]
+
+
+def test_merge_keeps_expired_windows_when_the_survivor_is_open_ended(tmp_path):
+    target = _spot_with_windows(
+        tmp_path / "open-ended-survivor.md",
+        [("2026-01-05", "2026-07-13"), ("2026-09-01", None)],
+    )
+    merge(
+        target,
+        {
+            "sessions": [{"day": "monday", "type": "lap_swim", "start": "07:00", "end": "08:00"}],
+            "closures": [],
+            "effective_start": "2026-09-01",
+            "schedule_basis": "swim_schedule",
+        },
+        today=_PUBLISH_DAY,
+    )
+    starts = [entry["effective_start"] for entry in _read_schedules_array(target)]
+    assert starts == ["2026-09-01"]

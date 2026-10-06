@@ -1,0 +1,1283 @@
+{
+  "review_policy": "Agent visual transcription, not human attestation or publication approval. Human sign-off is pending. Reserved documents have no labels and must not be used for prompt tuning.",
+  "documents": [
+    {
+      "id": "mission-fall-holdout",
+      "split": "holdout",
+      "source_pdf": "data/mission-community-pool/2026-09-02-67f2a420e8fc/source.pdf",
+      "source_sha256": "67f2a420e8fc7957ece8b02acfcbf574249473f759eafb123e17c6ed0cebd2b4",
+      "review": "agent_visual; 2026-09-05; full page rendered with Poppler, all 25 sessions and five closures transcribed before any model calls; human sign-off pending",
+      "as_of": "2026-09-05",
+      "unresolved": [
+        "The Thursday session caveat must not become an all-day closure. The explicit facility notice establishes 12:00-14:00 closures on August 27 and September 24."
+      ],
+      "expected": {
+        "effective_start": "2026-08-18",
+        "effective_end": "2026-10-17",
+        "schedule_basis": "swim_schedule",
+        "sessions": [
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "09:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "senior_swim",
+            "start": "09:15",
+            "end": "11:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "11:15",
+            "end": "13:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "14:00",
+            "end": "15:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "family_swim",
+            "start": "15:45",
+            "end": "17:15"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "17:45",
+            "end": "19:00"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "09:00"
+          },
+          {
+            "day": "wednesday",
+            "type": "senior_swim",
+            "start": "09:15",
+            "end": "11:00"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "11:30",
+            "end": "13:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "14:30",
+            "end": "16:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "17:00",
+            "end": "19:00"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "09:00"
+          },
+          {
+            "day": "thursday",
+            "type": "senior_swim",
+            "start": "09:15",
+            "end": "11:00"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "11:15",
+            "end": "13:30"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "14:00",
+            "end": "15:30"
+          },
+          {
+            "day": "thursday",
+            "type": "family_swim",
+            "start": "15:45",
+            "end": "17:15"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "17:45",
+            "end": "19:00"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "09:00"
+          },
+          {
+            "day": "friday",
+            "type": "senior_swim",
+            "start": "09:15",
+            "end": "11:00"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "11:30",
+            "end": "13:30"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "14:30",
+            "end": "16:30"
+          },
+          {
+            "day": "friday",
+            "type": "family_swim",
+            "start": "17:00",
+            "end": "19:00"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "11:30",
+            "end": "12:45"
+          },
+          {
+            "day": "saturday",
+            "type": "family_swim",
+            "start": "14:00",
+            "end": "15:30"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "16:00",
+            "end": "17:30"
+          }
+        ],
+        "closures": [
+          {
+            "start": "2026-09-07",
+            "end": "2026-09-07",
+            "reason": "Labor Day"
+          },
+          {
+            "start": "2026-10-12",
+            "end": "2026-10-12",
+            "reason": "Indigenous People's Day"
+          },
+          {
+            "start": "2026-08-22",
+            "end": "2026-08-22",
+            "start_time": "09:00",
+            "end_time": "11:00",
+            "reason": "Staff training"
+          },
+          {
+            "start": "2026-08-27",
+            "end": "2026-08-27",
+            "start_time": "12:00",
+            "end_time": "14:00",
+            "reason": "Aquatic Division Training"
+          },
+          {
+            "start": "2026-09-24",
+            "end": "2026-09-24",
+            "start_time": "12:00",
+            "end_time": "14:00",
+            "reason": "Aquatic Division Training"
+          }
+        ]
+      }
+    },
+    {
+      "id": "north-beach-expired",
+      "split": "development",
+      "source_pdf": "data/north-beach-pool/2026-06-06-f981721f2991/source.pdf",
+      "source_sha256": "f981721f29912aa82bfa0bcf2957235d92da8b453350803d5f697e82c2a240cb",
+      "review": "agent_visual; 2026-09-04; full page 1 rendered with Poppler, all program rows, legend and holiday notes; human sign-off pending",
+      "as_of": "2026-09-04",
+      "unresolved": [
+        "Benchmark pool codes preserve the printed labels in lowercase: c, w, w/t, c/w/t. The source legend means cool, warm and therapy lane. Do not expand the codes or split a shared slot into invented individual sessions. This explicit benchmark convention does not change production normalization."
+      ],
+      "expected": {
+        "effective_start": "2026-06-09",
+        "effective_end": "2026-08-15",
+        "schedule_basis": "swim_schedule",
+        "sessions": [
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "07:00",
+            "end": "08:00",
+            "pool": "c/w/t"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "10:15",
+            "end": "13:00",
+            "pool": "c"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "12:00",
+            "end": "13:00",
+            "pool": "w/t"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "13:30",
+            "end": "15:45",
+            "pool": "c"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "17:30",
+            "end": "18:30",
+            "pool": "c/w/t"
+          },
+          {
+            "day": "tuesday",
+            "type": "family_swim",
+            "start": "10:15",
+            "end": "11:45",
+            "pool": "w"
+          },
+          {
+            "day": "tuesday",
+            "type": "family_swim",
+            "start": "13:30",
+            "end": "15:30",
+            "pool": "w"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "10:15",
+            "end": "12:30",
+            "pool": "c"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "13:00",
+            "end": "15:45",
+            "pool": "c"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "17:30",
+            "end": "19:00",
+            "pool": "c"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "13:00",
+            "end": "15:30",
+            "pool": "w"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "17:30",
+            "end": "18:30",
+            "pool": "w"
+          },
+          {
+            "day": "wednesday",
+            "type": "senior_swim",
+            "start": "11:30",
+            "end": "12:30",
+            "pool": "w"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "07:00",
+            "end": "08:00",
+            "pool": "c/w/t"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "10:15",
+            "end": "13:00",
+            "pool": "c"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "12:00",
+            "end": "13:00",
+            "pool": "w/t"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "13:30",
+            "end": "15:45",
+            "pool": "c"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "17:30",
+            "end": "18:30",
+            "pool": "c/w/t"
+          },
+          {
+            "day": "thursday",
+            "type": "family_swim",
+            "start": "10:15",
+            "end": "11:45",
+            "pool": "w"
+          },
+          {
+            "day": "thursday",
+            "type": "family_swim",
+            "start": "13:30",
+            "end": "15:30",
+            "pool": "w"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "10:15",
+            "end": "12:30",
+            "pool": "c"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "13:00",
+            "end": "15:45",
+            "pool": "c"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "17:30",
+            "end": "19:00",
+            "pool": "c"
+          },
+          {
+            "day": "friday",
+            "type": "family_swim",
+            "start": "13:00",
+            "end": "15:30",
+            "pool": "w"
+          },
+          {
+            "day": "friday",
+            "type": "family_swim",
+            "start": "17:30",
+            "end": "19:00",
+            "pool": "w"
+          },
+          {
+            "day": "friday",
+            "type": "senior_swim",
+            "start": "11:30",
+            "end": "12:30",
+            "pool": "w"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "12:00",
+            "end": "15:00",
+            "pool": "c"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "15:30",
+            "end": "16:30",
+            "pool": "c"
+          },
+          {
+            "day": "saturday",
+            "type": "family_swim",
+            "start": "12:30",
+            "end": "14:00",
+            "pool": "w"
+          },
+          {
+            "day": "saturday",
+            "type": "family_swim",
+            "start": "14:30",
+            "end": "15:30",
+            "pool": "w"
+          }
+        ],
+        "closures": [
+          {
+            "start": "2026-06-19",
+            "end": "2026-06-19",
+            "reason": "Juneteenth"
+          },
+          {
+            "start": "2026-07-04",
+            "end": "2026-07-04",
+            "reason": "Independence Day"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hamilton-fall",
+      "split": "development",
+      "source_pdf": "data/hamilton-pool/2026-08-20-c8e193806d9e/source.pdf",
+      "source_sha256": "c8e193806d9e9b7c6240eda5cc3e533ac2bb261007b6f72c48f60ce466db6697",
+      "review": "agent_visual; 2026-09-04; full page 1 rendered with Poppler, grid and notes; human sign-off pending",
+      "unresolved": [
+        "Thursday cells say CLOSED on 8/27, 9/24, 10/22 across 11:00-12:30 and 13:00-15:00, but the facility note says 12:00-14:00. Closure scope needs a source-policy decision; closures are not scored.",
+        "Numeric Lap Swim labels (4), (5), (6) are lane counts, not pool sections. Family labels retain '2 lanes + small' and 'waterslide' under the current literal-label prompt rule. Confirm this naming rule before changing the production schema."
+      ],
+      "expected": {
+        "effective_start": "2026-08-18",
+        "effective_end": "2026-12-12",
+        "schedule_basis": "swim_schedule",
+        "sessions": [
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "09:00",
+            "end": "11:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "11:00",
+            "end": "12:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "13:00",
+            "end": "15:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "family_swim",
+            "start": "13:00",
+            "end": "15:00",
+            "pool": "2 lanes + small"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "06:30",
+            "end": "08:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "09:00",
+            "end": "11:00"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "11:00",
+            "end": "12:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "13:00",
+            "end": "15:00"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "13:00",
+            "end": "15:00",
+            "pool": "2 lanes + small"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "18:30",
+            "end": "20:00"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "09:00",
+            "end": "11:00"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "11:00",
+            "end": "12:30"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "13:00",
+            "end": "15:00"
+          },
+          {
+            "day": "thursday",
+            "type": "family_swim",
+            "start": "13:00",
+            "end": "15:00",
+            "pool": "2 lanes + small"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "06:30",
+            "end": "08:30"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "09:00",
+            "end": "11:00"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "11:00",
+            "end": "12:30"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "13:00",
+            "end": "15:00"
+          },
+          {
+            "day": "friday",
+            "type": "family_swim",
+            "start": "13:00",
+            "end": "15:00",
+            "pool": "2 lanes + small"
+          },
+          {
+            "day": "friday",
+            "type": "family_swim",
+            "start": "18:30",
+            "end": "20:00"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "09:00",
+            "end": "10:30"
+          },
+          {
+            "day": "saturday",
+            "type": "family_swim",
+            "start": "13:30",
+            "end": "15:30",
+            "pool": "waterslide"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "16:00",
+            "end": "17:00"
+          }
+        ]
+      }
+    },
+    {
+      "id": "balboa-fall",
+      "split": "development",
+      "source_pdf": "data/balboa-pool/2026-08-20-d6f218710372/source.pdf",
+      "source_sha256": "d6f21871037274cc7b8817ab17a92eb7fec8b8d9dfa915d1cb72182b9526dda9",
+      "review": "agent_visual; 2026-09-04; full page 1 rendered with Poppler, grid and notes; human sign-off pending",
+      "unresolved": [
+        "The note lists in-service training on 8/22 and 12/12 but no closure hours. Do not invent hours or silently score an all-day closure as established fact.",
+        "The recurring fourth-Thursday notice and listed training dates need a consistent rule for 11/26, which is also a holiday. Closures are not scored until that rule is reviewed.",
+        "Pool labels preserve the literal current prompt convention: 'main only' and 'small/main'. They do not infer a separate pool for each program in a shared cell."
+      ],
+      "expected": {
+        "effective_start": "2026-09-01",
+        "effective_end": "2026-12-12",
+        "schedule_basis": "swim_schedule",
+        "sessions": [
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "07:00",
+            "end": "08:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "senior_swim",
+            "start": "10:30",
+            "end": "12:00",
+            "pool": "main"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "12:30",
+            "end": "14:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "family_swim",
+            "start": "14:30",
+            "end": "15:30",
+            "pool": "small/main"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "14:30",
+            "end": "16:00",
+            "pool": "small/main"
+          },
+          {
+            "day": "tuesday",
+            "type": "family_swim",
+            "start": "16:00",
+            "end": "17:30",
+            "pool": "small/main"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "16:00",
+            "end": "17:30",
+            "pool": "small/main"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "09:00",
+            "end": "10:15"
+          },
+          {
+            "day": "wednesday",
+            "type": "senior_swim",
+            "start": "10:30",
+            "end": "12:00"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "12:30",
+            "end": "15:00",
+            "pool": "main"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "14:00",
+            "end": "15:00",
+            "pool": "small"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "07:00",
+            "end": "08:00"
+          },
+          {
+            "day": "thursday",
+            "type": "senior_swim",
+            "start": "10:00",
+            "end": "11:00"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "11:30",
+            "end": "14:00"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "14:30",
+            "end": "17:00"
+          },
+          {
+            "day": "thursday",
+            "type": "family_swim",
+            "start": "17:30",
+            "end": "19:30"
+          },
+          {
+            "day": "friday",
+            "type": "senior_swim",
+            "start": "10:30",
+            "end": "12:00"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "13:30",
+            "end": "15:00"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "09:00",
+            "end": "10:30",
+            "pool": "main only"
+          },
+          {
+            "day": "saturday",
+            "type": "family_swim",
+            "start": "12:30",
+            "end": "14:00"
+          },
+          {
+            "day": "saturday",
+            "type": "family_swim",
+            "start": "14:30",
+            "end": "15:30"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "16:00",
+            "end": "17:00"
+          }
+        ]
+      }
+    },
+    {
+      "id": "balboa-interim",
+      "split": "development",
+      "source_pdf": "data/balboa-pool/2026-08-20-d20965597a7a/source.pdf",
+      "source_sha256": "d20965597a7afacf2c4b28495fd6374dd21e7ee975d70809edc32778dd003a78",
+      "review": "agent_visual; 2026-09-04; full page 1 rendered with Poppler, including Wednesday's overprinted Family Swim cell; human sign-off pending",
+      "unresolved": [
+        "The note lists in-service training on 8/22 and 12/12 but no closure hours. Closures are unscored pending source-policy review.",
+        "The PDF includes holiday and training dates outside its August window. Decide whether the reference preserves all explicitly listed dates or only dates inside the effective window.",
+        "Pool labels preserve the current literal-label convention, as in balboa-fall."
+      ],
+      "expected": {
+        "effective_start": "2026-08-11",
+        "effective_end": "2026-08-29",
+        "schedule_basis": "swim_schedule",
+        "sessions": [
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "07:00",
+            "end": "08:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "senior_swim",
+            "start": "10:30",
+            "end": "12:00",
+            "pool": "main"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "12:30",
+            "end": "14:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "family_swim",
+            "start": "14:30",
+            "end": "15:30",
+            "pool": "small/main"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "14:30",
+            "end": "16:00",
+            "pool": "small/main"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "09:00",
+            "end": "10:15"
+          },
+          {
+            "day": "wednesday",
+            "type": "senior_swim",
+            "start": "10:30",
+            "end": "12:00"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "12:30",
+            "end": "15:00",
+            "pool": "main"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "14:00",
+            "end": "15:00",
+            "pool": "small"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "15:30",
+            "end": "17:30",
+            "pool": "main"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "15:30",
+            "end": "17:30",
+            "pool": "small"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "07:00",
+            "end": "08:00"
+          },
+          {
+            "day": "thursday",
+            "type": "senior_swim",
+            "start": "10:00",
+            "end": "11:00"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "11:30",
+            "end": "14:00"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "14:30",
+            "end": "17:00"
+          },
+          {
+            "day": "thursday",
+            "type": "family_swim",
+            "start": "17:30",
+            "end": "19:30"
+          },
+          {
+            "day": "friday",
+            "type": "senior_swim",
+            "start": "10:30",
+            "end": "12:00"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "13:30",
+            "end": "15:00"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "09:00",
+            "end": "10:30",
+            "pool": "main only"
+          },
+          {
+            "day": "saturday",
+            "type": "family_swim",
+            "start": "12:30",
+            "end": "14:00"
+          },
+          {
+            "day": "saturday",
+            "type": "family_swim",
+            "start": "14:30",
+            "end": "15:30"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "16:00",
+            "end": "17:00"
+          }
+        ]
+      }
+    },
+    {
+      "id": "rossi-spring",
+      "split": "finalist",
+      "source_pdf": "data/rossi-pool/2026-04-19-f580f358615e/source.pdf",
+      "source_sha256": "f580f358615eb222d31249ebe28d5a67fe9d7aa473493559754696849d8c798f",
+      "review": "agent_visual; 2026-09-05; full page 1 rendered at 150 DPI with Poppler; rows, dates and notes checked before model calls; human transcription sign-off pending",
+      "as_of": "2026-09-04",
+      "unresolved": [
+        "Closures are unscored: the Thursday lap cell spans 12:30-15:30 and says closed every third Thursday, but the facility note gives 11:00-14:00 on 3/19, 4/16 and 5/21. The listed 6/19 holiday is outside the schedule window.",
+        "Literal-label policy approved by user on 2026-09-05. All parenthetical pool allocations on this PDF are numeric lane counts, so pool is absent. Session notes and evidence are not quality-scored."
+      ],
+      "expected": {
+        "effective_start": "2026-03-15",
+        "effective_end": "2026-06-04",
+        "schedule_basis": "swim_schedule",
+        "sessions": [
+          {
+            "day": "sunday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "08:30"
+          },
+          {
+            "day": "sunday",
+            "type": "family_swim",
+            "start": "12:30",
+            "end": "14:00"
+          },
+          {
+            "day": "sunday",
+            "type": "family_swim",
+            "start": "14:30",
+            "end": "15:30"
+          },
+          {
+            "day": "monday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "10:00"
+          },
+          {
+            "day": "monday",
+            "type": "senior_swim",
+            "start": "11:45",
+            "end": "13:00"
+          },
+          {
+            "day": "monday",
+            "type": "lap_swim",
+            "start": "13:30",
+            "end": "15:30"
+          },
+          {
+            "day": "monday",
+            "type": "lap_swim",
+            "start": "18:15",
+            "end": "19:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "10:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "senior_swim",
+            "start": "10:15",
+            "end": "12:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "12:30",
+            "end": "15:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "family_swim",
+            "start": "18:15",
+            "end": "19:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "18:15",
+            "end": "19:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "senior_swim",
+            "start": "09:00",
+            "end": "10:45"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "11:00",
+            "end": "13:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "14:00",
+            "end": "15:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "14:00",
+            "end": "15:30"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "10:00"
+          },
+          {
+            "day": "thursday",
+            "type": "senior_swim",
+            "start": "10:15",
+            "end": "11:45"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "12:30",
+            "end": "15:30"
+          },
+          {
+            "day": "thursday",
+            "type": "family_swim",
+            "start": "18:15",
+            "end": "19:30"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "18:15",
+            "end": "19:30"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mlk-fall",
+      "split": "finalist",
+      "source_pdf": "data/martin-luther-king-jr-pool/2026-08-20-838c12e25ad1/source.pdf",
+      "source_sha256": "838c12e25ad10207558e0a5c7e72d84aa3a2eaa0cc974be92e82e46e3acf4b72",
+      "review": "agent_visual; 2026-09-05; full page 1 rendered at 150 DPI with Poppler; rows, dates and notes checked before model calls; human transcription sign-off pending",
+      "as_of": "2026-09-04",
+      "unresolved": [
+        "Closures are unscored: the 8/22 training closure has no hours; 8/27 and 9/24 cancellations are printed in selected cells without an explicit whole-facility closure window.",
+        "Literal-label policy approved by user on 2026-09-05. Preserve the composite pool label '4 & shallow'; numeric-only lane counts are not pool labels. Session notes and evidence are not quality-scored."
+      ],
+      "expected": {
+        "effective_start": "2026-08-18",
+        "effective_end": "2026-09-26",
+        "schedule_basis": "swim_schedule",
+        "sessions": [
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "09:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "senior_swim",
+            "start": "09:00",
+            "end": "12:00",
+            "pool": "4 & shallow"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "09:00",
+            "end": "12:00"
+          },
+          {
+            "day": "tuesday",
+            "type": "family_swim",
+            "start": "12:30",
+            "end": "15:30",
+            "pool": "shallow"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "12:30",
+            "end": "15:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "15:30",
+            "end": "17:30"
+          },
+          {
+            "day": "tuesday",
+            "type": "lap_swim",
+            "start": "18:00",
+            "end": "19:00"
+          },
+          {
+            "day": "wednesday",
+            "type": "senior_swim",
+            "start": "09:00",
+            "end": "10:30",
+            "pool": "4 & shallow"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "09:00",
+            "end": "12:00"
+          },
+          {
+            "day": "wednesday",
+            "type": "family_swim",
+            "start": "12:30",
+            "end": "15:30",
+            "pool": "shallow"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "12:30",
+            "end": "15:30"
+          },
+          {
+            "day": "wednesday",
+            "type": "lap_swim",
+            "start": "15:30",
+            "end": "17:30"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "07:30",
+            "end": "09:00"
+          },
+          {
+            "day": "thursday",
+            "type": "senior_swim",
+            "start": "09:00",
+            "end": "12:00",
+            "pool": "4 & shallow"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "09:00",
+            "end": "12:00"
+          },
+          {
+            "day": "thursday",
+            "type": "family_swim",
+            "start": "12:30",
+            "end": "15:30",
+            "pool": "shallow"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "12:30",
+            "end": "15:30"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "15:30",
+            "end": "17:30"
+          },
+          {
+            "day": "thursday",
+            "type": "lap_swim",
+            "start": "18:00",
+            "end": "19:00"
+          },
+          {
+            "day": "friday",
+            "type": "senior_swim",
+            "start": "09:00",
+            "end": "10:30",
+            "pool": "4 & shallow"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "09:00",
+            "end": "12:00"
+          },
+          {
+            "day": "friday",
+            "type": "family_swim",
+            "start": "12:30",
+            "end": "15:30",
+            "pool": "shallow"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "12:30",
+            "end": "15:30"
+          },
+          {
+            "day": "friday",
+            "type": "lap_swim",
+            "start": "15:30",
+            "end": "17:30"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "07:00",
+            "end": "08:30"
+          },
+          {
+            "day": "saturday",
+            "type": "family_swim",
+            "start": "13:30",
+            "end": "15:00"
+          },
+          {
+            "day": "saturday",
+            "type": "lap_swim",
+            "start": "15:30",
+            "end": "17:00"
+          }
+        ]
+      }
+    },
+    {
+      "id": "garfield-maintenance",
+      "split": "finalist",
+      "source_pdf": "data/garfield-pool/2026-08-20-241f3a02fd75/source.pdf",
+      "source_sha256": "241f3a02fd75bed284f548b2979c63af97e7399d53a1b5cd7ab6a3601df2f4b8",
+      "review": "agent_visual; 2026-09-05; full page 1 rendered at 150 DPI with Poppler; rows, dates and notes checked before model calls; human transcription sign-off pending",
+      "as_of": "2026-09-04",
+      "unresolved": [
+        "The notice expects reopening on 2026-09-08, but it gives no weekly sessions and does not verify that reopening occurred. The closure interval is inclusive through 2026-09-07. Closure reason wording is not quality-scored."
+      ],
+      "expected": {
+        "effective_start": "2026-08-14",
+        "effective_end": "2026-09-07",
+        "schedule_basis": "temporarily_closed",
+        "sessions": [],
+        "closures": [
+          {
+            "start": "2026-08-14",
+            "end": "2026-09-07",
+            "reason": "Maintenance"
+          }
+        ]
+      }
+    }
+  ]
+}

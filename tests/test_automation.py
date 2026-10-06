@@ -12,16 +12,15 @@ from schedules.automation import automate, copy_extraction_cache, open_closure_r
 
 @pytest.fixture
 def runner(tmp_path, monkeypatch):
-    ledger = tmp_path / "budget.json"
-    ledger.write_text("{}")
     monkeypatch.setenv("SCHEDULES_AUTOMATION_ENABLED", "true")
-    monkeypatch.setenv("SCHEDULES_API_BUDGET_FILE", str(ledger))
     monkeypatch.delenv("SCHEDULES_AUTO_PROJECT", raising=False)
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
     monkeypatch.setattr("schedules.automation.tempfile.mkdtemp", lambda **_: str(tmp_path / f"work-{len(calls)}"))
     root = tmp_path / "repo"
     root.mkdir()
     calls = []
-    controls = {"stale": 0, "changed": True, "failure": None, "dirty": False, "verified": []}
+    controls = {"stale": 0, "changed": True, "failure": None, "dirty": False, "verified": [],
+                "closure_reviews": {}, "seed": {}, "staged_captures": None, "evidence_at_prune": []}
 
     def command(arguments, cwd, **kwargs):
         calls.append(arguments)
@@ -32,8 +31,20 @@ def runner(tmp_path, monkeypatch):
         elif arguments[:2] == ["git", "rev-parse"]:
             output = "a" * 40
         elif arguments[:3] == ["git", "worktree", "add"]:
-            Path(arguments[-2]).mkdir(parents=True)
+            worktree = Path(arguments[-2])
+            worktree.mkdir(parents=True)
+            for relative, payload in controls["seed"].items():
+                (worktree / relative).parent.mkdir(parents=True, exist_ok=True)
+                (worktree / relative).write_text(payload)
+        elif arguments[-1] == "prune":
+            from schedules.prune import prune
+            controls["evidence_at_prune"] = sorted(
+                str(path.relative_to(root / "tmp/automation"))
+                for path in (root / "tmp/automation").rglob("*") if path.is_file())
+            prune(cwd / "data", cwd, dry_run=False)
         elif arguments[-1] == "stage":
+            controls["staged_captures"] = sorted(
+                str(path.relative_to(cwd)) for path in (cwd / "data").rglob("*") if path.is_file())
             output = json.dumps({"changed": controls["changed"], "paths": ["content/spots/test-pool.md"]})
         elif "promote" in arguments:
             if controls["stale"]:
@@ -44,6 +55,11 @@ def runner(tmp_path, monkeypatch):
         elif arguments[-1] == "publish-pending":
             (cwd / "tmp").mkdir(exist_ok=True)
             (cwd / "tmp/publish-pending.json").write_text('{"published":["test-pool"],"refused":[]}')
+        if "extract" in arguments:
+            provider = "direct" if "--direct" in arguments else "openai"
+            (cwd / "tmp").mkdir(exist_ok=True)
+            (cwd / f"tmp/extraction-report-{provider}.json").write_text(json.dumps(
+                {"closure_reviews": controls["closure_reviews"].get(provider, [])}))
         if controls["failure"] and controls["failure"] in arguments:
             code = 1
         return subprocess.CompletedProcess(arguments, code, output, "")
@@ -67,9 +83,44 @@ def test_publish_orders_extraction_gate_commit_promotion_and_live_check(runner):
     assert result["published_slugs"] == ["test-pool"]
     assert controls["verified"] == ["b" * 40]
     positions = [next(i for i, args in enumerate(calls) if token in args) for token in
-                 ("discover", "--direct", "openai", "publish-pending", "stage", "commit", "promote")]
+                 ("discover", "--direct", "openai", "publish-pending", "prune", "stage", "commit", "promote")]
     assert positions == sorted(positions)
     assert json.loads((root / "tmp/automation/result.json").read_text()) == result
+
+
+def test_obsolete_snapshots_are_pruned_before_the_commit_is_staged(runner):
+    """The build commits the prune, so retention lands with the schedules it served."""
+    _, _, controls, run = runner
+    obsolete = "data/test-pool/2026-09-06-aaaaaaaaaaaa"
+    current = "data/test-pool/2026-09-07-bbbbbbbbbbbb"
+    controls["seed"] = {
+        f"{obsolete}/source.html": "old",
+        f"{obsolete}/source.sha256": hashlib.sha256(b"old").hexdigest(),
+        f"{obsolete}/reviewed.json": '{"slug": "test-pool"}',
+        f"{current}/source.html": "new",
+        f"{current}/source.sha256": hashlib.sha256(b"new").hexdigest(),
+        f"{current}/reviewed.json": '{"slug": "test-pool"}',
+    }
+    assert run()["status"] == "published"
+    assert controls["staged_captures"] == [
+        f"{current}/reviewed.json", f"{current}/source.html", f"{current}/source.sha256"]
+
+
+def test_closure_capture_is_retained_and_its_bytes_saved_before_prune_runs(runner):
+    """A capture awaiting closure review holds source bytes and no artifact.
+    `open_closure_review_prs` reads those bytes back out of the retained
+    evidence, so the evidence is written before prune may touch the tree."""
+    root, _, controls, run = runner
+    capture = "data/test-pool/2026-09-07-bbbbbbbbbbbb"
+    controls["seed"] = {
+        f"{capture}/source.html": "closure notice",
+        f"{capture}/source.sha256": hashlib.sha256(b"closure notice").hexdigest(),
+    }
+    controls["closure_reviews"] = {"openai": [{"slug": "test-pool", "source_path": f"{capture}/source.html"}]}
+    assert run()["status"] == "published"
+    assert controls["staged_captures"] == [f"{capture}/source.html", f"{capture}/source.sha256"]
+    assert f"build-1/{capture}/source.html" in controls["evidence_at_prune"]
+    assert (root / "tmp/automation/build-1" / capture / "source.html").read_text() == "closure notice"
 
 
 def test_extract_only_never_projects_commits_or_pushes(runner):
@@ -99,12 +150,13 @@ def test_required_failure_never_reports_publication(runner, failure):
     assert not controls["verified"]
 
 
-def test_pool_extraction_failure_keeps_other_pools_eligible_and_records_failure(runner):
+@pytest.mark.parametrize("failure, report", [("openai", "openai"), ("--direct", "direct")])
+def test_pool_extraction_failure_keeps_other_pools_eligible_and_records_failure(runner, failure, report):
     _, _, controls, run = runner
-    controls["failure"] = "openai"
+    controls["failure"] = failure
     result = run()
     assert result["status"] == "published"
-    assert result["builds"][0]["commands"]["openai"] == 1
+    assert result["builds"][0]["commands"][report] == 1
 
 
 def test_main_movement_rebuilds_once_and_rechecks(runner):
@@ -143,19 +195,20 @@ def test_kill_switch_stops_before_commands(runner, monkeypatch):
 
 
 def test_cache_never_copies_reviewed_decisions_or_overwrites_concurrent_source_edits(tmp_path):
+    source_name = "source.pdf"
     previous, current = tmp_path / "previous", tmp_path / "current"
     capture = Path("data/test-pool/2026-09-02-67f2a420e8fc")
     (previous / capture).mkdir(parents=True)
     (current / capture).mkdir(parents=True)
-    for name in ("reviewed.json", "source.pdf", "openai-gpt-5-5-2026-04-23.json"):
+    for name in ("reviewed.json", source_name, "openai-gpt-6-2027-01-30.json"):
         (previous / capture / name).write_text("cached")
-    (current / capture / "source.pdf").write_text("concurrent edit")
+    (current / capture / source_name).write_text("concurrent edit")
     def command(args, root, **kwargs):
-        return subprocess.CompletedProcess(args, 0, "source.pdf" if args[-1].endswith("source.pdf") else "", "")
+        return subprocess.CompletedProcess(args, 0, source_name if args[-1].endswith(source_name) else "", "")
     copy_extraction_cache(previous, current, "a" * 40, command)
     assert not (current / capture / "reviewed.json").exists()
-    assert (current / capture / "source.pdf").read_text() == "concurrent edit"
-    assert (current / capture / "openai-gpt-5-5-2026-04-23.json").read_text() == "cached"
+    assert (current / capture / source_name).read_text() == "concurrent edit"
+    assert (current / capture / "openai-gpt-6-2027-01-30.json").read_text() == "cached"
 
 
 def test_live_verification_retries_then_succeeds_and_checks_browsers(tmp_path):
@@ -197,8 +250,9 @@ def test_live_verification_timeout_never_succeeds(tmp_path):
     assert clock[0] == 1200
 
 
-@pytest.fixture
-def closure_repository(tmp_path, monkeypatch):
+@pytest.fixture(params=[("test-pool", "pdf"), ("chinatown-ymca", "html"), ("ucsf-bakar", "html")])
+def closure_repository(tmp_path, monkeypatch, request):
+    slug, extension = request.param
     remote, root, evidence = tmp_path / "origin.git", tmp_path / "repo", tmp_path / "evidence"
     def git(cwd, *arguments):
         return subprocess.check_output(["git", *arguments], cwd=cwd, text=True, stderr=subprocess.PIPE).strip()
@@ -210,12 +264,13 @@ def closure_repository(tmp_path, monkeypatch):
     git(root, "add", "hours.txt")
     git(root, "commit", "-m", "Baseline")
     git(root, "push", "origin", "main")
-    digest = hashlib.sha256(b"%PDF-test source").hexdigest()
-    path = f"data/test-pool/2026-09-06-{digest[:12]}/source.pdf"
+    source_bytes = b"%PDF-test source" if extension == "pdf" else b"<html>Closed for maintenance</html>"
+    digest = hashlib.sha256(source_bytes).hexdigest()
+    path = f"data/{slug}/2026-09-06-{digest[:12]}/source.{extension}"
     source = evidence / "build-1" / path
     source.parent.mkdir(parents=True)
-    source.write_bytes(b"%PDF-test source")
-    review = {"slug": "test-pool", "source_sha256": digest, "source_path": path,
+    source.write_bytes(source_bytes)
+    review = {"slug": slug, "source_sha256": digest, "source_path": path,
               "issues": ["page_1:unresolved_closure_scope"],
               "notices": [{"id": "page_1", "text": "Closed for training; hours unclear", "facility": False}]}
     state = {"mode": "publish", "builds": [{"closure_reviews": [review]}]}
@@ -226,13 +281,14 @@ def closure_repository(tmp_path, monkeypatch):
     def command(arguments, cwd, **kwargs):
         calls.append(arguments)
         if arguments[:3] == ["gh", "pr", "list"]:
-            return subprocess.CompletedProcess(arguments, 0, json.dumps(existing), "")
+            matching = existing if "--head" in arguments else [item for item in existing if item["state"] == "OPEN"]
+            return subprocess.CompletedProcess(arguments, 0, json.dumps(matching), "")
         if arguments[:3] == ["gh", "repo", "view"]:
             return subprocess.CompletedProcess(arguments, 0, "example/pools", "")
         if arguments[:3] == ["gh", "pr", "create"]:
             assert "--draft" in arguments
             body = Path(arguments[arguments.index("--body-file") + 1]).read_text()
-            assert f"https://github.com/example/pools/blob/review/closures/test-pool-{digest[:12]}/{path}" in body
+            assert f"https://github.com/example/pools/blob/review/closures/{slug}-{digest[:12]}/{path}" in body
             existing.append({"url": "https://github.com/example/pools/pull/1", "state": "OPEN"})
             return subprocess.CompletedProcess(arguments, 0, existing[0]["url"], "")
         return subprocess.run(arguments, cwd=cwd, capture_output=True, text=True)
@@ -243,10 +299,15 @@ def test_closure_pr_contains_evidence_only_and_does_not_move_main(closure_reposi
     root, remote, evidence, review, _, calls, _, command, git = closure_repository
     main = git(remote, "rev-parse", "main")
     result = open_closure_review_prs(root, evidence, command)
-    branch = f"review/closures/test-pool-{review['source_sha256'][:12]}"
+    branch = f"review/closures/{review['slug']}-{review['source_sha256'][:12]}"
     assert git(remote, "rev-parse", "main") == main
     paths = git(remote, "diff", "--name-only", "main", branch).splitlines()
-    assert set(paths) == {review["source_path"], review["source_path"].replace("source.pdf", "closure-review.md")}
+    assert set(paths) == {review["source_path"], str(Path(review["source_path"]).with_name("closure-review.md")),
+                          str(Path(review["source_path"]).with_name("source.sha256"))}
+    sidecar = str(Path(review["source_path"]).with_name("source.sha256"))
+    assert git(remote, "show", f"{branch}:{sidecar}") == review["source_sha256"]
+    stored_source = subprocess.check_output(["git", "show", f"{branch}:{review['source_path']}"], cwd=remote)
+    assert hashlib.sha256(stored_source).hexdigest() == git(remote, "show", f"{branch}:{sidecar}")
     assert git(remote, "show", f"{branch}:hours.txt") == "Do not change these hours"
     assert result[0]["state"] == "OPEN"
     assert not any("--force" in args or "--auto" in args or "merge" in args for args in calls)
@@ -296,7 +357,7 @@ def test_closure_pr_validates_evidence_before_any_remote_write(closure_repositor
 
 def test_orphan_review_branch_is_preserved_not_force_pushed(closure_repository):
     root, remote, evidence, review, _, calls, _, command, git = closure_repository
-    branch = f"review/closures/test-pool-{review['source_sha256'][:12]}"
+    branch = f"review/closures/{review['slug']}-{review['source_sha256'][:12]}"
     git(root, "push", "origin", f"HEAD:refs/heads/{branch}")
     before = git(remote, "rev-parse", branch)
     with pytest.raises(RuntimeError, match="preserve"):
@@ -311,8 +372,9 @@ def test_browser_capture_runs_before_direct_and_again_after_stale_main(runner):
     assert run()['status'] == 'published'
     captures = [i for i, args in enumerate(calls) if args == ['node', 'scripts/capture-schedules.mjs']]
     direct = [i for i, args in enumerate(calls) if '--direct' in args]
-    assert len(captures) == len(direct) == 2
-    assert captures[0] < direct[0] < captures[1] < direct[1]
+    pdf = [i for i, args in enumerate(calls) if 'openai' in args]
+    assert len(captures) == len(direct) == len(pdf) == 2
+    assert captures[0] < direct[0] < pdf[0] < captures[1] < direct[1] < pdf[1]
 
 
 def test_browser_failure_is_reported_without_blocking_independent_sources(runner):
@@ -339,3 +401,186 @@ def test_browser_evidence_retained_with_narrow_filename_allowlist(tmp_path):
         'browser-capture/jccsf/screenshot.png', 'browser-capture/jccsf/source.html',
         'browser-capture/results.json',
     ]
+
+
+def test_cache_copy_reuses_every_capture_kind_and_drops_old_browser_receipts(tmp_path):
+    """A retry re-uses the captures it already paid for, whatever their kind."""
+    previous, current = tmp_path / "previous", tmp_path / "current"
+    capture = Path("data/jccsf/2026-09-08-67f2a420e8fc")
+    (previous / capture).mkdir(parents=True)
+    for name in ("source.html", "source.xlsx", "source.csv", "source.pdf", "source.sha256",
+                 "openai-gpt-6-2027-01-30.json", "direct-jccsf-html-v1.json", "reviewed.json"):
+        (previous / capture / name).write_text(name)
+    browser = previous / "tmp/browser-capture/jccsf"
+    browser.mkdir(parents=True)
+    (browser / "capture.json").write_text("old receipt")
+    copy_extraction_cache(previous, current, "a" * 40,
+                          lambda args, cwd, **kwargs: subprocess.CompletedProcess(args, 0, "", ""))
+    assert sorted(path.name for path in (current / capture).iterdir()) == [
+        "direct-jccsf-html-v1.json", "openai-gpt-6-2027-01-30.json", "source.csv", "source.html",
+        "source.pdf", "source.sha256", "source.xlsx"]
+    assert not (current / "tmp/browser-capture").exists()
+
+
+def test_unapproved_html_source_cannot_open_closure_pr(closure_repository):
+    root, _, evidence, review, state, calls, _, command, _ = closure_repository
+    review["slug"] = "unapproved-pool"
+    review["source_path"] = f"data/unapproved-pool/2026-09-06-{review['source_sha256'][:12]}/source.html"
+    (evidence / "result.json").write_text(json.dumps(state))
+    with pytest.raises(ValueError, match="Invalid closure review evidence"):
+        open_closure_review_prs(root, evidence, command)
+    assert not calls
+
+
+def test_closure_review_escapes_source_backtick_fences():
+    from schedules.automation import closure_review_document
+    review = {"slug": "chinatown-ymca", "source_path": "data/chinatown-ymca/source.html",
+              "source_sha256": "a" * 64, "issues": ["conflict"], "notices": ["``` injection"]}
+    document = closure_review_document(review)
+    assert "[Source HTML](source.html)" in document
+    assert "````json" in document
+    assert document.endswith("````\n")
+
+
+def test_city_and_html_closure_reviews_share_existing_review_report(runner):
+    _, _, controls, run = runner
+    controls["closure_reviews"] = {"openai": [{"slug": "balboa-pool"}],
+                                    "direct": [{"slug": "chinatown-ymca"}]}
+    result = run()
+    assert result["builds"][0]["closure_reviews"] == [
+        {"slug": "balboa-pool"}, {"slug": "chinatown-ymca"}]
+
+
+@pytest.mark.parametrize("open_head, reused", [
+    ("review/closures/chinatown-ymca-" + "a" * 12, True),
+    ("review/closures/chinatown-ymca-other-" + "a" * 12, False),
+    ("review/closures/chinatown-ymca-" + "g" * 12, False),
+    ("review/closures/chinatown-ymca-" + "a" * 13, False),
+])
+def test_html_byte_churn_reuses_only_exact_slug_open_review(closure_repository, open_head, reused):
+    root, remote, evidence, review, _, calls, _, original, git = closure_repository
+    old_review = {"headRefName": open_head, "url": "https://example.invalid/existing", "state": "OPEN"}
+    def command(args, cwd, **kwargs):
+        if args[:3] == ["gh", "pr", "list"] and "--head" not in args:
+            calls.append(args)
+            return subprocess.CompletedProcess(args, 0, json.dumps([old_review]), "")
+        return original(args, cwd, **kwargs)
+    before = git(remote, "rev-parse", "main")
+    result = open_closure_review_prs(root, evidence, command)
+    should_reuse = reused and review["slug"] == "chinatown-ymca"
+    assert (result[0]["url"] == old_review["url"]) == should_reuse
+    assert any(args[:3] == ["gh", "pr", "create"] for args in calls) != should_reuse
+    assert any("push" in args for args in calls) != should_reuse
+    assert git(remote, "rev-parse", "main") == before
+    assert (evidence / "build-1" / review["source_path"]).is_file()
+
+
+def test_browser_source_cannot_disguise_closure_evidence_as_pdf(closure_repository):
+    root, _, evidence, review, state, calls, _, command, _ = closure_repository
+    review["slug"] = "chinatown-ymca"
+    review["source_path"] = f"data/chinatown-ymca/2026-09-06-{review['source_sha256'][:12]}/source.pdf"
+    (evidence / "result.json").write_text(json.dumps(state))
+    with pytest.raises(ValueError, match="Invalid closure review evidence"):
+        open_closure_review_prs(root, evidence, command)
+    assert not calls
+
+
+def test_changed_html_capture_second_run_keeps_existing_review_and_new_evidence(closure_repository):
+    root, _, evidence, review, state, calls, existing, original, _ = closure_repository
+    if review["slug"] != "chinatown-ymca":
+        return
+    first = open_closure_review_prs(root, evidence, original)
+    old_branch = f"review/closures/{review['slug']}-{review['source_sha256'][:12]}"
+    source_bytes = b"<html>new markup; same maintenance closure</html>"
+    digest = hashlib.sha256(source_bytes).hexdigest()
+    review["source_sha256"] = digest
+    review["source_path"] = f"data/{review['slug']}/2026-09-13-{digest[:12]}/source.html"
+    source = evidence / "build-1" / review["source_path"]
+    source.parent.mkdir(parents=True)
+    source.write_bytes(source_bytes)
+    (evidence / "result.json").write_text(json.dumps(state))
+    calls.clear()
+    def command(args, cwd, **kwargs):
+        if args[:3] == ["gh", "pr", "list"]:
+            calls.append(args)
+            output = [] if "--head" in args else [existing[0] | {"headRefName": old_branch}]
+            return subprocess.CompletedProcess(args, 0, json.dumps(output), "")
+        return original(args, cwd, **kwargs)
+    second = open_closure_review_prs(root, evidence, command)
+    assert second[0]["url"] == first[0]["url"]
+    assert second[0]["source_sha256"] == digest
+    assert source.read_bytes() == source_bytes
+    assert len(calls) == 2 and all(args[:3] == ["gh", "pr", "list"] for args in calls)
+
+
+@pytest.mark.parametrize("existing_hash", ["wrong hash\n", "symlink"])
+def test_closure_pr_preserves_conflicting_source_hash_before_push(closure_repository, existing_hash):
+    root, remote, evidence, review, _, calls, _, command, git = closure_repository
+    sidecar = root / Path(review["source_path"]).with_name("source.sha256")
+    sidecar.parent.mkdir(parents=True)
+    if existing_hash == "symlink":
+        sidecar.symlink_to(root / "hours.txt")
+    else:
+        sidecar.write_text(existing_hash)
+    git(root, "add", str(sidecar.relative_to(root)))
+    git(root, "commit", "-m", "Preserve operator hash")
+    git(root, "push", "origin", "main")
+    before = git(remote, "rev-parse", "main")
+    with pytest.raises(ValueError, match="Existing source hash differs"):
+        open_closure_review_prs(root, evidence, command)
+    assert git(remote, "rev-parse", "main") == before
+    assert not any("push" in args for args in calls)
+    assert sidecar.is_symlink() if existing_hash == "symlink" else sidecar.read_text() == existing_hash
+
+
+def test_failed_paid_extraction_still_captures_and_publishes_free_updates(runner):
+    root, calls, controls, run = runner
+    controls["failure"] = "openai"
+    result = run()
+    assert result["status"] == "published"
+    assert result["builds"][0]["commands"] == {"discover": 0, "browser": 0, "direct": 0, "openai": 1}
+    assert any(args == ["node", "scripts/capture-schedules.mjs"] for args in calls)
+    assert controls["verified"] == ["b" * 40]
+
+
+@pytest.mark.parametrize("in_actions", [True, False])
+def test_openai_usage_is_reported_only_into_a_github_step_summary(runner, tmp_path, monkeypatch, in_actions):
+    """A failed attempt archives a request and no response, so the request tally
+    comes from the requests and only the answered ones carry tokens."""
+    root, _, controls, run = runner
+    answered, failed = "a" * 32, "b" * 32
+    controls["seed"] = {
+        f"tmp/api-attempts/{answered}/request.json": '{"model": "gpt-5.5-2026-04-23"}',
+        f"tmp/api-attempts/{answered}/response.json": json.dumps(
+            {"usage": {"input_tokens": 1200, "output_tokens": 340}}),
+        f"tmp/api-attempts/{failed}/request.json": '{"model": "gpt-5.5-2026-04-23"}',
+    }
+    summary = tmp_path / "step-summary.md"
+    if in_actions:
+        monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
+    assert run()["status"] == "published"
+    assert (root / f"tmp/automation/build-1/api-attempts/{answered}/request.json").is_file()
+    assert (root / f"tmp/automation/build-1/api-attempts/{failed}/request.json").is_file()
+    if in_actions:
+        assert summary.read_text() == "OpenAI usage: 1200 in / 340 out across 2 requests\n"
+    else:
+        assert not summary.exists()
+
+
+def test_malformed_api_evidence_never_replaces_the_run_failure(runner, tmp_path, monkeypatch):
+    """The usage summary runs in automate's finally; it must not raise there."""
+    _, _, controls, run = runner
+    controls["seed"] = {
+        f"tmp/api-attempts/{'a' * 32}/request.json": "{}",
+        f"tmp/api-attempts/{'a' * 32}/response.json": '["not", "an", "object"]',
+        f"tmp/api-attempts/{'b' * 32}/request.json": "{}",
+        f"tmp/api-attempts/{'b' * 32}/response.json": '{"usage": {"input_tokens": "many"}}',
+        f"tmp/api-attempts/{'c' * 32}/request.json": "{}",
+        f"tmp/api-attempts/{'c' * 32}/response.json": "{ truncated",
+    }
+    controls["failure"] = "discover"
+    summary = tmp_path / "step-summary.md"
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
+    with pytest.raises(RuntimeError, match="discover failed"):
+        run()
+    assert summary.read_text() == "OpenAI usage: 0 in / 0 out across 3 requests\n"

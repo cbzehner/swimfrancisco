@@ -1,11 +1,12 @@
-"""Tests for pipeline pure helpers.
+"""Tests for the extract pipeline.
 
-The pipeline itself has heavy external dependencies (network, provider APIs,
-filesystem). These tests cover the pure helper that gates its operator-trust
-property: honest exit codes — partial failures must not exit 0.
-
-Full-integration tests are out of scope; the invariant lives in the helper
-and is exercised here.
+Two layers live here. The pure helpers that gate the pipeline's
+operator-trust properties — honest exit codes, source-mode partitioning,
+report paths — are called directly. Everything above them runs through
+``run_pipeline`` against ``_stub_extract_pipeline``, a minimal world in
+which discover, the PDF fetch, and the provider call are all faked, so the
+adoption, caching, and force behaviour is exercised end to end without
+network or provider APIs.
 """
 
 from __future__ import annotations
@@ -17,11 +18,10 @@ from pathlib import Path
 import pytest
 
 from schedules.discover import DiscoverError
-from schedules.models import Aborted, Extracted, FetchResult, PoolResult, Skipped, Unchanged
+from schedules.models import Aborted, DiscoveryDocument, DiscoveryState, Extracted, FetchResult, PoolResult, ProviderResult, Skipped, Unchanged
 from schedules.models import PoolEntry
 from schedules.paths import REPORT_PATHS
 from schedules.pipeline import (
-    BakeoffRun,
     DirectRun,
     DiscoverAndExpand,
     ExpandFromDecisions,
@@ -46,7 +46,7 @@ def _pdf_run(
     force: bool = False,
     discover: bool = False,
     url: str | None = None,
-    provider: str = "gemini",
+    provider: str = "openai",
     decisions: DecisionSet | None = None,
 ) -> PdfRun:
     if url is not None:
@@ -68,8 +68,8 @@ def _unchanged(slug: str) -> Unchanged:
         official_page_url="",
         pdf_url="",
         source_status="published",
-        provider="anthropic",
-        model="claude",
+        provider="openai",
+        model="gpt",
         pdf_sha256="x",
         page_count=1,
         sessions_count=0,
@@ -84,8 +84,8 @@ def _proposed(slug: str) -> Extracted:
         official_page_url="",
         pdf_url="",
         source_status="published",
-        provider="anthropic",
-        model="claude",
+        provider="openai",
+        model="gpt",
         pdf_sha256="x",
         page_count=1,
         sessions_count=5,
@@ -161,7 +161,7 @@ def test_source_modes_partition_registry_without_overlap() -> None:
         "direct-one",
         "direct-two",
     ]
-    assert [entry.slug for entry in select_registry_entries(registry, source_mode="gemini", slugs=None)] == [
+    assert [entry.slug for entry in select_registry_entries(registry, source_mode="openai", slugs=None)] == [
         "pdf-one",
         "pdf-two",
     ]
@@ -171,7 +171,7 @@ def test_source_mode_rejects_slug_from_other_partition() -> None:
     registry = [_entry("direct-one", "jccsf_html"), _entry("pdf-one", "sfrecpark_pdf")]
 
     try:
-        select_registry_entries(registry, source_mode="anthropic", slugs=["direct-one"])
+        select_registry_entries(registry, source_mode="openai", slugs=["direct-one"])
     except ValueError as exc:
         assert "mismatched" in str(exc)
     else:
@@ -199,38 +199,32 @@ def test_each_source_mode_processes_its_partition_exactly_once(monkeypatch, tmp_
 
     def report(results, *, path):
         reports[path.name] = [result.slug for result in results]
+        path.with_suffix(".json").parent.mkdir(parents=True, exist_ok=True)
+        path.with_suffix(".json").write_text("{}")
         return path
 
     monkeypatch.setattr("schedules.pipeline._process_entry", process)
     monkeypatch.setattr("schedules.pipeline.write_report", report)
 
-    for mode in ("direct", "gemini", "anthropic"):
-        if mode == "direct":
-            run_pipeline(DirectRun(slugs=None, force=False))
-        else:
-            run_pipeline(_pdf_run(provider=mode))
+    run_pipeline(DirectRun(slugs=None, force=False))
+    run_pipeline(_pdf_run(provider="openai"))
 
     assert calls == [
         ("direct", "direct-one"),
         ("direct", "direct-two"),
-        ("gemini", "pdf-one"),
-        ("gemini", "pdf-two"),
-        ("anthropic", "pdf-one"),
-        ("anthropic", "pdf-two"),
+        ("openai", "pdf-one"),
+        ("openai", "pdf-two"),
     ]
     assert reports == {
         "extraction-report-direct.md": ["direct-one", "direct-two"],
-        "extraction-report-gemini.md": ["pdf-one", "pdf-two"],
-        "extraction-report-anthropic.md": ["pdf-one", "pdf-two"],
+        "extraction-report-openai.md": ["pdf-one", "pdf-two"],
     }
 
 
 def test_source_modes_have_distinct_report_paths() -> None:
-    assert len(set(REPORT_PATHS.values())) == 4
+    assert len(set(REPORT_PATHS.values())) == 2
     assert REPORT_PATHS["openai"].name == "extraction-report-openai.md"
     assert REPORT_PATHS["direct"].name == "extraction-report-direct.md"
-    assert REPORT_PATHS["gemini"].name == "extraction-report-gemini.md"
-    assert REPORT_PATHS["anthropic"].name == "extraction-report-anthropic.md"
 
 
 OLD_URL = "https://sfrecpark.org/DocumentCenter/View/29599"
@@ -241,7 +235,7 @@ SAVA_ADOPTED = "https://sfrecpark.org/DocumentCenter/View/29815"
 FLYER_URL = "https://sfrecpark.org/DocumentCenter/View/29808"
 
 
-def _pdf_entry(slug: str, pdf_url: str, *, status: str = "published", notes: str | None = None) -> PoolEntry:
+def _pdf_entry(slug: str, pdf_url: str, *, status: str = "published", notes: str | None = None, discovery: DiscoveryState | None = None) -> PoolEntry:
     return PoolEntry(
         slug=slug,
         pdf_url=pdf_url,
@@ -249,6 +243,18 @@ def _pdf_entry(slug: str, pdf_url: str, *, status: str = "published", notes: str
         source_status=status,  # type: ignore[arg-type]
         source_kind="sfrecpark_pdf",
         notes=notes,
+        discovery=discovery,
+    )
+
+
+def _discovery(action: str, reason: str, *documents: tuple[int, str, str]) -> DiscoveryState:
+    return DiscoveryState(
+        action=action,  # type: ignore[arg-type]
+        reason=reason,
+        documents=tuple(
+            DiscoveryDocument(view_id=view_id, kind=kind, origin=origin)  # type: ignore[arg-type]
+            for view_id, kind, origin in documents
+        ),
     )
 
 
@@ -270,15 +276,13 @@ def _stub_extract_pipeline(monkeypatch, tmp_path: Path, registry: list[PoolEntry
     )
     monkeypatch.setattr("schedules.pipeline.extract_page_texts", lambda _bytes: [""])
     monkeypatch.setattr("schedules.pipeline.analyze_page_texts", lambda _pages: [])
-    monkeypatch.setattr("schedules.pipeline.normalize_pdf_text", lambda _pages: "")
-    from schedules.models import GroundingResult
-
-    monkeypatch.setattr(
-        "schedules.pipeline.grounding_from_text",
-        lambda _text, _payload: GroundingResult(sessions=[]),
-    )
     monkeypatch.setattr("schedules.pipeline.source_notes_for_signals", lambda _sig: [])
     monkeypatch.setattr("schedules.pipeline.check_delta", lambda _payload, _prior: [])
+    monkeypatch.setattr("schedules.pipeline.inspect_pdf_source", lambda _bytes: None)
+    monkeypatch.setattr(
+        "schedules.pipeline.source_publication_coverage",
+        lambda _source, _payload, **kwargs: {"ok": True, "issues": []},
+    )
     monkeypatch.setattr(
         "schedules.pipeline.read_schedule_snapshot",
         lambda _path: {"sessions": [], "closures": [], "effective_start": None},
@@ -287,7 +291,7 @@ def _stub_extract_pipeline(monkeypatch, tmp_path: Path, registry: list[PoolEntry
     monkeypatch.setattr("schedules.pipeline.skip_if_fresh", lambda **kwargs: False)
     monkeypatch.setattr(
         "schedules.pipeline.save_artifact_bundle",
-        lambda **kwargs: {"gemini": str(tmp_path / "artifact.json")},
+        lambda **kwargs: {"openai": str(tmp_path / "artifact.json")},
     )
     monkeypatch.setattr("schedules.pipeline.carry_forward_review", lambda **kwargs: None)
 
@@ -304,24 +308,26 @@ def _stub_extract_pipeline(monkeypatch, tmp_path: Path, registry: list[PoolEntry
     monkeypatch.setattr("schedules.pipeline.fetch_pdf", fake_fetch)
 
     def fake_extract(provider, pdf_bytes, prompt, schema):
-        from schedules.models import ProviderResult
-
-        return ProviderResult(
-            payload={
-                "effective_start": "2026-08-18",
-                "schedule_basis": "swim_schedule",
-                "sessions": [
-                    {"day": d, "type": "lap_swim", "start": "07:00", "end": "08:00"}
-                    for d in ("monday", "tuesday", "wednesday", "thursday", "friday")
-                ],
-                "closures": [],
-            },
-            model="gemini-test",
-            usage={},
-        )
+        return _provider_result()
 
     monkeypatch.setattr("schedules.pipeline.extract_with_provider", fake_extract)
     return state
+
+
+def _extracted_payload() -> dict:
+    return {
+        "effective_start": "2026-08-18",
+        "schedule_basis": "swim_schedule",
+        "sessions": [
+            {"day": d, "type": "lap_swim", "start": "07:00", "end": "08:00"}
+            for d in ("monday", "tuesday", "wednesday", "thursday", "friday")
+        ],
+        "closures": [],
+    }
+
+
+def _provider_result() -> ProviderResult:
+    return ProviderResult(payload=_extracted_payload(), model="openai-test", usage={})
 
 
 def _fake_discover(state: dict, *, new_url: str | None = None, decisions: list | None = None, tmp_path: Path):
@@ -404,7 +410,15 @@ def test_same_id_still_uses_unchanged_shortcut(monkeypatch, tmp_path) -> None:
             }
         )
     )
+    cached = tmp_path / "openai-cached.json"
+    cached.write_text(json.dumps({
+        "model": "openai-test",
+        "payload": json.loads(reviewed.read_text())["payload"],
+    }))
     monkeypatch.setattr("schedules.pipeline.reviewed_path", lambda *args, **kwargs: reviewed)
+    monkeypatch.setattr("schedules.pipeline.artifact_path", lambda *args, **kwargs: cached)
+    monkeypatch.setattr("schedules.pipeline.skip_if_fresh", lambda **kwargs: True)
+    monkeypatch.setattr("schedules.pipeline.verify_artifact", lambda *args, **kwargs: {"ok": True})
     monkeypatch.setattr(
         "schedules.pipeline.discover_all",
         _fake_discover(state, new_url=None, tmp_path=tmp_path),
@@ -423,6 +437,48 @@ def test_same_id_still_uses_unchanged_shortcut(monkeypatch, tmp_path) -> None:
     assert state["discover_calls"] == 1
     assert state["fetched"] == [("hamilton-pool", OLD_URL)]
     assert isinstance(results[0], Unchanged)
+
+
+def test_force_bypasses_reviewed_fast_path(monkeypatch, tmp_path) -> None:
+    """--force must invoke the provider even when reviewed.json exists.
+
+    Same world as the unchanged shortcut above, so the only difference is
+    the flag: a reviewed snapshot the SHA matches, and a verified cached
+    artifact that would otherwise short-circuit the run.
+    """
+    registry = [_pdf_entry("hamilton-pool", OLD_URL)]
+    _stub_extract_pipeline(monkeypatch, tmp_path, registry)
+    reviewed = tmp_path / "reviewed.json"
+    reviewed.write_text(
+        json.dumps(
+            {
+                "slug": "hamilton-pool",
+                "pdf_sha256": "a" * 64,
+                "reviewed_at": "2026-04-19",
+                "source_pdf_url": OLD_URL,
+                "payload": _extracted_payload(),
+            }
+        )
+    )
+    cached = tmp_path / "openai-cached.json"
+    cached.write_text(json.dumps({"model": "openai-test", "payload": _extracted_payload()}))
+    monkeypatch.setattr("schedules.pipeline.reviewed_path", lambda *args, **kwargs: reviewed)
+    monkeypatch.setattr("schedules.pipeline.artifact_path", lambda *args, **kwargs: cached)
+    monkeypatch.setattr("schedules.pipeline.skip_if_fresh", lambda **kwargs: True)
+    monkeypatch.setattr("schedules.pipeline.verify_artifact", lambda *args, **kwargs: {"ok": True})
+    providers = []
+
+    def counting_extract(provider, pdf_bytes, prompt, schema):
+        providers.append(provider)
+        return _provider_result()
+
+    monkeypatch.setattr("schedules.pipeline.extract_with_provider", counting_extract)
+
+    exit_code, _, results = run_pipeline(_pdf_run(slugs=["hamilton-pool"], force=True))
+
+    assert exit_code == 0
+    assert providers == ["openai"], "--force must invoke the provider even when reviewed.json exists"
+    assert results[0].provider == "openai"
 
 
 def test_direct_mode_never_calls_discover(monkeypatch, tmp_path) -> None:
@@ -507,35 +563,9 @@ def test_force_still_discovers_once(monkeypatch, tmp_path) -> None:
     assert state["discover_calls"] == 1
 
 
-def test_bakeoff_does_not_call_discover(monkeypatch, tmp_path) -> None:
-    registry = [_pdf_entry("hamilton-pool", OLD_URL)]
-    state = _stub_extract_pipeline(monkeypatch, tmp_path, registry)
-    before = list(state["registry"])
-
-    def boom(*_args, **_kwargs):
-        raise AssertionError("bakeoff must not write the registry")
-
-    monkeypatch.setattr("schedules.pipeline.discover_all", boom)
-
-    run_pipeline(
-        BakeoffRun(
-            provider="gemini",
-            compare_with="anthropic",
-            slugs=("hamilton-pool",),
-            force=False,
-        )
-    )
-
-    assert state["registry"] == before
-    assert state["fetched"] == [("hamilton-pool", OLD_URL)]
-
-
 def test_garfield_adopt_then_extract_fetches_adopted_url(monkeypatch, tmp_path) -> None:
-    notes = (
-        "discover: 2026-08-19 extra id=29808:closure_notice:table "
-        "band_session_grid id=29799:session_grid:persisted"
-    )
-    registry = [_pdf_entry("garfield-pool", GARFIELD_ADOPTED, notes=notes)]
+    discovery = _discovery("adopt", "session_grid", (29808, "closure_notice", "table"), (29799, "session_grid", "persisted"))
+    registry = [_pdf_entry("garfield-pool", GARFIELD_ADOPTED, discovery=discovery)]
     state = _stub_extract_pipeline(monkeypatch, tmp_path, registry)
     monkeypatch.setattr(
         "schedules.pipeline.discover_all",
@@ -701,8 +731,8 @@ def test_split_part_adopt_does_not_extract(monkeypatch, tmp_path) -> None:
 
 
 def test_flag_does_not_skip_published_extract(monkeypatch, tmp_path) -> None:
-    notes = "discover: 2026-08-19 flag overlapping_windows id=29815:session_grid:table id=29805:session_grid:band"
-    registry = [_pdf_entry("sava-pool", SAVA_SUMMER, notes=notes)]
+    discovery = _discovery("flag", "overlapping_windows", (29815, "session_grid", "table"), (29805, "session_grid", "band"))
+    registry = [_pdf_entry("sava-pool", SAVA_SUMMER, discovery=discovery)]
     state = _stub_extract_pipeline(monkeypatch, tmp_path, registry)
     fall1 = "https://sfrecpark.org/DocumentCenter/View/29815"
     fall2 = "https://sfrecpark.org/DocumentCenter/View/29805"
@@ -1047,6 +1077,8 @@ def test_openai_cache_reuses_only_independently_verified_results(tmp_path, north
             stored['details']['source_facts']['sessions'] = 'invalid'
         cached_path.write_text(json.dumps(stored))
     cached_bytes = cached_path.read_bytes()
+    if state == 'valid':
+        monkeypatch.delenv('OPENAI_API_KEY', raising=False)
     monkeypatch.setattr(pipeline, 'read_schedule_snapshot', lambda _: good['payload'])
     monkeypatch.setattr(pipeline, 'fetch_pdf', lambda *args: FetchResult(original, good['pdf_sha256'], component['document'], True, 1))
     monkeypatch.setattr(pipeline, 'artifact_path', lambda *args: paths.artifact_path(*args, root=root))
@@ -1077,3 +1109,35 @@ def test_openai_cache_reuses_only_independently_verified_results(tmp_path, north
         assert isinstance(result, Aborted)
         assert calls == (['openai'] if state == 'retry_failure' else [])
         assert cached_path.read_bytes() == cached_bytes
+
+
+@pytest.mark.parametrize('damage', [None, 'hash', 'printed_window', 'anchor_only', 'unconfirmed', 'missing_bytes', 'future'])
+def test_expired_discovery_grid_requires_independent_retained_original(tmp_path, monkeypatch, damage):
+    import hashlib
+    from datetime import date
+    from schedules import paths
+    from schedules.window_dates import verified_expired_grid_ids
+    content = (Path(__file__).parents[1] / 'data/sava-pool/2026-09-01-4d9a6f5e805d/source.pdf').read_bytes()
+    digest = hashlib.sha256(content).hexdigest()
+    directory = tmp_path / 'sava-pool' / f'2026-09-01-{digest[:12]}'
+    directory.mkdir(parents=True)
+    (directory / 'source.pdf').write_bytes(content)
+    old = {'view_id': 29806, 'href': 'https://sfrecpark.org/DocumentCenter/View/29806',
+           'kind': 'session_grid', 'source': 'persisted', 'window_start': '2026-08-18',
+           'window_end': '2026-08-28', 'window_source': 'page-1', 'grid_confirmed': True, 'pdf_sha256': digest}
+    current = {'view_id': 30037, 'href': 'https://sfrecpark.org/DocumentCenter/View/30037',
+               'kind': 'session_grid', 'source': 'table', 'window_start': '2026-08-29', 'window_end': '2026-12-12'}
+    if damage == 'hash': old['pdf_sha256'] = '0' * 64
+    if damage == 'printed_window': old['window_end'] = '2026-08-27'
+    if damage == 'anchor_only': old['window_source'] = 'anchor'
+    if damage == 'unconfirmed': old['grid_confirmed'] = False
+    if damage == 'missing_bytes': (directory / 'source.pdf').unlink()
+    today = date(2026, 8, 17) if damage == 'future' else date(2026, 9, 9)
+    decision = {'slug': 'sava-pool', 'reason': 'sequential_windows', 'candidates': [old, current]}
+    assert verified_expired_grid_ids('sava-pool', decision, today, data_root=tmp_path) == ({29806} if damage is None else set())
+    monkeypatch.setattr(paths, 'DATA_DIR', tmp_path)
+    monkeypatch.setattr('schedules._time.pacific_today', lambda: today)
+    entry = PoolEntry('sava-pool', current['href'], 'https://sfrecpark.org/sava')
+    hrefs = _session_grid_hrefs(entry, DecisionSet.from_items([decision]))
+    assert current['href'] in hrefs
+    assert (old['href'] not in hrefs) is (damage is None)

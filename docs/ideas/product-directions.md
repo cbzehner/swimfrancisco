@@ -1,7 +1,7 @@
 # Swim Francisco Product Directions
 
 Product ideas extracted from the 2026-04-17 review. These are
-intentionally kept out of the fix plan (`docs/plans/review-followup.md`)
+intentionally kept out of the fix plan (`docs/plans/archived/review-followup.md`)
 so they do not get mixed with bug work.
 
 ## 1. Swim Windows

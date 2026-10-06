@@ -40,15 +40,3 @@ required = [
 banned = [
   '\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-',
 ]
-
-[locales.fi]
-required = [
-  'Pääsy',
-  'Rajoitettu pääsy',
-  'ristiaallokko',
-]
-banned = [
-  'repeämä',
-  '\bKulku\b',
-  'kulkuaiko',
-]

@@ -39,10 +39,10 @@ def test_registry_pair_replaces_single_pointer(tmp_path, north_beach_pair):
             load_registry(path)
 
 
-def test_direct_publication_opt_in_is_limited_to_pomeroy(tmp_path):
+def test_direct_publication_opt_in_is_limited_to_approved_identities(tmp_path):
     entry = next(entry for entry in load_registry() if entry.slug == "pomeroy-pool")
     assert entry.auto_publish
-    assert all(not item.auto_publish for item in load_registry() if item.slug != entry.slug)
+    assert {item.slug for item in load_registry() if item.auto_publish} == _BROWSER_SLUGS | {entry.slug, "ucsf-bakar", "ucsf-millberry", "fitness-sf-fillmore", "city-sports-20th-ave", "equinox-sports-club-sf", "bay-club-gateway"}
     path = tmp_path / "registry.toml"
     for slug, kind, url, opt_in in (
         ("pomeroy-pool", "pomeroy_html", "https://example.org/", "true"),
@@ -50,7 +50,7 @@ def test_direct_publication_opt_in_is_limited_to_pomeroy(tmp_path):
         ("jccsf-pool", "jccsf_html", entry.pdf_url, "true"),
     ):
         path.write_text(f'[[pool]]\nslug="{slug}"\nsource_kind="{kind}"\npdf_url="{url}"\nofficial_page_url="{entry.official_page_url}"\nauto_publish={opt_in}\n')
-        with pytest.raises(ValueError, match="Pomeroy"):
+        with pytest.raises(ValueError, match="approved source identities"):
             load_registry(path)
 
 
@@ -61,8 +61,8 @@ def test_registry_uses_browser_primary_only_for_six_approved_sources():
     entries = load_registry()
     assert {entry.slug for entry in entries if entry.capture_method == "cloudflare_browser"} == _BROWSER_SLUGS
     assert all(entry.capture_method == "http" for entry in entries if entry.slug not in _BROWSER_SLUGS)
-    assert all(not entry.auto_publish for entry in entries if entry.slug in _BROWSER_SLUGS)
-    assert {entry.slug for entry in entries if entry.auto_publish} == {"pomeroy-pool"}
+    assert all(entry.auto_publish for entry in entries if entry.slug in _BROWSER_SLUGS)
+    assert {entry.slug for entry in entries if entry.auto_publish} == _BROWSER_SLUGS | {"pomeroy-pool", "ucsf-bakar", "ucsf-millberry", "fitness-sf-fillmore", "city-sports-20th-ave", "equinox-sports-club-sf", "bay-club-gateway"}
 
 
 def _capture_registry(path, *, slug="jccsf", kind="jccsf_html", url="https://www.jccsf.org/fitness/aquatics/", method=None, auto_publish=False):
@@ -103,8 +103,7 @@ def test_browser_capture_requires_approved_source_kind_and_exact_url(tmp_path, s
         with pytest.raises(ValueError, match="six approved HTML sources"):
             load_registry(path)
     _capture_registry(path, slug=slug, kind=entry.source_kind, url=entry.pdf_url, method='"cloudflare_browser"', auto_publish=True)
-    with pytest.raises(ValueError, match="Pomeroy"):
-        load_registry(path)
+    assert load_registry(path)[0].auto_publish
 
 
 @pytest.mark.parametrize("slug", ["pomeroy-pool", "koret-center", "balboa-pool"])
@@ -113,4 +112,48 @@ def test_browser_capture_rejects_unapproved_sources(tmp_path, slug):
     path = tmp_path / "registry.toml"
     _capture_registry(path, slug=slug, kind=entry.source_kind, url=entry.pdf_url, method='"cloudflare_browser"')
     with pytest.raises(ValueError, match="six approved HTML sources"):
+        load_registry(path)
+
+
+@pytest.mark.parametrize(
+    "discovery",
+    [
+        '{ action = "flag", reason = "x", documents = [{ id = 0, kind = "session_grid", origin = "band" }] }',
+        '{ action = "flag", reason = "x", documents = [{ id = "29799", kind = "session_grid", origin = "band" }] }',
+        '{ action = "flag", reason = "x", documents = [{ id = 29799, kind = "unknown", origin = "band" }] }',
+        '{ action = "flag", reason = "x", documents = [{ id = 29799, kind = "session_grid", origin = "unknown" }] }',
+        '{ action = "flag", reason = "x", documents = [{ id = 29799, kind = [], origin = "band" }] }',
+        '{ action = "flag", reason = "x", documents = [{ id = 29799, kind = "session_grid", origin = [] }] }',
+    ],
+)
+def test_registry_rejects_invalid_structured_discovery_document(tmp_path, discovery):
+    path = tmp_path / "registry.toml"
+    path.write_text(
+        '[[pool]]\nslug = "jccsf"\npdf_url = "https://www.jccsf.org/fitness/aquatics/"\n'
+        'official_page_url = "https://www.jccsf.org/fitness/aquatics/"\n'
+        f"discovery = {discovery}\n"
+    )
+    with pytest.raises(ValueError, match="discovery document"):
+        load_registry(path)
+
+
+def test_registry_rejects_invalid_structured_discovery_state(tmp_path):
+    path = tmp_path / "registry.toml"
+    path.write_text(
+        '[[pool]]\nslug = "jccsf"\npdf_url = "https://www.jccsf.org/fitness/aquatics/"\n'
+        'official_page_url = "https://www.jccsf.org/fitness/aquatics/"\n'
+        'discovery = { action = "unknown", reason = "x", documents = [] }\n'
+    )
+    with pytest.raises(ValueError, match="discovery action"):
+        load_registry(path)
+
+
+def test_registry_rejects_non_string_discovery_action(tmp_path):
+    path = tmp_path / "registry.toml"
+    path.write_text(
+        '[[pool]]\nslug = "jccsf"\npdf_url = "https://www.jccsf.org/fitness/aquatics/"\n'
+        'official_page_url = "https://www.jccsf.org/fitness/aquatics/"\n'
+        'discovery = { action = [], reason = "x", documents = [] }\n'
+    )
+    with pytest.raises(ValueError, match="discovery action"):
         load_registry(path)

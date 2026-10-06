@@ -2,7 +2,7 @@
   "pdf_sha256": "c8e193806d9e9b7c6240eda5cc3e533ac2bb261007b6f72c48f60ce466db6697",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29800",
   "slug": "hamilton-pool",
-  "reviewed_at": "2026-09-08",
+  "reviewed_at": "2026-09-14",
   "attested_by": "ci",
   "payload": {
     "closures": [
@@ -203,7 +203,7 @@
       {
         "day": "wednesday",
         "end": "15:00",
-        "evidence": "Family Swim (2 lanes + Small Pool) 1:00 pm \u2013 3:00 pm _____",
+        "evidence": "Family Swim (2 lanes + Small Pool) 1:00 pm \u2013 3:00 pm",
         "pool": "2 lanes + small",
         "start": "13:00",
         "type": "family_swim"
@@ -231,7 +231,7 @@
           "2026-09-24",
           "2026-10-22"
         ],
-        "notes": "Cell includes CLOSED dates; retained as session exclusions.",
+        "notes": "Cell states CLOSED on listed dates.",
         "start": "11:00",
         "type": "lap_swim"
       },
@@ -244,7 +244,7 @@
           "2026-09-24",
           "2026-10-22"
         ],
-        "notes": "Cell includes CLOSED dates; retained as session exclusions.",
+        "notes": "Cell states CLOSED on listed dates.",
         "start": "13:00",
         "type": "lap_swim"
       },
@@ -257,7 +257,7 @@
           "2026-09-24",
           "2026-10-22"
         ],
-        "notes": "Cell includes CLOSED dates; retained as session exclusions.",
+        "notes": "Cell states CLOSED on listed dates.",
         "pool": "2 lanes + small",
         "start": "13:00",
         "type": "family_swim"
@@ -293,7 +293,7 @@
       {
         "day": "friday",
         "end": "15:00",
-        "evidence": "Family Swim (2 lanes + Small Pool) 1:00 pm \u2013 3:00 pm _____",
+        "evidence": "Family Swim (2 lanes + Small Pool) 1:00 pm \u2013 3:00 pm",
         "pool": "2 lanes + small",
         "start": "13:00",
         "type": "family_swim"

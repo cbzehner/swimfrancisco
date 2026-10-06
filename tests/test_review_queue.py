@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 from http.client import HTTPConnection
 from http.server import ThreadingHTTPServer
 from pathlib import Path
@@ -11,6 +12,8 @@ import pytest
 from schedules.models import PoolEntry
 from schedules.publish import PublishRefuse
 from schedules.review_server import ReviewApp, make_handler
+from conftest import pin_publish_clock
+
 
 DAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 SHA_29797 = "1" * 64
@@ -59,7 +62,7 @@ def _write_capture(
 ) -> Path:
     review_dir = data / slug / f"{fetch_date}-{sha[:12]}"
     review_dir.mkdir(parents=True, exist_ok=True)
-    (review_dir / "gemini-model.json").write_text(
+    (review_dir / "openai-model.json").write_text(
         json.dumps(
             {
                 "pdf_sha256": sha,
@@ -252,6 +255,7 @@ def _seed_balboa(data: Path) -> None:
 
 
 def test_save_all_edited_effective_end_lands_in_content(queue_env, monkeypatch):
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     data, content, tmp = queue_env
     _seed_balboa(data)
     _seed_content(content, "balboa-pool")
@@ -360,6 +364,7 @@ def test_per_card_sequential_post_does_not_write_reviewed_json(queue_env, monkey
 
 
 def test_hamilton_unique_grid_save_projects_one_dir(queue_env, monkeypatch):
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     data, content, tmp = queue_env
     review_dir = _write_capture(
         data,
@@ -541,6 +546,7 @@ def test_sequential_queue_lists_every_unpublished_sibling(queue_env, monkeypatch
 def test_sequential_refresh_keeps_latest_per_view_id_and_save_all_writes_new(
     queue_env, monkeypatch
 ):
+    pin_publish_clock(monkeypatch, date(2026, 8, 20))
     data, content, tmp = queue_env
     _seed_balboa(data)
     _seed_content(content, "balboa-pool")
@@ -627,3 +633,19 @@ def test_save_all_overlapping_posted_end_refuses(queue_env, monkeypatch):
         data / "balboa-pool" / f"2026-08-20-{SHA_29796[:12]}" / "reviewed.json"
     ).exists()
     assert (content / "balboa-pool.md").read_bytes() == before
+
+
+@pytest.mark.parametrize('override', [None, 'https://www.jccsf.org/fitness/aquatics/'])
+def test_browser_review_identity_hashes_capture_without_extraction(monkeypatch, override):
+    import hashlib
+    from schedules import review_server
+    from schedules.direct_sources.http import DirectTextResponse
+    entry = next(entry for entry in review_server.load_registry() if entry.slug == 'jccsf')
+    content = b'<html>Original bytes\r\n</html>'
+    monkeypatch.setattr(review_server, 'extract_direct', lambda *args, **kwargs: pytest.fail('Identity lookup must not extract or spend'))
+    monkeypatch.setattr(review_server, 'fetch_pdf', lambda *args, **kwargs: pytest.fail('Browser identity must not fetch a PDF'))
+    monkeypatch.setattr('schedules.direct_sources.browser.read_browser_capture', lambda current: (
+        DirectTextResponse(content.decode(), content, entry.pdf_url), {}))
+    assert review_server.current_source_identity(entry.slug, url=override) == hashlib.sha256(content).hexdigest()
+    with pytest.raises(ValueError, match='differs from the approved'):
+        review_server.current_source_identity(entry.slug, url='https://other.invalid/')

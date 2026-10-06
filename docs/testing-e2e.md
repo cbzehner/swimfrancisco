@@ -30,7 +30,7 @@ can run alone or in any order without leaving data for another journey.
 Worker HTTP contracts. Wrangler's `createTestHarness` runs the production Worker
 and routing configuration with disposable static asset fixtures. Every case
 resets both local KV and Cache API storage. It verifies populated responses,
-empty-store recovery, CORS across alternating origins, methods, and API/static
+empty-store recovery, same-origin API behavior across alternating origins, methods, and API/static
 404 routing without running the same API assertions in two browsers. No extra
 test framework or dependency is needed. To focus these checks:
 

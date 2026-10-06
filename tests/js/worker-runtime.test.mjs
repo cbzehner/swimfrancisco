@@ -41,7 +41,7 @@ async function seedConditions() {
   await CONDITIONS.put("conditions", JSON.stringify(conditions));
 }
 
-test("conditions preserve readings and per-request CORS across alternating origins", async () => {
+test("conditions preserve readings without granting cross-origin browser access", async () => {
   await seedConditions();
   for (const origin of ["https://swimfrancisco.com", "https://untrusted.example", "http://localhost:8787", null, "https://swimfrancisco.com"]) {
     const response = await server.fetch("/api/conditions", { headers: origin ? { origin } : {} });
@@ -49,8 +49,8 @@ test("conditions preserve readings and per-request CORS across alternating origi
     assert.deepEqual(await response.json(), conditions);
     assert.equal(response.headers.get("content-type"), "application/json; charset=utf-8");
     assert.equal(response.headers.get("cache-control"), "public, max-age=900, s-maxage=3600");
-    assert.equal(response.headers.get("vary"), "Origin");
-    assert.equal(response.headers.get("access-control-allow-origin"), origin === "https://untrusted.example" ? null : origin);
+    assert.equal(response.headers.get("vary"), null);
+    assert.equal(response.headers.get("access-control-allow-origin"), null);
   }
 });
 
@@ -71,17 +71,13 @@ test("empty conditions recover after population, including the trailing-slash ro
   }
 });
 
-test("conditions preflight works before population and unsupported methods are rejected", async () => {
-  for (const origin of ["https://swimfrancisco.com", "https://untrusted.example"]) {
-    const response = await server.fetch("/api/conditions", { method: "OPTIONS", headers: { origin } });
-    assert.equal(response.status, 204);
-    assert.equal(await response.text(), "");
-    assert.equal(response.headers.get("access-control-allow-origin"), origin === "https://swimfrancisco.com" ? origin : null);
-    assert.equal(response.headers.get("access-control-allow-methods"), "GET, OPTIONS");
+test("conditions reject preflight and unsupported methods before population", async () => {
+  for (const method of ["OPTIONS", "POST", "PUT", "DELETE"]) {
+    const response = await server.fetch("/api/conditions", { method, headers: { origin: "https://untrusted.example" } });
+    assert.equal(response.status, 405);
+    assert.equal(await response.text(), "method not allowed");
+    assert.equal(response.headers.get("access-control-allow-origin"), null);
   }
-  const response = await server.fetch("/api/conditions", { method: "POST" });
-  assert.equal(response.status, 405);
-  assert.equal(await response.text(), "method not allowed");
 });
 
 test("missing map configuration and API routes fail without falling through to assets", async () => {

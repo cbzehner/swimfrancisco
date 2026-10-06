@@ -1,29 +1,23 @@
 // Swim Francisco conditions Worker.
 // - Cron (hourly): walk each open-water spot's temp-source chain (USGS,
 //   NOAA, NDBC, ERDDAP, MUR SST) and NOAA tide predictions; assemble
-//   per-spot records; write KV. The 00:00 PT tick also triggers a rebuild.
+//   per-spot records; write KV.
 // - HTTP: GET /api/conditions → slug-keyed bulk record from KV.
 // - HTTP: GET /api/map-config → public browser map configuration.
 // - HTTP: /ingest/* → PostHog reverse proxy.
 
 import { assembleAndPersist } from "./assemble.ts";
 import { readConditionsRaw } from "./kv.ts";
-import { corsHeaders, preflight } from "./cors.ts";
-import { triggerRebuild } from "./deploy.ts";
-import { isPtMidnight } from "./schedule.ts";
 import { handlePosthog, isPosthogPath } from "./posthog.ts";
 
 export interface Env {
   CONDITIONS: KVNamespace;
-  WORKERS_BUILDS_DEPLOY_HOOK: string;
   CARTO_BASEMAP_API_KEY?: string;
 }
 
 // Data refreshes hourly via cron. The Worker writes successful conditions
 // responses to caches.default on miss, so most fetches in a given colo are
-// served straight from the edge without re-reading KV. The cached response is
-// header-neutral (no CORS); corsHeaders(request) is applied per-request after
-// cache.match, so correctness never depends on the Cache API honoring Vary.
+// served straight from the edge without re-reading KV.
 const JSON_CACHE_CONTROL = "public, max-age=900, s-maxage=3600";
 const NEGATIVE_CACHE_CONTROL = "public, max-age=60";
 
@@ -31,55 +25,29 @@ const NEGATIVE_CACHE_CONTROL = "public, max-age=60";
 // incoming request's URL shape (trailing slashes, etc.).
 const CONDITIONS_CACHE_KEY_URL = "https://swimfrancisco.com/api/conditions";
 
-function withCors(request: Request, response: Response): Response {
-  const out = new Response(response.body, response);
-  for (const [name, value] of Object.entries(corsHeaders(request))) {
-    out.headers.set(name, value);
-  }
-  return out;
+// `cacheControl` is explicit per call site: the miss responses are worth
+// caching briefly at the edge, a rejected method is not.
+function errorResponse(status: number, message: string, cacheControl?: string): Response {
+  const headers: Record<string, string> = { "content-type": "text/plain; charset=utf-8" };
+  if (cacheControl) headers["cache-control"] = cacheControl;
+  return new Response(message, { status, headers });
 }
 
-function notFound(request: Request, message: string): Response {
-  return new Response(message, {
-    status: 404,
-    headers: {
-      "content-type": "text/plain; charset=utf-8",
-      "cache-control": NEGATIVE_CACHE_CONTROL,
-      ...corsHeaders(request),
-    },
-  });
-}
-
-function serviceUnavailable(request: Request, message: string): Response {
-  return new Response(message, {
-    status: 503,
-    headers: {
-      "content-type": "text/plain; charset=utf-8",
-      "cache-control": NEGATIVE_CACHE_CONTROL,
-      ...corsHeaders(request),
-    },
-  });
-}
-
-async function handleConditions(
-  request: Request,
-  env: Env,
-  ctx: ExecutionContext,
-): Promise<Response> {
+async function handleConditions(env: Env, ctx: ExecutionContext): Promise<Response> {
   const cache = caches.default;
   const cacheKey = new Request(CONDITIONS_CACHE_KEY_URL);
 
   const cached = await cache.match(cacheKey);
-  if (cached) return withCors(request, cached);
+  if (cached) return cached;
 
   let raw: string | null;
   try {
     raw = await readConditionsRaw(env.CONDITIONS);
   } catch (err) {
     console.error("KV read failed:", err);
-    return serviceUnavailable(request, "conditions temporarily unavailable");
+    return errorResponse(503, "conditions temporarily unavailable", NEGATIVE_CACHE_CONTROL);
   }
-  if (!raw) return serviceUnavailable(request, "conditions not yet available");
+  if (!raw) return errorResponse(503, "conditions not yet available", NEGATIVE_CACHE_CONTROL);
 
   const response = new Response(raw, {
     headers: {
@@ -88,7 +56,7 @@ async function handleConditions(
     },
   });
   ctx.waitUntil(cache.put(cacheKey, response.clone()));
-  return withCors(request, response);
+  return response;
 }
 
 function handleMapConfig(request: Request, env: Env): Response {
@@ -114,8 +82,8 @@ function handleMapConfig(request: Request, env: Env): Response {
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     // Analytics proxy is same-origin and forwards every method (POST for
-    // ingestion, GET for the library), so it runs before the OPTIONS/GET
-    // gate below, which only governs the JSON API.
+    // ingestion, GET for the library), so it runs before the GET gate
+    // below, which only governs the JSON API.
     const url = new URL(request.url);
     const path = url.pathname.replace(/\/+$/, "");
 
@@ -124,42 +92,25 @@ export default {
     }
 
     if (path === "/api/conditions") {
-      if (request.method === "OPTIONS") return preflight(request);
-      if (request.method !== "GET") {
-        return new Response("method not allowed", {
-          status: 405,
-          headers: { "content-type": "text/plain; charset=utf-8", ...corsHeaders(request) },
-        });
-      }
-      return handleConditions(request, env, ctx);
+      if (request.method !== "GET") return errorResponse(405, "method not allowed");
+      return handleConditions(env, ctx);
     }
 
     if (path === "/api/map-config") {
       return handleMapConfig(request, env);
     }
 
-    return notFound(request, "not found");
+    return errorResponse(404, "not found", NEGATIVE_CACHE_CONTROL);
   },
 
-  async scheduled(event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
-    // Every hourly tick refreshes data. The tick that lands at 00:00 PT
-    // also triggers a rebuild so the day-of-week rendered in static HTML
-    // turns over with the calendar day. PT midnight maps to exactly one
-    // UTC hour per day (DST-aware via Intl), so the rebuild fires once.
+  async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+    // Every hourly tick refreshes conditions. Static schedule pages are
+    // date-independent, so this path has no build or calendar-day side effect.
     ctx.waitUntil(
       assembleAndPersist(env.CONDITIONS).catch((err) => {
         console.error("assembleAndPersist failed:", err);
         throw err;
       }),
     );
-
-    if (isPtMidnight(event.scheduledTime)) {
-      ctx.waitUntil(
-        triggerRebuild(env.WORKERS_BUILDS_DEPLOY_HOOK, event.scheduledTime).catch((err) => {
-          console.error("triggerRebuild failed:", err);
-          throw err;
-        }),
-      );
-    }
   },
 } satisfies ExportedHandler<Env>;

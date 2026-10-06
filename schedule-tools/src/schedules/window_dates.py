@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from datetime import date
+from pathlib import Path
 from typing import Literal
 
 WindowSource = Literal["page-1", "anchor", "filename"]
@@ -213,3 +214,39 @@ def _year_for_match(match: re.Match[str], text: str, year_default: int) -> int:
         if best is None or candidate[:2] < best[:2]:
             best = candidate
     return best[2] if best is not None else year_default
+
+
+def verified_expired_grid_ids(slug: str, decision: dict | None, today: date, *, data_root: Path | None = None) -> set[int]:
+    import hashlib
+    from .paths import DATA_DIR
+    from .discover import collapse_grid_candidates, view_id_from_url
+    from .signals import inspect_pdf_source
+    from .grounding import source_window
+
+    if not isinstance(decision, dict):
+        return set()
+    root = (data_root if data_root is not None else DATA_DIR) / slug
+    expired = set()
+    items = list(decision.get("candidates") or []) + list(decision.get("extra_candidates") or [])
+    for item in collapse_grid_candidates(items):
+        try:
+            window = (date.fromisoformat(item["window_start"]), date.fromisoformat(item["window_end"]))
+            digest = item["pdf_sha256"]
+            view_id = view_id_from_url(item["href"])
+            if (item.get("window_source") != "page-1" or item.get("grid_confirmed") is not True
+                    or window[0] > window[1] or window[1] >= today or view_id is None
+                    or not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest)):
+                continue
+            for path in root.glob(f"*-{digest[:12]}/source.pdf"):
+                if path.is_symlink() or path.parent.is_symlink():
+                    continue
+                content = path.read_bytes()
+                if hashlib.sha256(content).hexdigest() != digest:
+                    continue
+                source = inspect_pdf_source(content)
+                if source.cells and source_window(source) == window:
+                    expired.add(view_id)
+                    break
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+    return expired

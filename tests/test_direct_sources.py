@@ -16,27 +16,144 @@ from schedules.direct_sources import (
     _extract_city_sports,
     _extract_equinox,
     _extract_fitness_sf,
-    _extract_jccsf,
     _extract_koret,
     _extract_pomeroy,
-    _extract_sfsu_aquatics,
     _extract_ucsf_bakar,
     _extract_ucsf_fitness,
-    _extract_ymca_location,
 )
+from schedules.direct_sources.parsing import _resolve_yearless_date
 
 
 def test_cache_bytes_preserves_encoding_and_rejects_corruption(tmp_path):
     from schedules.direct_sources.http import _cache_bytes
     content = b"first\r\nsecond\xff"
     digest = hashlib.sha256(content).hexdigest()
-    path, cached = _cache_bytes(tmp_path, digest, "html", content)
-    assert not cached
+    capture = _cache_bytes(tmp_path, digest, "html", content)
+    assert not capture.from_cache
+    path = capture.path
     assert path.read_bytes() == content
-    assert _cache_bytes(tmp_path, digest, "html", content) == (path, True)
+    reused = _cache_bytes(tmp_path, digest, "html", content)
+    assert (reused.path, reused.sha256, reused.content, reused.from_cache) == (path, digest, content, True)
     path.write_bytes(b"corrupt")
     with pytest.raises(DirectSourceError, match="prefix collision"):
         _cache_bytes(tmp_path, digest, "html", content)
+
+
+def test_cache_bytes_reuses_a_capture_from_an_earlier_day(tmp_path):
+    """Identical bytes are one capture, no matter which day they arrive on."""
+    from schedules.direct_sources.http import _cache_bytes
+    content = b"<p>hours</p>"
+    digest = hashlib.sha256(content).hexdigest()
+    yesterday = (pacific_today() - timedelta(days=1)).isoformat()
+    earlier = tmp_path / f"{yesterday}-{digest[:12]}"
+    earlier.mkdir()
+    (earlier / "source.html").write_bytes(content)
+    capture = _cache_bytes(tmp_path, digest, "html", content)
+    assert (capture.path, capture.from_cache) == (earlier / "source.html", True)
+    assert [directory.name for directory in sorted(tmp_path.iterdir())] == [earlier.name]
+
+
+def _cfemail_page(payload: str) -> bytes:
+    """A Cloudflare-obfuscated page; the payload rotates on every response."""
+    return (
+        f'<html><body><p>Lap swim 6am-8pm</p>'
+        f'<a href="/cdn-cgi/l/email-protection#{payload}">'
+        f'<span class="__cf_email__" data-cfemail="{payload}">[email&#160;protected]</span></a>'
+        f'</body></html>'
+    ).encode()
+
+
+def _workbook_bytes(creator: str, hours: str = "Hours: 6am-8pm", *, merge: str = "B2:C2",
+                    hidden_notice: bool = False) -> bytes:
+    """A Koret-shaped export. The merge covers empty cells inside the used range,
+    so a different merge changes no cell value and no sheet dimension."""
+    book = Workbook()
+    sheet = book.active
+    sheet.title = "Monday"
+    sheet["A1"] = hours
+    sheet["A2"] = time(6, 0)
+    sheet["E5"] = "notes"
+    sheet.merge_cells(merge)
+    notice = book.create_sheet("Long Course Notice")
+    notice["A1"] = "Short course from 9/10"
+    if hidden_notice:
+        notice.sheet_state = "hidden"
+    book.properties.creator = creator
+    buffer = io.BytesIO()
+    book.save(buffer)
+    return buffer.getvalue()
+
+
+def test_canonical_html_identity_ignores_rotating_cfemail(tmp_path):
+    from schedules.artifacts import canonical_source_sha256
+    from schedules.direct_sources.http import _cache_bytes
+    first, second = _cfemail_page("a1b2c3d4"), _cfemail_page("9f8e7d6c")
+    assert first != second
+    assert canonical_source_sha256("html", first) == canonical_source_sha256("html", second)
+
+    stored = _cache_bytes(tmp_path, hashlib.sha256(first).hexdigest(), "html", first)
+    reused = _cache_bytes(tmp_path, hashlib.sha256(second).hexdigest(), "html", second)
+    assert reused.from_cache
+    assert (reused.path, reused.content, reused.sha256) == (stored.path, first, stored.sha256)
+    assert [directory.name for directory in sorted(tmp_path.iterdir())] == [stored.path.parent.name]
+
+
+def test_canonical_xlsx_identity_ignores_export_nondeterminism(tmp_path):
+    from schedules.artifacts import canonical_source_sha256
+    from schedules.direct_sources.http import _cache_bytes
+    first, second = _workbook_bytes("first export"), _workbook_bytes("second export")
+    assert first != second
+    assert canonical_source_sha256("xlsx", first) == canonical_source_sha256("xlsx", second)
+
+    stored = _cache_bytes(tmp_path, hashlib.sha256(first).hexdigest(), "xlsx", first)
+    reused = _cache_bytes(tmp_path, hashlib.sha256(second).hexdigest(), "xlsx", second)
+    assert (reused.path, reused.content, reused.from_cache) == (stored.path, first, True)
+    assert [directory.name for directory in sorted(tmp_path.iterdir())] == [stored.path.parent.name]
+
+
+def test_canonical_xlsx_identity_covers_everything_the_parser_reads():
+    """Merges and hidden sheets change the schedule the parser sees, not just the cells."""
+    from schedules.artifacts import canonical_source_sha256
+    from schedules.artifacts import workbook_facts
+    plain, elsewhere, hidden = (
+        _workbook_bytes("export"),
+        _workbook_bytes("export", merge="C2:D2"),
+        _workbook_bytes("export", hidden_notice=True),
+    )
+    cells = lambda content: {title: sheet["cells"] for title, sheet in workbook_facts(content).items()}
+    assert cells(plain) == cells(elsewhere) == cells(hidden)
+    assert len({canonical_source_sha256("xlsx", book) for book in (plain, elsewhere, hidden)}) == 3
+
+
+def test_canonical_identity_keeps_pdf_and_csv_on_raw_bytes():
+    from schedules.artifacts import canonical_source_sha256
+    body = b"%PDF-1.4 lap swim"
+    assert canonical_source_sha256("pdf", body) == hashlib.sha256(body).hexdigest()
+    assert canonical_source_sha256("csv", b"day,start\n") == hashlib.sha256(b"day,start\n").hexdigest()
+
+
+def test_cache_bytes_reuses_the_latest_capture_of_the_same_document(tmp_path):
+    """Retention keeps the newest capture, so reuse has to land there too."""
+    from schedules.direct_sources.http import _cache_bytes
+    older, newer = _cfemail_page("11111111"), _cfemail_page("22222222")
+    for content, day in ((older, "2026-09-07"), (newer, "2026-09-08")):
+        directory = tmp_path / f"{day}-{hashlib.sha256(content).hexdigest()[:12]}"
+        directory.mkdir()
+        (directory / "source.html").write_bytes(content)
+        (directory / "source.sha256").write_text(hashlib.sha256(content).hexdigest())
+    reused = _cache_bytes(tmp_path, hashlib.sha256(_cfemail_page("33333333")).hexdigest(),
+                          "html", _cfemail_page("33333333"))
+    assert (reused.from_cache, reused.content) == (True, newer)
+    assert reused.path.parent.name.startswith("2026-09-08")
+
+
+def test_cache_bytes_keeps_a_changed_document_apart(tmp_path):
+    from schedules.direct_sources.http import _cache_bytes
+    first, second = _cfemail_page("a1b2c3d4"), _cfemail_page("a1b2c3d4").replace(b"6am-8pm", b"7am-9pm")
+    _cache_bytes(tmp_path, hashlib.sha256(first).hexdigest(), "html", first)
+    changed = _cache_bytes(tmp_path, hashlib.sha256(second).hexdigest(), "html", second)
+    assert not changed.from_cache
+    assert len(list(tmp_path.iterdir())) == 2
 
 
 def test_cache_bytes_rejects_semantic_hash(tmp_path):
@@ -80,7 +197,7 @@ def test_fetch_text_retries_transient_errors_and_keeps_bytes(monkeypatch, failur
     client = httpx.Client(transport=httpx.MockTransport(respond))
     monkeypatch.setattr(http.httpx, "Client", lambda **kwargs: client)
     sleeps = []
-    monkeypatch.setattr(http.time, "sleep", sleeps.append)
+    monkeypatch.setattr("schedules.fetch.time.sleep", sleeps.append)
     result = http.fetch_text("https://example.org/pool")
     assert len(requests) == 2
     assert sleeps == [0.25]
@@ -98,51 +215,10 @@ def test_fetch_text_transient_attempts_are_bounded(monkeypatch):
         return httpx.Response(503)
     client = httpx.Client(transport=httpx.MockTransport(respond))
     monkeypatch.setattr(http.httpx, "Client", lambda **kwargs: client)
-    monkeypatch.setattr(http.time, "sleep", lambda delay: None)
+    monkeypatch.setattr("schedules.fetch.time.sleep", lambda delay: None)
     with pytest.raises(DirectSourceError, match="HTTP 503"):
         http.fetch_text("https://example.org/pool")
     assert len(requests) == 3
-
-
-def test_jccsf_html_extractor_models_lap_and_family_hours():
-    payload = _extract_jccsf(
-        """
-        <h3>Aquatics Center Hours</h3>
-        <p>Monday – Friday: 5:30 am – 9:45 pm</p>
-        <p>Saturday & Sunday: 7:00 am – 6:45 pm*</p>
-        <h3>Rec Pool Hours</h3>
-        <p>Monday & Wednesday: 5:30 am – Noon, 3:00 – 9:45 pm</p>
-        <p>Tuesday: 5:30 – 11:30 am, 3:00 – 9:45 pm</p>
-        <p>Thursday: 5:30 am – Noon, 3:00 – 9:45 pm</p>
-        <p>Friday: 5:30 – 10:00 am, 1:30 – 9:45 pm</p>
-        <p>Saturday & Sunday: 7:00 – 8:00 am, 2:00 – 6:45 pm</p>
-        <p>The Lap Pool is available for lap swimming during Aquatics Center hours.</p>
-        """
-    )
-
-    assert any(
-        s["day"] == "monday" and s["type"] == "lap_swim" and s["start"] == "05:30" and s["end"] == "21:45"
-        for s in payload["sessions"]
-    )
-    assert any(s["type"] == "family_swim" for s in payload["sessions"])
-    assert any(
-        s["day"] == "tuesday"
-        and s["type"] == "family_swim"
-        and s["start"] == "15:00"
-        and s["end"] == "21:45"
-        for s in payload["sessions"]
-    )
-
-
-def test_jccsf_html_extractor_rejects_page_when_posted_hours_change():
-    with pytest.raises(DirectSourceError, match="Expected source text not found"):
-        _extract_jccsf(
-            """
-            <h3>Aquatics Center Hours</h3>
-            <p>Monday – Friday: 6:00 am – 9:00 pm</p>
-            <p>The Lap Pool is available for lap swimming during Aquatics Center hours.</p>
-            """
-        )
 
 
 def _koret_workbook(tmp_path, sheets):
@@ -155,6 +231,21 @@ def _koret_workbook(tmp_path, sheets):
     path = tmp_path / "koret.xlsx"
     workbook.save(path)
     return path
+
+
+# ---- yearless dates in source text roll forward, never backward -------------
+
+
+def test_resolve_yearless_date_keeps_same_year_for_near_future():
+    assert _resolve_yearless_date(4, 30, today=date(2026, 4, 1)) == date(2026, 4, 30)
+
+
+def test_resolve_yearless_date_keeps_same_year_for_recent_past():
+    assert _resolve_yearless_date(4, 1, today=date(2026, 4, 20)) == date(2026, 4, 1)
+
+
+def test_resolve_yearless_date_rolls_forward_for_distant_past():
+    assert _resolve_yearless_date(1, 15, today=date(2026, 12, 20)) == date(2027, 1, 15)
 
 
 def test_koret_google_sheet_extractor_reads_weekday_and_weekend_hours(tmp_path):
@@ -428,184 +519,88 @@ def test_24_hour_fitness_extractor_models_reopened_facility_hours():
     assert any(a["day"] == "wednesday" and a["start"] == "00:00" for a in payload["access_hours"])
 
 
-def test_city_sports_extractor_reads_club_hours():
-    payload = _extract_city_sports(
-        """
-        <h1>SAN FRANCISCO - 20TH AVE</h1>
-        <p>lap pool</p>
-        <p>HOURS Mon - Thu 5:00am - 11:00pm Fri 5:00am - 10:00pm
-        Sat - Sun 8:00am - 8:00pm Special Club Hours</p>
-        """
-    )
+def test_city_sports_rejects_hours_without_complete_independent_source_tables():
+    with pytest.raises(DirectSourceError):
+        _extract_city_sports("""<h1>SAN FRANCISCO - 20TH AVE</h1><p>lap pool</p>
+            <p>HOURS Mon - Thu 5:00am - 11:00pm Fri 5:00am - 10:00pm
+            Sat - Sun 8:00am - 8:00pm Special Club Hours</p>""")
 
+
+def test_equinox_rejects_incomplete_location_hours():
+    with pytest.raises(DirectSourceError):
+        _extract_equinox("""<h1>Equinox Sports Club San Francisco</h1><p>Indoor Pool</p>
+            "openingHoursSpecification": [
+              {"dayOfWeek": ["Monday","Tuesday"],"opens": "05:00","closes": "22:00"},
+              {"dayOfWeek": ["Saturday","Sunday"],"opens": "07:00","closes": "18:00"}]
+            """)
+
+
+def test_fitness_sf_rejects_partial_location_hours_without_full_source_evidence():
+    with pytest.raises(DirectSourceError):
+        _extract_fitness_sf("""<h1>FITNESS SF Fillmore</h1>
+            <p>25-yard, 5-lane swimming pool</p>
+            <p>Mon - Thu: 5 am - 12 am Fri: 5 am - 11 pm Sat - Sun: 7 am - 8 pm 1-415-348-6377</p>""")
+
+
+@pytest.mark.parametrize("extractor, weekend_end", [(_extract_ucsf_bakar, "18:00"), (_extract_ucsf_fitness, "16:00")])
+def test_ucsf_combined_calendar_preserves_facility_identity(extractor, weekend_end):
+    from pathlib import Path
+    html = (Path(__file__).parent / "fixtures/html-facts/ucsf-holiday-2026.html").read_text()
+    payload = extractor(html, date(2026, 9, 1))
     assert payload["schedule_basis"] == "facility_hours"
+    assert payload["sessions"] == []
     assert len(payload["access_hours"]) == 7
-    assert any(a["day"] == "friday" and a["end"] == "22:00" for a in payload["access_hours"])
+    assert next(row for row in payload["access_hours"] if row["day"] == "sunday")["end"] == weekend_end
+    assert payload["closures"][0]["start"] == "2026-09-07"
 
 
-def test_equinox_extractor_reads_schema_hours():
-    payload = _extract_equinox(
-        """
-        <h1>Equinox Sports Club San Francisco</h1>
-        <p>Indoor Pool</p>
-        "openingHoursSpecification": [
-          {"dayOfWeek": ["Monday","Tuesday"],"opens": "05:00","closes": "22:00"},
-          {"dayOfWeek": ["Saturday","Sunday"],"opens": "07:00","closes": "18:00"}
-        ]
-        """
-    )
-
-    assert payload["schedule_basis"] == "facility_hours"
-    assert any(a["day"] == "monday" and a["start"] == "05:00" for a in payload["access_hours"])
-    assert any(a["day"] == "sunday" and a["end"] == "18:00" for a in payload["access_hours"])
+@pytest.mark.parametrize("observed, end, closed, exceptions", [
+    (date(2026, 11, 20), "2026-12-03", ["2026-11-26"], ["2026-11-27"]),
+    (date(2026, 12, 24), "2027-01-01", ["2026-12-24", "2026-12-25", "2027-01-01"],
+     [f"2026-12-{day}" for day in range(26, 32)]),
+])
+def test_ucsf_closures_partial_days_and_printed_rollover(observed, end, closed, exceptions):
+    from pathlib import Path
+    html = (Path(__file__).parent / "fixtures/html-facts/ucsf-holiday-2026.html").read_text()
+    payload = _extract_ucsf_bakar(html, observed)
+    assert payload["effective_end"] == end
+    assert [row["start"] for row in payload["closures"]] == closed
+    assert [row["date"] for row in payload["access_exceptions"]] == exceptions
+    assert all((row["start"], row["end"]) == ("08:00", "14:00") for row in payload["access_exceptions"])
 
 
-def test_fitness_sf_extractor_reads_pool_hours_from_location_hours():
-    payload = _extract_fitness_sf(
-        """
-        <h1>FITNESS SF Fillmore</h1>
-        <p>25-yard, 5-lane swimming pool</p>
-        <p>Mon - Thu: 5 am - 12 am Fri: 5 am - 11 pm Sat - Sun: 7 am - 8 pm 1-415-348-6377</p>
-        """
-    )
-
-    assert payload["schedule_basis"] == "pool_hours"
-    assert any(a["day"] == "thursday" and a["end"] == "23:59" for a in payload["access_hours"])
-
-
-def test_sfsu_extractor_reads_natatorium_hours():
-    payload = _extract_sfsu_aquatics(
-        """
-        <h2>Natatorium Hours of Operation</h2>
-        <p>Mon, Wed, Thur: Noon - 4:00 p.m. Tue, Fri: 10:00am- 1:30pm Saturday/ Sunday: Closed</p>
-        <p>Lap Pool: six lanes.</p>
-        """
-    )
-
-    assert payload["schedule_basis"] == "pool_hours"
-    assert len(payload["access_hours"]) == 5
-    assert any(a["day"] == "monday" and a["start"] == "12:00" for a in payload["access_hours"])
-    assert any(a["day"] == "friday" and a["start"] == "10:00" for a in payload["access_hours"])
+@pytest.mark.parametrize("old, new", [
+    ("(Bakar and Millberry)", "(Bakar)"),
+    ("Monday-Friday", "Monday-Thursday"),
+    ("January 19 (MLK", "January 1 (MLK"),
+    ("2027 New Year's", "2026 New Year's"),
+    ("Open Regular Hours", "Open Regular Hours except pool closed"),
+    ("8:00 am-2:00 pm", "8:00 am-2:00 pm pool only"),
+    ("<p>November 11 (Veterans Day): Open Regular Hours</p>", ""),
+])
+def test_ucsf_unsupported_scope_dates_or_missing_rows_hold(old, new):
+    from pathlib import Path
+    html = (Path(__file__).parent / "fixtures/html-facts/ucsf-holiday-2026.html").read_text()
+    assert old in html
+    with pytest.raises(DirectSourceError):
+        _extract_ucsf_bakar(html.replace(old, new), date(2026, 9, 9))
 
 
-def test_ucsf_bakar_extractor_reads_facility_hours():
-    payload = _extract_ucsf_bakar(
-        """
-        <p>Facility Hours: Monday-Friday, 6:00 am-9:00 pm;
-        Saturday-Sunday, 8:00 am-6:00 pm</p>
-        """
-    )
-
-    assert payload["schedule_basis"] == "facility_hours"
-    assert len(payload["access_hours"]) == 7
-    assert any(a["day"] == "monday" and a["start"] == "06:00" for a in payload["access_hours"])
-    assert any(a["day"] == "sunday" and a["end"] == "18:00" for a in payload["access_hours"])
-
-
-def test_ucsf_fitness_extractor_handles_millberry_page():
-    payload = _extract_ucsf_fitness(
-        """
-        <p>Facility Hours: Monday-Friday, 6:00 am-9:00 pm;
-        Saturday-Sunday, 8:00 am-4:00 pm Millberry Union</p>
-        """
-    )
-
-    assert payload["schedule_basis"] == "facility_hours"
-    assert any(a["day"] == "sunday" and a["end"] == "16:00" for a in payload["access_hours"])
-
-
-def test_ymca_extractor_reads_first_location_hours_block():
-    payload = _extract_ymca_location(
-        """
-        <h2>Letterman Pool &amp; Gym Hours</h2>
-        <div class="tr-accordion_day-hour__list"><span>Monday</span><span>5:30 am – 8:30 pm</span></div>
-        <div class="tr-accordion_day-hour__list"><span>Tuesday</span><span>5:30 am – 8:30 pm</span></div>
-        <div class="tr-accordion_day-hour__list"><span>Wednesday</span><span>5:30 am – 8:30 pm</span></div>
-        <div class="tr-accordion_day-hour__list"><span>Thursday</span><span>5:30 am – 8:30 pm</span></div>
-        <div class="tr-accordion_day-hour__list"><span>Friday</span><span>5:30 am – 8:30 pm</span></div>
-        <div class="tr-accordion_day-hour__list"><span>Saturday</span><span>7:00 am – 4:30 pm</span></div>
-        <div class="tr-accordion_day-hour__list"><span>Sunday</span><span>Closed</span></div>
-        <h2>Other Hours</h2>
-        <div class="tr-accordion_day-hour__list"><span>Monday</span><span>1:00 pm – 2:00 pm</span></div>
-        """
-    )
-
-    assert payload["schedule_basis"] == "facility_hours"
-    assert len(payload["access_hours"]) == 6
-    assert any(a["day"] == "saturday" and a["end"] == "16:30" for a in payload["access_hours"])
-    assert not any(a["day"] == "sunday" for a in payload["access_hours"])
-
-
-def test_ymca_extractor_prefers_facility_hours_block_with_day_ranges(monkeypatch):
-    monkeypatch.setattr("schedules._time.pacific_today", lambda: date(2026, 5, 17))
-
-    payload = _extract_ymca_location(
-        """
-        <h2>Facility Hours</h2>
-        <div class="tr-accordion_day-hour__list"><span>Monday-Friday</span><span>6:30 a.m. – 7:45 p.m.</span></div>
-        <div class="tr-accordion_day-hour__list"><span>Saturday and Sunday</span><span>8:00 a.m. – 3:45 p.m.</span></div>
-        <h2>Holiday Hours</h2>
-        <p>Monday, May 25 (Memorial Day)</p>
-        <p>8:00 a.m. – 1:30 p.m.</p>
-        <h4>Contact</h4>
-        <div class="tr-accordion_day-hour__list"><span>Monday</span><span>8:00 am – 6:00 pm</span></div>
-        """
-    )
-
-    assert len(payload["access_hours"]) == 7
-    assert any(a["day"] == "monday" and a["start"] == "06:30" and a["end"] == "19:45" for a in payload["access_hours"])
-    assert any(a["day"] == "sunday" and a["start"] == "08:00" and a["end"] == "15:45" for a in payload["access_hours"])
-    assert payload["access_exceptions"] == [{
-        "date": "2026-05-25",
-        "evidence": "Monday, May 25 (Memorial Day) 8:00 a.m. – 1:30 p.m.",
-        "label": "Holiday facility hours",
-        "reason": "Memorial Day",
-        "start": "08:00",
-        "end": "13:30",
-    }]
-
-
-def test_ymca_extractor_uses_pool_hours_when_page_gives_pool_rule(monkeypatch):
-    monkeypatch.setattr("schedules._time.pacific_today", lambda: date(2026, 5, 17))
-
-    payload = _extract_ymca_location(
-        """
-        <h2>Hours</h2>
-        <div class="tr-accordion_day-hour__list"><span>Monday</span><span>5:30 am – 9:00 pm</span></div>
-        <div class="tr-accordion_day-hour__list"><span>Tuesday</span><span>5:30 am – 9:00 pm</span></div>
-        <h2>Holiday Hours</h2>
-        <p>Monday, May 25 (Memorial Day)</p>
-        <p>7:00 a.m. – 2:00 p.m.</p>
-        <p>Pool Closes at 1:30 p.m.</p>
-        <p>Pool Hours Opens 30 min after, closes 30 min before facility</p>
-        """
-    )
-
-    assert payload["schedule_basis"] == "pool_hours"
-    assert payload["access_hours"][0]["start"] == "06:00"
-    assert payload["access_hours"][0]["end"] == "20:30"
-    assert payload["access_exceptions"] == [{
-        "date": "2026-05-25",
-        "evidence": "Monday, May 25 (Memorial Day) 7:00 a.m. – 2:00 p.m. Pool Closes at 1:30 p.m.",
-        "label": "Holiday pool hours",
-        "reason": "Memorial Day",
-        "start": "07:30",
-        "end": "13:30",
-    }]
+@pytest.mark.parametrize("observed", [date(2025, 12, 31), date(2027, 1, 2)])
+def test_ucsf_expired_or_future_year_schedule_never_extends(observed):
+    from pathlib import Path
+    html = (Path(__file__).parent / "fixtures/html-facts/ucsf-holiday-2026.html").read_text()
+    with pytest.raises(DirectSourceError):
+        _extract_ucsf_bakar(html, observed)
 
 
 def test_koret_cache_identity_includes_original_zip_bytes(monkeypatch, tmp_path):
     import httpx
     from schedules.direct_sources import http
 
-    def workbook(timestamp):
-        output = io.BytesIO()
-        with zipfile.ZipFile(output, "w") as archive:
-            archive.writestr(zipfile.ZipInfo("xl/workbook.xml", date_time=timestamp), b"<workbook/>")
-        return output.getvalue()
-
-    first_bytes = workbook((2026, 7, 10, 10, 0, 0))
-    second_bytes = workbook((2026, 7, 10, 11, 0, 0))
+    first_bytes = _workbook_bytes("first export")
+    second_bytes = _workbook_bytes("second export")
+    changed_bytes = _workbook_bytes("first export", hours="Hours: 7am-9pm")
     current = [first_bytes]
     def respond(request):
         return httpx.Response(200, content=current[0] if request.url.params["format"] == "xlsx" else b"%PDF-1.4")
@@ -618,14 +613,38 @@ def test_koret_cache_identity_includes_original_zip_bytes(monkeypatch, tmp_path)
     assert first.path.read_bytes() == first_bytes
     assert "format=xlsx" in first.response_url
     assert http.fetch_koret_workbook("koret-center", url, cache_root=tmp_path).from_cache
+
+    # A re-export of the same cells keeps the original capture and its identity.
     current[0] = second_bytes
-    second = http.fetch_koret_workbook("koret-center", url, cache_root=tmp_path)
-    assert second.sha256 != first.sha256
-    assert not second.from_cache
+    assert second_bytes != first_bytes
+    reused = http.fetch_koret_workbook("koret-center", url, cache_root=tmp_path)
+    assert (reused.path, reused.sha256, reused.from_cache) == (first.path, first.sha256, True)
+    assert reused.path.read_bytes() == first_bytes
+
+    current[0] = changed_bytes
+    changed = http.fetch_koret_workbook("koret-center", url, cache_root=tmp_path)
+    assert changed.sha256 != first.sha256
+    assert not changed.from_cache
+
     first.path.write_bytes(b"corrupt")
     current[0] = first_bytes
     with pytest.raises(DirectSourceError, match="prefix collision"):
         http.fetch_koret_workbook("koret-center", url, cache_root=tmp_path)
+
+
+def test_koret_rejects_an_unreadable_workbook_export(monkeypatch, tmp_path):
+    import httpx
+    from schedules.direct_sources import http
+    output = io.BytesIO()
+    with zipfile.ZipFile(output, "w") as archive:
+        archive.writestr("xl/workbook.xml", b"<workbook/>")
+    client_class = httpx.Client
+    monkeypatch.setattr(http.httpx, "Client", lambda **kwargs: client_class(
+        transport=httpx.MockTransport(lambda request: httpx.Response(200, content=output.getvalue()))))
+    with pytest.raises(DirectSourceError, match="not a valid XLSX"):
+        http.fetch_koret_workbook("koret-center", "https://docs.google.com/spreadsheets/d/official/edit",
+                                  cache_root=tmp_path)
+    assert not list(tmp_path.iterdir())
 
 
 def test_fetch_text_reports_sanitized_redirect_destination(monkeypatch):
@@ -827,10 +846,14 @@ def test_browser_capture_uses_original_bytes_and_keeps_provenance(browser_captur
     root, directory, entry, receipt = browser_capture
     monkeypatch.setattr('schedules.direct_sources.browser.read_browser_capture', lambda entry: read_browser_capture(entry, root=root))
     monkeypatch.setattr(direct_sources, 'fetch_text', lambda *_: pytest.fail('Browser source must never use HTTP fallback'))
-    monkeypatch.setitem(direct_sources._HTML_EXTRACTORS, 'jccsf_html', (lambda text: {'sessions': [], 'closures': [], 'schedule_basis': 'swim_schedule'}, 'test', 'note'))
+    from schedules.direct_sources import html_facts
+    inventory = {'lines': [{'id': 'row', 'text': 'Official pool schedule'}]}
+    monkeypatch.setattr(html_facts, 'inspect_html_source', lambda slug, text: inventory)
+    monkeypatch.setattr(html_facts, 'html_source_payload', lambda *_: {'sessions': [], 'closures': [], 'schedule_basis': 'swim_schedule'})
     result = direct_sources.extract_direct(entry, cache_root=root / 'data')
     assert result.fetch_result.path.read_bytes() == (directory / 'source.html').read_bytes()
     assert result.source['configuration']['capture'] == receipt
+    assert result.model == 'browser-html'
 
 
 @pytest.mark.parametrize('failure', ['missing', 'source_hash', 'rendered_hash', 'screenshot_hash', 'url', 'status', 'stale', 'future', 'script', 'version', 'unclosed', 'failed', 'duplicate', 'symlink'])
@@ -869,15 +892,296 @@ def test_browser_capture_rejects_invalid_evidence_without_http_fallback(browser_
         direct_sources.extract_direct(entry, cache_root=root / 'data')
 
 
+def test_browser_capture_extracts_undecodable_byte_leniently(browser_capture, monkeypatch):
+    """The stored bytes stay the evidence; the extractor sees a repaired byte, not a rejected capture."""
+    from schedules import direct_sources
+    from schedules.direct_sources.browser import read_browser_capture
+    from schedules.direct_sources import html_facts
+    root, directory, entry, receipt = browser_capture
+    content = b'<html><body>Official pool schedule \xff more</body></html>'
+    (directory / 'source.html').write_bytes(content)
+    receipt['hashes']['source'] = hashlib.sha256(content).hexdigest()
+    (directory / 'capture.json').write_text(json.dumps(receipt))
+    monkeypatch.setattr('schedules.direct_sources.browser.read_browser_capture', lambda entry: read_browser_capture(entry, root=root))
+    monkeypatch.setattr(direct_sources, 'fetch_text', lambda *_: pytest.fail('Browser source must never use HTTP fallback'))
+    seen = []
+    monkeypatch.setattr(html_facts, 'inspect_html_source',
+                        lambda slug, text: seen.append(text) or {'lines': [{'id': 'row', 'text': 'Official pool schedule'}]})
+    monkeypatch.setattr(html_facts, 'html_source_payload', lambda *_: {'sessions': [], 'closures': [], 'schedule_basis': 'swim_schedule'})
+    result = direct_sources.extract_direct(entry, cache_root=root / 'data')
+    assert seen == ['<html><body>Official pool schedule � more</body></html>']
+    assert result.fetch_result.path.read_bytes() == content
+
+
+def test_access_verification_of_undecodable_capture_does_not_raise_unicode_decode_error(tmp_path, monkeypatch):
+    """Verification must fail, if at all, with the module's own error — never a bare UnicodeDecodeError."""
+    from schedules import direct_sources
+    from schedules.direct_sources.http import DirectTextResponse
+    from schedules.models import PoolEntry
+    content = b'<html><body>Fri: 5 am - 11 pm \xff</body></html>'
+    monkeypatch.setattr(direct_sources, 'fetch_text',
+                        lambda url: DirectTextResponse('', content, 'https://fitnesssf.com/location/fillmore'))
+    monkeypatch.setitem(direct_sources._HTML_EXTRACTORS, 'fitness_sf_html',
+                        (lambda text: {'sessions': [], 'closures': []}, 'fitness-sf-html-v1', 'Access hours only.'))
+    entry = PoolEntry(slug='fitness-sf-fillmore', pdf_url='https://fitnesssf.com/location/fillmore',
+                      official_page_url='https://fitnesssf.com/location/fillmore', source_kind='fitness_sf_html')
+    result = direct_sources.extract_direct(entry, cache_root=tmp_path / 'data')
+    artifact = {'provider': 'direct', 'model': result.model, 'source_pdf_url': entry.pdf_url,
+                'pdf_sha256': result.fetch_result.sha256, 'payload': result.payload,
+                'details': {'direct_source': result.source}}
+    today = date.fromisoformat(result.source['observed_on'])
+    try:
+        outcome = direct_sources.verify_direct_artifact(artifact, result.fetch_result.path, today=today)
+    except UnicodeDecodeError:
+        pytest.fail('Verification leaked a bare UnicodeDecodeError instead of DirectSourceError')
+    except DirectSourceError:
+        pass
+    else:
+        assert outcome['ok']
+
+
+def test_http_capture_replaces_an_undecodable_byte_instead_of_failing(tmp_path, monkeypatch):
+    """The stored bytes stay the evidence; only the text handed to the extractor is repaired."""
+    from schedules import direct_sources
+    from schedules.direct_sources.http import DirectTextResponse
+    from schedules.models import PoolEntry
+    content = b'<html><body>Lap swim \xff 6am</body></html>'
+    monkeypatch.setattr(direct_sources, 'fetch_text',
+                        lambda url: DirectTextResponse('', content, 'https://www.fitnesssf.com/pool'))
+    seen = []
+    monkeypatch.setitem(direct_sources._HTML_EXTRACTORS, 'fitness_sf_html',
+                        (lambda text: seen.append(text) or {'sessions': [], 'closures': []},
+                         'fitness-sf-html-v1', 'Access hours only.'))
+    entry = PoolEntry(slug='fitness-sf', pdf_url='https://www.fitnesssf.com/pool',
+                      official_page_url='https://www.fitnesssf.com/pool', source_kind='fitness_sf_html')
+    result = direct_sources.extract_direct(entry, cache_root=tmp_path / 'data')
+    assert seen == ['<html><body>Lap swim \ufffd 6am</body></html>']
+    assert result.fetch_result.path.read_bytes() == content
+
+
 def test_browser_parser_failure_retains_original_source_and_capture(browser_capture, monkeypatch):
     from schedules import direct_sources
     from schedules.direct_sources.browser import read_browser_capture
     root, directory, entry, _ = browser_capture
     monkeypatch.setattr('schedules.direct_sources.browser.read_browser_capture', lambda entry: read_browser_capture(entry, root=root))
-    def fail(text):
+    def fail(slug, text):
         raise DirectSourceError('Changed schedule requires review')
-    monkeypatch.setitem(direct_sources._HTML_EXTRACTORS, 'jccsf_html', (fail, 'test', 'note'))
+    monkeypatch.setattr('schedules.direct_sources.html_facts.inspect_html_source', fail)
     with pytest.raises(DirectSourceError, match='Changed schedule'):
         direct_sources.extract_direct(entry, cache_root=root / 'data')
     assert len(list((root / 'data/jccsf').glob('*/source.html'))) == 1
     assert (directory / 'capture.json').exists()
+
+
+_PUBLISHABLE_HTML_SLUGS = ('jccsf', 'sfsu-mashouf', 'embarcadero-ymca', 'presidio-ymca-letterman', 'chinatown-ymca')
+
+@pytest.fixture
+def integrated_html_capture(tmp_path, monkeypatch):
+    from copy import deepcopy
+    from pathlib import Path
+    from schedules.direct_sources.http import DirectTextResponse
+    from schedules.providers import openai_provider
+    from schedules.registry import load_registry
+    captures = {}
+    for slug in _PUBLISHABLE_HTML_SLUGS:
+        entry = next(item for item in load_registry() if item.slug == slug)
+        fixture = 'chinatown-ymca-reopened' if slug == 'chinatown-ymca' else slug
+        content = (Path(__file__).parent / 'fixtures/html-facts' / f'{fixture}.html').read_bytes()
+        receipt = {'method': 'cloudflare_browser', 'requested_url': entry.pdf_url,
+                   'url': entry.pdf_url, 'status': 200, 'captured_at': '2026-09-08T18:00:00Z',
+                   'hashes': {'source': hashlib.sha256(content).hexdigest()},
+                   'configuration': {'script_sha256': 'f' * 64, 'playwright_version': 'test'}}
+        captures[slug] = (DirectTextResponse(content.decode(), content, entry.pdf_url), receipt)
+    monkeypatch.setattr('schedules.direct_sources.browser.read_browser_capture', lambda entry: deepcopy(captures[entry.slug]))
+    monkeypatch.setattr(openai_provider, 'call_api', lambda *args, **kwargs: pytest.fail('HTML must not call the model'))
+    return captures
+
+
+
+def _integrated_html_artifact(tmp_path, slug):
+    from schedules.direct_sources import extract_direct
+    from schedules.registry import load_registry
+    entry = next(item for item in load_registry() if item.slug == slug)
+    result = extract_direct(entry, cache_root=tmp_path / 'data')
+    artifact = {'provider': 'direct', 'model': result.model, 'source_pdf_url': entry.pdf_url,
+                'pdf_sha256': result.fetch_result.sha256, 'payload': result.payload,
+                'details': {'direct_source': result.source}}
+    path = result.fetch_result.path.parent / 'direct-browser-html.json'
+    path.write_text(json.dumps(artifact))
+    return entry, result, artifact
+
+
+@pytest.mark.parametrize('slug', sorted(_PUBLISHABLE_HTML_SLUGS))
+def test_frozen_html_capture_and_publication_verifier_agree(tmp_path, integrated_html_capture, slug):
+    from schedules.direct_sources import verify_direct_artifact
+    _, result, artifact = _integrated_html_artifact(tmp_path, slug)
+    assert verify_direct_artifact(artifact, result.fetch_result.path, today=date(2026, 9, 8))['ok']
+    _, reused, fresh = _integrated_html_artifact(tmp_path, slug)
+    assert verify_direct_artifact(fresh, reused.fetch_result.path, today=date(2026, 9, 8))['ok']
+    assert reused.fetch_result.from_cache
+
+
+@pytest.mark.parametrize('mutation', ['configuration', 'payload', 'receipt', 'expired', 'future', 'bytes'])
+def test_frozen_html_publication_rejects_changed_evidence(tmp_path, integrated_html_capture, mutation):
+    from schedules.direct_sources import verify_direct_artifact
+    _, result, artifact = _integrated_html_artifact(tmp_path, 'sfsu-mashouf')
+    today = date(2026, 9, 8)
+    if mutation == 'configuration':
+        artifact['details']['direct_source']['configuration']['parser_sha256'] = '0' * 64
+    elif mutation == 'payload':
+        artifact['payload']['access_hours'][0]['end'] = '23:00'
+    elif mutation == 'receipt':
+        integrated_html_capture['sfsu-mashouf'][1]['captured_at'] = '2026-09-09T18:00:00Z'
+    elif mutation == 'expired':
+        today = date(2026, 9, 22)
+    elif mutation == 'future':
+        today = date(2026, 9, 7)
+    else:
+        result.fetch_result.path.write_bytes(b'changed')
+    with pytest.raises(DirectSourceError):
+        verify_direct_artifact(artifact, result.fetch_result.path, today=today)
+
+
+def test_frozen_letterman_closure_cannot_publish_after_printed_end(tmp_path, integrated_html_capture):
+    from schedules.publish import publish_eligible
+    from schedules.review import find_review_candidates
+    entry, result, artifact = _integrated_html_artifact(tmp_path, 'presidio-ymca-letterman')
+    candidate = find_review_candidates(data_root=tmp_path / 'data')[0]
+    options = dict(candidate=candidate, payload=result.payload, prior_sessions_count=0,
+                   latest_effective_start='2026-05-17', source_kind=entry.source_kind,
+                   source_status=entry.source_status, blocking_slugs=frozenset(), quarantined_shas=frozenset(),
+                   has_prior_schedule_window=True, source_pdf_path=result.fetch_result.path,
+                   pin_url=entry.pdf_url, direct_opt_in=True)
+    assert publish_eligible(**options, today=date(2026, 9, 13)).ok
+    assert not publish_eligible(**options, today=date(2026, 9, 14)).ok
+
+
+def test_chinatown_publication_rejects_conflict_date_even_with_fresh_capture(tmp_path, integrated_html_capture):
+    from schedules.direct_sources import verify_direct_artifact
+    integrated_html_capture['chinatown-ymca'][1]['captured_at'] = '2026-12-20T18:00:00Z'
+    _, result, artifact = _integrated_html_artifact(tmp_path, 'chinatown-ymca')
+    assert artifact['payload']['effective_end'] == '2026-12-31'
+    assert verify_direct_artifact(artifact, result.fetch_result.path, today=date(2026, 12, 31))['ok']
+    with pytest.raises(DirectSourceError, match='schedule window is expired'):
+        verify_direct_artifact(artifact, result.fetch_result.path, today=date(2027, 1, 1))
+    artifact['payload']['effective_end'] = '2027-01-02'
+    with pytest.raises(DirectSourceError, match='differs from verified source facts'):
+        verify_direct_artifact(artifact, result.fetch_result.path, today=date(2026, 12, 31))
+
+
+def test_frozen_browser_sources_publish_atomically_per_candidate(tmp_path, integrated_html_capture, monkeypatch):
+    from schedules import publish, review
+    extracted = [_integrated_html_artifact(tmp_path, slug) for slug in _PUBLISHABLE_HTML_SLUGS]
+    content = tmp_path / 'content'
+    content.mkdir()
+    for entry, _, _ in extracted:
+        sessions = '\n'.join(
+            f'[[extra.schedules.sessions]]\nday = "{day}"\ntype = "lap_swim"\nstart = "07:00"\nend = "08:00"'
+            for day in ('monday', 'tuesday', 'wednesday', 'thursday', 'friday'))
+        (content / f'{entry.slug}.md').write_text(
+            f'+++\ntitle = "{entry.slug}"\nslug = "{entry.slug}"\n[extra]\n'
+            '[[extra.schedules]]\neffective_start = "2026-05-17"\neffective_end = "2026-08-11"\n'
+            f'schedule_basis = "swim_schedule"\nclosures = []\n{sessions}\n+++\n')
+    reports = tmp_path / 'reports'
+    reports.mkdir()
+    monkeypatch.setattr(publish, 'TMP_DIR', reports)
+    monkeypatch.setattr(publish, 'auto_project_enabled', lambda: True)
+    monkeypatch.setattr(publish, 'load_registry', lambda: [entry for entry, _, _ in extracted])
+    monkeypatch.setattr(publish, 'load_quarantine', lambda: frozenset())
+    monkeypatch.setattr(review, 'pacific_today', lambda: date(2026, 9, 8))
+    options = dict(data_root=tmp_path / 'data', content_spots_dir=content, today=date(2026, 9, 8))
+    assert publish.publish_pending_all(**options)[0] == 0
+    assert not list((tmp_path / 'data').glob('*/*/reviewed.json'))
+    (reports / 'extraction-report-direct.json').write_text(json.dumps({'ready_direct': {
+        entry.slug: (result.fetch_result.path.parent / 'direct-browser-html.json').relative_to(tmp_path).as_posix()
+        for entry, result, _ in extracted}}))
+    assert publish.publish_pending_all(**options)[0] == len(_PUBLISHABLE_HTML_SLUGS)
+    report = json.loads((reports / 'publish-pending.json').read_text())
+    assert report['refused'] == []
+    for entry, result, artifact in extracted:
+        reviewed = json.loads((result.fetch_result.path.parent / 'reviewed.json').read_text())
+        assert reviewed['direct_source'] == artifact['details']['direct_source']
+        assert reviewed['payload'] == artifact['payload']
+        projected = (content / f'{entry.slug}.md').read_text()
+        if entry.slug == 'presidio-ymca-letterman':
+            assert 'maintenance' in projected
+            assert reviewed['payload']['effective_end'] == '2026-09-13'
+        if entry.slug in {'sfsu-mashouf', 'embarcadero-ymca'}:
+            assert reviewed['payload']['sessions'] == []
+            assert reviewed['payload']['schedule_basis'] == 'pool_hours'
+    published_bytes = {path: path.read_bytes() for path in content.glob('*.md')}
+    assert publish.publish_pending_all(**options)[0] == 0
+    assert all(path.read_bytes() == original for path, original in published_bytes.items())
+    for _, receipt in integrated_html_capture.values():
+        receipt['captured_at'] = '2026-09-09T18:00:00Z'
+    for slug in _PUBLISHABLE_HTML_SLUGS:
+        _integrated_html_artifact(tmp_path, slug)
+    monkeypatch.setattr(review, 'pacific_today', lambda: date(2026, 9, 9))
+    assert publish.publish_pending_all(**(options | {'today': date(2026, 9, 9)}))[0] == len(_PUBLISHABLE_HTML_SLUGS)
+    for path in (tmp_path / 'data').glob('*/*/reviewed.json'):
+        assert json.loads(path.read_text())['payload']['effective_start'] == '2026-09-09'
+
+
+def test_browser_pipeline_writes_ready_direct_artifact_for_verified_access_transition(tmp_path, integrated_html_capture, monkeypatch):
+    from schedules import artifacts, direct_sources, paths, pipeline
+    from schedules.registry import load_registry
+    from schedules.report import write_report
+    entry = next(item for item in load_registry() if item.slug == 'sfsu-mashouf')
+    monkeypatch.setattr(direct_sources, 'DATA_DIR', tmp_path / 'data')
+    monkeypatch.setattr(pipeline, 'reviewed_path', lambda *args: paths.reviewed_path(*args, root=tmp_path / 'data'))
+    save = artifacts.save_artifact_bundle
+    monkeypatch.setattr(pipeline, 'save_artifact_bundle', lambda **kwargs: save(**kwargs, root=tmp_path / 'data'))
+    monkeypatch.setattr(artifacts, 'relative_to_repo', lambda path: path.relative_to(tmp_path).as_posix())
+    prior = {'sessions': [{'day': 'monday', 'type': 'lap_swim', 'start': '07:00', 'end': '08:00'}],
+             'closures': [], 'effective_start': '2026-05-17', 'effective_end': None}
+    result = pipeline._process_direct_entry(entry, prior, policy=pipeline.ReusePolicy(False, False, False))
+    assert result.provider == 'direct'
+    assert result.model == 'browser-html'
+    assert not result.catastrophic
+    assert result.violations == []
+    report = tmp_path / 'extraction-report-direct.md'
+    write_report([result], report)
+    receipt = json.loads(report.with_suffix('.json').read_text())
+    assert receipt['ready_direct'] == {entry.slug: result.artifact_paths['direct']}
+    artifact_path = tmp_path / receipt['ready_direct'][entry.slug]
+    artifact = json.loads(artifact_path.read_text())
+    assert artifact['usage'] == {}
+    assert artifact['cost_estimate'] == 'deterministic'
+    assert artifact['payload']['sessions'] == []
+    assert artifact['payload']['access_hours']
+    assert artifact['prompt_sha256'] == hashlib.sha256(f'direct:{entry.source_kind}'.encode()).hexdigest()
+    assert direct_sources.verify_direct_artifact(artifact, artifact_path.parent / 'source.html', today=date(2026, 9, 8))['ok']
+
+
+def test_koret_original_invalid_monday_hours_hold_whole_workbook():
+    from pathlib import Path
+    original = Path(__file__).parent / 'fixtures/koret-september.xlsx'
+    assert hashlib.sha256(original.read_bytes()).hexdigest() == 'a2506a70e8567c8ad5cee1b369b2e0b23be8927afa760a870aadb807253d3c4b'
+    with pytest.raises(DirectSourceError, match='Monday A2: invalid stated hours: Hours: 7am-7am'):
+        _extract_koret(original)
+
+
+def test_koret_original_sunday_deep_end_closure_does_not_close_other_lanes():
+    from pathlib import Path
+    from openpyxl import load_workbook
+    from schedules.direct_sources.providers.koret import _weekend_schedule
+    workbook = load_workbook(Path(__file__).parent / 'fixtures/koret-september.xlsx', data_only=True)
+    sessions, closures = _weekend_schedule(workbook['Weekend'])
+    assert [(row['day'], row['start'], row['end']) for row in sessions] == [
+        ('saturday', '08:00', '18:00'), ('sunday', '08:00', '18:00')]
+    assert closures == []
+    assert workbook['Weekend']['L27'].value == 'Deep End Closed'
+
+
+@pytest.mark.parametrize('hours', ['Hours: 7am-7am', 'Hours: 9pm-7am'])
+def test_koret_invalid_headline_never_falls_back_to_grid(tmp_path, hours):
+    sheets = {'Monday': [['Monday'], [hours], [time(6), 'slow'], [time(20), 'slow']]}
+    with pytest.raises(DirectSourceError, match='invalid stated hours'):
+        _extract_koret(_koret_workbook(tmp_path, sheets))
+
+
+def test_koret_unresolved_sunday_closure_scope_holds(tmp_path):
+    sheets = {'Weekend': [['Saturday'], ['Hours 8am-6pm'], ['Sunday'],
+                         ['Hours 8am-6pm'], [time(8), 'Closed unless staffing permits']]}
+    with pytest.raises(DirectSourceError, match='unresolved closure scope'):
+        _extract_koret(_koret_workbook(tmp_path, sheets))

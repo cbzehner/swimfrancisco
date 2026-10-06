@@ -1,12 +1,10 @@
 {
-  "cost_estimate": "input_tokens=4398, output_tokens=3467",
+  "cost_estimate": "input_tokens=4398, output_tokens=3277",
   "details": {
     "attempts": [
       {
-        "cost_usd": 0.10872,
-        "elapsed_seconds": 34.389,
+        "elapsed_seconds": 25.321,
         "http_status": 200,
-        "reserved_microusd": 352400,
         "status": "completed"
       }
     ],
@@ -14,12 +12,12 @@
       "image_detail": "original",
       "implementation_sha256": {
         "_time.py": "f1efa6d6ad8330772b2fa08cca374337c238aefa03ebf39edd002f5eecab4f35",
-        "artifacts.py": "be675cf6d20a5f1b73092af8ad2ef2b08e54618b19f4565220a009bce4ecee46",
-        "grounding.py": "8cbb607e772769fed10b25258b7d8e017b3a6d5c1e4ad0a3a2b1d7a1f8a68fd0",
-        "providers/openai_provider.py": "249fc978692bc9b4f86d7a5c285dea9e2643e63f0abc63f21f9c4a20d48eae56",
+        "artifacts.py": "734a53acbbd4c4436a6287cd2471b7ded359daa629cac786984acf50e0286c9d",
+        "grounding.py": "5a82c59f1ba683a4296ffde5c57b1e51b13dd05bfff8b0cb35089520cff56c1f",
+        "providers/openai_provider.py": "0dc3b053c05c7e9481691e054691801f27e80f3fa0b769adfea4b0f1860b805e",
         "schema.py": "b4a7307f43667e00ea7408112b180aed1e48851621022eeb690a6971c87719c6",
-        "signals.py": "f29c87c4cd8047a3a10402683135dfa30477d2c899984bad06134cea08fa8391",
-        "window_dates.py": "ad6af1472977d18e6ec4df57c0198cb7ebb3f66ca20c0333cd57f008822259b9"
+        "signals.py": "6a1a57bfadd13674c02e89ee60b2012c6b47963796af71e312380a580192f1de",
+        "window_dates.py": "a0389c04375b84df9b8c5d120e2c58ddab4ddf789c480707df756a24cfce9ae9"
       },
       "libraries": {
         "pdfminer-six": "20260107",
@@ -29,20 +27,12 @@
       },
       "max_output_tokens": 8192,
       "model": "gpt-5.5-2026-04-23",
-      "pricing": {
-        "cached_input_usd_per_million": 0.5,
-        "checked_at": "2026-09-05",
-        "input_usd_per_million": 5,
-        "output_usd_per_million": 30,
-        "service_tier": "default",
-        "source": "https://developers.openai.com/api/docs/models/gpt-5.5"
-      },
       "prompt_sha256": "fc1ba7fba37a6326844c9b48b2b31530dab6e4f6059024897a32aa478a43802b",
       "reasoning": "medium",
       "render_dpi": 150,
       "schema_sha256": "d2839c7fa22768d3b11935bd0e7103d9424f7d0d93813349e0c63e91e7ed6629"
     },
-    "final_response": "{\"effective_start\":\"2026-09-08\",\"schedule_basis\":\"swim_schedule\",\"effective_end\":\"2026-12-10\",\"sessions\":[{\"day\":\"sunday\",\"type\":\"lap_swim\",\"start\":\"08:30\",\"end\":\"10:30\",\"evidence\":\"Lap Swim (Main Pool) 8:30 am-10:30 am\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"sunday\",\"type\":\"lap_swim\",\"start\":\"12:30\",\"end\":\"14:00\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 12:30 pm-2:00 pm\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"sunday\",\"type\":\"family_swim\",\"start\":\"12:30\",\"end\":\"14:00\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 12:30 pm-2:00 pm\",\"notes\":null,\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"sunday\",\"type\":\"family_swim\",\"start\":\"14:30\",\"end\":\"16:30\",\"evidence\":\"Rec/Family Swim 2:30 pm-4:30 pm Please note that registration is\",\"notes\":\"Pool allocation is not printed in this session cell.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"lap_swim\",\"start\":\"07:00\",\"end\":\"08:45\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"family_swim\",\"start\":\"07:00\",\"end\":\"08:45\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am\",\"notes\":null,\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"10:45\",\"evidence\":\"Senior /Therapy Swim (Main Pool) 9:00 am-10:45 am\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"13:00\",\"evidence\":\"Lap Swim (Main Pool) 11:00 am-1:00 pm\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"lap_swim\",\"start\":\"14:00\",\"end\":\"15:45\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:45 pm\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"family_swim\",\"start\":\"14:00\",\"end\":\"15:45\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:45 pm\",\"notes\":null,\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"lap_swim\",\"start\":\"17:30\",\"end\":\"19:00\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"family_swim\",\"start\":\"17:30\",\"end\":\"19:00\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm\",\"notes\":null,\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"07:00\",\"end\":\"08:45\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"family_swim\",\"start\":\"07:00\",\"end\":\"08:45\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am\",\"notes\":null,\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"10:45\",\"evidence\":\"Senior /Therapy Swim (Main Pool) 9:00 am-10:45 am\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"family_swim\",\"start\":\"09:00\",\"end\":\"10:45\",\"evidence\":\"Rec/Family Swim (Small Pool) 9:00 am-10:45 am\",\"notes\":null,\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"13:00\",\"evidence\":\"Lap Swim (Main Pool) 11:00 am-1:00 pm\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"14:00\",\"end\":\"15:30\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"family_swim\",\"start\":\"14:00\",\"end\":\"15:30\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm\",\"notes\":null,\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"07:00\",\"end\":\"08:45\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"family_swim\",\"start\":\"07:00\",\"end\":\"08:45\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am\",\"notes\":null,\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"10:45\",\"evidence\":\"Senior /Therapy Swim (Main Pool) 9:00 am-10:45 am\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"13:00\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"family_swim\",\"start\":\"11:00\",\"end\":\"13:00\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm\",\"notes\":null,\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"17:30\",\"end\":\"19:00\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"family_swim\",\"start\":\"17:30\",\"end\":\"19:00\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm\",\"notes\":null,\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"07:00\",\"end\":\"08:45\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"family_swim\",\"start\":\"07:00\",\"end\":\"08:45\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am\",\"notes\":null,\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"10:45\",\"evidence\":\"Senior /Therapy Swim(Main Pool-2 Lanes) 9:00 am-10:45 am\",\"notes\":null,\"pool_label_raw\":\"Main Pool-2 Lanes\",\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"13:00\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"family_swim\",\"start\":\"11:00\",\"end\":\"13:00\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm\",\"notes\":null,\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"14:00\",\"end\":\"15:30\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"family_swim\",\"start\":\"14:00\",\"end\":\"15:30\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm\",\"notes\":null,\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null}],\"access_hours\":null,\"access_exceptions\":null,\"closures\":[{\"start\":\"2026-10-12\",\"end\":\"2026-10-12\",\"reason\":\"Indigenous Peoples Day\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-11-11\",\"end\":\"2026-11-11\",\"reason\":\"Veterans Day\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-11-26\",\"end\":\"2026-11-27\",\"reason\":\"Thanksgiving\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-09-24\",\"end\":\"2026-09-24\",\"reason\":\"staff training\",\"start_time\":\"11:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-10-22\",\"end\":\"2026-10-22\",\"reason\":\"staff training\",\"start_time\":\"11:00\",\"end_time\":\"14:00\",\"physical_pool\":null}]}",
+    "final_response": "{\"effective_start\":\"2026-09-08\",\"schedule_basis\":\"swim_schedule\",\"effective_end\":\"2026-12-10\",\"sessions\":[{\"day\":\"sunday\",\"type\":\"lap_swim\",\"start\":\"08:30\",\"end\":\"10:30\",\"evidence\":\"Lap Swim (Main Pool) 8:30 am-10:30 am\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"sunday\",\"type\":\"lap_swim\",\"start\":\"12:30\",\"end\":\"14:00\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 12:30 pm-2:00 pm\",\"notes\":\"Shared cell with Rec/Family Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"sunday\",\"type\":\"family_swim\",\"start\":\"12:30\",\"end\":\"14:00\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 12:30 pm-2:00 pm\",\"notes\":\"Shared cell with Lap Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"sunday\",\"type\":\"family_swim\",\"start\":\"14:30\",\"end\":\"16:30\",\"evidence\":\"Rec/Family Swim 2:30 pm-4:30 pm Please note that registration is\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"lap_swim\",\"start\":\"07:00\",\"end\":\"08:45\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am\",\"notes\":\"Shared cell with Rec/Family Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"family_swim\",\"start\":\"07:00\",\"end\":\"08:45\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am\",\"notes\":\"Shared cell with Lap Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"10:45\",\"evidence\":\"Senior /Therapy Swim (Main Pool) 9:00 am-10:45 am\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"13:00\",\"evidence\":\"Lap Swim (Main Pool) 11:00 am-1:00 pm\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"lap_swim\",\"start\":\"14:00\",\"end\":\"15:45\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:45 pm\",\"notes\":\"Shared cell with Rec/Family Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"family_swim\",\"start\":\"14:00\",\"end\":\"15:45\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:45 pm\",\"notes\":\"Shared cell with Lap Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"lap_swim\",\"start\":\"17:30\",\"end\":\"19:00\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm\",\"notes\":\"Shared cell with Rec/Family Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"monday\",\"type\":\"family_swim\",\"start\":\"17:30\",\"end\":\"19:00\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm\",\"notes\":\"Shared cell with Lap Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"07:00\",\"end\":\"08:45\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am\",\"notes\":\"Shared cell with Rec/Family Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"family_swim\",\"start\":\"07:00\",\"end\":\"08:45\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am\",\"notes\":\"Shared cell with Lap Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"10:45\",\"evidence\":\"Senior /Therapy Swim (Main Pool) 9:00 am-10:45 am\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"family_swim\",\"start\":\"09:00\",\"end\":\"10:45\",\"evidence\":\"Rec/Family Swim (Small Pool) 9:00 am-10:45 am\",\"notes\":null,\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"13:00\",\"evidence\":\"Lap Swim (Main Pool) 11:00 am-1:00 pm\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"14:00\",\"end\":\"15:30\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm\",\"notes\":\"Shared cell with Rec/Family Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"family_swim\",\"start\":\"14:00\",\"end\":\"15:30\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm\",\"notes\":\"Shared cell with Lap Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"07:00\",\"end\":\"08:45\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am\",\"notes\":\"Shared cell with Rec/Family Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"family_swim\",\"start\":\"07:00\",\"end\":\"08:45\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am\",\"notes\":\"Shared cell with Lap Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"10:45\",\"evidence\":\"Senior /Therapy Swim (Main Pool) 9:00 am-10:45 am\",\"notes\":null,\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"13:00\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm\",\"notes\":\"Shared cell with Rec/Family Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"family_swim\",\"start\":\"11:00\",\"end\":\"13:00\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm\",\"notes\":\"Shared cell with Lap Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"17:30\",\"end\":\"19:00\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm\",\"notes\":\"Shared cell with Rec/Family Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"family_swim\",\"start\":\"17:30\",\"end\":\"19:00\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm\",\"notes\":\"Shared cell with Lap Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"07:00\",\"end\":\"08:45\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am\",\"notes\":\"Shared cell with Rec/Family Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"family_swim\",\"start\":\"07:00\",\"end\":\"08:45\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am\",\"notes\":\"Shared cell with Lap Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"10:45\",\"evidence\":\"Senior /Therapy Swim(Main Pool-2 Lanes) 9:00 am-10:45 am\",\"notes\":null,\"pool_label_raw\":\"Main Pool-2 Lanes\",\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"13:00\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm\",\"notes\":\"Shared cell with Rec/Family Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"family_swim\",\"start\":\"11:00\",\"end\":\"13:00\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm\",\"notes\":\"Shared cell with Lap Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"14:00\",\"end\":\"15:30\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm\",\"notes\":\"Shared cell with Rec/Family Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Main Pool\",\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"family_swim\",\"start\":\"14:00\",\"end\":\"15:30\",\"evidence\":\"Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm\",\"notes\":\"Shared cell with Lap Swim; each program has its own printed pool allocation.\",\"pool_label_raw\":\"Small Pool\",\"excluded_dates\":null}],\"access_hours\":null,\"access_exceptions\":null,\"closures\":[{\"start\":\"2026-10-12\",\"end\":\"2026-10-12\",\"reason\":\"Indigenous Peoples Day\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-11-11\",\"end\":\"2026-11-11\",\"reason\":\"Veterans Day\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-11-26\",\"end\":\"2026-11-27\",\"reason\":\"Thanksgiving\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-09-24\",\"end\":\"2026-09-24\",\"reason\":\"staff training\",\"start_time\":\"11:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-10-22\",\"end\":\"2026-10-22\",\"reason\":\"staff training\",\"start_time\":\"11:00\",\"end_time\":\"14:00\",\"physical_pool\":null}]}",
     "image_sha256": {},
     "request_sha256": "7009e7ff623f884ef7d911bc25dc7d09c38d074b566195434a30de21fa61dbb8",
     "response_status": "completed",
@@ -241,6 +231,7 @@
           "day": "sunday",
           "end": "14:00",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 12:30 pm-2:00 pm",
+          "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Main Pool",
           "start": "12:30",
           "type": "lap_swim"
@@ -249,6 +240,7 @@
           "day": "sunday",
           "end": "14:00",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 12:30 pm-2:00 pm",
+          "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Small Pool",
           "start": "12:30",
           "type": "family_swim"
@@ -257,7 +249,6 @@
           "day": "sunday",
           "end": "16:30",
           "evidence": "Rec/Family Swim 2:30 pm-4:30 pm Please note that registration is",
-          "notes": "Pool allocation is not printed in this session cell.",
           "pool_label_raw": null,
           "start": "14:30",
           "type": "family_swim"
@@ -266,6 +257,7 @@
           "day": "monday",
           "end": "08:45",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+          "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Main Pool",
           "start": "07:00",
           "type": "lap_swim"
@@ -274,6 +266,7 @@
           "day": "monday",
           "end": "08:45",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+          "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Small Pool",
           "start": "07:00",
           "type": "family_swim"
@@ -298,6 +291,7 @@
           "day": "monday",
           "end": "15:45",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:45 pm",
+          "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Main Pool",
           "start": "14:00",
           "type": "lap_swim"
@@ -306,6 +300,7 @@
           "day": "monday",
           "end": "15:45",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:45 pm",
+          "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Small Pool",
           "start": "14:00",
           "type": "family_swim"
@@ -314,6 +309,7 @@
           "day": "monday",
           "end": "19:00",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+          "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Main Pool",
           "start": "17:30",
           "type": "lap_swim"
@@ -322,6 +318,7 @@
           "day": "monday",
           "end": "19:00",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+          "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Small Pool",
           "start": "17:30",
           "type": "family_swim"
@@ -330,6 +327,7 @@
           "day": "tuesday",
           "end": "08:45",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+          "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Main Pool",
           "start": "07:00",
           "type": "lap_swim"
@@ -338,6 +336,7 @@
           "day": "tuesday",
           "end": "08:45",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+          "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Small Pool",
           "start": "07:00",
           "type": "family_swim"
@@ -370,6 +369,7 @@
           "day": "tuesday",
           "end": "15:30",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm",
+          "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Main Pool",
           "start": "14:00",
           "type": "lap_swim"
@@ -378,6 +378,7 @@
           "day": "tuesday",
           "end": "15:30",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm",
+          "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Small Pool",
           "start": "14:00",
           "type": "family_swim"
@@ -386,6 +387,7 @@
           "day": "wednesday",
           "end": "08:45",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+          "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Main Pool",
           "start": "07:00",
           "type": "lap_swim"
@@ -394,6 +396,7 @@
           "day": "wednesday",
           "end": "08:45",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+          "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Small Pool",
           "start": "07:00",
           "type": "family_swim"
@@ -410,6 +413,7 @@
           "day": "wednesday",
           "end": "13:00",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm",
+          "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Main Pool",
           "start": "11:00",
           "type": "lap_swim"
@@ -418,6 +422,7 @@
           "day": "wednesday",
           "end": "13:00",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm",
+          "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Small Pool",
           "start": "11:00",
           "type": "family_swim"
@@ -426,6 +431,7 @@
           "day": "wednesday",
           "end": "19:00",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+          "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Main Pool",
           "start": "17:30",
           "type": "lap_swim"
@@ -434,6 +440,7 @@
           "day": "wednesday",
           "end": "19:00",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+          "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Small Pool",
           "start": "17:30",
           "type": "family_swim"
@@ -442,6 +449,7 @@
           "day": "thursday",
           "end": "08:45",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+          "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Main Pool",
           "start": "07:00",
           "type": "lap_swim"
@@ -450,6 +458,7 @@
           "day": "thursday",
           "end": "08:45",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+          "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Small Pool",
           "start": "07:00",
           "type": "family_swim"
@@ -466,6 +475,7 @@
           "day": "thursday",
           "end": "13:00",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm",
+          "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Main Pool",
           "start": "11:00",
           "type": "lap_swim"
@@ -474,6 +484,7 @@
           "day": "thursday",
           "end": "13:00",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm",
+          "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Small Pool",
           "start": "11:00",
           "type": "family_swim"
@@ -482,6 +493,7 @@
           "day": "thursday",
           "end": "15:30",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm",
+          "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Main Pool",
           "start": "14:00",
           "type": "lap_swim"
@@ -490,6 +502,7 @@
           "day": "thursday",
           "end": "15:30",
           "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm",
+          "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
           "pool_label_raw": "Small Pool",
           "start": "14:00",
           "type": "family_swim"
@@ -945,278 +958,7 @@
     },
     "visual_pages": []
   },
-  "extracted_at": "2026-09-08T07:45:28.678672+00:00",
-  "grounding": {
-    "grounded_count": 32,
-    "ratio": 0.9697,
-    "sessions": [
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 0,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 1,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 2,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": false,
-        "grounded": false,
-        "index": 3,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 4,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 5,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 6,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 7,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 8,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 9,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 10,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 11,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 12,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 13,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 14,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 15,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 16,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 17,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 18,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 19,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 20,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 21,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 22,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 23,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 24,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 25,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 26,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 27,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 28,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 29,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 30,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 31,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      },
-      {
-        "evidence_in_pdf": true,
-        "grounded": true,
-        "index": 32,
-        "missing_evidence": false,
-        "start_in_evidence": true,
-        "type_in_evidence": true
-      }
-    ],
-    "total": 33
-  },
+  "extracted_at": "2026-09-14T20:10:49.113942+00:00",
   "model": "gpt-5.5-2026-04-23",
   "payload": {
     "closures": [
@@ -1313,6 +1055,7 @@
         "day": "sunday",
         "end": "14:00",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 12:30 pm-2:00 pm",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "12:30",
         "type": "lap_swim"
@@ -1321,6 +1064,7 @@
         "day": "sunday",
         "end": "14:00",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 12:30 pm-2:00 pm",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "12:30",
         "type": "family_swim"
@@ -1329,7 +1073,6 @@
         "day": "sunday",
         "end": "16:30",
         "evidence": "Rec/Family Swim 2:30 pm-4:30 pm Please note that registration is",
-        "notes": "Pool allocation is not printed in this session cell.",
         "start": "14:30",
         "type": "family_swim"
       },
@@ -1337,6 +1080,7 @@
         "day": "monday",
         "end": "08:45",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "07:00",
         "type": "lap_swim"
@@ -1345,6 +1089,7 @@
         "day": "monday",
         "end": "08:45",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "07:00",
         "type": "family_swim"
@@ -1369,6 +1114,7 @@
         "day": "monday",
         "end": "15:45",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:45 pm",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "14:00",
         "type": "lap_swim"
@@ -1377,6 +1123,7 @@
         "day": "monday",
         "end": "15:45",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:45 pm",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "14:00",
         "type": "family_swim"
@@ -1385,6 +1132,7 @@
         "day": "monday",
         "end": "19:00",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "17:30",
         "type": "lap_swim"
@@ -1393,6 +1141,7 @@
         "day": "monday",
         "end": "19:00",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "17:30",
         "type": "family_swim"
@@ -1401,6 +1150,7 @@
         "day": "tuesday",
         "end": "08:45",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "07:00",
         "type": "lap_swim"
@@ -1409,6 +1159,7 @@
         "day": "tuesday",
         "end": "08:45",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "07:00",
         "type": "family_swim"
@@ -1441,6 +1192,7 @@
         "day": "tuesday",
         "end": "15:30",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "14:00",
         "type": "lap_swim"
@@ -1449,6 +1201,7 @@
         "day": "tuesday",
         "end": "15:30",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "14:00",
         "type": "family_swim"
@@ -1457,6 +1210,7 @@
         "day": "wednesday",
         "end": "08:45",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "07:00",
         "type": "lap_swim"
@@ -1465,6 +1219,7 @@
         "day": "wednesday",
         "end": "08:45",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "07:00",
         "type": "family_swim"
@@ -1481,6 +1236,7 @@
         "day": "wednesday",
         "end": "13:00",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "11:00",
         "type": "lap_swim"
@@ -1489,6 +1245,7 @@
         "day": "wednesday",
         "end": "13:00",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "11:00",
         "type": "family_swim"
@@ -1497,6 +1254,7 @@
         "day": "wednesday",
         "end": "19:00",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "17:30",
         "type": "lap_swim"
@@ -1505,6 +1263,7 @@
         "day": "wednesday",
         "end": "19:00",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "17:30",
         "type": "family_swim"
@@ -1513,6 +1272,7 @@
         "day": "thursday",
         "end": "08:45",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "07:00",
         "type": "lap_swim"
@@ -1521,6 +1281,7 @@
         "day": "thursday",
         "end": "08:45",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "07:00",
         "type": "family_swim"
@@ -1537,6 +1298,7 @@
         "day": "thursday",
         "end": "13:00",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "11:00",
         "type": "lap_swim"
@@ -1545,6 +1307,7 @@
         "day": "thursday",
         "end": "13:00",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "11:00",
         "type": "family_swim"
@@ -1553,6 +1316,7 @@
         "day": "thursday",
         "end": "15:30",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "14:00",
         "type": "lap_swim"
@@ -1561,6 +1325,7 @@
         "day": "thursday",
         "end": "15:30",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "14:00",
         "type": "family_swim"
@@ -1576,12 +1341,12 @@
     "input_tokens": 4398,
     "input_tokens_details": {
       "cache_write_tokens": 0,
-      "cached_tokens": 3840
+      "cached_tokens": 0
     },
-    "output_tokens": 3467,
+    "output_tokens": 3277,
     "output_tokens_details": {
-      "reasoning_tokens": 1034
+      "reasoning_tokens": 516
     },
-    "total_tokens": 7865
+    "total_tokens": 7675
   }
 }

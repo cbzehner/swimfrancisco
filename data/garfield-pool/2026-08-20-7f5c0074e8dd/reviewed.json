@@ -2,7 +2,7 @@
   "pdf_sha256": "7f5c0074e8ddf2428c38ce3870d36d73521e7ae17f863839c5db20893e26573b",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29799",
   "slug": "garfield-pool",
-  "reviewed_at": "2026-09-08",
+  "reviewed_at": "2026-09-14",
   "attested_by": "ci",
   "payload": {
     "closures": [
@@ -99,6 +99,7 @@
         "day": "sunday",
         "end": "14:00",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 12:30 pm-2:00 pm",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "12:30",
         "type": "lap_swim"
@@ -107,6 +108,7 @@
         "day": "sunday",
         "end": "14:00",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 12:30 pm-2:00 pm",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "12:30",
         "type": "family_swim"
@@ -115,7 +117,6 @@
         "day": "sunday",
         "end": "16:30",
         "evidence": "Rec/Family Swim 2:30 pm-4:30 pm Please note that registration is",
-        "notes": "Pool allocation is not printed in this session cell.",
         "start": "14:30",
         "type": "family_swim"
       },
@@ -123,6 +124,7 @@
         "day": "monday",
         "end": "08:45",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "07:00",
         "type": "lap_swim"
@@ -131,6 +133,7 @@
         "day": "monday",
         "end": "08:45",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "07:00",
         "type": "family_swim"
@@ -155,6 +158,7 @@
         "day": "monday",
         "end": "15:45",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:45 pm",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "14:00",
         "type": "lap_swim"
@@ -163,6 +167,7 @@
         "day": "monday",
         "end": "15:45",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:45 pm",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "14:00",
         "type": "family_swim"
@@ -171,6 +176,7 @@
         "day": "monday",
         "end": "19:00",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "17:30",
         "type": "lap_swim"
@@ -179,6 +185,7 @@
         "day": "monday",
         "end": "19:00",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "17:30",
         "type": "family_swim"
@@ -187,6 +194,7 @@
         "day": "tuesday",
         "end": "08:45",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "07:00",
         "type": "lap_swim"
@@ -195,6 +203,7 @@
         "day": "tuesday",
         "end": "08:45",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "07:00",
         "type": "family_swim"
@@ -227,6 +236,7 @@
         "day": "tuesday",
         "end": "15:30",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "14:00",
         "type": "lap_swim"
@@ -235,6 +245,7 @@
         "day": "tuesday",
         "end": "15:30",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "14:00",
         "type": "family_swim"
@@ -243,6 +254,7 @@
         "day": "wednesday",
         "end": "08:45",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "07:00",
         "type": "lap_swim"
@@ -251,6 +263,7 @@
         "day": "wednesday",
         "end": "08:45",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "07:00",
         "type": "family_swim"
@@ -267,6 +280,7 @@
         "day": "wednesday",
         "end": "13:00",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "11:00",
         "type": "lap_swim"
@@ -275,6 +289,7 @@
         "day": "wednesday",
         "end": "13:00",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "11:00",
         "type": "family_swim"
@@ -283,6 +298,7 @@
         "day": "wednesday",
         "end": "19:00",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "17:30",
         "type": "lap_swim"
@@ -291,6 +307,7 @@
         "day": "wednesday",
         "end": "19:00",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 5:30 pm-7:00 pm",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "17:30",
         "type": "family_swim"
@@ -299,6 +316,7 @@
         "day": "thursday",
         "end": "08:45",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "07:00",
         "type": "lap_swim"
@@ -307,6 +325,7 @@
         "day": "thursday",
         "end": "08:45",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 7:00 am-8:45 am",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "07:00",
         "type": "family_swim"
@@ -323,6 +342,7 @@
         "day": "thursday",
         "end": "13:00",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "11:00",
         "type": "lap_swim"
@@ -331,6 +351,7 @@
         "day": "thursday",
         "end": "13:00",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 11:00 am-1:00 pm",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "11:00",
         "type": "family_swim"
@@ -339,6 +360,7 @@
         "day": "thursday",
         "end": "15:30",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm",
+        "notes": "Shared cell with Rec/Family Swim; each program has its own printed pool allocation.",
         "pool": "main",
         "start": "14:00",
         "type": "lap_swim"
@@ -347,6 +369,7 @@
         "day": "thursday",
         "end": "15:30",
         "evidence": "Lap Swim (Main Pool) Rec/Family Swim (Small Pool) 2:00 pm-3:30 pm",
+        "notes": "Shared cell with Lap Swim; each program has its own printed pool allocation.",
         "pool": "small",
         "start": "14:00",
         "type": "family_swim"

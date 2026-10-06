@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import csv
 import html
+import hashlib
 import json
 import mimetypes
-import os
 import re
 import tempfile
 import threading
@@ -20,7 +20,7 @@ from .discover import view_id_from_url
 from .paths import CONTENT_SPOTS_DIR, DATA_DIR, TMP_DIR, all_review_dirs
 from .direct_sources import DirectSourceError, extract_direct
 from .fetch import FetchError, fetch_pdf
-from .pipeline import DirectRun, ExpandFromDecisions, PdfRun, PinOverride, parse_provider, run_pipeline
+from .pipeline import DirectRun, ExpandFromDecisions, PdfRun, PinOverride, run_pipeline
 from .publish import (
     PublishRefuse,
     unpublished_kept_windows,
@@ -205,7 +205,7 @@ class ReviewApp:
                 else ExpandFromDecisions(self._decisions())
             )
             command = PdfRun(
-                provider=parse_provider("openai" if entry.pool_sources else os.getenv("SCHEDULES_PROVIDER", "gemini")),
+                provider="openai",
                 slugs=(slug,),
                 force=not bool(entry.pool_sources),
                 urls=urls,
@@ -643,6 +643,12 @@ def current_source_identity(slug: str, url: str | None = None) -> str:
     entry = next((entry for entry in load_registry() if entry.slug == slug), None)
     if entry is None:
         raise LookupError(f"Unknown registry slug: {slug}.")
+    if entry.capture_method == "cloudflare_browser":
+        from .direct_sources.browser import read_browser_capture
+        if url is not None and url != entry.pdf_url:
+            raise ValueError("Browser source URL differs from the approved registry source")
+        response, _ = read_browser_capture(entry)
+        return hashlib.sha256(response.content).hexdigest()
     with tempfile.TemporaryDirectory(prefix="swimfrancisco-source-check-") as directory:
         cache_root = Path(directory)
         if entry.pool_sources:

@@ -3,21 +3,59 @@ from __future__ import annotations
 import tomllib
 from typing import get_args
 
-from .models import CaptureMethod, PoolEntry, PoolSource, SourceKind, SourceStatus
+from .models import (
+    CaptureMethod,
+    DiscoveryDocument,
+    DiscoveryState,
+    PoolEntry,
+    PoolSource,
+    SourceKind,
+    SourceStatus,
+)
 from .paths import CONTENT_SPOTS_DIR, REGISTRY_PATH
 
 
 _VALID_SOURCE_STATUSES = frozenset(get_args(SourceStatus))
 _VALID_SOURCE_KINDS = frozenset(get_args(SourceKind))
 _VALID_CAPTURE_METHODS = frozenset(get_args(CaptureMethod))
-_BROWSER_CAPTURE_SOURCES = frozenset({
-    ("jccsf", "jccsf_html", "https://www.jccsf.org/fitness/aquatics/"),
-    ("presidio-ymca-letterman", "ymca_location_html", "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"),
-    ("stonestown-ymca", "ymca_location_html", "https://www.ymcasf.org/location/stonestown-family-ymca/"),
-    ("embarcadero-ymca", "ymca_location_html", "https://www.ymcasf.org/location/embarcadero-ymca/"),
-    ("chinatown-ymca", "ymca_location_html", "https://www.ymcasf.org/location/chinatown-ymca/"),
-    ("sfsu-mashouf", "sfsu_aquatics_html", "https://campusrec.sfsu.edu/Aquatics"),
-})
+BROWSER_SOURCES = {
+    "jccsf": ("jccsf_html", "https://www.jccsf.org/fitness/aquatics/"),
+    "presidio-ymca-letterman": ("ymca_location_html", "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"),
+    "stonestown-ymca": ("ymca_location_html", "https://www.ymcasf.org/location/stonestown-family-ymca/"),
+    "embarcadero-ymca": ("ymca_location_html", "https://www.ymcasf.org/location/embarcadero-ymca/"),
+    "chinatown-ymca": ("ymca_location_html", "https://www.ymcasf.org/location/chinatown-ymca/"),
+    "sfsu-mashouf": ("sfsu_aquatics_html", "https://campusrec.sfsu.edu/Aquatics"),
+}
+UCSF_SOURCES = {
+    "ucsf-bakar": ("ucsf_bakar_html", "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/news/2026-fitness-and-recreation-holiday-schedule"),
+    "ucsf-millberry": ("ucsf_fitness_html", "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/news/2026-fitness-and-recreation-holiday-schedule"),
+}
+HTTP_ACCESS_SOURCES = {
+    "equinox-sports-club-sf": ("equinox_html", "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco"),
+    "bay-club-gateway": ("bayclub_html", "https://www.bayclubs.com/clubs/thegateway"),
+    **UCSF_SOURCES,
+    "fitness-sf-fillmore": ("fitness_sf_html", "https://fitnesssf.com/location/fillmore"),
+    "city-sports-20th-ave": ("city_sports_html", "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914"),
+}
+APPROVED_DIRECT_SOURCES = {
+    "pomeroy-pool": ("pomeroy_html", "https://www.prrcsf.org/therapeutic-swim"),
+    **BROWSER_SOURCES,
+    **HTTP_ACCESS_SOURCES,
+}
+_ACCESS_SOURCES = {slug: BROWSER_SOURCES[slug] for slug in (
+    "presidio-ymca-letterman", "stonestown-ymca", "embarcadero-ymca", "chinatown-ymca", "sfsu-mashouf",
+)} | HTTP_ACCESS_SOURCES
+
+
+def allows_access_transition(slug: str, source_kind: str, source_url: str,
+                             source_status: str, payload: dict) -> bool:
+    return (
+        _ACCESS_SOURCES.get(slug) == (source_kind, source_url)
+        and source_status == "access_hours_only"
+        and payload.get("schedule_basis") in {"pool_hours", "facility_hours"}
+        and payload.get("sessions") == [] and bool(payload.get("access_hours"))
+    )
+
 
 
 def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
@@ -54,16 +92,15 @@ def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
         source_status = raw_entry.get("source_status", "published")
         source_kind = raw_entry.get("source_kind", "sfrecpark_pdf")
         notes = raw_entry.get("notes")
+        discovery = parse_discovery(raw_entry.get("discovery"), slug)
         capture_method = raw_entry.get("capture_method", "http")
         if not isinstance(capture_method, str) or capture_method not in _VALID_CAPTURE_METHODS:
             raise ValueError("capture_method must be http or cloudflare_browser")
-        if capture_method == "cloudflare_browser" and (slug, source_kind, pdf_url) not in _BROWSER_CAPTURE_SOURCES:
+        if capture_method == "cloudflare_browser" and BROWSER_SOURCES.get(slug) != (source_kind, pdf_url):
             raise ValueError("Cloudflare browser capture is limited to the six approved HTML sources and URLs")
         auto_publish = raw_entry.get("auto_publish", False)
-        if not isinstance(auto_publish, bool) or (auto_publish and (slug, source_kind, pdf_url) != (
-            "pomeroy-pool", "pomeroy_html", "https://www.prrcsf.org/therapeutic-swim"
-        )):
-            raise ValueError("Direct automatic publication is limited to the approved Pomeroy source")
+        if not isinstance(auto_publish, bool) or (auto_publish and APPROVED_DIRECT_SOURCES.get(slug) != (source_kind, pdf_url)):
+            raise ValueError("Direct automatic publication is limited to the approved source identities")
 
         if slug in seen_slugs:
             raise ValueError(f"Duplicate registry slug: {slug}")
@@ -97,6 +134,7 @@ def load_registry(path=REGISTRY_PATH) -> list[PoolEntry]:
                 capture_method=capture_method,
                 notes=notes,
                 pool_sources=pool_sources,
+                discovery=discovery,
             )
         )
 
@@ -108,3 +146,34 @@ def _require_string(raw_entry: dict, field: str, index: int) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"Registry entry #{index} is missing required field {field!r}.")
     return value.strip()
+
+
+def parse_discovery(raw: object, slug: str) -> DiscoveryState | None:
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise ValueError(f"discovery for {slug!r} must be a table.")
+    action = raw.get("action")
+    if not isinstance(action, str) or action not in {"adopt", "unchanged", "flag"}:
+        raise ValueError(f"discovery action for {slug!r} is invalid.")
+    reason = raw.get("reason")
+    if not isinstance(reason, str) or not reason.strip():
+        raise ValueError(f"discovery reason for {slug!r} must be a non-empty string.")
+    documents = raw.get("documents", [])
+    if not isinstance(documents, list):
+        raise ValueError(f"discovery documents for {slug!r} must be an array.")
+    parsed: list[DiscoveryDocument] = []
+    for index, item in enumerate(documents, start=1):
+        if not isinstance(item, dict):
+            raise ValueError(f"discovery document #{index} for {slug!r} must be a table.")
+        view_id = item.get("id")
+        if isinstance(view_id, bool) or not isinstance(view_id, int) or view_id <= 0:
+            raise ValueError(f"discovery document #{index} for {slug!r} has an invalid id.")
+        kind = item.get("kind")
+        if not isinstance(kind, str) or kind not in {"session_grid", "closure_notice", "split_part", "other"}:
+            raise ValueError(f"discovery document #{index} for {slug!r} has an invalid kind.")
+        origin = item.get("origin")
+        if not isinstance(origin, str) or origin not in {"table", "band", "persisted"}:
+            raise ValueError(f"discovery document #{index} for {slug!r} has an invalid origin.")
+        parsed.append(DiscoveryDocument(view_id=view_id, kind=kind, origin=origin))
+    return DiscoveryState(action=action, reason=reason.strip(), documents=tuple(parsed))

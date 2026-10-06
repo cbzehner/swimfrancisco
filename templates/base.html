@@ -1,4 +1,16 @@
 {% import "macros/seo.html" as seo %}
+{#- Localized spot pages carry only the translated strings; every structural
+    field (type, coordinates, schedule) stays on the default-language page.
+    `canonical_page` resolves to that page — `page` itself everywhere else.
+    It lives here because Tera does not carry a child template's top-level
+    `set` into the blocks the child overrides; a parent's does reach them,
+    so this is the one place the lookup can be written once. -#}
+{% set localized_from = page.extra.localized_from | default(value="") %}
+{% if localized_from %}
+  {% set canonical_page = get_page(path="spots/" ~ localized_from ~ ".md", lang=config.default_language) %}
+{% else %}
+  {% set canonical_page = page | default(value=false) %}
+{% endif %}
 <!DOCTYPE html>
 <html lang="{{ lang | default(value=config.default_language) }}">
 <head>

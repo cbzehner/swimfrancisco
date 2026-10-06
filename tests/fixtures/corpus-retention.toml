@@ -1,0 +1,39 @@
+# Explicit retention for non-PDF captures formerly protected by citations in
+# tests or archived implementation documents. PDF captures remain protected by
+# the source.pdf corpus rule and are intentionally not duplicated here.
+
+[[pins]]
+path = "data/24-hour-fitness-ocean/2026-05-17-bfc2cfde9340"
+reason = "Archived sequential-window evidence"
+
+[[pins]]
+path = "data/chinatown-ymca/2026-05-17-54f49481ad6f"
+reason = "Archived sequential-window evidence"
+
+[[pins]]
+path = "data/city-sports-20th-ave/2026-09-08-759de370b994"
+reason = "Direct-source regression fixture"
+
+[[pins]]
+path = "data/embarcadero-ymca/2026-05-17-f0aea00d396f"
+reason = "Archived sequential-window evidence"
+
+[[pins]]
+path = "data/jccsf/2026-05-17-02f5bb08d901"
+reason = "Archived sequential-window evidence"
+
+[[pins]]
+path = "data/koret-center/2026-07-10-47b0c41acd2b"
+reason = "Archived sequential-window evidence"
+
+[[pins]]
+path = "data/pomeroy-pool/2026-05-17-846bfed69445"
+reason = "Archived sequential-window evidence"
+
+[[pins]]
+path = "data/pomeroy-pool/2026-08-12-5348b4b7f7e3"
+reason = "Direct-source and publication regression fixture"
+
+[[pins]]
+path = "data/sfsu-mashouf/2026-05-17-26d5584d5adb"
+reason = "Archived sequential-window evidence"

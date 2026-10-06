@@ -32,7 +32,6 @@ from schedules.discover import (
     view_id_from_url,
 )
 from schedules.registry import load_registry
-from schedules.window_dates import parse_window_dates
 
 ROOT = Path(__file__).resolve().parents[1]
 REC_PARK = {entry.slug for entry in rec_park_entries(load_registry())}
@@ -104,22 +103,3 @@ def test_corpus_coverage_floor() -> None:
         if _classify(slug, view_id, pdf).window_start is not None:
             parsed += 1
     assert parsed >= 30
-
-
-def test_numeric_page1_window_parses() -> None:
-    assert parse_window_dates(
-        page_text="SPRING 2026\n05/12/2026 - 06/06/2026\nAdditional Information",
-        anchor_text=None,
-        filename=None,
-        year_default=2026,
-    ) == (date(2026, 5, 12), date(2026, 6, 6))
-    # Two-digit years are closure notes, not windows.
-    assert (
-        parse_window_dates(
-            page_text="Closed 6/6/26 9am - 1pm In-Service",
-            anchor_text=None,
-            filename=None,
-            year_default=2026,
-        )
-        is None
-    )

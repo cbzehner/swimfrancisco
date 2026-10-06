@@ -27,7 +27,7 @@ from .paths import (
     parse_review_dir_name,
 )
 from .providers.openai_provider import source_fact_payload, verify_artifact
-from .registry import load_registry
+from .registry import APPROVED_DIRECT_SOURCES, allows_access_transition, load_registry
 from .review import (
     DecisionSet,
     FinalizeError,
@@ -202,8 +202,8 @@ def publish_eligible(
     if not identity.ok:
         return identity
 
-    direct_pilot = direct_opt_in and source_kind == "pomeroy_html" and candidate.slug == "pomeroy-pool"
-    if source_kind != "sfrecpark_pdf" and not direct_pilot:
+    approved_direct = direct_opt_in and APPROVED_DIRECT_SOURCES.get(candidate.slug) == (source_kind, pin_url)
+    if source_kind != "sfrecpark_pdf" and not approved_direct:
         return _refuse("not_rec_park", f"source_kind {source_kind!r} is not auto-published")
 
     if source_status == "missing_current_schedule":
@@ -212,7 +212,7 @@ def publish_eligible(
     if candidate.slug in blocking_slugs:
         return _refuse("discovery_flagged", f"{candidate.slug} is discover-blocking")
 
-    if require_unique_pin and not direct_pilot:
+    if require_unique_pin and not approved_direct:
         unique = _unique_pin_gate(candidate, decision, pin_url, source_pdf_url)
         if not unique.ok:
             return unique
@@ -226,7 +226,9 @@ def publish_eligible(
     if not has_prior_schedule_window:
         return _refuse("no_merge_baseline", f"no [[extra.schedules]] window for {candidate.slug}")
 
-    result = validate(payload, prior_sessions_count=prior_sessions_count)
+    access_transition = approved_direct and allows_access_transition(
+        candidate.slug, source_kind, pin_url, source_status, payload)
+    result = validate(payload, prior_sessions_count=0 if access_transition else prior_sessions_count)
     if result.catastrophic:
         first = result.violations[0] if result.violations else None
         code = first.code if first else "sessions_dropped_to_zero"
@@ -236,12 +238,12 @@ def publish_eligible(
         first = result.violations[0]
         return _refuse(first.code if first.code else "validate_failed", first.message)
 
-    grid = _ok() if candidate.bundle_sha256 or direct_pilot else _source_pdf_gate(source_pdf_path)
+    grid = _ok() if candidate.bundle_sha256 or approved_direct else _source_pdf_gate(source_pdf_path)
     if not grid.ok:
         return grid
 
     artifact = json.loads(_pick_provider_artifact(candidate.review_dir).read_text())
-    if direct_pilot:
+    if approved_direct:
         try:
             from .direct_sources import verify_direct_artifact
             if artifact.get("payload") != payload or pin_url != artifact.get("details", {}).get("direct_source", {}).get("requested_url"):
@@ -268,7 +270,7 @@ def publish_eligible(
             return _refuse("source_coverage_failed", "Extraction differs from the independent source inventory")
 
     basis = payload.get("schedule_basis")
-    if basis not in _AUTO_PUBLISHABLE_BASES:
+    if basis not in _AUTO_PUBLISHABLE_BASES and not access_transition:
         return _refuse("wrong_basis", f"schedule_basis {basis!r} is not auto-publishable")
 
     new_start = payload.get("effective_start")
@@ -785,7 +787,8 @@ def publish_sequential_slug(
     # A human Save-all still publishes whatever the operator confirmed.
     expired: set[int] = set()
     if attested_by == "ci":
-        expired = {
+        from .window_dates import verified_expired_grid_ids
+        expired = verified_expired_grid_ids(slug, decision, attested_at, data_root=data_root) | {
             view_id
             for view_id, candidate in unpublished.items()
             if (window := _payload_window(dict(candidate.payload))) is not None
@@ -1037,7 +1040,7 @@ def _write_reports(
     lines = [
         "# publish-pending",
         "",
-        f"{len(published)} published, {len(refused)} refused",
+        f"{len(published)} published; pools with refusals: {len({item['slug'] for item in refused})}; candidate refusals: {len(refused)}",
         "",
     ]
     if skipped:
@@ -1047,12 +1050,11 @@ def _write_reports(
         lines.extend(f"- {slug}" for slug in published)
     else:
         lines.append("- none")
-    lines.extend(["", "## Refused"])
+    lines.extend(["", "## Candidate refusals by pool"])
     if refused:
-        lines.extend(
-            f"- {item['slug']}: {item['code']} — {item.get('message', '')}"
-            for item in refused
-        )
+        for slug in sorted({item["slug"] for item in refused}):
+            reasons = sorted({f"{item['code']} — {item.get('message', '')}" for item in refused if item["slug"] == slug})
+            lines.append(f"- {slug}: {'; '.join(reasons)}")
     else:
         lines.append("- none")
     lines.extend(["", "## Closure"])

@@ -13,8 +13,6 @@ TMP_DIR = REPO_ROOT / "tmp"
 REPORT_PATHS = {
     "openai": TMP_DIR / "extraction-report-openai.md",
     "direct": TMP_DIR / "extraction-report-direct.md",
-    "gemini": TMP_DIR / "extraction-report-gemini.md",
-    "anthropic": TMP_DIR / "extraction-report-anthropic.md",
 }
 REGISTRY_PATH = PACKAGE_ROOT / "registry.toml"
 PROMPT_PATH = PACKAGE_ROOT / "prompts" / "extract.txt"
@@ -79,11 +77,6 @@ def all_review_dirs(slug: str, *, root: Path = DATA_DIR) -> list[Path]:
     return sorted(
         d for d in slug_dir.iterdir() if d.is_dir() and parse_review_dir_name(d.name)
     )
-
-
-def latest_review_dir(slug: str, *, root: Path = DATA_DIR) -> Path | None:
-    dirs = all_review_dirs(slug, root=root)
-    return dirs[-1] if dirs else None
 
 
 def latest_reviewed_dir(slug: str, *, root: Path = DATA_DIR) -> Path | None:

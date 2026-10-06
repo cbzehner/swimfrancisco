@@ -11,6 +11,7 @@ import time
 from pathlib import Path
 
 from .publish import pager_job_payload
+from .registry import BROWSER_SOURCES, HTTP_ACCESS_SOURCES
 
 
 def run_command(arguments: list[str], root: Path, *, timeout: int = 900) -> subprocess.CompletedProcess:
@@ -25,12 +26,19 @@ def checked(arguments: list[str], root: Path, command=run_command, *, timeout: i
     return result.stdout.strip()
 
 
+# Every file a build attempt captured or extracted, so a retry pays for none
+# of it twice. reviewed.json is deliberately absent: a publication decision
+# carried into the retry would take its slug out of the review queue and the
+# retry would then never write its schedule page.
+REUSABLE_CAPTURE = re.compile(r"source\.(pdf|html|xlsx|csv|sha256)|openai-[a-z0-9-]+\.json|direct-[a-z0-9-]+\.json")
+
+
 def copy_extraction_cache(previous: Path, current: Path, previous_base: str, command=run_command) -> None:
     """Reuse source captures, never prior publication decisions or concurrent edits."""
     for source in (previous / "data").glob("*/*/*"):
         if source.is_symlink() or not source.is_file():
             continue
-        if not re.fullmatch(r"source\.(pdf|sha256)|openai-gpt-5-5-2026-04-23\.json", source.name):
+        if not REUSABLE_CAPTURE.fullmatch(source.name):
             continue
         relative = source.relative_to(previous)
         target = current / relative
@@ -52,6 +60,15 @@ def save_evidence(root: Path, destination: Path) -> None:
         target = destination / "browser-capture" / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, target)
+    attempts = root / "tmp/api-attempts"
+    for source in attempts.glob("*/*.json"):
+        if source.is_symlink() or source.parent.is_symlink() or not source.is_file():
+            continue
+        if not re.fullmatch(r"[a-f0-9]{32}/(request|response)\.json", source.relative_to(attempts).as_posix()):
+            continue
+        target = destination / "api-attempts" / source.relative_to(attempts)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, target)
     for name in ("discovery-decisions.json", "discovery-report.md", "publish-pending.json", "publish-pending-report.md",
                  "extraction-report-direct.md", "extraction-report-direct.json", "extraction-report-openai.md", "extraction-report-openai.json"):
         source = root / "tmp" / name
@@ -60,7 +77,7 @@ def save_evidence(root: Path, destination: Path) -> None:
     for source in (root / "data").glob("*/*/*"):
         if source.is_symlink() or not source.is_file():
             continue
-        if not re.fullmatch(r"source\.(pdf|html|csv|xlsx|sha256)|reviewed\.json|source-bundle\.json|openai-pool-bundle\.json|openai-gpt-5-5-2026-04-23\.json|direct-[a-z0-9-]+\.json", source.name):
+        if not re.fullmatch(r"source\.(pdf|html|csv|xlsx|sha256)|reviewed\.json|source-bundle\.json|openai-[a-z0-9-]+\.json|direct-[a-z0-9-]+\.json", source.name):
             continue
         target = destination / source.relative_to(root)
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -89,10 +106,12 @@ def wait_for_deployment(root: Path, commit: str, command=run_command, *, sleep=t
 def closure_review_document(review: dict) -> str:
     notices = json.dumps({"issues": review["issues"], "notices": review["notices"]}, ensure_ascii=False, indent=2)
     fence = "`" * (max([len(value) for value in re.findall(r"`+", notices)] + [2]) + 1)
+    source_name = Path(review["source_path"]).name
+    source_label = "Source HTML" if source_name == "source.html" else "Source PDF"
     return (
         f"# Closure review: {review['slug']}\n\n"
         f"Source SHA-256: `{review['source_sha256']}`\n\n"
-        "[Source PDF](source.pdf)\n\n"
+        f"[{source_label}]({source_name})\n\n"
         "This draft contains evidence only. It does not change published hours.\n"
         "Merging this note alone does not approve or resolve the closure.\n\n"
         "- [ ] Confirm closure dates, times, and affected programs against the official source.\n"
@@ -115,9 +134,10 @@ def open_closure_review_prs(root: Path, evidence: Path, command=run_command) -> 
     for review in builds[-1].get("closure_reviews", []):
         slug, digest = review.get("slug", ""), review.get("source_sha256", "")
         relative = Path(review.get("source_path", ""))
+        source_extension = "html" if slug in BROWSER_SOURCES | HTTP_ACCESS_SOURCES else "pdf"
         if (not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug)
                 or not re.fullmatch(r"[a-f0-9]{64}", digest)
-                or not re.fullmatch(rf"data/{re.escape(slug)}/\d{{4}}-\d{{2}}-\d{{2}}-{digest[:12]}/source\.pdf", relative.as_posix())
+                or not re.fullmatch(rf"data/{re.escape(slug)}/\d{{4}}-\d{{2}}-\d{{2}}-{digest[:12]}/source\.{source_extension}", relative.as_posix())
                 or not isinstance(review.get("issues"), list) or not review["issues"]
                 or not isinstance(review.get("notices"), list) or not review["notices"]):
             raise ValueError("Invalid closure review evidence")
@@ -137,6 +157,18 @@ def open_closure_review_prs(root: Path, evidence: Path, command=run_command) -> 
         if existing:
             published.append({"slug": slug, "source_sha256": digest, **existing[0]})
             continue
+        if source_extension == "html":
+            open_reviews = json.loads(checked([
+                "gh", "pr", "list", "--base", "main", "--state", "open",
+                "--json", "headRefName,url,state", "--limit", "1000"], root, command))
+            matching = [item for item in open_reviews
+                        if item.get("state") == "OPEN" and re.fullmatch(
+                            rf"review/closures/{re.escape(slug)}-[a-f0-9]{{12}}", item.get("headRefName", ""))]
+            if matching:
+                existing_review = sorted(matching, key=lambda item: item["headRefName"])[0]
+                published.append({"slug": slug, "source_sha256": digest,
+                                  "url": existing_review["url"], "state": existing_review["state"]})
+                continue
         remote = checked(["git", "ls-remote", "--heads", "origin", f"refs/heads/{branch}"], root, command)
         if remote:
             raise RuntimeError("Closure review branch exists without a PR; preserve it for operator recovery")
@@ -150,16 +182,20 @@ def open_closure_review_prs(root: Path, evidence: Path, command=run_command) -> 
         target.parent.mkdir(parents=True, exist_ok=True)
         if target.exists() and target.read_bytes() != source_bytes:
             raise ValueError("Existing source differs; refusing to overwrite it")
+        sidecar = target.with_name("source.sha256")
+        if sidecar.is_symlink() or (sidecar.exists() and sidecar.read_text() != f"{digest}\n"):
+            raise ValueError("Existing source hash differs; preserve the operator's work")
         target.write_bytes(source_bytes)
+        sidecar.write_text(f"{digest}\n")
         note = target.with_name("closure-review.md")
         if note.exists() or note.is_symlink():
             raise ValueError("Closure review note already exists; preserve the operator's work")
         note.write_text(closure_review_document(review))
-        paths = [relative.as_posix(), note.relative_to(worktree).as_posix()]
+        paths = [relative.as_posix(), sidecar.relative_to(worktree).as_posix(), note.relative_to(worktree).as_posix()]
         checked(["git", "add", "--", *paths], worktree, command)
         staged = checked(["git", "diff", "--cached", "--name-only"], worktree, command).splitlines()
         if not staged or not set(staged).issubset(paths):
-            raise ValueError("Closure PR may contain only its source PDF and review note")
+            raise ValueError("Closure PR may contain only its source document, hash, and review note")
         checked(["git", "-c", "user.name=Schedule automation", "-c", "user.email=schedules@swimfrancisco.com",
                  "commit", "-m", f"Review unclear closure notice for {slug}"], worktree, command)
         checked(["git", "push", "origin", f"HEAD:refs/heads/{branch}"], worktree, command)
@@ -168,12 +204,51 @@ def open_closure_review_prs(root: Path, evidence: Path, command=run_command) -> 
             raise ValueError("Invalid repository identity")
         body = worktree / "tmp/closure-pr-body.md"
         body.parent.mkdir(exist_ok=True)
-        body.write_text(note.read_text().replace("[Source PDF](source.pdf)",
-                        f"[Source PDF](https://github.com/{repository}/blob/{branch}/{relative.as_posix()})"))
+        source_label = "Source HTML" if relative.name == "source.html" else "Source PDF"
+        body.write_text(note.read_text().replace(f"[{source_label}]({relative.name})",
+                        f"[{source_label}](https://github.com/{repository}/blob/{branch}/{relative.as_posix()})"))
         url = checked(["gh", "pr", "create", "--draft", "--base", "main", "--head", branch,
                        "--title", f"Review unclear closure notice: {slug}", "--body-file", str(body)], worktree, command)
         published.append({"slug": slug, "source_sha256": digest, "url": url, "state": "OPEN"})
     return published
+
+
+def _archived_usage(response: Path) -> tuple[int, int] | None:
+    """Token counts from one archived response, or None when it is unusable."""
+    try:
+        body = json.loads(response.read_text())
+    except (OSError, ValueError):
+        return None
+    usage = body.get("usage") if isinstance(body, dict) else None
+    if not isinstance(usage, dict):
+        return None
+    counts = [usage.get("input_tokens"), usage.get("output_tokens")]
+    if any(type(count) is not int or count < 0 for count in counts):
+        return None
+    return counts[0], counts[1]
+
+
+def report_openai_usage(evidence: Path) -> None:
+    """Summarize the run's paid requests from their archived usage, when GitHub asks.
+
+    This runs in automate's finally, so it reports what the evidence supports and
+    never raises: an unusable archive must not replace the failure that got here.
+    A failed attempt archives its request and no response, so the request tally
+    counts requests and only the answered ones contribute tokens.
+    """
+    summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not summary:
+        return
+    requests = sum(1 for _ in evidence.glob("build-*/api-attempts/*/request.json"))
+    usages = [_archived_usage(response)
+              for response in sorted(evidence.glob("build-*/api-attempts/*/response.json"))]
+    input_tokens = sum(usage[0] for usage in usages if usage)
+    output_tokens = sum(usage[1] for usage in usages if usage)
+    try:
+        with Path(summary).open("a") as stream:
+            stream.write(f"OpenAI usage: {input_tokens} in / {output_tokens} out across {requests} requests\n")
+    except OSError:
+        pass
 
 
 def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=wait_for_deployment) -> dict:
@@ -183,9 +258,6 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
         raise ValueError("Automation is disabled; operator approval is required")
     if mode == "publish" and os.environ.get("SCHEDULES_AUTO_PROJECT") == "false":
         raise ValueError("Publication kill switch is active")
-    ledger = Path(os.environ.get("SCHEDULES_API_BUDGET_FILE", ""))
-    if not ledger.is_absolute() or not ledger.is_file():
-        raise ValueError("Automation requires an existing absolute run budget ledger")
     if checked(["git", "status", "--porcelain"], root, command):
         raise ValueError("Automation requires a clean checkout")
     evidence = root / "tmp" / "automation"
@@ -225,8 +297,11 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
                     build["commands"][name] = result.returncode
                     if required and result.returncode:
                         raise RuntimeError(f"{name} failed; no publication is allowed")
-                closure_report = worktree / "tmp/extraction-report-openai.json"
-                build["closure_reviews"] = json.loads(closure_report.read_text())["closure_reviews"] if closure_report.exists() else []
+                build["closure_reviews"] = []
+                for provider in ("openai", "direct"):
+                    closure_report = worktree / f"tmp/extraction-report-{provider}.json"
+                    if closure_report.exists():
+                        build["closure_reviews"].extend(json.loads(closure_report.read_text()).get("closure_reviews", []))
                 save_state()
                 if mode == "extract-only":
                     state["status"] = "extracted"
@@ -235,6 +310,12 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
                 publication = json.loads((worktree / "tmp/publish-pending.json").read_text())
                 build["closure_reviews"].extend(item["closure_review"] for item in publication.get("refused", []) if item.get("closure_review"))
                 build["decisions"] = pager_job_payload(worktree / "tmp")
+                # Retention deletes whole capture dirs, and a capture held for
+                # closure review is source bytes with no artifact. Its evidence
+                # is on disk before prune runs, so the review PR can still read
+                # those bytes back whatever retention decides about the dir.
+                save_evidence(worktree, evidence / f"build-{build_number}")
+                checked(schedules + ["prune"], worktree, command)
                 checked(["node", "scripts/generate-bulletin.mjs"], worktree, command)
                 checked(["node", "scripts/generate-i18n.mjs", "generate"], worktree, command)
                 staged = json.loads(checked(["node", "scripts/check-build-ci.mjs", "stage"], worktree, command))
@@ -244,7 +325,6 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
                     return state
                 checked(["git", "-c", "user.name=Schedule automation", "-c", "user.email=schedules@swimfrancisco.com",
                          "commit", "-m", "Refresh verified swimming schedules"], worktree, command)
-                save_evidence(worktree, evidence / f"build-{build_number}")
                 save_state()
                 result = command(["node", "scripts/check-build-ci.mjs", "promote", base, build["branch"]], worktree, timeout=900)
                 if result.returncode not in (0, 2):
@@ -272,3 +352,4 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
         raise
     finally:
         save_state()
+        report_openai_usage(evidence)

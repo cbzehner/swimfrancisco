@@ -9,10 +9,8 @@ compatibility_date = "2025-01-01"
 enabled = true
 invocation_logs = true
 
-# One hourly cron. Every tick refreshes conditions data; the tick that
-# happens to land at 00:00 PT also fires a rebuild (handler-side check
-# via `isPtMidnight`), keeping the server-rendered day-of-week current.
-# DST is handled inside the Worker via Intl, not by the cron config.
+# One hourly cron. Every tick refreshes conditions data. Schedule pages are
+# date-independent, so no calendar-day build trigger is needed.
 [triggers]
 crons = ["0 * * * *"]
 

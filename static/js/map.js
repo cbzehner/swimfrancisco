@@ -50,7 +50,7 @@ function createPopupHTML(spot, conditions, instant) {
   }
 
   return (
-    `<div class="sf-map-popup">` +
+    `<div class="sf-map-popup mono-caps">` +
     `<a class="sf-map-popup-title" href="${detailsHref}">` +
     `<strong>${name}</strong>` +
     `<span class="sf-map-popup-title-arrow" aria-hidden="true">→</span>` +
@@ -198,7 +198,10 @@ export function mountMap(root = document, {
   }, { signal: controller.signal });
 
   const ready = loadBasemap(L, map, controller.signal, fetcher).catch(() => {
-    if (!controller.signal.aborted) console.error("[swimfrancisco] basemap unavailable");
+    if (!controller.signal.aborted) {
+      capture("map_config_fetch_failed");
+      console.error("[swimfrancisco] basemap unavailable");
+    }
   });
   return {
     update, ready,

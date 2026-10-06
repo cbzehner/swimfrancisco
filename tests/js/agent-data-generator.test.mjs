@@ -7,7 +7,13 @@ import { fileURLToPath } from "node:url";
 
 import { generateAgentData, normalizeIsoDate } from "../../scripts/generate-agent-data.mjs";
 import { generateBuildMetadata } from "../../scripts/generate-build-metadata.mjs";
-import { assertConditionsFresh, assertSpotMatchesContent, verifySpotRecords } from "../../scripts/smoke-production.mjs";
+import {
+  assertBuildMetadata,
+  assertConditionsFresh,
+  assertSpotMatchesContent,
+  assertTimestampValid,
+  verifySpotRecords,
+} from "../../scripts/smoke-production.mjs";
 import { listCanonicalSpotFiles } from "../../scripts/lib/spot-frontmatter.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -164,6 +170,45 @@ test("production smoke rejects missing, duplicate, extra, or empty spot indexes"
     await assert.rejects(verifySpotRecords({ spots }, expected, () => assert.fail("Index must fail before fetching details")), /exactly the expected/);
   }
   await assert.rejects(verifySpotRecords({ spots: [] }, [], () => {}), /exactly the expected/);
+});
+
+test("production smoke accepts old static metadata with fresh matching data", async () => {
+  const oldGeneratedAt = new Date(Date.now() - 7 * 24 * 3_600_000).toISOString();
+  const expectedCommit = "a".repeat(40);
+  const expected = [{ slug: "mission-pool", pool: { schedules: [] } }];
+  const build = {
+    build_command: "npm run build",
+    generated_at: oldGeneratedAt,
+    git_commit: expectedCommit,
+  };
+
+  assert.doesNotThrow(() => assertBuildMetadata(build, expectedCommit));
+  assert.doesNotThrow(() => assertTimestampValid("agent index generated_at", oldGeneratedAt));
+  await verifySpotRecords(
+    { generated_at: oldGeneratedAt, spots: expected },
+    expected,
+    async () => ({ ...expected[0], generated_at: oldGeneratedAt }),
+  );
+  assert.doesNotThrow(() => assertConditionsFresh({
+    "ocean-beach": {
+      updated_at: new Date().toISOString(),
+      water_temp_f: null,
+      temp_observed_at: null,
+    },
+  }));
+
+  assert.throws(
+    () => assertBuildMetadata({ ...build, git_commit: "b".repeat(40) }, expectedCommit),
+    /production commit .* does not match expected/,
+  );
+  assert.throws(
+    () => assertBuildMetadata({ ...build, generated_at: "not-a-timestamp" }, expectedCommit),
+    /build marker generated_at is not a valid ISO timestamp/,
+  );
+  assert.throws(
+    () => assertTimestampValid("agent index generated_at", new Date(Date.now() + 60_000).toISOString()),
+    /agent index generated_at is in the future/,
+  );
 });
 
 test("production smoke rejects old observations even when the latest assembly labels them fresh", () => {

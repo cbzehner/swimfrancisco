@@ -190,7 +190,7 @@ def _closure_notices(page, header: list[dict], cells: list[SourceCell] | None = 
         return [SourceNotice(f"p{page.page_number}-unresolved-notice", page.extract_text() or "", False)]
     heading = headings[0]
     left, top = max(0, heading["x0"] - 4), heading["bottom"]
-    text = page.crop((left, top, page.width, page.height)).extract_text() or ""
+    text = page.within_bbox((left, top, page.width, page.height)).extract_text() or ""
     blocks = re.split(r"[•●]|\bPool Info:|(?=Closed for annual maintenance)", text)
     notices = [SourceNotice(f"p{page.page_number}-notice-{index}", block.strip(), True)
                for index, block in enumerate(blocks) if CLOSURE_TOKEN_RE.search(block)]

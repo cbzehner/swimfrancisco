@@ -9,6 +9,7 @@ from ..models import PoolEntry
 from ..paths import REPO_ROOT
 from .errors import DirectSourceError
 from .http import DirectTextResponse
+from .parsing import decode_source
 
 
 def read_browser_capture(entry: PoolEntry, *, root: Path = REPO_ROOT) -> tuple[DirectTextResponse, dict]:
@@ -43,7 +44,7 @@ def read_browser_capture(entry: PoolEntry, *, root: Path = REPO_ROOT) -> tuple[D
                 raise ValueError("Capture evidence hash mismatch")
         if not content["screenshot"].startswith(b"\x89PNG\r\n\x1a\n"):
             raise ValueError("Capture screenshot is not PNG")
-        text = content["source"].decode("utf-8")
+        text = decode_source(content["source"])
         if "<html" not in text.lower() or any(marker in text.lower() for marker in (
                 "<title>just a moment", "<title>access denied", "<title>attention required")):
             raise ValueError("Capture is not a usable HTML document")
