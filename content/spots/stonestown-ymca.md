@@ -19,58 +19,9 @@ access_summary = "Stonestown Family YMCA is a membership YMCA branch with lap sw
 [[extra.schedules]]
 sessions = []
 closures = []
-effective_start = "2026-05-17"
-effective_end = "2026-08-11"
-schedule_basis = "facility_hours"
-last_verified_at = "2026-05-17"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "07:00"
-end = "17:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "07:00"
-end = "17:00"
-label = "Facility hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
 effective_start = "2026-08-12"
 schedule_basis = "facility_hours"
+effective_end = "2026-10-11"
 last_verified_at = "2026-08-12"
 
 [[extra.schedules.access_hours]]
@@ -198,6 +149,56 @@ start = "07:00"
 end = "14:00"
 label = "Holiday facility hours"
 reason = "Independence Day"
+
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-10-12"
+schedule_basis = "facility_hours"
+effective_end = "2026-10-25"
+last_verified_at = "2026-10-12"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "07:00"
+end = "17:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "sunday"
+start = "07:00"
+end = "17:00"
+label = "Facility hours"
 
 [[extra.pricing]]
 label = "YMCA member"
