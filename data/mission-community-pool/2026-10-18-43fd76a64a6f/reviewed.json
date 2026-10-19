@@ -1,0 +1,128 @@
+{
+  "slug": "mission-community-pool",
+  "pdf_sha256": "43fd76a64a6fada732f0e6e26d50ef66fc39d2b6244350c03705477797362915",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/30319",
+  "reviewed_at": "2026-10-18",
+  "attested_by": "agent-reference",
+  "payload": {
+    "effective_start": "2026-10-20",
+    "effective_end": "2026-11-21",
+    "schedule_basis": "swim_schedule",
+    "sessions": [
+      {
+        "day": "tuesday",
+        "type": "lap_swim",
+        "start": "08:00",
+        "end": "09:00"
+      },
+      {
+        "day": "tuesday",
+        "type": "senior_swim",
+        "start": "09:15",
+        "end": "10:15",
+        "excluded_dates": [
+          "2026-10-20"
+        ]
+      },
+      {
+        "day": "tuesday",
+        "type": "lap_swim",
+        "start": "10:30",
+        "end": "12:00",
+        "excluded_dates": [
+          "2026-10-20"
+        ]
+      },
+      {
+        "day": "wednesday",
+        "type": "lap_swim",
+        "start": "08:00",
+        "end": "09:00"
+      },
+      {
+        "day": "wednesday",
+        "type": "senior_swim",
+        "start": "09:15",
+        "end": "10:15"
+      },
+      {
+        "day": "wednesday",
+        "type": "lap_swim",
+        "start": "10:30",
+        "end": "12:00"
+      },
+      {
+        "day": "thursday",
+        "type": "lap_swim",
+        "start": "08:00",
+        "end": "09:30"
+      },
+      {
+        "day": "thursday",
+        "type": "senior_swim",
+        "start": "09:45",
+        "end": "11:45"
+      },
+      {
+        "day": "friday",
+        "type": "lap_swim",
+        "start": "08:00",
+        "end": "09:00"
+      },
+      {
+        "day": "friday",
+        "type": "senior_swim",
+        "start": "09:15",
+        "end": "10:15"
+      },
+      {
+        "day": "friday",
+        "type": "lap_swim",
+        "start": "10:30",
+        "end": "12:00"
+      },
+      {
+        "day": "saturday",
+        "type": "lap_swim",
+        "start": "10:00",
+        "end": "11:15"
+      },
+      {
+        "day": "saturday",
+        "type": "family_swim",
+        "start": "11:30",
+        "end": "14:00"
+      }
+    ],
+    "closures": [
+      {
+        "start": "2026-10-20",
+        "end": "2026-10-20",
+        "start_time": "09:00",
+        "end_time": "12:30",
+        "reason": "All-staff meeting",
+        "reason_code": "staff_training",
+        "source_notices": [
+          {
+            "id": "p1-notice-1",
+            "text": "All city pools will be closed on 10/20/2026 from 9:00 AM-12:30 PM due to an all-staff meeting",
+            "source_sha256": "43fd76a64a6fada732f0e6e26d50ef66fc39d2b6244350c03705477797362915"
+          }
+        ]
+      },
+      {
+        "start": "2026-11-11",
+        "end": "2026-11-11",
+        "reason": "Veterans Day",
+        "reason_code": "holiday",
+        "source_notices": [
+          {
+            "id": "p1-notice-2",
+            "text": "All city pools will be closed on 11/11/2026 in observance of Veterans Day",
+            "source_sha256": "43fd76a64a6fada732f0e6e26d50ef66fc39d2b6244350c03705477797362915"
+          }
+        ]
+      }
+    ]
+  }
+}

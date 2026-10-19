@@ -1,7 +1,7 @@
 {
   "slug": "balboa-pool",
   "pdf_sha256": "d6f21871037274cc7b8817ab17a92eb7fec8b8d9dfa915d1cb72182b9526dda9",
-  "reviewed_at": "2026-09-09",
+  "reviewed_at": "2026-10-18",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29796",
   "payload": {
     "closures": [
@@ -62,6 +62,21 @@
             "id": "p1-c5-b28-notice",
             "text": "All city pools will be CLOSED\nDecember 12 from 9am-12pm\nfor Aquatics In-service Training",
             "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8"
+          }
+        ]
+      },
+      {
+        "start": "2026-10-20",
+        "end": "2026-10-20",
+        "start_time": "09:00",
+        "end_time": "12:30",
+        "reason": "All-staff meeting",
+        "reason_code": "staff_training",
+        "source_notices": [
+          {
+            "id": "p1-notice-1",
+            "text": "All city pools will be closed on 10/20/2026 from 9:00 AM-12:30 PM due to an all-staff meeting",
+            "source_sha256": "43fd76a64a6fada732f0e6e26d50ef66fc39d2b6244350c03705477797362915"
           }
         ]
       }
@@ -236,5 +251,5 @@
       }
     ]
   },
-  "attested_by": "human"
+  "attested_by": "agent-reference"
 }

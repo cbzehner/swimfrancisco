@@ -18,7 +18,7 @@ payment_model = "session"
 effective_start = "2026-09-01"
 schedule_basis = "swim_schedule"
 effective_end = "2026-12-12"
-last_verified_at = "2026-10-12"
+last_verified_at = "2026-10-18"
 
 [[extra.schedules.sessions]]
 day = "tuesday"
@@ -395,6 +395,19 @@ source_sha256 = "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397
 id = "p1-notice-1"
 text = "North Beach Pool will be CLOSED\nOctober 13-October 31 for\nANNUAL MAINTENCE."
 source_sha256 = "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8"
+
+[[extra.schedules.closures]]
+start = "2026-10-20"
+end = "2026-10-20"
+reason = "All-staff meeting"
+start_time = "09:00"
+end_time = "12:30"
+reason_code = "staff_training"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-1"
+text = "All city pools will be closed on 10/20/2026 from 9:00 AM-12:30 PM due to an all-staff meeting"
+source_sha256 = "43fd76a64a6fada732f0e6e26d50ef66fc39d2b6244350c03705477797362915"
 
 [[extra.schedules.closures]]
 start = "2026-10-22"

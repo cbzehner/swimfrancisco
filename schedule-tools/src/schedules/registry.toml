@@ -27,7 +27,7 @@ discovery = { action = "unchanged", reason = "sequential_windows", documents = [
 
 [[pool]]
 slug = "mission-community-pool"
-pdf_url = "https://sfrecpark.org/DocumentCenter/View/30001"
+pdf_url = "https://sfrecpark.org/DocumentCenter/View/30319"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Mission-Community-Pool-217"
 
 [[pool]]

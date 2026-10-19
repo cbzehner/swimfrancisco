@@ -15,23 +15,10 @@ access_mode = "public"
 payment_model = "session"
 
 [[extra.schedules]]
-sessions = []
-effective_start = "2026-08-14"
-schedule_basis = "temporarily_closed"
-effective_end = "2026-09-07"
-last_verified_at = "2026-08-20"
-
-[[extra.schedules.closures]]
-start = "2026-08-14"
-end = "2026-09-07"
-reason = "Garfield Pool Maintenance Closure 8-14_9-7 2026"
-reason_code = "garfield_maintenance"
-
-[[extra.schedules]]
 effective_start = "2026-09-08"
 schedule_basis = "swim_schedule"
 effective_end = "2026-12-10"
-last_verified_at = "2026-09-14"
+last_verified_at = "2026-10-18"
 
 [[extra.schedules.sessions]]
 day = "monday"
@@ -308,6 +295,19 @@ reason_code = "holiday"
 [[extra.schedules.closures.source_notices]]
 id = "p1-notice-1"
 text = "All city pools will be closed on\nOct. 12- Indigenous Peoples Day\nNov. 11- Veterans Day\nNov. 26 and 27- Thanksgiving"
+
+[[extra.schedules.closures]]
+start = "2026-10-20"
+end = "2026-10-20"
+reason = "All-staff meeting"
+start_time = "09:00"
+end_time = "12:30"
+reason_code = "staff_training"
+
+[[extra.schedules.closures.source_notices]]
+id = "p1-notice-1"
+text = "All city pools will be closed on 10/20/2026 from 9:00 AM-12:30 PM due to an all-staff meeting"
+source_sha256 = "43fd76a64a6fada732f0e6e26d50ef66fc39d2b6244350c03705477797362915"
 
 [[extra.schedules.closures]]
 start = "2026-10-22"

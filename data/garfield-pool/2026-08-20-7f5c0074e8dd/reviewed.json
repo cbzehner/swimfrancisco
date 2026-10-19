@@ -2,8 +2,8 @@
   "pdf_sha256": "7f5c0074e8ddf2428c38ce3870d36d73521e7ae17f863839c5db20893e26573b",
   "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/29799",
   "slug": "garfield-pool",
-  "reviewed_at": "2026-09-14",
-  "attested_by": "ci",
+  "reviewed_at": "2026-10-18",
+  "attested_by": "agent-reference",
   "payload": {
     "closures": [
       {
@@ -81,6 +81,21 @@
         ],
         "start": "2026-10-22",
         "start_time": "11:00"
+      },
+      {
+        "start": "2026-10-20",
+        "end": "2026-10-20",
+        "start_time": "09:00",
+        "end_time": "12:30",
+        "reason": "All-staff meeting",
+        "reason_code": "staff_training",
+        "source_notices": [
+          {
+            "id": "p1-notice-1",
+            "text": "All city pools will be closed on 10/20/2026 from 9:00 AM-12:30 PM due to an all-staff meeting",
+            "source_sha256": "43fd76a64a6fada732f0e6e26d50ef66fc39d2b6244350c03705477797362915"
+          }
+        ]
       }
     ],
     "effective_end": "2026-12-10",

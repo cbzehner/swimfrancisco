@@ -79,8 +79,8 @@
     }
   ],
   "slug": "north-beach-pool",
-  "reviewed_at": "2026-09-06",
-  "attested_by": "ci",
+  "reviewed_at": "2026-10-18",
+  "attested_by": "agent-reference",
   "payload": {
     "effective_start": "2026-09-01",
     "effective_end": "2026-12-12",
@@ -171,7 +171,7 @@
           "2026-09-24",
           "2026-10-22"
         ],
-        "notes": "Printed cell states CLOSED 9/24 & 10/22.",
+        "notes": "Session cell is marked CLOSED on the listed dates.",
         "start": "11:00",
         "type": "lap_swim",
         "physical_pool": "cool",
@@ -254,7 +254,8 @@
         "physical_pool": "cool",
         "pool_label_raw": null,
         "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c",
-        "source_cell": "p1-c5-b23"
+        "source_cell": "p1-c5-b23",
+        "notes": "Printed end time is abbreviated as \"4:30p\"."
       },
       {
         "day": "tuesday",
@@ -264,7 +265,7 @@
         "start": "07:30",
         "type": "lap_swim",
         "physical_pool": "warm",
-        "pool_label_raw": "(Lap/ Therapy)",
+        "pool_label_raw": "Lap/ Therapy",
         "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
         "source_cell": "p1-c1-b1"
       },
@@ -276,7 +277,7 @@
         "start": "09:00",
         "type": "senior_swim",
         "physical_pool": "warm",
-        "pool_label_raw": "(Lap/Therapy)",
+        "pool_label_raw": "Lap/Therapy",
         "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
         "source_cell": "p1-c1-b2"
       },
@@ -288,7 +289,7 @@
         "start": "12:00",
         "type": "lap_swim",
         "physical_pool": "warm",
-        "pool_label_raw": "(Lap/Therapy)",
+        "pool_label_raw": "Lap/Therapy",
         "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
         "source_cell": "p1-c1-b4"
       },
@@ -322,7 +323,7 @@
         "start": "09:00",
         "type": "senior_swim",
         "physical_pool": "warm",
-        "pool_label_raw": "(Lap/Therapy)",
+        "pool_label_raw": "Lap/Therapy",
         "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
         "source_cell": "p1-c2-b7"
       },
@@ -334,7 +335,7 @@
         "start": "12:50",
         "type": "lap_swim",
         "physical_pool": "warm",
-        "pool_label_raw": "(Lap/Therapy)",
+        "pool_label_raw": "Lap/Therapy",
         "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
         "source_cell": "p1-c2-b10"
       },
@@ -357,7 +358,7 @@
         "start": "07:30",
         "type": "lap_swim",
         "physical_pool": "warm",
-        "pool_label_raw": "(Lap/ Therapy)",
+        "pool_label_raw": "Lap/ Therapy",
         "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
         "source_cell": "p1-c3-b14"
       },
@@ -369,7 +370,7 @@
         "start": "09:00",
         "type": "senior_swim",
         "physical_pool": "warm",
-        "pool_label_raw": "(Lap/Therapy)",
+        "pool_label_raw": "Lap/Therapy",
         "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
         "source_cell": "p1-c3-b15"
       },
@@ -381,12 +382,12 @@
           "2026-09-24",
           "2026-10-22"
         ],
-        "notes": "Printed cell says CLOSED 9/24 & 10/22.",
+        "notes": "Cell states CLOSED 9/24 & 10/22.",
         "pool": "lap/therapy",
         "start": "11:15",
         "type": "lap_swim",
         "physical_pool": "warm",
-        "pool_label_raw": "(Lap/Therapy)",
+        "pool_label_raw": "Lap/Therapy",
         "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
         "source_cell": "p1-c3-b16"
       },
@@ -416,7 +417,7 @@
         "day": "friday",
         "end": "10:15",
         "evidence": "Rec/Family Swim (1) Senior Swim (1) 9:00am-10:15am",
-        "notes": "Shared cell with Senior Swim; printed (1) is only a numeric lane count and is not used as pool allocation.",
+        "notes": "Shared cell also lists Senior Swim; numeric (1) is not treated as a pool allocation.",
         "start": "09:00",
         "type": "family_swim",
         "physical_pool": "warm",
@@ -428,7 +429,7 @@
         "day": "friday",
         "end": "10:15",
         "evidence": "Rec/Family Swim (1) Senior Swim (1) 9:00am-10:15am",
-        "notes": "Shared cell with Rec/Family Swim; printed (1) is only a numeric lane count and is not used as pool allocation.",
+        "notes": "Shared cell also lists Rec/Family Swim; numeric (1) is not treated as a pool allocation.",
         "start": "09:00",
         "type": "senior_swim",
         "physical_pool": "warm",
@@ -444,7 +445,7 @@
         "start": "12:50",
         "type": "lap_swim",
         "physical_pool": "warm",
-        "pool_label_raw": "(Lap/Therapy)",
+        "pool_label_raw": "Lap/Therapy",
         "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
         "source_cell": "p1-c4-b24"
       },
@@ -478,7 +479,7 @@
         "start": "13:45",
         "type": "lap_swim",
         "physical_pool": "warm",
-        "pool_label_raw": "(Lap/Therapy)",
+        "pool_label_raw": "Lap/Therapy",
         "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8",
         "source_cell": "p1-c5-b33"
       },
@@ -497,9 +498,21 @@
     "closures": [
       {
         "end": "2026-10-31",
-        "reason": "ANUAL MAINTENANCE for North Beach Pool closure",
+        "reason": "ANUAL MAINTENANCE",
         "start": "2026-10-13",
-        "reason_code": "annual_maintenance"
+        "reason_code": "maintenance",
+        "source_notices": [
+          {
+            "id": "p1-notice-1",
+            "text": "North Beach Pool will be CLOSED\nOctober 13- October 31 for\nANUAL MAINTENANCE",
+            "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c"
+          },
+          {
+            "id": "p1-notice-1",
+            "text": "North Beach Pool will be CLOSED\nOctober 13-October 31 for\nANNUAL MAINTENCE.",
+            "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8"
+          }
+        ]
       },
       {
         "end": "2026-09-24",
@@ -507,7 +520,19 @@
         "reason": "Aquatics Division Training",
         "start": "2026-09-24",
         "start_time": "12:00",
-        "reason_code": "aquatics_training"
+        "reason_code": "staff_training",
+        "source_notices": [
+          {
+            "id": "p1-notice-2",
+            "text": "All city pools will be CLOSED\nevery 4th Thursday of the month\nfrom 12pm-2pm for Aquatics\nDivision Training",
+            "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c"
+          },
+          {
+            "id": "p1-notice-2",
+            "text": "All city pools will be CLOSED\nevery 4th Thursday of the month\nfrom 12p-2pm for Aquatics\nDivision Training",
+            "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8"
+          }
+        ]
       },
       {
         "end": "2026-10-22",
@@ -515,7 +540,19 @@
         "reason": "Aquatics Division Training",
         "start": "2026-10-22",
         "start_time": "12:00",
-        "reason_code": "aquatics_training"
+        "reason_code": "staff_training",
+        "source_notices": [
+          {
+            "id": "p1-notice-2",
+            "text": "All city pools will be CLOSED\nevery 4th Thursday of the month\nfrom 12pm-2pm for Aquatics\nDivision Training",
+            "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c"
+          },
+          {
+            "id": "p1-notice-2",
+            "text": "All city pools will be CLOSED\nevery 4th Thursday of the month\nfrom 12p-2pm for Aquatics\nDivision Training",
+            "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8"
+          }
+        ]
       },
       {
         "end": "2026-11-26",
@@ -523,19 +560,55 @@
         "reason": "Aquatics Division Training",
         "start": "2026-11-26",
         "start_time": "12:00",
-        "reason_code": "aquatics_training"
+        "reason_code": "staff_training",
+        "source_notices": [
+          {
+            "id": "p1-notice-2",
+            "text": "All city pools will be CLOSED\nevery 4th Thursday of the month\nfrom 12pm-2pm for Aquatics\nDivision Training",
+            "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c"
+          },
+          {
+            "id": "p1-notice-2",
+            "text": "All city pools will be CLOSED\nevery 4th Thursday of the month\nfrom 12p-2pm for Aquatics\nDivision Training",
+            "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8"
+          }
+        ]
       },
       {
         "end": "2026-11-11",
         "reason": "Veteran's Day",
         "start": "2026-11-11",
-        "reason_code": "veterans_day"
+        "reason_code": "holiday",
+        "source_notices": [
+          {
+            "id": "p1-notice-3",
+            "text": "All city pools will be CLOSED on\nNovember 11 for Veteran's Day,\nNovember 26-27 for Thanksgiving",
+            "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c"
+          },
+          {
+            "id": "p1-notice-3",
+            "text": "All city pools will be CLOSED on\nNovember 11 for Veteran's Day,\nNovember 26-27 for Thanksgiving",
+            "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8"
+          }
+        ]
       },
       {
         "end": "2026-11-27",
         "reason": "Thanksgiving",
         "start": "2026-11-26",
-        "reason_code": "thanksgiving"
+        "reason_code": "holiday",
+        "source_notices": [
+          {
+            "id": "p1-notice-3",
+            "text": "All city pools will be CLOSED on\nNovember 11 for Veteran's Day,\nNovember 26-27 for Thanksgiving",
+            "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c"
+          },
+          {
+            "id": "p1-notice-3",
+            "text": "All city pools will be CLOSED on\nNovember 11 for Veteran's Day,\nNovember 26-27 for Thanksgiving",
+            "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8"
+          }
+        ]
       },
       {
         "end": "2026-12-12",
@@ -543,7 +616,34 @@
         "reason": "Aquatics In-service Training",
         "start": "2026-12-12",
         "start_time": "09:00",
-        "reason_code": "aquatics_training"
+        "reason_code": "staff_training",
+        "source_notices": [
+          {
+            "id": "p1-c5-b20-notice",
+            "text": "All city pools will be\nCLOSED December 12\nfrom 9am-12pm for\nAquatics In-service Training",
+            "source_sha256": "6c2b2e77fb2370a1aee52203c9d8672fc5e55ab398875a72f83156ac3b23397c"
+          },
+          {
+            "id": "p1-c5-b28-notice",
+            "text": "All city pools will be CLOSED\nDecember 12 from 9am-12pm\nfor Aquatics In-service Training",
+            "source_sha256": "ac196df42a14a71cd86fbb13972706e22b5e5cf8dcc5820f660d57882bfd25c8"
+          }
+        ]
+      },
+      {
+        "start": "2026-10-20",
+        "end": "2026-10-20",
+        "start_time": "09:00",
+        "end_time": "12:30",
+        "reason": "All-staff meeting",
+        "reason_code": "staff_training",
+        "source_notices": [
+          {
+            "id": "p1-notice-1",
+            "text": "All city pools will be closed on 10/20/2026 from 9:00 AM-12:30 PM due to an all-staff meeting",
+            "source_sha256": "43fd76a64a6fada732f0e6e26d50ef66fc39d2b6244350c03705477797362915"
+          }
+        ]
       }
     ]
   }

@@ -1220,3 +1220,74 @@ Keep source evidence and existing review holds until each item's checks pass.
   meridiem correction or automatic cross-source closure propagation. Done
   when unchanged reviews remain usable, changed evidence cannot silently
   inherit an attestation, and expired schedules remain expired.
+
+## Mission autumn schedule and citywide closure — October 18, 2026
+
+The user requested the updates identified in the October 17 audit. The official
+[Mission schedule](https://sfrecpark.org/DocumentCenter/View/30319) now covers
+October 20–November 21, 2026. Its complete one-page grid and notes were visually
+reviewed. The retained original is
+`data/mission-community-pool/2026-10-18-43fd76a64a6f/source.pdf`, SHA-256
+`43fd76a64a6fada732f0e6e26d50ef66fc39d2b6244350c03705477797362915`.
+The new snapshot contains 13 weekly sessions. Parent & Tot is not published as
+a supported swim category; the shared Tuesday and Thursday cells retain Senior
+Swim. Tuesday's 09:15–10:15 and 10:30–12:00 sessions explicitly exclude October
+20. The 08:00–09:00 lap session ends before the closure and remains available.
+
+The notice explicitly closes **all city pools** on October 20, 09:00–12:30
+Pacific, for an all-staff meeting, and on November 11 for Veterans Day. The
+October 20 closure was added to the current accepted windows for Balboa,
+Coffman, Garfield, Hamilton, MLK, North Beach, Rossi, and Sava, with the
+literal notice and Mission original's full hash. These eight pools already
+cover November 11. North Beach's October maintenance remains in force; the
+additional staff-meeting notice does not reopen either physical pool.
+Membership pools and open-water spots are outside this notice's scope.
+
+This is a source-specific correction, not a general automatic cross-source
+propagation rule. Existing session times, exclusions, dates, closures, and
+physical-pool identities were compared with canonical Markdown and preserved.
+The North Beach snapshot also retains the source notices and reason codes
+already present in canonical Markdown. The shared publication boundary
+validated and projected the sitting; its normal 14-day grace policy removed
+older expired windows from pages while retaining their original evidence.
+The revised snapshots use `attested_by: agent-reference` to identify the agent
+review without claiming a human source-cell approval. Earlier human/CI
+attestations remain in Git history; Sava's approved noon interpretation and
+Balboa's December training correction are unchanged. No provider call or
+general parser change was made. The Mission registry URL and authored
+descriptions in all five languages now reflect the November 21 season end.
+
+The evidence-only September closure PRs
+[#112](https://github.com/cbzehner/swimfrancisco/pull/112),
+[#113](https://github.com/cbzehner/swimfrancisco/pull/113), and
+[#114](https://github.com/cbzehner/swimfrancisco/pull/114) were closed with
+disposition comments and their branches retained. Stonestown's contradictory
+historical reopening date remains unresolved, but the old notice is superseded
+by current facility-hours evidence. City Sports' September 14 cancellation
+affected one Aqua Fit class. JCCSF's September holiday closure has passed;
+future Swim School breaks remain program-specific.
+
+MLK's current PDF 30210 was fetched again and its complete page visually
+reviewed against the older accepted source. Its SHA-256 is
+`edca152a4fa61deb96bd55e5ed54a0fd82d1e3d464c07fca0392213965044725`.
+The text comparison changes only the omitted October 12 holiday line; the
+weekly grid and future closures are unchanged. The October 18 agent review is
+stored with that current original in
+`data/martin-luther-king-jr-pool/2026-09-28-edca152a4fa6/reviewed.json`.
+Its October 20 closure cites the Mission source, while the historical October
+12 closure retains the older MLK hash. The old reviewed snapshot is unchanged.
+This prevents the already-retained current PDF from being treated as an
+unreviewed replacement for the supplemented schedule.
+
+Validation used fresh sandbox `swim-oct18-validation` with Wrangler 4.151.1,
+smol-toml 1.9.1, and pypdf 6.21.1. `devenv shell -- just release`
+regenerated artifacts and ran the complete `just check`: 1,539 Python tests
+passed (58 skipped), 239 JavaScript tests, 47 browser checks, 20 end-to-end
+tests, and a 150-page build. npm audit reported zero known vulnerabilities.
+The shared Worker browser verified all nine October 20 closures, Mission's
+08:00–09:00 session, both cancelled sessions, a normal Tuesday, Veterans Day,
+and schedule expiry. HTTPS, live conditions, harmless keyboard input,
+isolation, read-only Cloudflare access, restart with concurrent devenv use,
+and export of a disposable commit/deletion/new file passed. The export bundle
+verified, its patch applied cleanly to the recorded base, ignored files were
+excluded, and the guest index was unchanged.

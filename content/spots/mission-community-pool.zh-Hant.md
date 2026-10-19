@@ -6,4 +6,4 @@ slug = "mission-community-pool"
 localized_from = "mission-community-pool"
 +++
 
-三藩市唯一的市營戶外泳池。這座建於 1916 年的 90 x 40 呎泳池位於 Mission District 中心、Linda 和 Valencia 之間，五月至十月季節性營運。項目包括泳道游泳、長者游泳、休閒游泳、水中有氧和游泳課。
+三藩市唯一的市營戶外泳池。這座建於 1916 年的 90 x 40 呎泳池位於 Mission District 中心、Linda 和 Valencia 之間，季節性營運。2026 年泳季於 11 月 21 日結束。項目包括泳道游泳、長者游泳、休閒游泳、水中有氧和游泳課。
