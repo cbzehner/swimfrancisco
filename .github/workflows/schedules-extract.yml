@@ -3,6 +3,7 @@ name: schedules-extract
 on:
   schedule:
     - cron: '0 16 * * 1'
+    - cron: '0 16 * * 0,2-6'
   workflow_dispatch:
     inputs:
       mode:
@@ -18,8 +19,35 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  detect:
+    if: github.ref == 'refs/heads/main' && vars.SCHEDULES_AUTOMATION_ENABLED == 'true' && github.event_name == 'schedule' && github.event.schedule != '0 16 * * 1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    outputs:
+      changed: ${{ steps.detect.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: astral-sh/setup-uv@v5
+      - name: Check city-pool source changes without paid calls
+        id: detect
+        run: |
+          uv --project schedule-tools run --locked schedules detect-changes
+          python -c 'import json, os; r = json.load(open("tmp/source-changes.json")); print("changed=" + str(r["changed"]).lower(), file=open(os.environ["GITHUB_OUTPUT"], "a"))'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: schedule-detection-${{ github.run_id }}-${{ github.run_attempt }}
+          path: tmp/
+          retention-days: 30
+
   extract:
-    if: github.ref == 'refs/heads/main' && vars.SCHEDULES_AUTOMATION_ENABLED == 'true'
+    needs: detect
+    if: always() && github.ref == 'refs/heads/main' && vars.SCHEDULES_AUTOMATION_ENABLED == 'true' && (needs.detect.result == 'skipped' || needs.detect.result == 'failure' || needs.detect.outputs.changed == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 110
     permissions:

@@ -11,6 +11,7 @@ from .paths import (
     DATA_DIR,
     TMP_DIR,
     REPO_ROOT,
+    PROMPT_PATH,
     latest_reviewed_dir,
 )
 from .publish import publish_pending_all
@@ -273,6 +274,21 @@ def automate_command(mode: str, run_id: str) -> None:
         click.echo(json.dumps(automate(REPO_ROOT, mode=mode, run_id=run_id)))
     except Exception as error:
         raise click.ClickException(f"Automation stopped ({type(error).__name__}); inspect its evidence") from error
+
+
+@cli.command("detect-changes")
+def detect_changes_command() -> None:
+    """Check city-pool sources without model calls or publication."""
+    from .detection import changed_sources
+
+    entries = rec_park_entries(load_registry())
+    if not entries:
+        raise click.ClickException("No city-pool sources configured")
+    decisions = discover_all(entries, dry_run=True)
+    changes = changed_sources(decisions, PROMPT_PATH.read_text().strip())
+    result = {"changed": bool(changes), "changes": changes, "checked_pools": len(decisions)}
+    (TMP_DIR / "source-changes.json").write_text(json.dumps(result, indent=2) + "\n")
+    click.echo(json.dumps(result))
 
 
 @cli.command("prune")

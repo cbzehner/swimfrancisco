@@ -220,7 +220,7 @@ Run it by hand with `just schedules prune`.
 
 The source registry lives at `schedule-tools/src/schedules/registry.toml`.
 
-The weekly hosted `schedules automate` run discovers Rec & Park
+The hosted `schedules automate` run discovers Rec & Park
 `DocumentCenter` IDs from each pool's `official_page_url`. `schedules discover`
 rewrites `pdf_url` to the
 table-linked current `session_grid` (a unique table grid, or the current
@@ -555,14 +555,22 @@ does not change in this task.
 
 ## Autonomous extraction and publication
 
-`schedules automate` runs the weekly hosted pipeline. It replaces the earlier
+`schedules automate` runs the hosted pipeline. It replaces the earlier
 rolling-PR workflow: verified updates go straight to `main`, and unclear
 closure notices get a separate draft review PR.
 
-The schedule is Monday at 16:00 UTC (09:00 Pacific daylight time, 08:00 standard
-time). Weekly discovery checks for upcoming schedules before the current window
-ends. A late change can take up to seven days to appear; manual runs remain
-available. Manual runs default to `extract-only`. Both modes require
+The full run is Monday at 16:00 UTC (09:00 Pacific daylight time, 08:00 standard
+time). On other days at the same time, `schedules detect-changes` checks the
+nine city pools' official documents without model calls or browser capture.
+New source hashes, changed extraction configuration, or unresolved discovery
+start the existing full pipeline. An unchanged preflight skips it; a failed
+preflight falls back to the full pipeline so failures reach the operator issue.
+Detection reports are retained for 30 days. Discovery does not rewrite the
+registry in this preflight, and detection never approves or publishes hours.
+
+Membership and browser-only sources retain weekly checks; city-pool changes
+normally reach detection within a day, subject to hosted scheduling and source
+availability. Manual runs remain available and default to `extract-only`. Both modes require
 `SCHEDULES_AUTOMATION_ENABLED=true`; unset means disabled.
 
 Unchanged source/configuration pairs reuse cached extraction without model
