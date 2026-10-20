@@ -734,6 +734,11 @@ Past trial runs, their spend, and the source exceptions they exposed are in
 
 ## Future
 
+The [Jev classification trial](jev-trial.md) provides a separate offline replay
+and explicit paid-request tool. It has no publication authority. Historical
+corpus review and credentialed model evaluation remain prerequisites to any
+production routing proposal.
+
 Semantic XLSX fingerprinting remains separate work. This workflow uses existing
 source-byte identity and does not introduce semantic identity or canonicalization.
 
