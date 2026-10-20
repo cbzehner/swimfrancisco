@@ -1,54 +1,50 @@
 {
-  "cost_estimate": "deterministic",
-  "details": {
-    "direct_source": {
-      "configuration": {
-        "capture": {
-          "browser_version": "128.0.6613.137",
-          "captured_at": "2026-10-19T20:52:53.608Z",
-          "configuration": {
-            "playwright_version": "1.61.1",
-            "script_sha256": "8e5c24db09d052cd63888ed77acc3a6a5273434b12f71ed7a2ac03e786535ae4"
-          },
-          "hashes": {
-            "rendered": "45bb32b4603620a0539bc17ccb8322216a3665b3f1db530204b2a770149df29f",
-            "screenshot": "dc0e95892ecb05685cf3e0f4a32bf9714f8209ec51f7b584b14c97b398167693",
-            "source": "9674c4957442b10389908a67a702c10b0fbd2711740c997ba5a07200ee9ede85"
-          },
-          "method": "cloudflare_browser",
-          "requested_url": "https://www.jccsf.org/fitness/aquatics/",
-          "status": 200,
-          "url": "https://www.jccsf.org/fitness/aquatics/"
+  "pdf_sha256": "f09fa2edd931cc29549a66a56e5be26cc8f1b94d53cca7eaffee88a35ea487a6",
+  "source_pdf_url": "https://www.jccsf.org/fitness/aquatics/",
+  "direct_source": {
+    "configuration": {
+      "capture": {
+        "browser_version": "128.0.6613.137",
+        "captured_at": "2026-10-20T19:51:21.645Z",
+        "configuration": {
+          "playwright_version": "1.61.1",
+          "script_sha256": "8e5c24db09d052cd63888ed77acc3a6a5273434b12f71ed7a2ac03e786535ae4"
         },
-        "freshness_days": 14,
-        "libraries": {
-          "httpx": "0.28.1",
-          "openpyxl": "3.1.5"
+        "hashes": {
+          "rendered": "16ee15e7019027ef9935eef16dac8629c80f7b9de5f35e439932b2519206803b",
+          "screenshot": "3cb517577956588c8fe94aa4ce22ea4d8fe509bf823040f3214a960a0394bcac",
+          "source": "f09fa2edd931cc29549a66a56e5be26cc8f1b94d53cca7eaffee88a35ea487a6"
         },
-        "parser_sha256": "9245e06e2229752047aaba1751039838af82ef712e92181292551a5381e90e57",
-        "python": "3.13.16",
-        "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
-        "source_identity": "original_bytes"
+        "method": "cloudflare_browser",
+        "requested_url": "https://www.jccsf.org/fitness/aquatics/",
+        "status": 200,
+        "url": "https://www.jccsf.org/fitness/aquatics/"
       },
       "freshness_days": 14,
-      "observed_on": "2026-10-19",
-      "requested_url": "https://www.jccsf.org/fitness/aquatics/",
-      "sha256": "9674c4957442b10389908a67a702c10b0fbd2711740c997ba5a07200ee9ede85",
-      "url": "https://www.jccsf.org/fitness/aquatics/"
+      "libraries": {
+        "httpx": "0.28.1",
+        "openpyxl": "3.1.5"
+      },
+      "parser_sha256": "a9c5a177a53291230d1471ff965c3a06d43957624269d9f6b14be76e2ce6bc7f",
+      "python": "3.13.16",
+      "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+      "source_identity": "original_bytes"
     },
-    "source_coverage": {
-      "issues": [],
-      "ok": true
-    }
+    "freshness_days": 14,
+    "observed_on": "2026-10-20",
+    "requested_url": "https://www.jccsf.org/fitness/aquatics/",
+    "sha256": "f09fa2edd931cc29549a66a56e5be26cc8f1b94d53cca7eaffee88a35ea487a6",
+    "url": "https://www.jccsf.org/fitness/aquatics/"
   },
-  "extracted_at": "2026-10-19T20:53:24.911962+00:00",
-  "model": "browser-html",
+  "slug": "jccsf",
+  "reviewed_at": "2026-10-20",
+  "attested_by": "ci",
   "payload": {
     "access_exceptions": [],
     "access_hours": [],
     "closures": [],
-    "effective_end": "2026-11-01",
-    "effective_start": "2026-10-19",
+    "effective_end": "2026-11-02",
+    "effective_start": "2026-10-20",
     "schedule_basis": "swim_schedule",
     "sessions": [
       {
@@ -238,11 +234,5 @@
         "type": "lap_swim"
       }
     ]
-  },
-  "pdf_sha256": "9674c4957442b10389908a67a702c10b0fbd2711740c997ba5a07200ee9ede85",
-  "prompt_sha256": "721bb09111c5997215222e098b067ddc7bac48be9fdc5beb8d11299be165e512",
-  "provider": "direct",
-  "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
-  "source_pdf_url": "https://www.jccsf.org/fitness/aquatics/",
-  "usage": {}
+  }
 }

@@ -1,31 +1,27 @@
 {
-  "cost_estimate": "deterministic",
-  "details": {
-    "direct_source": {
-      "configuration": {
-        "freshness_days": 14,
-        "libraries": {
-          "httpx": "0.28.1",
-          "openpyxl": "3.1.5"
-        },
-        "parser_sha256": "9245e06e2229752047aaba1751039838af82ef712e92181292551a5381e90e57",
-        "python": "3.13.16",
-        "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
-        "source_identity": "original_bytes"
-      },
+  "pdf_sha256": "e197a5aef1aa841c74c04e11abe557c17ed4ead765574ae2d737c626996acbf5",
+  "source_pdf_url": "https://www.bayclubs.com/clubs/thegateway",
+  "direct_source": {
+    "configuration": {
       "freshness_days": 14,
-      "observed_on": "2026-10-19",
-      "requested_url": "https://www.bayclubs.com/clubs/thegateway",
-      "sha256": "22be0de1a4d6c409bb97d3e37206ef45b809169623bcc38a0fb00c0568138399",
-      "url": "https://www.bayclubs.com/clubs/thegateway"
+      "libraries": {
+        "httpx": "0.28.1",
+        "openpyxl": "3.1.5"
+      },
+      "parser_sha256": "a9c5a177a53291230d1471ff965c3a06d43957624269d9f6b14be76e2ce6bc7f",
+      "python": "3.13.16",
+      "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+      "source_identity": "original_bytes"
     },
-    "source_coverage": {
-      "issues": [],
-      "ok": true
-    }
+    "freshness_days": 14,
+    "observed_on": "2026-10-20",
+    "requested_url": "https://www.bayclubs.com/clubs/thegateway",
+    "sha256": "e197a5aef1aa841c74c04e11abe557c17ed4ead765574ae2d737c626996acbf5",
+    "url": "https://www.bayclubs.com/clubs/thegateway"
   },
-  "extracted_at": "2026-10-19T20:53:28.192790+00:00",
-  "model": "bayclub-html",
+  "slug": "bay-club-gateway",
+  "reviewed_at": "2026-10-20",
+  "attested_by": "ci",
   "payload": {
     "access_exceptions": [],
     "access_hours": [
@@ -80,15 +76,9 @@
       }
     ],
     "closures": [],
-    "effective_end": "2026-11-01",
-    "effective_start": "2026-10-19",
+    "effective_end": "2026-11-02",
+    "effective_start": "2026-10-20",
     "schedule_basis": "facility_hours",
     "sessions": []
-  },
-  "pdf_sha256": "22be0de1a4d6c409bb97d3e37206ef45b809169623bcc38a0fb00c0568138399",
-  "prompt_sha256": "926c164b0c3c8a4f4217c3732bcc5c9a0af11423e1de728132dddc8d0d6b4843",
-  "provider": "direct",
-  "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
-  "source_pdf_url": "https://www.bayclubs.com/clubs/thegateway",
-  "usage": {}
+  }
 }
