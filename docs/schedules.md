@@ -581,6 +581,14 @@ window for each affected pool. It closes when coverage is restored. This job
 also runs when publication is disabled, so the kill switch cannot hide an
 approaching expiry. Reports are retained for 30 days.
 
+The separate `schedules-watchdog` workflow runs daily at 20:00 UTC. It checks
+that scheduled source detection succeeded within 36 hours and a full scheduled
+extraction succeeded within eight days. Skipped jobs, reporting jobs, and manual
+runs cannot supply those heartbeats. A disabled workflow or enablement variable
+is reported explicitly in one deduplicated watchdog issue; the watchdog never
+reenables publication. Its separate trigger can detect a disabled extraction
+workflow, but cannot detect a GitHub-wide scheduler outage or its own disablement.
+
 Membership and browser-only sources retain weekly checks; city-pool changes
 normally reach detection within a day, subject to hosted scheduling and source
 availability. Manual runs remain available and default to `extract-only`. Both modes require

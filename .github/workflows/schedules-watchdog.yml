@@ -1,0 +1,66 @@
+name: schedules-watchdog
+
+on:
+  schedule:
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
+concurrency:
+  group: schedules-watchdog
+  cancel-in-progress: false
+
+jobs:
+  watchdog:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check scheduled source-check and extraction heartbeats
+        uses: actions/github-script@v7
+        env:
+          AUTOMATION_ENABLED: ${{ vars.SCHEDULES_AUTOMATION_ENABLED }}
+        with:
+          script: |
+            const fs = require('node:fs');
+            const { automationHealth } = await import(process.cwd() + '/scripts/lib/schedule-health.mjs');
+            const { owner, repo } = context.repo;
+            const workflow_id = 'schedules-extract.yml';
+            const workflow = await github.rest.actions.getWorkflow({ owner, repo, workflow_id });
+            const runs = await github.rest.actions.listWorkflowRuns({ owner, repo, workflow_id, branch: 'main', event: 'schedule', per_page: 50 });
+            const now = new Date();
+            const cutoff = now.getTime() - 9 * 24 * 60 * 60 * 1000;
+            const jobs = [];
+            for (const run of runs.data.workflow_runs.filter(run => Date.parse(run.created_at) >= cutoff)) {
+              jobs.push(...await github.paginate(github.rest.actions.listJobsForWorkflowRun, { owner, repo, run_id: run.id, per_page: 100 }));
+            }
+            const report = automationHealth({ workflowState: workflow.data.state, enabled: process.env.AUTOMATION_ENABLED, jobs, now });
+            fs.mkdirSync('tmp', { recursive: true });
+            fs.writeFileSync('tmp/schedule-watchdog.json', JSON.stringify(report, null, 2) + '\n');
+            const marker = '<!-- schedule-watchdog-status -->';
+            const issues = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: 'open', creator: 'github-actions[bot]', per_page: 100 });
+            const issue = issues.find(item => !item.pull_request && item.body?.includes(marker));
+            if (!report.issues.length) {
+              if (issue) await github.rest.issues.update({ owner, repo, issue_number: issue.number, state: 'closed' });
+              return;
+            }
+            const fingerprint = '<!-- state:' + Buffer.from(JSON.stringify(report.issues)).toString('base64') + ' -->';
+            if (issue?.body?.includes(fingerprint)) return;
+            const body = [marker, fingerprint, ...report.issues.map(item => '- ' + item.message), '',
+              'Last successful scheduled source check: ' + (report.last_detection_at || 'none in the inspected period'),
+              'Last successful scheduled full extraction: ' + (report.last_extraction_at || 'none in the inspected period'), '',
+              'Inspect the workflow, enablement variable, and failed run evidence. This watchdog never enables publication or changes schedules.', '',
+              '[Watchdog run](' + context.serverUrl + '/' + owner + '/' + repo + '/actions/runs/' + context.runId + ')'].join('\n');
+            if (issue) await github.rest.issues.update({ owner, repo, issue_number: issue.number, body });
+            else await github.rest.issues.create({ owner, repo, title: 'Schedule automation is not running reliably', body });
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: schedule-watchdog-${{ github.run_id }}-${{ github.run_attempt }}
+          path: tmp/schedule-watchdog.json
+          retention-days: 30
