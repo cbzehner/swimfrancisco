@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import time
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from collections.abc import Callable
 from io import BytesIO
 from pathlib import Path
@@ -22,6 +24,31 @@ TRANSIENT_STATUSES = frozenset({408, 429, 500, 502, 503, 504})
 
 class FetchError(RuntimeError):
     """Raised when a PDF cannot be fetched or validated."""
+
+
+def http_failure_code(status: int) -> str:
+    if status in {404, 410}:
+        return "source_missing"
+    if status in {401, 403}:
+        return "source_access_denied"
+    return "source_unavailable" if status in TRANSIENT_STATUSES else "source_request_failed"
+
+
+def retry_delay(error: httpx.HTTPError, attempt: int) -> float | None:
+    """Honor a server's delay, or defer to a later run rather than retry early."""
+    fallback = 0.25 * (attempt + 1)
+    if not isinstance(error, httpx.HTTPStatusError):
+        return fallback
+    value = error.response.headers.get("Retry-After")
+    if not value:
+        return fallback
+    try:
+        delay = float(value) if value.isdecimal() else (
+            parsedate_to_datetime(value) - datetime.now(timezone.utc)
+        ).total_seconds()
+    except (ValueError, TypeError, OverflowError):
+        return fallback
+    return max(fallback, delay) if delay <= 30 else None
 
 
 def get_with_retries(
@@ -53,7 +80,10 @@ def get_with_retries(
             )
             if not retryable or attempt >= retries:
                 break
-            (sleep or time.sleep)(0.25 * (attempt + 1))
+            delay = retry_delay(exc, attempt)
+            if delay is None:
+                break
+            (sleep or time.sleep)(delay)
     raise last_error
 
 

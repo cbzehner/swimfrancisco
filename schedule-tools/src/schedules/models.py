@@ -252,6 +252,7 @@ class Aborted(PoolResultBase):
     prior_schedule_effective: str | None
     review_notes: list[ReviewNote] = field(default_factory=list)
     closure_review: dict[str, Any] | None = None
+    failure_code: str = "extraction_failed"
 
 
 PoolResult = Skipped | Unchanged | Extracted | Aborted

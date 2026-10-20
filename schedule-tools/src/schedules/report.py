@@ -7,6 +7,7 @@ from .discover import view_id_from_url
 from .models import Aborted, Extracted, PoolResult, ReviewNote, Skipped, Unchanged, Violation, needs_review
 from .review import DecisionSet, parse_view_id
 from .paths import relative_to_repo
+from .recovery import RECOVERY_ACTIONS
 
 
 def result_counts(results: list[PoolResult]) -> dict[str, int]:
@@ -59,6 +60,7 @@ def write_report(results: list[PoolResult], path: Path) -> Path:
 
     path.write_text("\n".join(lines))
     path.with_suffix(".json").write_text(json.dumps({
+        "attention": recovery_actions(results),
         "ready_openai": [relative_to_repo(Path(result.artifact_paths["openai"])) for result in results
                          if isinstance(result, Extracted) and result.provider == "openai"
                          and not result.catastrophic and not result.violations and "openai" in result.artifact_paths],
@@ -69,6 +71,20 @@ def write_report(results: list[PoolResult], path: Path) -> Path:
                             if isinstance(result, Aborted) and result.closure_review is not None],
     }, indent=2) + "\n")
     return path
+
+
+def recovery_actions(results: list[PoolResult]) -> list[dict]:
+    actions = {}
+    for result in results:
+        if isinstance(result, Aborted):
+            code = "closure_review" if result.closure_review else result.failure_code
+        elif isinstance(result, Extracted) and result.catastrophic:
+            code = "source_coverage_failed"
+        else:
+            continue
+        actions[(result.slug, code)] = {"slug": result.slug, "code": code,
+                                       "action": RECOVERY_ACTIONS.get(code, RECOVERY_ACTIONS["extraction_failed"])}
+    return [actions[key] for key in sorted(actions)]
 
 
 def _status_label(result: PoolResult) -> str:

@@ -156,10 +156,16 @@ def pager_job_payload(tmp_dir: Path) -> dict:
                 slug for slug in (payload.get("published") or []) if isinstance(slug, str)
             ]
     rows = pager_flagged_set(refused=refused, blocking=blocking)
+    recovery_actions = []
+    for provider in ("direct", "openai"):
+        path = tmp_dir / f"extraction-report-{provider}.json"
+        if path.is_file():
+            recovery_actions.extend(json.loads(path.read_text()).get("attention", []))
     return {
         "flagged_computed": flagged_computed,
         "flagged_set": [f"{slug}:{code}" for slug, code in rows],
         "published_slugs": published,
+        "recovery_actions": recovery_actions,
     }
 
 

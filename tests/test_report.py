@@ -9,9 +9,19 @@ approve bad data or reject good data.
 from __future__ import annotations
 
 from pathlib import Path
+import json
 
 from schedules.models import Aborted, Extracted, PoolResult, ReviewNote, Skipped, Unchanged, Violation
 from schedules.report import write_report
+
+
+def test_public_recovery_guidance_does_not_copy_raw_errors(tmp_path):
+    report = tmp_path / "report.md"
+    write_report([_aborted(error="private-token-in-raw-error", failure_code="source_missing")], report)
+    payload = json.loads(report.with_suffix(".json").read_text())
+    assert payload["attention"][0]["code"] == "source_missing"
+    assert "replacement document" in payload["attention"][0]["action"]
+    assert "private-token" not in json.dumps(payload)
 
 
 def _proposed(**overrides: object) -> Extracted:

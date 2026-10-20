@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Literal
 
 from .artifacts import save_artifact_bundle, skip_if_fresh, save_pool_bundle
+from .recovery import failure_code
 from .delta import check_delta
 from .direct_sources import extract_direct
 from .direct_sources.errors import CapturedClosureReviewRequired
@@ -312,6 +313,7 @@ def _process_entry(
                 "notices": exc.notices,
             } if isinstance(exc, ClosureReviewRequired) else exc.review if isinstance(exc, CapturedClosureReviewRequired) else None,
             error=f"{type(exc).__name__}: {exc}\n{traceback.format_exc()}",
+            failure_code=failure_code(exc),
             prior_sessions_count=len(prior_snapshot["sessions"]),
             prior_closures_count=len(prior_snapshot["closures"]),
             prior_schedule_effective=prior_snapshot["effective_start"],

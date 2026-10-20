@@ -4,6 +4,10 @@ from __future__ import annotations
 class DirectSourceError(RuntimeError):
     """Raised when a non-PDF source cannot be fetched or parsed."""
 
+    def __init__(self, message: str, *, failure_code: str = "source_format_changed"):
+        self.failure_code = failure_code
+        super().__init__(message)
+
 
 class CapturedClosureReviewRequired(DirectSourceError):
     def __init__(self, *, slug: str, source_path: str, source_sha256: str,

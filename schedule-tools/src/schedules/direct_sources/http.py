@@ -14,7 +14,7 @@ from openpyxl.utils.exceptions import InvalidFileException
 
 from .._time import pacific_today
 from ..artifacts import canonical_source_sha256
-from ..fetch import get_with_retries
+from ..fetch import get_with_retries, http_failure_code
 from ..paths import DATA_DIR, parse_review_dir_name
 from .errors import DirectSourceError
 
@@ -68,6 +68,7 @@ def fetch_text(
     if not 0 <= retries <= 5:
         raise ValueError("retries must be between 0 and 5")
     detail = "request failed"
+    failure_code = "source_unavailable"
     headers = {
         "User-Agent": BOT_USER_AGENT,
         "Accept": "text/html,application/xhtml+xml,text/plain;q=0.9,*/*;q=0.8",
@@ -77,11 +78,12 @@ def fetch_text(
             response = get_with_retries(client, url, retries=retries)
         except httpx.HTTPStatusError as exc:
             detail = _http_failure(exc.response)
+            failure_code = http_failure_code(exc.response.status_code)
         except httpx.TransportError as exc:
             detail = type(exc).__name__
         else:
             return DirectTextResponse(response.text, response.content, str(response.url))
-    raise DirectSourceError(f"Failed to fetch {_safe_url(url)}: {detail}") from None
+    raise DirectSourceError(f"Failed to fetch {_safe_url(url)}: {detail}", failure_code=failure_code) from None
 
 
 def fetch_koret_workbook(slug: str, workbook_url: str, *, cache_root: Path = DATA_DIR) -> DirectFetchResult:
@@ -106,9 +108,11 @@ def fetch_koret_workbook(slug: str, workbook_url: str, *, cache_root: Path = DAT
             })
             pdf_response.raise_for_status()
     except httpx.HTTPStatusError as exc:
-        raise DirectSourceError(f"Failed to fetch {slug} workbook: {_http_failure(exc.response)}") from None
+        raise DirectSourceError(f"Failed to fetch {slug} workbook: {_http_failure(exc.response)}",
+                                failure_code=http_failure_code(exc.response.status_code)) from None
     except httpx.TransportError as exc:
-        raise DirectSourceError(f"Failed to fetch {slug} workbook: {type(exc).__name__}") from None
+        raise DirectSourceError(f"Failed to fetch {slug} workbook: {type(exc).__name__}",
+                                failure_code="source_unavailable") from None
 
     workbook_bytes = workbook_response.content
     pdf_bytes = pdf_response.content

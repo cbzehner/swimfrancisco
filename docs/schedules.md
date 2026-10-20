@@ -597,6 +597,14 @@ availability. Manual runs remain available and default to `extract-only`. Both m
 Unchanged source/configuration pairs reuse cached extraction without model
 calls.
 
+Source GETs retry only transport failures and transient HTTP responses. A
+`Retry-After` delay of up to 30 seconds is honored; longer delays defer the
+source to a later run rather than retrying early. Missing documents and access
+denials are not retried. The operator issue now names affected pools and gives
+specific guidance for removed sources, access failures, format changes, source
+fact disagreements, and closure review. Raw exception text remains in the
+retained extraction report, not the public issue's recovery guidance.
+
 ### Run contract
 
 Paid calls are bounded only by the OpenAI project spend limit; this repository

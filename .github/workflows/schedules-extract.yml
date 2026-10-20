@@ -170,9 +170,10 @@ jobs:
             const builds = result.builds || [];
             const last = builds.at(-1) || {};
             const flags = last.decisions?.flagged_set || [];
+            const recovery = last.decisions?.recovery_actions || [];
             const commandFailures = Object.entries(last.commands || {}).filter(([, exit]) => exit !== 0).map(([name]) => name);
             const failed = process.env.EXTRACT_RESULT !== 'success' || process.env.CLOSURE_REVIEW_RESULT === 'failure' || result.status === 'failed' || !result.status;
-            const needsAttention = failed || flags.length || commandFailures.length;
+            const needsAttention = failed || flags.length || commandFailures.length || recovery.length;
             const marker = '<!-- schedule-automation-status -->';
             const { owner, repo } = context.repo;
             const issues = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: 'open', creator: 'github-actions[bot]', per_page: 100 });
@@ -181,7 +182,7 @@ jobs:
               if (issue) await github.rest.issues.update({ owner, repo, issue_number: issue.number, state: 'closed' });
               return;
             }
-            const fingerprint = JSON.stringify({ failed, flags: [...flags].sort(), commandFailures: commandFailures.sort() });
+            const fingerprint = JSON.stringify({ failed, flags: [...flags].sort(), commandFailures: commandFailures.sort(), recovery });
             const statusMarker = '<!-- state:' + Buffer.from(fingerprint).toString('base64') + ' -->';
             if (issue?.body?.includes(statusMarker)) return;
             const runUrl = context.serverUrl + '/' + owner + '/' + repo + '/actions/runs/' + context.runId;
@@ -190,6 +191,7 @@ jobs:
               'Held pools: ' + (flags.join(', ') || 'see run evidence'),
               'Extraction commands with held or failed sources: ' + (commandFailures.join(', ') || 'none'),
               'Confirmed live updates: ' + (result.status === 'published' ? result.published_slugs.join(', ') || 'none' : 'none'),
+              '', ...recovery.map(item => '- ' + item.slug + ': ' + item.action),
               '', '[Run and retained evidence](' + runUrl + ')'].join('\n');
             if (issue) await github.rest.issues.update({ owner, repo, issue_number: issue.number, body });
             else await github.rest.issues.create({ owner, repo, title: 'Schedule automation needs attention', body });

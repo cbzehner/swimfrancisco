@@ -136,7 +136,12 @@ def test_report_preserves_structured_closure_holds_without_error_logs(tmp_path):
     report = tmp_path / "extraction-report-openai.md"
     write_report([result, _failed("other-pool")], report)
     payload = json.loads(report.with_suffix(".json").read_text())
-    assert payload == {"closure_reviews": [review], "ready_direct": {}, "ready_openai": []}
+    assert payload["closure_reviews"] == [review]
+    assert payload["ready_direct"] == {}
+    assert payload["ready_openai"] == []
+    assert [(item["slug"], item["code"]) for item in payload["attention"]] == [
+        ("other-pool", "extraction_failed"), ("test-pool", "closure_review"),
+    ]
     assert "private transport details" not in report.with_suffix(".json").read_text()
 
 

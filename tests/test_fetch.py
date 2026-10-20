@@ -163,6 +163,24 @@ def test_http_retries_have_one_implementation() -> None:
     assert not hasattr(discover, "_get_with_retries")
 
 
+@pytest.mark.parametrize("retry_after, expected_calls, expected_waits", [
+    ("3", 3, [3, 3]), ("120", 1, []), ("invalid", 3, [0.25, 0.5]),
+])
+def test_rate_limit_delay_is_respected_or_deferred(retry_after, expected_calls, expected_waits):
+    from schedules.fetch import get_with_retries
+    calls, waits = [], []
+
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(429, headers={"Retry-After": retry_after})
+
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+        with pytest.raises(httpx.HTTPStatusError):
+            get_with_retries(client, "https://example.test/source", sleep=waits.append)
+    assert len(calls) == expected_calls
+    assert waits == expected_waits
+
+
 @pytest.mark.parametrize("status, expected_calls", [(404, 1), (403, 1), (429, 3), (500, 3), (503, 3)])
 def test_fetch_retries_only_transient_http_errors(tmp_path, monkeypatch, status, expected_calls):
     client = httpx.Client
