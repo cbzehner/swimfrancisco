@@ -605,6 +605,16 @@ specific guidance for removed sources, access failures, format changes, source
 fact disagreements, and closure review. Raw exception text remains in the
 retained extraction report, not the public issue's recovery guidance.
 
+Each full run also retains `metrics.json` beside its publication receipt and
+adds a per-pool table to the Actions summary. It distinguishes cached results,
+failed results, review holds, and verified live publications. Paired/sequential
+captures remain separate results within one pool; counts are not estimates of
+operator effort. The receipt records total elapsed time and extraction-command
+durations. Missing or unreadable reports remain visible, and a failed deployment
+never counts as a live publication. Operator minutes are explicitly unmeasured.
+Use these retained observations to compare sources before changing their cadence
+or granting an additional model any responsibility.
+
 ### Run contract
 
 Paid calls are bounded only by the OpenAI project spend limit; this repository

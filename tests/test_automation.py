@@ -562,7 +562,9 @@ def test_openai_usage_is_reported_only_into_a_github_step_summary(runner, tmp_pa
     assert (root / f"tmp/automation/build-1/api-attempts/{answered}/request.json").is_file()
     assert (root / f"tmp/automation/build-1/api-attempts/{failed}/request.json").is_file()
     if in_actions:
-        assert summary.read_text() == "OpenAI usage: 1200 in / 340 out across 2 requests\n"
+        assert summary.read_text().splitlines()[0] == "OpenAI usage: 1200 in / 340 out across 2 requests"
+        assert "Pool schedule outcomes" in summary.read_text()
+        assert json.loads((root / "tmp/automation/metrics.json").read_text())["status"] == "published"
     else:
         assert not summary.exists()
 
@@ -583,4 +585,4 @@ def test_malformed_api_evidence_never_replaces_the_run_failure(runner, tmp_path,
     monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
     with pytest.raises(RuntimeError, match="discover failed"):
         run()
-    assert summary.read_text() == "OpenAI usage: 0 in / 0 out across 3 requests\n"
+    assert summary.read_text().splitlines()[0] == "OpenAI usage: 0 in / 0 out across 3 requests"

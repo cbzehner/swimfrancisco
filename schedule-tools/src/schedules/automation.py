@@ -11,6 +11,7 @@ import time
 from pathlib import Path
 
 from .publish import pager_job_payload
+from .metrics import write_run_metrics
 from .registry import BROWSER_SOURCES, HTTP_ACCESS_SOURCES
 
 
@@ -270,6 +271,7 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
 
     previous: Path | None = None
     previous_base = ""
+    started = time.monotonic()
     try:
         for build_number in (1, 2):
             checked(["git", "fetch", "--no-tags", "origin", "main"], root, command)
@@ -278,7 +280,7 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
                 raise RuntimeError("Remote main did not resolve to an exact commit")
             worktree = Path(tempfile.mkdtemp(prefix="swimfrancisco-publication-")) / "checkout"
             checked(["git", "worktree", "add", "--detach", str(worktree), base], root, command)
-            build: dict = {"base": base, "branch": f"auto/schedules/{run_id}-{build_number}", "commands": {}}
+            build: dict = {"base": base, "branch": f"auto/schedules/{run_id}-{build_number}", "commands": {}, "command_seconds": {}}
             state["builds"].append(build)
             save_state()
             try:
@@ -293,7 +295,9 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
                     ("direct", schedules + ["extract", "--direct"], False),
                     ("openai", schedules + ["extract", "--provider", "openai", "--no-discover"], False),
                 ):
+                    command_started = time.monotonic()
                     result = command(arguments, worktree, timeout=160 if name == "browser" else 1800)
+                    build["command_seconds"][name] = round(time.monotonic() - command_started, 3)
                     build["commands"][name] = result.returncode
                     if required and result.returncode:
                         raise RuntimeError(f"{name} failed; no publication is allowed")
@@ -351,5 +355,7 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
         state["error_type"] = type(error).__name__
         raise
     finally:
+        state["elapsed_seconds"] = round(time.monotonic() - started, 3)
         save_state()
         report_openai_usage(evidence)
+        write_run_metrics(evidence, state)

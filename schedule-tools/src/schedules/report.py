@@ -61,6 +61,11 @@ def write_report(results: list[PoolResult], path: Path) -> Path:
     path.write_text("\n".join(lines))
     path.with_suffix(".json").write_text(json.dumps({
         "attention": recovery_actions(results),
+        "results": [{"slug": result.slug, "status": _status_label(result),
+                     "source_sha256": getattr(result, "pdf_sha256", None),
+                     "provider": getattr(result, "provider", None),
+                     "cached": isinstance(result, Unchanged) or getattr(result, "cost_estimate", "").startswith("cached"),
+                     "usage_label": getattr(result, "cost_estimate", None)} for result in results],
         "ready_openai": [relative_to_repo(Path(result.artifact_paths["openai"])) for result in results
                          if isinstance(result, Extracted) and result.provider == "openai"
                          and not result.catastrophic and not result.violations and "openai" in result.artifact_paths],
