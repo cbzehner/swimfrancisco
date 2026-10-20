@@ -4,7 +4,7 @@ import { OPEN_STATUSES, PLACEHOLDER, evaluateBoard, formatHHMM, getHorizonOption
   readNumberAttribute, readScheduleAttribute } from "./helpers/board.mjs";
 import { initialBoardState, serializeBoardHash, transitionBoard } from "./helpers/board-state.mjs";
 import { pacificWallClockDate } from "./helpers/pacific.mjs";
-import { programLabel, statusLabel, statusNextLabel, t } from "./helpers/i18n.mjs";
+import { dayShortLabel, programLabel, statusLabel, statusNextLabel, t } from "./helpers/i18n.mjs";
 import { capture } from "./helpers/analytics.mjs";
 import { initHorizonMenu } from "./helpers/horizon-menu.mjs";
 
@@ -56,9 +56,6 @@ function applyHorizonChrome(root, horizon, now) {
   });
   root.querySelectorAll("[data-horizon-button]").forEach((node) => {
     node.textContent = isNow ? t("now", "Now") : label;
-  });
-  root.querySelectorAll("[data-horizon-stamp-label]").forEach((node) => {
-    node.textContent = isNow ? t("open_now", "OPEN NOW") : label.toUpperCase();
   });
 
   const banner = root.querySelector("[data-time-banner]");
@@ -144,6 +141,7 @@ function readSpots(rows) {
     const link = nameCell?.querySelector("a");
     return {
       slug: row.dataset.slug || "", type: row.dataset.type || "pool",
+      officialUrl: row.dataset.officialUrl || "",
       accessMode: row.dataset.accessMode || "public", schedule: readScheduleAttribute(row),
       name: link?.textContent.trim() || nameCell?.textContent.trim() || "",
       label: nameCell?.textContent.trim() || "", href: link?.getAttribute("href") || "",
@@ -224,6 +222,21 @@ export function mountBoard(root = document, { now = () => new Date(), onChange =
         entry.type === "open_water" && snapshot.horizon.id === "now" ? t("status_year_round", "YEAR-ROUND") : "");
       const nextCell = cell(row, "next");
       if (nextCell) nextCell.textContent = entry.nextText;
+      if (nextCell && entry.status === "CHECK" && entry.officialUrl) {
+        const sourceLink = document.createElement("a");
+        sourceLink.href = entry.officialUrl;
+        sourceLink.className = "verify-link";
+        sourceLink.textContent = t("check_official_schedule", "Check official schedule");
+        nextCell.append(sourceLink);
+      }
+      const sessionSummary = row.querySelector("[data-session-summary]");
+      if (sessionSummary) {
+        const session = entry.result.bestWindow;
+        const day = snapshot.horizon.id === "now" && session?.offset > 0
+          ? `${dayShortLabel(session.day)} ` : "";
+        sessionSummary.textContent = entry.sessionBased && session
+          ? `${day}${formatWindowNext(entry.result)}` : entry.typeLabel;
+      }
       row.hidden = entry.hidden;
       row.classList.toggle("is-open", entry.type === "open_water"
         ? snapshot.horizon.id === "now" : OPEN_STATUSES.has(entry.status));

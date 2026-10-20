@@ -215,3 +215,7 @@ water_temperature_live = "Temperatura ng tubig · live"
 weekly_access_hours = "LINGGUHAN · ORAS NG PAGPASOK"
 weekly_by_program = "LINGGUHAN · AYON SA PROGRAMA"
 when = "Kailan"
+
+water_temperature = "TEMP. NG TUBIG"
+check_official_schedule = "Tingnan ang opisyal na iskedyul"
+last_verified = "Huling na-verify"

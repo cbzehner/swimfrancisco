@@ -190,6 +190,12 @@ function refreshWindowDates(root, active, now) {
     }
   }
   const effective = root.querySelector(".meta-effective");
+  const verified = root.querySelector(".meta-verified");
+  if (verified) {
+    verified.hidden = !active?.last_verified_at;
+    verified.textContent = active?.last_verified_at
+      ? `${t("last_verified", "Last verified")} ${formatLocalizedISODate(active.last_verified_at.slice(0, 10))}` : "";
+  }
   if (effective && active?.effective_start) {
     effective.textContent = `${t("schedule_effective_from", "Schedule effective from")} ${formatLocalizedISODate(active.effective_start)}`
       + (active.effective_end ? ` ${t("to", "to")} ${formatLocalizedISODate(active.effective_end)}` : "");

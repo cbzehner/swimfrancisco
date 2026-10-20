@@ -215,3 +215,7 @@ water_temperature_live = "Water temperature · live"
 weekly_access_hours = "WEEKLY · ACCESS HOURS"
 weekly_by_program = "WEEKLY · BY PROGRAM"
 when = "When"
+
+water_temperature = "WATER TEMP"
+check_official_schedule = "Check official schedule"
+last_verified = "Last verified"

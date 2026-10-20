@@ -213,7 +213,7 @@
     <p class="meta">
       {% if extra.address %}<span class="key"><a href="{{ place_href }}" target="_blank" rel="noopener" data-outbound="map">{{ extra.address | upper }}</a></span>{% endif %}
       {% if extra.subtype %}<span class="subtype">{{ chrome::spot_label(label=extra.subtype, active_lang=lang) | upper }}</span>{% endif %}
-      {% if extra.setpoint_label %}<span class="setpoint">{{ trans(key='water', lang=lang) }} {{ chrome::spot_label(label=extra.setpoint_label, active_lang=lang) | upper }}</span>{% endif %}
+      {% if extra.setpoint_label %}<span class="setpoint">{% if '°' in extra.setpoint_label or extra.setpoint_label == 'saltwater' %}{{ trans(key='water', lang=lang) }} {% endif %}{{ chrome::spot_label(label=extra.setpoint_label, active_lang=lang) | upper }}</span>{% endif %}
       {{ chrome::cost_badge(extra=extra, active_lang=lang) }}
       {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener" data-outbound="official_site">{{ trans(key='official_page', lang=lang) }}</a>{% endif %}
       {% if extra.address %}
@@ -473,6 +473,7 @@
             {% if extra.website %}<a href="{{ extra.website }}" target="_blank" rel="noopener" data-outbound="official_site">{{ trans(key='source_official_site', lang=lang) }}</a>{% else %}{{ trans(key='source_official_site', lang=lang) }}{% endif %}
           </p>
           <p class="meta-effective" hidden></p>
+          <p class="meta-verified" hidden></p>
         </footer>
       {% endif %}
     </div>

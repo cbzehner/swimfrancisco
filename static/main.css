@@ -294,8 +294,7 @@ h1, h2, h3 {
 /* ── Bulletin hero (NEW markup — see README) ───────────────────────────── */
 .bulletin-hero {
   position: relative;
-  min-height: 500px;
-  padding: 38px 14px 44px;
+  padding: 24px 14px;
   border-bottom: 3px solid var(--ink);
   background-image:
     radial-gradient(circle at 12% 28%, rgba(26,24,18,0.04) 0%, transparent 14%),
@@ -306,7 +305,7 @@ h1, h2, h3 {
 .bulletin-hero h1 {
   font-family: var(--display);
   max-width: 1040px;
-  font-size: clamp(64px, 10vw, 148px);
+  font-size: clamp(36px, 6vw, 64px);
   line-height: 0.88;
   letter-spacing: 0;
   margin: 0;
@@ -337,24 +336,11 @@ h1, h2, h3 {
 .hero-line {
   position: relative;
   z-index: 2;
-  margin: 42px 0 0;
+  margin: 16px 0 0;
   font-family: var(--display);
-  font-size: clamp(42px, 5.2vw, 72px);
+  font-size: 24px;
   line-height: 0.95;
   text-transform: uppercase;
-}
-.hero-stamp {
-  position: absolute;
-  right: 48px;
-  bottom: 34px;
-  padding: 8px 18px;
-  border: 3px solid var(--red);
-  color: var(--red);
-  font-family: var(--display);
-  font-size: 16px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  transform: rotate(-6deg);
 }
 /* ── Meta strip (NEW — bay / ocean / tide / updated) ───────────────────── */
 /* CONTRACT: this strip is exactly six <div> children in this order
@@ -1419,7 +1405,7 @@ table.weekly-grid tr { display: contents; }
 }
 
 /* ── Meta footer (sources / effective dates) ───────────────────────────── */
-.meta, .notes, .meta-source, .meta-effective {
+.meta, .notes, .meta-source, .meta-effective, .meta-verified {
   font-family: var(--mono);
   font-size: 10.5px;
   letter-spacing: 0.14em;
@@ -1766,9 +1752,6 @@ body.map-page .site-footer {
     font-size: 27px;
     white-space: nowrap;
   }
-  .hero-stamp {
-    display: none;
-  }
   .bulletin-hero,
   .spot-detail-head,
   .status-slab,
@@ -1776,7 +1759,7 @@ body.map-page .site-footer {
   .access-panel,
   .description,
   .conditions, .hazards, .clubs, .distances,
-  .meta, .meta-source, .meta-effective,
+  .meta, .meta-source, .meta-effective, .meta-verified,
   .closure-banner-zone { margin-left: 16px; margin-right: 16px; padding-left: 16px; padding-right: 16px; }
   .bulletin-hero,
   .spot-detail-head {
@@ -1892,4 +1875,11 @@ body.map-page .site-footer {
   .condition-grid {
     grid-template-columns: 1fr 1fr;
   }
+}
+
+.verify-link {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  text-transform: none;
 }

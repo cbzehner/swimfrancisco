@@ -215,3 +215,7 @@ water_temperature_live = "Nhiệt độ nước · trực tiếp"
 weekly_access_hours = "HẰNG TUẦN · GIỜ VÀO CỬA"
 weekly_by_program = "HẰNG TUẦN · THEO CHƯƠNG TRÌNH"
 when = "Khi nào"
+
+water_temperature = "NHIỆT ĐỘ NƯỚC"
+check_official_schedule = "Xem lịch chính thức"
+last_verified = "Xác minh lần cuối"

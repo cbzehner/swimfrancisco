@@ -215,3 +215,7 @@ water_temperature_live = "Temperatura del agua · en vivo"
 weekly_access_hours = "SEMANAL · HORARIO DE ACCESO"
 weekly_by_program = "SEMANAL · POR PROGRAMA"
 when = "Cuándo"
+
+water_temperature = "TEMP. DEL AGUA"
+check_official_schedule = "Consultar el horario oficial"
+last_verified = "Última verificación"

@@ -215,3 +215,7 @@ water_temperature_live = "水溫 · 即時"
 weekly_access_hours = "每週 · 入場時間"
 weekly_by_program = "每週 · 按項目"
 when = "時間"
+
+water_temperature = "水溫"
+check_official_schedule = "查看官方時間表"
+last_verified = "最後驗證日期"

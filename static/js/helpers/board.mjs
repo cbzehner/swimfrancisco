@@ -605,7 +605,7 @@ export function computeStatus(schedule, now, allowedTypes = null) {
   if (current) {
     return statusResult("OPEN", `Closes ${formatHHMM(current.end)}`, "closes", {
       time: formatHHMM(current.end),
-    }, { openOffset: 0 });
+    }, { openOffset: 0, bestWindow: { ...current, offset: 0 } });
   }
 
   const best = findNextSession(normalized, closures, now);
@@ -620,7 +620,7 @@ export function computeStatus(schedule, now, allowedTypes = null) {
     label,
     best.offset === 0 ? "opens_today" : "opens_day",
     { day: best.session.day, time: formatHHMM(best.session.start) },
-    { openOffset },
+    { openOffset, bestWindow: { ...best.session, offset: best.offset } },
   );
 }
 

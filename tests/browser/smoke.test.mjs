@@ -125,7 +125,7 @@ async function decisionPage(t, engine, spots, { path = "/fixture", time = "2026-
   const rows = spots.map(({ slug, name = slug, type = "pool", access = "public", schedules = [] }) => `
     <tr data-slug="${slug}" data-type="${type}" data-access-mode="${access}"
         data-schedule='${JSON.stringify({ schedules }).replaceAll("&", "&amp;").replaceAll("'", "&#39;")}'>
-      <td data-cell="spot">${name}</td><td data-cell="status"><span class="status-pill">—</span></td><td data-cell="next">—</td>
+      <td data-cell="spot">${name}<span class="spot-subtitle" data-session-summary>POOL</span></td><td data-cell="status"><span class="status-pill">—</span></td><td data-cell="next">—</td>
     </tr>`).join("");
   const page = await fixturePage(t, engine, `
     <script>window.SWIMFRANCISCO_I18N = ${JSON.stringify(englishLabels)};</script>
@@ -169,6 +169,7 @@ for (const engine of ["webkit", "chromium"]) {
     const page = await decisionPage(t, engine, programSpots);
     await page.getByRole("button", { name: "Family", exact: true }).click();
     assert.deepEqual(await visibleDecisions(page), [["mixed-programs", "CLOSED", "Opens 15:00"]]);
+    assert.equal(await page.locator('[data-slug="mixed-programs"] [data-session-summary]').textContent(), "FAMILY 15:00–16:00");
     await page.getByRole("button", { name: "Memberships", exact: true }).click();
     assert.deepEqual(await visibleDecisions(page), [
       ["members-family", "OPEN", "Closes 13:00"],
@@ -183,6 +184,7 @@ for (const engine of ["webkit", "chromium"]) {
     ]);
     await page.getByRole("button", { name: "Senior", exact: true }).click();
     assert.deepEqual(await visibleDecisions(page), [["mixed-programs", "CLOSED", "Opens THU 09:00"]]);
+    assert.equal(await page.locator('[data-slug="mixed-programs"] [data-session-summary]').textContent(), "THU SENIOR 09:00–10:00");
   });
 
   test(`[${engine}] swim decisions: family selection uses exact session boundaries on load and refresh`, async (t) => {

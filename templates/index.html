@@ -56,9 +56,7 @@
       <p class="deck" aria-live="polite">
         <span class="em" data-open-count>—</span>
         <span data-open-count-label>{{ trans(key='places_open_now', lang=lang) }}</span>.
-        {{ trans(key='bay', lang=lang) }} <span class="em" data-bay-temp>—</span>, {{ trans(key='ocean', lang=lang) }} <span class="em" data-ocean-temp>—</span>.
       </p>
-      <div class="hero-stamp" aria-hidden="true"><span data-horizon-stamp-label>{{ trans(key='open_now', lang=lang) }}</span> · <span data-open-count>—</span></div>
     </section>
   {% endif %}
 
@@ -122,7 +120,7 @@
         <th scope="col">{{ trans(key='spot', lang=lang) }}</th>
         <th scope="col">{{ trans(key='status', lang=lang) }}</th>
         <th scope="col">{{ trans(key='next', lang=lang) }}</th>
-        <th scope="col">{{ trans(key='water', lang=lang) }}</th>
+        <th scope="col">{{ trans(key='water_temperature', lang=lang) }}</th>
         <th scope="col">{{ trans(key='locale', lang=lang) }}</th>
       </tr>
     </thead>
@@ -131,6 +129,7 @@
         {% set display = get_page(path="spots/" ~ page.slug ~ ".md", lang=lang) %}
         <tr
           data-slug="{{ page.slug }}"
+          data-official-url="{{ page.extra.website | default(value='') }}"
           data-type="{{ page.extra.type }}"
           data-subtype="{{ page.extra.subtype | default(value='') }}"
           data-access-mode="{{ page.extra.access_mode | default(value='public') }}"
@@ -145,14 +144,14 @@
                 {{ display.extra.description_short | default(value=page.extra.description_short | default(value=trans(key='open_water_fallback', lang=lang))) }}
               </span>
             {% else %}
-              <span class="spot-subtitle">
+              <span class="spot-subtitle" data-session-summary>
                 {{ chrome::spot_label(label=page.extra.subtype | default(value='pool'), active_lang=lang) | upper }}
               </span>
             {% endif %}
           </td>
           <td data-cell="status"><span class="status-pill">—</span></td>
           <td data-cell="next">—</td>
-          <td data-cell="water">{% if page.extra.type == 'pool' and page.extra.setpoint_label %}{{ chrome::spot_label(label=page.extra.setpoint_label, active_lang=lang) | upper }}{% else %}—{% endif %}</td>
+          <td data-cell="water">{% if page.extra.type == 'pool' and page.extra.setpoint_label and '°' in page.extra.setpoint_label %}{{ chrome::spot_label(label=page.extra.setpoint_label, active_lang=lang) | upper }}{% else %}—{% endif %}</td>
           <td data-cell="locale">
             {{ chrome::cost_badge(extra=page.extra, active_lang=lang) }}
             <span class="locale-text">
