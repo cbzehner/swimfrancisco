@@ -107,6 +107,10 @@ NSS database; TLS verification stays enabled.
 
 ## Credentials and login prompts
 
+For TypeSafe, OpenAI, dedicated Cloudflare tokens, and Terraform R2 keys, use
+[Task credentials](secrets.md). These are explicit task grants; normal
+sandbox creation does not require those SecretSpec keys.
+
 Cloudflare requests use the host's existing Wrangler authentication.
 `sandbox/sbxenv.yaml` registers the host project's devenv-managed
 `wrangler auth token` as a dynamic secret

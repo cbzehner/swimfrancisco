@@ -13,6 +13,14 @@ sandbox-attach name="swimfrancisco":
 sandbox-exec name="swimfrancisco" *command:
     sandbox_name="$1"; shift; python3 scripts/sandbox.py exec "$sandbox_name" -- "$@"
 
+# Host Keychain -> sandbox proxy; profile is jev, extraction, or cloudflare.
+sandbox-grant name profile:
+    python3 scripts/sandbox.py grant "$1" --profile "$2"
+
+# R2 signing requires real credentials, sent only to this Terraform process.
+sandbox-terraform name +args:
+    sandbox_name="$1"; shift; SECRETSPEC_REASON="Run Swim Francisco Terraform" secretspec run --provider keyring --profile infrastructure -- python3 scripts/sandbox.py terraform "$sandbox_name" -- "$@"
+
 sandbox-export name="swimfrancisco":
     python3 scripts/sandbox.py export "$1"
 
@@ -83,13 +91,13 @@ refresh-conditions:
     @echo "cron handler invoked; fetch with: curl -s http://localhost:8787/api/conditions | jq"
 
 schedules *args:
-    set -a; [ ! -f .env ] || . ./.env; set +a; uv --project schedule-tools run schedules "$@"
+    uv --project schedule-tools run schedules "$@"
 
 schedules-extract *args:
-    set -a; [ ! -f .env ] || . ./.env; set +a; uv --project schedule-tools run schedules extract "$@"
+    uv --project schedule-tools run schedules extract "$@"
 
 schedules-review *args:
-    set -a; [ ! -f .env ] || . ./.env; set +a; uv --project schedule-tools run schedules review "$@"
+    uv --project schedule-tools run schedules review "$@"
 
 schedules-eval *args:
     uv --project schedule-tools run schedules eval "$@"

@@ -41,8 +41,9 @@ they are not a historical benchmark or evidence of model quality.
 
 ## Run inside the project sandbox
 
-Use the [sandbox workflow](sandboxes.md). With TypeSafe credentials provided
-to the guest environment, explicitly request paid calls:
+Use the [sandbox workflow](sandboxes.md). Follow [Task credentials](secrets.md) to store the TypeSafe key in the host
+Keychain and grant the sandbox its proxy placeholder, then explicitly request
+paid calls:
 
 ```sh
 devenv shell -- uv --project schedule-tools run python -m schedules.jev_trial \

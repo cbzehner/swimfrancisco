@@ -43,30 +43,17 @@ Use `uv` for package management in the extractor project:
 just sync
 ```
 
-Copy the root `.env.example` to root `.env`, then fill in the provider key:
+Store the provider key with the host's SecretSpec Keychain provider, then
+explicitly grant it to the project sandbox. See [Task credentials](secrets.md).
 
 ```sh
-cp .env.example .env
+secretspec set OPENAI_API_KEY --provider keyring --profile extraction
+just sandbox-grant swimfrancisco extraction
 ```
 
-```sh
-OPENAI_API_KEY=...
-```
-
-OpenAI is the only provider. CI stores `OPENAI_API_KEY` as an Actions secret.
-Local extract is optional and is not required for sequential FLAG ingest. Do
-not commit the key.
-
-The repo uses `devenv`'s built-in dotenv integration, so a `devenv shell`
-autoloads root `.env`:
-
-```nix
-dotenv.enable = true;
-dotenv.filename = [ ".env" ];
-```
-
-If you use `direnv`, run `direnv allow` once after pulling the `.envrc` change.
-After editing `.env`, run `direnv reload` or start a fresh `devenv shell`.
+OpenAI is the only extraction provider. CI keeps `OPENAI_API_KEY` as an
+Actions secret. Free direct-source runs and tests need no provider key.
+Ordinary devenv shells no longer load `.env`.
 
 ## Usage
 

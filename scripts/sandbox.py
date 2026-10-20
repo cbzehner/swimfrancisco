@@ -4,9 +4,11 @@
 import argparse
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 import re
 import shutil
+import shlex
 import subprocess
 import tarfile
 import tempfile
@@ -15,6 +17,78 @@ ROOT = Path(__file__).resolve().parents[1]
 ENVIRONMENT = ROOT / "sandbox/sbxenv.yaml"
 WORKSPACE = "/home/agent/workspace"
 SBX = shutil.which("sbx") or str(Path.home() / ".local/bin/sbx")
+SECRET_PROFILES = {
+    "jev": ("jev", "TYPESAFE_API_KEY", "api.typesafe.ai"),
+    "extraction": ("extraction", "OPENAI_API_KEY", "api.openai.com"),
+    "cloudflare": ("infrastructure", "CLOUDFLARE_API_TOKEN", "api.cloudflare.com"),
+}
+INFRASTRUCTURE_KEYS = ("CLOUDFLARE_API_TOKEN", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY")
+
+
+def proxy_environment(name):
+    """Read only placeholder metadata, never resolved credential values."""
+    records = json.loads(output(SBX, "secret", "ls", "--sandbox", name, "--json"))
+    allowed = {key: domain for _, key, domain in SECRET_PROFILES.values()}
+    environment = {}
+    for record in records.get("custom_secrets", []):
+        key = record.get("env")
+        if key not in allowed or record.get("scope") != name or record.get("targets") != [allowed[key]]:
+            continue
+        placeholder = record.get("placeholder", "")
+        if not re.fullmatch(r"sbx-cs-[A-Za-z0-9_-]+", placeholder) or key in environment:
+            raise SystemExit("Invalid or duplicate proxy grant; remove and recreate this sandbox")
+        environment[key] = placeholder
+    return environment
+
+
+def proxy_flags(name):
+    return [argument for key, value in proxy_environment(name).items()
+            for argument in ("--env", f"{key}={value}")]
+
+
+def grant(name, profile):
+    secret_profile, key, domain = SECRET_PROFILES[profile]
+    executable = shutil.which("secretspec")
+    if not executable:
+        raise SystemExit("SecretSpec is required on the host; enter devenv shell first")
+    source = shlex.join(["env", f"SECRETSPEC_REASON=Authenticate {name} to {domain}",
+                         executable, "--file", str(ROOT / "secretspec.toml"),
+                         "get", key, "--provider", "keyring", "--profile", secret_profile])
+    # sbx consumes resolver stdout. Never resolve a real value in this launcher.
+    if profile == "cloudflare":
+        run(SBX, "secret", "set", "swimfrancisco-cloudflare", "--sandbox", name,
+            "--command", source, "--refresh", "10m")
+    else:
+        existing = proxy_environment(name).get(key)
+        run(SBX, "secret", "set-custom", "--sandbox", name, "--host", domain,
+            "--env", key, "--command", source, "--refresh", "10m",
+            *(["--placeholder", existing] if existing else []))
+    run(SBX, "policy", "allow", "network", domain + ":443", "--sandbox", name)
+    print(f"Granted {profile} to {name}; only proxy placeholders enter the guest")
+
+
+def terraform(name, arguments):
+    credentials = {key: os.environ.get(key, "") for key in INFRASTRUCTURE_KEYS}
+    if not all(credentials.values()):
+        raise SystemExit("Run through just sandbox-terraform so SecretSpec resolves the infrastructure profile")
+    # JSON travels over stdin, never argv or a guest file. The wrapper consumes
+    # it before exec and disconnects stdin so Terraform cannot read it again.
+    wrapper = '''import json, os, sys
+credentials = json.load(sys.stdin)
+for key in ("TYPESAFE_API_KEY", "OPENAI_API_KEY", "AWS_SESSION_TOKEN", "TF_LOG", "TF_LOG_PATH", "TF_LOG_CORE", "TF_LOG_PROVIDER"):
+    os.environ.pop(key, None)
+os.environ.update(credentials)
+os.environ["TF_INPUT"] = "0"
+fd = os.open(os.devnull, os.O_RDONLY)
+os.dup2(fd, 0)
+os.close(fd)
+os.execvp("terraform", ["terraform", "-chdir=terraform"] + sys.argv[1:])
+'''
+    for domain in ("registry.terraform.io", "releases.hashicorp.com",
+                   "d985f954e272a26b858d9f8c5fc53217.r2.cloudflarestorage.com"):
+        run(SBX, "policy", "allow", "network", domain + ":443", "--sandbox", name)
+    run(SBX, "exec", "-i", "-w", WORKSPACE, name, "devenv", "shell", "--",
+        "python3", "-c", wrapper, *arguments, input=json.dumps(credentials).encode())
 
 
 def run(*args, **kwargs):
@@ -118,14 +192,15 @@ def export(name):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["create", "seed", "attach", "exec", "export", "remove", "credential"])
+    parser.add_argument("action", choices=["create", "seed", "attach", "exec", "export", "remove", "credential", "grant", "terraform"])
     parser.add_argument("name", nargs="?", default="swimfrancisco")
     parser.add_argument("--agent", choices=["codex", "claude", "shell"], default="codex")
     parser.add_argument("--template")
+    parser.add_argument("--profile", choices=list(SECRET_PROFILES))
     args, command = parser.parse_known_args()
     if not re.fullmatch(r"[a-z0-9][a-z0-9.-]+", args.name):
         parser.error("name must use lowercase letters, digits, periods, and hyphens")
-    if command and args.action != "exec":
+    if command and args.action not in ("exec", "terraform"):
         parser.error(f"unexpected arguments: {' '.join(command)}")
     if args.action == "credential":
         credential = json.loads(output("devenv", "--quiet", "shell", "--",
@@ -137,6 +212,19 @@ def main():
         return
     template = args.template or ""
     state = ROOT / ".sandbox" / f"{args.name}.json"
+    if args.action in ("grant", "terraform") and not state.exists():
+        parser.error("create this project sandbox before granting credentials")
+    if args.action == "grant":
+        if not args.profile:
+            parser.error("grant requires --profile")
+        grant(args.name, args.profile)
+        return
+    if args.action == "terraform":
+        command = command[1:] if command[:1] == ["--"] else command
+        if not command:
+            parser.error("terraform requires a command after --")
+        terraform(args.name, command)
+        return
     if args.action == "create":
         if state.exists():
             parser.error("this sandbox already has local state; attach or remove it first")
@@ -148,12 +236,12 @@ def main():
     elif args.action == "seed":
         seed(args.name, args.agent, template)
     elif args.action == "attach":
-        run(SBX, "run", "--name", args.name)
+        run(SBX, "run", "--name", args.name, *proxy_flags(args.name))
     elif args.action == "exec":
         command = command[1:] if command[:1] == ["--"] else command
         if not command:
             parser.error("exec requires a command after --")
-        run(SBX, "exec", "-w", WORKSPACE, args.name, *command)
+        run(SBX, "exec", "-w", WORKSPACE, *proxy_flags(args.name), args.name, *command)
     elif args.action == "export":
         export(args.name)
     elif args.action == "remove":

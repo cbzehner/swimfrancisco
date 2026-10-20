@@ -105,7 +105,7 @@ Create a new file at `content/spots/<slug>.md` with TOML frontmatter. See `docs/
 
 For new **open-water** spots, regenerate the committed Worker station mapping with `node scripts/generate-worker-spots.mjs` (also run by `just typecheck-worker`); `tests/test_worker_spots.py` fails if it drifts. Pools do not need worker changes.
 
-For pool schedule refreshes, use the local extractor in `docs/schedules.md`. It lives in `schedule-tools/`, is `uv`-managed, reads its credentials from a gitignored root `.env` loaded by `devenv`'s built-in dotenv integration, saves raw review artifacts under `data/<slug>/<date>-<sha12>/`, and locks reviewed payloads via a committed `reviewed.json` in the same directory. Git keeps the source snapshot (`source.pdf` / `source.html` / `source.xlsx` / `source.csv`), `source.sha256`, provider JSON, and `reviewed.json`. `npm run build` and `just build` refresh `data/bulletin.json`; when the reviewed schedule fingerprint changes, the visible bulletin number bumps automatically.
+For pool schedule refreshes, use the local extractor in `docs/schedules.md`. It lives in `schedule-tools/`, is `uv`-managed, uses explicitly granted [SecretSpec credentials](docs/secrets.md), saves raw review artifacts under `data/<slug>/<date>-<sha12>/`, and locks reviewed payloads via a committed `reviewed.json` in the same directory. Git keeps the source snapshot (`source.pdf` / `source.html` / `source.xlsx` / `source.csv`), `source.sha256`, provider JSON, and `reviewed.json`. `npm run build` and `just build` refresh `data/bulletin.json`; when the reviewed schedule fingerprint changes, the visible bulletin number bumps automatically.
 
 ## Adding or updating translations
 

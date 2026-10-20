@@ -7,6 +7,7 @@
     pkgs.zola
     pkgs.watchexec
     pkgs.terraform
+    pkgs.secretspec
     # Node ≥22.18 — unflagged TS type stripping for `node --test` against
     # `worker/src/*.ts`. nixpkgs currently ships 22.22+, which clears the bar.
     pkgs.nodejs_22
@@ -17,8 +18,9 @@
 
   languages.javascript.enable = true;
   languages.javascript.npm.enable = true;
-  dotenv.enable = true;
-  dotenv.filename = [ ".env" ];
+  # Resolve task credentials explicitly; ordinary shells do not load secrets.
+  dotenv.enable = false;
+  dotenv.disableHint = true;
 
   # Pre-push gate: fast suite (~7s) plus the real-browser integration tests
   # (~20s, WebKit + Chromium — the engine-behavior regressions nothing else

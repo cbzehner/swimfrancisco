@@ -9,21 +9,20 @@ binding. State lives in a Cloudflare R2 bucket (`swimfrancisco-tfstate`).
 1. **Create the R2 state bucket.** Dashboard → R2 → Create bucket:
    `swimfrancisco-tfstate`, automatic location, no public access.
 2. **Create an R2 API token** scoped to that bucket, permissions "Object
-   Read & Write". Save `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` into
-   `.env` at the repo root.
+   Read & Write". Store `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in the SecretSpec
+   `infrastructure` profile; see [Task credentials](../docs/secrets.md).
 3. **Create a Cloudflare API token** with:
    - Account: `Workers Scripts:Edit`, `Workers KV Storage:Edit`,
      `Workers Routes:Edit`, `Account Settings:Read`
    - Zone: `DNS:Edit`, `Single Redirect:Edit`, `Zone:Read`, scoped to
      `swimfrancisco.com`
 
-   Save it as `CLOUDFLARE_API_TOKEN` in `.env`.
-4. **Enter the devenv shell** so `terraform` is on PATH and `.env` is
-   loaded:
-
-   ```sh
-   devenv shell
-   ```
+   Store it as `CLOUDFLARE_API_TOKEN` in that same profile.
+4. **Create a project sandbox** using [the sandbox workflow](../docs/sandboxes.md).
+   Run Terraform through `just sandbox-terraform <name> <command>` on the host.
+   Credentials reach only that guest Terraform process; ordinary shells do not
+   load them. Use `just sandbox-terraform <name> version` to test transport
+   without making infrastructure changes.
 
 ## First apply (two phases)
 
@@ -32,16 +31,17 @@ before it can bind the apex. The Worker is created by the first Workers
 Builds deploy (dashboard-connected to the GitHub repo). Apply in two phases:
 
 ```sh
-cd terraform
-terraform init
+just sandbox-terraform swimfrancisco init
 
 # Phase 1 — create infra the Worker does NOT depend on.
-terraform apply \
+just sandbox-terraform swimfrancisco plan -out=bootstrap.tfplan \
   -target=cloudflare_workers_kv_namespace.conditions \
   -target=cloudflare_workers_kv_namespace.conditions_preview \
   -target=cloudflare_dns_record.www \
   -target=cloudflare_ruleset.www_redirect
-terraform output
+# Review the saved plan before applying.
+just sandbox-terraform swimfrancisco apply bootstrap.tfplan
+just sandbox-terraform swimfrancisco output
 ```
 
 Paste the KV IDs into `worker/wrangler.toml`, commit, push. The push
@@ -49,10 +49,14 @@ triggers the first Workers Builds deploy.
 
 ```sh
 # Phase 2 — attach the apex now that the Worker exists.
-terraform apply
+just sandbox-terraform swimfrancisco plan -out=reviewed.tfplan
+# Review the saved plan before applying.
+just sandbox-terraform swimfrancisco apply reviewed.tfplan
 ```
 
-Subsequent changes are single-phase: `terraform plan` → `terraform apply`.
+Subsequent changes use `just sandbox-terraform swimfrancisco plan -out=reviewed.tfplan`,
+review the plan, then `just sandbox-terraform swimfrancisco apply reviewed.tfplan`.
+The wrapper disables interactive input; a saved plan is the preferred apply path.
 
 ## Outputs
 
