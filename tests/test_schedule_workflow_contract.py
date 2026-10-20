@@ -28,6 +28,7 @@ def test_daily_detection_is_read_only_and_failure_falls_back_to_gated_pipeline()
 def test_split_permissions_with_closure_only_review_job():
     extract, rest = WORKFLOW.split("\n  review-closures:", 1)
     reviews, report = rest.split("\n  report:", 1)
+    report = report.split("\n  coverage:", 1)[0]
     assert "permissions: {}" in extract
     assert "contents: write" in extract
     assert "actions: read" in extract
@@ -71,7 +72,7 @@ def test_evidence_and_live_browser_dependencies():
     assert "install --with-deps webkit chromium" in WORKFLOW
     assert "retention-days: 90" in WORKFLOW
     assert _uploaded_evidence_paths() == ["tmp/automation/"]
-    assert "path: tmp/" not in WORKFLOW.split("\n  extract:", 1)[1]
+    assert "path: tmp/" not in WORKFLOW.split("\n  extract:", 1)[1].split("\n  review-closures:", 1)[0]
 
 
 def test_downloaded_evidence_paths_start_at_the_stripped_artifact_root():

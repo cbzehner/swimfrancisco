@@ -568,6 +568,19 @@ preflight falls back to the full pipeline so failures reach the operator issue.
 Detection reports are retained for 30 days. Discovery does not rewrite the
 registry in this preflight, and detection never approves or publishes hours.
 
+Every scheduled run also checks canonical pool schedule coverage from today
+through seven days ahead in Pacific time. `just schedules coverage` runs the
+same read-only check locally. Adjacent schedule windows count as continuous
+coverage; a successor separated by even one uncovered date is reported. Known
+closures count as covered information, not as available swimming. Sources with
+no published end date retain their authored meaning; this check invents no
+expiry date. It never extends or edits a schedule.
+
+One deduplicated coverage issue lists the first missing date and next known
+window for each affected pool. It closes when coverage is restored. This job
+also runs when publication is disabled, so the kill switch cannot hide an
+approaching expiry. Reports are retained for 30 days.
+
 Membership and browser-only sources retain weekly checks; city-pool changes
 normally reach detection within a day, subject to hosted scheduling and source
 availability. Manual runs remain available and default to `extract-only`. Both modes require

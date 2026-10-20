@@ -193,3 +193,49 @@ jobs:
               '', '[Run and retained evidence](' + runUrl + ')'].join('\n');
             if (issue) await github.rest.issues.update({ owner, repo, issue_number: issue.number, body });
             else await github.rest.issues.create({ owner, repo, title: 'Schedule automation needs attention', body });
+
+  coverage:
+    # Coverage remains observable when publication has deliberately been disabled.
+    needs: extract
+    if: always() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: astral-sh/setup-uv@v5
+      - run: uv --project schedule-tools run --locked schedules coverage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: schedule-coverage-${{ github.run_id }}-${{ github.run_attempt }}
+          path: tmp/schedule-coverage.json
+          retention-days: 30
+      - name: Update schedule coverage issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const report = JSON.parse(fs.readFileSync('tmp/schedule-coverage.json', 'utf8'));
+            const { owner, repo } = context.repo;
+            const marker = '<!-- schedule-coverage-status -->';
+            const issues = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: 'open', creator: 'github-actions[bot]', per_page: 100 });
+            const issue = issues.find(item => !item.pull_request && item.body?.includes(marker));
+            if (!report.alerts.length) {
+              if (issue) await github.rest.issues.update({ owner, repo, issue_number: issue.number, state: 'closed' });
+              return;
+            }
+            const fingerprint = '<!-- state:' + Buffer.from(JSON.stringify(report.alerts)).toString('base64') + ' -->';
+            if (issue?.body?.includes(fingerprint)) return;
+            const body = [marker, fingerprint, 'Published schedule coverage is missing within the next seven days.', '',
+              ...report.alerts.map(item => '- ' + item.title + ': missing from ' + item.gap_start + (item.next_start ? '; next schedule starts ' + item.next_start : '; no successor published')),
+              '', 'Check official sources and resolve the held extraction or review. Never extend the old schedule without source evidence.',
+              '', '[Run and evidence](' + context.serverUrl + '/' + owner + '/' + repo + '/actions/runs/' + context.runId + ')'].join('\n');
+            if (issue) await github.rest.issues.update({ owner, repo, issue_number: issue.number, body });
+            else await github.rest.issues.create({ owner, repo, title: 'Pool schedule coverage needs attention', body });

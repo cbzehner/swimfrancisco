@@ -291,6 +291,17 @@ def detect_changes_command() -> None:
     click.echo(json.dumps(result))
 
 
+@cli.command("coverage")
+def coverage_command() -> None:
+    """Report missing schedule coverage over the next seven days."""
+    from .health import coverage_report
+
+    result = coverage_report()
+    TMP_DIR.mkdir(parents=True, exist_ok=True)
+    (TMP_DIR / "schedule-coverage.json").write_text(json.dumps(result, indent=2) + "\n")
+    click.echo(json.dumps(result))
+
+
 @cli.command("prune")
 @click.option("--dry-run", is_flag=True, help="List the obsolete snapshot dirs without deleting them.")
 def prune_command(dry_run: bool) -> None:
