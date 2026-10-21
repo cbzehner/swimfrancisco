@@ -14,13 +14,13 @@
       "source_identity": "original_bytes"
     },
     "freshness_days": 14,
-    "observed_on": "2026-10-20",
+    "observed_on": "2026-10-21",
     "requested_url": "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/news/2026-fitness-and-recreation-holiday-schedule",
     "sha256": "9d8f2d1937f23535e29a7875dd2aa23c67339c4220b3bd6c710448c042c23678",
     "url": "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/news/2026-fitness-and-recreation-holiday-schedule"
   },
   "slug": "ucsf-bakar",
-  "reviewed_at": "2026-10-20",
+  "reviewed_at": "2026-10-21",
   "attested_by": "ci",
   "payload": {
     "access_exceptions": [],
@@ -76,8 +76,8 @@
       }
     ],
     "closures": [],
-    "effective_end": "2026-11-02",
-    "effective_start": "2026-10-20",
+    "effective_end": "2026-11-03",
+    "effective_start": "2026-10-21",
     "schedule_basis": "facility_hours",
     "sessions": []
   }

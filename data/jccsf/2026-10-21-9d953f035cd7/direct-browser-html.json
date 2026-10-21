@@ -5,15 +5,15 @@
       "configuration": {
         "capture": {
           "browser_version": "128.0.6613.137",
-          "captured_at": "2026-10-20T19:51:21.645Z",
+          "captured_at": "2026-10-21T19:56:59.340Z",
           "configuration": {
             "playwright_version": "1.61.1",
             "script_sha256": "8e5c24db09d052cd63888ed77acc3a6a5273434b12f71ed7a2ac03e786535ae4"
           },
           "hashes": {
-            "rendered": "16ee15e7019027ef9935eef16dac8629c80f7b9de5f35e439932b2519206803b",
-            "screenshot": "3cb517577956588c8fe94aa4ce22ea4d8fe509bf823040f3214a960a0394bcac",
-            "source": "f09fa2edd931cc29549a66a56e5be26cc8f1b94d53cca7eaffee88a35ea487a6"
+            "rendered": "99fa5b622b9a20a63f20ca7eb0c065f7b3cfad0aa946efb091883f1e332df11c",
+            "screenshot": "8c3fcd7e09735b2ed7867a101fcc27414004151a71d0d1c52d2b07fbdf6d36db",
+            "source": "9d953f035cd72604e93a5fb0a22a9fdbc20d449a513f111ab4519f53e7181db8"
           },
           "method": "cloudflare_browser",
           "requested_url": "https://www.jccsf.org/fitness/aquatics/",
@@ -31,9 +31,9 @@
         "source_identity": "original_bytes"
       },
       "freshness_days": 14,
-      "observed_on": "2026-10-20",
+      "observed_on": "2026-10-21",
       "requested_url": "https://www.jccsf.org/fitness/aquatics/",
-      "sha256": "f09fa2edd931cc29549a66a56e5be26cc8f1b94d53cca7eaffee88a35ea487a6",
+      "sha256": "9d953f035cd72604e93a5fb0a22a9fdbc20d449a513f111ab4519f53e7181db8",
       "url": "https://www.jccsf.org/fitness/aquatics/"
     },
     "source_coverage": {
@@ -41,14 +41,14 @@
       "ok": true
     }
   },
-  "extracted_at": "2026-10-20T19:51:49.131713+00:00",
+  "extracted_at": "2026-10-21T19:57:31.669459+00:00",
   "model": "browser-html",
   "payload": {
     "access_exceptions": [],
     "access_hours": [],
     "closures": [],
-    "effective_end": "2026-11-02",
-    "effective_start": "2026-10-20",
+    "effective_end": "2026-11-03",
+    "effective_start": "2026-10-21",
     "schedule_basis": "swim_schedule",
     "sessions": [
       {
@@ -239,7 +239,7 @@
       }
     ]
   },
-  "pdf_sha256": "f09fa2edd931cc29549a66a56e5be26cc8f1b94d53cca7eaffee88a35ea487a6",
+  "pdf_sha256": "9d953f035cd72604e93a5fb0a22a9fdbc20d449a513f111ab4519f53e7181db8",
   "prompt_sha256": "721bb09111c5997215222e098b067ddc7bac48be9fdc5beb8d11299be165e512",
   "provider": "direct",
   "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",

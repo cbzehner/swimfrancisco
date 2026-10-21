@@ -14,9 +14,9 @@
         "source_identity": "original_bytes"
       },
       "freshness_days": 14,
-      "observed_on": "2026-10-20",
+      "observed_on": "2026-10-21",
       "requested_url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914",
-      "sha256": "5b1111b219f37890ce18f644aac54526f646b303caa7fdfb856ba730aee13eef",
+      "sha256": "f9bd7569df0518429704c2a3b678941a0957edc3ec62b57e56bd1f38e95e2318",
       "url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914"
     },
     "source_coverage": {
@@ -24,7 +24,7 @@
       "ok": true
     }
   },
-  "extracted_at": "2026-10-20T19:51:54.016297+00:00",
+  "extracted_at": "2026-10-21T19:57:37.927459+00:00",
   "model": "city-sports-html-v1",
   "payload": {
     "access_exceptions": [],
@@ -80,12 +80,12 @@
       }
     ],
     "closures": [],
-    "effective_end": "2026-11-02",
-    "effective_start": "2026-10-20",
+    "effective_end": "2026-11-03",
+    "effective_start": "2026-10-21",
     "schedule_basis": "facility_hours",
     "sessions": []
   },
-  "pdf_sha256": "5b1111b219f37890ce18f644aac54526f646b303caa7fdfb856ba730aee13eef",
+  "pdf_sha256": "f9bd7569df0518429704c2a3b678941a0957edc3ec62b57e56bd1f38e95e2318",
   "prompt_sha256": "c6d66ea6d229afd461a7314ba4ed02cf3682bd0b079c3763047f3d06cb64555a",
   "provider": "direct",
   "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",

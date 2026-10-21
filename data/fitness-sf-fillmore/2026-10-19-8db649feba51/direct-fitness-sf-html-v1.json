@@ -14,7 +14,7 @@
         "source_identity": "original_bytes"
       },
       "freshness_days": 14,
-      "observed_on": "2026-10-20",
+      "observed_on": "2026-10-21",
       "requested_url": "https://fitnesssf.com/location/fillmore",
       "sha256": "8db649feba51c40c35669f56bc218d1f83ce0d7bb6a82446352d31ce02aa79e3",
       "url": "https://fitnesssf.com/location/fillmore"
@@ -24,7 +24,7 @@
       "ok": true
     }
   },
-  "extracted_at": "2026-10-20T19:51:52.907760+00:00",
+  "extracted_at": "2026-10-21T19:57:35.919664+00:00",
   "model": "fitness-sf-html-v1",
   "payload": {
     "access_exceptions": [],
@@ -80,8 +80,8 @@
       }
     ],
     "closures": [],
-    "effective_end": "2026-11-02",
-    "effective_start": "2026-10-20",
+    "effective_end": "2026-11-03",
+    "effective_start": "2026-10-21",
     "schedule_basis": "facility_hours",
     "sessions": []
   },
