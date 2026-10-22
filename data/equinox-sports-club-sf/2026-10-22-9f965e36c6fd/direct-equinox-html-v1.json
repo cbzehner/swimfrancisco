@@ -1,0 +1,94 @@
+{
+  "cost_estimate": "deterministic",
+  "details": {
+    "direct_source": {
+      "configuration": {
+        "freshness_days": 14,
+        "libraries": {
+          "httpx": "0.28.1",
+          "openpyxl": "3.1.5"
+        },
+        "parser_sha256": "a9c5a177a53291230d1471ff965c3a06d43957624269d9f6b14be76e2ce6bc7f",
+        "python": "3.13.16",
+        "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+        "source_identity": "original_bytes"
+      },
+      "freshness_days": 14,
+      "observed_on": "2026-10-22",
+      "requested_url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco",
+      "sha256": "9f965e36c6fd429bb66dfe2da82d50cdc35d6bf391087e9db2bd13c3e14917b1",
+      "url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco"
+    },
+    "source_coverage": {
+      "issues": [],
+      "ok": true
+    }
+  },
+  "extracted_at": "2026-10-22T19:46:22.481173+00:00",
+  "model": "equinox-html-v1",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "22:00",
+        "evidence": "Monday: 05:00\u201322:00",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "22:00",
+        "evidence": "Tuesday: 05:00\u201322:00",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "22:00",
+        "evidence": "Wednesday: 05:00\u201322:00",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "thursday",
+        "end": "22:00",
+        "evidence": "Thursday: 05:00\u201322:00",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "friday",
+        "end": "21:00",
+        "evidence": "Friday: 05:00\u201321:00",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "saturday",
+        "end": "19:00",
+        "evidence": "Saturday: 07:00\u201319:00",
+        "label": "Club hours",
+        "start": "07:00"
+      },
+      {
+        "day": "sunday",
+        "end": "19:00",
+        "evidence": "Sunday: 07:00\u201319:00",
+        "label": "Club hours",
+        "start": "07:00"
+      }
+    ],
+    "closures": [],
+    "effective_end": "2026-11-04",
+    "effective_start": "2026-10-22",
+    "schedule_basis": "facility_hours",
+    "sessions": []
+  },
+  "pdf_sha256": "9f965e36c6fd429bb66dfe2da82d50cdc35d6bf391087e9db2bd13c3e14917b1",
+  "prompt_sha256": "ba8a702335cf62f72261e6eb250e340652b6897710e6976a608e93a50f2cdb81",
+  "provider": "direct",
+  "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+  "source_pdf_url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco",
+  "usage": {}
+}
