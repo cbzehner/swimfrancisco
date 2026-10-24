@@ -1,0 +1,91 @@
+{
+  "cost_estimate": "deterministic",
+  "details": {
+    "direct_source": {
+      "configuration": {
+        "freshness_days": 14,
+        "libraries": {
+          "httpx": "0.28.1",
+          "openpyxl": "3.1.5"
+        },
+        "parser_sha256": "a9c5a177a53291230d1471ff965c3a06d43957624269d9f6b14be76e2ce6bc7f",
+        "python": "3.13.16",
+        "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+        "source_identity": "original_bytes"
+      },
+      "freshness_days": 14,
+      "observed_on": "2026-10-24",
+      "requested_url": "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport",
+      "sha256": "ecb325a252800c0fd73cb1220b6c6ca37e16b5d1150d6a4c429beffe0dd45e7e",
+      "url": "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport"
+    },
+    "source_coverage": null
+  },
+  "extracted_at": "2026-10-24T18:36:33.693072+00:00",
+  "model": "twenty-four-hour-fitness-html-v1",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "23:59",
+        "evidence": "Monday: 05:00 AM - 11:59 PM",
+        "label": "Gym hours",
+        "start": "05:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "23:59",
+        "evidence": "Tuesday - Thursday: 12:00 AM - 11:59 PM",
+        "label": "Gym hours",
+        "start": "00:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "23:59",
+        "evidence": "Tuesday - Thursday: 12:00 AM - 11:59 PM",
+        "label": "Gym hours",
+        "start": "00:00"
+      },
+      {
+        "day": "thursday",
+        "end": "23:59",
+        "evidence": "Tuesday - Thursday: 12:00 AM - 11:59 PM",
+        "label": "Gym hours",
+        "start": "00:00"
+      },
+      {
+        "day": "friday",
+        "end": "21:00",
+        "evidence": "Friday: 12:00 AM - 09:00 PM",
+        "label": "Gym hours",
+        "start": "00:00"
+      },
+      {
+        "day": "saturday",
+        "end": "21:00",
+        "evidence": "Saturday - Sunday: 05:00 AM - 09:00 PM",
+        "label": "Gym hours",
+        "start": "05:00"
+      },
+      {
+        "day": "sunday",
+        "end": "21:00",
+        "evidence": "Saturday - Sunday: 05:00 AM - 09:00 PM",
+        "label": "Gym hours",
+        "start": "05:00"
+      }
+    ],
+    "closures": [],
+    "effective_end": "2026-11-06",
+    "effective_start": "2026-10-24",
+    "schedule_basis": "facility_hours",
+    "sessions": []
+  },
+  "pdf_sha256": "ecb325a252800c0fd73cb1220b6c6ca37e16b5d1150d6a4c429beffe0dd45e7e",
+  "prompt_sha256": "03eee14261fe48668ae6e1ae2c9bfc14ceddb86ab899274257f52ca6309b93a7",
+  "provider": "direct",
+  "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+  "source_pdf_url": "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport",
+  "usage": {}
+}
