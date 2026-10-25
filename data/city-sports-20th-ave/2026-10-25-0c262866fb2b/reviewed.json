@@ -1,5 +1,5 @@
 {
-  "pdf_sha256": "ed83184b220c3f60dedeeefdfb26e096af60a5ddf959d1c6cacfb34d5f4dab5d",
+  "pdf_sha256": "0c262866fb2ba12d009ade6995c49225ce90678376a907de2a7e2fc37edabe1f",
   "source_pdf_url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914",
   "direct_source": {
     "configuration": {
@@ -14,13 +14,13 @@
       "source_identity": "original_bytes"
     },
     "freshness_days": 14,
-    "observed_on": "2026-10-24",
+    "observed_on": "2026-10-25",
     "requested_url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914",
-    "sha256": "ed83184b220c3f60dedeeefdfb26e096af60a5ddf959d1c6cacfb34d5f4dab5d",
+    "sha256": "0c262866fb2ba12d009ade6995c49225ce90678376a907de2a7e2fc37edabe1f",
     "url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914"
   },
   "slug": "city-sports-20th-ave",
-  "reviewed_at": "2026-10-24",
+  "reviewed_at": "2026-10-25",
   "attested_by": "ci",
   "payload": {
     "access_exceptions": [],
@@ -76,8 +76,8 @@
       }
     ],
     "closures": [],
-    "effective_end": "2026-11-06",
-    "effective_start": "2026-10-24",
+    "effective_end": "2026-11-07",
+    "effective_start": "2026-10-25",
     "schedule_basis": "facility_hours",
     "sessions": []
   }
