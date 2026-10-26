@@ -14,14 +14,14 @@
         "source_identity": "original_bytes"
       },
       "freshness_days": 14,
-      "observed_on": "2026-10-25",
+      "observed_on": "2026-10-26",
       "requested_url": "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport",
       "sha256": "23aee813590027494e1b65a7d51e8d26d5fa73d7199f34dd8543e6a8c3665360",
       "url": "https://www.24hourfitness.com/gyms/san-francisco-ca/potrero-sport"
     },
     "source_coverage": null
   },
-  "extracted_at": "2026-10-25T18:45:11.727456+00:00",
+  "extracted_at": "2026-10-26T21:22:54.744143+00:00",
   "model": "twenty-four-hour-fitness-html-v1",
   "payload": {
     "access_exceptions": [],
@@ -77,8 +77,8 @@
       }
     ],
     "closures": [],
-    "effective_end": "2026-11-07",
-    "effective_start": "2026-10-25",
+    "effective_end": "2026-11-08",
+    "effective_start": "2026-10-26",
     "schedule_basis": "facility_hours",
     "sessions": []
   },

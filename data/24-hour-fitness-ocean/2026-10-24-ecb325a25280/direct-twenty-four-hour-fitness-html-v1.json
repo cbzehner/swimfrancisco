@@ -14,14 +14,14 @@
         "source_identity": "original_bytes"
       },
       "freshness_days": 14,
-      "observed_on": "2026-10-25",
+      "observed_on": "2026-10-26",
       "requested_url": "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport",
       "sha256": "ecb325a252800c0fd73cb1220b6c6ca37e16b5d1150d6a4c429beffe0dd45e7e",
       "url": "https://www.24hourfitness.com/gyms/san-francisco-ca/ocean-sport"
     },
     "source_coverage": null
   },
-  "extracted_at": "2026-10-25T18:45:14.323432+00:00",
+  "extracted_at": "2026-10-26T21:22:57.571966+00:00",
   "model": "twenty-four-hour-fitness-html-v1",
   "payload": {
     "access_exceptions": [],
@@ -77,8 +77,8 @@
       }
     ],
     "closures": [],
-    "effective_end": "2026-11-07",
-    "effective_start": "2026-10-25",
+    "effective_end": "2026-11-08",
+    "effective_start": "2026-10-26",
     "schedule_basis": "facility_hours",
     "sessions": []
   },

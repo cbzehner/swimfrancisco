@@ -19,50 +19,6 @@ access_summary = "Embarcadero YMCA is a membership YMCA branch on the waterfront
 [[extra.schedules]]
 sessions = []
 closures = []
-effective_start = "2026-10-05"
-schedule_basis = "pool_hours"
-effective_end = "2026-10-11"
-last_verified_at = "2026-10-05"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "06:00"
-end = "20:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "06:00"
-end = "20:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "06:00"
-end = "20:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "06:00"
-end = "20:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "06:00"
-end = "20:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "07:30"
-end = "16:30"
-label = "Pool hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
 effective_start = "2026-10-12"
 schedule_basis = "pool_hours"
 effective_end = "2026-10-18"
@@ -373,8 +329,52 @@ sessions = []
 closures = []
 effective_start = "2026-10-25"
 schedule_basis = "pool_hours"
-effective_end = "2026-11-07"
+effective_end = "2026-10-25"
 last_verified_at = "2026-10-25"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "06:00"
+end = "20:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "06:00"
+end = "20:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "06:00"
+end = "20:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "06:00"
+end = "20:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "06:00"
+end = "20:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "07:30"
+end = "16:30"
+label = "Pool hours"
+
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-10-26"
+schedule_basis = "pool_hours"
+effective_end = "2026-11-08"
+last_verified_at = "2026-10-26"
 
 [[extra.schedules.access_hours]]
 day = "monday"

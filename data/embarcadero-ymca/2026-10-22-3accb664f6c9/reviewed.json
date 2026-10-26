@@ -5,15 +5,15 @@
     "configuration": {
       "capture": {
         "browser_version": "152.0.7977.64",
-        "captured_at": "2026-10-25T18:44:53.437Z",
+        "captured_at": "2026-10-26T21:22:37.880Z",
         "configuration": {
           "playwright_version": "1.61.1",
           "script_sha256": "8e5c24db09d052cd63888ed77acc3a6a5273434b12f71ed7a2ac03e786535ae4"
         },
         "hashes": {
-          "rendered": "e2d6ad851f57961eaa24af1f7ffea457bf39e915e0555d680aa2a23fcf10cd19",
+          "rendered": "8c68564c616a5f98fec525c92d7d2f594738503e46c435209231b2bf58ef8675",
           "screenshot": "98cc23b477633ac36aa8cf3715486acc66418da2d8132232442aa7364c8f522f",
-          "source": "0987647a0a69cbd5f0b6d3e072318af2736b9cc4db6d18d2cdae6a2501f72a39"
+          "source": "7f242a093d97d804f1e54dc0e172e5929e8cbf4b575e37934965a9a0351da5c3"
         },
         "method": "cloudflare_browser",
         "requested_url": "https://www.ymcasf.org/location/embarcadero-ymca/",
@@ -31,13 +31,13 @@
       "source_identity": "original_bytes"
     },
     "freshness_days": 14,
-    "observed_on": "2026-10-25",
+    "observed_on": "2026-10-26",
     "requested_url": "https://www.ymcasf.org/location/embarcadero-ymca/",
     "sha256": "3accb664f6c976b0fe2feb7259754121408112fac6684095bd431d86b7fc59a5",
     "url": "https://www.ymcasf.org/location/embarcadero-ymca/"
   },
   "slug": "embarcadero-ymca",
-  "reviewed_at": "2026-10-25",
+  "reviewed_at": "2026-10-26",
   "attested_by": "ci",
   "payload": {
     "access_exceptions": [],
@@ -86,8 +86,8 @@
       }
     ],
     "closures": [],
-    "effective_end": "2026-11-07",
-    "effective_start": "2026-10-25",
+    "effective_end": "2026-11-08",
+    "effective_start": "2026-10-26",
     "schedule_basis": "pool_hours",
     "sessions": []
   }
