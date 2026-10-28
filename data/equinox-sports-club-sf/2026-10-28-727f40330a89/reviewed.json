@@ -1,6 +1,6 @@
 {
-  "pdf_sha256": "0c262866fb2ba12d009ade6995c49225ce90678376a907de2a7e2fc37edabe1f",
-  "source_pdf_url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914",
+  "pdf_sha256": "727f40330a89862a1ea682a31c803bf99ed7bfe8afbc36e4ddbd9fd1e3727159",
+  "source_pdf_url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco",
   "direct_source": {
     "configuration": {
       "freshness_days": 14,
@@ -14,70 +14,70 @@
       "source_identity": "original_bytes"
     },
     "freshness_days": 14,
-    "observed_on": "2026-10-25",
-    "requested_url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914",
-    "sha256": "0c262866fb2ba12d009ade6995c49225ce90678376a907de2a7e2fc37edabe1f",
-    "url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914"
+    "observed_on": "2026-10-28",
+    "requested_url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco",
+    "sha256": "727f40330a89862a1ea682a31c803bf99ed7bfe8afbc36e4ddbd9fd1e3727159",
+    "url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco"
   },
-  "slug": "city-sports-20th-ave",
-  "reviewed_at": "2026-10-25",
+  "slug": "equinox-sports-club-sf",
+  "reviewed_at": "2026-10-28",
   "attested_by": "ci",
   "payload": {
     "access_exceptions": [],
     "access_hours": [
       {
         "day": "monday",
-        "end": "23:00",
-        "evidence": "Mon - Thu: 5:00am - 11:00pm",
+        "end": "22:00",
+        "evidence": "Monday: 05:00\u201322:00",
         "label": "Club hours",
         "start": "05:00"
       },
       {
         "day": "tuesday",
-        "end": "23:00",
-        "evidence": "Mon - Thu: 5:00am - 11:00pm",
+        "end": "22:00",
+        "evidence": "Tuesday: 05:00\u201322:00",
         "label": "Club hours",
         "start": "05:00"
       },
       {
         "day": "wednesday",
-        "end": "23:00",
-        "evidence": "Mon - Thu: 5:00am - 11:00pm",
+        "end": "22:00",
+        "evidence": "Wednesday: 05:00\u201322:00",
         "label": "Club hours",
         "start": "05:00"
       },
       {
         "day": "thursday",
-        "end": "23:00",
-        "evidence": "Mon - Thu: 5:00am - 11:00pm",
+        "end": "22:00",
+        "evidence": "Thursday: 05:00\u201322:00",
         "label": "Club hours",
         "start": "05:00"
       },
       {
         "day": "friday",
-        "end": "22:00",
-        "evidence": "Fri: 5:00am - 10:00pm",
+        "end": "21:00",
+        "evidence": "Friday: 05:00\u201321:00",
         "label": "Club hours",
         "start": "05:00"
       },
       {
         "day": "saturday",
-        "end": "20:00",
-        "evidence": "Sat - Sun: 8:00am - 8:00pm",
+        "end": "19:00",
+        "evidence": "Saturday: 07:00\u201319:00",
         "label": "Club hours",
-        "start": "08:00"
+        "start": "07:00"
       },
       {
         "day": "sunday",
-        "end": "20:00",
-        "evidence": "Sat - Sun: 8:00am - 8:00pm",
+        "end": "19:00",
+        "evidence": "Sunday: 07:00\u201319:00",
         "label": "Club hours",
-        "start": "08:00"
+        "start": "07:00"
       }
     ],
     "closures": [],
-    "effective_end": "2026-11-07",
-    "effective_start": "2026-10-25",
+    "effective_end": "2026-11-10",
+    "effective_start": "2026-10-28",
     "schedule_basis": "facility_hours",
     "sessions": []
   }

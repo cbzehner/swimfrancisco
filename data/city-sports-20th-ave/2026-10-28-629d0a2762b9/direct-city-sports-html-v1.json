@@ -14,81 +14,81 @@
         "source_identity": "original_bytes"
       },
       "freshness_days": 14,
-      "observed_on": "2026-10-23",
-      "requested_url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco",
-      "sha256": "87df0e8ceb8c5eb39b79ae81dc4118a21ecdac24ea6434b9f8df19cc700eae20",
-      "url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco"
+      "observed_on": "2026-10-28",
+      "requested_url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914",
+      "sha256": "629d0a2762b98e7c5d12809c8e042dc35d7fd7934532ec5331e88ec8fe221250",
+      "url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914"
     },
     "source_coverage": {
       "issues": [],
       "ok": true
     }
   },
-  "extracted_at": "2026-10-23T20:33:48.042420+00:00",
-  "model": "equinox-html-v1",
+  "extracted_at": "2026-10-28T20:48:02.356312+00:00",
+  "model": "city-sports-html-v1",
   "payload": {
     "access_exceptions": [],
     "access_hours": [
       {
         "day": "monday",
-        "end": "22:00",
-        "evidence": "Monday: 05:00\u201322:00",
+        "end": "23:00",
+        "evidence": "Mon - Thu: 5:00am - 11:00pm",
         "label": "Club hours",
         "start": "05:00"
       },
       {
         "day": "tuesday",
-        "end": "22:00",
-        "evidence": "Tuesday: 05:00\u201322:00",
+        "end": "23:00",
+        "evidence": "Mon - Thu: 5:00am - 11:00pm",
         "label": "Club hours",
         "start": "05:00"
       },
       {
         "day": "wednesday",
-        "end": "22:00",
-        "evidence": "Wednesday: 05:00\u201322:00",
+        "end": "23:00",
+        "evidence": "Mon - Thu: 5:00am - 11:00pm",
         "label": "Club hours",
         "start": "05:00"
       },
       {
         "day": "thursday",
-        "end": "22:00",
-        "evidence": "Thursday: 05:00\u201322:00",
+        "end": "23:00",
+        "evidence": "Mon - Thu: 5:00am - 11:00pm",
         "label": "Club hours",
         "start": "05:00"
       },
       {
         "day": "friday",
-        "end": "21:00",
-        "evidence": "Friday: 05:00\u201321:00",
+        "end": "22:00",
+        "evidence": "Fri: 5:00am - 10:00pm",
         "label": "Club hours",
         "start": "05:00"
       },
       {
         "day": "saturday",
-        "end": "19:00",
-        "evidence": "Saturday: 07:00\u201319:00",
+        "end": "20:00",
+        "evidence": "Sat - Sun: 8:00am - 8:00pm",
         "label": "Club hours",
-        "start": "07:00"
+        "start": "08:00"
       },
       {
         "day": "sunday",
-        "end": "19:00",
-        "evidence": "Sunday: 07:00\u201319:00",
+        "end": "20:00",
+        "evidence": "Sat - Sun: 8:00am - 8:00pm",
         "label": "Club hours",
-        "start": "07:00"
+        "start": "08:00"
       }
     ],
     "closures": [],
-    "effective_end": "2026-11-05",
-    "effective_start": "2026-10-23",
+    "effective_end": "2026-11-10",
+    "effective_start": "2026-10-28",
     "schedule_basis": "facility_hours",
     "sessions": []
   },
-  "pdf_sha256": "87df0e8ceb8c5eb39b79ae81dc4118a21ecdac24ea6434b9f8df19cc700eae20",
-  "prompt_sha256": "ba8a702335cf62f72261e6eb250e340652b6897710e6976a608e93a50f2cdb81",
+  "pdf_sha256": "629d0a2762b98e7c5d12809c8e042dc35d7fd7934532ec5331e88ec8fe221250",
+  "prompt_sha256": "c6d66ea6d229afd461a7314ba4ed02cf3682bd0b079c3763047f3d06cb64555a",
   "provider": "direct",
   "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
-  "source_pdf_url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco",
+  "source_pdf_url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914",
   "usage": {}
 }
