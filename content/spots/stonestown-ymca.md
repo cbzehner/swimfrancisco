@@ -421,7 +421,7 @@ sessions = []
 closures = []
 effective_start = "2026-10-26"
 schedule_basis = "facility_hours"
-effective_end = "2026-11-08"
+effective_end = "2026-10-28"
 last_verified_at = "2026-10-26"
 
 [[extra.schedules.access_hours]]
@@ -465,6 +465,65 @@ day = "sunday"
 start = "07:00"
 end = "17:00"
 label = "Facility hours"
+
+[[extra.schedules]]
+sessions = []
+effective_start = "2026-10-29"
+schedule_basis = "facility_hours"
+effective_end = "2026-11-11"
+last_verified_at = "2026-10-29"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "07:00"
+end = "17:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "sunday"
+start = "07:00"
+end = "17:00"
+label = "Facility hours"
+
+[[extra.schedules.closures]]
+start = "2026-11-11"
+end = "2026-11-11"
+reason = "Wednesday, November 11 (All Staff Training) CLOSED"
+reason_code = "staff_training"
+
+[[extra.schedules.closures.source_notices]]
+id = "040041ec621a0bb6-1"
+text = "Wednesday, November 11 (All Staff Training) CLOSED"
 
 [[extra.pricing]]
 label = "YMCA member"

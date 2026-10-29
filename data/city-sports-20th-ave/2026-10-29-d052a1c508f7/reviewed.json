@@ -1,0 +1,84 @@
+{
+  "pdf_sha256": "d052a1c508f7081e98e4fa7035e5282cbd28a17c2751dae27acea2d0c7e1d24b",
+  "source_pdf_url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914",
+  "direct_source": {
+    "configuration": {
+      "freshness_days": 14,
+      "libraries": {
+        "httpx": "0.28.1",
+        "openpyxl": "3.1.5"
+      },
+      "parser_sha256": "a9c5a177a53291230d1471ff965c3a06d43957624269d9f6b14be76e2ce6bc7f",
+      "python": "3.13.17",
+      "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+      "source_identity": "original_bytes"
+    },
+    "freshness_days": 14,
+    "observed_on": "2026-10-29",
+    "requested_url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914",
+    "sha256": "d052a1c508f7081e98e4fa7035e5282cbd28a17c2751dae27acea2d0c7e1d24b",
+    "url": "https://www.citysportsfitness.com/Pages/clubhome.aspx?clubid=914"
+  },
+  "slug": "city-sports-20th-ave",
+  "reviewed_at": "2026-10-29",
+  "attested_by": "ci",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "23:00",
+        "evidence": "Mon - Thu: 5:00am - 11:00pm",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "23:00",
+        "evidence": "Mon - Thu: 5:00am - 11:00pm",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "23:00",
+        "evidence": "Mon - Thu: 5:00am - 11:00pm",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "thursday",
+        "end": "23:00",
+        "evidence": "Mon - Thu: 5:00am - 11:00pm",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "friday",
+        "end": "22:00",
+        "evidence": "Fri: 5:00am - 10:00pm",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "saturday",
+        "end": "20:00",
+        "evidence": "Sat - Sun: 8:00am - 8:00pm",
+        "label": "Club hours",
+        "start": "08:00"
+      },
+      {
+        "day": "sunday",
+        "end": "20:00",
+        "evidence": "Sat - Sun: 8:00am - 8:00pm",
+        "label": "Club hours",
+        "start": "08:00"
+      }
+    ],
+    "closures": [],
+    "effective_end": "2026-11-11",
+    "effective_start": "2026-10-29",
+    "schedule_basis": "facility_hours",
+    "sessions": []
+  }
+}
