@@ -19,56 +19,6 @@ access_summary = "Equinox Sports Club San Francisco lists an indoor pool and clu
 [[extra.schedules]]
 sessions = []
 closures = []
-effective_start = "2026-10-05"
-schedule_basis = "facility_hours"
-effective_end = "2026-10-11"
-last_verified_at = "2026-10-05"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "05:00"
-end = "22:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "05:00"
-end = "22:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "05:00"
-end = "22:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "05:00"
-end = "22:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "05:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "07:00"
-end = "19:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "07:00"
-end = "19:00"
-label = "Club hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
 effective_start = "2026-10-12"
 schedule_basis = "facility_hours"
 effective_end = "2026-10-18"
@@ -271,8 +221,58 @@ sessions = []
 closures = []
 effective_start = "2026-10-23"
 schedule_basis = "facility_hours"
-effective_end = "2026-11-05"
+effective_end = "2026-10-29"
 last_verified_at = "2026-10-23"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "05:00"
+end = "22:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "05:00"
+end = "22:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "05:00"
+end = "22:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "05:00"
+end = "22:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "05:00"
+end = "21:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "07:00"
+end = "19:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "sunday"
+start = "07:00"
+end = "19:00"
+label = "Club hours"
+
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-10-30"
+schedule_basis = "facility_hours"
+effective_end = "2026-11-12"
+last_verified_at = "2026-10-30"
 
 [[extra.schedules.access_hours]]
 day = "monday"
