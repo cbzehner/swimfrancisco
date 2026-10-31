@@ -14,7 +14,7 @@
         "source_identity": "original_bytes"
       },
       "freshness_days": 14,
-      "observed_on": "2026-10-30",
+      "observed_on": "2026-10-31",
       "requested_url": "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/news/2026-fitness-and-recreation-holiday-schedule",
       "sha256": "19ae7ce7b0490d3727bf8bdd361c6e42c78ed9dd7721cfd74b3794321192fe2c",
       "url": "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/news/2026-fitness-and-recreation-holiday-schedule"
@@ -24,7 +24,7 @@
       "ok": true
     }
   },
-  "extracted_at": "2026-10-30T20:25:18.210831+00:00",
+  "extracted_at": "2026-10-31T19:44:14.122891+00:00",
   "model": "ucsf-fitness-html-v1",
   "payload": {
     "access_exceptions": [],
@@ -80,8 +80,8 @@
       }
     ],
     "closures": [],
-    "effective_end": "2026-11-12",
-    "effective_start": "2026-10-30",
+    "effective_end": "2026-11-13",
+    "effective_start": "2026-10-31",
     "schedule_basis": "facility_hours",
     "sessions": []
   },
