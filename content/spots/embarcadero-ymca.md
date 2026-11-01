@@ -416,8 +416,61 @@ label = "Pool hours"
 sessions = []
 effective_start = "2026-10-30"
 schedule_basis = "pool_hours"
-effective_end = "2026-11-12"
+effective_end = "2026-10-31"
 last_verified_at = "2026-10-30"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "06:00"
+end = "20:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "06:00"
+end = "20:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "06:00"
+end = "20:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "06:00"
+end = "20:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "06:00"
+end = "20:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "07:30"
+end = "16:30"
+label = "Pool hours"
+
+[[extra.schedules.closures]]
+start = "2026-11-11"
+end = "2026-11-11"
+reason = "Wednesday, November 11 (All Staff Training) CLOSED"
+reason_code = "staff_training"
+
+[[extra.schedules.closures.source_notices]]
+id = "040041ec621a0bb6-1"
+text = "Wednesday, November 11 (All Staff Training) CLOSED"
+
+[[extra.schedules]]
+sessions = []
+effective_start = "2026-11-01"
+schedule_basis = "pool_hours"
+effective_end = "2026-11-14"
+last_verified_at = "2026-11-01"
 
 [[extra.schedules.access_hours]]
 day = "monday"
