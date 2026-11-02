@@ -5,14 +5,14 @@
     "configuration": {
       "capture": {
         "browser_version": "152.0.7977.64",
-        "captured_at": "2026-10-30T20:24:52.467Z",
+        "captured_at": "2026-11-02T23:19:00.348Z",
         "configuration": {
           "playwright_version": "1.61.1",
           "script_sha256": "8e5c24db09d052cd63888ed77acc3a6a5273434b12f71ed7a2ac03e786535ae4"
         },
         "hashes": {
-          "rendered": "a06626d50fca5d8cb9ae2aa4222d34a0dd6e341ea4aebd617864a87cec6f9b86",
-          "screenshot": "1fc05fb7ee41e250422c4b05a2d3a74974a682211f1305d59618e7c8aa55c53d",
+          "rendered": "046ed7f4c4eb3d4dc9e7f25d8399e70c309a9c47dcfcfa82a1f54970efc948bb",
+          "screenshot": "1b73be605afedea209c1225b6584250a526ac696fdaa57bdcaa9c47eb7b94de7",
           "source": "5906d6ca447babf0e60c5fa536c3c74454845f251a5de0ad8a47818646d60b2b"
         },
         "method": "cloudflare_browser",
@@ -31,13 +31,13 @@
       "source_identity": "original_bytes"
     },
     "freshness_days": 14,
-    "observed_on": "2026-10-30",
+    "observed_on": "2026-11-02",
     "requested_url": "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/",
     "sha256": "5906d6ca447babf0e60c5fa536c3c74454845f251a5de0ad8a47818646d60b2b",
     "url": "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"
   },
   "slug": "presidio-ymca-letterman",
-  "reviewed_at": "2026-10-30",
+  "reviewed_at": "2026-11-02",
   "attested_by": "ci",
   "payload": {
     "access_exceptions": [],
@@ -93,8 +93,8 @@
       }
     ],
     "closures": [],
-    "effective_end": "2026-11-12",
-    "effective_start": "2026-10-30",
+    "effective_end": "2026-11-15",
+    "effective_start": "2026-11-02",
     "schedule_basis": "facility_hours",
     "sessions": []
   }

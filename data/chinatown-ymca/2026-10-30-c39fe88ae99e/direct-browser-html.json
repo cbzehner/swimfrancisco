@@ -5,15 +5,15 @@
       "configuration": {
         "capture": {
           "browser_version": "152.0.7977.64",
-          "captured_at": "2026-10-30T20:25:07.578Z",
+          "captured_at": "2026-11-02T23:19:29.530Z",
           "configuration": {
             "playwright_version": "1.61.1",
             "script_sha256": "8e5c24db09d052cd63888ed77acc3a6a5273434b12f71ed7a2ac03e786535ae4"
           },
           "hashes": {
-            "rendered": "8addb2371dc552adf0eebc664a9632ec752850e417d98476685d1c3a37703a48",
-            "screenshot": "7b3cffa8b892df8cdaebfbc42dd7ddba9c85e01988b6c79510dfd620c706470f",
-            "source": "c39fe88ae99e54a47581b44139987648b687aed1ca93b3f276901fff0f325e46"
+            "rendered": "bf25403275cfec0e6828e239e2aaa343336c9e09290eca2b8083abed508d5d2e",
+            "screenshot": "d315e0f696940cb0cf93746f3a09bd6c18556838b151aed635f521f24ee77da7",
+            "source": "ce0fcbcb0cf287db2b5cd3dfd86855cf8c67e859e3ac2a62b531a5820dd3ca15"
           },
           "method": "cloudflare_browser",
           "requested_url": "https://www.ymcasf.org/location/chinatown-ymca/",
@@ -31,7 +31,7 @@
         "source_identity": "original_bytes"
       },
       "freshness_days": 14,
-      "observed_on": "2026-10-30",
+      "observed_on": "2026-11-02",
       "requested_url": "https://www.ymcasf.org/location/chinatown-ymca/",
       "sha256": "c39fe88ae99e54a47581b44139987648b687aed1ca93b3f276901fff0f325e46",
       "url": "https://www.ymcasf.org/location/chinatown-ymca/"
@@ -41,7 +41,7 @@
       "ok": true
     }
   },
-  "extracted_at": "2026-10-30T20:25:15.698448+00:00",
+  "extracted_at": "2026-11-02T23:19:43.236173+00:00",
   "model": "browser-html",
   "payload": {
     "access_exceptions": [],
@@ -114,8 +114,8 @@
         "start": "2026-11-11"
       }
     ],
-    "effective_end": "2026-11-12",
-    "effective_start": "2026-10-30",
+    "effective_end": "2026-11-15",
+    "effective_start": "2026-11-02",
     "schedule_basis": "pool_hours",
     "sessions": []
   },

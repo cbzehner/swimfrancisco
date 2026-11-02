@@ -14,9 +14,9 @@
         "source_identity": "original_bytes"
       },
       "freshness_days": 14,
-      "observed_on": "2026-10-30",
+      "observed_on": "2026-11-02",
       "requested_url": "https://fitnesssf.com/location/fillmore",
-      "sha256": "8db649feba51c40c35669f56bc218d1f83ce0d7bb6a82446352d31ce02aa79e3",
+      "sha256": "944f958af59fbf4301fb09201b4f49c6dd585ecec61d7f8669d49cc9287f6f55",
       "url": "https://fitnesssf.com/location/fillmore"
     },
     "source_coverage": {
@@ -24,7 +24,7 @@
       "ok": true
     }
   },
-  "extracted_at": "2026-10-30T20:25:15.861521+00:00",
+  "extracted_at": "2026-11-02T23:19:43.460019+00:00",
   "model": "fitness-sf-html-v1",
   "payload": {
     "access_exceptions": [],
@@ -80,12 +80,12 @@
       }
     ],
     "closures": [],
-    "effective_end": "2026-11-12",
-    "effective_start": "2026-10-30",
+    "effective_end": "2026-11-15",
+    "effective_start": "2026-11-02",
     "schedule_basis": "facility_hours",
     "sessions": []
   },
-  "pdf_sha256": "8db649feba51c40c35669f56bc218d1f83ce0d7bb6a82446352d31ce02aa79e3",
+  "pdf_sha256": "944f958af59fbf4301fb09201b4f49c6dd585ecec61d7f8669d49cc9287f6f55",
   "prompt_sha256": "2529b3401aac7f9b94d213be7af2b27264162b7f0941f293330790026c3b8ae7",
   "provider": "direct",
   "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
