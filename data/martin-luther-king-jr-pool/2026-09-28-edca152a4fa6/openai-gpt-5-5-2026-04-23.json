@@ -1,0 +1,1146 @@
+{
+  "cost_estimate": "input_tokens=4455, output_tokens=2146",
+  "details": {
+    "attempts": [
+      {
+        "elapsed_seconds": 20.817,
+        "http_status": 200,
+        "status": "completed"
+      }
+    ],
+    "configuration": {
+      "image_detail": "original",
+      "implementation_sha256": {
+        "_time.py": "f1efa6d6ad8330772b2fa08cca374337c238aefa03ebf39edd002f5eecab4f35",
+        "artifacts.py": "734a53acbbd4c4436a6287cd2471b7ded359daa629cac786984acf50e0286c9d",
+        "grounding.py": "5a82c59f1ba683a4296ffde5c57b1e51b13dd05bfff8b0cb35089520cff56c1f",
+        "providers/openai_provider.py": "0dc3b053c05c7e9481691e054691801f27e80f3fa0b769adfea4b0f1860b805e",
+        "schema.py": "b4a7307f43667e00ea7408112b180aed1e48851621022eeb690a6971c87719c6",
+        "signals.py": "6a1a57bfadd13674c02e89ee60b2012c6b47963796af71e312380a580192f1de",
+        "window_dates.py": "a0389c04375b84df9b8c5d120e2c58ddab4ddf789c480707df756a24cfce9ae9"
+      },
+      "libraries": {
+        "pdfminer-six": "20260107",
+        "pdfplumber": "0.11.10",
+        "pillow": "12.3.0",
+        "pypdfium2": "5.13.0"
+      },
+      "max_output_tokens": 8192,
+      "model": "gpt-5.5-2026-04-23",
+      "prompt_sha256": "fc1ba7fba37a6326844c9b48b2b31530dab6e4f6059024897a32aa478a43802b",
+      "reasoning": "medium",
+      "render_dpi": 150,
+      "schema_sha256": "d2839c7fa22768d3b11935bd0e7103d9424f7d0d93813349e0c63e91e7ed6629"
+    },
+    "final_response": "{\"effective_start\":\"2026-09-29\",\"schedule_basis\":\"swim_schedule\",\"effective_end\":\"2026-12-12\",\"sessions\":[{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"07:30\",\"end\":\"09:00\",\"evidence\":\"Lap Swim (10) 7:30am \u2013 9:00am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"12:00\",\"evidence\":\"Senior Lap Swim (4 & shallow) 9:00am \u2013 12:00pm\",\"notes\":null,\"pool_label_raw\":\"4 & shallow\",\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"09:00\",\"end\":\"12:00\",\"evidence\":\"Lap Swim (4) 9:00am \u2013 12:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"family_swim\",\"start\":\"12:30\",\"end\":\"15:30\",\"evidence\":\"Rec/Family Swim (shallow) 12:30pm \u2013 3:30pm\",\"notes\":null,\"pool_label_raw\":\"shallow\",\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"12:30\",\"end\":\"15:30\",\"evidence\":\"Lap Swim (8) 12:30pm \u2013 3:30pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"18:00\",\"end\":\"19:00\",\"evidence\":\"Lap Swim (8) 6:00pm \u2013 7:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"10:30\",\"evidence\":\"Senior Lap Swim (4 & shallow) 9:00am \u2013 10:30am\",\"notes\":null,\"pool_label_raw\":\"4 & shallow\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"09:00\",\"end\":\"12:00\",\"evidence\":\"Lap Swim (4) 9:00am \u2013 12:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"family_swim\",\"start\":\"12:30\",\"end\":\"15:30\",\"evidence\":\"Rec/Family Swim (shallow) 12:30pm \u2013 3:30pm\",\"notes\":null,\"pool_label_raw\":\"shallow\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"12:30\",\"end\":\"15:30\",\"evidence\":\"Lap Swim (8) 12:30pm \u2013 3:30pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"07:30\",\"end\":\"09:00\",\"evidence\":\"Lap Swim (10) 7:30am \u2013 9:00am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"12:00\",\"evidence\":\"Senior Lap Swim (4 & shallow) 9:00am \u2013 12:00pm\",\"notes\":null,\"pool_label_raw\":\"4 & shallow\",\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"09:00\",\"end\":\"12:00\",\"evidence\":\"Lap Swim (4) 9:00am \u2013 12:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"family_swim\",\"start\":\"12:30\",\"end\":\"15:30\",\"evidence\":\"Rec/Family Swim (shallow) CLOSED (10/22) 12:30pm \u2013 3:30pm\",\"notes\":\"Session cell marked CLOSED (10/22).\",\"pool_label_raw\":\"shallow\",\"excluded_dates\":[\"2026-10-22\"]},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"12:30\",\"end\":\"15:30\",\"evidence\":\"Lap Swim (8) CLOSED (10/22) 12:30pm \u2013 3:30pm\",\"notes\":\"Session cell marked CLOSED (10/22).\",\"pool_label_raw\":null,\"excluded_dates\":[\"2026-10-22\"]},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"18:00\",\"end\":\"19:00\",\"evidence\":\"Lap Swim (8) 6:00pm \u2013 7:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"senior_swim\",\"start\":\"09:00\",\"end\":\"10:30\",\"evidence\":\"Senior Lap Swim (4 & shallow) 9:00am \u2013 10:30am\",\"notes\":null,\"pool_label_raw\":\"4 & shallow\",\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"lap_swim\",\"start\":\"09:00\",\"end\":\"12:00\",\"evidence\":\"Lap Swim (4) 9:00am \u2013 12:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"family_swim\",\"start\":\"12:30\",\"end\":\"15:30\",\"evidence\":\"Rec/Family Swim (shallow) 12:30pm \u2013 3:30pm\",\"notes\":null,\"pool_label_raw\":\"shallow\",\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"lap_swim\",\"start\":\"12:30\",\"end\":\"15:30\",\"evidence\":\"Lap Swim (8) 12:30pm \u2013 3:30pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"lap_swim\",\"start\":\"07:00\",\"end\":\"08:30\",\"evidence\":\"Lap Swim (10) 7:00am \u2013 8:30am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"family_swim\",\"start\":\"13:30\",\"end\":\"15:00\",\"evidence\":\"Rec/Family Swim (10) 1:30pm \u2013 3:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"lap_swim\",\"start\":\"15:30\",\"end\":\"17:00\",\"evidence\":\"Lap Swim (10) 3:30pm \u2013 5:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null}],\"access_hours\":null,\"access_exceptions\":null,\"closures\":[{\"start\":\"2026-11-11\",\"end\":\"2026-11-11\",\"reason\":\"Holiday Closures\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-11-26\",\"end\":\"2026-11-26\",\"reason\":\"Holiday Closures\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-11-27\",\"end\":\"2026-11-27\",\"reason\":\"Holiday Closures\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-12-12\",\"end\":\"2026-12-12\",\"reason\":\"Training Closures\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null}]}",
+    "image_sha256": {},
+    "request_sha256": "c90109b6186b3c60e01a50f9ba43c8015decc72ddd72484ab3269ee97eec37db",
+    "response_status": "completed",
+    "source_closures": {
+      "expected": [
+        [
+          "2026-11-11",
+          "2026-11-11",
+          null,
+          null
+        ],
+        [
+          "2026-11-26",
+          "2026-11-26",
+          null,
+          null
+        ],
+        [
+          "2026-11-27",
+          "2026-11-27",
+          null,
+          null
+        ],
+        [
+          "2026-12-12",
+          "2026-12-12",
+          null,
+          null
+        ]
+      ],
+      "extra": [],
+      "issues": [],
+      "missing": [],
+      "ok": true
+    },
+    "source_coverage": {
+      "closures": {
+        "expected": [
+          [
+            "2026-11-11",
+            "2026-11-11",
+            null,
+            null
+          ],
+          [
+            "2026-11-26",
+            "2026-11-26",
+            null,
+            null
+          ],
+          [
+            "2026-11-27",
+            "2026-11-27",
+            null,
+            null
+          ],
+          [
+            "2026-12-12",
+            "2026-12-12",
+            null,
+            null
+          ]
+        ],
+        "extra": [],
+        "issues": [],
+        "missing": [],
+        "ok": true
+      },
+      "exclusions": {
+        "expected": {
+          "p1-c3-b20": [
+            "2026-10-22"
+          ],
+          "p1-c3-b21": [
+            "2026-10-22"
+          ]
+        },
+        "issues": [],
+        "ok": true
+      },
+      "expected_count": 23,
+      "extra": [],
+      "issues": [],
+      "missing": [],
+      "ok": true,
+      "session_cells": [
+        "p1-c1-b1",
+        "p1-c1-b2",
+        "p1-c1-b3",
+        "p1-c1-b4",
+        "p1-c1-b5",
+        "p1-c1-b8",
+        "p1-c2-b10",
+        "p1-c2-b11",
+        "p1-c2-b13",
+        "p1-c2-b14",
+        "p1-c3-b17",
+        "p1-c3-b18",
+        "p1-c3-b19",
+        "p1-c3-b20",
+        "p1-c3-b21",
+        "p1-c3-b24",
+        "p1-c4-b26",
+        "p1-c4-b27",
+        "p1-c4-b29",
+        "p1-c4-b30",
+        "p1-c5-b33",
+        "p1-c5-b36",
+        "p1-c5-b37"
+      ],
+      "window": {
+        "actual": [
+          "2026-09-29",
+          "2026-12-12"
+        ],
+        "expected": [
+          "2026-09-29",
+          "2026-12-12"
+        ],
+        "issues": [],
+        "ok": true
+      }
+    },
+    "source_facts": {
+      "closures": [
+        {
+          "end": "2026-11-11",
+          "reason": "Holiday Closures",
+          "start": "2026-11-11"
+        },
+        {
+          "end": "2026-11-26",
+          "reason": "Holiday Closures",
+          "start": "2026-11-26"
+        },
+        {
+          "end": "2026-11-27",
+          "reason": "Holiday Closures",
+          "start": "2026-11-27"
+        },
+        {
+          "end": "2026-12-12",
+          "reason": "Training Closures",
+          "start": "2026-12-12"
+        }
+      ],
+      "effective_end": "2026-12-12",
+      "effective_start": "2026-09-29",
+      "schedule_basis": "swim_schedule",
+      "sessions": [
+        {
+          "day": "tuesday",
+          "end": "09:00",
+          "evidence": "Lap Swim (10) 7:30am \u2013 9:00am",
+          "pool_label_raw": null,
+          "start": "07:30",
+          "type": "lap_swim"
+        },
+        {
+          "day": "tuesday",
+          "end": "12:00",
+          "evidence": "Senior Lap Swim (4 & shallow) 9:00am \u2013 12:00pm",
+          "pool_label_raw": "4 & shallow",
+          "start": "09:00",
+          "type": "senior_swim"
+        },
+        {
+          "day": "tuesday",
+          "end": "12:00",
+          "evidence": "Lap Swim (4) 9:00am \u2013 12:00pm",
+          "pool_label_raw": null,
+          "start": "09:00",
+          "type": "lap_swim"
+        },
+        {
+          "day": "tuesday",
+          "end": "15:30",
+          "evidence": "Rec/Family Swim (shallow) 12:30pm \u2013 3:30pm",
+          "pool_label_raw": "shallow",
+          "start": "12:30",
+          "type": "family_swim"
+        },
+        {
+          "day": "tuesday",
+          "end": "15:30",
+          "evidence": "Lap Swim (8) 12:30pm \u2013 3:30pm",
+          "pool_label_raw": null,
+          "start": "12:30",
+          "type": "lap_swim"
+        },
+        {
+          "day": "tuesday",
+          "end": "19:00",
+          "evidence": "Lap Swim (8) 6:00pm \u2013 7:00pm",
+          "pool_label_raw": null,
+          "start": "18:00",
+          "type": "lap_swim"
+        },
+        {
+          "day": "wednesday",
+          "end": "10:30",
+          "evidence": "Senior Lap Swim (4 & shallow) 9:00am \u2013 10:30am",
+          "pool_label_raw": "4 & shallow",
+          "start": "09:00",
+          "type": "senior_swim"
+        },
+        {
+          "day": "wednesday",
+          "end": "12:00",
+          "evidence": "Lap Swim (4) 9:00am \u2013 12:00pm",
+          "pool_label_raw": null,
+          "start": "09:00",
+          "type": "lap_swim"
+        },
+        {
+          "day": "wednesday",
+          "end": "15:30",
+          "evidence": "Rec/Family Swim (shallow) 12:30pm \u2013 3:30pm",
+          "pool_label_raw": "shallow",
+          "start": "12:30",
+          "type": "family_swim"
+        },
+        {
+          "day": "wednesday",
+          "end": "15:30",
+          "evidence": "Lap Swim (8) 12:30pm \u2013 3:30pm",
+          "pool_label_raw": null,
+          "start": "12:30",
+          "type": "lap_swim"
+        },
+        {
+          "day": "thursday",
+          "end": "09:00",
+          "evidence": "Lap Swim (10) 7:30am \u2013 9:00am",
+          "pool_label_raw": null,
+          "start": "07:30",
+          "type": "lap_swim"
+        },
+        {
+          "day": "thursday",
+          "end": "12:00",
+          "evidence": "Senior Lap Swim (4 & shallow) 9:00am \u2013 12:00pm",
+          "pool_label_raw": "4 & shallow",
+          "start": "09:00",
+          "type": "senior_swim"
+        },
+        {
+          "day": "thursday",
+          "end": "12:00",
+          "evidence": "Lap Swim (4) 9:00am \u2013 12:00pm",
+          "pool_label_raw": null,
+          "start": "09:00",
+          "type": "lap_swim"
+        },
+        {
+          "day": "thursday",
+          "end": "15:30",
+          "evidence": "Rec/Family Swim (shallow) CLOSED (10/22) 12:30pm \u2013 3:30pm",
+          "excluded_dates": [
+            "2026-10-22"
+          ],
+          "notes": "Session cell marked CLOSED (10/22).",
+          "pool_label_raw": "shallow",
+          "start": "12:30",
+          "type": "family_swim"
+        },
+        {
+          "day": "thursday",
+          "end": "15:30",
+          "evidence": "Lap Swim (8) CLOSED (10/22) 12:30pm \u2013 3:30pm",
+          "excluded_dates": [
+            "2026-10-22"
+          ],
+          "notes": "Session cell marked CLOSED (10/22).",
+          "pool_label_raw": null,
+          "start": "12:30",
+          "type": "lap_swim"
+        },
+        {
+          "day": "thursday",
+          "end": "19:00",
+          "evidence": "Lap Swim (8) 6:00pm \u2013 7:00pm",
+          "pool_label_raw": null,
+          "start": "18:00",
+          "type": "lap_swim"
+        },
+        {
+          "day": "friday",
+          "end": "10:30",
+          "evidence": "Senior Lap Swim (4 & shallow) 9:00am \u2013 10:30am",
+          "pool_label_raw": "4 & shallow",
+          "start": "09:00",
+          "type": "senior_swim"
+        },
+        {
+          "day": "friday",
+          "end": "12:00",
+          "evidence": "Lap Swim (4) 9:00am \u2013 12:00pm",
+          "pool_label_raw": null,
+          "start": "09:00",
+          "type": "lap_swim"
+        },
+        {
+          "day": "friday",
+          "end": "15:30",
+          "evidence": "Rec/Family Swim (shallow) 12:30pm \u2013 3:30pm",
+          "pool_label_raw": "shallow",
+          "start": "12:30",
+          "type": "family_swim"
+        },
+        {
+          "day": "friday",
+          "end": "15:30",
+          "evidence": "Lap Swim (8) 12:30pm \u2013 3:30pm",
+          "pool_label_raw": null,
+          "start": "12:30",
+          "type": "lap_swim"
+        },
+        {
+          "day": "saturday",
+          "end": "08:30",
+          "evidence": "Lap Swim (10) 7:00am \u2013 8:30am",
+          "pool_label_raw": null,
+          "start": "07:00",
+          "type": "lap_swim"
+        },
+        {
+          "day": "saturday",
+          "end": "15:00",
+          "evidence": "Rec/Family Swim (10) 1:30pm \u2013 3:00pm",
+          "pool_label_raw": null,
+          "start": "13:30",
+          "type": "family_swim"
+        },
+        {
+          "day": "saturday",
+          "end": "17:00",
+          "evidence": "Lap Swim (10) 3:30pm \u2013 5:00pm",
+          "pool_label_raw": null,
+          "start": "15:30",
+          "type": "lap_swim"
+        }
+      ]
+    },
+    "source_inventory": {
+      "cells": [
+        {
+          "bounds": [
+            34.49993999999999,
+            111.219,
+            148.31745600000002,
+            133.41899999999998
+          ],
+          "day": "tuesday",
+          "id": "p1-c1-b1",
+          "page": 1,
+          "text": "Lap Swim (10)\n7:30am \u2013 9:00am"
+        },
+        {
+          "bounds": [
+            34.49993999999999,
+            147.099,
+            148.31745600000002,
+            181.54067999999995
+          ],
+          "day": "tuesday",
+          "id": "p1-c1-b2",
+          "page": 1,
+          "text": "Senior Lap Swim\n(4 & shallow)\n9:00am \u2013 12:00pm"
+        },
+        {
+          "bounds": [
+            34.49993999999999,
+            195.81900000000002,
+            148.31745600000002,
+            218.01899999999995
+          ],
+          "day": "tuesday",
+          "id": "p1-c1-b3",
+          "page": 1,
+          "text": "Lap Swim (4)\n9:00am \u2013 12:00pm"
+        },
+        {
+          "bounds": [
+            34.49993999999999,
+            287.859,
+            148.31745600000002,
+            322.299
+          ],
+          "day": "tuesday",
+          "id": "p1-c1-b4",
+          "page": 1,
+          "text": "Rec/Family Swim\n(shallow)\n12:30pm \u2013 3:30pm"
+        },
+        {
+          "bounds": [
+            34.49993999999999,
+            347.979,
+            148.31745600000002,
+            370.17984
+          ],
+          "day": "tuesday",
+          "id": "p1-c1-b5",
+          "page": 1,
+          "text": "Lap Swim (8)\n12:30pm \u2013 3:30pm"
+        },
+        {
+          "bounds": [
+            34.49993999999999,
+            390.219,
+            148.31745600000002,
+            424.539
+          ],
+          "day": "tuesday",
+          "id": "p1-c1-b6",
+          "page": 1,
+          "text": "Bayview Safety Swim\n& Splash (10)\n3:30pm \u2013 6:00pm"
+        },
+        {
+          "bounds": [
+            34.49993999999999,
+            439.899,
+            148.31745600000002,
+            474.22116
+          ],
+          "day": "tuesday",
+          "id": "p1-c1-b7",
+          "page": 1,
+          "text": "Water Exercise\n(shallow)\n6:00pm \u2013 7:00pm"
+        },
+        {
+          "bounds": [
+            34.49993999999999,
+            487.179,
+            148.31745600000002,
+            509.259
+          ],
+          "day": "tuesday",
+          "id": "p1-c1-b8",
+          "page": 1,
+          "text": "Lap Swim (8)\n6:00pm \u2013 7:00pm"
+        },
+        {
+          "bounds": [
+            34.49993999999999,
+            520.899,
+            148.31745600000002,
+            555.3389999999999
+          ],
+          "day": "tuesday",
+          "id": "p1-c1-b9",
+          "page": 1,
+          "text": "RENTALS (10)\nMASTERS\n7:00pm \u2013 8:30pm"
+        },
+        {
+          "bounds": [
+            148.31745600000002,
+            147.099,
+            262.196241,
+            181.54067999999995
+          ],
+          "day": "wednesday",
+          "id": "p1-c2-b10",
+          "page": 1,
+          "text": "Senior Lap Swim\n(4 & shallow)\n9:00am \u2013 10:30am"
+        },
+        {
+          "bounds": [
+            148.31745600000002,
+            195.81900000000002,
+            262.196241,
+            218.01899999999995
+          ],
+          "day": "wednesday",
+          "id": "p1-c2-b11",
+          "page": 1,
+          "text": "Lap Swim (4)\n9:00am \u2013 12:00pm"
+        },
+        {
+          "bounds": [
+            148.31745600000002,
+            232.41816,
+            262.196241,
+            266.74032
+          ],
+          "day": "wednesday",
+          "id": "p1-c2-b12",
+          "page": 1,
+          "text": "Swim Lessons\n(shallow)\n10:30am \u2013 12:30pm"
+        },
+        {
+          "bounds": [
+            148.31745600000002,
+            287.859,
+            262.196241,
+            322.299
+          ],
+          "day": "wednesday",
+          "id": "p1-c2-b13",
+          "page": 1,
+          "text": "Rec/Family Swim\n(shallow)\n12:30pm \u2013 3:30pm"
+        },
+        {
+          "bounds": [
+            148.31745600000002,
+            347.979,
+            262.196241,
+            370.17984
+          ],
+          "day": "wednesday",
+          "id": "p1-c2-b14",
+          "page": 1,
+          "text": "Lap Swim (8)\n12:30pm \u2013 3:30pm"
+        },
+        {
+          "bounds": [
+            148.31745600000002,
+            390.219,
+            262.196241,
+            424.539
+          ],
+          "day": "wednesday",
+          "id": "p1-c2-b15",
+          "page": 1,
+          "text": "Bayview Safety Swim\n& Splash (10)\n3:30pm \u2013 6:00pm"
+        },
+        {
+          "bounds": [
+            148.31745600000002,
+            520.899,
+            262.196241,
+            555.3389999999999
+          ],
+          "day": "wednesday",
+          "id": "p1-c2-b16",
+          "page": 1,
+          "text": "RENTALS (10)\nSYNCHRO/HOCKEY\n6:00pm \u2013 8:00pm"
+        },
+        {
+          "bounds": [
+            262.196241,
+            111.219,
+            376.13677199999995,
+            133.41899999999998
+          ],
+          "day": "thursday",
+          "id": "p1-c3-b17",
+          "page": 1,
+          "text": "Lap Swim (10)\n7:30am \u2013 9:00am"
+        },
+        {
+          "bounds": [
+            262.196241,
+            147.099,
+            376.13677199999995,
+            181.54067999999995
+          ],
+          "day": "thursday",
+          "id": "p1-c3-b18",
+          "page": 1,
+          "text": "Senior Lap Swim\n(4 & shallow)\n9:00am \u2013 12:00pm"
+        },
+        {
+          "bounds": [
+            262.196241,
+            195.81900000000002,
+            376.13677199999995,
+            218.01899999999995
+          ],
+          "day": "thursday",
+          "id": "p1-c3-b19",
+          "page": 1,
+          "text": "Lap Swim (4)\n9:00am \u2013 12:00pm"
+        },
+        {
+          "bounds": [
+            262.196241,
+            281.739,
+            376.13677199999995,
+            328.299
+          ],
+          "day": "thursday",
+          "id": "p1-c3-b20",
+          "page": 1,
+          "text": "Rec/Family Swim\n(shallow)\nCLOSED (10/22)\n12:30pm \u2013 3:30pm"
+        },
+        {
+          "bounds": [
+            262.196241,
+            341.98308,
+            376.13677199999995,
+            376.30523999999997
+          ],
+          "day": "thursday",
+          "id": "p1-c3-b21",
+          "page": 1,
+          "text": "Lap Swim (8)\nCLOSED (10/22)\n12:30pm \u2013 3:30pm"
+        },
+        {
+          "bounds": [
+            262.196241,
+            390.219,
+            376.13677199999995,
+            424.539
+          ],
+          "day": "thursday",
+          "id": "p1-c3-b22",
+          "page": 1,
+          "text": "Bayview Safety Swim\n& Splash (10)\n3:30pm \u2013 6:00pm"
+        },
+        {
+          "bounds": [
+            262.196241,
+            439.899,
+            376.13677199999995,
+            474.22116
+          ],
+          "day": "thursday",
+          "id": "p1-c3-b23",
+          "page": 1,
+          "text": "Water Exercise\n(shallow)\n6:00pm \u2013 7:00pm"
+        },
+        {
+          "bounds": [
+            262.196241,
+            487.179,
+            376.13677199999995,
+            509.259
+          ],
+          "day": "thursday",
+          "id": "p1-c3-b24",
+          "page": 1,
+          "text": "Lap Swim (8)\n6:00pm \u2013 7:00pm"
+        },
+        {
+          "bounds": [
+            262.196241,
+            520.899,
+            376.13677199999995,
+            555.3389999999999
+          ],
+          "day": "thursday",
+          "id": "p1-c3-b25",
+          "page": 1,
+          "text": "RENTALS (10)\nMASTERS\n7:00pm \u2013 8:30pm"
+        },
+        {
+          "bounds": [
+            376.13677199999995,
+            147.099,
+            490.52734499999997,
+            181.54067999999995
+          ],
+          "day": "friday",
+          "id": "p1-c4-b26",
+          "page": 1,
+          "text": "Senior Lap Swim\n(4 & shallow)\n9:00am \u2013 10:30am"
+        },
+        {
+          "bounds": [
+            376.13677199999995,
+            195.81900000000002,
+            490.52734499999997,
+            218.01899999999995
+          ],
+          "day": "friday",
+          "id": "p1-c4-b27",
+          "page": 1,
+          "text": "Lap Swim (4)\n9:00am \u2013 12:00pm"
+        },
+        {
+          "bounds": [
+            376.13677199999995,
+            232.41816,
+            490.52734499999997,
+            266.74032
+          ],
+          "day": "friday",
+          "id": "p1-c4-b28",
+          "page": 1,
+          "text": "Swim Lessons\n(shallow)\n10:30am \u2013 12:30pm"
+        },
+        {
+          "bounds": [
+            376.13677199999995,
+            287.859,
+            490.52734499999997,
+            322.299
+          ],
+          "day": "friday",
+          "id": "p1-c4-b29",
+          "page": 1,
+          "text": "Rec/Family Swim\n(shallow)\n12:30pm \u2013 3:30pm"
+        },
+        {
+          "bounds": [
+            376.13677199999995,
+            347.98895999999996,
+            490.52734499999997,
+            370.1898
+          ],
+          "day": "friday",
+          "id": "p1-c4-b30",
+          "page": 1,
+          "text": "Lap Swim (8)\n12:30pm \u2013 3:30pm"
+        },
+        {
+          "bounds": [
+            376.13677199999995,
+            390.219,
+            490.52734499999997,
+            424.539
+          ],
+          "day": "friday",
+          "id": "p1-c4-b31",
+          "page": 1,
+          "text": "Bayview Safety Swim\n& Splash (10)\n3:30pm \u2013 6:00pm"
+        },
+        {
+          "bounds": [
+            376.13677199999995,
+            520.899,
+            490.52734499999997,
+            555.3389999999999
+          ],
+          "day": "friday",
+          "id": "p1-c4-b32",
+          "page": 1,
+          "text": "RENTALS (10)\nYOUTH HOCKEY\n6:00pm \u2013 8:00pm"
+        },
+        {
+          "bounds": [
+            490.52734499999997,
+            111.219,
+            605.367483,
+            133.41899999999998
+          ],
+          "day": "saturday",
+          "id": "p1-c5-b33",
+          "page": 1,
+          "text": "Lap Swim (10)\n7:00am \u2013 8:30am"
+        },
+        {
+          "bounds": [
+            490.52734499999997,
+            147.099,
+            605.367483,
+            181.54067999999995
+          ],
+          "day": "saturday",
+          "id": "p1-c5-b34",
+          "page": 1,
+          "text": "RENTALS (7)\nMASTERS/SYNCHRO\n9:00am \u2013 11:00am"
+        },
+        {
+          "bounds": [
+            490.52734499999997,
+            232.41816,
+            605.367483,
+            266.74032
+          ],
+          "day": "saturday",
+          "id": "p1-c5-b35",
+          "page": 1,
+          "text": "Swim Lessons\n(1 & shallow)\n9:00am \u2013 12:00pm"
+        },
+        {
+          "bounds": [
+            490.52734499999997,
+            293.979,
+            605.367483,
+            316.179
+          ],
+          "day": "saturday",
+          "id": "p1-c5-b36",
+          "page": 1,
+          "text": "Rec/Family Swim (10)\n1:30pm \u2013 3:00pm"
+        },
+        {
+          "bounds": [
+            490.52734499999997,
+            396.339,
+            605.367483,
+            418.419
+          ],
+          "day": "saturday",
+          "id": "p1-c5-b37",
+          "page": 1,
+          "text": "Lap Swim (10)\n3:30pm \u2013 5:00pm"
+        }
+      ],
+      "issues": [],
+      "notices": [
+        {
+          "bounds": null,
+          "facility": true,
+          "id": "p1-notice-1",
+          "page": 1,
+          "physical_pool": null,
+          "session_cell": null,
+          "text": "Holiday Closures\nNovember 11, 2026\nNovember 26, 2026\nNovember 27, 2026"
+        },
+        {
+          "bounds": null,
+          "facility": true,
+          "id": "p1-notice-2",
+          "page": 1,
+          "physical_pool": null,
+          "session_cell": null,
+          "text": "Training Closures\nDecember 12, 2026"
+        },
+        {
+          "bounds": [
+            262.196241,
+            281.739,
+            376.13677199999995,
+            328.299
+          ],
+          "facility": false,
+          "id": "p1-c3-b20-notice",
+          "page": 1,
+          "physical_pool": null,
+          "session_cell": "p1-c3-b20",
+          "text": "Rec/Family Swim\n(shallow)\nCLOSED (10/22)\n12:30pm \u2013 3:30pm"
+        },
+        {
+          "bounds": [
+            262.196241,
+            341.98308,
+            376.13677199999995,
+            376.30523999999997
+          ],
+          "facility": false,
+          "id": "p1-c3-b21-notice",
+          "page": 1,
+          "physical_pool": null,
+          "session_cell": "p1-c3-b21",
+          "text": "Lap Swim (8)\nCLOSED (10/22)\n12:30pm \u2013 3:30pm"
+        }
+      ],
+      "page_count": 1,
+      "text": "PAGE 1\nMLK POOL FALL 2026 SCHEDULE pt.2 (SEPTEMBER 29 \u2013 DECEMBER 12)\nTUESDAY WEDNESDAY THURSDAY FRIDAY SATURDAY Cost:\nLap Swim (10) Lap Swim (10) Lap Swim (10) $8 adults; $2 youth\n7:30am \u2013 9:00am 7:30am \u2013 9:00am 7:00am \u2013 8:30am\nNotes:\nSenior Lap Swim Senior Lap Swim Senior Lap Swim Senior Lap Swim RENTALS (7)\n(4 & shallow) (4 & shallow) (4 & shallow) (4 & shallow) MASTERS/SYNCHRO \u2022 Holiday Closures\n9:00am \u2013 12:00pm 9:00am \u2013 10:30am 9:00am \u2013 12:00pm 9:00am \u2013 10:30am 9:00am \u2013 11:00am November 11, 2026\nNovember 26, 2026\nLap Swim (4) Lap Swim (4) Lap Swim (4) Lap Swim (4)\nNovember 27, 2026\n9:00am \u2013 12:00pm 9:00am \u2013 12:00pm 9:00am \u2013 12:00pm 9:00am \u2013 12:00pm\n\u2022 Training Closures\nSwim Lessons Swim Lessons Swim Lessons December 12, 2026\n(shallow) (shallow) (1 & shallow) \u2022 Children under 48\u201d\n10:30am \u2013 12:30pm 10:30am \u2013 12:30pm 9:00am \u2013 12:00pm\nmust always be\naccompanied by an\nRec/Family Swim\nRec/Family Swim Rec/Family Swim Rec/Family Swim\n(shallow) Rec/Family Swim (10) adult within arm\u2019s\n(shallow) (shallow) (shallow)\nCLOSED (10/22) 1:30pm \u2013 3:00pm reach.\n12:30pm \u2013 3:30pm 12:30pm \u2013 3:30pm 12:30pm \u2013 3:30pm\n12:30pm \u2013 3:30pm \u2022 () indicates the number\nof lanes available for\nLap Swim (8)\nLap Swim (8) Lap Swim (8) Lap Swim (8) designated program.\nCLOSED (10/22)\n12:30pm \u2013 3:30pm 12:30pm \u2013 3:30pm 12:30pm \u2013 3:30pm\n12:30pm \u2013 3:30pm\nPool Info:\nBayview Safety Swim Bayview Safety Swim Bayview Safety Swim Bayview Safety Swim\nLap Swim (10) Aquatics Facility Supervisor\n& Splash (10) & Splash (10) & Splash (10) & Splash (10)\n3:30pm \u2013 5:00pm Dan Ngo\n3:30pm \u2013 6:00pm 3:30pm \u2013 6:00pm 3:30pm \u2013 6:00pm 3:30pm \u2013 6:00pm\nDan.Ngo@sfgov.org\nWater Exercise Water Exercise\n(shallow) (shallow) 5701 3rd Street\n6:00pm \u2013 7:00pm 6:00pm \u2013 7:00pm\nSan Francisco, CA 94124\nLap Swim (8) Lap Swim (8) (415) 822-2807\n6:00pm \u2013 7:00pm 6:00pm \u2013 7:00pm www.sfrecpark.org\nRENTALS (10) RENTALS (10) RENTALS (10) RENTALS (10)\nMASTERS SYNCHRO/HOCKEY MASTERS YOUTH HOCKEY\n7:00pm \u2013 8:30pm 6:00pm \u2013 8:00pm 7:00pm \u2013 8:30pm 6:00pm \u2013 8:00pm"
+    },
+    "source_window": {
+      "actual": [
+        "2026-09-29",
+        "2026-12-12"
+      ],
+      "expected": [
+        "2026-09-29",
+        "2026-12-12"
+      ],
+      "issues": [],
+      "ok": true
+    },
+    "visual_pages": []
+  },
+  "extracted_at": "2026-11-04T21:45:07.247956+00:00",
+  "model": "gpt-5.5-2026-04-23",
+  "payload": {
+    "closures": [
+      {
+        "end": "2026-11-11",
+        "reason": "Holiday Closures",
+        "reason_code": "holiday",
+        "source_notices": [
+          {
+            "id": "p1-notice-1",
+            "text": "Holiday Closures\nNovember 11, 2026\nNovember 26, 2026\nNovember 27, 2026"
+          }
+        ],
+        "start": "2026-11-11"
+      },
+      {
+        "end": "2026-11-26",
+        "reason": "Holiday Closures",
+        "reason_code": "holiday",
+        "source_notices": [
+          {
+            "id": "p1-notice-1",
+            "text": "Holiday Closures\nNovember 11, 2026\nNovember 26, 2026\nNovember 27, 2026"
+          }
+        ],
+        "start": "2026-11-26"
+      },
+      {
+        "end": "2026-11-27",
+        "reason": "Holiday Closures",
+        "reason_code": "holiday",
+        "source_notices": [
+          {
+            "id": "p1-notice-1",
+            "text": "Holiday Closures\nNovember 11, 2026\nNovember 26, 2026\nNovember 27, 2026"
+          }
+        ],
+        "start": "2026-11-27"
+      },
+      {
+        "end": "2026-12-12",
+        "reason": "Training Closures",
+        "reason_code": "staff_training",
+        "source_notices": [
+          {
+            "id": "p1-notice-2",
+            "text": "Training Closures\nDecember 12, 2026"
+          }
+        ],
+        "start": "2026-12-12"
+      }
+    ],
+    "effective_end": "2026-12-12",
+    "effective_start": "2026-09-29",
+    "schedule_basis": "swim_schedule",
+    "sessions": [
+      {
+        "day": "tuesday",
+        "end": "09:00",
+        "evidence": "Lap Swim (10) 7:30am \u2013 9:00am",
+        "start": "07:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "12:00",
+        "evidence": "Senior Lap Swim (4 & shallow) 9:00am \u2013 12:00pm",
+        "pool": "4 & shallow",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "12:00",
+        "evidence": "Lap Swim (4) 9:00am \u2013 12:00pm",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim (shallow) 12:30pm \u2013 3:30pm",
+        "pool": "shallow",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "15:30",
+        "evidence": "Lap Swim (8) 12:30pm \u2013 3:30pm",
+        "start": "12:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "19:00",
+        "evidence": "Lap Swim (8) 6:00pm \u2013 7:00pm",
+        "start": "18:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "10:30",
+        "evidence": "Senior Lap Swim (4 & shallow) 9:00am \u2013 10:30am",
+        "pool": "4 & shallow",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "12:00",
+        "evidence": "Lap Swim (4) 9:00am \u2013 12:00pm",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim (shallow) 12:30pm \u2013 3:30pm",
+        "pool": "shallow",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "15:30",
+        "evidence": "Lap Swim (8) 12:30pm \u2013 3:30pm",
+        "start": "12:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "09:00",
+        "evidence": "Lap Swim (10) 7:30am \u2013 9:00am",
+        "start": "07:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "12:00",
+        "evidence": "Senior Lap Swim (4 & shallow) 9:00am \u2013 12:00pm",
+        "pool": "4 & shallow",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "12:00",
+        "evidence": "Lap Swim (4) 9:00am \u2013 12:00pm",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim (shallow) CLOSED (10/22) 12:30pm \u2013 3:30pm",
+        "excluded_dates": [
+          "2026-10-22"
+        ],
+        "notes": "Session cell marked CLOSED (10/22).",
+        "pool": "shallow",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "15:30",
+        "evidence": "Lap Swim (8) CLOSED (10/22) 12:30pm \u2013 3:30pm",
+        "excluded_dates": [
+          "2026-10-22"
+        ],
+        "notes": "Session cell marked CLOSED (10/22).",
+        "start": "12:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "19:00",
+        "evidence": "Lap Swim (8) 6:00pm \u2013 7:00pm",
+        "start": "18:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "10:30",
+        "evidence": "Senior Lap Swim (4 & shallow) 9:00am \u2013 10:30am",
+        "pool": "4 & shallow",
+        "start": "09:00",
+        "type": "senior_swim"
+      },
+      {
+        "day": "friday",
+        "end": "12:00",
+        "evidence": "Lap Swim (4) 9:00am \u2013 12:00pm",
+        "start": "09:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "15:30",
+        "evidence": "Rec/Family Swim (shallow) 12:30pm \u2013 3:30pm",
+        "pool": "shallow",
+        "start": "12:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "friday",
+        "end": "15:30",
+        "evidence": "Lap Swim (8) 12:30pm \u2013 3:30pm",
+        "start": "12:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "08:30",
+        "evidence": "Lap Swim (10) 7:00am \u2013 8:30am",
+        "start": "07:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "15:00",
+        "evidence": "Rec/Family Swim (10) 1:30pm \u2013 3:00pm",
+        "start": "13:30",
+        "type": "family_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "17:00",
+        "evidence": "Lap Swim (10) 3:30pm \u2013 5:00pm",
+        "start": "15:30",
+        "type": "lap_swim"
+      }
+    ]
+  },
+  "pdf_sha256": "edca152a4fa61deb96bd55e5ed54a0fd82d1e3d464c07fca0392213965044725",
+  "prompt_sha256": "fc1ba7fba37a6326844c9b48b2b31530dab6e4f6059024897a32aa478a43802b",
+  "provider": "openai",
+  "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/30210",
+  "usage": {
+    "input_tokens": 4455,
+    "input_tokens_details": {
+      "cache_write_tokens": 0,
+      "cached_tokens": 0
+    },
+    "output_tokens": 2146,
+    "output_tokens_details": {
+      "reasoning_tokens": 516
+    },
+    "total_tokens": 6601
+  }
+}
