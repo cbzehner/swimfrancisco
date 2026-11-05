@@ -19,206 +19,6 @@ access_summary = "FITNESS SF Fillmore is the FITNESS SF location with a 25-yard,
 [[extra.schedules]]
 sessions = []
 closures = []
-effective_start = "2026-10-12"
-schedule_basis = "facility_hours"
-effective_end = "2026-10-18"
-last_verified_at = "2026-10-12"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "05:00"
-end = "23:59"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "05:00"
-end = "23:59"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "05:00"
-end = "23:59"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "05:00"
-end = "23:59"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "05:00"
-end = "23:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "07:00"
-end = "20:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "07:00"
-end = "20:00"
-label = "Club hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
-effective_start = "2026-10-19"
-schedule_basis = "facility_hours"
-effective_end = "2026-10-19"
-last_verified_at = "2026-10-19"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "05:00"
-end = "23:59"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "05:00"
-end = "23:59"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "05:00"
-end = "23:59"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "05:00"
-end = "23:59"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "05:00"
-end = "23:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "07:00"
-end = "20:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "07:00"
-end = "20:00"
-label = "Club hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
-effective_start = "2026-10-20"
-schedule_basis = "facility_hours"
-effective_end = "2026-10-20"
-last_verified_at = "2026-10-20"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "05:00"
-end = "23:59"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "05:00"
-end = "23:59"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "05:00"
-end = "23:59"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "05:00"
-end = "23:59"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "05:00"
-end = "23:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "07:00"
-end = "20:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "07:00"
-end = "20:00"
-label = "Club hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
-effective_start = "2026-10-21"
-schedule_basis = "facility_hours"
-effective_end = "2026-10-21"
-last_verified_at = "2026-10-21"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "05:00"
-end = "23:59"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "05:00"
-end = "23:59"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "05:00"
-end = "23:59"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "05:00"
-end = "23:59"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "05:00"
-end = "23:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "07:00"
-end = "20:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "07:00"
-end = "20:00"
-label = "Club hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
 effective_start = "2026-10-22"
 schedule_basis = "facility_hours"
 effective_end = "2026-10-22"
@@ -471,8 +271,58 @@ sessions = []
 closures = []
 effective_start = "2026-10-30"
 schedule_basis = "facility_hours"
-effective_end = "2026-11-12"
+effective_end = "2026-11-04"
 last_verified_at = "2026-10-30"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "05:00"
+end = "23:59"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "05:00"
+end = "23:59"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "05:00"
+end = "23:59"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "05:00"
+end = "23:59"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "05:00"
+end = "23:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "07:00"
+end = "20:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "sunday"
+start = "07:00"
+end = "20:00"
+label = "Club hours"
+
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-11-05"
+schedule_basis = "facility_hours"
+effective_end = "2026-11-18"
+last_verified_at = "2026-11-05"
 
 [[extra.schedules.access_hours]]
 day = "monday"
