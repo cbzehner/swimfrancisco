@@ -19,256 +19,6 @@ access_summary = "Chinatown YMCA is a membership YMCA branch with a saltwater po
 [[extra.schedules]]
 sessions = []
 closures = []
-effective_start = "2026-10-12"
-schedule_basis = "pool_hours"
-effective_end = "2026-10-18"
-last_verified_at = "2026-10-12"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "08:00"
-end = "15:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "08:00"
-end = "15:30"
-label = "Pool hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
-effective_start = "2026-10-19"
-schedule_basis = "pool_hours"
-effective_end = "2026-10-19"
-last_verified_at = "2026-10-19"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "08:00"
-end = "15:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "08:00"
-end = "15:30"
-label = "Pool hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
-effective_start = "2026-10-20"
-schedule_basis = "pool_hours"
-effective_end = "2026-10-20"
-last_verified_at = "2026-10-20"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "08:00"
-end = "15:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "08:00"
-end = "15:30"
-label = "Pool hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
-effective_start = "2026-10-21"
-schedule_basis = "pool_hours"
-effective_end = "2026-10-21"
-last_verified_at = "2026-10-21"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "08:00"
-end = "15:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "08:00"
-end = "15:30"
-label = "Pool hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
-effective_start = "2026-10-22"
-schedule_basis = "pool_hours"
-effective_end = "2026-10-22"
-last_verified_at = "2026-10-22"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "08:00"
-end = "19:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "08:00"
-end = "15:30"
-label = "Pool hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "08:00"
-end = "15:30"
-label = "Pool hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
 effective_start = "2026-10-23"
 schedule_basis = "pool_hours"
 effective_end = "2026-10-23"
@@ -470,8 +220,71 @@ label = "Pool hours"
 sessions = []
 effective_start = "2026-10-30"
 schedule_basis = "pool_hours"
-effective_end = "2026-11-12"
+effective_end = "2026-11-05"
 last_verified_at = "2026-10-30"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "08:00"
+end = "19:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "08:00"
+end = "19:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "08:00"
+end = "19:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "08:00"
+end = "19:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "08:00"
+end = "19:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "08:00"
+end = "15:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "sunday"
+start = "08:00"
+end = "15:30"
+label = "Pool hours"
+
+[[extra.schedules.closures]]
+start = "2026-11-11"
+end = "2026-11-11"
+reason = "Wednesday, November 11 (All Staff Training) CLOSED Wednesday, November 11 (All Staff Training) Closed"
+reason_code = "staff_training"
+
+[[extra.schedules.closures.source_notices]]
+id = "040041ec621a0bb6-1"
+text = "Wednesday, November 11 (All Staff Training) CLOSED"
+
+[[extra.schedules.closures.source_notices]]
+id = "f25a4ff56fbe617b-1"
+text = "Wednesday, November 11 (All Staff Training) Closed"
+
+[[extra.schedules]]
+sessions = []
+effective_start = "2026-11-06"
+schedule_basis = "pool_hours"
+effective_end = "2026-11-19"
+last_verified_at = "2026-11-06"
 
 [[extra.schedules.access_hours]]
 day = "monday"
