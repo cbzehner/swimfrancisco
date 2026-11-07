@@ -1291,3 +1291,44 @@ isolation, read-only Cloudflare access, restart with concurrent devenv use,
 and export of a disposable commit/deletion/new file passed. The export bundle
 verified, its patch applied cleanly to the recorded base, ignored files were
 excluded, and the guest index was unchanged.
+
+## Koret availability withdrawal (November 7, 2026)
+
+The [official USF pool page](https://www.usfca.edu/koret/facilities/indoor-swimming)
+links the [pool lane workbook](https://docs.google.com/spreadsheets/d/1PcFSl3ndScM2-SZnubwDvBlbhpmbFsVjEPK-yGilZU0/edit?gid=1958899859&pli=1).
+The first retained closure observation, October 22, has only `Pool Closure
+Notice` visible. Its A4 cell says “The Pool is Closed” for repairs and maintenance,
+with November 9 the *soonest* possible reopening. The fresh November 7 workbook
+and full-workbook PDF instead say “Anticipated Reopen: January 2027 / Date TBD.”
+Neither notice confirms a reopening. All weekly sheets are hidden and cannot
+supply current swimming hours.
+
+The retained originals are:
+
+- [`2026-10-22-7a48aa48b21c`](../data/koret-center/2026-10-22-7a48aa48b21c/):
+  XLSX SHA-256 `7a48aa48b21c1009cddecd3002917e80d3aef52a7532e447a340ca8931d26d50`.
+- [`2026-11-07-443781804a7b`](../data/koret-center/2026-11-07-443781804a7b/):
+  XLSX SHA-256 `443781804a7bd0b3e7f5c235ff84ffc0bd0c625c03668fc7229ae9df6425ffb8`;
+  PDF SHA-256 `8c8e5d4d359df918598e972b1c37cb8e644660c5429b92856752ce5da1dabf4b`.
+
+These are original-byte hashes. Both capture directories are explicitly pinned
+against pruning. The November 7 source was inspected by the agent; it has no
+`reviewed.json` and is not a new human attestation or approval of swimming hours.
+The closure-only parser hold remains in force.
+
+The August 12 availability now ends October 21, inclusive, withdrawing old-hour
+recommendations from the first retained closure observation on October 22.
+This is our recommendation boundary, **not** a known closure start or a claim
+that the earlier hours were available through October 21. All three historical
+windows, sessions, verification dates, and original reviewed envelopes remain
+unchanged apart from that final validity bound. The five localized summaries
+lead with the dated closure warning and retain membership/pass restrictions.
+
+The existing UI therefore reports CHECK/NOT_VERIFIED and no next swim; the
+coverage check reports a gap without a successor. January prose creates no
+future window or automatic reopening. A new reopening needs current official
+visible hours and an explicitly reviewed window with a new effective start.
+Do not project or save a stale Koret review: `schedules project koret-center`
+can replace the matching August window with the old unbounded payload without
+a fresh review. Ordinary builds preserve the correction; closure-only extraction
+holds, and Koret is not eligible for automatic publication.

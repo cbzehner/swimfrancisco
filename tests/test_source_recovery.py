@@ -1,11 +1,12 @@
-"""Synthetic source changes reproducing the November extraction holds."""
+"""Frozen and synthetic sources reproducing schedule review holds."""
+import hashlib
 import json
 import re
 from datetime import date
 from pathlib import Path
 
 import pytest
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 
 from schedules.direct_sources import verify_direct_artifact
 from schedules.direct_sources.errors import DirectSourceError
@@ -28,6 +29,34 @@ def test_koret_closure_only_workbook_does_not_resurrect_hidden_hours(tmp_path):
     workbook.save(path)
     with pytest.raises(DirectSourceError, match="review"):
         _extract_koret(path)  # No invalid closure model or invented reopening date.
+
+
+@pytest.mark.parametrize("capture,sha256,pdf_sha256,notice", [
+    ("2026-10-22-7a48aa48b21c", "7a48aa48b21c1009cddecd3002917e80d3aef52a7532e447a340ca8931d26d50",
+     "c94402db2734cfe74dec979017091a6e03946ffd24fced6d8dd48fb34eba5a25",
+     "The soonest the pool will reopen is 11/9"),
+    ("2026-11-07-443781804a7b", "443781804a7bd0b3e7f5c235ff84ffc0bd0c625c03668fc7229ae9df6425ffb8",
+     "8c8e5d4d359df918598e972b1c37cb8e644660c5429b92856752ce5da1dabf4b",
+     "Anticipated Reopen: January 2027\nDate TBD"),
+])
+def test_koret_withdrawal_evidence_stays_held(capture, sha256, pdf_sha256, notice):
+    directory = Path(__file__).parents[1] / "data/koret-center" / capture
+    path = directory / "source.xlsx"
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == sha256
+    assert (directory / "source.sha256").read_text().strip() == sha256
+    assert hashlib.sha256((directory / "source.pdf").read_bytes()).hexdigest() == pdf_sha256
+    assert not (directory / "reviewed.json").exists()  # Withdrawal is not a new attestation.
+    workbook = load_workbook(path, read_only=True, data_only=True)
+    try:
+        assert [sheet.title for sheet in workbook if sheet.sheet_state == "visible"] == ["Pool Closure Notice"]
+        text = workbook["Pool Closure Notice"]["A4"].value
+        assert "The Pool is Closed" in text
+        assert notice in text
+        assert any(sheet.sheet_state == "hidden" for sheet in workbook)
+    finally:
+        workbook.close()
+    with pytest.raises(DirectSourceError, match="closure-only workbook requires review"):
+        _extract_koret(path)
 
 
 def test_pomeroy_explicit_multi_day_holiday_checks_every_weekday():

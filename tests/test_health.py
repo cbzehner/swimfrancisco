@@ -1,5 +1,6 @@
 from datetime import date
 from pathlib import Path
+import tomllib
 
 import pytest
 
@@ -54,6 +55,19 @@ def test_report_uses_canonical_pools_and_preserves_content(tmp_path):
     assert report["checked_pools"] == 1
     assert report["alerts"] == [{"slug": "pool", "title": "Pool", "gap_start": "2026-10-19", "next_start": None}]
     assert (tmp_path / "pool.md").read_text() == canonical
+
+
+@pytest.mark.parametrize("today", [
+    date(2026, 11, 7), date(2026, 10, 22), date(2026, 11, 9),
+    date(2027, 1, 1), date(2027, 1, 30), date(2027, 6, 5),
+])
+def test_withdrawn_koret_hours_no_longer_hide_coverage_gaps(today):
+    path = Path(__file__).parents[1] / "content/spots/koret-center.md"
+    page = tomllib.loads(path.read_text().split("+++", 2)[1])
+    # A separately reviewed reopening may add a new window; it must not
+    # resurrect the withdrawn August hours or hide gaps in their coverage.
+    history = [s for s in page["extra"]["schedules"] if s["effective_start"] < "2026-10-22"]
+    assert coverage_gap(history, today) == {"gap_start": today.isoformat(), "next_start": None}
 
 
 def test_coverage_job_remains_enabled_when_publication_is_disabled():

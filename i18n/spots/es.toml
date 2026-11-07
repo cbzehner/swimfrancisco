@@ -194,9 +194,9 @@ url = "https://www.jccsf.org/fitness/aquatics/"
 [spots.koret-center]
 title = "Koret Center"
 slug = "koret-center"
-access_notes = [ "Consulta el horario de carriles de Koret antes de ir; la página oficial advierte que el número de carriles varía por lecciones, equipos y eventos." ]
-access_summary = "Koret Center de USF tiene una piscina cubierta grande. Los carriles suelen estar disponibles durante el horario de piscina, pero el acceso y los pases dependen de membresía USF/Koret u opciones de pase elegibles."
-body = "Koret es una de las instalaciones de piscina cubierta más grandes de la ciudad, con natación de carril, masters, lecciones, equipos juveniles y eventos compartiendo el agua."
+access_notes = [ "No uses los horarios históricos para planear una visita a nadar. Consulta el aviso actual de la piscina de USF antes de ir." ]
+access_summary = "La piscina Koret de USF está cerrada por reparaciones y mantenimiento, según el aviso oficial consultado el 7 de noviembre de 2026. La reapertura se prevé para enero de 2027, con fecha por confirmar; no hay un nuevo horario verificado. El acceso y los pases siguen dependiendo de membresía USF/Koret u opciones de pase elegibles."
+body = "Koret es una de las instalaciones de piscina cubierta más grandes de la ciudad, con natación de carril, masters, lecciones, equipos juveniles y eventos compartiendo el agua.\n\nLa fecha final del 21 de octubre de 2026 marca el límite de nuestras recomendaciones, basado en el aviso de cierre de USF conservado del 22 de octubre. No es una fecha conocida de inicio del cierre. [Aviso oficial de la piscina](https://docs.google.com/spreadsheets/d/1PcFSl3ndScM2-SZnubwDvBlbhpmbFsVjEPK-yGilZU0/edit?gid=1958899859&pli=1)."
 
 [[spots.koret-center.pricing]]
 label = "Miembro / pase elegible"

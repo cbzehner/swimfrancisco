@@ -4,6 +4,8 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { splitFrontMatter } from "../../scripts/lib/spot-frontmatter.mjs";
 
 import {
   computeStatus,
@@ -20,6 +22,56 @@ import {
   resolveActiveSchedule,
   resolveHorizon,
 } from "../../static/js/helpers/board.mjs";
+
+const koretPath = new URL("../../content/spots/koret-center.md", import.meta.url);
+const { front: koretFront } = splitFrontMatter(readFileSync(koretPath, "utf8"), koretPath.pathname);
+function assertWithdrawnKoretHours(schedules) {
+  // A reviewed successor may legitimately prune every old window.
+  const history = { schedules: schedules.filter((window) => window.effective_start < "2026-10-22") };
+  for (const window of history.schedules) {
+    assert.ok(window.effective_end && window.effective_end <= "2026-10-21", "Withdrawn Koret hours must end by October 21");
+    assert.equal(new Date(window.effective_end).toISOString().slice(0, 10), window.effective_end);
+  }
+  // just pins TZ=America/Los_Angeles for these wall-clock fixtures.
+  for (const dateTime of [
+    "2026-11-07T10:00:00", "2026-10-22T00:00:00", "2026-11-09T10:00:00",
+    "2027-01-01T10:00:00", "2027-01-30T10:00:00", "2027-06-05T10:00:00",
+  ]) {
+    const now = new Date(dateTime);
+    const board = computeStatus(history, now);
+    assert.equal(board.status, history.schedules.length ? "CHECK" : PLACEHOLDER, dateTime);
+    if (history.schedules.length) {
+      assert.equal(board.nextKind, "schedule_ended");
+      assert.deepEqual(board.nextArgs, { iso: resolveActiveSchedule(history, now).effective_end });
+    }
+    const detail = computeDetailStatus(history, now);
+    assert.equal(detail.kind, "NOT_VERIFIED");
+    assert.equal(detail.nextDropIn, null);
+    assert.equal(findNextDropIn(history, now), null);
+    const horizon = { kind: "window", date: dateTime.slice(0, 10),
+      day: ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"][now.getDay()],
+      start: 0, end: 24 * 60 };
+    const planned = computeWindowAvailability(history, horizon);
+    assert.equal(planned.status, history.schedules.length ? "CHECK" : "NO SESSION");
+    assert.equal(planned.bestWindow, null);
+  }
+}
+
+test("Koret's withdrawn hours never supply swimming after the closure observation", () => {
+  assertWithdrawnKoretHours(koretFront.extra.schedules);
+});
+
+test("Koret's withdrawal permits reopening after pruning but rejects stale hours", () => {
+  // Synthetic fixtures, not official reopening dates or hours.
+  const reopening = { effective_start: "2027-01-09", effective_end: "2027-01-22",
+    sessions: [{ day: "saturday", type: "lap_swim", start: "09:00", end: "11:00" }] };
+  assertWithdrawnKoretHours([reopening]);
+  assert.equal(computeStatus({ schedules: [reopening] }, new Date("2027-01-09T10:00:00")).status, "OPEN");
+  assertWithdrawnKoretHours([{ ...reopening, effective_start: "2026-08-12", effective_end: "2026-10-21" }]);
+  for (const end of [undefined, "2027-01-08"]) {
+    assert.throws(() => assertWithdrawnKoretHours([{ ...reopening, effective_start: "2026-08-12", effective_end: end }]), /Withdrawn Koret hours must end/);
+  }
+});
 
 function boardShape(partial) {
   return {

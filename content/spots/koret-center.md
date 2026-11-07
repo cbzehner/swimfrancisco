@@ -14,8 +14,8 @@ day_pass_price = "$30"
 setpoint_label = "80–82°F"
 access_mode = "limited_public"
 payment_model = "session"
-access_notes = [ "Check Koret's pool lane schedule before going; the official page warns lane counts vary with lessons, teams, and events." ]
-access_summary = "USF's Koret Center has a large indoor pool. Lap lanes are generally available during pool hours, but access and passes depend on USF/Koret membership or eligible pass options."
+access_notes = [ "Do not use the historical hours to plan a swim. Check USF's current pool notice before going." ]
+access_summary = "USF's Koret pool is closed for repairs and maintenance, per the official notice checked November 7, 2026. Reopening is anticipated in January 2027, date TBD; no reopening schedule is verified. Access and passes still depend on USF/Koret membership or eligible pass options."
 
 [[extra.schedules]]
 closures = []
@@ -111,6 +111,7 @@ reason_code = "juneteenth"
 [[extra.schedules]]
 closures = []
 effective_start = "2026-08-12"
+effective_end = "2026-10-21"
 schedule_basis = "pool_hours"
 last_verified_at = "2026-08-12"
 
@@ -168,3 +169,5 @@ payment_model = "membership"
 +++
 
 Koret is one of the city's larger indoor pool facilities, with lap swim, masters swimming, lessons, youth teams, and events sharing the water.
+
+The October 21, 2026 end date is our recommendation cutoff, based on the retained October 22 USF closure notice. It is not a known closure start date. [Official pool notice](https://docs.google.com/spreadsheets/d/1PcFSl3ndScM2-SZnubwDvBlbhpmbFsVjEPK-yGilZU0/edit?gid=1958899859&pli=1).

@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
+from schedules.health import coverage_gap
 from schedules.merge import merge, pick_active_schedule, read_schedule_snapshot
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -326,6 +327,21 @@ def _spot_with_windows(target: Path, windows: list[tuple[str, str | None]]) -> P
         "\n" + "\n".join(blocks) + "+++\nBody\n"
     )
     return target
+
+
+def test_koret_reopening_can_replace_withdrawn_history(tmp_path):
+    # Synthetic reopening, not official USF dates or hours. Keep the seed fixed
+    # so later legitimate catalog updates cannot turn this into a no-op test.
+    target = _spot_with_windows(tmp_path / "koret-center.md", [("2026-08-12", "2026-10-21")])
+    reopening = {"effective_start": "2027-01-09", "effective_end": "2027-01-22",
+                 "schedule_basis": "pool_hours", "closures": [],
+                 "sessions": [{"day": "saturday", "type": "lap_swim", "start": "09:00", "end": "11:00"}]}
+    assert merge(target, reopening, today=date(2027, 1, 8))
+    schedules = _read_schedules_array(target)
+    assert [s["effective_start"] for s in schedules] == ["2027-01-09"]
+    assert pick_active_schedule(schedules, "2027-01-09")["sessions"] == reopening["sessions"]
+    assert coverage_gap(schedules, date(2027, 1, 8)) == {"gap_start": "2027-01-08", "next_start": "2027-01-09"}
+    assert coverage_gap(schedules, date(2027, 1, 9)) is None
 
 
 def test_merge_drops_windows_that_expired_more_than_two_weeks_ago(tmp_path):

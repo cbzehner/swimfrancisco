@@ -194,9 +194,9 @@ url = "https://www.jccsf.org/fitness/aquatics/"
 [spots.koret-center]
 title = "Koret Center"
 slug = "koret-center"
-access_notes = [ "Kiểm tra lịch làn bơi của Koret trước khi đi; trang chính thức cảnh báo số làn thay đổi theo lớp học, đội bơi và sự kiện." ]
-access_summary = "Koret Center của USF có hồ bơi trong nhà lớn. Các làn bơi thường có trong giờ hồ bơi, nhưng quyền vào và thẻ lượt phụ thuộc vào hội viên USF/Koret hoặc các lựa chọn thẻ đủ điều kiện."
-body = "Koret là một trong những cơ sở hồ bơi trong nhà lớn hơn của thành phố, nơi bơi theo làn, masters swimming, lớp học, đội trẻ và sự kiện cùng chia sẻ mặt nước."
+access_notes = [ "Không dùng giờ mở cửa cũ để lên kế hoạch đi bơi. Hãy xem thông báo hiện tại của USF về hồ bơi trước khi đến." ]
+access_summary = "Hồ bơi Koret của USF đang đóng cửa để sửa chữa và bảo trì, theo thông báo chính thức được kiểm tra vào ngày 7 tháng 11 năm 2026. Dự kiến mở lại vào tháng 1 năm 2027, nhưng ngày cụ thể và lịch mới chưa được xác nhận. Quyền vào và thẻ lượt vẫn phụ thuộc vào hội viên USF/Koret hoặc các lựa chọn thẻ đủ điều kiện."
+body = "Koret là một trong những cơ sở hồ bơi trong nhà lớn hơn của thành phố, nơi bơi theo làn, masters swimming, lớp học, đội trẻ và sự kiện cùng chia sẻ mặt nước.\n\nNgày kết thúc 21 tháng 10 năm 2026 là mốc ngừng khuyến nghị của chúng tôi, dựa trên thông báo đóng cửa của USF được lưu từ ngày 22 tháng 10. Đây không phải ngày bắt đầu đóng cửa đã được xác định. [Thông báo chính thức về hồ bơi](https://docs.google.com/spreadsheets/d/1PcFSl3ndScM2-SZnubwDvBlbhpmbFsVjEPK-yGilZU0/edit?gid=1958899859&pli=1)."
 
 [[spots.koret-center.pricing]]
 label = "Hội viên / thẻ đủ điều kiện"

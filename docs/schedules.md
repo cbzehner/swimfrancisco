@@ -124,14 +124,22 @@ data/<slug>/<fetch-date>-<pdf-sha12>/
 Source bodies (`source.pdf`, `source.html`, `source.xlsx`, `source.csv`) are
 committed with the extraction artifacts. They are the backtest corpus: a
 fresh clone can re-run extraction and compare against the original bytes.
-`source.sha256` is the integrity check. For HTML, the hash may be a
-semantic fingerprint of extracted hours rather than the raw file; for Koret
-workbooks it is the zip-content hash of `source.xlsx`.
+New captures record the original-byte SHA-256 in `source.sha256`.
+Historical HTML/workbook captures may retain normalized hashes; those identities
+are not rewritten. Canonical normalization now identifies unchanged captures for
+reuse without replacing their original source bytes or hashes.
 
 Koret is workbook-backed: `source.xlsx` is the canonical hashed source and
 `source.pdf` is the full-workbook visual export used by the reviewer. The XLSX
 preserves visible sheet names, merged ranges, and cell values; every visible
-sheet must be classified by the extractor or extraction fails.
+sheet must be classified by the extractor or extraction fails. Closure-only
+workbooks remain held for review; hidden hours and tentative reopening dates
+cannot restore swimming availability. Koret's old hours are withdrawn from
+October 22, 2026, based on the first retained closure observation, not a known
+closure start. A reopening requires a newly reviewed window with a new start.
+Do not run `schedules project koret-center` or save a stale review: projecting the
+old unbounded snapshot would overwrite the withdrawal. See the
+[dated correction](schedules-decision-log.md#koret-availability-withdrawal-november-7-2026).
 
 Review status is a filesystem predicate: `reviewed.json` present ⇒ attested;
 absent ⇒ not published. `--force` bypasses this fast-path.
@@ -480,7 +488,9 @@ issue, or production setting was changed by this review.
 
 At the fixed Pacific date 2026-09-12, the registry contains 25 canonical pools
 and the current/upcoming Markdown contains 26 schedule windows. The inventory
-below maps every live or future window to retained accepted evidence. “Exact”
+below maps every live or future window to retained accepted evidence. The Koret
+row also records the later safety withdrawal; it does not renew the original
+approval. “Exact”
 means the repository’s canonical comparison matches; that comparison ignores
 formatting, evidence prose, and notes. North Beach is operationally equivalent
 but has a metadata/provenance mismatch.
@@ -497,7 +507,7 @@ but has a metadata/provenance mismatch.
 | Rossi | 2026-08-16–12-10 | `data/rossi-pool/2026-08-20-cb8abdbbedda/reviewed.json` | Exact |
 | Sava | 2026-08-29–12-12 | `data/sava-pool/2026-09-09-4b1055669e1d/reviewed.json`; document IDs 30037/29806/29815 | Exact |
 | JCCSF | 2026-09-09–09-22 | `data/jccsf/2026-09-09-f1baf58cd35c/reviewed.json` | Exact |
-| Koret | 2026-08-12–open | `data/koret-center/2026-08-23-890e0daca506/reviewed.json` | Exact; six equivalent reviews |
+| Koret | 2026-08-12–10-21 (recommendation cutoff) | `data/koret-center/2026-08-23-890e0daca506/reviewed.json`; October 22 and November 7 closure captures | Historical reviews unchanged; availability withdrawn from October 22, not a new attestation |
 | Pomeroy | 2026-09-09–09-22 | `data/pomeroy-pool/2026-09-09-e786c784f602/reviewed.json` | Exact |
 | 24 Hour Fitness Potrero | 2026-05-17–open | `data/24-hour-fitness-potrero/2026-05-17-c884d75c863b/reviewed.json` | Exact; two equivalent reviews |
 | Bay Club Gateway | 2026-09-09–09-22 | `data/bay-club-gateway/2026-09-09-9ae8b6715d45/reviewed.json` | Exact |

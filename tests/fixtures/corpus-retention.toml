@@ -27,6 +27,14 @@ path = "data/koret-center/2026-07-10-47b0c41acd2b"
 reason = "Archived sequential-window evidence"
 
 [[pins]]
+path = "data/koret-center/2026-10-22-7a48aa48b21c"
+reason = "First retained closure observation supporting withdrawal of old availability"
+
+[[pins]]
+path = "data/koret-center/2026-11-07-443781804a7b"
+reason = "Current closure notice supporting withdrawal; reopening remains unverified"
+
+[[pins]]
 path = "data/pomeroy-pool/2026-05-17-846bfed69445"
 reason = "Archived sequential-window evidence"
 

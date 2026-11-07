@@ -28,6 +28,7 @@ import { programSpots } from "../fixtures/board-spots.mjs";
 import { verifyPoolPage } from "../../scripts/smoke-production.mjs";
 import { buildSpotRecord } from "../../scripts/generate-agent-data.mjs";
 import { splitFrontMatter } from "../../scripts/lib/spot-frontmatter.mjs";
+import { evaluateBoard } from "../../static/js/helpers/board.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..", "..");
 const englishLabels = JSON.parse(readFileSync(join(ROOT, "data/i18n/en.json"), "utf8"));
@@ -237,6 +238,30 @@ for (const engine of ["webkit", "chromium"]) {
     await page.goto(`${baseURL}/spots/${expected.slug}/`);
     await page.locator(".today-block").evaluate((block) => { block.dataset.day = "friday"; });
     await assert.rejects(verifyPoolPage(page, expected, instant), /wrong Pacific weekday/);
+  });
+
+  test(`[${engine}] Koret pages follow the catalog without restoring withdrawn hours`, async (t) => {
+    const path = join(ROOT, "content/spots/koret-center.md");
+    const { front, body } = splitFrontMatter(readFileSync(path, "utf8"), path);
+    const withdrawn = front.extra.schedules.find((window) => window.effective_start === "2026-08-12");
+    if (withdrawn) assert.ok(withdrawn.effective_end && withdrawn.effective_end <= "2026-10-21");
+    const instant = new Date("2026-11-07T18:00:00Z"); // 10:00 Pacific, formerly OPEN.
+    const expected = evaluateBoard([{ type: front.extra.type, accessMode: front.extra.access_mode,
+      schedule: { schedules: front.extra.schedules } }], { horizon: "now", includeMemberships: true }, instant);
+    const context = await browsers[engine].newContext({ timezoneId: "Asia/Tokyo" });
+    t.after(() => context.close());
+    const page = await context.newPage();
+    await page.clock.setFixedTime(instant);
+    await page.goto(`${baseURL}/`);
+    await page.waitForFunction(() => document.querySelector('[data-slug="koret-center"] [data-cell="status"]')?.hasAttribute("data-status-value"));
+    await page.locator('[data-filter="access"][data-access="memberships"]').click();
+    const row = page.locator('[data-slug="koret-center"]');
+    assert.equal(await row.locator('[data-cell="status"]').getAttribute("data-status-value"), expected.entries[0].result.status);
+
+    await page.goto(`${baseURL}/spots/koret-center/`);
+    await verifyPoolPage(page, buildSpotRecord(front, body, path), instant);
+    if (withdrawn) assert.equal(await page.locator(`[data-schedule-window="2026-08-12/${withdrawn.effective_end}"]`).count(), 1);
+    assert.equal((await page.locator(".access-summary").textContent()).trim(), front.extra.access_summary);
   });
 
   test(`[${engine}] Pacific answers agree for Los Angeles and Tokyo visitors`, async (t) => {
