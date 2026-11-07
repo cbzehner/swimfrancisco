@@ -20,7 +20,10 @@ concurrency:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    # Upgrade deliberately: WebKit binaries depend on the Ubuntu release.
+    runs-on: ubuntu-24.04
+    # Recent successful runs took 5–12 minutes; leave cold-cache headroom.
+    timeout-minutes: 15
     # Matches the timezone the justfile pins locally, so a clock-reading
     # test cannot pass in one place and fail in the other.
     env:
@@ -67,29 +70,60 @@ jobs:
         run: npm ci
 
       - name: Sync schedule-tools deps
-        run: uv --project schedule-tools sync
+        run: uv --project schedule-tools sync --locked
 
-      - name: Resolve Playwright version
-        id: playwright
-        run: echo "version=$(node -p "require('playwright-core/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Resolve browser cache identity
+        id: browsers
+        run: |
+          . /etc/os-release
+          echo "os=$ID-$VERSION_ID" >> "$GITHUB_OUTPUT"
+          node --input-type=commonjs <<'NODE' >> "$GITHUB_OUTPUT"
+          const { createRequire } = require("node:module");
+          const engineRequire = createRequire(require.resolve("@e2e-dev/web"));
+          console.log(`regressions=${require("playwright-core/package.json").version}`);
+          console.log(`journeys=${engineRequire("playwright-core/package.json").version}`);
+          NODE
 
       - name: Cache Playwright browsers
         id: playwright-cache
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+          # Never restore the old OS-agnostic cache: WebKit revision paths do
+          # not distinguish Ubuntu ABIs. Both suites share this directory.
+          key: browsers-v2-${{ steps.browsers.outputs.os }}-${{ runner.arch }}-${{ steps.browsers.outputs.regressions }}-${{ steps.browsers.outputs.journeys }}
+          restore-keys: browsers-v2-${{ steps.browsers.outputs.os }}-${{ runner.arch }}-
 
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: node node_modules/playwright-core/cli.js install --with-deps webkit chromium
-
-      - name: Install Playwright OS deps
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
+      - name: Install browser OS dependencies
+        # System packages are not cached. The locked Playwright versions use
+        # the same Ubuntu 24.04 package list; invoke apt only once.
         run: node node_modules/playwright-core/cli.js install-deps webkit chromium
 
+      - name: Install regression browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: node node_modules/playwright-core/cli.js install webkit chromium
+
       - name: Install e2e engine browsers
-        run: ./node_modules/.bin/e2e-web install --with-deps webkit chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: ./node_modules/.bin/e2e-web install webkit chromium
+
+      - name: Check browser launches
+        timeout-minutes: 1
+        # Fail before the long Python suite if a restored browser cannot run.
+        run: |
+          node --input-type=commonjs <<'NODE'
+          const { createRequire } = require("node:module");
+          const engineRequire = createRequire(require.resolve("@e2e-dev/web"));
+          (async () => {
+            for (const playwright of [require("playwright-core"), engineRequire("playwright-core")]) {
+              for (const engine of ["webkit", "chromium"]) {
+                const browser = await playwright[engine].launch({ timeout: 10_000 });
+                console.log(`${engine}: ${browser.version()}`);
+                await browser.close();
+              }
+            }
+          })().catch(error => { console.error(error); process.exitCode = 1; });
+          NODE
 
       - name: Run full verification
         run: just check

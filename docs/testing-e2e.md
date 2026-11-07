@@ -157,6 +157,36 @@ pre-1.0, so upgrades require reviewing its bundled `node_modules/e2e/docs` and
 running both engines. Node 24 is used in CI; the project devenv provides a
 compatible runtime.
 
+### CI browser setup and minute limits
+
+[Verification](../.github/workflows/ci.yml) pins Ubuntu 24.04 and caches both
+browser sets together. The cache identity includes the actual Ubuntu release,
+runner architecture, and both resolved Playwright versions. Revision directory
+names alone do not distinguish Ubuntu builds: an OS-agnostic cache restored a
+24.04 WebKit on 26.04, where it could not load ICU. Upgrade the runner deliberately;
+never restore a cache across Ubuntu releases or architectures.
+
+Exact cache hits skip both downloads. A version change can reuse the same
+OS/architecture cache and download missing revisions, without invalidating it
+for unrelated npm dependency updates. System packages are installed once per
+runner, even on a cache hit. The two currently locked Playwright versions have
+the same Ubuntu 24.04 dependency list; compare their `tools`, `chromium`, and
+`webkit` package lists when upgrading either version before retaining the single
+`install-deps` call.
+
+A one-minute preflight launches WebKit and Chromium through **each** Playwright
+version before the long suite, so a broken cache fails early. The whole job has
+a 15-minute limit: the longest successful run inspected for October 26–November 1
+was 12 minutes 11 seconds, leaving nearly three minutes of headroom. Revisit the
+limit if measured cold-cache runs approach it. All `just check` tests remain
+required, and superseded runs on the same ref are cancelled. No test-result reuse or deployment-gate change
+is part of this setup optimization.
+
+Develop and run the full gate in the sandbox before publishing changes. GitHub's
+cache restore/save behavior and Ubuntu x86-64 packages still need confirmation
+on the next authorized push; a local ARM sandbox cannot prove those boundaries.
+Do not dispatch or rerun workflows just to iterate on this configuration.
+
 The first run reproduced two real distance-sort bugs in both engines: denying
 location permission cleared the pressed sort while retaining `#open`, and a
 late location result replaced a newer Open Next selection. The fixes preserve
