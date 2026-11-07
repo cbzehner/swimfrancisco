@@ -728,10 +728,21 @@ remain checked. Recognition establishes the source role, not that JavaScript
 always executes successfully. It does not create swim sessions or change
 publication eligibility.
 
-Ambiguous Balboa in-service notices, Mission session exclusions, and Sava's
-conflicting documents/closure dates remain on the review path. Preserve the
-source and resolve each notice's dates, times, and affected programs before
-publishing; do not extend prior schedules or drop one sequential window.
+A bare `CLOSED M/D` session exclusion is recognized only as the final line of
+a complete observed cell: `Lap Swim` or `Parent & Tot (1) / Senior Swim (3)`,
+one printed time range, then one closure date. The notice must belong to that
+same non-facility cell. The date must resolve uniquely inside the printed
+window and match the cell's weekday. Other program headings or lane counts,
+date lists, year suffixes, qualifiers, and unconsumed text remain held in this
+bare form.
+Mission's two October 20 cell exclusions do not replace its independent timed
+and full-day facility notices or turn Parent & Tot into a supported swim
+category.
+
+Ambiguous Balboa in-service notices and Sava's conflicting documents/closure
+dates remain on the review path. Preserve the source and resolve each notice's
+dates, times, and affected programs before publishing; do not extend prior
+schedules or drop one sequential window.
 
 Provider failures retain a credential-free `transport.json` recording HTTP
 status and an allowlisted failure code. A 429 without a recognized quota code

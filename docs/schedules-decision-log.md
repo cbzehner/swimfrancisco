@@ -1332,3 +1332,28 @@ Do not project or save a stale Koret review: `schedules project koret-center`
 can replace the matching August window with the old unbounded payload without
 a fresh review. Ordinary builds preserve the correction; closure-only extraction
 holds, and Koret is not eligible for automatic publication.
+
+## Mission session-exclusion recognition (November 7, 2026)
+
+The retained [October 18 original](../data/mission-community-pool/2026-10-18-43fd76a64a6f/source.pdf)
+has two Tuesday cells ending in bare `CLOSED 10/20`. Recognition requires each
+complete observed heading (`Lap Swim` or `Parent & Tot (1) / Senior Swim (3)`),
+one time line, and a separate terminal single-date marker. Extra scope,
+negation, times, or dates remain held rather than being discarded by a suffix
+search. Existing printed-window, unique-year, weekday, and duplicate checks
+still apply. This is shared recognition of evidenced cell shapes, not a
+facility, source-hash, or approval exception.
+
+The 13 supported sessions, uncancelled 08:00–09:00 lap swim, October 20
+09:00–12:30 facility closure, and November 11 all-day closure are unchanged.
+The retained `agent-reference` review is not reissued or elevated to human
+source-cell approval. This grammar recovery adds no cross-source closure
+propagation or new publication eligibility.
+
+Changing `grounding.py` invalidates the shared PDF extraction configuration;
+selected otherwise unchanged PDFs can therefore require paid re-extraction,
+not just Mission. Direct-source configuration is unaffected. Original-source
+replays and mocked transport validate the parser without a paid extraction
+trial; they do not establish live source availability or account health.
+Cache, spending controls, and review authority are not bypassed to reuse a
+comparison projection.

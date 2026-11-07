@@ -79,6 +79,87 @@ def test_unresolved_closure_scope_stops_before_spend(monkeypatch, credentials):
     assert all({"id", "text", "facility"}.issubset(notice) for notice in held.value.notices)
 
 
+def test_mission_original_passes_closure_preflight_without_an_api_key(monkeypatch, mission_autumn_original):
+    monkeypatch.delenv('OPENAI_API_KEY', raising=False)
+
+    def unexpected_call(*args, **kwargs):
+        pytest.fail('Missing credentials must stop before rendering or paid transport')
+
+    monkeypatch.setattr(openai_provider, 'render_source_pages', unexpected_call)
+    monkeypatch.setattr(openai_provider, 'call_api', unexpected_call)
+    with pytest.raises(ValueError, match='OPENAI_API_KEY is not configured'):
+        openai_provider.extract(mission_autumn_original['document'], PROMPT_PATH.read_text(), EXTRACTION_SCHEMA)
+
+
+@pytest.mark.parametrize('supported', [True, False])
+def test_mission_original_uses_mocked_transport_only_after_independent_preflight(monkeypatch, mission_autumn_original, supported):
+    import copy
+    import hashlib
+    from dataclasses import replace
+    from schedules.signals import SourceNotice
+    from schedules.schema import SOURCE_FACTS_SCHEMA
+
+    monkeypatch.setenv('OPENAI_API_KEY', 'unit-test-not-a-key')
+    document = mission_autumn_original['document']
+    facts = mission_autumn_original['facts']
+    calls = []
+
+    def transport(value, schema):
+        if isinstance(value, dict):
+            return {key: transport(value.get(key), child) for key, child in schema['properties'].items()}
+        if isinstance(value, list):
+            return [transport(item, schema['items']) for item in value]
+        return value
+
+    response = transport(facts, SOURCE_FACTS_SCHEMA)
+
+    def call(request, *args):
+        calls.append(request)
+        assert 'session cell marked CLOSED' in request['input']
+        assert 'p1-c1-b2' in request['input']
+        return api_usage_result(status='completed', output=[{
+            'type': 'message', 'status': 'completed', 'role': 'assistant',
+            'content': [{'type': 'output_text', 'text': json.dumps(response)}],
+        }]) | {'http_status': 200, 'timed_out': False}
+
+    monkeypatch.setattr(openai_provider, 'call_api', call)
+    if not supported:
+        source = mission_autumn_original['source']
+        cell = next(cell for cell in source.cells if cell.id == 'p1-c1-b2')
+        changed = replace(cell, text=cell.text.replace('CLOSED 10/20', 'NOT\nCLOSED 10/20'))
+        held = replace(source, cells=tuple(changed if item.id == cell.id else item for item in source.cells),
+                       notices=tuple(SourceNotice(notice.id, changed.text, False, session_cell=cell.id)
+                                     if notice.session_cell == cell.id else notice for notice in source.notices))
+        monkeypatch.setattr(openai_provider, 'inspect_pdf_source', lambda _: held)
+        with pytest.raises(openai_provider.ClosureReviewRequired, match='unresolved_session_exclusion'):
+            openai_provider.extract(document, PROMPT_PATH.read_text(), EXTRACTION_SCHEMA)
+        assert not calls
+        return
+
+    result = openai_provider.extract(document, PROMPT_PATH.read_text(), EXTRACTION_SCHEMA)
+    assert len(calls) == 1
+    assert result.details['source_coverage']['ok']
+    assert result.details['source_window']['ok']
+    assert result.details['source_closures']['ok']
+    artifact = {'model': openai_provider.API_MODEL, 'pdf_sha256': hashlib.sha256(document).hexdigest(),
+                'payload': result.payload, 'details': result.details}
+    assert openai_provider.verify_artifact(artifact, document, PROMPT_PATH.read_text())['ok']
+    for damage in ('exclusion', 'configuration', 'source'):
+        damaged = copy.deepcopy(artifact)
+        if damage == 'exclusion':
+            row = next(row for row in damaged['details']['source_facts']['sessions'] if row.get('excluded_dates'))
+            row['excluded_dates'] = []
+            damaged['payload'] = openai_provider.source_fact_payload(damaged['details']['source_facts'], mission_autumn_original['source'])
+            assert not openai_provider.verify_artifact(damaged, document, PROMPT_PATH.read_text())['ok']
+        elif damage == 'configuration':
+            damaged['details']['configuration']['reasoning'] = 'low'
+            with pytest.raises(ValueError, match='configuration is stale'):
+                openai_provider.verify_artifact(damaged, document, PROMPT_PATH.read_text())
+        else:
+            with pytest.raises(ValueError, match='Source PDF does not match'):
+                openai_provider.verify_artifact(damaged, document + b'\n% synthetic source change', PROMPT_PATH.read_text())
+
+
 @pytest.mark.parametrize("pages,selected", [(0, {1}), (13, {1}), (1, {0}), (1, {2})])
 def test_render_rejects_unsupported_page_selection_before_decoding(monkeypatch, pages, selected):
     from contextlib import nullcontext

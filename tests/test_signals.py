@@ -297,6 +297,151 @@ def test_frozen_city_cells_cancel_whole_sessions_independently(capture, dates, c
             assert not source_exclusion_coverage(source, {"sessions": damaged})["ok"]
 
 
+def test_mission_original_keeps_cell_exclusions_separate_from_facility_closures(mission_autumn_original):
+    from datetime import date
+    from schedules.grounding import source_closure_inventory, source_excluded_dates, source_slots, source_window
+    from schedules.providers.openai_provider import source_fact_payload
+
+    source = mission_autumn_original['source']
+    assert not source.issues
+    assert source_window(source) == (date(2026, 10, 20), date(2026, 11, 21))
+    assert len(source_slots(source)) == 13
+    assert not any(slot.cell.day == 'tuesday' and slot.type == 'family_swim' for slot in source_slots(source))
+    assert source_excluded_dates(source) == {
+        'p1-c1-b2': ['2026-10-20'], 'p1-c1-b3': ['2026-10-20'],
+    }
+    closures = source_closure_inventory(source)
+    assert [(row['start'], row['end'], row.get('start_time'), row.get('end_time')) for row in closures] == [
+        ('2026-10-20', '2026-10-20', '09:00', '12:30'), ('2026-11-11', '2026-11-11', None, None),
+    ]
+    assert closures[0]['reason_code'] == 'other'  # Existing classification, not a new staff-training alias.
+    notices = {notice.id: notice for notice in source.notices}
+    for closure, notice_id in zip(closures, ('p1-notice-1', 'p1-notice-2'), strict=True):
+        assert closure['source_notices'] == [{'id': notice_id, 'text': notices[notice_id].text}]
+    payload = source_fact_payload(mission_autumn_original['facts'], source)
+    assert source_publication_coverage(source, payload)['ok']
+
+
+@pytest.mark.parametrize('damage', [
+    'missing_exclusion', 'wrong_exclusion', 'duplicate_exclusion', 'extra_exclusion', 'morning_exclusion',
+    'facility_date_exclusion', 'missing_session', 'missing_closure', 'all_day_closure', 'extended_closure',
+])
+def test_mission_original_rejects_damaged_publication(mission_autumn_original, damage):
+    from schedules.providers.openai_provider import source_fact_payload
+
+    source = mission_autumn_original['source']
+    payload = source_fact_payload(mission_autumn_original['facts'], source)
+    session = next(row for row in payload['sessions'] if row['day'] == 'tuesday' and row['type'] == 'senior_swim')
+    morning = next(row for row in payload['sessions'] if row['day'] == 'tuesday' and row['start'] == '08:00')
+    closure = next(row for row in payload['closures'] if row['start'] == '2026-10-20')
+    if damage == 'missing_exclusion':
+        session['excluded_dates'] = []
+    elif damage == 'wrong_exclusion':
+        session['excluded_dates'] = ['2026-10-27']
+    elif damage == 'duplicate_exclusion':
+        session['excluded_dates'] *= 2
+    elif damage == 'extra_exclusion':
+        session['excluded_dates'].append('2026-10-27')
+    elif damage == 'morning_exclusion':
+        morning['excluded_dates'] = ['2026-10-20']
+    elif damage == 'facility_date_exclusion':
+        next(row for row in payload['sessions'] if row['day'] == 'wednesday')['excluded_dates'] = ['2026-11-11']
+    elif damage == 'missing_session':
+        payload['sessions'].pop()
+    elif damage == 'missing_closure':
+        payload['closures'].remove(closure)
+    elif damage == 'all_day_closure':
+        closure.pop('start_time')
+        closure.pop('end_time')
+    else:
+        closure['end_time'] = '13:00'
+    assert not source_publication_coverage(source, payload)['ok']
+
+
+@pytest.mark.parametrize('heading,time_line', [
+    ('Lap Swim', '10:30am-12:00pm'), ('Parent & Tot (1) / Senior\nSwim (3)', '9:15am-10:15am'),
+])
+@pytest.mark.parametrize('marker', ['CLOSED 10/20', 'closed 10/20', '  CLOSED\t10/20  \n'])
+def test_bare_cell_exclusion_requires_complete_observed_shape(heading, time_line, marker):
+    from schedules.grounding import source_excluded_dates
+    from schedules.signals import SourceCell
+
+    cell = SourceCell('session', 1, 'tuesday', f'{heading}\n{time_line}\n{marker}', (0, 0, 1, 1))
+    source = PdfSource('FALL 2026 SCHEDULE (OCTOBER 20 – NOVEMBER 21)', (cell,), (), 1,
+                       (SourceNotice('notice', cell.text, False, session_cell=cell.id),))
+    assert source_excluded_dates(source) == {'session': ['2026-10-20']}
+
+
+@pytest.mark.parametrize('text', [
+    'Lap Swim\n10:30am-12:00pm\nOnly Senior Swim\nCLOSED 10/20',
+    'Lap Swim\n10:30am-12:00pm\nNOT\nCLOSED 10/20',
+    'Only Lap Swim\n10:30am-12:00pm\nCLOSED 10/20',
+    'Family Swim\n10:30am-12:00pm\nCLOSED 10/20',
+    'Parent & Tot (2) / Senior Swim (2)\n9:15am-10:15am\nCLOSED 10/20',
+    'Lap Swim\n10:30am-11:00am 11:15am-12:00pm\nCLOSED 10/20',
+    'Lap Swim\n10:30am-12:00pm CLOSED 10/20',
+    'Lap Swim\nCLOSED 10/20\n10:30am-12:00pm',
+    'Lap Swim\n10:30am-12:00pm\nCLOSED 10/20 9am-12:30pm',
+    'Lap Swim\n10:30am-12:00pm\nCLOSED 10/20 & 10/27',
+    'Lap Swim\n10:30am-12:00pm\nCLOSED 10/20-10/27',
+    'Lap Swim\n10:30am-12:00pm\nCLOSED 10/20/2026',
+    'Lap Swim\n10:30am-12:00pm\n(CLOSED 10/20',
+    'Lap Swim\n10:30am-12:00pm\nCLOSED (10/20',
+    'Lap Swim\n10:30am-12:00pm\nCLOSED 10/20 unless announced otherwise',
+    'Lap Swim\n10:30am-12:00pm\nCLOSED 10/20 FOR MAINTENANCE',
+    'Lap Swim\n10:30am-12:00pm\nCLOSED 10/20\nCLOSED 10/27',
+])
+def test_bare_cell_exclusion_rejects_unconsumed_or_qualified_text(text):
+    from schedules.grounding import source_excluded_dates
+    from schedules.signals import SourceCell
+
+    cell = SourceCell('session', 1, 'tuesday', text, (0, 0, 1, 1))
+    source = PdfSource('FALL 2026 SCHEDULE (OCTOBER 20 – NOVEMBER 21)', (cell,), (), 1,
+                       (SourceNotice('notice', cell.text, False, session_cell=cell.id),))
+    with pytest.raises(ValueError, match='notice:unresolved_session_exclusion'):
+        source_excluded_dates(source)
+
+
+@pytest.mark.parametrize('marker', ['CLOSED 10/21', 'CLOSED 12/20', 'CLOSED 10/32'])
+def test_bare_cell_exclusion_keeps_date_and_weekday_guards(marker):
+    from schedules.grounding import source_excluded_dates
+    from schedules.signals import SourceCell
+
+    cell = SourceCell('session', 1, 'tuesday', 'Lap Swim\n10:30am-12:00pm\n' + marker, (0, 0, 1, 1))
+    source = PdfSource('FALL 2026 SCHEDULE (OCTOBER 20 – NOVEMBER 21)', (cell,), (), 1,
+                       (SourceNotice('notice', cell.text, False, session_cell=cell.id),))
+    with pytest.raises(ValueError, match='notice:ambiguous_exclusion_date'):
+        source_excluded_dates(source)
+
+
+@pytest.mark.parametrize('damage', ['facility_scope', 'different_cell_text'])
+def test_bare_cell_exclusion_requires_its_own_non_facility_notice(damage):
+    from schedules.grounding import source_excluded_dates
+    from schedules.signals import SourceCell
+
+    cell = SourceCell('session', 1, 'tuesday', 'Lap Swim\n10:30am-12:00pm\nCLOSED 10/20', (0, 0, 1, 1))
+    text = cell.text.replace('10/20', '10/27') if damage == 'different_cell_text' else cell.text
+    source = PdfSource('FALL 2026 SCHEDULE (OCTOBER 20 – NOVEMBER 21)', (cell,), (), 1,
+                       (SourceNotice('notice', text, damage == 'facility_scope', session_cell=cell.id),))
+    with pytest.raises(ValueError, match='notice:unresolved_session_exclusion'):
+        source_excluded_dates(source)
+
+
+@pytest.mark.parametrize('window_kind', ['missing', 'ambiguous_year'])
+def test_bare_cell_exclusion_never_guesses_a_window_or_year(monkeypatch, window_kind):
+    from datetime import date
+    from schedules import grounding
+    from schedules.signals import SourceCell
+
+    cell = SourceCell('session', 1, 'tuesday', 'Lap Swim\n10:30am-12:00pm\nCLOSED 10/20', (0, 0, 1, 1))
+    source = PdfSource('schedule', (cell,), (), 1, (SourceNotice('notice', cell.text, False, session_cell=cell.id),))
+    window = None if window_kind == 'missing' else (date(2026, 1, 1), date(2027, 12, 31))
+    monkeypatch.setattr(grounding, 'source_window', lambda _: window)
+    reason = 'unresolved_session_exclusion' if window is None else 'ambiguous_exclusion_date'
+    with pytest.raises(ValueError, match='notice:' + reason):
+        grounding.source_excluded_dates(source)
+
+
 def test_rossi_footer_retains_exact_notice_without_contact_numbers():
     from schedules.grounding import source_closure_inventory
 

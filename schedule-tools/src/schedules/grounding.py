@@ -348,6 +348,15 @@ def source_excluded_dates(source: PdfSource) -> dict[str, list[str]]:
         if not match:
             expected_tokens = 2
             match = re.search(r"\bCLOSED\s+(\d{1,2}/\d{1,2}(?:\s*[&,]\s*\d{1,2}/\d{1,2})*)\s+FOR\s+STAFF\s+TRAINING\s*$", notice.text, re.IGNORECASE)
+        if not match and not notice.facility and notice.text == cell.text:
+            # A bare marker must consume the complete observed cell, not hide scope qualifiers.
+            expected_tokens = 1
+            parts = notice.text.strip().rsplit("\n", 2)
+            if len(parts) == 3:
+                heading, time_line, closure_line = parts
+                if (re.fullmatch(r"(?:Lap\s+Swim|Parent\s*&\s*Tot\s*\(1\)\s*/\s*Senior\s+Swim\s*\(3\))", heading.strip(), re.IGNORECASE)
+                        and TIME_RANGE_RE.fullmatch(time_line.strip())):
+                    match = re.fullmatch(r"CLOSED[ \t]+(\d{1,2}/\d{1,2})", closure_line.strip(), re.IGNORECASE)
         if not match or len(CLOSURE_TOKEN_RE.findall(notice.text)) != expected_tokens:
             raise ValueError(f"{notice.id}:unresolved_session_exclusion")
         dates = []

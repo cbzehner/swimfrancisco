@@ -175,3 +175,34 @@ def north_beach_pair():
     entry = PoolEntry("north-beach-pool", "", "https://sfrecpark.org/facilities/facility/details/North-Beach-Pool-218",
                       pool_sources=tuple(PoolSource(item["pool"], item["artifact"]["source_pdf_url"]) for item in components))
     return entry, components
+
+
+@pytest.fixture
+def mission_autumn_original():
+    """Immutable original and visual transcription; never input or approval for production."""
+    from schedules.signals import inspect_pdf_source
+
+    path = ROOT / 'data/mission-community-pool/2026-10-18-43fd76a64a6f/source.pdf'
+    document = path.read_bytes()
+    digest = '43fd76a64a6fada732f0e6e26d50ef66fc39d2b6244350c03705477797362915'
+    assert hashlib.sha256(document).hexdigest() == path.with_suffix('.sha256').read_text().strip() == digest
+    rows = {
+        'tuesday': [('lap_swim', '08:00', '09:00'), ('senior_swim', '09:15', '10:15'), ('lap_swim', '10:30', '12:00')],
+        'wednesday': [('lap_swim', '08:00', '09:00'), ('senior_swim', '09:15', '10:15'), ('lap_swim', '10:30', '12:00')],
+        'thursday': [('lap_swim', '08:00', '09:30'), ('senior_swim', '09:45', '11:45')],
+        'friday': [('lap_swim', '08:00', '09:00'), ('senior_swim', '09:15', '10:15'), ('lap_swim', '10:30', '12:00')],
+        'saturday': [('lap_swim', '10:00', '11:15'), ('family_swim', '11:30', '14:00')],
+    }
+    sessions = []
+    for day, values in rows.items():
+        for kind, start, end in values:
+            row = {'day': day, 'type': kind, 'start': start, 'end': end, 'pool_label_raw': None}
+            if day == 'tuesday' and start in {'09:15', '10:30'}:
+                row['excluded_dates'] = ['2026-10-20']
+            sessions.append(row)
+    facts = {'effective_start': '2026-10-20', 'effective_end': '2026-11-21', 'schedule_basis': 'swim_schedule',
+             'sessions': sessions, 'closures': [
+                 {'start': '2026-10-20', 'end': '2026-10-20', 'start_time': '09:00', 'end_time': '12:30', 'reason': 'All-staff meeting'},
+                 {'start': '2026-11-11', 'end': '2026-11-11', 'reason': 'Veterans Day'},
+             ]}
+    return {'document': document, 'sha256': digest, 'source': inspect_pdf_source(document), 'facts': facts}
