@@ -20,16 +20,20 @@ def runner(tmp_path, monkeypatch):
     root.mkdir()
     calls = []
     controls = {"stale": 0, "changed": True, "failure": None, "dirty": False, "verified": [],
-                "closure_reviews": {}, "seed": {}, "staged_captures": None, "evidence_at_prune": []}
+                "closure_reviews": {}, "seed": {}, "staged_captures": None, "evidence_at_prune": [],
+                "receipt": None, "receipt_raw": None, "promotion_timeout": False, "remote_main": None, "command_options": []}
 
     def command(arguments, cwd, **kwargs):
         calls.append(arguments)
+        controls["command_options"].append((arguments, kwargs))
         output = ""
         code = 0
         if arguments[:3] == ["git", "status", "--porcelain"]:
             output = " M user.txt" if controls["dirty"] else ""
         elif arguments[:2] == ["git", "rev-parse"]:
-            output = "a" * 40
+            output = ("a" if cwd == root else "b") * 40
+        elif arguments[:2] == ["git", "ls-remote"] and controls["remote_main"]:
+            output = controls["remote_main"] + "\trefs/heads/main"
         elif arguments[:3] == ["git", "worktree", "add"]:
             worktree = Path(arguments[-2])
             worktree.mkdir(parents=True)
@@ -62,12 +66,23 @@ def runner(tmp_path, monkeypatch):
                 {"closure_reviews": controls["closure_reviews"].get(provider, [])}))
         if controls["failure"] and controls["failure"] in arguments:
             code = 1
+        if "promote" in arguments:
+            receipt = json.loads(output)
+            if code == 1:
+                receipt = {"status": "failed", "failure_code": "promotion_failed"}
+            (cwd / "tmp/promotion.json").write_text(controls["receipt_raw"] if controls["receipt_raw"] is not None else json.dumps(controls["receipt"] or receipt))
+            if controls["promotion_timeout"]:
+                raise subprocess.TimeoutExpired(arguments, kwargs["timeout"], output="PRIVATE_DIAGNOSTIC")
+        if controls.get("after_command"):
+            controls["after_command"](arguments)
         return subprocess.CompletedProcess(arguments, code, output, "")
 
     def verify(worktree, commit, command):
         receipt = json.loads((root / "tmp/automation/result.json").read_text())
         assert receipt["status"] == "promoted"
         assert receipt["published_slugs"] == []
+        if controls.get("verify_failure"):
+            raise RuntimeError("PRIVATE_DIAGNOSTIC")
         controls["verified"].append(commit)
 
     def run(mode="publish"):
@@ -157,6 +172,144 @@ def test_pool_extraction_failure_keeps_other_pools_eligible_and_records_failure(
     result = run()
     assert result["status"] == "published"
     assert result["builds"][0]["commands"][report] == 1
+
+
+def test_failed_promotion_retains_stage_candidate_and_safe_receipt(runner):
+    root, _, controls, run = runner
+    controls["failure"] = "promote"
+    with pytest.raises(RuntimeError):
+        run()
+    result = json.loads((root / "tmp/automation/result.json").read_text())
+    build = result["builds"][-1]
+    assert build["stage"] == "promotion"
+    assert build["candidate"] == "b" * 40
+    assert build["promotion"]["status"] == "failed"
+    assert result["failure_code"] == "promotion_failed"
+
+
+@pytest.mark.parametrize("timeout", [False, True])
+def test_failed_promotion_retains_allowlisted_ci_details_not_transport_output(runner, timeout):
+    root, _, controls, run = runner
+    controls["failure"] = "promote"
+    controls["promotion_timeout"] = timeout
+    controls["receipt"] = {"status": "failed", "failure_code": "ci_failed", "commit": "b" * 40,
+        "check_url": "https://github.com/cbzehner/swimfrancisco/actions/runs/123",
+        "ci_status": "completed", "ci_conclusion": "failure", "raw_error": "PRIVATE_DIAGNOSTIC"}
+    with pytest.raises(RuntimeError):
+        run()
+    result = json.loads((root / "tmp/automation/result.json").read_text())
+    assert result["failure_code"] == ("promotion_timeout" if timeout else "ci_failed")
+    assert result["builds"][0]["promotion"]["ci_conclusion"] == "failure"
+    assert not any("PRIVATE_DIAGNOSTIC" in path.read_text() for path in (root / "tmp/automation").rglob("*.json"))
+
+
+def test_promotion_subprocess_allows_ci_plus_bounded_git_operations(runner):
+    _, calls, controls, run = runner
+    assert run()["status"] == "published"
+    assert any("promote" in args for args in calls)
+    assert next(options["timeout"] for args, options in controls["command_options"] if "promote" in args) == 1320
+
+
+@pytest.mark.parametrize("ci_passed", [False, True])
+@pytest.mark.parametrize("timeout", [False, True])
+def test_failed_promotion_reconciles_main_only_with_exact_ci_success(runner, ci_passed, timeout):
+    root, _, controls, run = runner
+    controls["promotion_timeout"] = timeout
+    controls["failure"] = "promote"
+    controls["remote_main"] = "b" * 40
+    controls["receipt"] = {"status": "waiting", "commit": "b" * 40, "ci_status": "completed",
+        "ci_conclusion": "success" if ci_passed else "failure",
+        "check_url": "https://github.com/cbzehner/swimfrancisco/actions/runs/123"}
+    if ci_passed:
+        result = run()
+        assert result["status"] == "published"
+        assert result["builds"][0]["promotion"]["reconciled"] is True
+        assert "failure_code" not in result
+    else:
+        with pytest.raises(RuntimeError):
+            run()
+        result = json.loads((root / "tmp/automation/result.json").read_text())
+        assert result["status"] == "failed"
+        assert not controls["verified"]
+    assert result["builds"][0]["promotion"]["main_state"] == "candidate"
+
+
+@pytest.mark.parametrize("update", [{"commit": "c" * 40}, {"check_url": "https://attacker.invalid/private"}])
+def test_invalid_child_receipt_cannot_authorize_live_publication(runner, update):
+    root, _, controls, run = runner
+    controls["receipt"] = {"status": "promoted", "commit": "b" * 40} | update
+    with pytest.raises(RuntimeError, match="Invalid promotion receipt"):
+        run()
+    result = json.loads((root / "tmp/automation/result.json").read_text())
+    assert result["status"] == "failed"
+    assert not controls["verified"]
+    assert result["published_slugs"] == []
+
+
+def test_deployment_failure_retains_promoted_commit_without_claiming_publication(runner):
+    root, _, controls, run = runner
+    controls["verify_failure"] = True
+    with pytest.raises(RuntimeError):
+        run()
+    result = json.loads((root / "tmp/automation/result.json").read_text())
+    assert result["failure_code"] == "deployment_unverified"
+    assert result["builds"][0]["promotion"]["status"] == "promoted"
+    assert result["builds"][0]["deployment"]["status"] == "unverified"
+    assert result["published_slugs"] == []
+    assert "PRIVATE_DIAGNOSTIC" not in json.dumps(result)
+
+
+@pytest.mark.parametrize("receipt", ['{ truncated PRIVATE_DIAGNOSTIC', '[]', '{"status":"promoted","commit":"wrong"}'])
+def test_damaged_receipt_still_records_main_without_authorizing_publication(runner, receipt):
+    root, _, controls, run = runner
+    controls.update(receipt_raw=receipt, promotion_timeout=True, remote_main="b" * 40)
+    with pytest.raises(RuntimeError):
+        run()
+    result = json.loads((root / "tmp/automation/result.json").read_text())
+    assert result["builds"][0]["promotion"]["main_state"] == "candidate"
+    assert result["status"] == "failed"
+    assert not controls["verified"]
+    assert "PRIVATE_DIAGNOSTIC" not in json.dumps(result)
+
+
+@pytest.mark.parametrize("remaining", [60, 360])
+def test_extract_only_commands_leave_evidence_upload_time(runner, monkeypatch, remaining):
+    import time
+    _, _, controls, run = runner
+    monkeypatch.setenv("SCHEDULES_JOB_DEADLINE", str(int(time.time()) + remaining))
+    if remaining <= 300:
+        with pytest.raises(RuntimeError):
+            run("extract-only")
+        assert not any("extract" in args for args, _ in controls["command_options"])
+    else:
+        assert run("extract-only")["status"] == "extracted"
+        assert all(0 < options["timeout"] <= remaining - 300 for args, options in controls["command_options"] if "extract" in args)
+
+
+def test_hosted_deadline_includes_time_spent_installing_dependencies(runner, monkeypatch):
+    import time
+    root, calls, _, run = runner
+    monkeypatch.setenv("SCHEDULES_JOB_DEADLINE", str(int(time.time()) + 46 * 60))
+    with pytest.raises(RuntimeError, match="Insufficient time"):
+        run()
+    assert not any(token in args for args in calls for token in ("discover", "--direct", "openai", "promote"))
+    assert json.loads((root / "tmp/automation/result.json").read_text())["failure_code"] == "publication_time_exhausted"
+
+
+def test_deadline_is_checked_again_between_expensive_stages(runner, monkeypatch):
+    root, calls, controls, run = runner
+    clock = [1_000_000]
+    monkeypatch.setattr('schedules.automation.time.time', lambda: clock[0])
+    monkeypatch.setenv('SCHEDULES_JOB_DEADLINE', str(clock[0] + 110 * 60))
+    def slow_discovery(arguments):
+        if arguments[-1] == 'discover':
+            clock[0] += 64 * 60
+    controls['after_command'] = slow_discovery
+    with pytest.raises(RuntimeError, match='Insufficient time'):
+        run()
+    assert any('discover' in args for args in calls)
+    assert not any('extract' in args for args in calls)
+    assert json.loads((root / 'tmp/automation/result.json').read_text())['failure_code'] == 'publication_time_exhausted'
 
 
 def test_main_movement_rebuilds_once_and_rechecks(runner):

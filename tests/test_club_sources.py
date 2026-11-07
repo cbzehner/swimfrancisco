@@ -1,3 +1,4 @@
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -8,6 +9,12 @@ from schedules.direct_sources.providers.fitness_clubs import _extract_bayclub_ga
 from schedules.merge import _normalized_schedule_payload
 
 FIXTURES = Path(__file__).parent / 'fixtures' / 'html-facts'
+
+
+@pytest.fixture(autouse=True)
+def captured_club_date(monkeypatch):
+    # These fixtures' Today summary was captured on a Thursday.
+    monkeypatch.setattr('schedules.direct_sources.providers.fitness_clubs.pacific_today', lambda: date(2026, 9, 24))
 
 
 def source(slug):

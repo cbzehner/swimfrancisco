@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from html import unescape
 
 from ..._time import pacific_today
@@ -49,29 +49,63 @@ def _extract_24_hour_fitness(html: str) -> dict:
     return _payload("facility_hours", [], access_hours=access_hours)
 
 
-def _extract_bayclub_gateway(html: str) -> dict:
+def _extract_bayclub_gateway(html: str, *, observed_on: date | None = None) -> dict:
+    observed_on = observed_on or pacific_today()
     text = _html_text(html)
     for identity in ('Bay Club Gateway', '370 Drumm Street', 'two heated pools'):
         _require_text(text, identity)
     if len(re.findall(r'<h1\b[^>]*>The Gateway</h1>', html, re.I)) != 1:
         raise DirectSourceError('Missing or duplicate Gateway club identity')
-    blocks = list(re.finditer(r'<div\b[^>]*class="club_hours_info w-richtext"[^>]*>(.*?)</div>', html, re.I | re.S))
+    blocks = list(re.finditer(r'<div\b[^>]*class="(?:club_hours_info|club_hero_hours) w-richtext"[^>]*>(.*?)</div>', html, re.I | re.S))
     notices = list(re.finditer(r'<div\b[^>]*class="text16regular-main orange[^"]*"[^>]*>(.*?)</div>', html, re.I | re.S))
-    if len(blocks) != 1 or len(notices) != 1:
+    if not 1 <= len(blocks) <= 2 or len(notices) != 1:
         raise DirectSourceError('Missing or duplicate Gateway hours or notice section')
-    if notices[0].group(1).strip():
-        _club_hold('Gateway has a populated club notice', _html_text(notices[0].group(1)) or 'Club-notice media')
-    rows = []
-    for paragraph in re.findall(r'<p\b[^>]*>(.*?)</p>', blocks[0].group(1), re.I | re.S):
-        row = re.fullmatch(r'(Sun|Mon|Tue|Wed|Thu|Fri|Sat):\s*(.+)', _html_text(paragraph).replace('\u200d', '').strip(), re.I)
-        if not row:
-            raise DirectSourceError('Unsupported Gateway weekly hours row')
-        rows.append(row.groups())
-    if _html_text(re.sub(r'<p\b[^>]*>.*?</p>', '', blocks[0].group(1), flags=re.I | re.S)):
-        raise DirectSourceError('Unaccounted Gateway hours content')
-    access = _club_week(rows)
+    if sum('class="club_hours_info ' in match[0] for match in blocks) != 1:
+        raise DirectSourceError('Missing or duplicate Gateway hours or notice section')
+    weeks = []
+    for block in blocks:
+        rows = []
+        for paragraph in re.findall(r'<p\b[^>]*>(.*?)</p>', block[1], re.I | re.S):
+            row = re.fullmatch(r'(Sun|Mon|Tue|Wed|Thu|Fri|Sat):\s*(.+)', _html_text(paragraph).replace('\u200d', '').strip(), re.I)
+            if not row:
+                raise DirectSourceError('Unsupported Gateway weekly hours row')
+            rows.append(row.groups())
+        if _html_text(re.sub(r'<p\b[^>]*>.*?</p>', '', block[1], flags=re.I | re.S)):
+            raise DirectSourceError('Unaccounted Gateway hours content')
+        weeks.append(_club_week(rows))
+    access = weeks[0]
+    if any(_club_identity(week) != _club_identity(access) for week in weeks[1:]):
+        raise DirectSourceError('Gateway repeated weekly hours disagree')
+    exceptions = []
+    notice = notices[0].group(1)
+    if notice.strip():
+        match = re.fullmatch(r"([A-Za-z '’]+) \((Mon|Tue|Wed|Thu|Fri|Sat|Sun), ([A-Z][a-z]{2}) (\d{1,2})\): (.+)", _html_text(notice))
+        if not match or re.search(r'<(?!/?(?:p|strong|br)\b)[^>]+>', notice, re.I):
+            _club_hold('Unsupported Gateway holiday notice', _html_text(notice) or 'Club-notice media')
+        reason, weekday, month, day, hours = match.groups()
+        reason = reason.replace('’', "'")
+        if reason not in {'Thanksgiving Day', 'Christmas Day', "New Year's Day"}:
+            _club_hold('Unsupported Gateway holiday reason', _html_text(notice))
+        try:
+            month_number = datetime.strptime(month, '%b').month
+            candidates = [date(year, month_number, int(day)) for year in range(observed_on.year - 1, observed_on.year + 2)]
+            holiday = min(candidates, key=lambda value: abs((value - observed_on).days))
+        except ValueError as error:
+            raise DirectSourceError('Invalid Gateway holiday date') from error
+        if holiday.strftime('%a') != weekday:
+            raise DirectSourceError('Gateway holiday weekday conflicts with date')
+        start, end = _club_range(hours)
+        exception = _club_access_exception(holiday, start, end, reason, access, observed_on)
+        if exception:
+            exceptions.append(exception)
+    summaries = list(re.finditer(r'<p\b[^>]*data-club-today=""[^>]*>(.*?)</p>', html, re.I | re.S))
+    if len(summaries) > 1:
+        raise DirectSourceError('Duplicate Gateway daily summary')
+    if summaries:
+        if _club_range(_html_text(summaries[0][1])) != _club_hours_on(access, observed_on, exceptions):
+            _club_hold('Gateway daily summary disagrees with weekly or holiday hours', _html_text(summaries[0][1]))
     remainder = html
-    for match in sorted([blocks[0], notices[0]], key=lambda match: match.start(), reverse=True):
+    for match in sorted([*blocks, notices[0], *summaries], key=lambda match: match.start(), reverse=True):
         remainder = remainder[:match.start()] + remainder[match.end():]
     template = re.search(r'<div class="details_info_cancelled"><div>CANCELLED</div>(.*?)</div></div><div class="div_flex-down x-left">', remainder, re.S)
     if template and _html_text(template.group(0)) == 'CANCELLED Location: placeholder Instructor: placeholder':
@@ -81,7 +115,18 @@ def _extract_bayclub_gateway(html: str) -> dict:
     for kind in ('classes', 'events'):
         remainder = re.sub(r'<div id="' + kind + r'-template"[^>]*>.*?<a href="#" class="button clubs_' + kind + r' w-button">Learn More</a></div>', '', remainder, flags=re.S)
     _check_remaining_club_notices(remainder)
-    return _payload('facility_hours', [], access_hours=access)
+    return _payload('facility_hours', [], access_hours=access, access_exceptions=exceptions)
+
+
+def _club_access_exception(holiday: date, start: str, end: str, reason: str,
+                           week: list[dict], observed: date) -> dict | None:
+    regular = next(row for row in week if row['day'] == DAY_ORDER[holiday.weekday()])
+    if not regular['start'] <= start < end <= regular['end']:
+        raise DirectSourceError('Holiday access hours extend beyond regular club hours')
+    if not observed <= holiday < observed + timedelta(days=14):
+        return None
+    return {'date': holiday.isoformat(), 'start': start, 'end': end, 'label': 'Club hours',
+            'reason': reason, 'evidence': f'{holiday.isoformat()}: {start}–{end}; {reason}'}
 
 
 def _club_range(text: str) -> tuple[str, str]:
@@ -111,6 +156,14 @@ def _club_week(rows: list[tuple[str, str]]) -> list[dict]:
 
 def _club_identity(hours: list[dict]) -> list[tuple[str, str, str]]:
     return [(row['day'], row['start'], row['end']) for row in hours]
+
+
+def _club_hours_on(week: list[dict], day: date, exceptions=(), closures=()) -> tuple[str, str] | None:
+    if any(row['start'] <= day.isoformat() <= row['end'] for row in closures):
+        return None
+    row = next((row for row in exceptions if row['date'] == day.isoformat()),
+               next(row for row in week if row['day'] == DAY_ORDER[day.weekday()]))
+    return row['start'], row['end']
 
 
 def _check_remaining_club_notices(html: str) -> None:
@@ -225,7 +278,9 @@ def _extract_city_sports(html: str) -> dict:
         remaining_calendar = remaining_calendar.replace(cell, '')
     if re.search(r'closed|closure|maintenance|cancelled|canceled|unavailable|special hours', _html_text(remaining_calendar), re.I):
         _club_hold('Unaccounted notice in City Sports class schedule', _html_text(remaining_calendar))
-    if cancelled and (not legend or _html_text(legend.group(1)) != 'Cancellation Reason(s): 1 Maintenance'):
+    if cancelled and (not legend or _html_text(legend.group(1)) not in {
+        'Cancellation Reason(s): 1 Maintenance', 'Cancellation Reason(s): 1 -',
+    }):
         raise DirectSourceError('City Sports class cancellation has an unknown legend')
     if legend and not cancelled:
         raise DirectSourceError('City Sports maintenance legend has no matching class cancellation')
@@ -282,7 +337,8 @@ def _equinox_service_week(hours: dict) -> list[dict]:
     return _equinox_structured_week(rows)
 
 
-def _equinox_visible_week(rows: list[tuple[str, str]]) -> list[dict]:
+def _check_equinox_visible_week(rows: list[tuple[str, str]], week: list[dict], *,
+                               observed: date, exceptions=(), closures=()) -> None:
     labels = [label.lower() for label, _ in rows]
     if 'today' in labels:
         named = [_expand_days(label)[0] for label in labels if label != 'today']
@@ -293,10 +349,70 @@ def _equinox_visible_week(rows: list[tuple[str, str]]) -> list[dict]:
         days = [_expand_days(label)[0] for label, _ in rows]
         if any((DAY_ORDER.index(right) - DAY_ORDER.index(left)) % 7 != 1 for left, right in zip(days, days[1:])):
             raise DirectSourceError('Equinox visible weekday order conflicts with Today')
-    return _club_week(rows)
+    expected = {row['day']: (row['start'], row['end']) for row in week}
+    seen = set()
+    for label, (days, raw) in zip(labels, rows):
+        for day in _expand_days(days):
+            if day not in DAY_ORDER or day in seen:
+                raise DirectSourceError('Unknown or duplicate Equinox visible weekday')
+            seen.add(day)
+            target = expected[day]
+            if label == 'today':
+                if day != DAY_ORDER[observed.weekday()]:
+                    raise DirectSourceError('Equinox Today weekday disagrees with the observed date')
+                target = _club_hours_on(week, observed, exceptions, closures)
+            actual = None if raw.lower() == 'closed' else _club_range(raw)
+            if actual != target:
+                raise DirectSourceError('Equinox primary and repeated visible hours disagree')
+    if seen != set(DAY_ORDER):
+        raise DirectSourceError('Equinox visible hours omit a weekday')
 
 
-def _extract_equinox(html: str) -> dict:
+def _equinox_holidays(groups: list[dict], week: list[dict], observed: date) -> tuple[list[dict], list[dict]]:
+    if not isinstance(groups, list):
+        raise DirectSourceError('Invalid Equinox holiday inventory')
+    exceptions, closures, seen = [], [], set()
+    fields = {'id', 'startDay', 'startHour', 'startMinutes', 'endDay', 'endHour', 'endMinutes',
+              'startTime', 'endTime', 'holidayType', 'closed'}
+    for group in groups:
+        if (not isinstance(group, dict) or set(group) != {'name', 'holidayHours'} or not isinstance(group['name'], str)
+                or not re.fullmatch(r"[A-Z ']+HOURS", group['name'])
+                or not isinstance(group['holidayHours'], list) or not group['holidayHours']):
+            _club_hold('Unrecognized Equinox holiday group', json.dumps(group))
+        for row in group['holidayHours']:
+            if (not isinstance(row, dict) or set(row) != fields or row['holidayType'] != 'Club'
+                    or type(row['closed']) is not bool):
+                _club_hold('Unsupported Equinox holiday scope or fields', json.dumps(group))
+            try:
+                holiday = datetime.strptime(row['startDay'], '%m/%d/%Y').date()
+                if row['endDay'] != row['startDay'] or holiday in seen:
+                    raise ValueError('Duplicate or multiday holiday')
+                seen.add(holiday)
+                times = []
+                for prefix in ('start', 'end'):
+                    hour, minute = row[prefix + 'Hour'], row[prefix + 'Minutes']
+                    if type(hour) is not int or type(minute) is not int or not 0 <= hour <= 23 or not 0 <= minute < 60:
+                        raise ValueError('Invalid clock')
+                    clock = f'{hour:02d}:{minute:02d}'
+                    if row[prefix + 'Time'] != f'{holiday.isoformat()}T{clock}:00':
+                        raise ValueError('Conflicting holiday timestamps')
+                    times.append(clock)
+            except (TypeError, ValueError) as error:
+                raise DirectSourceError('Invalid or conflicting Equinox holiday date/time') from error
+            if row['closed']:
+                if times != ['00:00', '00:00']:
+                    raise DirectSourceError('Closed Equinox holiday has nonzero hours')
+                if observed <= holiday < observed + timedelta(days=14):
+                    closures.append({'start': holiday.isoformat(), 'end': holiday.isoformat(), 'reason': group['name'], 'reason_code': 'holiday'})
+            else:
+                exception = _club_access_exception(holiday, *times, group['name'], week, observed)
+                if exception:
+                    exceptions.append(exception)
+    return exceptions, closures
+
+
+def _extract_equinox(html: str, *, observed_on: date | None = None) -> dict:
+    observed_on = observed_on or pacific_today()
     url = 'https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco'
     name = 'Equinox Sports Club San Francisco'
     if len(html.encode('utf-8')) > 4 * 1024 * 1024:
@@ -324,8 +440,7 @@ def _extract_equinox(html: str) -> dict:
         facility = page['facility']
         if facility.get('name') != name or page.get('slug') != 'clubs/northern-california/sportsclubsanfrancisco':
             raise DirectSourceError('Equinox facility data is for another club')
-        if facility['holidays'] != []:
-            _club_hold('Equinox has populated holiday hours', json.dumps(facility['holidays']))
+        exceptions, closures = _equinox_holidays(facility['holidays'], primary, observed_on)
         for field in ('banner', 'statusMessage', 'clubHTMLContent'):
             if facility.get(field):
                 _club_hold('Equinox has a structured facility notice requiring review', json.dumps({field: facility[field]}))
@@ -383,21 +498,23 @@ def _extract_equinox(html: str) -> dict:
             raise DirectSourceError('Unaccounted Equinox hours-group content')
         prefix = _html_text(primary_html[:match.start()]).lower()
         scope = 'spa' if prefix.rfind('spa hours') > max(prefix.rfind('club hours'), prefix.rfind('hours today')) else 'club'
-        visible = _equinox_visible_week([(_html_text(day), _html_text(hours)) for day, hours in rows])
-        if _club_identity(visible) != _club_identity(spa if scope == 'spa' else primary):
-            raise DirectSourceError('Equinox primary and repeated visible hours disagree')
+        _check_equinox_visible_week([(_html_text(day), _html_text(hours)) for day, hours in rows],
+            spa if scope == 'spa' else primary, observed=observed_on,
+            exceptions=exceptions if scope == 'club' else (), closures=closures if scope == 'club' else ())
         consumed.append(match.span())
         found[scope] += 1
     if not all(found.values()):
         raise DirectSourceError('Missing complete Equinox visible Club or Spa hours')
     remainder = primary_html
+    notices = html
     for start, end in sorted(consumed, reverse=True):
         remainder = remainder[:start] + remainder[end:]
-    if re.search(r'\b(?:closed|closure|closes|reopen|unavailable|maintenance|cancelled|canceled|special hours|holiday hours)\b', _html_text(html), re.I):
-        _club_hold('Equinox has an unaccounted whole-page closure or special-hours notice', _html_text(html))
+        notices = notices[:start] + notices[end:]
+    if re.search(r'\b(?:closed|closure|closes|reopen|unavailable|maintenance|cancelled|canceled|special hours|holiday hours)\b', _html_text(notices), re.I):
+        _club_hold('Equinox has an unaccounted whole-page closure or special-hours notice', _html_text(notices))
     summaries = re.findall(r'Hours today\s+(.+?)(?=\s+Join Now|\s+Schedule a Visit|$)', _html_text(remainder), re.I)
     for summary in summaries:
-        if _club_range(summary) not in {(row['start'], row['end']) for row in primary}:
+        if _club_range(summary) != _club_hours_on(primary, observed_on, exceptions, closures):
             raise DirectSourceError('Equinox daily summary disagrees with weekly hours')
     _check_remaining_club_notices(remainder)
-    return _payload('facility_hours', [], access_hours=primary)
+    return _payload('facility_hours', [], access_hours=primary, access_exceptions=exceptions, closures=closures)

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, symlinkSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, symlinkSync, openSync, closeSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -20,7 +20,8 @@ function gate(responses, overrides = {}) {
     requests,
     sleeps,
     logs,
-    run: () => checkBuildCI({
+    run: () => (overrides.publication ? waitForCommitCI : checkBuildCI)({
+      commit, branch: "main",
       environment,
       readHead: () => commit,
       now: () => elapsed,
@@ -60,6 +61,25 @@ test("CI lookup reports authentication mode without exposing the token", async (
   assert.ok(authenticated.logs.every((message) => !message.includes("private-test-token") && !message.includes("unauthenticated")));
 });
 
+test("CI failure reports a canonical run URL without trusting server text", async () => {
+  const receipts = [];
+  const check = gate([{ workflow_runs: [{ ...successfulRun, id: 123, conclusion: 'failure', html_url: 'https://attacker.invalid/private' }] }], { report: value => receipts.push(value) });
+  await assert.rejects(check.run(), /did not complete successfully/);
+  assert.deepEqual(receipts, [{ check_url: 'https://github.com/cbzehner/swimfrancisco/actions/runs/123', ci_status: 'completed', ci_conclusion: 'failure' }]);
+});
+
+test("promotion CLI writes a safe failure receipt even before pushing", t => {
+  const directory = mkdtempSync(join(tmpdir(), 'ci-receipt-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const receipt = join(directory, 'receipt.json');
+  writeFileSync(receipt, 'previous complete receipt');
+  const previous = openSync(receipt, 'r');
+  t.after(() => closeSync(previous));
+  assert.throws(() => execFileSync('node', ['scripts/check-build-ci.mjs', 'promote', 'invalid', 'invalid', `--receipt=${receipt}`], { stdio: 'pipe' }));
+  assert.deepEqual(JSON.parse(readFileSync(receipt)), { status: 'failed', failure_code: 'promotion_failed' });
+  assert.equal(readFileSync(previous, 'utf8'), 'previous complete receipt', 'the receipt is atomically replaced, never truncated');
+});
+
 test("missing and pending runs wait until the same commit passes", async () => {
   const check = gate([
     { workflow_runs: [] },
@@ -89,7 +109,16 @@ test("a newer pending rerun cannot use an older successful result", async () => 
   assert.deepEqual(check.sleeps, [30_000]);
 });
 
-test("pending CI times out within ten minutes and at most 21 requests", async () => {
+test("publication accepts CI that finishes after twelve minutes", async () => {
+  const check = gate([
+    ...Array.from({ length: 25 }, () => ({ workflow_runs: [] })),
+    { workflow_runs: [successfulRun] },
+  ], { publication: true, timeoutMilliseconds: 20 * 60_000 });
+  assert.deepEqual(await check.run(), successfulRun);
+  assert.equal(check.sleeps.length, 25);
+});
+
+test("pending deployment CI times out within ten minutes and at most 21 requests", async () => {
   const check = gate([{ workflow_runs: [] }]);
   await assert.rejects(check.run(), /Timed out/);
   assert.ok(check.requests.length <= 21);
@@ -431,10 +460,11 @@ function promotionRepository(t, { path = "content/spots/test-pool.md", symlink =
     return remoteHead();
   };
   return { work, base, candidate, branch, git, remoteHead, advanceMain,
-    options: { base, branch, git, environment: {}, waitForCI: async ({ commit, branch }) => {
+    options: { base, branch, git, environment: {}, waitForCI: async ({ commit, branch, timeoutMilliseconds }) => {
+      assert.equal(timeoutMilliseconds, 20 * 60_000);
       assert.equal(remoteHead(branch), commit);
       assert.equal(remoteHead(), base);
-      return { ...successfulRun, head_sha: commit, head_branch: branch, html_url: "https://example.invalid/check" };
+      return { ...successfulRun, id: 123, head_sha: commit, head_branch: branch, html_url: "https://attacker.invalid/untrusted" };
     } },
   };
 }
@@ -536,7 +566,7 @@ test("promotion checks the exact temporary-branch commit before fast-forwarding 
   assert.equal(result.status, "promoted");
   assert.equal(result.commit, repository.candidate);
   assert.equal(repository.remoteHead(), repository.candidate);
-  assert.equal(result.check_url, "https://example.invalid/check");
+  assert.equal(result.check_url, "https://github.com/cbzehner/swimfrancisco/actions/runs/123");
 });
 
 test("failed CI never updates main", async (t) => {

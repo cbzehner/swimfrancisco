@@ -2,6 +2,8 @@ import posixpath
 import re
 from pathlib import Path
 
+import pytest
+
 WORKFLOW = (Path(__file__).parents[1] / ".github/workflows/schedules-extract.yml").read_text()
 
 
@@ -23,6 +25,40 @@ def test_daily_detection_is_read_only_and_failure_falls_back_to_gated_pipeline()
     assert "schedules detect-changes" in detect
     assert "needs.detect.result == 'failure'" in WORKFLOW
     assert "needs.detect.outputs.changed == 'true'" in WORKFLOW
+
+
+def test_detection_timeout_leaves_time_for_evidence_and_normal_failure_fallback():
+    detect = WORKFLOW.split("\n  detect:", 1)[1].split("\n  extract:", 1)[0]
+    assert "timeout-minutes: 15" in detect
+    assert "timeout --signal=TERM --kill-after=30s 10m" in detect
+    assert "source-changes.json" in detect
+    assert "detection_timeout" in detect
+
+
+@pytest.mark.parametrize('cancelled,detect_result,changed,expected', [
+    (True, 'success', 'true', False), (True, 'skipped', '', False),
+    (True, 'failure', '', False), (False, 'cancelled', 'true', False),
+    (False, 'failure', '', True), (False, 'skipped', '', True),
+    (False, 'success', 'true', True), (False, 'success', 'false', False),
+])
+def test_cancelled_runs_never_start_paid_extraction(cancelled, detect_result, changed, expected):
+    # Evaluate the actual condition's small boolean grammar, not a copied policy.
+    condition = WORKFLOW.split('\n  extract:', 1)[1].split('if:', 1)[1].splitlines()[0].strip()
+    condition = condition.removeprefix('${{').removesuffix('}}').strip()
+    values = {'always()': True, '!cancelled()': not cancelled,
+              'github.ref': 'refs/heads/main', 'vars.SCHEDULES_AUTOMATION_ENABLED': 'true',
+              'needs.detect.result': detect_result, 'needs.detect.outputs.changed': changed}
+    for key, value in values.items():
+        condition = condition.replace(key, repr(value))
+    assert eval(condition.replace('&&', ' and ').replace('||', ' or '), {'__builtins__': {}}, {}) is expected
+
+
+def test_live_browser_runner_is_pinned_and_checked_before_extraction():
+    extract = WORKFLOW.split("\n  extract:", 1)[1].split("\n  review-closures:", 1)[0]
+    assert "runs-on: ubuntu-24.04" in extract
+    assert extract.index("name: Record publication job deadline") < extract.index("name: Require capture credentials")
+    assert extract.index("name: Record publication job deadline") < extract.index("actions/checkout")
+    assert extract.index("name: Check browser launches") < extract.index("name: Extract and check publication")
 
 
 def test_split_permissions_with_closure_only_review_job():

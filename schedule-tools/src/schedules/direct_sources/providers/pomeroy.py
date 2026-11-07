@@ -38,13 +38,36 @@ def _pomeroy_closures(html: str, observed_on: date) -> tuple[list[dict], list[di
     blocks = re.findall(r"Upcoming Pool Closure Dates:\s*(.*?)\s*Therapeutic Swimming", text)
     if len(blocks) != 1:
         raise DirectSourceError("Pomeroy closure inventory is missing or duplicated")
+    block = blocks[0].replace('’', "'")
+    weekdays = r"(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)"
+    span = re.fullmatch(
+        rf"({weekdays}(?:, {weekdays})* and {weekdays}) (\d{{1,2}})\.(\d{{1,2}})[-–](\d{{1,2}})\.(\d{{1,2}}) - (Thanksgiving|Christmas|New Year's Day)",
+        block,
+    )
+    if span:
+        days, month, first, end_month, last, reason = span.groups()
+        month, first, end_month, last = map(int, (month, first, end_month, last))
+        try:
+            start = min((date(year, month, first) for year in range(observed_on.year - 1, observed_on.year + 2)),
+                        key=lambda value: abs((value - observed_on).days))
+            end = date(start.year + (end_month < month), end_month, last)
+        except ValueError as error:
+            raise DirectSourceError("Invalid Pomeroy closure date range") from error
+        if not 0 <= (end - start).days <= 6:
+            raise DirectSourceError("Unsupported Pomeroy closure date range")
+        actual = [(start + timedelta(days=offset)).strftime("%A") for offset in range((end - start).days + 1)]
+        if re.split(r", | and ", days) != actual:
+            raise DirectSourceError("Pomeroy closure weekdays conflict with date range")
+        evidence = [{"text": block, "start": start.isoformat(), "end": end.isoformat()}]
+        closures = ([{"start": start.isoformat(), "end": end.isoformat(), "reason": reason, "reason_code": "holiday"}]
+                    if start < observed_on + timedelta(days=14) and end >= observed_on else [])
+        return closures, evidence
     pattern = re.compile(
         r"(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),\s*"
         r"(January|February|March|April|May|June|July|August|September|October|November|December) "
         r"(\d{1,2})(?:st|nd|rd|th)?(?:,? (20\d{2}))?\s*[-–]\s*"
         r"([A-Za-z][A-Za-z ']*?)(?= (?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),|$)"
     )
-    block = blocks[0]
     matches = list(pattern.finditer(block))
     if not matches or pattern.sub("", block).strip():
         raise DirectSourceError("Unsupported Pomeroy closure notice")

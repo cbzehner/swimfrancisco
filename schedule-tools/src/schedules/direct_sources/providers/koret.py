@@ -21,6 +21,9 @@ _CLOSED_BANNER = re.compile(r"^closed\b[\s:,-]*(.*)", re.IGNORECASE)
 def _extract_koret(path: Path) -> dict:
     workbook = load_workbook(path, data_only=True)
     visible_sheets = [sheet for sheet in workbook.worksheets if sheet.sheet_state == "visible"]
+    if len(visible_sheets) == 1 and visible_sheets[0].title == "Pool Closure Notice":
+        # Do not invent closure dates or restore hours from hidden lane grids.
+        raise DirectSourceError("Koret closure-only workbook requires review before publication")
     unknown = sorted(sheet.title for sheet in visible_sheets if sheet.title not in _KNOWN_SHEETS)
     if unknown:
         raise DirectSourceError(f"Unclassified visible Koret sheet(s): {', '.join(unknown)}")

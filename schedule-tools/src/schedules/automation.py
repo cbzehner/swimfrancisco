@@ -65,7 +65,7 @@ def save_evidence(root: Path, destination: Path) -> None:
     for source in attempts.glob("*/*.json"):
         if source.is_symlink() or source.parent.is_symlink() or not source.is_file():
             continue
-        if not re.fullmatch(r"[a-f0-9]{32}/(request|response)\.json", source.relative_to(attempts).as_posix()):
+        if not re.fullmatch(r"[a-f0-9]{32}/(request|response|transport)\.json", source.relative_to(attempts).as_posix()):
             continue
         target = destination / "api-attempts" / source.relative_to(attempts)
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -259,28 +259,50 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
         raise ValueError("Automation is disabled; operator approval is required")
     if mode == "publish" and os.environ.get("SCHEDULES_AUTO_PROJECT") == "false":
         raise ValueError("Publication kill switch is active")
+    state: dict = {"run_id": run_id, "mode": mode, "status": "running", "builds": [], "published_slugs": []}
+    deadline = os.environ.get("SCHEDULES_JOB_DEADLINE", str(int(time.time()) + 110 * 60))
+    if not re.fullmatch(r"[0-9]+", deadline):
+        raise ValueError("Invalid publication job deadline")
+    job_deadline = int(deadline)
+    raw_command = command
+
+    def bounded_command(arguments, cwd, *, timeout=900):
+        remaining = int(job_deadline - time.time()) - 5 * 60
+        if remaining <= 0:
+            state["failure_code"] = "job_time_exhausted"
+            raise RuntimeError("Job deadline reached; preserve time for evidence upload")
+        return raw_command(arguments, cwd, timeout=min(timeout, remaining))
+
+    command = bounded_command
     if checked(["git", "status", "--porcelain"], root, command):
         raise ValueError("Automation requires a clean checkout")
     evidence = root / "tmp" / "automation"
     if evidence.exists():
         raise ValueError("Automation evidence directory already exists; use a fresh checkout")
     evidence.mkdir(parents=True)
-    state: dict = {"run_id": run_id, "mode": mode, "status": "running", "builds": [], "published_slugs": []}
     def save_state() -> None:
         (evidence / "result.json").write_text(json.dumps(state, indent=2) + "\n")
 
     previous: Path | None = None
     previous_base = ""
+
+    def require_publication_time():
+        # 22 minutes for promotion, 20 for live verification, five for evidence.
+        if mode == "publish" and job_deadline - time.time() < 47 * 60:
+            state["failure_code"] = "publication_time_exhausted"
+            raise RuntimeError("Insufficient time remains for checked publication")
+
     started = time.monotonic()
     try:
         for build_number in (1, 2):
+            require_publication_time()
             checked(["git", "fetch", "--no-tags", "origin", "main"], root, command)
             base = checked(["git", "rev-parse", "FETCH_HEAD"], root, command)
             if not re.fullmatch(r"[a-f0-9]{40}", base):
                 raise RuntimeError("Remote main did not resolve to an exact commit")
             worktree = Path(tempfile.mkdtemp(prefix="swimfrancisco-publication-")) / "checkout"
             checked(["git", "worktree", "add", "--detach", str(worktree), base], root, command)
-            build: dict = {"base": base, "branch": f"auto/schedules/{run_id}-{build_number}", "commands": {}, "command_seconds": {}}
+            build: dict = {"stage": "prepare", "base": base, "branch": f"auto/schedules/{run_id}-{build_number}", "commands": {}, "command_seconds": {}}
             state["builds"].append(build)
             save_state()
             try:
@@ -295,6 +317,9 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
                     ("direct", schedules + ["extract", "--direct"], False),
                     ("openai", schedules + ["extract", "--provider", "openai", "--no-discover"], False),
                 ):
+                    require_publication_time()
+                    build["stage"] = name
+                    save_state()
                     command_started = time.monotonic()
                     result = command(arguments, worktree, timeout=160 if name == "browser" else 1800)
                     build["command_seconds"][name] = round(time.monotonic() - command_started, 3)
@@ -310,6 +335,8 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
                 if mode == "extract-only":
                     state["status"] = "extracted"
                     return state
+                build["stage"] = "publication"
+                save_state()
                 checked(schedules + ["publish-pending"], worktree, command)
                 publication = json.loads((worktree / "tmp/publish-pending.json").read_text())
                 build["closure_reviews"].extend(item["closure_review"] for item in publication.get("refused", []) if item.get("closure_review"))
@@ -322,6 +349,8 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
                 checked(schedules + ["prune"], worktree, command)
                 checked(["node", "scripts/generate-bulletin.mjs"], worktree, command)
                 checked(["node", "scripts/generate-i18n.mjs", "generate"], worktree, command)
+                build["stage"] = "stage"
+                save_state()
                 staged = json.loads(checked(["node", "scripts/check-build-ci.mjs", "stage"], worktree, command))
                 build["paths"] = staged["paths"]
                 if not staged["changed"]:
@@ -329,12 +358,62 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
                     return state
                 checked(["git", "-c", "user.name=Schedule automation", "-c", "user.email=schedules@swimfrancisco.com",
                          "commit", "-m", "Refresh verified swimming schedules"], worktree, command)
+                build["candidate"] = checked(["git", "rev-parse", "HEAD"], worktree, command)
+                if not re.fullmatch(r"[a-f0-9]{40}", build["candidate"]):
+                    raise RuntimeError("Invalid candidate commit")
+                build["stage"] = "promotion"
+                build["promotion"] = {"status": "not_started", "failure_code": "promotion_failed"}
                 save_state()
-                result = command(["node", "scripts/check-build-ci.mjs", "promote", base, build["branch"]], worktree, timeout=900)
+                require_publication_time()
+                try:
+                    result = command(["node", "scripts/check-build-ci.mjs", "promote", base, build["branch"],
+                                      "--receipt=tmp/promotion.json"], worktree, timeout=1320)
+                except subprocess.TimeoutExpired:
+                    state["failure_code"] = "promotion_timeout"
+                    result = subprocess.CompletedProcess([], 1)
+                receipt = worktree / "tmp/promotion.json"
+                receipt_valid = True
+                try:
+                    if receipt.is_file():
+                        promotion = json.loads(receipt.read_text())
+                        # Only typed, credential-free fields enter retained evidence.
+                        if (not isinstance(promotion, dict)
+                                or promotion.get("status") not in {"failed", "waiting", "stale", "promoted"}
+                                or promotion.get("commit", build["candidate"]) != build["candidate"]
+                                or promotion.get("failure_code") not in {None, "ci_failed", "ci_timeout", "promotion_failed"}
+                                or promotion.get("ci_status") not in {None, "queued", "in_progress", "completed", "waiting", "requested", "pending"}
+                                or promotion.get("ci_conclusion") not in {None, "success", "failure", "cancelled", "timed_out", "skipped", "neutral", "action_required", "stale"}
+                                or (promotion.get("check_url") is not None and not re.fullmatch(
+                                    r"https://github\.com/cbzehner/swimfrancisco/actions/runs/[1-9][0-9]*", promotion["check_url"]))):
+                            raise ValueError("Invalid promotion receipt")
+                        build["promotion"] = {key: promotion[key] for key in
+                            ("status", "commit", "check_url", "failure_code", "ci_status", "ci_conclusion") if key in promotion}
+                except (OSError, ValueError, TypeError):
+                    receipt_valid = False
+                    state.setdefault("failure_code", "invalid_promotion_receipt")
+                    result = subprocess.CompletedProcess([], 1)
+                promotion = build["promotion"]
                 if result.returncode not in (0, 2):
-                    raise RuntimeError("Exact-commit CI or main promotion failed")
-                promotion = json.loads(result.stdout.strip().splitlines()[-1])
-                build["promotion"] = promotion
+                    # A failed or killed child can have completed the main push. Reconcile
+                    # read-only, but require its exact-CI success evidence too.
+                    try:
+                        remote = command(["git", "ls-remote", "--heads", "origin", "refs/heads/main"], worktree, timeout=15)
+                        fields = remote.stdout.strip().split() if remote.returncode == 0 else []
+                        main = fields[0] if len(fields) == 2 and fields[1] == "refs/heads/main" else None
+                    except subprocess.TimeoutExpired:
+                        main = None
+                    build["promotion"]["main_state"] = "candidate" if main == build["candidate"] else "different" if main else "unknown"
+                    if (main == build["candidate"] and promotion.get("commit") == build["candidate"]
+                            and promotion.get("ci_status") == "completed" and promotion.get("ci_conclusion") == "success"
+                            and promotion.get("check_url")):
+                        build["promotion"].update(status="promoted", failure_code=None, reconciled=True)
+                        promotion = build["promotion"]
+                        state.pop("failure_code", None)
+                        result = subprocess.CompletedProcess([], 0)
+                if result.returncode not in (0, 2):
+                    build["promotion"]["status"] = "failed"
+                    state.setdefault("failure_code", promotion.get("failure_code") or "promotion_failed")
+                    raise RuntimeError("Exact-commit CI or main promotion failed" if receipt_valid else "Invalid promotion receipt")
                 if result.returncode == 2 and promotion["status"] == "stale":
                     previous, previous_base = worktree, base
                     continue
@@ -342,7 +421,12 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
                     raise RuntimeError("Invalid promotion receipt")
                 state["status"] = "promoted"
                 save_state()
+                build["stage"] = "deployment"
+                build["deployment"] = {"status": "unverified", "commit": promotion["commit"]}
+                save_state()
                 verify(worktree, promotion["commit"], command)
+                build["deployment"]["status"] = "verified"
+                build["stage"] = "complete"
                 state["status"] = "published"
                 state["published_slugs"] = build["decisions"]["published_slugs"]
                 state["deployment_url"] = "https://swimfrancisco.com/agent/build.json"
@@ -353,6 +437,8 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
     except Exception as error:
         state["status"] = "failed"
         state["error_type"] = type(error).__name__
+        stage = state["builds"][-1].get("stage", "prepare") if state["builds"] else "prepare"
+        state.setdefault("failure_code", "deployment_unverified" if stage == "deployment" else f"{stage}_failed")
         raise
     finally:
         state["elapsed_seconds"] = round(time.monotonic() - started, 3)

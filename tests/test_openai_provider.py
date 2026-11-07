@@ -124,6 +124,44 @@ def test_api_closure_pairs_are_checked_after_null_mapping():
                             format_checker=jsonschema.FormatChecker())
 
 
+def test_extract_429_stops_after_one_request_and_preserves_safe_failure_code(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "synthetic-key")
+    monkeypatch.setattr(openai_provider, "inspect_pdf_source", lambda value: object())
+    monkeypatch.setattr(openai_provider, "source_closure_coverage", lambda *args: {"issues": []})
+    monkeypatch.setattr(openai_provider, "source_closure_inventory", lambda *args: [])
+    monkeypatch.setattr(openai_provider, "visual_page_numbers", lambda *args: [])
+    monkeypatch.setattr(openai_provider, "render_source_pages", lambda *args: {})
+    monkeypatch.setattr(openai_provider, "source_request", lambda *args: {})
+    calls = []
+    def call(*args):
+        calls.append(args)
+        return {"status": "execution_error", "http_status": 429, "timed_out": False,
+                "api_response": None, "failure_code": "provider_rate_limited"}
+    monkeypatch.setattr(openai_provider, "call_api", call)
+    with pytest.raises(openai_provider.ProviderUnavailable) as error:
+        openai_provider.extract(b"synthetic", "synthetic", CHECK_SCHEMA)
+    assert error.value.failure_code == "provider_rate_limited"
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize("error_code, expected", [
+    ("insufficient_quota", "provider_quota_exhausted"),
+    ("rate_limit_exceeded", "provider_rate_limited"),
+    ("PRIVATE_DIAGNOSTIC", "provider_rate_limited"),
+])
+def test_provider_quota_is_distinguished_without_persisting_raw_errors(tmp_path, monkeypatch, error_code, expected):
+    monkeypatch.setenv("OPENAI_API_KEY", "PRIVATE_KEY")
+    real_client = openai_provider.httpx.Client
+    monkeypatch.setattr(openai_provider.httpx, "Client", lambda **kwargs: real_client(**kwargs,
+        transport=openai_provider.httpx.MockTransport(lambda request: openai_provider.httpx.Response(
+            429, json={"error": {"code": error_code, "message": "PRIVATE_DIAGNOSTIC"}}))))
+    result = openai_provider.call_api({}, tmp_path / "call", 10)
+    assert result["failure_code"] == expected
+    from schedules.recovery import failure_code
+    assert failure_code(openai_provider.ProviderUnavailable(expected)) == expected
+    assert all("PRIVATE" not in path.read_text() for path in tmp_path.rglob("*.json"))
+
+
 @pytest.mark.parametrize("failure", [401, 429, "timeout"])
 def test_api_failure_stops_without_retry_or_secret_logs(tmp_path, monkeypatch, failure):
     monkeypatch.setenv("OPENAI_API_KEY", "DO_NOT_PERSIST")
@@ -144,5 +182,9 @@ def test_api_failure_stops_without_retry_or_secret_logs(tmp_path, monkeypatch, f
     assert len(calls) == 1
     assert result["status"] == ("timeout" if failure == "timeout" else "execution_error")
     assert result["api_response"] is None
+    diagnostic = json.loads((directory / "transport.json").read_text())
+    assert diagnostic["http_status"] == (None if failure == "timeout" else failure)
+    if failure == 429:
+        assert diagnostic["failure_code"] == "provider_rate_limited"
     assert not (directory / "response.json").exists()
     assert all(b"DO_NOT_PERSIST" not in path.read_bytes() for path in directory.rglob("*") if path.is_file())

@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 
 import { execFileSync } from "node:child_process";
+import { renameSync, writeFileSync } from "node:fs";
 import { isDeepStrictEqual } from "node:util";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = fileURLToPath(new URL("../", import.meta.url));
 const workflowURL = "https://api.github.com/repos/cbzehner/swimfrancisco/actions/workflows/ci.yml/runs";
-const timeoutMilliseconds = 10 * 60_000;
+const deploymentWaitMilliseconds = 10 * 60_000;
+const promotionWaitMilliseconds = 20 * 60_000;
 const pollMilliseconds = 30_000;
 const secondaryRateLimitInitialDelayMilliseconds = 60_000;
 const workflowStatuses = new Set(["queued", "in_progress", "completed", "waiting", "requested", "pending"]);
@@ -145,6 +147,8 @@ export async function waitForCommitCI({
   now = Date.now,
   sleep = delay,
   log = console.log,
+  timeoutMilliseconds = deploymentWaitMilliseconds,
+  report = () => {},
 } = {}) {
   if (!/^[a-f\d]{40}$/.test(commit || "") ||
       !(branch === "main" || automationBranch.test(branch || ""))) {
@@ -164,7 +168,8 @@ export async function waitForCommitCI({
   const deadline = now() + timeoutMilliseconds;
   let retryCount = 0;
 
-  for (let attempt = 0; attempt < 21; attempt += 1) {
+  const maximumAttempts = Math.ceil(timeoutMilliseconds / pollMilliseconds) + 1;
+  for (let attempt = 0; attempt < maximumAttempts; attempt += 1) {
     const remaining = deadline - now();
     if (remaining <= 0) break;
     let response;
@@ -176,7 +181,7 @@ export async function waitForCommitCI({
       });
     } catch {
       const waitMilliseconds = Math.min(pollMilliseconds, deadline - now());
-      if (waitMilliseconds <= 0 || attempt === 20) break;
+      if (waitMilliseconds <= 0 || attempt === maximumAttempts - 1) break;
       log(`GitHub CI lookup encountered a network error or request timeout; retrying in ${Math.ceil(waitMilliseconds / 1_000)} seconds.`);
       await sleep(waitMilliseconds);
       assertHeadMatches(commit, readHead);
@@ -189,7 +194,7 @@ export async function waitForCommitCI({
         throw new Error(`GitHub CI lookup failed with HTTP ${response.status}`);
       }
       const waitMilliseconds = Math.min(retryDelayMilliseconds(response, retryCount, now()), deadline - now());
-      if (waitMilliseconds <= 0 || attempt === 20) break;
+      if (waitMilliseconds <= 0 || attempt === maximumAttempts - 1) break;
       log(`GitHub CI lookup returned HTTP ${response.status}; waiting ${Math.ceil(waitMilliseconds / 1_000)} seconds before retrying${waitMilliseconds >= deadline - now() ? " (the retry delay reaches the build deadline)" : ""}.`);
       await sleep(waitMilliseconds);
       assertHeadMatches(commit, readHead);
@@ -210,9 +215,15 @@ export async function waitForCommitCI({
       if (run.head_sha !== commit || run.head_branch !== branch || run.event !== "push") {
         throw new Error("GitHub CI run does not match the main push commit being built");
       }
+      report({
+        check_url: Number.isSafeInteger(run.id) && run.id > 0
+          ? `https://github.com/cbzehner/swimfrancisco/actions/runs/${run.id}` : null,
+        ci_status: run.status,
+        ci_conclusion: ["success", "failure", "cancelled", "timed_out", "skipped", "neutral", "action_required", "stale"].includes(run.conclusion) ? run.conclusion : null,
+      });
       if (run.status === "completed") {
         if (run.conclusion !== "success") {
-          throw new Error("CI did not complete successfully");
+          throw Object.assign(new Error("CI did not complete successfully"), { failure_code: "ci_failed" });
         }
         assertHeadMatches(commit, readHead);
         log(`CI passed for ${commit}.`);
@@ -220,12 +231,12 @@ export async function waitForCommitCI({
       }
     }
     const waitMilliseconds = Math.min(pollMilliseconds, deadline - now());
-    if (waitMilliseconds <= 0 || attempt === 20) break;
+    if (waitMilliseconds <= 0 || attempt === maximumAttempts - 1) break;
     log(`Waiting for CI on ${commit}.`);
     await sleep(waitMilliseconds);
     assertHeadMatches(commit, readHead);
   }
-  throw new Error(`Timed out waiting for successful CI on ${commit} after ten minutes`);
+  throw Object.assign(new Error(`Timed out waiting for successful CI on ${commit} after ${timeoutMilliseconds / 60_000} minutes`), { failure_code: "ci_timeout" });
 }
 
 export async function checkBuildCI(options = {}) {
@@ -245,6 +256,7 @@ export async function promoteScheduleCommit({
   environment = process.env,
   git = (args) => execFileSync("git", args, { cwd: repoRoot, encoding: "utf8", timeout: 60_000 }),
   waitForCI = waitForCommitCI,
+  report = () => {},
 } = {}) {
   if (!/^[a-f\d]{40}$/.test(base || "") || !automationBranch.test(branch || "")) {
     throw new Error("Promotion requires the base commit and a run-specific automation branch");
@@ -275,36 +287,53 @@ export async function promoteScheduleCommit({
   const existing = readRemote(branch);
   if (existing && existing !== commit) throw new Error("Automation branch already points to another commit");
   git(["push", "--porcelain", "origin", `${commit}:refs/heads/${branch}`]);
-  const check = await waitForCI({ commit, branch, environment, readHead: () => git(["rev-parse", "HEAD"]) });
+  report({ status: "waiting", commit });
+  const check = await waitForCI({ commit, branch, environment, timeoutMilliseconds: promotionWaitMilliseconds,
+    readHead: () => git(["rev-parse", "HEAD"]), report });
   if (!check || check.head_sha !== commit || check.head_branch !== branch || check.event !== "push"
       || check.status !== "completed" || check.conclusion !== "success") throw new Error("Promotion requires successful CI for its exact commit");
   assertHeadMatches(commit, () => git(["rev-parse", "HEAD"]));
+  const checkURL = Number.isSafeInteger(check.id) && check.id > 0
+    ? `https://github.com/cbzehner/swimfrancisco/actions/runs/${check.id}` : null;
   const currentMain = readRemote("main");
-  if (currentMain !== base) return { status: "stale", commit, main: currentMain, check_url: check.html_url || null };
+  if (currentMain !== base) return { status: "stale", commit, main: currentMain, check_url: checkURL };
   try {
     git(["push", "--porcelain", "origin", `${commit}:refs/heads/main`]);
   } catch {
     const currentMain = readRemote("main");
     if (currentMain !== commit) {
-      if (currentMain !== base) return { status: "stale", commit, main: currentMain, check_url: check.html_url || null };
+      if (currentMain !== base) return { status: "stale", commit, main: currentMain, check_url: checkURL };
       throw new Error("Main promotion failed; branch protection or the publication token rejected the push");
     }
   }
   if (readRemote("main") !== commit) throw new Error("Main advanced after promotion; publication requires a new revision check");
-  return { status: "promoted", commit, check_url: check.html_url || null };
+  return { status: "promoted", commit, check_url: checkURL };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const receiptPath = process.argv.find(argument => argument.startsWith("--receipt="))?.slice("--receipt=".length);
+  let receipt = { status: "failed", failure_code: "promotion_failed" };
+  const report = update => {
+    receipt = { ...receipt, ...update };
+    if (receiptPath) {
+      writeFileSync(`${receiptPath}.tmp`, JSON.stringify(receipt) + "\n");
+      renameSync(`${receiptPath}.tmp`, receiptPath);
+    }
+  };
   const action = process.argv[2] === "stage"
     ? Promise.resolve().then(() => console.log(JSON.stringify(stageScheduleChanges())))
     : process.argv[2] === "promote"
-    ? promoteScheduleCommit({ base: process.argv[3], branch: process.argv[4] }).then((result) => {
+    ? promoteScheduleCommit({ base: process.argv[3], branch: process.argv[4], report }).then((result) => {
+      report({ ...result, failure_code: null });
       console.log(JSON.stringify(result));
       if (result.status === "stale") process.exitCode = 2;
     })
     : checkBuildCI();
   action.catch((error) => {
-    console.error(error.message);
+    if (process.argv[2] === "promote") {
+      report({ status: "failed", failure_code: ["ci_failed", "ci_timeout"].includes(error.failure_code) ? error.failure_code : "promotion_failed" });
+      console.error("Promotion failed; inspect the structured receipt.");
+    } else console.error(error.message);
     process.exitCode = 1;
   });
 }

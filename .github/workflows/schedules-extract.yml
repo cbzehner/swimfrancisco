@@ -36,7 +36,16 @@ jobs:
       - name: Check city-pool source changes without paid calls
         id: detect
         run: |
-          uv --project schedule-tools run --locked schedules detect-changes
+          timeout --signal=TERM --kill-after=30s 10m uv --project schedule-tools run --locked schedules detect-changes || {
+            status=$?
+            mkdir -p tmp
+            if [ "$status" -eq 124 ] || [ "$status" -eq 137 ]; then
+              printf '%s\n' '{"changed":true,"failure_code":"detection_timeout"}' > tmp/source-changes.json
+            else
+              printf '%s\n' '{"changed":true,"failure_code":"detection_failed"}' > tmp/source-changes.json
+            fi
+            exit 1
+          }
           python -c 'import json, os; r = json.load(open("tmp/source-changes.json")); print("changed=" + str(r["changed"]).lower(), file=open(os.environ["GITHUB_OUTPUT"], "a"))'
       - uses: actions/upload-artifact@v4
         if: always()
@@ -47,8 +56,8 @@ jobs:
 
   extract:
     needs: detect
-    if: always() && github.ref == 'refs/heads/main' && vars.SCHEDULES_AUTOMATION_ENABLED == 'true' && (needs.detect.result == 'skipped' || needs.detect.result == 'failure' || needs.detect.outputs.changed == 'true')
-    runs-on: ubuntu-latest
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && vars.SCHEDULES_AUTOMATION_ENABLED == 'true' && (needs.detect.result == 'skipped' || needs.detect.result == 'failure' || (needs.detect.result == 'success' && needs.detect.outputs.changed == 'true')) }}
+    runs-on: ubuntu-24.04
     timeout-minutes: 110
     permissions:
       contents: write
@@ -60,6 +69,9 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
       GITHUB_TOKEN: ${{ github.token }}
     steps:
+      - name: Record publication job deadline
+        run: echo "SCHEDULES_JOB_DEADLINE=$(( $(date +%s) + 110 * 60 ))" >> "$GITHUB_ENV"
+
       - name: Require capture credentials and CI-capable token
         env:
           SCHEDULES_BOT_TOKEN: ${{ secrets.SCHEDULES_BOT_TOKEN }}
@@ -92,6 +104,19 @@ jobs:
       - run: uv --project schedule-tools sync --locked
       - name: Install live browser checks
         run: node node_modules/playwright-core/cli.js install --with-deps webkit chromium
+
+      - name: Check browser launches
+        timeout-minutes: 1
+        run: |
+          node --input-type=commonjs <<'NODE'
+          (async () => {
+            const playwright = require('playwright-core');
+            for (const engine of ['webkit', 'chromium']) {
+              const browser = await playwright[engine].launch({ timeout: 10_000 });
+              await browser.close();
+            }
+          })().catch(error => { console.error(error); process.exitCode = 1; });
+          NODE
 
       - name: Extract and check publication
         env:
@@ -182,12 +207,18 @@ jobs:
               if (issue) await github.rest.issues.update({ owner, repo, issue_number: issue.number, state: 'closed' });
               return;
             }
-            const fingerprint = JSON.stringify({ failed, flags: [...flags].sort(), commandFailures: commandFailures.sort(), recovery });
+            const failureCode = result.failure_code || 'unknown';
+            const failureStage = last.stage || 'setup';
+            const mainState = last.promotion?.main_state || null;
+            const fingerprint = JSON.stringify({ failed, failureCode, failureStage, mainState, flags: [...flags].sort(), commandFailures: commandFailures.sort(), recovery });
             const statusMarker = '<!-- state:' + Buffer.from(fingerprint).toString('base64') + ' -->';
             if (issue?.body?.includes(statusMarker)) return;
             const runUrl = context.serverUrl + '/' + owner + '/' + repo + '/actions/runs/' + context.runId;
             const body = [marker, statusMarker, 'Schedule automation needs attention.',
               '', 'Publication status: ' + (result.status || process.env.EXTRACT_RESULT),
+              'Failure stage/code: ' + (failed ? failureStage + ' / ' + failureCode : 'none'),
+              ...(mainState ? ['Main after unsuccessful promotion: ' + mainState] : []),
+              ...(last.promotion?.check_url ? ['[Candidate CI](' + last.promotion.check_url + ')'] : []),
               'Held pools: ' + (flags.join(', ') || 'see run evidence'),
               'Extraction commands with held or failed sources: ' + (commandFailures.join(', ') || 'none'),
               'Confirmed live updates: ' + (result.status === 'published' ? result.published_slugs.join(', ') || 'none' : 'none'),

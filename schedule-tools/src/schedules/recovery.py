@@ -5,6 +5,9 @@ from .fetch import http_failure_code
 
 
 RECOVERY_ACTIONS = {
+    "provider_rate_limited": "Provider rate limited extraction: inspect the retained transport status and provider limits before another paid attempt.",
+    "provider_quota_exhausted": "Provider quota exhausted: the account owner must review the project spend limit or billing; do not retry automatically.",
+    "provider_access_denied": "Provider denied access: the account owner must check the extraction credential and project permissions.",
     "source_unavailable": "Temporary source failure: bounded retries were exhausted or deferred; retry extraction after the source recovers.",
     "source_missing": "Source removed: inspect the official facility page and discovery report for a replacement document.",
     "source_access_denied": "Source denied access: inspect the capture method and credentials before retrying.",

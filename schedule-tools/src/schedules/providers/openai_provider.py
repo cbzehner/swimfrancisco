@@ -105,6 +105,16 @@ def call_api(request: dict, directory: Path, timeout: int) -> dict:
         result["http_status"] = response.status_code
         result["exit_code"] = 0 if response.is_success else 1
         result["status"] = "completed" if response.is_success else "execution_error"
+        if response.status_code == 429:
+            result["failure_code"] = "provider_rate_limited"
+            try:
+                error = response.json().get("error", {})
+                if isinstance(error, dict) and error.get("code") == "insufficient_quota":
+                    result["failure_code"] = "provider_quota_exhausted"
+            except (ValueError, AttributeError):
+                pass
+        elif response.status_code in {401, 403}:
+            result["failure_code"] = "provider_access_denied"
         if response.is_success:
             body = response.json()
             (directory / "response.json").write_text(json.dumps(body, indent=2))
@@ -115,6 +125,8 @@ def call_api(request: dict, directory: Path, timeout: int) -> dict:
     except (httpx.HTTPError, ValueError, KeyError) as error:
         result |= {"error_type": type(error).__name__, "status": "execution_error", "exit_code": 1}
     result["elapsed_seconds"] = round(time.monotonic() - started, 3)
+    (directory / "transport.json").write_text(json.dumps({key: result.get(key) for key in
+        ("status", "http_status", "timed_out", "elapsed_seconds", "failure_code")}, indent=2) + "\n")
     return result
 
 
@@ -264,6 +276,12 @@ def verify_artifact(artifact: dict, pdf_bytes: bytes, prompt: str) -> dict:
     return source_publication_coverage(source, artifact["payload"], visual_pages=pages)
 
 
+class ProviderUnavailable(ValueError):
+    def __init__(self, failure_code: str):
+        self.failure_code = failure_code
+        super().__init__(failure_code)
+
+
 class ClosureReviewRequired(ValueError):
     def __init__(self, source: PdfSource, issues: list[str]):
         self.issues = issues
@@ -295,6 +313,8 @@ def extract(pdf_bytes: bytes, prompt: str, schema: dict) -> ProviderResult:
         if not (result["timed_out"] or result["http_status"] in {408, 500, 502, 503, 504}) or attempt == 1:
             break
         time.sleep(1)
+    if result.get("failure_code"):
+        raise ProviderUnavailable(result["failure_code"])
     parsed = api_response_result(result["api_response"], SOURCE_FACTS_SCHEMA) if result["api_response"] else {}
     if parsed.get("status") != "completed" or parsed.get("resolved_model") != API_MODEL:
         raise ValueError(f"Extraction failed: {parsed.get('status', result['status'])}; HTTP {result['http_status']}")

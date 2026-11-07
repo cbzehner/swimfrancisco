@@ -552,6 +552,10 @@ nine city pools' official documents without model calls or browser capture.
 New source hashes, changed extraction configuration, or unresolved discovery
 start the existing full pipeline. An unchanged preflight skips it; a failed
 preflight falls back to the full pipeline so failures reach the operator issue.
+Detection has a ten-minute command deadline inside its fifteen-minute job.
+A command timeout writes `source-changes.json` with `detection_timeout` and
+fails normally, allowing the gated fallback to run and preserving time for the
+evidence upload. Explicit workflow cancellation does not start that fallback.
 Detection reports are retained for 30 days. Discovery does not rewrite the
 registry in this preflight, and detection never approves or publishes hours.
 
@@ -621,8 +625,9 @@ operator issue reports the failed command.
 4. Validate the generated-file allowlist before staging and committing. Direct
    source changes to capture time and clock-derived start alone do not create
    content commits. PDF dates remain substantive facts.
-5. Push one generated commit to `auto/schedules/<run>-<attempt>-<build>`, wait for
-   its exact successful CI run, and fast-forward main only if its head still
+5. Push one generated commit to `auto/schedules/<run>-<attempt>-<build>`, wait up
+   to twenty minutes for its exact successful CI run (the fifteen-minute job
+   plus startup allowance), and fast-forward main only if its head still
    matches the recorded base. No PR and no force push. If main moves, rebuild
    once in a new worktree. Reuse only source/extraction cache files, not previous
    publication decisions or concurrently edited files.
@@ -683,13 +688,67 @@ Keep these requirements in place for enabled runs:
   its evidence and usage, then run a checked publication trial. Confirm hosted
   CI, main promotion, and the exact live deployment before declaring autonomy.
 
+### Source-format recovery
+
+The deterministic parsers support Pomeroy's explicit weekday/date-range holiday
+notice and City Sports' empty cancellation-reason marker only for an already
+identified non-aquatic class. Aquatic, facility-wide, and unscoped cancellations
+remain held. Pomeroy validates every weekday in a range; it never infers dates
+from a holiday name alone.
+
+Koret's closure-only workbook remains held for review. A reopening month marked
+TBD is not a confirmed date; do not invent a dated closure, emit an invalid
+`temporarily_closed` model, or restore hours from hidden sheets.
+
+Gateway and Equinox can produce dated **facility-access** exceptions from the
+supported explicit holiday formats. They cannot create swim sessions or extend
+regular availability. Dates, scope, duplicated hours, and repeated timestamps
+must agree; unknown notices and media remain held. Daily summaries and Equinox's
+Today row must agree with the applicable observed-day weekly or holiday hours.
+A disagreement is source evidence
+requiring clarification, not permission to choose the more convenient value.
+
+Ambiguous Balboa in-service notices, Mission session exclusions, and Sava's
+conflicting documents/closure dates remain on the review path. Preserve the
+source and resolve each notice's dates, times, and affected programs before
+publishing; do not extend prior schedules or drop one sequential window.
+
+Provider failures retain a credential-free `transport.json` recording HTTP
+status and an allowlisted failure code. A 429 without a recognized quota code
+is reported as rate limiting, not assumed to be exhausted credit. A recognized
+`insufficient_quota` response asks the account owner to review billing or the
+project limit. Neither 429 case is retried within that extraction call; a later
+scheduled extraction or stale-main rebuild is a new attempt. No key, raw error
+body, or automatic spending-limit change is part of this recovery.
+
+Changes to provider implementation invalidate the extraction-configuration
+fingerprint, including otherwise unchanged PDFs. Inspect an authorized
+`extract-only` trial before enabling a new publication rollout; local fixture
+replays do not establish current source availability or provider-account health.
+
 ### Evidence and recovery
 
 Each run retains `tmp/automation/result.json`, per-build discovery and publication
 reports, source PDFs, provider artifacts, accepted snapshots, request/response
 files under `api-attempts/`, and browser-capture evidence as a GitHub artifact
 for 90 days. The receipt records base and candidate commits, changed paths,
-CI URL, outcomes, and confirmed live updates.
+CI URL, outcomes, and confirmed live updates. Each build records its stage and
+candidate commit before promotion. The child writes a structured promotion
+receipt by atomic file replacement rather than requiring the parent to recover JSON from stdout;
+only validated fields enter the retained run result. Failure codes distinguish
+candidate CI failure/timeout, promotion failure/timeout, and unverified deployment.
+The promotion subprocess has a twenty-two-minute bound. If the child times out or exits unsuccessfully, the
+parent checks main read-only: only the exact candidate plus a retained exact-CI
+success can proceed to live verification. Otherwise the receipt reports main as
+candidate, different, or unknown without claiming publication. An unreadable or
+invalid receipt still permits read-only main reconciliation, never publication.
+A publish build requires forty-seven minutes remaining before expensive stages
+and before promotion: twenty-two for promotion, twenty for live verification,
+and five for evidence upload. Every subprocess is bounded by the remaining job
+time minus that evidence reserve. The hosted deadline is recorded before
+dependency installation, so slow apt setup counts; local runs default to the
+same 110-minute lifetime. The main Workers Builds CI gate remains bounded at ten
+minutes; it does not inherit the longer candidate-promotion wait.
 Run artifacts exclude credentials and raw transport logs.
 
 Set `SCHEDULES_AUTOMATION_ENABLED=false` to stop future runs. This does not cancel

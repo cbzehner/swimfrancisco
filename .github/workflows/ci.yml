@@ -97,6 +97,7 @@ jobs:
       - name: Install browser OS dependencies
         # System packages are not cached. The locked Playwright versions use
         # the same Ubuntu 24.04 package list; invoke apt only once.
+        # The preflight below launches both versions to detect dependency drift.
         run: node node_modules/playwright-core/cli.js install-deps webkit chromium
 
       - name: Install regression browsers

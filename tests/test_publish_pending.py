@@ -2010,8 +2010,10 @@ def test_verified_club_source_publication_checks_original_hours_and_freshness(tm
     original = directory / "source.html"
     original.write_bytes(content)
     (directory / "source.sha256").write_text(digest + "\n")
+    payload = (extractor(content.decode(), observed_on=date(2026, 9, 9))
+               if kind in {"equinox_html", "bayclub_html"} else extractor(content.decode()))
     artifact = {"provider": "direct", "model": model, "pdf_sha256": digest, "source_pdf_url": url,
-                "payload": observation_window(extractor(content.decode()), "2026-09-09"), "details": {"direct_source": {
+                "payload": observation_window(payload, "2026-09-09"), "details": {"direct_source": {
                     "sha256": digest, "url": url, "requested_url": url, "observed_on": "2026-09-09",
                     "freshness_days": 14, "configuration": direct_configuration()}}}
     if change == "hours":

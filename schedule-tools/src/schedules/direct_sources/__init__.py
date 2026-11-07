@@ -112,11 +112,14 @@ def extract_direct(entry: PoolEntry, *, cache_root: Path | None = None) -> Direc
     if entry.source_kind == "koret_google_sheet":
         fetched = fetch_koret_workbook(entry.slug, entry.pdf_url, **fetch_kwargs)
         source = _source_metadata(entry, fetched, pacific_today())
+        payload = observation_window(_extract_koret(fetched.path), source["observed_on"])
         return DirectExtraction(
             fetch_result=fetched,
-            payload=observation_window(_extract_koret(fetched.path), source["observed_on"]),
+            payload=payload,
             model="koret-google-workbook-v1",
-            notes=["Koret sessions represent official pool hours; the sheet still carries lane-level restrictions and team bookings."],
+            notes=(["The only visible Koret sheet closes the pool for repairs; reopening is tentative with date TBD."]
+                   if payload["schedule_basis"] == "temporarily_closed" else
+                   ["Koret sessions represent official pool hours; the sheet still carries lane-level restrictions and team bookings."]),
             source=source,
         )
     if entry.capture_method == "cloudflare_browser":
@@ -147,7 +150,7 @@ def extract_direct(entry: PoolEntry, *, cache_root: Path | None = None) -> Direc
     from .html_facts import HtmlClosureReviewRequired
     from .errors import CapturedClosureReviewRequired
     try:
-        payload = extractor(text, observed_on=observed_on) if entry.source_kind in {"pomeroy_html", "ucsf_fitness_html", "ucsf_bakar_html"} else extractor(text)
+        payload = extractor(text, observed_on=observed_on) if entry.source_kind in {"pomeroy_html", "ucsf_fitness_html", "ucsf_bakar_html", "equinox_html", "bayclub_html"} else extractor(text)
     except HtmlClosureReviewRequired as error:
         raise CapturedClosureReviewRequired(slug=entry.slug, source_path=relative_to_repo(path),
             source_sha256=sha256, issues=error.issues, notices=error.notices) from error
@@ -310,7 +313,7 @@ def _verify_access_artifact(artifact: dict, source_path: Path, *, today: date) -
     if not observed <= today <= observed + timedelta(days=13):
         raise DirectSourceError("HTTP access observation is expired or future-dated")
     payload = (extractor(decode_source(content), observed_on=observed)
-               if kind in {"ucsf_fitness_html", "ucsf_bakar_html"} else extractor(decode_source(content)))
+               if kind in {"ucsf_fitness_html", "ucsf_bakar_html", "equinox_html", "bayclub_html"} else extractor(decode_source(content)))
     payload = observation_window(payload, observed.isoformat())
     if payload != artifact.get("payload"):
         raise DirectSourceError("HTTP access payload differs from the complete official source")
