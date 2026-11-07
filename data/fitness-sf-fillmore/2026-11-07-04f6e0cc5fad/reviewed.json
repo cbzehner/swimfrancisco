@@ -1,0 +1,84 @@
+{
+  "pdf_sha256": "04f6e0cc5fad28963958b138bfebec109a3495a17245dd753ba6836e000aed27",
+  "source_pdf_url": "https://fitnesssf.com/location/fillmore",
+  "direct_source": {
+    "configuration": {
+      "freshness_days": 14,
+      "libraries": {
+        "httpx": "0.28.1",
+        "openpyxl": "3.1.5"
+      },
+      "parser_sha256": "ef2fe30f8aa8f78216d6d88f231e6b26f69ac1fb4b31622c7842d52f00bb1d5c",
+      "python": "3.13.18",
+      "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+      "source_identity": "original_bytes"
+    },
+    "freshness_days": 14,
+    "observed_on": "2026-11-07",
+    "requested_url": "https://fitnesssf.com/location/fillmore",
+    "sha256": "04f6e0cc5fad28963958b138bfebec109a3495a17245dd753ba6836e000aed27",
+    "url": "https://fitnesssf.com/location/fillmore"
+  },
+  "slug": "fitness-sf-fillmore",
+  "reviewed_at": "2026-11-07",
+  "attested_by": "ci",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "23:59",
+        "evidence": "Mon - Thu: 5 am - 12 am",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "23:59",
+        "evidence": "Mon - Thu: 5 am - 12 am",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "23:59",
+        "evidence": "Mon - Thu: 5 am - 12 am",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "thursday",
+        "end": "23:59",
+        "evidence": "Mon - Thu: 5 am - 12 am",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "friday",
+        "end": "23:00",
+        "evidence": "Fri: 5 am - 11 pm",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "saturday",
+        "end": "20:00",
+        "evidence": "Sat - Sun: 7 am - 8 pm",
+        "label": "Club hours",
+        "start": "07:00"
+      },
+      {
+        "day": "sunday",
+        "end": "20:00",
+        "evidence": "Sat - Sun: 7 am - 8 pm",
+        "label": "Club hours",
+        "start": "07:00"
+      }
+    ],
+    "closures": [],
+    "effective_end": "2026-11-20",
+    "effective_start": "2026-11-07",
+    "schedule_basis": "facility_hours",
+    "sessions": []
+  }
+}

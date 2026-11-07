@@ -1,0 +1,94 @@
+{
+  "cost_estimate": "deterministic",
+  "details": {
+    "direct_source": {
+      "configuration": {
+        "freshness_days": 14,
+        "libraries": {
+          "httpx": "0.28.1",
+          "openpyxl": "3.1.5"
+        },
+        "parser_sha256": "ef2fe30f8aa8f78216d6d88f231e6b26f69ac1fb4b31622c7842d52f00bb1d5c",
+        "python": "3.13.18",
+        "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+        "source_identity": "original_bytes"
+      },
+      "freshness_days": 14,
+      "observed_on": "2026-11-07",
+      "requested_url": "https://www.bayclubs.com/clubs/thegateway",
+      "sha256": "8f0729320c4bfab572cf013946dcea7319f861ac7f341528b2af758ef61a1402",
+      "url": "https://www.bayclubs.com/clubs/thegateway"
+    },
+    "source_coverage": {
+      "issues": [],
+      "ok": true
+    }
+  },
+  "extracted_at": "2026-11-07T19:53:45.596180+00:00",
+  "model": "bayclub-html",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "21:00",
+        "evidence": "Mon: 6:00 am - 9:00 pm",
+        "label": "Club hours",
+        "start": "06:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "21:00",
+        "evidence": "Tue: 6:00 am - 9:00 pm",
+        "label": "Club hours",
+        "start": "06:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "21:00",
+        "evidence": "Wed: 6:00 am - 9:00 pm",
+        "label": "Club hours",
+        "start": "06:00"
+      },
+      {
+        "day": "thursday",
+        "end": "21:00",
+        "evidence": "Thu: 6:00 am - 9:00 pm",
+        "label": "Club hours",
+        "start": "06:00"
+      },
+      {
+        "day": "friday",
+        "end": "21:00",
+        "evidence": "Fri: 6:00 am - 9:00 pm",
+        "label": "Club hours",
+        "start": "06:00"
+      },
+      {
+        "day": "saturday",
+        "end": "20:00",
+        "evidence": "Sat: 7:00 am - 8:00 pm",
+        "label": "Club hours",
+        "start": "07:00"
+      },
+      {
+        "day": "sunday",
+        "end": "20:00",
+        "evidence": "Sun: 7:00 am - 8:00 pm",
+        "label": "Club hours",
+        "start": "07:00"
+      }
+    ],
+    "closures": [],
+    "effective_end": "2026-11-20",
+    "effective_start": "2026-11-07",
+    "schedule_basis": "facility_hours",
+    "sessions": []
+  },
+  "pdf_sha256": "8f0729320c4bfab572cf013946dcea7319f861ac7f341528b2af758ef61a1402",
+  "prompt_sha256": "926c164b0c3c8a4f4217c3732bcc5c9a0af11423e1de728132dddc8d0d6b4843",
+  "provider": "direct",
+  "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+  "source_pdf_url": "https://www.bayclubs.com/clubs/thegateway",
+  "usage": {}
+}
