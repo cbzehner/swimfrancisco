@@ -713,10 +713,20 @@ TBD is not a confirmed date; do not invent a dated closure, emit an invalid
 Gateway and Equinox can produce dated **facility-access** exceptions from the
 supported explicit holiday formats. They cannot create swim sessions or extend
 regular availability. Dates, scope, duplicated hours, and repeated timestamps
-must agree; unknown notices and media remain held. Daily summaries and Equinox's
-Today row must agree with the applicable observed-day weekly or holiday hours.
-A disagreement is source evidence
-requiring clarification, not permission to choose the more convenient value.
+must agree; unknown notices and media remain held. Independent daily summaries
+and Equinox's Today row must agree with the applicable observed-day weekly or
+holiday hours. A disagreement requires clarification, not permission to choose
+the more convenient value.
+
+Gateway's recognized Open today widget is a weekly-derived template placeholder,
+not independent hours evidence. Its exact captured inline updater and unique,
+correctly scoped source/target must match the pinned contract; changed or
+ambiguous widgets remain held even when their placeholder happens to agree.
+The placeholder must still be a clean hours range. Both complete weekly groups,
+explicit holiday reductions (including on the holiday), and whole-page notices
+remain checked. Recognition establishes the source role, not that JavaScript
+always executes successfully. It does not create swim sessions or change
+publication eligibility.
 
 Ambiguous Balboa in-service notices, Mission session exclusions, and Sava's
 conflicting documents/closure dates remain on the review path. Preserve the
@@ -731,10 +741,12 @@ project limit. Neither 429 case is retried within that extraction call; a later
 scheduled extraction or stale-main rebuild is a new attempt. No key, raw error
 body, or automatic spending-limit change is part of this recovery.
 
-Changes to provider implementation invalidate the extraction-configuration
-fingerprint, including otherwise unchanged PDFs. Inspect an authorized
-`extract-only` trial before enabling a new publication rollout; local fixture
-replays do not establish current source availability or provider-account health.
+Changes to the PDF provider or its grounding implementation invalidate the PDF
+extraction-configuration fingerprint, including otherwise unchanged PDFs. The
+club parser code contributes to the shared direct-artifact configuration, not
+the PDF/OpenAI configuration. Inspect an authorized `extract-only` trial before
+enabling a new publication rollout; local fixture replays do not establish
+current source availability or provider-account health.
 
 ### Evidence and recovery
 

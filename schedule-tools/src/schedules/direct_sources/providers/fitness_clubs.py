@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from datetime import date, datetime, timedelta
 from html import unescape
+from html.parser import HTMLParser
 
 from ..._time import pacific_today
 from ...models import DAY_ORDER
@@ -47,6 +49,110 @@ def _extract_24_hour_fitness(html: str) -> dict:
     if not access_hours:
         raise DirectSourceError("24 Hour Fitness page did not expose gym hours.")
     return _payload("facility_hours", [], access_hours=access_hours)
+
+
+# Exact complete inline script body in the pinned 2026-10-30-bdecb5882d8b
+# capture. It derives Open today from the hidden week, not the holiday notice.
+# No whitespace normalization: the script includes a literal U+200D regexp.
+_GATEWAY_UPDATER_SHA256 = '741916b9e3678c3a0d6071a823a9d8d4d727b854beda04ec37da5119c63901d4'
+_GATEWAY_ROLES = ('data-club-hero', 'data-club-hours', 'data-club-today')
+_GATEWAY_ROLE_REFERENCE = re.compile(r'\bdata-club-(?:hero|hours|today)(?![-\w])', re.I)
+
+
+class _GatewayWidgetInventory(HTMLParser):
+    """Only the roles, ancestry, and scripts needed for this one contract."""
+
+    _VOID = frozenset('area base br col embed hr img input link meta param source track wbr'.split())
+
+    def __init__(self, html: str):
+        super().__init__(convert_charrefs=False)
+        self.html = html
+        self.line_starts = [0, *(match.end() for match in re.finditer('\n', html))]
+        self.stack = []
+        self.roles = {name: [] for name in _GATEWAY_ROLES}
+        self.scripts = []
+        self.malformed = False
+        self.feed(html)
+        self.close()
+
+    def _offset(self) -> int:
+        line, column = self.getpos()
+        return self.line_starts[line - 1] + column
+
+    def handle_starttag(self, tag, attrs):
+        start = self._offset()
+        parent = self.stack[-1] if self.stack else {}
+        attributes = dict(attrs)
+        node = {'tag': tag, 'start': start, 'end': None, 'attrs': tuple(attrs), 'text': [],
+                'hero': start if any(name == 'data-club-hero' for name, _ in attrs) else parent.get('hero'),
+                'card': start if 'club_hero_card_item' in (attributes.get('class') or '').split() else parent.get('card'),
+                'inert': tag in {'template', 'noscript'} or parent.get('inert', False),
+                'foreign': tag in {'svg', 'math'} or parent.get('foreign', False),
+                'ambiguous': len(attrs) != len(attributes) or parent.get('ambiguous', False)}
+        # Preserve duplicate attributes; a dict alone loses browser ambiguity.
+        for name, _ in attrs:
+            if name in self.roles:
+                self.roles[name].append(node)
+        if tag == 'script':
+            self.scripts.append(node)
+        if tag not in self._VOID:
+            self.stack.append(node)
+
+    def handle_endtag(self, tag):
+        index = next((i for i in range(len(self.stack) - 1, -1, -1) if self.stack[i]['tag'] == tag), None)
+        if index is None:
+            self.malformed = True
+            return
+        self.malformed |= index != len(self.stack) - 1
+        end = self.html.find('>', self._offset()) + 1
+        for node in self.stack[index:]:
+            node['end'] = end
+        del self.stack[index:]
+
+    def handle_startendtag(self, tag, attrs):
+        self.handle_starttag(tag, attrs)
+        if tag not in self._VOID:
+            # HTML self-closing non-void elements need browser repair. SVG does not.
+            self.malformed |= not self.stack[-1]['foreign']
+            self.handle_endtag(tag)
+
+    def handle_data(self, data):
+        if self.stack and self.stack[-1]['tag'] == 'script':
+            self.stack[-1]['text'].append(data)
+
+
+def _gateway_derived_summary(html: str, blocks, summaries) -> bool:
+    inventory = _GatewayWidgetInventory(html)
+    scripts = [node for node in inventory.scripts
+               if _GATEWAY_ROLE_REFERENCE.search(''.join(node['text']))
+               or any(_GATEWAY_ROLE_REFERENCE.search(value or '') for _, value in node['attrs'])]
+    if not inventory.roles['data-club-hero'] and not scripts:
+        return False  # Legacy standalone summary: retain the observed-day comparison.
+
+    def unsupported():
+        _club_hold('Unsupported Gateway derived-hours widget', 'Hero, weekly source, summary, or updater contract changed')
+
+    if (inventory.malformed or inventory.stack or len(scripts) != 1
+            or any(len(nodes) != 1 for nodes in inventory.roles.values())
+            or len(blocks) != 2 or len(summaries) != 1):
+        unsupported()
+    hero, source, target = (inventory.roles[name][0] for name in _GATEWAY_ROLES)
+    script = scripts[0]
+    if any(node['inert'] or node['foreign'] or node['ambiguous'] for node in (hero, source, target, script)):
+        unsupported()
+    if (hero['tag'] != 'section' or source['hero'] != hero['start'] or target['hero'] != hero['start']
+            or source['card'] is None or source['card'] != target['card']
+            or not hero['start'] < source['card'] < min(source['start'], target['start'])
+            or dict(source['attrs']).get('aria-hidden') != 'true'
+            or not any(match.start() == source['start'] and match.end() == source['end']
+                       and 'club_hero_hours' in match[0] for match in blocks)
+            or target['start'] != summaries[0].start() or target['end'] != summaries[0].end()
+            or '<' in summaries[0][1]):
+        unsupported()
+    if (script['attrs'] or script['start'] < hero['end']
+            or hashlib.sha256(''.join(script['text']).encode()).hexdigest() != _GATEWAY_UPDATER_SHA256):
+        unsupported()
+    return True
 
 
 def _extract_bayclub_gateway(html: str, *, observed_on: date | None = None) -> dict:
@@ -101,9 +207,17 @@ def _extract_bayclub_gateway(html: str, *, observed_on: date | None = None) -> d
     summaries = list(re.finditer(r'<p\b[^>]*data-club-today=""[^>]*>(.*?)</p>', html, re.I | re.S))
     if len(summaries) > 1:
         raise DirectSourceError('Duplicate Gateway daily summary')
+    derived = _gateway_derived_summary(html, blocks, summaries)
     if summaries:
-        if _club_range(_html_text(summaries[0][1])) != _club_hours_on(access, observed_on, exceptions):
-            _club_hold('Gateway daily summary disagrees with weekly or holiday hours', _html_text(summaries[0][1]))
+        printed_text = _html_text(summaries[0][1])
+        try:
+            printed = _club_range(printed_text)
+        except DirectSourceError:
+            if not derived:
+                raise
+            _club_hold('Unsupported Gateway derived daily summary', printed_text)
+        if not derived and printed != _club_hours_on(access, observed_on, exceptions):
+            _club_hold('Gateway daily summary disagrees with weekly or holiday hours', printed_text)
     remainder = html
     for match in sorted([*blocks, notices[0], *summaries], key=lambda match: match.start(), reverse=True):
         remainder = remainder[:match.start()] + remainder[match.end():]

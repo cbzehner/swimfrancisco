@@ -100,6 +100,7 @@ def test_gateway_explicit_holiday_reduces_facility_hours_not_swim_sessions():
 
 
 def test_gateway_repeated_week_is_checked_and_conflicting_daily_summary_is_held():
+    # Standalone summary: the older page has no hero or derivation script.
     original = (Path(__file__).parent / "fixtures/html-facts/bay-club-gateway.html").read_text()
     week = re.search(r'<div class="club_hours_info w-richtext">(.*?)</div>', original, re.S)[1]
     html = original.replace('</body>', f'<div data-club-hours="" class="club_hero_hours w-richtext">{week}</div><p data-club-today="">6:00 am - 9:00 pm</p></body>')
@@ -108,6 +109,178 @@ def test_gateway_repeated_week_is_checked_and_conflicting_daily_summary_is_held(
         _extract_bayclub_gateway(html.replace('data-club-today="">6:', 'data-club-today="">5:'), observed_on=date(2026, 11, 6))
     with pytest.raises(DirectSourceError, match="disagree"):
         _extract_bayclub_gateway(html.replace('data-club-hours="" class="club_hero_hours w-richtext">', 'data-club-hours="" class="club_hero_hours w-richtext">', 1).replace(week, week.replace('6:00 am', '5:00 am'), 1), observed_on=date(2026, 11, 6))
+
+
+@pytest.fixture
+def gateway_widget_capture():
+    path = Path(__file__).parents[1] / "data/bay-club-gateway/2026-10-30-bdecb5882d8b/source.html"
+    content = path.read_bytes()
+    digest = "bdecb5882d8b9cea9855c3c3fbb53bd42b892197e054c94fa1e1d4028893c0a8"
+    assert hashlib.sha256(content).hexdigest() == digest
+    assert path.with_suffix(".sha256").read_text().strip() == digest
+    return content
+
+
+@pytest.mark.parametrize("observed,holiday", [
+    (date(2026, 10, 30), False), (date(2026, 10, 31), False),
+    (date(2026, 11, 1), False), (date(2026, 11, 12), False),
+    (date(2026, 11, 13), True), (date(2026, 11, 26), True),
+    (date(2026, 11, 27), False),
+])
+def test_gateway_derived_widget_does_not_override_complete_week_or_holiday(gateway_widget_capture, observed, holiday):
+    html = gateway_widget_capture.decode()
+    assert 'data-club-today="" class="club_hero_card_text">5:00 am – 9:00 pm' in html
+    payload = _extract_bayclub_gateway(html, observed_on=observed)
+    assert payload["schedule_basis"] == "facility_hours"
+    assert payload["sessions"] == payload["closures"] == []
+    assert [(r["start"], r["end"]) for r in payload["access_hours"]] == [("06:00", "21:00")] * 5 + [("07:00", "20:00")] * 2
+    assert [(r["date"], r["start"], r["end"]) for r in payload["access_exceptions"]] == (
+        [("2026-11-26", "06:00", "14:00")] if holiday else [])
+
+
+@pytest.mark.parametrize("change", [
+    "missing_script", "commented_script", "duplicate_script", "inert_script", "external_script",
+    "script_before_hero", "script_in_template", "changed_timezone", "early_return", "retargeted_hero",
+    "additional_actor", "additional_actor_uppercase", "additional_actor_attribute", "duplicate_actor_attributes",
+    "missing_hero", "missing_source", "missing_target", "duplicate_hero_attribute",
+    "duplicate_target_attribute", "additional_target", "earlier_source", "source_outside_hero",
+    "target_outside_hero", "different_card", "outer_card", "source_on_visible_week", "source_in_template",
+    "malformed_target", "target_media", "target_closed", "target_invalid_range",
+])
+def test_gateway_unsupported_widget_holds_even_when_placeholder_agrees(gateway_widget_capture, change):
+    # Agreement must not accidentally accept unsupported derivation on weekdays.
+    html = gateway_widget_capture.decode().replace('>5:00 am – 9:00 pm</p>', '>6:00 am – 9:00 pm</p>', 1)
+    scripts = [m[0] for m in re.finditer(r'<script>(.*?)</script>', html, re.S) if 'var DAYS =' in m[1]]
+    assert len(scripts) == 1
+    script = scripts[0]
+    target = re.search(r'<p\b[^>]*data-club-today=""[^>]*>.*?</p>', html, re.S)[0]
+    source = re.search(r'<div\b[^>]*data-club-hours=""[^>]*>.*?</div>', html, re.S)[0]
+    changes = {
+        "missing_script": lambda: html.replace(script, ''),
+        "commented_script": lambda: html.replace(script, f'<!--{script}-->'),
+        "duplicate_script": lambda: html.replace(script, script + script),
+        "inert_script": lambda: html.replace(script, script.replace('<script>', '<script type="application/json">', 1)),
+        "external_script": lambda: html.replace(script, script.replace('<script>', '<script src="https://example.invalid/widget.js">', 1)),
+        "script_before_hero": lambda: html.replace(script, '').replace('<section data-club-hero=""', script + '<section data-club-hero=""', 1),
+        "script_in_template": lambda: html.replace(script, f'<template>{script}</template>'),
+        "changed_timezone": lambda: html.replace(script, script.replace('America/Los_Angeles', 'UTC')),
+        "early_return": lambda: html.replace(script, script.replace('var DAYS =', 'return;\nvar DAYS =', 1)),
+        "retargeted_hero": lambda: html.replace(script, script.replace("querySelector('[data-club-hero]')", "querySelector('[data-other-hero]')", 1)),
+        "additional_actor": lambda: html.replace(script, script + "<script>document.querySelector('[data-club-today]');</script>"),
+        "additional_actor_uppercase": lambda: html.replace(script, script + "<script>document.querySelector('[DATA-CLUB-TODAY]');</script>"),
+        "additional_actor_attribute": lambda: html.replace(script, script + '<script src="https://example.invalid/widget.js?target=data-club-today"></script>'),
+        "duplicate_actor_attributes": lambda: html.replace(script, script + '<script src="/widget.js?target=data-club-today" src="/other.js"></script>'),
+        "missing_hero": lambda: html.replace('data-club-hero=""', 'data-other-hero=""', 1),
+        "missing_source": lambda: html.replace('data-club-hours=""', 'data-other-hours=""', 1),
+        "missing_target": lambda: html.replace('data-club-today=""', 'data-other-today=""', 1),
+        "duplicate_hero_attribute": lambda: html.replace('data-club-hero=""', 'data-club-hero="" data-club-hero="other"', 1),
+        "duplicate_target_attribute": lambda: html.replace('data-club-today=""', 'data-club-today="" data-club-today="other"', 1),
+        "additional_target": lambda: html.replace(target, target + '<span data-club-today="other">6:00 am – 9:00 pm</span>', 1),
+        "earlier_source": lambda: html.replace('<section data-club-hero=""', '<div data-club-hours="other"></div><section data-club-hero=""', 1),
+        "source_outside_hero": lambda: html.replace(source, '').replace('</body>', source + '</body>', 1),
+        "target_outside_hero": lambda: html.replace(target, '').replace('</body>', target + '</body>', 1),
+        "different_card": lambda: html.replace(target, '').replace('>Find us</div>', '>Find us</div>' + target, 1),
+        "outer_card": lambda: html.replace('<div class="club_hero_card_item"><div class="club_hero_card_label">Open today',
+            '<div class="other_card"><div class="club_hero_card_label">Open today', 1).replace(
+            '<section data-club-hero=""', '<div class="club_hero_card_item"><section data-club-hero=""', 1).replace(
+            '</section><section class="main_section">', '</section></div><section class="main_section">', 1),
+        "source_on_visible_week": lambda: html.replace('data-club-hours=""', '', 1).replace('<div class="club_hours_info', '<div data-club-hours="" class="club_hours_info', 1),
+        "source_in_template": lambda: html.replace(source, '<template>' + source + '</template>', 1),
+        "malformed_target": lambda: html.replace(target, target.replace('</p>', '</span></p>'), 1),
+        "target_media": lambda: html.replace(target, target.replace('</p>', '<img src="notice.png"></p>'), 1),
+        "target_closed": lambda: html.replace(target, target.replace('6:00 am – 9:00 pm', 'Pool closed until further notice'), 1),
+        "target_invalid_range": lambda: html.replace(target, target.replace('6:00 am – 9:00 pm', '25:00 am – 9:00 pm'), 1),
+    }
+    changed = changes[change]()
+    assert changed != html, change
+    printed_notice = {"target_closed": "Pool closed until further notice",
+                      "target_invalid_range": "25:00 am – 9:00 pm"}.get(change)
+    issue = 'Unsupported Gateway derived daily summary' if printed_notice else 'Unsupported Gateway derived-hours widget'
+    with pytest.raises(HtmlClosureReviewRequired, match=f'^{issue}$') as error:
+        _extract_bayclub_gateway(changed, observed_on=date(2026, 10, 30))
+    if printed_notice:
+        assert error.value.notices[0]['text'] == printed_notice
+
+
+@pytest.mark.parametrize("context", ["textarea", "title", "xmp", "iframe", "noembed", "noframes", "plaintext", "plaintext_prefix"])
+def test_gateway_updater_in_text_context_requires_review(gateway_widget_capture, context):
+    # These already hold on the pinned Python parser; guard against toolchain regressions.
+    html = gateway_widget_capture.decode().replace('>5:00 am – 9:00 pm</p>', '>6:00 am – 9:00 pm</p>', 1)
+    script = next(m[0] for m in re.finditer(r'<script>(.*?)</script>', html, re.S) if 'var DAYS =' in m[1])
+    wrapped = '<plaintext></plaintext>' + script if context == 'plaintext_prefix' else f'<{context}>{script}</{context}>'
+    with pytest.raises(HtmlClosureReviewRequired, match='^Unsupported Gateway derived-hours widget$'):
+        _extract_bayclub_gateway(html.replace(script, wrapped), observed_on=date(2026, 10, 30))
+
+
+def test_gateway_standalone_invalid_summary_keeps_its_hard_error():
+    html = (Path(__file__).parent / "fixtures/html-facts/bay-club-gateway.html").read_text()
+    html = html.replace('</body>', '<p data-club-today="">25:00 am – 9:00 pm</p></body>')
+    with pytest.raises(DirectSourceError, match='^Unsupported or invalid printed club hours range$') as error:
+        _extract_bayclub_gateway(html, observed_on=date(2026, 10, 30))
+    assert type(error.value) is DirectSourceError  # Only the recognized widget gains review routing.
+
+
+@pytest.mark.parametrize("change", [None, "configuration", "expired", "future", "payload", "bytes"])
+def test_gateway_widget_artifact_round_trip_preserves_publication_guards(tmp_path, monkeypatch, gateway_widget_capture, change):
+    from schedules import direct_sources
+    from schedules.direct_sources.http import DirectTextResponse
+    from schedules.registry import load_registry
+
+    entry = next(e for e in load_registry() if e.slug == "bay-club-gateway")
+    assert entry.auto_publish  # Existing opt-in, not newly enabled by this correction.
+    monkeypatch.setattr('schedules._time.pacific_today', lambda: date(2026, 10, 30))
+    monkeypatch.setattr(direct_sources, 'fetch_text', lambda url: DirectTextResponse(
+        gateway_widget_capture.decode(), gateway_widget_capture, url))
+    result = direct_sources.extract_direct(entry, cache_root=tmp_path / "data")
+    artifact = {"provider": "direct", "model": result.model, "source_pdf_url": entry.pdf_url,
+                "pdf_sha256": result.fetch_result.sha256, "payload": result.payload,
+                "details": {"direct_source": result.source}}
+    assert result.fetch_result.path.read_bytes() == gateway_widget_capture
+    assert (artifact["payload"]["effective_start"], artifact["payload"]["effective_end"]) == ("2026-10-30", "2026-11-12")
+    today = date(2026, 10, 30)
+    if change == "configuration":
+        artifact["details"]["direct_source"]["configuration"] = {}
+    elif change == "expired":
+        today = date(2026, 11, 13)
+    elif change == "future":
+        today = date(2026, 10, 29)
+    elif change == "payload":
+        artifact["payload"]["access_hours"][0]["start"] = "01:00"
+    elif change == "bytes":
+        result.fetch_result.path.write_bytes(b"different original")
+    if change is None:
+        assert verify_direct_artifact(artifact, result.fetch_result.path, today=today)["ok"]
+    else:
+        with pytest.raises(DirectSourceError):
+            verify_direct_artifact(artifact, result.fetch_result.path, today=today)
+
+
+def test_gateway_changed_updater_cannot_reuse_a_previously_accepted_capture(tmp_path, monkeypatch, gateway_widget_capture):
+    from schedules import direct_sources
+    from schedules.direct_sources.errors import CapturedClosureReviewRequired
+    from schedules.direct_sources.http import DirectTextResponse
+    from schedules.registry import load_registry
+
+    changed = gateway_widget_capture.replace(b'America/Los_Angeles', b'UTC', 1)
+    responses = iter([gateway_widget_capture, changed])
+    def fetch(url):
+        content = next(responses)
+        return DirectTextResponse(content.decode(), content, url)
+    monkeypatch.setattr(direct_sources, 'fetch_text', fetch)
+    monkeypatch.setattr('schedules._time.pacific_today', lambda: date(2026, 10, 30))
+    entry = next(e for e in load_registry() if e.slug == "bay-club-gateway")
+    original = direct_sources.extract_direct(entry, cache_root=tmp_path / "data")
+    with pytest.raises(CapturedClosureReviewRequired):
+        direct_sources.extract_direct(entry, cache_root=tmp_path / "data")
+    assert original.fetch_result.path.read_bytes() == gateway_widget_capture
+    assert sorted(p.read_bytes() for p in (tmp_path / "data").rglob('source.html')) == sorted([gateway_widget_capture, changed])
+
+
+def test_gateway_derived_widget_cannot_hide_a_notice_elsewhere_in_the_hero(gateway_widget_capture):
+    html = gateway_widget_capture.decode().replace('<div aria-hidden="true" data-club-hours=""',
+        '<p>The pool is closed for maintenance.</p><div aria-hidden="true" data-club-hours=""', 1)
+    with pytest.raises(HtmlClosureReviewRequired, match="Unaccounted Gateway"):
+        _extract_bayclub_gateway(html, observed_on=date(2026, 10, 30))
 
 
 @pytest.mark.parametrize("apostrophe", ["'", "’"])

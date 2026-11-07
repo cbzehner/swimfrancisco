@@ -7,6 +7,10 @@ path = "data/24-hour-fitness-ocean/2026-05-17-bfc2cfde9340"
 reason = "Archived sequential-window evidence"
 
 [[pins]]
+path = "data/bay-club-gateway/2026-10-30-bdecb5882d8b"
+reason = "Direct-source regression for the weekly-derived Open today widget"
+
+[[pins]]
 path = "data/chinatown-ymca/2026-05-17-54f49481ad6f"
 reason = "Archived sequential-window evidence"
 
