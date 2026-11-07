@@ -70,6 +70,19 @@ def test_withdrawn_koret_hours_no_longer_hide_coverage_gaps(today):
     assert coverage_gap(history, today) == {"gap_start": today.isoformat(), "next_start": None}
 
 
+@pytest.mark.parametrize("today", [
+    date(2026, 11, 3), date(2026, 11, 7), date(2026, 11, 13),
+    date(2026, 12, 5), date(2026, 12, 13), date(2026, 12, 20),
+])
+def test_withdrawn_sava_hours_do_not_hide_coverage_gaps(today):
+    path = Path(__file__).parents[1] / "content/spots/sava-pool.md"
+    page = tomllib.loads(path.read_text().split("+++", 2)[1])
+    # Known closure dates still lack verified operating hours. Later reviewed
+    # successors and normal pruning must not make this a frozen catalog test.
+    history = [s for s in page["extra"].get("schedules", []) if s["effective_start"] < "2026-11-03"]
+    assert coverage_gap(history, today) == {"gap_start": today.isoformat(), "next_start": None}
+
+
 def test_coverage_job_remains_enabled_when_publication_is_disabled():
     workflow = (Path(__file__).parents[1] / ".github/workflows/schedules-extract.yml").read_text()
     job = workflow.split("\n  coverage:", 1)[1]

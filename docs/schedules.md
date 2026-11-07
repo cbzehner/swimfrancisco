@@ -141,6 +141,19 @@ Do not run `schedules project koret-center` or save a stale review: projecting t
 old unbounded snapshot would overwrite the withdrawal. See the
 [dated correction](schedules-decision-log.md#koret-availability-withdrawal-november-7-2026).
 
+Sava's earlier recommendations end November 2, 2026, inclusive, because a
+second official grid overlaps from November 3 and lists different sessions.
+This withdraws recommendations, not a known pool closure or approval of the
+new grid. Retained explicit closures still apply; other unsupported dates show
+CHECK and a coverage gap. Do not run `schedules project sava-pool` or save the
+retained December 12 review without a new source comparison: it can overwrite
+the withdrawal in the working tree. Required canonical regressions reject that
+restoration at release; there is no command-level restoration guard. Later
+approval reuse must preserve the withdrawal before any automatic write. The
+current same-directory reuse path still requires a verified provider artifact;
+an envelope alone does not make Sava's source-specific exception reusable.
+See the [source-conflict decision](schedules-decision-log.md#sava-source-conflict-withdrawal-november-7-2026).
+
 Review status is a filesystem predicate: `reviewed.json` present ⇒ attested;
 absent ⇒ not published. `--force` bypasses this fast-path.
 
@@ -505,7 +518,7 @@ but has a metadata/provenance mismatch.
 | Mission | 2026-08-18–10-17 | `data/mission-community-pool/2026-09-02-67f2a420e8fc/reviewed.json` | Exact |
 | North Beach | 2026-09-01–12-12 | `data/north-beach-pool/2026-09-06-e494dea3b5f8/reviewed.json` paired bundle | Operational only; metadata/provenance differs |
 | Rossi | 2026-08-16–12-10 | `data/rossi-pool/2026-08-20-cb8abdbbedda/reviewed.json` | Exact |
-| Sava | 2026-08-29–12-12 | `data/sava-pool/2026-09-09-4b1055669e1d/reviewed.json`; document IDs 30037/29806/29815 | Exact |
+| Sava | 2026-08-29–11-02 (recommendation cutoff) | `data/sava-pool/2026-09-09-4b1055669e1d/reviewed.json`; conflicting November grid `data/sava-pool/2026-10-30-eb848200d8e2/source.pdf`, document IDs 30037/30374 | Prior approval unchanged; recommendations withdrawn from November 3 pending source-conflict review |
 | JCCSF | 2026-09-09–09-22 | `data/jccsf/2026-09-09-f1baf58cd35c/reviewed.json` | Exact |
 | Koret | 2026-08-12–10-21 (recommendation cutoff) | `data/koret-center/2026-08-23-890e0daca506/reviewed.json`; October 22 and November 7 closure captures | Historical reviews unchanged; availability withdrawn from October 22, not a new attestation |
 | Pomeroy | 2026-09-09–09-22 | `data/pomeroy-pool/2026-09-09-e786c784f602/reviewed.json` | Exact |

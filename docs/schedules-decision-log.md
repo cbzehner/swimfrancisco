@@ -1357,3 +1357,75 @@ replays and mocked transport validate the parser without a paid extraction
 trial; they do not establish live source availability or account health.
 Cache, spending controls, and review authority are not bypassed to reuse a
 comparison projection.
+
+## Sava source-conflict withdrawal (November 7, 2026)
+
+The successful normal scheduled run
+[42408150365](https://github.com/cbzehner/swimfrancisco/actions/runs/42408150365)
+found two table-linked official Sava grids with overlapping operating windows:
+
+- [30037](https://sfrecpark.org/DocumentCenter/View/30037), printed August 29–
+  December 12, 2026: retained [original](../data/sava-pool/2026-09-09-4b1055669e1d/source.pdf),
+  SHA-256 `4b1055669e1df46512c16b051b02b8de52d1b935f7cbfde2f27bfe38ff03009c`.
+- [30374](https://sfrecpark.org/DocumentCenter/View/30374), printed November 3–
+  December 1, 2026: retained [original](../data/sava-pool/2026-10-30-eb848200d8e2/source.pdf),
+  SHA-256 `eb848200d8e2426c44e499731ccfa050dd3042cabf2dea3735447655cc97f1aa`,
+  first retained October 30.
+
+These are separate URLs and original-byte identities, not a replacement of
+30037's bytes. The later grid changes Wednesday afternoon sessions and ends
+Friday noon lap swim at 15:00 instead of 15:30. The old canonical window still
+returned OPEN at Friday November 13, 15:15 Pacific. Discovery's existing
+`overlapping_windows` hold correctly prevents source adoption but does not
+withdraw already-published recommendations. Neither document establishes
+explicit supersession, so a newer date or narrower window cannot select it.
+
+The earlier canonical window now ends November 2, inclusive: recommendations
+stop on the first date covered by the competing grid, November 3. This is a
+recommendation boundary, **not** a closure date or proof every earlier session
+occurred. All 20 historical sessions, exclusions, ten closures, literal notices,
+October 18 verification date, and original reviewed/source files remain intact.
+The five authored locale catalogs explain the conflict; generated pages follow
+them. Board guidance uses the existing CHECK/ended-date and official-schedule
+link. The detail summary leads with the conflict; no new board prose field or
+frontend behavior was added.
+
+Known holidays and December 1–19 maintenance still produce CLOSED, including
+CLOSED_TODAY on the detail page; ordinary unsupported dates produce CHECK /
+NOT_VERIFIED. Neither state supplies a next swim or available planning window.
+Post-cutoff closure rows are outside the historical window's static banner
+list, but remain in canonical data and inform live closure results. Maintenance
+ending December 19 and the December 22 training notice do not verify reopening
+or extend operating hours. Coverage correctly reports a gap without a successor.
+
+The [September 9 full-source approval](#approved-sava-and-balboa-source-reviews--september-9-2026)
+remains settled for exact source `4b1055…` and its noon interpretation, not 30374.
+Its genuine human envelope is retained in Git at
+[5d63552a08d2f2fa4d1ee8fff71ba69e7d2eb269](https://github.com/cbzehner/swimfrancisco/blob/5d63552a08d2f2fa4d1ee8fff71ba69e7d2eb269/data/sava-pool/2026-09-09-4b1055669e1d/reviewed.json).
+The current `agent-reference` projection preserves those sessions and original
+closures, adding only the documented October 20 Mission-sourced meeting
+closure; it is not a new human approval. No envelope is rewritten or elevated.
+Both PDFs already have corpus retention; no duplicate fixture or extra pin is
+needed.
+
+Current raw-source holds remain: 30037's literal Thursday midnight duration,
+and 30374's midnight text and out-of-window September 24 / October 22 cancellation
+and fourth-Thursday training notices. Neither current-grid directory has a
+provider artifact, and discovery blocking still refuses publication. Existing
+`test_discovery_flagged_refuses` and
+`test_find_review_candidates_skips_review_dir_without_provider_json` cover those
+publication boundaries. Source-specific approval reuse remains a separate
+work item: the current fast path depends on a verified provider artifact and
+cannot infer authority from an agent-reference label or equal model output.
+It must not transfer the old correction to changed bytes or restore withdrawn
+recommendations.
+
+Do not project/save the stale December 12 payload: `schedules project sava-pool`
+can replace the bounded window in the working tree. Required canonical tests
+reject a missing or extended bound before release; no command-level guard is
+claimed. Synthetic successor and merge/pruning tests permit a newly reviewed
+window and removal of expired history, rather than freezing the old window or
+warning prose. Raw-source tests preserve the separate identities and holds
+without transport. No parser, prompt, schema, configuration, cache, spending,
+or publication-policy change is made. No paid trial, workflow dispatch,
+facility contact, source correction, or new human attestation was made.

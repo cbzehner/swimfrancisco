@@ -13,11 +13,12 @@ website = "https://sfrecpark.org/facilities/facility/details/Sava-Pool-220"
 setpoint_label = "80–82°F"
 access_mode = "public"
 payment_model = "session"
+access_summary = "Official schedules overlap and list different swim sessions. Current sessions are unverified; do not use the earlier hours to plan a swim."
 
 [[extra.schedules]]
 effective_start = "2026-08-29"
 schedule_basis = "swim_schedule"
-effective_end = "2026-12-12"
+effective_end = "2026-11-02"
 last_verified_at = "2026-10-18"
 
 [[extra.schedules.sessions]]
@@ -250,5 +251,7 @@ reason_code = "staff_training"
 id = "p1-notice-2"
 text = "All city pools will be CLOSED\nthe morning of December 22\nfor staff training 9 – 11 a.m."
 +++
+
+The official [August 29–December 12, 2026 grid](https://sfrecpark.org/DocumentCenter/View/30037) and [November 3–December 1, 2026 grid](https://sfrecpark.org/DocumentCenter/View/30374) overlap and list different swim sessions. Recommendations from the earlier grid stop after November 2. This is a recommendation boundary, not a pool closure date. Check the [official Sava page](https://sfrecpark.org/facilities/facility/details/Sava-Pool-220) before planning a swim. Both grids print December 1–19 maintenance; no reopening or later hours are verified.
 
 An indoor pool in the Parkside/Sunset district on 19th Avenue near Stern Grove. Programs include lap swim, senior swim, recreation swim, and lessons.

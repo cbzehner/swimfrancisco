@@ -344,6 +344,22 @@ def test_koret_reopening_can_replace_withdrawn_history(tmp_path):
     assert coverage_gap(schedules, date(2027, 1, 9)) is None
 
 
+def test_sava_successor_preserves_withdrawal_and_allows_normal_pruning(tmp_path):
+    # Synthetic successor, not official Sava hours or a human approval.
+    successor = {"effective_start": "2026-11-03", "effective_end": "2026-12-31",
+                 "schedule_basis": "swim_schedule", "closures": [],
+                 "sessions": [{"day": "saturday", "type": "lap_swim", "start": "08:00", "end": "09:00"}]}
+    for publish_day, keeps_history in [(date(2026, 11, 3), True), (date(2026, 11, 17), False)]:
+        target = _spot_with_windows(tmp_path / f"sava-{publish_day}.md", [("2026-08-29", "2026-11-02")])
+        assert merge(target, successor, today=publish_day)
+        schedules = _read_schedules_array(target)
+        legacy = [s for s in schedules if s["effective_start"] < "2026-11-03"]
+        assert bool(legacy) == keeps_history
+        assert all(s["effective_end"] == "2026-11-02" for s in legacy)
+        assert pick_active_schedule(schedules, "2026-11-07")["sessions"] == successor["sessions"]
+        assert coverage_gap(schedules, publish_day) is None
+
+
 def test_merge_drops_windows_that_expired_more_than_two_weeks_ago(tmp_path):
     target = _spot_with_windows(
         tmp_path / "expiring.md",

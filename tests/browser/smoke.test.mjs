@@ -264,6 +264,42 @@ for (const engine of ["webkit", "chromium"]) {
     assert.equal((await page.locator(".access-summary").textContent()).trim(), front.extra.access_summary);
   });
 
+  test(`[${engine}] Sava keeps withdrawn hours separate from explicit closures`, async (t) => {
+    const path = join(ROOT, "content/spots/sava-pool.md");
+    const { front, body } = splitFrontMatter(readFileSync(path, "utf8"), path);
+    const withdrawn = (front.extra.schedules ?? []).find((window) => window.effective_start === "2026-08-29");
+    if (withdrawn) assert.ok(withdrawn.effective_end && withdrawn.effective_end <= "2026-11-02");
+    const context = await browsers[engine].newContext({ timezoneId: "Asia/Tokyo" });
+    t.after(() => context.close());
+    const page = await context.newPage();
+    for (const timestamp of [
+      "2026-11-03T07:59:00Z", "2026-11-03T08:00:00Z", "2026-11-11T18:00:00Z",
+      "2026-11-13T23:15:00Z", "2026-12-05T18:00:00Z",
+    ]) {
+      const instant = new Date(timestamp);
+      const expected = evaluateBoard([{ type: front.extra.type, accessMode: front.extra.access_mode,
+        schedule: { schedules: front.extra.schedules } }], { horizon: "now" }, instant);
+      await page.clock.setFixedTime(instant);
+      await page.goto(`${baseURL}/`);
+      await page.waitForFunction(() => document.querySelector('[data-slug="sava-pool"] [data-cell="status"]')?.hasAttribute("data-status-value"));
+      assert.equal(await page.locator('[data-slug="sava-pool"] [data-cell="status"]').getAttribute("data-status-value"), expected.entries[0].result.status, timestamp);
+      await page.goto(`${baseURL}/spots/sava-pool/`);
+      await verifyPoolPage(page, buildSpotRecord(front, body, path), instant);
+      if (front.extra.access_summary) {
+        assert.equal((await page.locator(".access-summary").textContent()).trim(), front.extra.access_summary);
+      }
+      if (withdrawn) {
+        const window = page.locator(`[data-schedule-window="2026-08-29/${withdrawn.effective_end}"]`);
+        assert.equal(await window.count(), 1);
+        // The expired window's static banners are bounded, while its explicit
+        // holiday/maintenance notices still inform live CLOSED results.
+        for (const start of ["2026-11-11", "2026-11-26", "2026-12-01", "2026-12-22"]) {
+          assert.equal(await window.locator(`[data-notice-start="${start}"]`).count(), 0);
+        }
+      }
+    }
+  });
+
   test(`[${engine}] Pacific answers agree for Los Angeles and Tokyo visitors`, async (t) => {
     const syntheticCases = [
       {
