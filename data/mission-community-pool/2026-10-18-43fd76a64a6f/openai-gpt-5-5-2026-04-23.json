@@ -1,0 +1,636 @@
+{
+  "cost_estimate": "input_tokens=2829, output_tokens=1434",
+  "details": {
+    "attempts": [
+      {
+        "elapsed_seconds": 14.489,
+        "http_status": 200,
+        "status": "completed"
+      }
+    ],
+    "configuration": {
+      "image_detail": "original",
+      "implementation_sha256": {
+        "_time.py": "f1efa6d6ad8330772b2fa08cca374337c238aefa03ebf39edd002f5eecab4f35",
+        "artifacts.py": "734a53acbbd4c4436a6287cd2471b7ded359daa629cac786984acf50e0286c9d",
+        "grounding.py": "9791c5f175cfdcec92058a5d2bbbb327c2a0a2adb1dbe833658a8f2199ad1f31",
+        "providers/openai_provider.py": "8a4d9e2a5d8f4151ed4b4fa3f560619eeae04ca589a4dd9b639365220ea02834",
+        "schema.py": "b4a7307f43667e00ea7408112b180aed1e48851621022eeb690a6971c87719c6",
+        "signals.py": "6a1a57bfadd13674c02e89ee60b2012c6b47963796af71e312380a580192f1de",
+        "window_dates.py": "a0389c04375b84df9b8c5d120e2c58ddab4ddf789c480707df756a24cfce9ae9"
+      },
+      "libraries": {
+        "pdfminer-six": "20260107",
+        "pdfplumber": "0.11.10",
+        "pillow": "12.3.0",
+        "pypdfium2": "5.13.0"
+      },
+      "max_output_tokens": 8192,
+      "model": "gpt-5.5-2026-04-23",
+      "prompt_sha256": "fc1ba7fba37a6326844c9b48b2b31530dab6e4f6059024897a32aa478a43802b",
+      "reasoning": "medium",
+      "render_dpi": 150,
+      "schema_sha256": "d2839c7fa22768d3b11935bd0e7103d9424f7d0d93813349e0c63e91e7ed6629"
+    },
+    "final_response": "{\"effective_start\":\"2026-10-20\",\"schedule_basis\":\"swim_schedule\",\"effective_end\":\"2026-11-21\",\"sessions\":[{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"08:00\",\"end\":\"09:00\",\"evidence\":\"Lap Swim 8:00am-9:00am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"senior_swim\",\"start\":\"09:15\",\"end\":\"10:15\",\"evidence\":\"Parent & Tot (1) / Senior Swim (3) 9:15am-10:15am CLOSED 10/20\",\"notes\":\"Shared with Parent & Tot; Senior Swim is the allowed program.\",\"pool_label_raw\":null,\"excluded_dates\":[\"2026-10-20\"]},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"10:30\",\"end\":\"12:00\",\"evidence\":\"Lap Swim 10:30am-12:00pm CLOSED 10/20\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":[\"2026-10-20\"]},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"08:00\",\"end\":\"09:00\",\"evidence\":\"Lap Swim 8:00am-9:00am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"senior_swim\",\"start\":\"09:15\",\"end\":\"10:15\",\"evidence\":\"Senior / Therapy Swim 9:15am-10:15am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"10:30\",\"end\":\"12:00\",\"evidence\":\"Lap Swim 10:30am-12:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"08:00\",\"end\":\"09:30\",\"evidence\":\"Lap Swim 8:00am-9:30am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"senior_swim\",\"start\":\"09:45\",\"end\":\"11:45\",\"evidence\":\"Parent & Tot (1) / Senior Swim (3) 9:45am \u2013 11:45am --\",\"notes\":\"Shared with Parent & Tot; Senior Swim is the allowed program.\",\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"lap_swim\",\"start\":\"08:00\",\"end\":\"09:00\",\"evidence\":\"Lap Swim 8:00am-9:00am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"senior_swim\",\"start\":\"09:15\",\"end\":\"10:15\",\"evidence\":\"Senior / Therapy Swim 9:15am-10:15am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"lap_swim\",\"start\":\"10:30\",\"end\":\"12:00\",\"evidence\":\"Lap Swim 10:30am-12:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"lap_swim\",\"start\":\"10:00\",\"end\":\"11:15\",\"evidence\":\"-- Lap Swim 10:00am-11:15am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"family_swim\",\"start\":\"11:30\",\"end\":\"14:00\",\"evidence\":\"Family Swim 11:30am-2:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null}],\"access_hours\":null,\"access_exceptions\":null,\"closures\":[{\"start\":\"2026-10-20\",\"end\":\"2026-10-20\",\"reason\":\"all-staff meeting\",\"start_time\":\"09:00\",\"end_time\":\"12:30\",\"physical_pool\":null},{\"start\":\"2026-11-11\",\"end\":\"2026-11-11\",\"reason\":\"Veterans Day\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null}]}",
+    "image_sha256": {},
+    "request_sha256": "c4ed514c596bd52a869fb17fc6579b0c4cd7c44dcb913912c26c0be6aa6187c9",
+    "response_status": "completed",
+    "source_closures": {
+      "expected": [
+        [
+          "2026-10-20",
+          "2026-10-20",
+          "09:00",
+          "12:30"
+        ],
+        [
+          "2026-11-11",
+          "2026-11-11",
+          null,
+          null
+        ]
+      ],
+      "extra": [],
+      "issues": [],
+      "missing": [],
+      "ok": true
+    },
+    "source_coverage": {
+      "closures": {
+        "expected": [
+          [
+            "2026-10-20",
+            "2026-10-20",
+            "09:00",
+            "12:30"
+          ],
+          [
+            "2026-11-11",
+            "2026-11-11",
+            null,
+            null
+          ]
+        ],
+        "extra": [],
+        "issues": [],
+        "missing": [],
+        "ok": true
+      },
+      "exclusions": {
+        "expected": {
+          "p1-c1-b2": [
+            "2026-10-20"
+          ],
+          "p1-c1-b3": [
+            "2026-10-20"
+          ]
+        },
+        "issues": [],
+        "ok": true
+      },
+      "expected_count": 13,
+      "extra": [],
+      "issues": [],
+      "missing": [],
+      "ok": true,
+      "session_cells": [
+        "p1-c1-b1",
+        "p1-c1-b2",
+        "p1-c1-b3",
+        "p1-c2-b4",
+        "p1-c2-b5",
+        "p1-c2-b6",
+        "p1-c3-b7",
+        "p1-c3-b8",
+        "p1-c4-b9",
+        "p1-c4-b10",
+        "p1-c4-b11",
+        "p1-c5-b12",
+        "p1-c5-b13"
+      ],
+      "window": {
+        "actual": [
+          "2026-10-20",
+          "2026-11-21"
+        ],
+        "expected": [
+          "2026-10-20",
+          "2026-11-21"
+        ],
+        "issues": [],
+        "ok": true
+      }
+    },
+    "source_facts": {
+      "closures": [
+        {
+          "end": "2026-10-20",
+          "end_time": "12:30",
+          "reason": "all-staff meeting",
+          "start": "2026-10-20",
+          "start_time": "09:00"
+        },
+        {
+          "end": "2026-11-11",
+          "reason": "Veterans Day",
+          "start": "2026-11-11"
+        }
+      ],
+      "effective_end": "2026-11-21",
+      "effective_start": "2026-10-20",
+      "schedule_basis": "swim_schedule",
+      "sessions": [
+        {
+          "day": "tuesday",
+          "end": "09:00",
+          "evidence": "Lap Swim 8:00am-9:00am",
+          "pool_label_raw": null,
+          "start": "08:00",
+          "type": "lap_swim"
+        },
+        {
+          "day": "tuesday",
+          "end": "10:15",
+          "evidence": "Parent & Tot (1) / Senior Swim (3) 9:15am-10:15am CLOSED 10/20",
+          "excluded_dates": [
+            "2026-10-20"
+          ],
+          "notes": "Shared with Parent & Tot; Senior Swim is the allowed program.",
+          "pool_label_raw": null,
+          "start": "09:15",
+          "type": "senior_swim"
+        },
+        {
+          "day": "tuesday",
+          "end": "12:00",
+          "evidence": "Lap Swim 10:30am-12:00pm CLOSED 10/20",
+          "excluded_dates": [
+            "2026-10-20"
+          ],
+          "pool_label_raw": null,
+          "start": "10:30",
+          "type": "lap_swim"
+        },
+        {
+          "day": "wednesday",
+          "end": "09:00",
+          "evidence": "Lap Swim 8:00am-9:00am",
+          "pool_label_raw": null,
+          "start": "08:00",
+          "type": "lap_swim"
+        },
+        {
+          "day": "wednesday",
+          "end": "10:15",
+          "evidence": "Senior / Therapy Swim 9:15am-10:15am",
+          "pool_label_raw": null,
+          "start": "09:15",
+          "type": "senior_swim"
+        },
+        {
+          "day": "wednesday",
+          "end": "12:00",
+          "evidence": "Lap Swim 10:30am-12:00pm",
+          "pool_label_raw": null,
+          "start": "10:30",
+          "type": "lap_swim"
+        },
+        {
+          "day": "thursday",
+          "end": "09:30",
+          "evidence": "Lap Swim 8:00am-9:30am",
+          "pool_label_raw": null,
+          "start": "08:00",
+          "type": "lap_swim"
+        },
+        {
+          "day": "thursday",
+          "end": "11:45",
+          "evidence": "Parent & Tot (1) / Senior Swim (3) 9:45am \u2013 11:45am --",
+          "notes": "Shared with Parent & Tot; Senior Swim is the allowed program.",
+          "pool_label_raw": null,
+          "start": "09:45",
+          "type": "senior_swim"
+        },
+        {
+          "day": "friday",
+          "end": "09:00",
+          "evidence": "Lap Swim 8:00am-9:00am",
+          "pool_label_raw": null,
+          "start": "08:00",
+          "type": "lap_swim"
+        },
+        {
+          "day": "friday",
+          "end": "10:15",
+          "evidence": "Senior / Therapy Swim 9:15am-10:15am",
+          "pool_label_raw": null,
+          "start": "09:15",
+          "type": "senior_swim"
+        },
+        {
+          "day": "friday",
+          "end": "12:00",
+          "evidence": "Lap Swim 10:30am-12:00pm",
+          "pool_label_raw": null,
+          "start": "10:30",
+          "type": "lap_swim"
+        },
+        {
+          "day": "saturday",
+          "end": "11:15",
+          "evidence": "-- Lap Swim 10:00am-11:15am",
+          "pool_label_raw": null,
+          "start": "10:00",
+          "type": "lap_swim"
+        },
+        {
+          "day": "saturday",
+          "end": "14:00",
+          "evidence": "Family Swim 11:30am-2:00pm",
+          "pool_label_raw": null,
+          "start": "11:30",
+          "type": "family_swim"
+        }
+      ]
+    },
+    "source_inventory": {
+      "cells": [
+        {
+          "bounds": [
+            34.22099999999999,
+            167.93199999999996,
+            178.357,
+            192.18199999999996
+          ],
+          "day": "tuesday",
+          "id": "p1-c1-b1",
+          "page": 1,
+          "text": "Lap Swim\n8:00am-9:00am"
+        },
+        {
+          "bounds": [
+            34.22099999999999,
+            270.472,
+            178.357,
+            321.722
+          ],
+          "day": "tuesday",
+          "id": "p1-c1-b2",
+          "page": 1,
+          "text": "Parent & Tot (1) / Senior\nSwim (3)\n9:15am-10:15am\nCLOSED 10/20"
+        },
+        {
+          "bounds": [
+            34.22099999999999,
+            405.78200000000004,
+            178.357,
+            443.522
+          ],
+          "day": "tuesday",
+          "id": "p1-c1-b3",
+          "page": 1,
+          "text": "Lap Swim\n10:30am-12:00pm\nCLOSED 10/20"
+        },
+        {
+          "bounds": [
+            178.357,
+            167.93199999999996,
+            324.957,
+            192.18199999999996
+          ],
+          "day": "wednesday",
+          "id": "p1-c2-b4",
+          "page": 1,
+          "text": "Lap Swim\n8:00am-9:00am"
+        },
+        {
+          "bounds": [
+            178.357,
+            283.722,
+            324.957,
+            308.222
+          ],
+          "day": "wednesday",
+          "id": "p1-c2-b5",
+          "page": 1,
+          "text": "Senior / Therapy Swim\n9:15am-10:15am"
+        },
+        {
+          "bounds": [
+            178.357,
+            412.53200000000004,
+            324.957,
+            437.03200000000004
+          ],
+          "day": "wednesday",
+          "id": "p1-c2-b6",
+          "page": 1,
+          "text": "Lap Swim\n10:30am-12:00pm"
+        },
+        {
+          "bounds": [
+            324.957,
+            167.93199999999996,
+            471.56275000000005,
+            192.18199999999996
+          ],
+          "day": "thursday",
+          "id": "p1-c3-b7",
+          "page": 1,
+          "text": "Lap Swim\n8:00am-9:30am"
+        },
+        {
+          "bounds": [
+            324.957,
+            276.972,
+            471.56275000000005,
+            430.28200000000004
+          ],
+          "day": "thursday",
+          "id": "p1-c3-b8",
+          "page": 1,
+          "text": "Parent & Tot (1) / Senior\nSwim (3)\n9:45am \u2013 11:45am\n--"
+        },
+        {
+          "bounds": [
+            471.56275000000005,
+            167.93199999999996,
+            613.02425,
+            192.18199999999996
+          ],
+          "day": "friday",
+          "id": "p1-c4-b9",
+          "page": 1,
+          "text": "Lap Swim\n8:00am-9:00am"
+        },
+        {
+          "bounds": [
+            471.56275000000005,
+            283.722,
+            613.02425,
+            308.222
+          ],
+          "day": "friday",
+          "id": "p1-c4-b10",
+          "page": 1,
+          "text": "Senior / Therapy Swim\n9:15am-10:15am"
+        },
+        {
+          "bounds": [
+            471.56275000000005,
+            412.53200000000004,
+            613.02425,
+            437.03200000000004
+          ],
+          "day": "friday",
+          "id": "p1-c4-b11",
+          "page": 1,
+          "text": "Lap Swim\n10:30am-12:00pm"
+        },
+        {
+          "bounds": [
+            613.02425,
+            174.68199999999996,
+            751.79975,
+            308.222
+          ],
+          "day": "saturday",
+          "id": "p1-c5-b12",
+          "page": 1,
+          "text": "--\nLap Swim\n10:00am-11:15am"
+        },
+        {
+          "bounds": [
+            613.02425,
+            412.53200000000004,
+            751.79975,
+            437.03200000000004
+          ],
+          "day": "saturday",
+          "id": "p1-c5-b13",
+          "page": 1,
+          "text": "Family Swim\n11:30am-2:00pm"
+        }
+      ],
+      "issues": [],
+      "notices": [
+        {
+          "bounds": null,
+          "facility": true,
+          "id": "p1-notice-1",
+          "page": 1,
+          "physical_pool": null,
+          "session_cell": null,
+          "text": "All city pools will be closed\non 10/20/2026 from 9:00\nAM-12:30 PM due to an all-\nstaff meeting"
+        },
+        {
+          "bounds": null,
+          "facility": true,
+          "id": "p1-notice-2",
+          "page": 1,
+          "physical_pool": null,
+          "session_cell": null,
+          "text": "All city pools will be closed\non 11/11/2026 in\nobservance of Veterans Day"
+        },
+        {
+          "bounds": [
+            34.22099999999999,
+            270.472,
+            178.357,
+            321.722
+          ],
+          "facility": false,
+          "id": "p1-c1-b2-notice",
+          "page": 1,
+          "physical_pool": null,
+          "session_cell": "p1-c1-b2",
+          "text": "Parent & Tot (1) / Senior\nSwim (3)\n9:15am-10:15am\nCLOSED 10/20"
+        },
+        {
+          "bounds": [
+            34.22099999999999,
+            405.78200000000004,
+            178.357,
+            443.522
+          ],
+          "facility": false,
+          "id": "p1-c1-b3-notice",
+          "page": 1,
+          "physical_pool": null,
+          "session_cell": "p1-c1-b3",
+          "text": "Lap Swim\n10:30am-12:00pm\nCLOSED 10/20"
+        }
+      ],
+      "page_count": 1,
+      "text": "PAGE 1\nMISSION POOL FALL 2026 SCHEDULE (OCTOBER 20-NOVEMBER 21)\nCost:\nTUESDAY WEDNESDAY THURSDAY FRIDAY SATURDAY\n$8 adults; $2 youth\nNotes:\n\u2022 All city pools will be closed\nLap Swim Lap Swim Lap Swim Lap Swim\n-- on 10/20/2026 from 9:00\n8:00am-9:00am 8:00am-9:00am 8:00am-9:30am 8:00am-9:00am\nAM-12:30 PM due to an all-\nstaff meeting\n\u2022 All city pools will be closed\non 11/11/2026 in\nobservance of Veterans Day\n\u2022 Children under 48\u201d must\nParent & Tot (1) / Senior\nParent & Tot (1) / Senior always be accompanied by\nSwim (3) Senior / Therapy Swim Senior / Therapy Swim Lap Swim\nSwim (3)\n9:15am-10:15am 9:15am-10:15am 9:15am-10:15am 10:00am-11:15am\nan adult within arm\u2019s reach\n9:45am \u2013 11:45am\nCLOSED 10/20 \u2022 Pool length = 30 yards\n\u2022 Pool temperature ~ 81F\n\u2022 Swim passes/memberships\ncan be purchased online or\n$8 drop-in per program either\nexact change or credit card.\n\u2022 The last day of the season\nLap Swim\nLap Swim Lap Swim Family Swim will be 11/21/26\n10:30am-12:00pm --\n10:30am-12:00pm 10:30am-12:00pm 11:30am-2:00pm\nCLOSED 10/20\nPool Info:\nAquatics Facility Supervisor\nAndres Cruz\nAndres.Cruz@sfgov.org\n101 Linda Street\n(415) 641-2841\nsfrecpark.org"
+    },
+    "source_window": {
+      "actual": [
+        "2026-10-20",
+        "2026-11-21"
+      ],
+      "expected": [
+        "2026-10-20",
+        "2026-11-21"
+      ],
+      "issues": [],
+      "ok": true
+    },
+    "visual_pages": []
+  },
+  "extracted_at": "2026-11-08T20:13:07.152984+00:00",
+  "model": "gpt-5.5-2026-04-23",
+  "payload": {
+    "closures": [
+      {
+        "end": "2026-10-20",
+        "end_time": "12:30",
+        "reason": "all-staff meeting",
+        "reason_code": "other",
+        "source_notices": [
+          {
+            "id": "p1-notice-1",
+            "text": "All city pools will be closed\non 10/20/2026 from 9:00\nAM-12:30 PM due to an all-\nstaff meeting"
+          }
+        ],
+        "start": "2026-10-20",
+        "start_time": "09:00"
+      },
+      {
+        "end": "2026-11-11",
+        "reason": "Veterans Day",
+        "reason_code": "holiday",
+        "source_notices": [
+          {
+            "id": "p1-notice-2",
+            "text": "All city pools will be closed\non 11/11/2026 in\nobservance of Veterans Day"
+          }
+        ],
+        "start": "2026-11-11"
+      }
+    ],
+    "effective_end": "2026-11-21",
+    "effective_start": "2026-10-20",
+    "schedule_basis": "swim_schedule",
+    "sessions": [
+      {
+        "day": "tuesday",
+        "end": "09:00",
+        "evidence": "Lap Swim 8:00am-9:00am",
+        "start": "08:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "10:15",
+        "evidence": "Parent & Tot (1) / Senior Swim (3) 9:15am-10:15am CLOSED 10/20",
+        "excluded_dates": [
+          "2026-10-20"
+        ],
+        "notes": "Shared with Parent & Tot; Senior Swim is the allowed program.",
+        "start": "09:15",
+        "type": "senior_swim"
+      },
+      {
+        "day": "tuesday",
+        "end": "12:00",
+        "evidence": "Lap Swim 10:30am-12:00pm CLOSED 10/20",
+        "excluded_dates": [
+          "2026-10-20"
+        ],
+        "start": "10:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "09:00",
+        "evidence": "Lap Swim 8:00am-9:00am",
+        "start": "08:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "10:15",
+        "evidence": "Senior / Therapy Swim 9:15am-10:15am",
+        "start": "09:15",
+        "type": "senior_swim"
+      },
+      {
+        "day": "wednesday",
+        "end": "12:00",
+        "evidence": "Lap Swim 10:30am-12:00pm",
+        "start": "10:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "09:30",
+        "evidence": "Lap Swim 8:00am-9:30am",
+        "start": "08:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "thursday",
+        "end": "11:45",
+        "evidence": "Parent & Tot (1) / Senior Swim (3) 9:45am \u2013 11:45am --",
+        "notes": "Shared with Parent & Tot; Senior Swim is the allowed program.",
+        "start": "09:45",
+        "type": "senior_swim"
+      },
+      {
+        "day": "friday",
+        "end": "09:00",
+        "evidence": "Lap Swim 8:00am-9:00am",
+        "start": "08:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "friday",
+        "end": "10:15",
+        "evidence": "Senior / Therapy Swim 9:15am-10:15am",
+        "start": "09:15",
+        "type": "senior_swim"
+      },
+      {
+        "day": "friday",
+        "end": "12:00",
+        "evidence": "Lap Swim 10:30am-12:00pm",
+        "start": "10:30",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "11:15",
+        "evidence": "-- Lap Swim 10:00am-11:15am",
+        "start": "10:00",
+        "type": "lap_swim"
+      },
+      {
+        "day": "saturday",
+        "end": "14:00",
+        "evidence": "Family Swim 11:30am-2:00pm",
+        "start": "11:30",
+        "type": "family_swim"
+      }
+    ]
+  },
+  "pdf_sha256": "43fd76a64a6fada732f0e6e26d50ef66fc39d2b6244350c03705477797362915",
+  "prompt_sha256": "fc1ba7fba37a6326844c9b48b2b31530dab6e4f6059024897a32aa478a43802b",
+  "provider": "openai",
+  "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+  "source_pdf_url": "https://sfrecpark.org/DocumentCenter/View/30319",
+  "usage": {
+    "input_tokens": 2829,
+    "input_tokens_details": {
+      "cache_write_tokens": 0,
+      "cached_tokens": 0
+    },
+    "output_tokens": 1434,
+    "output_tokens_details": {
+      "reasoning_tokens": 516
+    },
+    "total_tokens": 4263
+  }
+}

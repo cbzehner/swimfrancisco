@@ -19,56 +19,6 @@ access_summary = "Stonestown Family YMCA is a membership YMCA branch with lap sw
 [[extra.schedules]]
 sessions = []
 closures = []
-effective_start = "2026-10-24"
-schedule_basis = "facility_hours"
-effective_end = "2026-10-24"
-last_verified_at = "2026-10-24"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "07:00"
-end = "17:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "07:00"
-end = "17:00"
-label = "Facility hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
 effective_start = "2026-10-25"
 schedule_basis = "facility_hours"
 effective_end = "2026-10-25"
@@ -229,8 +179,67 @@ text = "Wednesday, November 11 (All Staff Training) CLOSED"
 sessions = []
 effective_start = "2026-11-07"
 schedule_basis = "facility_hours"
-effective_end = "2026-11-20"
+effective_end = "2026-11-07"
 last_verified_at = "2026-11-07"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "07:00"
+end = "17:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "sunday"
+start = "07:00"
+end = "17:00"
+label = "Facility hours"
+
+[[extra.schedules.closures]]
+start = "2026-11-11"
+end = "2026-11-11"
+reason = "Wednesday, November 11 (All Staff Training) CLOSED"
+reason_code = "staff_training"
+
+[[extra.schedules.closures.source_notices]]
+id = "040041ec621a0bb6-1"
+text = "Wednesday, November 11 (All Staff Training) CLOSED"
+
+[[extra.schedules]]
+sessions = []
+effective_start = "2026-11-08"
+schedule_basis = "facility_hours"
+effective_end = "2026-11-21"
+last_verified_at = "2026-11-08"
 
 [[extra.schedules.access_hours]]
 day = "monday"

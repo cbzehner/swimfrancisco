@@ -1,9 +1,9 @@
 {
-  "cost_estimate": "input_tokens=4790, output_tokens=3355",
+  "cost_estimate": "input_tokens=4790, output_tokens=3026",
   "details": {
     "attempts": [
       {
-        "elapsed_seconds": 31.159,
+        "elapsed_seconds": 26.411,
         "http_status": 200,
         "status": "completed"
       }
@@ -13,7 +13,7 @@
       "implementation_sha256": {
         "_time.py": "f1efa6d6ad8330772b2fa08cca374337c238aefa03ebf39edd002f5eecab4f35",
         "artifacts.py": "734a53acbbd4c4436a6287cd2471b7ded359daa629cac786984acf50e0286c9d",
-        "grounding.py": "5a82c59f1ba683a4296ffde5c57b1e51b13dd05bfff8b0cb35089520cff56c1f",
+        "grounding.py": "9791c5f175cfdcec92058a5d2bbbb327c2a0a2adb1dbe833658a8f2199ad1f31",
         "providers/openai_provider.py": "8a4d9e2a5d8f4151ed4b4fa3f560619eeae04ca589a4dd9b639365220ea02834",
         "schema.py": "b4a7307f43667e00ea7408112b180aed1e48851621022eeb690a6971c87719c6",
         "signals.py": "6a1a57bfadd13674c02e89ee60b2012c6b47963796af71e312380a580192f1de",
@@ -32,7 +32,7 @@
       "render_dpi": 150,
       "schema_sha256": "d2839c7fa22768d3b11935bd0e7103d9424f7d0d93813349e0c63e91e7ed6629"
     },
-    "final_response": "{\"effective_start\":\"2026-08-18\",\"schedule_basis\":\"swim_schedule\",\"effective_end\":\"2026-12-12\",\"sessions\":[{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"09:00\",\"end\":\"11:00\",\"evidence\":\"Lap Swim (4) 9:00 am \u2013 11:00 am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"12:30\",\"evidence\":\"Lap Swim (6) 11:00 am \u2013 12:30 pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"13:00\",\"end\":\"15:00\",\"evidence\":\"Lap Swim (4) 1:00 pm \u2013 3:00 pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"family_swim\",\"start\":\"13:00\",\"end\":\"15:00\",\"evidence\":\"Family Swim (2 lanes + Small Pool) 1:00 pm \u2013 3:00 pm\",\"notes\":null,\"pool_label_raw\":\"2 lanes + Small Pool\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"06:30\",\"end\":\"08:30\",\"evidence\":\"Lap Swim (6) 6:30 am \u2013 8:30 am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"09:00\",\"end\":\"11:00\",\"evidence\":\"Lap Swim (4) 9:00 am \u2013 11:00 am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"12:30\",\"evidence\":\"Lap Swim (6) 11:00 am \u2013 12:30 pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"13:00\",\"end\":\"15:00\",\"evidence\":\"Lap Swim (4) 1:00 pm \u2013 3:00 pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"family_swim\",\"start\":\"13:00\",\"end\":\"15:00\",\"evidence\":\"Family Swim (2 lanes + Small Pool) 1:00 pm \u2013 3:00 pm _____\",\"notes\":null,\"pool_label_raw\":\"2 lanes + Small Pool\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"18:30\",\"end\":\"20:00\",\"evidence\":\"Lap Swim (6) 6:30 pm \u2013 8:00 pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"09:00\",\"end\":\"11:00\",\"evidence\":\"Lap Swim (4) 9:00 am \u2013 11:00 am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"12:30\",\"evidence\":\"Lap Swim (6) 11:00 am \u2013 12:30 pm (CLOSED - 8/27, 9/24, 10/22)\",\"notes\":\"Session cell marks these dates closed.\",\"pool_label_raw\":null,\"excluded_dates\":[\"2026-08-27\",\"2026-09-24\",\"2026-10-22\"]},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"13:00\",\"end\":\"15:00\",\"evidence\":\"Lap Swim (4) 1:00 pm \u2013 3:00 pm (CLOSED - 8/27, 9/24, 10/22)\",\"notes\":\"Session cell marks these dates closed.\",\"pool_label_raw\":null,\"excluded_dates\":[\"2026-08-27\",\"2026-09-24\",\"2026-10-22\"]},{\"day\":\"thursday\",\"type\":\"family_swim\",\"start\":\"13:00\",\"end\":\"15:00\",\"evidence\":\"Family Swim (2 lanes + Small Pool) 1:00 pm \u2013 3:00 pm (CLOSED - 8/27, 9/24, 10/22)\",\"notes\":\"Session cell marks these dates closed.\",\"pool_label_raw\":\"2 lanes + Small Pool\",\"excluded_dates\":[\"2026-08-27\",\"2026-09-24\",\"2026-10-22\"]},{\"day\":\"friday\",\"type\":\"lap_swim\",\"start\":\"06:30\",\"end\":\"08:30\",\"evidence\":\"Lap Swim (6) 6:30 am \u2013 8:30 am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"lap_swim\",\"start\":\"09:00\",\"end\":\"11:00\",\"evidence\":\"Lap Swim (4) 9:00 am \u2013 11:00 am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"12:30\",\"evidence\":\"Lap Swim (6) 11:00 am \u2013 12:30 pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"lap_swim\",\"start\":\"13:00\",\"end\":\"15:00\",\"evidence\":\"Lap Swim (4) 1:00 pm \u2013 3:00 pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"family_swim\",\"start\":\"13:00\",\"end\":\"15:00\",\"evidence\":\"Family Swim (2 lanes + Small Pool) 1:00 pm \u2013 3:00 pm _____\",\"notes\":null,\"pool_label_raw\":\"2 lanes + Small Pool\",\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"family_swim\",\"start\":\"18:30\",\"end\":\"20:00\",\"evidence\":\"Family Swim 6:30 pm \u2013 8:00 pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"lap_swim\",\"start\":\"09:00\",\"end\":\"10:30\",\"evidence\":\"Lap Swim (5) 9:00 am \u2013 10:30 am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"family_swim\",\"start\":\"13:30\",\"end\":\"15:30\",\"evidence\":\"Family Swim (Waterslide) 1:30 pm \u2013 3:30 pm\",\"notes\":null,\"pool_label_raw\":\"Waterslide\",\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"lap_swim\",\"start\":\"16:00\",\"end\":\"17:00\",\"evidence\":\"Lap Swim (6) 4:00pm \u2013 5:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null}],\"access_hours\":null,\"access_exceptions\":null,\"closures\":[{\"start\":\"2026-08-22\",\"end\":\"2026-08-22\",\"reason\":\"Learn To Swim Aq. In-Service Training\",\"start_time\":\"08:30\",\"end_time\":\"12:30\",\"physical_pool\":null},{\"start\":\"2026-12-12\",\"end\":\"2026-12-12\",\"reason\":\"Learn To Swim Aq. In-Service Training\",\"start_time\":\"08:30\",\"end_time\":\"12:30\",\"physical_pool\":null},{\"start\":\"2026-08-27\",\"end\":\"2026-08-27\",\"reason\":\"Aquatics Division Training\",\"start_time\":\"12:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-09-24\",\"end\":\"2026-09-24\",\"reason\":\"Aquatics Division Training\",\"start_time\":\"12:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-10-22\",\"end\":\"2026-10-22\",\"reason\":\"Aquatics Division Training\",\"start_time\":\"12:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-11-26\",\"end\":\"2026-11-26\",\"reason\":\"Aquatics Division Training\",\"start_time\":\"12:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-09-07\",\"end\":\"2026-09-07\",\"reason\":\"Labor Day\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-10-12\",\"end\":\"2026-10-12\",\"reason\":\"Indigenous People\u2019s Day\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-11-11\",\"end\":\"2026-11-11\",\"reason\":\"Veteran\u2019s Day\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-11-23\",\"end\":\"2026-11-29\",\"reason\":\"maintenance\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null}]}",
+    "final_response": "{\"effective_start\":\"2026-08-18\",\"schedule_basis\":\"swim_schedule\",\"effective_end\":\"2026-12-12\",\"sessions\":[{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"09:00\",\"end\":\"11:00\",\"evidence\":\"Lap Swim (4) 9:00 am \u2013 11:00 am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"12:30\",\"evidence\":\"Lap Swim (6) 11:00 am \u2013 12:30 pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"lap_swim\",\"start\":\"13:00\",\"end\":\"15:00\",\"evidence\":\"Lap Swim (4) 1:00 pm \u2013 3:00 pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"tuesday\",\"type\":\"family_swim\",\"start\":\"13:00\",\"end\":\"15:00\",\"evidence\":\"Family Swim (2 lanes + Small Pool) 1:00 pm \u2013 3:00 pm\",\"notes\":null,\"pool_label_raw\":\"2 lanes + Small Pool\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"06:30\",\"end\":\"08:30\",\"evidence\":\"Lap Swim (6) 6:30 am \u2013 8:30 am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"09:00\",\"end\":\"11:00\",\"evidence\":\"Lap Swim (4) 9:00 am \u2013 11:00 am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"12:30\",\"evidence\":\"Lap Swim (6) 11:00 am \u2013 12:30 pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"13:00\",\"end\":\"15:00\",\"evidence\":\"Lap Swim (4) 1:00 pm \u2013 3:00 pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"family_swim\",\"start\":\"13:00\",\"end\":\"15:00\",\"evidence\":\"Family Swim (2 lanes + Small Pool) 1:00 pm \u2013 3:00 pm _____\",\"notes\":null,\"pool_label_raw\":\"2 lanes + Small Pool\",\"excluded_dates\":null},{\"day\":\"wednesday\",\"type\":\"lap_swim\",\"start\":\"18:30\",\"end\":\"20:00\",\"evidence\":\"Lap Swim (6) 6:30 pm \u2013 8:00 pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"09:00\",\"end\":\"11:00\",\"evidence\":\"Lap Swim (4) 9:00 am \u2013 11:00 am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"12:30\",\"evidence\":\"Lap Swim (6) 11:00 am \u2013 12:30 pm (CLOSED - 8/27, 9/24, 10/22)\",\"notes\":\"Printed cell marks this session CLOSED on listed dates.\",\"pool_label_raw\":null,\"excluded_dates\":[\"2026-08-27\",\"2026-09-24\",\"2026-10-22\"]},{\"day\":\"thursday\",\"type\":\"lap_swim\",\"start\":\"13:00\",\"end\":\"15:00\",\"evidence\":\"Lap Swim (4) 1:00 pm \u2013 3:00 pm (CLOSED - 8/27, 9/24, 10/22)\",\"notes\":\"Printed cell marks this session CLOSED on listed dates.\",\"pool_label_raw\":null,\"excluded_dates\":[\"2026-08-27\",\"2026-09-24\",\"2026-10-22\"]},{\"day\":\"thursday\",\"type\":\"family_swim\",\"start\":\"13:00\",\"end\":\"15:00\",\"evidence\":\"Family Swim (2 lanes + Small Pool) 1:00 pm \u2013 3:00 pm (CLOSED - 8/27, 9/24, 10/22)\",\"notes\":\"Printed cell marks this session CLOSED on listed dates.\",\"pool_label_raw\":\"2 lanes + Small Pool\",\"excluded_dates\":[\"2026-08-27\",\"2026-09-24\",\"2026-10-22\"]},{\"day\":\"friday\",\"type\":\"lap_swim\",\"start\":\"06:30\",\"end\":\"08:30\",\"evidence\":\"Lap Swim (6) 6:30 am \u2013 8:30 am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"lap_swim\",\"start\":\"09:00\",\"end\":\"11:00\",\"evidence\":\"Lap Swim (4) 9:00 am \u2013 11:00 am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"lap_swim\",\"start\":\"11:00\",\"end\":\"12:30\",\"evidence\":\"Lap Swim (6) 11:00 am \u2013 12:30 pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"lap_swim\",\"start\":\"13:00\",\"end\":\"15:00\",\"evidence\":\"Lap Swim (4) 1:00 pm \u2013 3:00 pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"family_swim\",\"start\":\"13:00\",\"end\":\"15:00\",\"evidence\":\"Family Swim (2 lanes + Small Pool) 1:00 pm \u2013 3:00 pm _____\",\"notes\":null,\"pool_label_raw\":\"2 lanes + Small Pool\",\"excluded_dates\":null},{\"day\":\"friday\",\"type\":\"family_swim\",\"start\":\"18:30\",\"end\":\"20:00\",\"evidence\":\"Family Swim 6:30 pm \u2013 8:00 pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"lap_swim\",\"start\":\"09:00\",\"end\":\"10:30\",\"evidence\":\"Lap Swim (5) 9:00 am \u2013 10:30 am\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"family_swim\",\"start\":\"13:30\",\"end\":\"15:30\",\"evidence\":\"Family Swim (Waterslide) 1:30 pm \u2013 3:30 pm\",\"notes\":null,\"pool_label_raw\":\"Waterslide\",\"excluded_dates\":null},{\"day\":\"saturday\",\"type\":\"lap_swim\",\"start\":\"16:00\",\"end\":\"17:00\",\"evidence\":\"Lap Swim (6) 4:00pm \u2013 5:00pm\",\"notes\":null,\"pool_label_raw\":null,\"excluded_dates\":null}],\"access_hours\":null,\"access_exceptions\":null,\"closures\":[{\"start\":\"2026-08-22\",\"end\":\"2026-08-22\",\"reason\":\"Aq. In-Service Training\",\"start_time\":\"08:30\",\"end_time\":\"12:30\",\"physical_pool\":null},{\"start\":\"2026-12-12\",\"end\":\"2026-12-12\",\"reason\":\"Aq. In-Service Training\",\"start_time\":\"08:30\",\"end_time\":\"12:30\",\"physical_pool\":null},{\"start\":\"2026-08-27\",\"end\":\"2026-08-27\",\"reason\":\"Aquatics Division Training\",\"start_time\":\"12:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-09-24\",\"end\":\"2026-09-24\",\"reason\":\"Aquatics Division Training\",\"start_time\":\"12:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-10-22\",\"end\":\"2026-10-22\",\"reason\":\"Aquatics Division Training\",\"start_time\":\"12:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-11-26\",\"end\":\"2026-11-26\",\"reason\":\"Aquatics Division Training\",\"start_time\":\"12:00\",\"end_time\":\"14:00\",\"physical_pool\":null},{\"start\":\"2026-09-07\",\"end\":\"2026-09-07\",\"reason\":\"Labor Day\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-10-12\",\"end\":\"2026-10-12\",\"reason\":\"Indigenous People\u2019s Day\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-11-11\",\"end\":\"2026-11-11\",\"reason\":\"Veteran\u2019s Day\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null},{\"start\":\"2026-11-23\",\"end\":\"2026-11-29\",\"reason\":\"maintenance\",\"start_time\":null,\"end_time\":null,\"physical_pool\":null}]}",
     "image_sha256": {},
     "request_sha256": "2c4f3e8718d24682a7dac8adf1e3e6e2af087d7020bf7eea3c6ff7aa9e0d8b56",
     "response_status": "completed",
@@ -242,14 +242,14 @@
         {
           "end": "2026-08-22",
           "end_time": "12:30",
-          "reason": "Learn To Swim Aq. In-Service Training",
+          "reason": "Aq. In-Service Training",
           "start": "2026-08-22",
           "start_time": "08:30"
         },
         {
           "end": "2026-12-12",
           "end_time": "12:30",
-          "reason": "Learn To Swim Aq. In-Service Training",
+          "reason": "Aq. In-Service Training",
           "start": "2026-12-12",
           "start_time": "08:30"
         },
@@ -403,7 +403,7 @@
             "2026-09-24",
             "2026-10-22"
           ],
-          "notes": "Session cell marks these dates closed.",
+          "notes": "Printed cell marks this session CLOSED on listed dates.",
           "pool_label_raw": null,
           "start": "11:00",
           "type": "lap_swim"
@@ -417,7 +417,7 @@
             "2026-09-24",
             "2026-10-22"
           ],
-          "notes": "Session cell marks these dates closed.",
+          "notes": "Printed cell marks this session CLOSED on listed dates.",
           "pool_label_raw": null,
           "start": "13:00",
           "type": "lap_swim"
@@ -431,7 +431,7 @@
             "2026-09-24",
             "2026-10-22"
           ],
-          "notes": "Session cell marks these dates closed.",
+          "notes": "Printed cell marks this session CLOSED on listed dates.",
           "pool_label_raw": "2 lanes + Small Pool",
           "start": "13:00",
           "type": "family_swim"
@@ -1091,14 +1091,14 @@
     },
     "visual_pages": []
   },
-  "extracted_at": "2026-11-07T19:55:34.215116+00:00",
+  "extracted_at": "2026-11-08T20:12:28.675262+00:00",
   "model": "gpt-5.5-2026-04-23",
   "payload": {
     "closures": [
       {
         "end": "2026-08-22",
         "end_time": "12:30",
-        "reason": "Learn To Swim Aq. In-Service Training",
+        "reason": "Aq. In-Service Training",
         "reason_code": "staff_training",
         "source_notices": [
           {
@@ -1112,7 +1112,7 @@
       {
         "end": "2026-12-12",
         "end_time": "12:30",
-        "reason": "Learn To Swim Aq. In-Service Training",
+        "reason": "Aq. In-Service Training",
         "reason_code": "staff_training",
         "source_notices": [
           {
@@ -1320,7 +1320,7 @@
           "2026-09-24",
           "2026-10-22"
         ],
-        "notes": "Session cell marks these dates closed.",
+        "notes": "Printed cell marks this session CLOSED on listed dates.",
         "start": "11:00",
         "type": "lap_swim"
       },
@@ -1333,7 +1333,7 @@
           "2026-09-24",
           "2026-10-22"
         ],
-        "notes": "Session cell marks these dates closed.",
+        "notes": "Printed cell marks this session CLOSED on listed dates.",
         "start": "13:00",
         "type": "lap_swim"
       },
@@ -1346,7 +1346,7 @@
           "2026-09-24",
           "2026-10-22"
         ],
-        "notes": "Session cell marks these dates closed.",
+        "notes": "Printed cell marks this session CLOSED on listed dates.",
         "pool": "2 lanes + small",
         "start": "13:00",
         "type": "family_swim"
@@ -1429,10 +1429,10 @@
       "cache_write_tokens": 0,
       "cached_tokens": 0
     },
-    "output_tokens": 3355,
+    "output_tokens": 3026,
     "output_tokens_details": {
-      "reasoning_tokens": 1368
+      "reasoning_tokens": 1034
     },
-    "total_tokens": 8145
+    "total_tokens": 7816
   }
 }
