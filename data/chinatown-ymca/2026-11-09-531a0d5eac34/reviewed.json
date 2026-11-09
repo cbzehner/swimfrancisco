@@ -1,0 +1,118 @@
+{
+  "pdf_sha256": "531a0d5eac343028b7a2723d4bf0269d219ad884407d322ddc29d05852b1319a",
+  "source_pdf_url": "https://www.ymcasf.org/location/chinatown-ymca/",
+  "direct_source": {
+    "configuration": {
+      "capture": {
+        "browser_version": "152.0.7977.64",
+        "captured_at": "2026-11-09T23:58:40.011Z",
+        "configuration": {
+          "playwright_version": "1.61.1",
+          "script_sha256": "8e5c24db09d052cd63888ed77acc3a6a5273434b12f71ed7a2ac03e786535ae4"
+        },
+        "hashes": {
+          "rendered": "8def0fd6fa4987e89a48b6287f43ae89cb46f3ecf9db3fa5f23dd53ced1a24e4",
+          "screenshot": "257d119d44f39cbc281e69be0d663db74bc52262451c5cbb8b1831b2de12a223",
+          "source": "531a0d5eac343028b7a2723d4bf0269d219ad884407d322ddc29d05852b1319a"
+        },
+        "method": "cloudflare_browser",
+        "requested_url": "https://www.ymcasf.org/location/chinatown-ymca/",
+        "status": 200,
+        "url": "https://www.ymcasf.org/location/chinatown-ymca/"
+      },
+      "freshness_days": 14,
+      "libraries": {
+        "httpx": "0.28.1",
+        "openpyxl": "3.1.5"
+      },
+      "parser_sha256": "ef2fe30f8aa8f78216d6d88f231e6b26f69ac1fb4b31622c7842d52f00bb1d5c",
+      "python": "3.13.18",
+      "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
+      "source_identity": "original_bytes"
+    },
+    "freshness_days": 14,
+    "observed_on": "2026-11-09",
+    "requested_url": "https://www.ymcasf.org/location/chinatown-ymca/",
+    "sha256": "531a0d5eac343028b7a2723d4bf0269d219ad884407d322ddc29d05852b1319a",
+    "url": "https://www.ymcasf.org/location/chinatown-ymca/"
+  },
+  "slug": "chinatown-ymca",
+  "reviewed_at": "2026-11-09",
+  "attested_by": "ci",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "19:30",
+        "evidence": "Monday: 8:00 am \u2013 7:30 pm",
+        "label": "Pool hours",
+        "start": "08:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "19:30",
+        "evidence": "Tuesday: 8:00 am \u2013 7:30 pm",
+        "label": "Pool hours",
+        "start": "08:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "19:30",
+        "evidence": "Wednesday: 8:00 am \u2013 7:30 pm",
+        "label": "Pool hours",
+        "start": "08:00"
+      },
+      {
+        "day": "thursday",
+        "end": "19:30",
+        "evidence": "Thursday: 8:00 am \u2013 7:30 pm",
+        "label": "Pool hours",
+        "start": "08:00"
+      },
+      {
+        "day": "friday",
+        "end": "19:30",
+        "evidence": "Friday: 8:00 am \u2013 7:30 pm",
+        "label": "Pool hours",
+        "start": "08:00"
+      },
+      {
+        "day": "saturday",
+        "end": "15:30",
+        "evidence": "Saturday: 8:00 am \u2013 3:30 pm",
+        "label": "Pool hours",
+        "start": "08:00"
+      },
+      {
+        "day": "sunday",
+        "end": "15:30",
+        "evidence": "Sunday: 8:00 am \u2013 3:30 pm",
+        "label": "Pool hours",
+        "start": "08:00"
+      }
+    ],
+    "closures": [
+      {
+        "end": "2026-11-11",
+        "reason": "Wednesday, November 11 (All Staff Training) CLOSED Wednesday, November 11 (All Staff Training) Closed",
+        "reason_code": "staff_training",
+        "source_notices": [
+          {
+            "id": "040041ec621a0bb6-1",
+            "text": "Wednesday, November 11 (All Staff Training) CLOSED"
+          },
+          {
+            "id": "f25a4ff56fbe617b-1",
+            "text": "Wednesday, November 11 (All Staff Training) Closed"
+          }
+        ],
+        "start": "2026-11-11"
+      }
+    ],
+    "effective_end": "2026-11-22",
+    "effective_start": "2026-11-09",
+    "schedule_basis": "pool_hours",
+    "sessions": []
+  }
+}

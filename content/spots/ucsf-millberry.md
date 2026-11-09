@@ -20,56 +20,6 @@ access_summary = "UCSF Millberry Fitness Center is the Parnassus UCSF fitness lo
 [[extra.schedules]]
 sessions = []
 closures = []
-effective_start = "2026-10-25"
-schedule_basis = "facility_hours"
-effective_end = "2026-10-25"
-last_verified_at = "2026-10-25"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "08:00"
-end = "16:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "08:00"
-end = "16:00"
-label = "Facility hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
 effective_start = "2026-10-26"
 schedule_basis = "facility_hours"
 effective_end = "2026-10-29"
@@ -222,8 +172,58 @@ sessions = []
 closures = []
 effective_start = "2026-11-08"
 schedule_basis = "facility_hours"
-effective_end = "2026-11-21"
+effective_end = "2026-11-08"
 last_verified_at = "2026-11-08"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "06:00"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "06:00"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "06:00"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "06:00"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "06:00"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "08:00"
+end = "16:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "sunday"
+start = "08:00"
+end = "16:00"
+label = "Facility hours"
+
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-11-09"
+schedule_basis = "facility_hours"
+effective_end = "2026-11-22"
+last_verified_at = "2026-11-09"
 
 [[extra.schedules.access_hours]]
 day = "monday"
