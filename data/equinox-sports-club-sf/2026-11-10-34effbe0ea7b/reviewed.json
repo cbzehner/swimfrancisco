@@ -1,5 +1,5 @@
 {
-  "pdf_sha256": "a5bcbd1af173f537f2542589569a719a05b71c562a2fbd551fee6a405266fda6",
+  "pdf_sha256": "34effbe0ea7b745ccdeda64e1c70a27f6ef531bd035cd8f801241ddd351dc0ee",
   "source_pdf_url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco",
   "direct_source": {
     "configuration": {
@@ -14,13 +14,13 @@
       "source_identity": "original_bytes"
     },
     "freshness_days": 14,
-    "observed_on": "2026-11-09",
+    "observed_on": "2026-11-10",
     "requested_url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco",
-    "sha256": "a5bcbd1af173f537f2542589569a719a05b71c562a2fbd551fee6a405266fda6",
+    "sha256": "34effbe0ea7b745ccdeda64e1c70a27f6ef531bd035cd8f801241ddd351dc0ee",
     "url": "https://www.equinox.com/clubs/northern-california/sportsclubsanfrancisco"
   },
   "slug": "equinox-sports-club-sf",
-  "reviewed_at": "2026-11-09",
+  "reviewed_at": "2026-11-10",
   "attested_by": "ci",
   "payload": {
     "access_exceptions": [],
@@ -76,8 +76,8 @@
       }
     ],
     "closures": [],
-    "effective_end": "2026-11-22",
-    "effective_start": "2026-11-09",
+    "effective_end": "2026-11-23",
+    "effective_start": "2026-11-10",
     "schedule_basis": "facility_hours",
     "sessions": []
   }

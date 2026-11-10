@@ -1,5 +1,5 @@
 {
-  "pdf_sha256": "0532b730fea7e1a6ac0543129e8a5f1cf314923a4cb279e944b6cf320030e694",
+  "pdf_sha256": "3e6ba3ec3685640b2ae4bda72f0680c6423b4fd34c21b689a14ef6eebd730057",
   "source_pdf_url": "https://www.prrcsf.org/therapeutic-swim",
   "direct_source": {
     "configuration": {
@@ -14,20 +14,20 @@
       "source_identity": "original_bytes"
     },
     "freshness_days": 14,
-    "observed_on": "2026-11-09",
+    "observed_on": "2026-11-10",
     "requested_url": "https://www.prrcsf.org/therapeutic-swim",
-    "sha256": "0532b730fea7e1a6ac0543129e8a5f1cf314923a4cb279e944b6cf320030e694",
+    "sha256": "3e6ba3ec3685640b2ae4bda72f0680c6423b4fd34c21b689a14ef6eebd730057",
     "url": "https://www.prrcsf.org/therapeutic-swim"
   },
   "slug": "pomeroy-pool",
-  "reviewed_at": "2026-11-09",
+  "reviewed_at": "2026-11-10",
   "attested_by": "ci",
   "payload": {
     "access_exceptions": [],
     "access_hours": [],
     "closures": [],
-    "effective_end": "2026-11-22",
-    "effective_start": "2026-11-09",
+    "effective_end": "2026-11-23",
+    "effective_start": "2026-11-10",
     "schedule_basis": "swim_schedule",
     "sessions": [
       {

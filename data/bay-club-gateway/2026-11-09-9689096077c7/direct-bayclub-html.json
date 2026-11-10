@@ -14,7 +14,7 @@
         "source_identity": "original_bytes"
       },
       "freshness_days": 14,
-      "observed_on": "2026-11-09",
+      "observed_on": "2026-11-10",
       "requested_url": "https://www.bayclubs.com/clubs/thegateway",
       "sha256": "9689096077c7e4783d7778df8e2debaa04c1b73d2e700e380656b2ae32c0653f",
       "url": "https://www.bayclubs.com/clubs/thegateway"
@@ -24,7 +24,7 @@
       "ok": true
     }
   },
-  "extracted_at": "2026-11-09T23:58:50.034362+00:00",
+  "extracted_at": "2026-11-10T21:40:37.140046+00:00",
   "model": "bayclub-html",
   "payload": {
     "access_exceptions": [],
@@ -80,8 +80,8 @@
       }
     ],
     "closures": [],
-    "effective_end": "2026-11-22",
-    "effective_start": "2026-11-09",
+    "effective_end": "2026-11-23",
+    "effective_start": "2026-11-10",
     "schedule_basis": "facility_hours",
     "sessions": []
   },

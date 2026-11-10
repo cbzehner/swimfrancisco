@@ -14,13 +14,13 @@
       "source_identity": "original_bytes"
     },
     "freshness_days": 14,
-    "observed_on": "2026-11-09",
+    "observed_on": "2026-11-10",
     "requested_url": "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/news/2026-fitness-and-recreation-holiday-schedule",
     "sha256": "911d091212e9f69961d2a461fed7c662f0fbe55f46e10270372f89f75bf7ca0d",
     "url": "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/news/2026-fitness-and-recreation-holiday-schedule"
   },
   "slug": "ucsf-millberry",
-  "reviewed_at": "2026-11-09",
+  "reviewed_at": "2026-11-10",
   "attested_by": "ci",
   "payload": {
     "access_exceptions": [],
@@ -76,8 +76,8 @@
       }
     ],
     "closures": [],
-    "effective_end": "2026-11-22",
-    "effective_start": "2026-11-09",
+    "effective_end": "2026-11-23",
+    "effective_start": "2026-11-10",
     "schedule_basis": "facility_hours",
     "sessions": []
   }
