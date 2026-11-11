@@ -14,9 +14,9 @@
         "source_identity": "original_bytes"
       },
       "freshness_days": 14,
-      "observed_on": "2026-11-10",
+      "observed_on": "2026-11-11",
       "requested_url": "https://www.prrcsf.org/therapeutic-swim",
-      "sha256": "3e6ba3ec3685640b2ae4bda72f0680c6423b4fd34c21b689a14ef6eebd730057",
+      "sha256": "d94447bc41b6b98fde9d7db19862b1a51dbc270c424cf913893abbcf93daa0f0",
       "url": "https://www.prrcsf.org/therapeutic-swim"
     },
     "source_coverage": {
@@ -235,14 +235,14 @@
       ]
     }
   },
-  "extracted_at": "2026-11-10T21:40:36.185203+00:00",
+  "extracted_at": "2026-11-11T22:31:01.347968+00:00",
   "model": "pomeroy-html-v1",
   "payload": {
     "access_exceptions": [],
     "access_hours": [],
     "closures": [],
-    "effective_end": "2026-11-23",
-    "effective_start": "2026-11-10",
+    "effective_end": "2026-11-24",
+    "effective_start": "2026-11-11",
     "schedule_basis": "swim_schedule",
     "sessions": [
       {
@@ -359,7 +359,7 @@
       }
     ]
   },
-  "pdf_sha256": "3e6ba3ec3685640b2ae4bda72f0680c6423b4fd34c21b689a14ef6eebd730057",
+  "pdf_sha256": "d94447bc41b6b98fde9d7db19862b1a51dbc270c424cf913893abbcf93daa0f0",
   "prompt_sha256": "17455ef18b4009e05dffed688558aedf9301b6029346d3ed79f165a4fcb32ed5",
   "provider": "direct",
   "schema_sha256": "987dbc4e2feff8d5edb6362ff40bd7a0ed6b093a4fbef21dcfc9a51e10832bcc",
