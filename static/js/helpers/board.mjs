@@ -20,10 +20,10 @@ const PLACEHOLDER = "\u2014"; // em dash
 const MIN_USEFUL_WINDOW_OVERLAP_MINUTES = 45;
 
 const HORIZON_DEFINITIONS = Object.freeze([
-  { id: "this-morning", label: "This Morning", dayOffset: 0, start: "06:00", end: "11:00" },
+  { id: "this-morning", label: "This Morning", dayOffset: 0, start: "06:00", end: "12:00" },
   { id: "this-afternoon", label: "This Afternoon", dayOffset: 0, start: "12:00", end: "17:00" },
   { id: "this-evening", label: "This Evening", dayOffset: 0, start: "17:00", end: "21:00" },
-  { id: "tomorrow-morning", label: "Tomorrow Morning", dayOffset: 1, start: "06:00", end: "11:00" },
+  { id: "tomorrow-morning", label: "Tomorrow Morning", dayOffset: 1, start: "06:00", end: "12:00" },
   { id: "tomorrow-afternoon", label: "Tomorrow Afternoon", dayOffset: 1, start: "12:00", end: "17:00" },
   { id: "tomorrow-evening", label: "Tomorrow Evening", dayOffset: 1, start: "17:00", end: "21:00" },
 ]);
@@ -60,8 +60,12 @@ function dateWithDayOffset(now, offset) {
 
 function horizonFromDefinition(def, now) {
   const date = dateWithDayOffset(now, def.dayOffset);
-  const start = parseHHMM(def.start);
+  const rawStart = parseHHMM(def.start);
   const end = parseHHMM(def.end);
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const start = rawStart === null
+    ? null
+    : (def.dayOffset === 0 ? Math.max(rawStart, nowMinutes) : rawStart);
   return {
     id: def.id,
     label: def.label,
@@ -210,6 +214,11 @@ export function scheduleHasSessions(schedule, now = pacificWallClockDate()) {
 
 export function scheduleHasAccessHours(schedule, now = pacificWallClockDate()) {
   return hasNonEmptyArray(resolveActiveSchedule(schedule, now), "access_hours");
+}
+
+export function scheduleHasAccessSchedule(schedule, now = pacificWallClockDate()) {
+  const active = resolveActiveSchedule(schedule, now);
+  return hasNonEmptyArray(active, "access_hours") || hasNonEmptyArray(active, "access_exceptions");
 }
 
 // Parse the JSON schedule from a `data-schedule` attribute on the given DOM
@@ -453,7 +462,10 @@ function currentWindows(windows, closures, now) {
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   return windows.flatMap((window) => (
     availableSegmentsAfterClosures(window.start, window.end, closures, dateISO, window)
-      .filter((segment) => segment.start <= nowMinutes && nowMinutes < segment.end)
+      .filter((segment) => (
+        segment.start <= nowMinutes
+        && (segment.end === 23 * 60 + 59 ? nowMinutes <= segment.end : nowMinutes < segment.end)
+      ))
       .map((segment) => ({ ...window, ...segment }))
   ));
 }
@@ -640,20 +652,25 @@ export function computeAccessStatus(schedule, now) {
     return statusResult(isScheduleBoundary(activeClosure) ? "CHECK" : "CLOSED", closureCopy(activeClosure), nextKind, nextArgs);
   }
 
-  const current = currentWindows(accessWindowsForDate(schedule, now), closures, now)[0];
+  const todayWindows = accessWindowsForDate(schedule, now);
+  const current = currentWindows(todayWindows, closures, now)[0];
   if (current) {
     return statusResult("ACCESS", `Until ${formatHHMM(current.end)}`, "until", {
       time: formatHHMM(current.end),
     });
   }
 
+  // An exception-only schedule doesn't establish hours on other dates.
+  const status = hasAccessHours || todayWindows.length ? "CLOSED" : "CHECK";
   const best = findNextAccessWindow(schedule, closures, now);
-  if (!best) return statusResult("CHECK", "OFFICIAL SITE", "official_site");
+  if (!best) return status === "CLOSED"
+    ? statusResult(status, PLACEHOLDER)
+    : statusResult(status, "OFFICIAL SITE", "official_site");
   const label = best.offset === 0
     ? `Access ${formatHHMM(best.access.start)}`
     : `Access ${DAY_KEYS[dateWithDayOffset(now, best.offset).getDay()].slice(0, 3).toUpperCase()} ${formatHHMM(best.access.start)}`;
   return statusResult(
-    "CHECK",
+    status,
     label,
     best.offset === 0 ? "access_today" : "access_day",
     { day: DAY_KEYS[dateWithDayOffset(now, best.offset).getDay()], time: formatHHMM(best.access.start) },
@@ -776,7 +793,7 @@ export function computeWindowAvailability(schedule, horizon, allowedTypes = null
     });
   }
 
-  const bestSession = normalized[0];
+  const bestSession = normalized.find((session) => session.overlap >= MIN_USEFUL_WINDOW_OVERLAP_MINUTES) ?? normalized[0];
   const limited = bestSession.overlap < MIN_USEFUL_WINDOW_OVERLAP_MINUTES;
   return boardResult({
     status: limited ? "LIMITED" : "AVAILABLE",
@@ -815,15 +832,17 @@ export function computeAccessWindowAvailability(schedule, horizon) {
   }
 
   const horizonDate = new Date(`${horizon.date}T00:00:00`);
+  const horizonWindows = accessWindowsForDate(schedule, horizonDate);
   const overlaps = windowSegmentsWithOverlap(
-    accessWindowsForDate(schedule, horizonDate),
+    horizonWindows,
     closures,
     horizon.date,
     horizon.start,
     horizon.end,
   ).sort((a, b) => a.start - b.start);
   if (overlaps.length === 0) {
-    return boardResult({ status: "CHECK", next: PLACEHOLDER, sortRank: 3, openOffset: 3 });
+    const status = accessHours.length > 0 || horizonWindows.length > 0 ? "CLOSED" : "CHECK";
+    return boardResult({ status, next: PLACEHOLDER, sortRank: 3, openOffset: 3 });
   }
   const access = overlaps[0];
   return boardResult({
@@ -837,12 +856,12 @@ export function computeAccessWindowAvailability(schedule, horizon) {
 
 export { PLACEHOLDER };
 
-// Statuses that render as "open-ish" (green pill / is-open row class).
-// "now" mode produces OPEN/ACCESS; window mode AVAILABLE/LIMITED/ACCESS;
-// open-water rows are OCEAN. Consumers that need a narrower set (the hero
-// open-count excludes ACCESS: access hours are not a verified swim session)
-// derive from this one.
-export const OPEN_STATUSES = new Set(["OPEN", "AVAILABLE", "LIMITED", "ACCESS", "OCEAN"]);
+// Positive swim statuses exclude posted facility access (not swim sessions).
+export const OPEN_STATUSES = new Set(["OPEN", "AVAILABLE", "LIMITED"]);
+
+export function isBoardOpen(status, horizon) {
+  return OPEN_STATUSES.has(status) || (status === "OCEAN" && horizon.kind === "point");
+}
 
 const EMPTY_DETAIL = Object.freeze({
   kind: "NOT_VERIFIED",
@@ -993,7 +1012,7 @@ function evaluateSpot(spot, horizon, now, allowedTypes) {
       : computeAccessWindowAvailability(spot.schedule, horizon);
   }
   if (hasSwimStatus) return computeStatus(spot.schedule, now, allowedTypes);
-  if (scheduleHasAccessHours(spot.schedule, asOf)) return computeAccessStatus(spot.schedule, now);
+  if (scheduleHasAccessSchedule(spot.schedule, asOf)) return computeAccessStatus(spot.schedule, now);
   return spot.accessMode !== "public"
     ? { status: "CHECK", next: "OFFICIAL SITE", nextKind: "official_site", sortRank: 2, openOffset: Infinity }
     : { status: PLACEHOLDER, next: PLACEHOLDER, sortRank: 2, openOffset: Infinity };
@@ -1045,8 +1064,7 @@ export function evaluateBoard(spots, query, instant) {
     entries: [...visible, ...ranked.filter((entry) => entry.hidden)],
     summary: {
       visibleCount: visible.length,
-      // Facility access is not a verified swim session.
-      openCount: visible.filter(({ result }) => result.status !== "ACCESS" && OPEN_STATUSES.has(result.status)).length,
+      openCount: visible.filter(({ result }) => isBoardOpen(result.status, horizon)).length,
     },
   };
 }

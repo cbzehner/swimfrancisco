@@ -118,6 +118,7 @@
   "status_limited": "ACCESO LIMITADO",
   "status_no_drop_in_today": "SIN NADO LIBRE HOY",
   "status_no_drop_in_week": "SIN NADO LIBRE ESTA SEMANA",
+  "status_no_session": "SIN SESIÓN",
   "status_not_verified": "HORARIO AÚN NO VERIFICADO",
   "status_now": "AHORA",
   "status_ocean": "OCÉANO",

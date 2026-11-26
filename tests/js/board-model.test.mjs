@@ -37,6 +37,11 @@ test("board facility access remains distinct from verified swimming and the summ
   const snapshot = evaluate(accessSpots);
   assert.deepEqual(decisions(snapshot), [["access-only", "ACCESS", "Until 18:00"], ["unknown", "—", "—"], ["beach", "OCEAN", "—"]]);
   assert.deepEqual(snapshot.summary, { visibleCount: 3, openCount: 1 });
+  const planned = evaluate(accessSpots, { horizon: "this-afternoon" });
+  assert.deepEqual(decisions(planned).map(([slug, status]) => [slug, status]), [
+    ["access-only", "ACCESS"], ["unknown", "—"], ["beach", "OCEAN"],
+  ]);
+  assert.deepEqual(planned.summary, { visibleCount: 3, openCount: 0 });
 });
 
 test("board program filters exclude access hours and unknown schedules; an empty result clears the count", () => {
@@ -98,6 +103,7 @@ test("URL restore canonicalizes legacy sorts, preserves foreign tokens, and neve
     const restored = step(initialBoardState(), { type: "restore", hash: `#zebra+${token}+family+memberships`, search: "?keep=yes&when=this-afternoon" });
     assert.equal(serializeBoardHash(restored.state), "#family+memberships+open+zebra");
     assert.equal(restored.state.horizon, "this-afternoon");
+    assert.deepEqual(restored.effects.find(({ kind }) => kind === "render"), { kind: "render", flap: false });
     assert.equal(restored.effects.some(({ kind }) => kind === "geolocate"), false);
   }
   const restored = step(initialBoardState(), { type: "restore", hash: "#distance+lap", search: "?when=invalid" });
@@ -145,7 +151,7 @@ test("distance coordinates survive in-session hash changes but are never restore
 
 test("minute ticks expire horizons without analytics or flap effects", () => {
   const state = query({ horizon: "this-morning", type: "family_swim" });
-  const tick = step(state, { type: "tick" });
+  const tick = step(state, { type: "tick", instant: new Date("2026-09-24T19:00:00Z") });
   assert.equal(tick.state.horizon, "now");
   assert.equal(tick.state.type, "family_swim");
   assert.deepEqual(tick.effects, [{ kind: "render", flap: false }, { kind: "write-url" }]);

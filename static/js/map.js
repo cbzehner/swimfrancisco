@@ -68,18 +68,23 @@ function createPopupHTML(spot, conditions, instant) {
 }
 
 function createMarkerIcon(L, spot) {
-  const isOpen = OPEN_STATUSES.has(spot.status);
-  const cls =
-    spot.type === "open_water"
-      ? "sf-marker sf-marker-open-water"
-      : `sf-marker${isOpen ? " sf-marker-open" : ""}`;
+  const variant = spot.type === "open_water" ? " sf-marker-open-water"
+    : spot.status === "ACCESS" ? " sf-marker-access"
+      : OPEN_STATUSES.has(spot.status) ? " sf-marker-open" : "";
   return L.divIcon({
-    className: cls,
+    className: `sf-marker${variant}`,
     html: '<span class="sf-marker-dot"></span>',
     iconSize: [28, 28],
     iconAnchor: [14, 14],
     popupAnchor: [0, -14],
   });
+}
+
+function labelMarkerElement(marker, label) {
+  // Leaflet only applies alt to image icons; div icons need a name too.
+  const element = marker.getElement();
+  element.title = label;
+  element.setAttribute("aria-label", label);
 }
 
 // Zoom level used when zooming into a clicked marker. Far enough in to see
@@ -97,15 +102,22 @@ function renderMarkers(L, map, markers, spots, conditions, instant) {
   spots.forEach((spot) => {
     const icon = createMarkerIcon(L, spot);
     const popupHTML = createPopupHTML(spot, conditions, instant);
+    const label = `${spot.name} — ${statusLabel(spot.status)}`;
     const existing = markers.get(spot.slug);
     if (existing) {
-      if (existing.iconClass !== icon.options.className) existing.marker.setIcon(icon);
+      const iconChanged = existing.iconClass !== icon.options.className;
+      if (existing.marker.options.title !== label) {
+        existing.marker.options.title = label;
+        existing.marker.options.alt = label;
+      }
+      if (iconChanged) existing.marker.setIcon(icon);
+      if (iconChanged || existing.marker.getElement().title !== label) labelMarkerElement(existing.marker, label);
       if (existing.popupHTML !== popupHTML) existing.marker.setPopupContent(popupHTML);
       existing.iconClass = icon.options.className;
       existing.popupHTML = popupHTML;
       return;
     }
-    const marker = L.marker([spot.lat, spot.lng], { icon });
+    const marker = L.marker([spot.lat, spot.lng], { icon, title: label, alt: label });
     marker.bindPopup(popupHTML);
     marker.on("click", () => {
       const targetZoom = Math.max(map.getZoom(), FOCUS_ZOOM);
@@ -123,11 +135,12 @@ function renderMarkers(L, map, markers, spots, conditions, instant) {
       marker.getElement()?.focus();
     });
     marker.addTo(map);
+    labelMarkerElement(marker, label);
     markers.set(spot.slug, { marker, iconClass: icon.options.className, popupHTML });
   });
 }
 
-async function loadBasemap(L, map, signal, fetcher) {
+async function loadBasemap(L, map, signal, fetcher, { onTileError, onTileLoad } = {}) {
   const request = new AbortController();
   const abort = () => request.abort();
   if (signal.aborted) abort();
@@ -137,17 +150,20 @@ async function loadBasemap(L, map, signal, fetcher) {
     const response = await fetcher("/api/map-config", { signal: request.signal });
     if (!response.ok) throw new Error("Map configuration unavailable");
     const config = await response.json();
-    if (request.signal.aborted) return;
+    request.signal.throwIfAborted();
     const key = config?.carto_basemap_key;
     if (typeof key !== "string" || !key.trim()) throw new Error("Map configuration invalid");
 
     // CartoDB Voyager keeps SF's neighborhoods and bay legible.
-    L.tileLayer(`https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(key.trim())}`, {
+    const layer = L.tileLayer(`https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(key.trim())}`, {
       maxZoom: 19,
       subdomains: "abcd",
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    }).addTo(map);
+    });
+    if (onTileError) layer.on("tileerror", onTileError);
+    if (onTileLoad) layer.on("tileload", onTileLoad);
+    layer.addTo(map);
   } finally {
     clearTimeout(timeout);
     signal.removeEventListener("abort", abort);
@@ -167,8 +183,29 @@ export function mountMap(root = document, {
   const controller = new AbortController();
   const map = L.map(container).setView(SF_CENTER, SF_ZOOM);
   const markers = new Map();
+  const notice = root.querySelector("[data-basemap-notice]");
+  const noticeText = notice?.textContent?.trim() || "";
+  if (notice) notice.hidden = true;
+  let tilesLoaded = false;
+  function showBasemapNotice() {
+    if (controller.signal.aborted || !notice || !notice.hidden) return;
+    if (noticeText) notice.textContent = noticeText;
+    notice.hidden = false;
+    map.invalidateSize();
+  }
+  function hideBasemapNotice() {
+    if (controller.signal.aborted || !notice || notice.hidden) return;
+    notice.hidden = true;
+    map.invalidateSize();
+  }
+  let planned = snapshot?.horizon?.kind === "window";
   function update(nextSnapshot, nextConditions = {}, nextInstant = new Date()) {
     if (controller.signal.aborted) return;
+    const nextPlanned = nextSnapshot?.horizon?.kind === "window";
+    if (planned !== nextPlanned) {
+      planned = nextPlanned;
+      map.invalidateSize();
+    }
     const spots = (nextSnapshot?.entries || []).filter((entry) => !entry.hidden && Number.isFinite(entry.lat) && Number.isFinite(entry.lng));
     renderMarkers(L, map, markers, spots, nextConditions, nextInstant);
   }
@@ -197,8 +234,17 @@ export function mountMap(root = document, {
     }
   }, { signal: controller.signal });
 
-  const ready = loadBasemap(L, map, controller.signal, fetcher).catch(() => {
+  const ready = loadBasemap(L, map, controller.signal, fetcher, {
+    onTileError() {
+      if (!tilesLoaded) showBasemapNotice();
+    },
+    onTileLoad() {
+      tilesLoaded = true;
+      hideBasemapNotice();
+    },
+  }).catch(() => {
     if (!controller.signal.aborted) {
+      showBasemapNotice();
       capture("map_config_fetch_failed");
       console.error("[swimfrancisco] basemap unavailable");
     }

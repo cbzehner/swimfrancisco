@@ -153,14 +153,63 @@ test("computeAccessStatus lets date-specific access exceptions override weekly h
   };
 
   const beforeHolidayWindow = computeAccessStatus(schedule, new Date("2026-05-25T07:00:00"));
-  assert.equal(beforeHolidayWindow.status, "CHECK");
+  assert.equal(beforeHolidayWindow.status, "CLOSED");
   assert.equal(beforeHolidayWindow.next, "Access 07:30");
   assert.equal(beforeHolidayWindow.nextKind, "access_today");
 
   const afterHolidayWindow = computeAccessStatus(schedule, new Date("2026-05-25T14:00:00"));
-  assert.equal(afterHolidayWindow.status, "CHECK");
+  assert.equal(afterHolidayWindow.status, "CLOSED");
   assert.equal(afterHolidayWindow.next, "Access MON 06:00");
   assert.equal(afterHolidayWindow.nextKind, "access_day");
+});
+
+test("posted access is closed after the last window while the schedule is still valid", () => {
+  const schedule = {
+    effective_start: "2026-04-14", effective_end: "2026-04-14",
+    access_hours: [{ day: "tuesday", start: "09:00", end: "12:00" }],
+  };
+  assert.equal(computeAccessStatus(schedule, new Date("2026-04-14T12:00:00")).status, "CLOSED");
+  assert.equal(computeAccessStatus(schedule, new Date("2026-04-15T12:00:00")).status, "CHECK");
+  const afternoon = resolveHorizon("this-afternoon", new Date("2026-04-14T10:00:00"));
+  assert.equal(computeAccessWindowAvailability(schedule, afternoon).status, "CLOSED");
+});
+
+test("midnight-closing access encoded as 23:59 stays open through 23:59", () => {
+  const schedule = { access_hours: [{ day: "tuesday", start: "05:00", end: "23:59" }] };
+  assert.equal(computeAccessStatus(schedule, new Date("2026-04-14T23:59:00")).status, "ACCESS");
+  assert.equal(computeAccessStatus(schedule, new Date("2026-04-15T00:00:00")).status, "CLOSED");
+});
+
+test("plan-ahead includes an 11:00 session, clamps in-progress horizons to now, and has contiguous windows", () => {
+  const now = new Date("2026-04-14T11:00:00");
+  const schedule = { sessions: [{ day: "tuesday", type: "lap_swim", start: "11:00", end: "12:00" }] };
+  assert.equal(computeWindowAvailability(schedule, resolveHorizon("this-morning", now)).status, "AVAILABLE");
+  for (const day of ["this", "tomorrow"]) {
+    const [morning, afternoon, evening] = ["morning", "afternoon", "evening"].map((part) => resolveHorizon(`${day}-${part}`, now));
+    assert.equal(morning.end, afternoon.start);
+    assert.equal(afternoon.end, evening.start);
+  }
+  const at1130 = new Date("2026-04-14T11:30:00");
+  const endedMorning = { sessions: [{ day: "tuesday", type: "lap_swim", start: "07:30", end: "09:00" }] };
+  assert.equal(computeWindowAvailability(endedMorning, resolveHorizon("this-morning", at1130)).status, "NO SESSION");
+  const mixedMorning = {
+    sessions: [
+      { day: "tuesday", type: "lap_swim", start: "07:30", end: "09:00" },
+      { day: "tuesday", type: "lap_swim", start: "11:15", end: "13:30" },
+    ],
+  };
+  const picked = computeWindowAvailability(mixedMorning, resolveHorizon("this-morning", at1130));
+  assert.equal(picked.bestWindow.start, 11 * 60 + 15);
+  const at1325 = new Date("2026-04-14T13:25:00");
+  const tailAndFullAfternoon = {
+    sessions: [
+      { day: "tuesday", type: "lap_swim", start: "12:00", end: "13:30" },
+      { day: "tuesday", type: "lap_swim", start: "14:00", end: "15:30" },
+    ],
+  };
+  const afternoonPicked = computeWindowAvailability(tailAndFullAfternoon, resolveHorizon("this-afternoon", at1325));
+  assert.equal(afternoonPicked.status, "AVAILABLE");
+  assert.equal(afternoonPicked.bestWindow.start, 14 * 60);
 });
 
 test("computeAccessWindowAvailability uses access hours for plan-ahead windows", () => {
@@ -488,7 +537,7 @@ test("computeDetailStatus respects local wall-clock across DST transitions", () 
 });
 
 test("getHorizonOptions omits same-day windows that have already ended", () => {
-  const now = new Date("2026-04-14T11:00:00"); // Tuesday 11:00 local
+  const now = new Date("2026-04-14T12:00:00"); // Tuesday noon local
   const ids = getHorizonOptions(now).map((option) => option.id);
   assert.deepEqual(ids, [
     "now",

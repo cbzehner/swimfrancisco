@@ -60,7 +60,7 @@ export function transitionBoard(state, action) {
         type: parsed.type, includeMemberships: parsed.includeMemberships, foreignTokens: parsed.foreignTokens,
         sort: parsed.open ? { kind: "open" } : keepDistance ? state.sort : { kind: "default" },
         geo: { status: "idle" },
-      });
+      }, { flap: action.type !== "restore" });
     }
     case "set-program":
       return render({ ...state, type: action.program === "none" ? null : action.program }, { trigger: "program" });

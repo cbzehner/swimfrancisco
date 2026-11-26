@@ -24,6 +24,7 @@ export const statusLabel = labelLookup(
     CHECK: "status_check",
     AVAILABLE: "status_available",
     LIMITED: "status_limited",
+    "NO SESSION": "status_no_session",
     OCEAN: "status_ocean",
   },
   (status) => status,
