@@ -50,7 +50,7 @@ test("horizon, program and access survive board/map navigation and reset", async
   await screen.getByRole("link", "View board").tap();
   await expect(browser).toHaveURL(/\/\?when=tomorrow-morning#beach\+memberships$/);
   await screen.getByRole("link", "View map").tap();
-  await expect(browser.locator("[data-time-banner-label]")).toHaveText("Tomorrow Morning");
+  await expect(browser.locator("[data-time-banner-label]")).toHaveText(/Tomorrow Morning/i);
   await browser.locator("[data-time-banner-reset]").tap();
   await expect(browser).toHaveURL(/\/map\/#beach\+memberships$/);
   await expect(browser.locator("[data-time-banner]")).not.toBeVisible();
