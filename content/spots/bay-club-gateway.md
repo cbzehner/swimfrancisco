@@ -19,256 +19,6 @@ access_summary = "Bay Club Gateway is a private club in the San Francisco Campus
 [[extra.schedules]]
 sessions = []
 closures = []
-effective_start = "2026-10-20"
-schedule_basis = "facility_hours"
-effective_end = "2026-11-02"
-last_verified_at = "2026-10-20"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "07:00"
-end = "20:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "07:00"
-end = "20:00"
-label = "Club hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
-effective_start = "2026-11-07"
-schedule_basis = "facility_hours"
-effective_end = "2026-11-07"
-last_verified_at = "2026-11-07"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "07:00"
-end = "20:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "07:00"
-end = "20:00"
-label = "Club hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
-effective_start = "2026-11-08"
-schedule_basis = "facility_hours"
-effective_end = "2026-11-08"
-last_verified_at = "2026-11-08"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "07:00"
-end = "20:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "07:00"
-end = "20:00"
-label = "Club hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
-effective_start = "2026-11-09"
-schedule_basis = "facility_hours"
-effective_end = "2026-11-09"
-last_verified_at = "2026-11-09"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "07:00"
-end = "20:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "07:00"
-end = "20:00"
-label = "Club hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
-effective_start = "2026-11-10"
-schedule_basis = "facility_hours"
-effective_end = "2026-11-10"
-last_verified_at = "2026-11-10"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "06:00"
-end = "21:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "07:00"
-end = "20:00"
-label = "Club hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "07:00"
-end = "20:00"
-label = "Club hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
 effective_start = "2026-11-11"
 schedule_basis = "facility_hours"
 effective_end = "2026-11-24"
@@ -315,6 +65,64 @@ day = "sunday"
 start = "07:00"
 end = "20:00"
 label = "Club hours"
+
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-11-26"
+schedule_basis = "facility_hours"
+effective_end = "2026-12-09"
+last_verified_at = "2026-11-26"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "06:00"
+end = "21:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "06:00"
+end = "21:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "06:00"
+end = "21:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "06:00"
+end = "21:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "06:00"
+end = "21:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "07:00"
+end = "20:00"
+label = "Club hours"
+
+[[extra.schedules.access_hours]]
+day = "sunday"
+start = "07:00"
+end = "20:00"
+label = "Club hours"
+
+[[extra.schedules.access_exceptions]]
+date = "2026-11-26"
+start = "06:00"
+end = "14:00"
+label = "Club hours"
+reason = "Thanksgiving Day"
+reason_code = "holiday_hours"
 
 [[extra.pricing]]
 label = "Member"

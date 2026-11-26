@@ -29,7 +29,7 @@ discovery = { action = "unchanged", reason = "current_session_grid", documents =
 slug = "mission-community-pool"
 pdf_url = "https://sfrecpark.org/DocumentCenter/View/30319"
 official_page_url = "https://sfrecpark.org/facilities/facility/details/Mission-Community-Pool-217"
-discovery = { action = "unchanged", reason = "sequential_windows", documents = [{ id = 30319, kind = "session_grid", origin = "table" }, { id = 30001, kind = "session_grid", origin = "table" }] }
+discovery = { action = "flag", reason = "empty_table", documents = [] }
 [[pool]]
 slug = "north-beach-pool"
 pool_sources = [{ pool = "cool", url = "https://sfrecpark.org/DocumentCenter/View/29953" }, { pool = "warm", url = "https://sfrecpark.org/DocumentCenter/View/29954" }]

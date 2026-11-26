@@ -18,224 +18,6 @@ access_summary = "Stonestown Family YMCA is a membership YMCA branch with lap sw
 
 [[extra.schedules]]
 sessions = []
-closures = []
-effective_start = "2026-10-25"
-schedule_basis = "facility_hours"
-effective_end = "2026-10-25"
-last_verified_at = "2026-10-25"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "07:00"
-end = "17:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "07:00"
-end = "17:00"
-label = "Facility hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
-effective_start = "2026-10-26"
-schedule_basis = "facility_hours"
-effective_end = "2026-10-29"
-last_verified_at = "2026-10-26"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "07:00"
-end = "17:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "07:00"
-end = "17:00"
-label = "Facility hours"
-
-[[extra.schedules]]
-sessions = []
-effective_start = "2026-10-30"
-schedule_basis = "facility_hours"
-effective_end = "2026-11-06"
-last_verified_at = "2026-10-30"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "07:00"
-end = "17:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "07:00"
-end = "17:00"
-label = "Facility hours"
-
-[[extra.schedules.closures]]
-start = "2026-11-11"
-end = "2026-11-11"
-reason = "Wednesday, November 11 (All Staff Training) CLOSED"
-reason_code = "staff_training"
-
-[[extra.schedules.closures.source_notices]]
-id = "040041ec621a0bb6-1"
-text = "Wednesday, November 11 (All Staff Training) CLOSED"
-
-[[extra.schedules]]
-sessions = []
-effective_start = "2026-11-07"
-schedule_basis = "facility_hours"
-effective_end = "2026-11-07"
-last_verified_at = "2026-11-07"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "05:30"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "07:00"
-end = "17:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "07:00"
-end = "17:00"
-label = "Facility hours"
-
-[[extra.schedules.closures]]
-start = "2026-11-11"
-end = "2026-11-11"
-reason = "Wednesday, November 11 (All Staff Training) CLOSED"
-reason_code = "staff_training"
-
-[[extra.schedules.closures.source_notices]]
-id = "040041ec621a0bb6-1"
-text = "Wednesday, November 11 (All Staff Training) CLOSED"
-
-[[extra.schedules]]
-sessions = []
 effective_start = "2026-11-08"
 schedule_basis = "facility_hours"
 effective_end = "2026-11-21"
@@ -292,6 +74,72 @@ reason_code = "staff_training"
 [[extra.schedules.closures.source_notices]]
 id = "040041ec621a0bb6-1"
 text = "Wednesday, November 11 (All Staff Training) CLOSED"
+
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-11-26"
+schedule_basis = "facility_hours"
+effective_end = "2026-12-09"
+last_verified_at = "2026-11-26"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "05:30"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "07:00"
+end = "14:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "07:00"
+end = "14:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "07:00"
+end = "17:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "sunday"
+start = "07:00"
+end = "17:00"
+label = "Facility hours"
+
+[[extra.schedules.access_exceptions]]
+date = "2026-11-26"
+start = "07:00"
+end = "14:00"
+label = "Holiday facility hours"
+reason = "Thursday, November 26 (Thanksgiving) 7:00 a.m. – 2:00 p.m."
+reason_code = "holiday_hours"
+
+[[extra.schedules.access_exceptions]]
+date = "2026-11-27"
+start = "07:00"
+end = "14:00"
+label = "Holiday facility hours"
+reason = "Friday, November 27 (Holiday Hours) 7:00 a.m. – 2:00 p.m."
+reason_code = "holiday_hours"
 
 [[extra.pricing]]
 label = "YMCA member"

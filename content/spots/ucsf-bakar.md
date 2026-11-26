@@ -20,306 +20,6 @@ access_summary = "Bakar Fitness Center at UCSF Mission Bay is a membership fitne
 [[extra.schedules]]
 sessions = []
 closures = []
-effective_start = "2026-10-26"
-schedule_basis = "facility_hours"
-effective_end = "2026-10-29"
-last_verified_at = "2026-10-26"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "08:00"
-end = "18:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "08:00"
-end = "18:00"
-label = "Facility hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
-effective_start = "2026-10-30"
-schedule_basis = "facility_hours"
-effective_end = "2026-11-06"
-last_verified_at = "2026-10-30"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "08:00"
-end = "18:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "08:00"
-end = "18:00"
-label = "Facility hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
-effective_start = "2026-11-07"
-schedule_basis = "facility_hours"
-effective_end = "2026-11-07"
-last_verified_at = "2026-11-07"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "08:00"
-end = "18:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "08:00"
-end = "18:00"
-label = "Facility hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
-effective_start = "2026-11-08"
-schedule_basis = "facility_hours"
-effective_end = "2026-11-08"
-last_verified_at = "2026-11-08"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "08:00"
-end = "18:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "08:00"
-end = "18:00"
-label = "Facility hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
-effective_start = "2026-11-09"
-schedule_basis = "facility_hours"
-effective_end = "2026-11-09"
-last_verified_at = "2026-11-09"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "08:00"
-end = "18:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "08:00"
-end = "18:00"
-label = "Facility hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
-effective_start = "2026-11-10"
-schedule_basis = "facility_hours"
-effective_end = "2026-11-10"
-last_verified_at = "2026-11-10"
-
-[[extra.schedules.access_hours]]
-day = "monday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "tuesday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "wednesday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "thursday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "friday"
-start = "06:00"
-end = "21:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "saturday"
-start = "08:00"
-end = "18:00"
-label = "Facility hours"
-
-[[extra.schedules.access_hours]]
-day = "sunday"
-start = "08:00"
-end = "18:00"
-label = "Facility hours"
-
-[[extra.schedules]]
-sessions = []
-closures = []
 effective_start = "2026-11-11"
 schedule_basis = "facility_hours"
 effective_end = "2026-11-24"
@@ -366,6 +66,73 @@ day = "sunday"
 start = "08:00"
 end = "18:00"
 label = "Facility hours"
+
+[[extra.schedules]]
+sessions = []
+effective_start = "2026-11-26"
+schedule_basis = "facility_hours"
+effective_end = "2026-12-09"
+last_verified_at = "2026-11-26"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "06:00"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "06:00"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "06:00"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "06:00"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "06:00"
+end = "21:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "08:00"
+end = "18:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "sunday"
+start = "08:00"
+end = "18:00"
+label = "Facility hours"
+
+[[extra.schedules.access_exceptions]]
+date = "2026-11-27"
+start = "08:00"
+end = "14:00"
+label = "Holiday facility hours"
+reason = "November 27 (Post-Thanksgiving Day): 8:00 am-2:00 pm"
+reason_code = "holiday_hours"
+
+[[extra.schedules.closures]]
+start = "2026-11-26"
+end = "2026-11-26"
+reason = "November 26 (Thanksgiving Day): Closed"
+reason_code = "holiday"
+
+[[extra.schedules.closures.source_notices]]
+id = "holiday-11"
+text = "November 26 (Thanksgiving Day): Closed"
 
 [[extra.pricing]]
 label = "Member"
