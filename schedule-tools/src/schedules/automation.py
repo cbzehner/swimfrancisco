@@ -19,11 +19,53 @@ def run_command(arguments: list[str], root: Path, *, timeout: int = 900) -> subp
     return subprocess.run(arguments, cwd=root, capture_output=True, text=True, timeout=timeout, check=False)
 
 
+_STDERR_DIAGNOSTICS = (
+    ("i18n/dynamic-labels.toml is missing canonical display label(s):", "Missing canonical display label(s)"),
+    ("i18n/dynamic-labels.toml is missing canonical display code(s):", "Missing canonical display code(s)"),
+    ("spot reason_code must match by_source[source].code:", "Display reason code does not match its source label"),
+    ("fatal: Authentication failed", "Git authentication failed"),
+    ("fatal: unable to access", "Git could not access the remote"),
+    ("npm error code ERESOLVE", "npm dependency resolution failed"),
+    ("npm error code E401", "npm authentication failed"),
+)
+
+
+def _stderr_summary(stderr: str | None) -> str:
+    # Public evidence must never include arbitrary subprocess output. Even an
+    # otherwise recognizable diagnostic can contain a URL, token, or env dump.
+    for line in reversed((stderr or "").splitlines()):
+        line = line.strip().removeprefix("Error: ")
+        for prefix, summary in _STDERR_DIAGNOSTICS:
+            if line.startswith(prefix):
+                return summary
+    return "stderr withheld" if stderr else "no stderr"
+
+
+class CommandFailure(RuntimeError):
+    def __init__(self, arguments: list[str], exit_code: int | None, summary: str):
+        command = arguments[0] if arguments[0] in {"git", "gh", "npm", "uv", "node"} else "subprocess"
+        if command == "node" and arguments[1:2] in (
+            ["scripts/generate-bulletin.mjs"], ["scripts/generate-i18n.mjs"], ["scripts/check-build-ci.mjs"],
+        ):
+            command += f" {arguments[1]}"
+        if arguments[:5] == ["uv", "--project", "schedule-tools", "run", "--locked"] and arguments[5:7] in (
+            ["schedules", "discover"], ["schedules", "publish-pending"], ["schedules", "prune"],
+        ):
+            command = f"schedules {arguments[6]}"
+        self.details = {"command": command, "exit_code": exit_code, "stderr_summary": summary}
+        exit_status = f" (exit {exit_code})" if exit_code is not None else ""
+        super().__init__(f"{command} failed{exit_status}: {summary}")
+
+
 def checked(arguments: list[str], root: Path, command=run_command, *, timeout: int = 900) -> str:
-    result = command(arguments, root, timeout=timeout)
+    try:
+        result = command(arguments, root, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        raise CommandFailure(arguments, None, "command timed out") from None
+    except OSError:
+        raise CommandFailure(arguments, None, "could not start command") from None
     if result.returncode:
-        # Do not copy subprocess output into public reports: it can include credentials.
-        raise RuntimeError(f"{arguments[0]} command failed (exit {result.returncode})")
+        raise CommandFailure(arguments, result.returncode, _stderr_summary(result.stderr))
     return result.stdout.strip()
 
 
@@ -325,7 +367,7 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
                     build["command_seconds"][name] = round(time.monotonic() - command_started, 3)
                     build["commands"][name] = result.returncode
                     if required and result.returncode:
-                        raise RuntimeError(f"{name} failed; no publication is allowed")
+                        raise CommandFailure(arguments, result.returncode, _stderr_summary(result.stderr))
                 build["closure_reviews"] = []
                 for provider in ("openai", "direct"):
                     closure_report = worktree / f"tmp/extraction-report-{provider}.json"
@@ -437,6 +479,8 @@ def automate(root: Path, *, mode: str, run_id: str, command=run_command, verify=
     except Exception as error:
         state["status"] = "failed"
         state["error_type"] = type(error).__name__
+        if isinstance(error, CommandFailure):
+            state["command_failure"] = error.details
         stage = state["builds"][-1].get("stage", "prepare") if state["builds"] else "prepare"
         state.setdefault("failure_code", "deployment_unverified" if stage == "deployment" else f"{stage}_failed")
         raise

@@ -322,7 +322,7 @@ _ACCESS_HOUR_SPEC = _RecordSpec(
 
 _ACCESS_EXCEPTION_SPEC = _RecordSpec(
     required=("date", "start", "end", "label", "reason"),
-    optional=("notes",),
+    optional=("reason_code", "notes"),
     sort_key=lambda item: (
         item["date"],
         item["start"],

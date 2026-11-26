@@ -101,7 +101,7 @@ def _extract_ucsf(html: str, facility: str, observed_on: date) -> dict:
                     'reason': row, 'reason_code': 'holiday', 'source_notices': [{'id': f'holiday-{index + 1}', 'text': row}]})
             elif window:
                 exceptions.append({'date': current.isoformat(), 'start': window[0], 'end': window[1],
-                    'label': 'Holiday facility hours', 'reason': row, 'evidence': row})
+                    'label': 'Holiday facility hours', 'reason': row, 'reason_code': 'holiday_hours', 'evidence': row})
     return _payload('facility_hours', [], access_hours=hours, access_exceptions=exceptions, closures=closures) | {
         'effective_start': observed_on.isoformat(), 'effective_end': end.isoformat()}
 

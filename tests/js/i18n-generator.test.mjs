@@ -166,6 +166,36 @@ for (const [table, field] of [["closures", "reason"], ["access_exceptions", "lab
   });
 }
 
+test("access exceptions accept a known reason code with unmapped prose, but still validate uncoded prose", () => {
+  const worktree = mkdtempSync(path.join(tmpdir(), "swimfrancisco-access-exception-code-"));
+  try {
+    archiveHead(worktree);
+    overlayWorkingGenerator(worktree);
+    const spot = path.join(worktree, "content/spots/hamilton-pool.md");
+    const original = readFileSync(spot, "utf8");
+    const closing = original.indexOf("\n+++", 4);
+    const window = '\n[[extra.schedules.access_exceptions]]\ndate = "2026-11-26"\nstart = "08:00"\nend = "13:30"\nlabel = "Holiday pool hours"\nreason = "Thanksgiving Thursday: pool doors close at half past one."\n';
+    const generate = (code) => {
+      writeFileSync(spot, original.slice(0, closing) + window
+        + (code ? `reason_code = "${code}"\n` : "") + original.slice(closing));
+      return spawnSync(process.execPath, ["scripts/generate-i18n.mjs", "generate"], { cwd: worktree, encoding: "utf8" });
+    };
+    const coded = generate("holiday_hours");
+    assert.equal(coded.status, 0, coded.stderr);
+    const canonical = readFileSync(spot, "utf8");
+    assert.match(canonical, /reason_code = "holiday_hours"/);
+    assert.match(canonical, /Thanksgiving Thursday: pool doors close at half past one\./);
+    const unknown = generate("constructor");
+    assert.notEqual(unknown.status, 0);
+    assert.match(unknown.stderr, /missing canonical display code/);
+    const uncoded = generate();
+    assert.notEqual(uncoded.status, 0);
+    assert.match(uncoded.stderr, /missing canonical display label.*Thanksgiving Thursday/);
+  } finally {
+    rmSync(worktree, { recursive: true, force: true });
+  }
+});
+
 test("closure display codes allow raw wording changes and reject unknown codes", () => {
   const worktree = mkdtempSync(path.join(tmpdir(), "swimfrancisco-closure-code-"));
   try {

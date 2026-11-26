@@ -7,7 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from schedules.automation import automate, copy_extraction_cache, open_closure_review_prs, wait_for_deployment
+from click.testing import CliRunner
+
+from schedules.automation import automate, checked, copy_extraction_cache, open_closure_review_prs, wait_for_deployment
+from schedules.cli import cli
 
 
 @pytest.fixture
@@ -75,7 +78,7 @@ def runner(tmp_path, monkeypatch):
                 raise subprocess.TimeoutExpired(arguments, kwargs["timeout"], output="PRIVATE_DIAGNOSTIC")
         if controls.get("after_command"):
             controls["after_command"](arguments)
-        return subprocess.CompletedProcess(arguments, code, output, "")
+        return subprocess.CompletedProcess(arguments, code, output, controls.get("stderr", "") if code else "")
 
     def verify(worktree, commit, command):
         receipt = json.loads((root / "tmp/automation/result.json").read_text())
@@ -89,6 +92,47 @@ def runner(tmp_path, monkeypatch):
         return automate(root, mode=mode, run_id="123-1", command=command, verify=verify)
 
     return root, calls, controls, run
+
+
+def test_checked_reports_only_safe_stderr_diagnostics(tmp_path, monkeypatch):
+    secret = "fixture-secret-not-for-output"
+    monkeypatch.setenv("FIXTURE_TOKEN", secret)
+    arguments = ["node", "scripts/generate-i18n.mjs", "generate", "private-arg"]
+    stderr = (
+        f"Error: i18n/dynamic-labels.toml is missing canonical display label(s): {secret}\n"
+        f"Authorization: Bearer {secret}\nFIXTURE_TOKEN={secret}\n"
+    )
+    result = subprocess.CompletedProcess(arguments, 7, "private-stdout", stderr)
+    with pytest.raises(RuntimeError) as failure:
+        checked(arguments, tmp_path, command=lambda *args, **kwargs: result)
+    assert str(failure.value) == (
+        "node scripts/generate-i18n.mjs failed (exit 7): Missing canonical display label(s)"
+    )
+
+
+def test_checked_withholds_unknown_stderr(tmp_path):
+    result = subprocess.CompletedProcess(["npm"], 1, "", "private unrecognized output")
+    with pytest.raises(RuntimeError, match=r"npm failed \(exit 1\): stderr withheld$"):
+        checked(["npm"], tmp_path, command=lambda *args, **kwargs: result)
+
+
+def test_automation_records_and_prints_safe_command_failure(runner, monkeypatch):
+    root, _, controls, run = runner
+    controls["failure"] = "scripts/generate-i18n.mjs"
+    controls["stderr"] = "Error: i18n/dynamic-labels.toml is missing canonical display code(s): PRIVATE_DIAGNOSTIC"
+    monkeypatch.setattr("schedules.cli.automate", lambda *args, **kwargs: run())
+
+    result = CliRunner().invoke(cli, ["automate", "--mode", "publish", "--run-id", "123-1"])
+    assert result.exit_code == 1
+    assert "node scripts/generate-i18n.mjs failed (exit 1): Missing canonical display code(s)" in result.output
+    assert "PRIVATE_DIAGNOSTIC" not in result.output
+    evidence = (root / "tmp/automation/result.json").read_text()
+    assert "PRIVATE_DIAGNOSTIC" not in evidence
+    assert json.loads(evidence)["command_failure"] == {
+        "command": "node scripts/generate-i18n.mjs",
+        "exit_code": 1,
+        "stderr_summary": "Missing canonical display code(s)",
+    }
 
 
 def test_publish_orders_extraction_gate_commit_promotion_and_live_check(runner):

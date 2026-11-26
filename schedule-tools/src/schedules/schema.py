@@ -35,6 +35,7 @@ def source_facts_schema() -> dict:
     closure = schema["properties"]["closures"]["items"]
     for field in ("reason_code", "source_notices"):
         del closure["properties"][field]
+    del schema["properties"]["access_exceptions"]["items"]["properties"]["reason_code"]
     session = schema["properties"]["sessions"]["items"]
     for field in ("pool", "physical_pool", "source_sha256", "source_cell"):
         del session["properties"][field]

@@ -61,6 +61,17 @@ def test_live_browser_runner_is_pinned_and_checked_before_extraction():
     assert extract.index("name: Check browser launches") < extract.index("name: Extract and check publication")
 
 
+def test_uv_cache_enabled_for_schedule_jobs():
+    for job, next_job in [('detect', 'extract'), ('extract', 'review-closures'),
+                          ('review-closures', 'report'), ('coverage', None)]:
+        block = WORKFLOW.split(f'\n  {job}:', 1)[1]
+        if next_job:
+            block = block.split(f'\n  {next_job}:', 1)[0]
+        uv = block.split('- uses: astral-sh/setup-uv@v5', 1)[1].split('\n      - ', 1)[0]
+        assert 'enable-cache: true' in uv
+        assert 'cache-dependency-glob: schedule-tools/uv.lock' in uv
+
+
 def test_split_permissions_with_closure_only_review_job():
     extract, rest = WORKFLOW.split("\n  review-closures:", 1)
     reviews, report = rest.split("\n  report:", 1)
@@ -105,7 +116,15 @@ def _artifact_root(paths: list[str]) -> str:
 
 
 def test_evidence_and_live_browser_dependencies():
-    assert "install --with-deps webkit chromium" in WORKFLOW
+    extract = WORKFLOW.split("\n  extract:", 1)[1].split("\n  review-closures:", 1)[0]
+    assert "TZ: America/Los_Angeles" in extract
+    assert "node-version: '24'" in extract
+    assert "path: ~/.cache/ms-playwright" in extract
+    assert '${{ steps.browsers.outputs.os }}-${{ runner.arch }}-${{ steps.browsers.outputs.version }}' in extract
+    assert 'require("playwright-core/package.json").version' in extract
+    assert "install-deps webkit chromium" in extract
+    assert "if: steps.playwright-cache.outputs.cache-hit != 'true'" in extract
+    assert "install webkit chromium" in extract
     assert "retention-days: 90" in WORKFLOW
     assert _uploaded_evidence_paths() == ["tmp/automation/"]
     assert "path: tmp/" not in WORKFLOW.split("\n  extract:", 1)[1].split("\n  review-closures:", 1)[0]

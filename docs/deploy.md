@@ -417,7 +417,7 @@ agent JSON before Zola packages the static assets. If Zola is not already
 on the build image's `PATH`, the script downloads the pinned release.
 
 The npm prebuild hook detects Workers Builds through `WORKERS_CI=1`.
-For `WORKERS_CI_BRANCH=main`, it waits up to ten minutes for the successful
+For `WORKERS_CI_BRANCH=main`, it waits up to fifteen minutes for the successful
 push run of `.github/workflows/ci.yml` at `WORKERS_CI_COMMIT_SHA`, which
 must match the checked-out commit. GitHub CI and local builds skip this
 gate, so CI can finish its own build. Non-production branch previews also
@@ -426,7 +426,7 @@ skip the gate. The existing dashboard build command needs no change.
 The gate reads the public GitHub Actions API. A failed or cancelled run,
 malformed response, permanent API error, or timeout stops the build before
 deployment. It retries temporary network and timeout errors and HTTP 408,
-429, and 5xx responses within the same ten-minute, 21-request limit. For a
+429, and 5xx responses within the same fifteen-minute, 31-request limit. For a
 rate limit it obeys `Retry-After` or the rate-limit reset time; an unknown
 rate limit waits at least one minute and backs off. Retry logs include the
 HTTP status and wait duration, and identify delays that reach the build
@@ -447,7 +447,7 @@ shared-IP rate limit:
    logs, then verify the live build metadata matches that commit.
 
 The script permits unauthenticated requests but warns when the build token
-is missing. A retry delay can consume the entire ten-minute deadline even
+is missing. A retry delay can consume the entire fifteen-minute deadline even
 when CI has already passed; waiting longer is not a reliable substitute for
 authenticated requests. See [GitHub rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api)
 and [Cloudflare build configuration](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/).

@@ -8,6 +8,7 @@ it.
 """
 
 import json
+import tomllib
 from datetime import date
 from pathlib import Path
 
@@ -66,6 +67,30 @@ def test_project_writes_sessions_to_content_md(tmp_path, monkeypatch):
     assert "last_verified_at = \"2026-04-18\"" in rendered
     assert rendered.count("[[extra.schedules.sessions]]") == 5
     assert "[[extra.schedules]]" in rendered
+
+
+def test_project_preserves_access_exception_code_and_original_reason(tmp_path, monkeypatch):
+    from schedules.reviewed_snapshots import payloads_equivalent
+
+    pin_publish_clock(monkeypatch, date(2026, 11, 25))
+    slug, sha = "hamilton-pool", "a" * 64
+    content = tmp_path / "content" / "spots"
+    spot = _seed_content_md(content, slug)
+    envelope = _valid_envelope(slug, sha)
+    window = {"date": "2026-11-26", "start": "08:00", "end": "13:30", "label": "Holiday pool hours",
+              "reason": "On Thanksgiving Thursday the pool doors close at half past one."}
+    coded = window | {"reason_code": "holiday_hours"}
+    envelope["payload"] = {
+        "effective_start": "2026-11-25", "schedule_basis": "pool_hours", "sessions": [], "closures": [],
+        "access_hours": [{"day": "thursday", "start": "08:00", "end": "18:00", "label": "Pool hours"}],
+        "access_exceptions": [coded],
+    }
+    reviewed = _write_reviewed_json(tmp_path / "data", slug, sha, envelope)
+    project(slug=slug, reviewed_json_path=reviewed, content_spots_dir=content)
+
+    schedule = tomllib.loads(spot.read_text().split("+++", 2)[1])["extra"]["schedules"][0]
+    assert schedule["access_exceptions"] == [coded]
+    assert not payloads_equivalent(envelope["payload"], envelope["payload"] | {"access_exceptions": [window]})
 
 
 def test_project_rejects_invalid_payload(tmp_path):

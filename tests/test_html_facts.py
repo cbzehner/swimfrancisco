@@ -418,6 +418,7 @@ def test_chinatown_pool_holiday_duplicates_agree_and_are_published_once():
     assert [(row['date'], row['start'], row['end']) for row in result['access_exceptions']] == [
         ('2026-11-26', '08:00', '13:30'), ('2026-11-27', '08:00', '13:30'),
     ]
+    assert [row['reason_code'] for row in result['access_exceptions']] == ['holiday_hours', 'holiday_hours']
 
 
 def test_chinatown_facility_closed_and_pool_closed_notices_preserve_both_sources():

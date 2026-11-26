@@ -33,7 +33,7 @@ def load_reviewed_snapshot_from_path(
 _COMPARE_KEYS = {
     "sessions": ("day", "type", "start", "end", "pool", "physical_pool", "excluded_dates"),
     "access_hours": ("day", "start", "end", "label"),
-    "access_exceptions": ("date", "start", "end", "label", "reason"),
+    "access_exceptions": ("date", "start", "end", "label", "reason", "reason_code"),
     "closures": ("start", "end", "reason", "start_time", "end_time", "physical_pool", "reason_code", "source_notices"),
 }
 

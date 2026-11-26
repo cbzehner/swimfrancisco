@@ -245,21 +245,18 @@ function dynamicLabelRequirements(extrasByFile) {
       requirements.push({ kind: "spot_label", source: String(extra.setpoint_label), file });
     }
     for (const schedule of extra.schedules || []) {
-      const windows = [
-        ...(schedule.closures || []),
-        ...(schedule.access_hours || []),
-        ...(schedule.access_exceptions || []),
-      ];
-      for (const window of windows) {
-        if (window.label) requirements.push({ kind: "access_window", source: String(window.label), file });
-        if (window.reason) {
-          requirements.push({
-            kind: "closure_reason",
-            source: String(window.reason),
-            code: window.reason_code ? String(window.reason_code) : "",
-            coded: (schedule.closures || []).includes(window),
-            file,
-          });
+      for (const kind of ["closures", "access_hours", "access_exceptions"]) {
+        for (const window of schedule[kind] || []) {
+          if (window.label) requirements.push({ kind: "access_window", source: String(window.label), file });
+          if (window.reason || Object.hasOwn(window, "reason_code")) {
+            requirements.push({
+              kind: "closure_reason",
+              source: String(window.reason ?? ""),
+              code: String(window.reason_code ?? ""),
+              coded: kind === "closures" || (kind === "access_exceptions" && Object.hasOwn(window, "reason_code")),
+              file,
+            });
+          }
         }
       }
     }
@@ -394,7 +391,7 @@ async function validateDynamicLabels({ codes, ui, dynamicLabels }) {
   const missingDynamicLabels = requirements.filter(
     (requirement) => requirement.coded
       ? !requirement.code
-      : !dynamicLabelsByKind[requirement.kind]?.by_source?.[requirement.source],
+      : !seenSources.has(`${requirement.kind}:${requirement.source}`),
   );
   if (missingDynamicLabels.length > 0) {
     const details = missingDynamicLabels
@@ -403,7 +400,7 @@ async function validateDynamicLabels({ codes, ui, dynamicLabels }) {
     throw new Error(`i18n/dynamic-labels.toml is missing canonical display label(s): ${details}`);
   }
   const missingDynamicCodes = requirements.filter(
-    (requirement) => requirement.code && !dynamicLabelsByKind[requirement.kind]?.by_code?.[requirement.code],
+    (requirement) => requirement.code && !seenCodes.has(`${requirement.kind}:${requirement.code}`),
   );
   if (missingDynamicCodes.length > 0) {
     const details = missingDynamicCodes

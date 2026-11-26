@@ -118,19 +118,28 @@ test("publication accepts CI that finishes after twelve minutes", async () => {
   assert.equal(check.sleeps.length, 25);
 });
 
-test("pending deployment CI times out within ten minutes and at most 21 requests", async () => {
-  const check = gate([{ workflow_runs: [] }]);
-  await assert.rejects(check.run(), /Timed out/);
-  assert.ok(check.requests.length <= 21);
-  assert.equal(check.sleeps.reduce((total, milliseconds) => total + milliseconds, 0), 600_000);
+test("deployment accepts CI that finishes after twelve minutes", async () => {
+  const check = gate([
+    ...Array.from({ length: 25 }, () => ({ workflow_runs: [] })),
+    { workflow_runs: [successfulRun] },
+  ]);
+  assert.deepEqual(await check.run(), successfulRun);
+  assert.equal(check.sleeps.length, 25);
 });
 
-test("request time counts toward the ten-minute deadline", async () => {
+test("pending deployment CI times out within fifteen minutes and at most 31 requests", async () => {
+  const check = gate([{ workflow_runs: [] }]);
+  await assert.rejects(check.run(), /Timed out/);
+  assert.ok(check.requests.length <= 31);
+  assert.equal(check.sleeps.reduce((total, milliseconds) => total + milliseconds, 0), 900_000);
+});
+
+test("request time counts toward the fifteen-minute deadline", async () => {
   let elapsed = 0;
   const check = gate([], {
     now: () => elapsed,
     fetch: async () => {
-      elapsed = 600_001;
+      elapsed = 900_001;
       return Response.json({ workflow_runs: [successfulRun] });
     },
   });
@@ -138,14 +147,14 @@ test("request time counts toward the ten-minute deadline", async () => {
   assert.equal(check.sleeps.length, 0);
 });
 
-test("response parsing time counts toward the ten-minute deadline", async () => {
+test("response parsing time counts toward the fifteen-minute deadline", async () => {
   let elapsed = 0;
   const check = gate([], {
     now: () => elapsed,
     fetch: async () => ({
       ok: true,
       json: async () => {
-        elapsed = 600_001;
+        elapsed = 900_001;
         return { workflow_runs: [successfulRun] };
       },
     }),
@@ -236,9 +245,9 @@ test("Retry-After dates are honored without exceeding the deadline", async () =>
     { workflow_runs: [successfulRun] },
   ]);
   await assert.rejects(beyondDeadline.run(), /Timed out/);
-  assert.deepEqual(beyondDeadline.sleeps, [600_000]);
+  assert.deepEqual(beyondDeadline.sleeps, [900_000]);
   assert.equal(beyondDeadline.requests.length, 1);
-  assert.ok(beyondDeadline.logs.some((message) => message.includes("HTTP 429") && message.includes("600 seconds") && message.includes("reaches the build deadline")));
+  assert.ok(beyondDeadline.logs.some((message) => message.includes("HTTP 429") && message.includes("900 seconds") && message.includes("reaches the build deadline")));
 });
 
 test("a temporary network failure can recover on the next attempt", async () => {

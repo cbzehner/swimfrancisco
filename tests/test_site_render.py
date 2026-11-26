@@ -198,14 +198,23 @@ def test_all_spots_have_access_classification() -> None:
             assert len(open_ended) <= 1, f"{path.name}: more than one open-ended schedule window"
 
 
-@pytest.mark.parametrize("extra_closure", [None, {
-    "reason": "Learn To Swim Aq. In-Service Training",
-    "reason_code": "staff_training",
-}], ids=["canonical-content", "uncataloged-source-wording"])
-def test_canonical_labels_have_i18n_mappings(extra_closure) -> None:
+@pytest.mark.parametrize("extra_schedule", [
+    None,
+    {"closures": [{
+        "reason": "Learn To Swim Aq. In-Service Training",
+        "reason_code": "staff_training",
+    }]},
+    {"access_exceptions": [{
+        "date": "2026-11-26",
+        "label": "Holiday pool hours",
+        "reason": "Thursday, November 26 (Thanksgiving) 7:00 a.m. – 2:00 p.m.",
+        "reason_code": "holiday_hours",
+    }]},
+], ids=["canonical-content", "uncataloged-source-wording", "uncataloged-coded-access-exception"])
+def test_canonical_labels_have_i18n_mappings(extra_schedule) -> None:
     extras_by_slug = _canonical_spot_extras()
-    if extra_closure is not None:
-        extras_by_slug["source-wording-regression"] = {"schedules": [{"closures": [extra_closure]}]}
+    if extra_schedule is not None:
+        extras_by_slug["source-wording-regression"] = {"schedules": [extra_schedule]}
     dynamic_labels = tomllib.loads((ROOT / "i18n" / "dynamic-labels.toml").read_text())
     dynamic_label_source_index: dict[tuple[str, str], str] = {}
     dynamic_label_code_index: dict[tuple[str, str], str] = {}
@@ -238,10 +247,10 @@ def test_canonical_labels_have_i18n_mappings(extra_closure) -> None:
             for window in windows:
                 if label := window.get("label"):
                     access_window_labels.add(str(label))
-                if reason := window.get("reason"):
+                if code := window.get("reason_code"):
+                    closure_reason_codes.add(str(code))
+                elif reason := window.get("reason"):
                     closure_reasons.add(str(reason))
-                if window.get("reason_code"):
-                    closure_reason_codes.add(str(window["reason_code"]))
             for closure in schedule.get("closures", []):
                 code = closure.get("reason_code")
                 assert isinstance(code, str) and code, f"Closure has no display code: {closure}"
