@@ -143,7 +143,8 @@ test("storage failures propagate and an unreadable previous record prevents coll
   await assert.rejects(assembleAndPersist({
     get: async () => null,
     put: async () => { writes += 1; throw new Error("write failed"); },
-  }, { spots: [], now: () => new Date(NOW) }), /write failed/);
+  }, { spots: [{ slug: "bay", tideStationId: "t", tempSources: [] }], now: () => new Date(NOW),
+    fetchTides: async () => ({ stationId: "t", predictions: [{ time: "2026-04-17T12:00:00", type: "H", valueFt: 2 }] }) }), /write failed/);
   assert.equal(writes, 1);
 });
 

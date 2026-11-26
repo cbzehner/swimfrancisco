@@ -17,8 +17,10 @@ export interface Env {
 
 // Data refreshes hourly via cron. The Worker writes successful conditions
 // responses to caches.default on miss, so most fetches in a given colo are
-// served straight from the edge without re-reading KV.
-const JSON_CACHE_CONTROL = "public, max-age=900, s-maxage=3600";
+// served straight from the edge without re-reading KV. Bounding s-maxage to
+// 900s limits cross-colo staleness because caches.default.delete() only purges
+// the colo running the cron.
+const JSON_CACHE_CONTROL = "public, max-age=900, s-maxage=900";
 const NEGATIVE_CACHE_CONTROL = "public, max-age=60";
 
 // Canonical URL used as the Cache API key. Decouples the cache key from the
@@ -92,8 +94,11 @@ export default {
     }
 
     if (path === "/api/conditions") {
-      if (request.method !== "GET") return errorResponse(405, "method not allowed");
-      return handleConditions(env, ctx);
+      if (request.method !== "GET" && request.method !== "HEAD") {
+        return new Response("method not allowed", { status: 405, headers: { allow: "GET, HEAD", "content-type": "text/plain; charset=utf-8" } });
+      }
+      const response = await handleConditions(env, ctx);
+      return request.method === "HEAD" ? new Response(null, response) : response;
     }
 
     if (path === "/api/map-config") {
@@ -107,10 +112,19 @@ export default {
     // Every hourly tick refreshes conditions. Static schedule pages are
     // date-independent, so this path has no build or calendar-day side effect.
     ctx.waitUntil(
-      assembleAndPersist(env.CONDITIONS).catch((err) => {
-        console.error("assembleAndPersist failed:", err);
-        throw err;
-      }),
+      assembleAndPersist(env.CONDITIONS)
+        .then(() =>
+          caches.default
+            .delete(new Request(CONDITIONS_CACHE_KEY_URL))
+            .catch((err) => {
+              // Best-effort same-colo purge; never fail a completed KV refresh.
+              console.warn("conditions cache invalidation failed:", err);
+            }),
+        )
+        .catch((err) => {
+          console.error("assembleAndPersist failed:", err);
+          throw err;
+        }),
     );
   },
 } satisfies ExportedHandler<Env>;

@@ -10,6 +10,31 @@ const API_HOST = "us.i.posthog.com";
 const ASSET_HOST = "us-assets.i.posthog.com";
 const PREFIX = "/ingest";
 const MAX_API_BODY_BYTES = 1024 * 1024;
+const FETCH_TIMEOUT_MS = 10_000;
+
+async function fetchUpstream(url: string, init: RequestInit = {}): Promise<Response> {
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (error) {
+    const isTimeout = timedOut || (error instanceof Error && error.name === "TimeoutError");
+    console.error("PostHog upstream error:", error);
+    return new Response(isTimeout ? "analytics upstream timeout" : "analytics upstream unavailable", {
+      status: isTimeout ? 504 : 502,
+      headers: {
+        "cache-control": "no-store",
+        "content-type": "text/plain; charset=utf-8",
+      },
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 // The JS library (/static/*) and remote config (/array/*) are cacheable and
 // served from PostHog's asset host. Everything else is event ingestion.
@@ -22,11 +47,11 @@ function isAssetPath(path: string): boolean {
 async function proxyAsset(request: Request, path: string, ctx: ExecutionContext): Promise<Response> {
   const cache = caches.default;
   const cacheKey = new Request(new URL(request.url).toString(), request);
-  const cached = await cache.match(cacheKey);
+  const cached = request.method === "GET" ? await cache.match(cacheKey) : undefined;
   if (cached) return cached;
 
-  const response = await fetch(`https://${ASSET_HOST}${path}`);
-  ctx.waitUntil(cache.put(cacheKey, response.clone()));
+  const response = await fetchUpstream(`https://${ASSET_HOST}${path}`);
+  if (request.method === "GET" && response.ok) ctx.waitUntil(cache.put(cacheKey, response.clone()));
   return response;
 }
 
@@ -89,7 +114,7 @@ async function proxyApi(request: Request, path: string): Promise<Response> {
       },
     });
   }
-  return fetch(`https://${API_HOST}${path}`, {
+  return fetchUpstream(`https://${API_HOST}${path}`, {
     method: request.method,
     headers,
     body,

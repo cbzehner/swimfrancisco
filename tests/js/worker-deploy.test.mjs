@@ -11,15 +11,19 @@ import worker from "../../worker/src/index.ts";
 const HOOK = "https://example.invalid/hook";
 
 let originalFetch;
+let originalCaches;
 let fetchCalls;
 
 beforeEach(() => {
   originalFetch = globalThis.fetch;
+  originalCaches = globalThis.caches;
+  globalThis.caches = { default: { delete: async () => true } };
   fetchCalls = [];
 });
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
+  globalThis.caches = originalCaches;
 });
 
 async function runHourlyRefresh(scheduledTime, includeObsoleteBinding) {
@@ -27,7 +31,7 @@ async function runHourlyRefresh(scheduledTime, includeObsoleteBinding) {
   const writes = [];
   const env = {
     CONDITIONS: {
-      get: async () => null,
+      get: async () => ({}),
       put: async (key, value) => writes.push({ key, value }),
     },
   };
@@ -75,7 +79,7 @@ test("scheduled reports a conditions KV write failure through waitUntil", async 
   const tasks = [];
   const env = {
     CONDITIONS: {
-      get: async () => null,
+      get: async () => ({}),
       put: async () => {
         throw new Error("KV write failed");
       },
