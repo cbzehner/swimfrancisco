@@ -4,12 +4,13 @@ Cloudflare Worker that fetches water conditions (USGS, NOAA CO-OPS, NDBC, ERDDAP
 
 ## Routes
 
-- `GET /api/conditions` — slug-keyed record for every spot
+- `GET` / `HEAD /api/conditions` — slug-keyed record for every spot
 - `GET /api/map-config` — public CARTO basemap configuration for the browser;
   returns `503` when `CARTO_BASEMAP_API_KEY` is not bound
 
-Conditions responses use `cache-control: public, max-age=900, s-maxage=3600`
-(15 min in the browser, 1 h at the edge). The API is same-origin and sends no
+Conditions responses use `cache-control: public, max-age=900, s-maxage=900`
+(15 min in the browser and at the edge; scheduled refreshes also purge the
+same-colo edge cache on a best-effort basis). The API is same-origin and sends no
 CORS headers. Map configuration uses `cache-control: no-store`.
 
 ## Scheduled trigger
@@ -39,7 +40,7 @@ See [`../docs/deploy.md`](../docs/deploy.md) for the end-to-end Workers Builds +
 
 ## First-deploy bootstrap
 
-After the initial deploy, KV is empty and `/api/conditions` returns `503 conditions not yet available` until the first cron tick (up to an hour later).
+After the initial deploy, KV is empty and `/api/conditions` returns `503 conditions not yet available` until the first cron tick that collects at least one usable temperature or tide reading (up to an hour later).
 
 To populate immediately:
 

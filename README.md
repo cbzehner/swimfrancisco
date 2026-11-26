@@ -139,7 +139,7 @@ Zola, plain JS (no build step for frontend), Leaflet (map pages only), Cloudflar
 ## Known gaps
 
 - Lat/lng for all spots are best-estimate geocodes; re-verify before any distance-critical UX work.
-- Worker bootstrap: after first deploy `/api/conditions` returns 503 until the first hourly cron fires or the dashboard cron trigger is run manually — see `docs/deploy.md`.
+- Worker bootstrap: after first deploy `/api/conditions` returns 503 until the first hourly cron tick collects at least one usable reading or the dashboard cron trigger is run manually — see `docs/deploy.md`.
 
 Issues and pull requests are welcome.
 

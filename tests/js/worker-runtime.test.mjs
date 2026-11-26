@@ -48,7 +48,7 @@ test("conditions preserve readings without granting cross-origin browser access"
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), conditions);
     assert.equal(response.headers.get("content-type"), "application/json; charset=utf-8");
-    assert.equal(response.headers.get("cache-control"), "public, max-age=900, s-maxage=3600");
+    assert.equal(response.headers.get("cache-control"), "public, max-age=900, s-maxage=900");
     assert.equal(response.headers.get("vary"), null);
     assert.equal(response.headers.get("access-control-allow-origin"), null);
   }
@@ -75,8 +75,19 @@ test("conditions reject preflight and unsupported methods before population", as
   for (const method of ["OPTIONS", "POST", "PUT", "DELETE"]) {
     const response = await server.fetch("/api/conditions", { method, headers: { origin: "https://untrusted.example" } });
     assert.equal(response.status, 405);
+    assert.equal(response.headers.get("allow"), "GET, HEAD");
     assert.equal(await response.text(), "method not allowed");
     assert.equal(response.headers.get("access-control-allow-origin"), null);
+  }
+});
+
+test("conditions HEAD returns GET headers without a body on cache miss and hit", async () => {
+  await seedConditions();
+  for (let i = 0; i < 2; i++) {
+    const response = await server.fetch("/api/conditions", { method: "HEAD" });
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("content-type"), "application/json; charset=utf-8");
+    assert.equal(await response.text(), "");
   }
 });
 

@@ -14,6 +14,36 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
 });
 
+test("PostHog upstream failures return gateway errors with timeout signals", async () => {
+  const originalCaches = globalThis.caches;
+  globalThis.caches = { default: { match: async () => null, put: async () => {} } };
+  try {
+    for (const path of ["/ingest/e", "/ingest/static/app.js"]) {
+      for (const [error, status] of [[new Error("network"), 502], [new DOMException("timeout", "TimeoutError"), 504]]) {
+        globalThis.fetch = async (_url, init) => {
+          assert.ok(init.signal instanceof AbortSignal);
+          throw error;
+        };
+        const response = await handlePosthog(new Request(`https://swimfrancisco.com${path}`), { waitUntil() {} });
+        assert.equal(response.status, status);
+      }
+    }
+  } finally { globalThis.caches = originalCaches; }
+});
+
+test("PostHog caches only successful GET assets", async () => {
+  const originalCaches = globalThis.caches;
+  let puts = 0;
+  globalThis.caches = { default: { match: async () => null, put: async () => { puts++; } } };
+  try {
+    for (const [method, status, expected] of [["POST", 200, 0], ["GET", 404, 0], ["GET", 200, 1]]) {
+      globalThis.fetch = async () => new Response("asset", { status });
+      await handlePosthog(new Request("https://swimfrancisco.com/ingest/static/app.js", { method }), { waitUntil() {} });
+      assert.equal(puts, expected);
+    }
+  } finally { globalThis.caches = originalCaches; }
+});
+
 test("PostHog proxy preserves a bounded API payload", async () => {
   let forwardedBody;
   let forwardedHeaders;

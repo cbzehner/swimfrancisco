@@ -526,7 +526,7 @@ In the dashboard: Worker → Settings → Triggers should show one cron
 ### 8. Bootstrap KV immediately
 
 Fresh KV returns `503 conditions not yet available` until the first hourly
-cron tick. Force a populate via the dashboard: Workers & Pages →
+cron tick that collects at least one usable temperature or tide reading. Force a populate via the dashboard: Workers & Pages →
 `swimfrancisco` → Triggers → Cron Triggers → next to `0 * * * *`, click
 **Run**. (Wrangler 4 has no standalone `cron trigger` subcommand; the
 dashboard invoker is the official production path.)

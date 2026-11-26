@@ -76,35 +76,37 @@ export async function fetchNoaaTemp(stationId: string): Promise<TempReading | nu
 // anchor the tide window to the station-local calendar day. Using the
 // Worker's UTC date would silently skip up to 7 hours of predictions
 // during PT evenings (when UTC has already rolled to "tomorrow").
-function stationLocalDateYmd(): string {
+function stationLocalDateYmd(instant: Date): string {
   const fmt = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Los_Angeles",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   });
-  return fmt.format(new Date()).replace(/-/g, "");
+  return fmt.format(instant).replace(/-/g, "");
 }
 
-export async function fetchNoaaTides(stationId: string): Promise<NoaaTideData | null> {
+export async function fetchNoaaTides(stationId: string, instant: Date = new Date()): Promise<NoaaTideData | null> {
   // 48-hour window forward from station-local today-midnight. Covers
   // today + tomorrow of hi/lo predictions so the client always has at
   // least one future entry no matter the hour of day.
   const body = await noaaGet<NoaaPredictionsResponse>("NOAA tides", stationId, {
     product: "predictions",
     datum: "MLLW",
-    begin_date: stationLocalDateYmd(),
+    begin_date: stationLocalDateYmd(instant),
     range: "48",
     interval: "hilo",
   });
   const rows = body.predictions ?? [];
   const predictions: NoaaTidePrediction[] = rows
     .map((row) => {
+      if (typeof row.v !== "string" || row.v.trim() === "") return null;
+      if (typeof row.t !== "string" || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(row.t.trim())) return null;
       const valueFt = Number(row.v);
       const type = row.type === "H" || row.type === "L" ? row.type : null;
       if (!Number.isFinite(valueFt) || !type) return null;
-      return { time: toLocalIso(row.t), type, valueFt: Math.round(valueFt * 100) / 100 };
+      return { time: toLocalIso(row.t.trim()), type, valueFt: Math.round(valueFt * 100) / 100 };
     })
     .filter((p): p is NoaaTidePrediction => p !== null);
-  return { stationId, predictions };
+  return predictions.length ? { stationId, predictions } : null;
 }

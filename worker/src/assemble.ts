@@ -145,10 +145,11 @@ function getOrFetchTide(
   tideCache: Map<string, Promise<TideSummary | null>>,
   stationId: string,
   fetchTides: typeof fetchNoaaTides,
+  instant: Date,
 ): Promise<TideSummary | null> {
   const cached = tideCache.get(stationId);
   if (cached) return cached;
-  const promise = Promise.resolve().then(() => fetchTides(stationId))
+  const promise = Promise.resolve().then(() => fetchTides(stationId, instant))
     .then(tideToSummary)
     .catch((err) => {
       console.error(`Tide fetch failed for station ${stationId}:`, err);
@@ -258,7 +259,7 @@ export async function collectObservations(
   return Promise.all(spots.map(async (spot) => {
     const [tempResult, tide] = await Promise.all([
       firstTempFromSources(spot.slug, spot.tempSources, providers.tempFetchers, tempCache, now),
-      getOrFetchTide(tideCache, spot.tideStationId, providers.fetchTides),
+      getOrFetchTide(tideCache, spot.tideStationId, providers.fetchTides, new Date(now)),
     ]);
     return { slug: spot.slug, temp: tempFromReading(tempResult), tide };
   }));
@@ -302,9 +303,11 @@ export async function assembleAndPersist(kv: KVNamespace, {
   fetchTides = fetchNoaaTides,
 }: RefreshOptions = {}): Promise<Conditions> {
   const instant = now();
-  const previous = (await readConditions(kv)) ?? {};
+  const previous = await readConditions(kv);
   const observations = await collectObservations(spots, { tempFetchers, fetchTides }, instant.getTime());
-  const next = resolveConditions(observations, previous, instant);
-  await writeConditions(kv, next);
+  const next = resolveConditions(observations, previous ?? {}, instant);
+  if (previous !== null || observations.some(({ temp, tide }) => temp !== null || tide !== null)) {
+    await writeConditions(kv, next);
+  }
   return next;
 }
