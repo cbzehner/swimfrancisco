@@ -2,7 +2,23 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-import { closureReasonLabel, formatLocalizedISODate } from "../../static/js/helpers/i18n.mjs";
+import { closureReasonLabel, formatLocalizedISODate, statusLabel } from "../../static/js/helpers/i18n.mjs";
+
+test("NO SESSION uses each locale's runtime catalog", () => {
+  const previousWindow = globalThis.window;
+  try {
+    for (const lang of ["en", "es", "fil", "vi", "zh-Hant"]) {
+      const catalog = JSON.parse(readFileSync(new URL(`../../data/i18n/${lang}.json`, import.meta.url), "utf8"));
+      globalThis.window = { SWIMFRANCISCO_I18N: catalog };
+      assert.ok(catalog.status_no_session, `${lang} must provide status_no_session`);
+      assert.equal(statusLabel("NO SESSION"), catalog.status_no_session, lang);
+      if (lang !== "en") assert.notEqual(statusLabel("NO SESSION"), "NO SESSION", lang);
+    }
+  } finally {
+    if (previousWindow === undefined) delete globalThis.window;
+    else globalThis.window = previousWindow;
+  }
+});
 
 test("retained North Beach extraction closure labels map to existing translations", () => {
   const read = (path) => JSON.parse(readFileSync(new URL(`../../${path}`, import.meta.url), "utf8"));

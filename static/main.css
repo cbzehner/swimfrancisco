@@ -758,6 +758,7 @@ table.board tr[data-type="open_water"] [data-cell="status"] {
   border: 1.5px solid var(--rule);
 }
 .status-pill.is-open { background: var(--red); border-color: var(--red); color: var(--paper); }
+.status-pill.is-access { background: var(--ochre); border-color: var(--ink); color: var(--ink); }
 .status-pill.is-ocean { background: var(--teal); border-color: var(--teal); color: var(--paper); }
 .status-pill.is-closed { background: var(--paper-2); color: var(--muted); }
 .status-pill.is-info { background: var(--ink); border-color: var(--ink); color: var(--paper); }
@@ -775,9 +776,12 @@ table.board tr[data-type="open_water"] [data-cell="status"] {
   color: var(--red);
   font-size: 18px;
 }
-/* Open row: keep the existing JS contract (.is-open on <tr>) */
+/* Highlight swimming and facility access separately. */
 table.board tbody tr.is-open td:first-child {
   box-shadow: inset 4px 0 0 var(--red);
+}
+table.board tbody tr.is-access td:first-child {
+  box-shadow: inset 4px 0 0 var(--ochre);
 }
 table.board tbody tr.is-open [data-cell="status"] {
   font-weight: 700;
@@ -1000,6 +1004,13 @@ table.board tbody tr.flap td {
 
 .schedule-window {
   margin: 16px 0 0;
+}
+.schedule-expired-notice {
+  margin: 0;
+  padding: 8px 14px;
+  background: var(--ochre);
+  color: var(--ink);
+  font-weight: 700;
 }
 .schedule-window-summary {
   display: block;
@@ -1416,6 +1427,7 @@ table.weekly-grid tr { display: contents; }
 
 /* ── Map view (existing #map-view + Leaflet popups, reskinned) ─────────── */
 #map-view {
+  flex: 1;
   min-height: 0;
   margin: 0;
   border-top: 3px solid var(--ink);
@@ -1432,10 +1444,16 @@ body.map-page main {
   max-width: none;
   margin: 0;
   min-height: 0;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   border-left: 0;
   border-right: 0;
+}
+.basemap-notice {
+  margin: 0;
+  padding: 8px 14px;
+  background: var(--paper-2);
+  color: var(--ink);
 }
 body.map-page .site-footer {
   display: none;
@@ -1454,6 +1472,7 @@ body.map-page .site-footer {
   border: 2px solid var(--ink);
 }
 .sf-marker-open .sf-marker-dot       { background: var(--red); }
+.sf-marker-access .sf-marker-dot     { background: var(--ochre); border-style: dashed; }
 .sf-marker-open-water .sf-marker-dot { background: var(--teal); }
 
 /* Leaflet popup — print bulletin */
@@ -1598,7 +1617,11 @@ body.map-page .site-footer {
   table.board tbody tr.is-open {
     border-left-color: var(--red);
   }
-  table.board tbody tr.is-open td:first-child {
+  table.board tbody tr.is-access {
+    border-left-color: var(--ochre);
+  }
+  table.board tbody tr.is-open td:first-child,
+  table.board tbody tr.is-access td:first-child {
     box-shadow: none;
   }
   table.board td {
@@ -1628,7 +1651,12 @@ body.map-page .site-footer {
     padding-top: 0;
     text-align: right;
   }
-  table.board [data-cell="locale"] { display: none; }
+  table.board [data-cell="locale"] {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    padding-top: 0;
+  }
+  table.board .row-arrow { display: none; }
 
   body { padding-bottom: calc(58px + env(safe-area-inset-bottom)); }
   body.map-page {
@@ -1738,8 +1766,17 @@ body.map-page .site-footer {
     margin-bottom: 6px;
     font-size: 9.5px;
   }
-  .bulletin-hero h1 {
-    display: none;
+  .bulletin-hero h1,
+  table.board .locale-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
   .bulletin-hero .deck {
     margin-top: 8px;

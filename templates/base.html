@@ -49,7 +49,7 @@
     window.SWIMFRANCISCO_LANG = {{ lang | json_encode | safe }};
     window.SWIMFRANCISCO_DEFAULT_LANG = {{ config.default_language | json_encode | safe }};
     window.SWIMFRANCISCO_I18N = {{ runtime_i18n | json_encode | safe }};
-    window.SWIMFRANCISCO_DYNAMIC_LABELS = {{ dynamic_labels | json_encode | safe }};
+    window.SWIMFRANCISCO_DYNAMIC_LABELS = { closure_reason: {{ dynamic_labels.closure_reason | json_encode | safe }} };
   </script>
   {% if config.extra.posthog_key %}
   {# PostHog analytics, reverse-proxied through the Worker at /ingest/* so

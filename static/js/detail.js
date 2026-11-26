@@ -9,7 +9,7 @@ import {
   formatHHMM,
   readScheduleAttribute,
   resolveActiveSchedule,
-  scheduleHasAccessHours,
+  scheduleHasAccessSchedule,
   scheduleHasSessions,
   sessionsForDate,
 } from "./helpers/board.mjs";
@@ -74,7 +74,7 @@ function formatNextLine(result) {
 }
 
 function presentDetail(schedule, now) {
-  if (scheduleHasSessions(schedule, now) || !scheduleHasAccessHours(schedule, now)) {
+  if (scheduleHasSessions(schedule, now) || !scheduleHasAccessSchedule(schedule, now)) {
     const result = computeDetailStatus(schedule, now);
     const hideToday = new Set([
       "CLOSED_TODAY",
@@ -175,6 +175,18 @@ function refreshWindowDates(root, active, now) {
   const activeKey = `${active?.effective_start || ""}/${active?.effective_end || ""}`;
   for (const scheduleWindow of root.querySelectorAll("[data-schedule-window]")) {
     const isActive = scheduleWindow.dataset.scheduleWindow === activeKey;
+    const end = scheduleWindow.dataset.scheduleWindow.split("/")[1];
+    const expired = Boolean(end && end < today);
+    scheduleWindow.classList.toggle("is-expired", expired);
+    const existingNotice = scheduleWindow.querySelector(".schedule-expired-notice");
+    if (expired && !existingNotice) {
+      const notice = root.ownerDocument.createElement("p");
+      notice.className = "schedule-expired-notice";
+      notice.textContent = `${t("status_schedule_ended", "Schedule ended")} ${formatLocalizedISODate(end)}`;
+      scheduleWindow.prepend(notice);
+    } else if (!expired) {
+      existingNotice?.remove();
+    }
     for (const section of scheduleWindow.querySelectorAll("[data-dated-notices]")) {
       if (!isActive) {
         section.hidden = false;
@@ -214,8 +226,10 @@ function refresh(root, schedule, now) {
   renderTodayBlock(root, schedule, now, result, day);
   const activeKey = `${active?.effective_start || ""}/${active?.effective_end || ""}`;
   for (const cell of root.querySelectorAll("[data-schedule-window] .weekly-grid [data-day]")) {
-    const inActiveWindow = cell.closest("[data-schedule-window]")?.dataset.scheduleWindow === activeKey;
-    if (inActiveWindow && cell.dataset.day === day) cell.dataset.today = "true";
+    const scheduleWindow = cell.closest("[data-schedule-window]");
+    if (scheduleWindow.dataset.scheduleWindow === activeKey && !scheduleWindow.classList.contains("is-expired") && cell.dataset.day === day) {
+      cell.dataset.today = "true";
+    }
     else delete cell.dataset.today;
   }
 }

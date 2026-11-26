@@ -105,13 +105,11 @@
     <div id="horizon-menu" class="horizon-menu" data-horizon-menu role="menu" hidden></div>
   {% endif %}
 
-  {% if not is_map_view %}
-    <div class="time-banner" data-time-banner hidden>
-      <span class="time-banner-k">{{ trans(key='plan_ahead', lang=lang) }}</span>
-      <span class="time-banner-v" data-time-banner-label>{{ trans(key='right_now', lang=lang) }}</span>
-      <button type="button" data-time-banner-reset>{{ trans(key='back_to_now', lang=lang) }}</button>
-    </div>
-  {% endif %}
+  <div class="time-banner" data-time-banner hidden>
+    <span class="time-banner-k">{{ trans(key='plan_ahead', lang=lang) }}</span>
+    <span class="time-banner-v" data-time-banner-label>{{ trans(key='right_now', lang=lang) }}</span>
+    <button type="button" data-time-banner-reset>{{ trans(key='back_to_now', lang=lang) }}</button>
+  </div>
 
   {% set spots = get_section(path='spots/_index.md', lang=config.default_language) %}
   <table class="board"{% if is_map_view %} hidden{% endif %}>
@@ -173,6 +171,7 @@
   </table>
 
   {% if is_map_view %}
+    <p class="basemap-notice" data-basemap-notice role="status" hidden>{{ trans(key='map_basemap_unavailable', lang=lang) }}</p>
     <div id="map-view"></div>
   {% endif %}
 

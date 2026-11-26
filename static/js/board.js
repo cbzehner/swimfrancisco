@@ -1,7 +1,7 @@
 // Board browser adapter. Catalog decoding happens at mount; all decisions
 // come from evaluateBoard and transitionBoard, never from rendered cells.
 import { OPEN_STATUSES, PLACEHOLDER, evaluateBoard, formatHHMM, getHorizonOptions,
-  readNumberAttribute, readScheduleAttribute } from "./helpers/board.mjs";
+  isBoardOpen, readNumberAttribute, readScheduleAttribute } from "./helpers/board.mjs";
 import { initialBoardState, serializeBoardHash, transitionBoard } from "./helpers/board-state.mjs";
 import { pacificWallClockDate } from "./helpers/pacific.mjs";
 import { dayShortLabel, programLabel, statusLabel, statusNextLabel, t } from "./helpers/i18n.mjs";
@@ -78,6 +78,7 @@ function cell(row, name) {
 
 function statusClass(status, type) {
   if (type === "open_water" || status === "OCEAN") return "is-ocean";
+  if (status === "ACCESS") return "is-access";
   if (OPEN_STATUSES.has(status)) return "is-open";
   if (status === "CHECK") return "is-info";
   return "is-closed";
@@ -190,6 +191,7 @@ export function mountBoard(root = document, { now = () => new Date(), onChange =
   let state = initialBoardState();
   let snapshot;
   let horizonMenu;
+  let flapFrame = null;
 
   function writeURL() {
     const url = new URL(window.location.href);
@@ -214,7 +216,10 @@ export function mountBoard(root = document, { now = () => new Date(), onChange =
         id: option.id, label: horizonLabel(option), selected: option.id === snapshot.horizon.id,
       })),
     });
-    let flapIndex = 0;
+    if (flapFrame !== null) cancelAnimationFrame(flapFrame);
+    flapFrame = null;
+    const flapRows = [];
+    const orderedRows = document.createDocumentFragment();
     for (const entry of snapshot.entries) {
       const row = rows[entry.index];
       const statusCell = cell(row, "status");
@@ -225,6 +230,8 @@ export function mountBoard(root = document, { now = () => new Date(), onChange =
       if (nextCell && entry.status === "CHECK" && entry.officialUrl) {
         const sourceLink = document.createElement("a");
         sourceLink.href = entry.officialUrl;
+        sourceLink.target = "_blank";
+        sourceLink.rel = "noopener";
         sourceLink.className = "verify-link";
         sourceLink.textContent = t("check_official_schedule", "Check official schedule");
         nextCell.append(sourceLink);
@@ -238,15 +245,21 @@ export function mountBoard(root = document, { now = () => new Date(), onChange =
           ? `${day}${formatWindowNext(entry.result)}` : entry.typeLabel;
       }
       row.hidden = entry.hidden;
-      row.classList.toggle("is-open", entry.type === "open_water"
-        ? snapshot.horizon.id === "now" : OPEN_STATUSES.has(entry.status));
-      tbody.appendChild(row);
+      row.classList.toggle("is-open", isBoardOpen(entry.status, snapshot.horizon));
+      row.classList.toggle("is-access", entry.status === "ACCESS");
+      row.classList.remove("flap");
+      orderedRows.append(row);
       if (flap && !entry.hidden) {
-        row.classList.remove("flap");
-        row.style.setProperty("--flap-index", String(flapIndex++));
-        void row.offsetWidth;
-        row.classList.add("flap");
+        row.style.setProperty("--flap-index", String(flapRows.length));
+        flapRows.push(row);
       }
+    }
+    tbody.append(orderedRows);
+    if (flapRows.length) {
+      flapFrame = requestAnimationFrame(() => {
+        flapFrame = null;
+        flapRows.forEach((row) => row.classList.add("flap"));
+      });
     }
     renderSummary(root, snapshot);
     onChange(snapshot);
@@ -302,6 +315,7 @@ export function mountBoard(root = document, { now = () => new Date(), onChange =
     dispose() {
       controller.abort();
       clearInterval(timer);
+      if (flapFrame !== null) cancelAnimationFrame(flapFrame);
       horizonMenu?.dispose();
       rows.forEach((row) => row.classList.remove("flap"));
     },

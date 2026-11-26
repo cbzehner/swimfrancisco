@@ -118,6 +118,7 @@
   "status_limited": "LIMITED ACCESS",
   "status_no_drop_in_today": "NO DROP-IN TODAY",
   "status_no_drop_in_week": "NO DROP-IN THIS WEEK",
+  "status_no_session": "NO SESSION",
   "status_not_verified": "SCHEDULE NOT YET VERIFIED",
   "status_now": "NOW",
   "status_ocean": "OCEAN",

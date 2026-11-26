@@ -49,7 +49,12 @@ test("horizon, program and access survive board/map navigation and reset", async
   await expect(browser.locator(".sf-marker")).toHaveCount(5);
   await screen.getByRole("link", "View board").tap();
   await expect(browser).toHaveURL(/\/\?when=tomorrow-morning#beach\+memberships$/);
+  await screen.getByRole("link", "View map").tap();
+  await expect(browser.locator("[data-time-banner-label]")).toHaveText("Tomorrow Morning");
   await browser.locator("[data-time-banner-reset]").tap();
+  await expect(browser).toHaveURL(/\/map\/#beach\+memberships$/);
+  await expect(browser.locator("[data-time-banner]")).not.toBeVisible();
+  await screen.getByRole("link", "View board").tap();
   await expect(browser).toHaveURL(/\/#beach\+memberships$/);
   await expect(browser.locator("[data-time-banner]")).not.toBeVisible();
   await browser.locator("[data-horizon-button]").tap();
@@ -111,6 +116,7 @@ test("map survives missing configuration and marker opens the correct spot", asy
   let tileRequests = 0;
   await browser.route("https://*.basemaps.cartocdn.com/**", (route) => { tileRequests++; return route.abort(); });
   await app.open("/map/#beach");
+  await expect(browser.locator("[data-basemap-notice]")).toBeVisible();
   await expect(browser.locator(".sf-marker")).toHaveCount(5);
   // The central visible marker receives a real pointer click on both viewports.
   const visibleMarker = await browser.evaluate(() => Array.from(document.querySelectorAll(".sf-marker")).findIndex((marker) => { const box = marker.getBoundingClientRect(); const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2); return !!hit && marker.contains(hit); }));

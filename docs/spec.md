@@ -179,8 +179,8 @@ Airport departure board aesthetic. Split-flap animation.
 
 **Animation:**
 - CSS transforms + vanilla JS
-- Staggered row flip on load (50ms delay per row, ~500ms total)
-- Rows flip on filter change
+- Initial board render skips flip animation to avoid load-time reflows
+- Rows flip on filter or sort change
 
 **Detail pages (`/spots/:slug/`):**
 - Pools: full weekly schedule table, address, static map image, link to official page

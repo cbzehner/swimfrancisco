@@ -123,8 +123,8 @@ async function fixturePage(t, engineName, html, { time = "2026-09-24T18:59:00Z",
 // Expected results below are hand-written, never computed with board.mjs.
 // Use the same schedule envelope and control attributes as Zola's board.
 async function decisionPage(t, engine, spots, { path = "/fixture", time = "2026-09-24T18:59:00Z" } = {}) {
-  const rows = spots.map(({ slug, name = slug, type = "pool", access = "public", schedules = [] }) => `
-    <tr data-slug="${slug}" data-type="${type}" data-access-mode="${access}"
+  const rows = spots.map(({ slug, name = slug, type = "pool", access = "public", schedules = [], officialUrl = "" }) => `
+    <tr data-slug="${slug}" data-type="${type}" data-access-mode="${access}" data-official-url="${officialUrl}"
         data-schedule='${JSON.stringify({ schedules }).replaceAll("&", "&amp;").replaceAll("'", "&#39;")}'>
       <td data-cell="spot">${name}<span class="spot-subtitle" data-session-summary>POOL</span></td><td data-cell="status"><span class="status-pill">—</span></td><td data-cell="next">—</td>
     </tr>`).join("");
@@ -133,6 +133,7 @@ async function decisionPage(t, engine, spots, { path = "/fixture", time = "2026-
     <div class="horizon-control"><button data-horizon-button>Now</button></div>
     <div data-horizon-menu role="menu" hidden></div>
     <div data-time-banner hidden><button data-time-banner-reset>Back to now</button></div>
+    <span data-open-count>—</span>
     <div class="filters">
       <button data-filter="type" data-type="none">All</button>
       <button data-filter="type" data-type="lap_swim">Lap</button>
@@ -166,6 +167,25 @@ function visibleDecisions(page) {
 
 
 for (const engine of ["webkit", "chromium"]) {
+  test(`[${engine}] board distinguishes access from swimming and keeps verification in a separate tab`, async (t) => {
+    const page = await decisionPage(t, engine, [
+      { slug: "access-only", schedules: [{ access_hours: [{ day: "thursday", start: "11:00", end: "14:00" }] }] },
+      { slug: "verified", schedules: [{ sessions: [{ day: "thursday", type: "lap_swim", start: "11:00", end: "14:00" }] }] },
+      { slug: "unverified", access: "members_only", officialUrl: "https://example.test/schedule" },
+    ], { path: "/fixture#memberships" });
+    assert.equal(await page.locator("[data-open-count]").textContent(), "1");
+    assert.equal(await page.locator("tr.is-open .status-pill.is-open").textContent(), "OPEN");
+    assert.equal(await page.locator("tr.is-access .status-pill.is-access").textContent(), "ACCESS");
+    assert.equal(await page.locator("tr.flap").count(), 0, "initial restore does not animate");
+    const verify = page.locator(".verify-link");
+    assert.equal(await verify.getAttribute("target"), "_blank");
+    assert.equal(await verify.getAttribute("rel"), "noopener");
+    await page.locator('button[data-type="lap_swim"]').evaluate((button) => button.click());
+    assert.equal(await page.locator("tr.flap").count(), 0, "animation waits for a frame");
+    await page.clock.runFor(32);
+    assert.equal(await page.locator('tr[data-slug="verified"].flap').count(), 1);
+  });
+
   test(`[${engine}] swim decisions: program and membership choices determine exact recommendations`, async (t) => {
     const page = await decisionPage(t, engine, programSpots);
     await page.getByRole("button", { name: "Family", exact: true }).click();
@@ -486,12 +506,19 @@ for (const engine of ["webkit", "chromium"]) {
       return route.abort();
     });
     await page.route("**/api/conditions", (route) => route.fulfill({ json: {} }));
+    await page.clock.setFixedTime(new Date("2026-09-24T18:59:00Z"));
     for (const config of [{ status: 503, json: { error: "unavailable" } }, { json: {} }, { json: { carto_basemap_key: " " } }]) {
       await page.route("**/api/map-config", (route) => route.fulfill(config));
       const unavailable = page.waitForEvent("console", (message) => message.text() === "[swimfrancisco] basemap unavailable");
-      await page.goto(`${baseURL}/map/`);
+      await page.goto(`${baseURL}/map/?when=tomorrow-morning#beach`);
       await unavailable;
       assert.ok(await page.locator(".sf-marker").count() > 0, "spots must still render when basemap configuration fails");
+      assert.equal(await page.getByRole("status").filter({ hasText: /basemap unavailable/i }).isVisible(), true);
+      assert.match(await page.locator("[data-time-banner-label]").textContent(), /tomorrow morning/i);
+      await page.locator("[data-time-banner-reset]").click();
+      assert.equal(new URL(page.url()).search, "");
+      assert.equal(new URL(page.url()).hash, "#beach");
+      assert.equal(await page.locator("[data-time-banner]").isHidden(), true);
       assert.equal(tileRequests.length, 0);
       await page.unroute("**/api/map-config");
     }
@@ -719,6 +746,12 @@ for (const engine of ["webkit", "chromium"]) {
     await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
     assert.equal(await page.locator('[data-notice-start="2026-09-25"]').getAttribute("hidden"), null, "the same build reveals a notice when it enters the fourteen-day horizon");
 
+    await page.clock.setSystemTime(new Date("2026-10-05T19:00:00Z"));
+    await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+    assert.equal(await activeWindow.locator(".schedule-expired-notice").isVisible(), true);
+    assert.match(await activeWindow.locator(".schedule-expired-notice").textContent(), /Schedule ended/i);
+    assert.equal(await activeWindow.locator('[data-today="true"]').count(), 0, "an expired grid must not highlight today");
+
     await page.clock.setSystemTime(new Date("2026-09-06T03:54:00Z"));
     await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
     assert.equal(await page.locator(".today-block-heading").textContent(), "TODAY · SATURDAY", "restoring a tab must refresh the date without waiting for the timer");
@@ -868,6 +901,7 @@ for (const engine of ["webkit", "chromium"]) {
     await page.route("https://*.basemaps.cartocdn.com/**", (route) => route.abort());
     await page.goto(`${baseURL}/fixture`);
     await page.locator(".sf-marker-open").waitFor();
+    assert.match(await page.locator(".sf-marker").getAttribute("aria-label"), /test pool.*AVAILABLE/i);
     await page.evaluate(() => { window.retainedMarker = document.querySelector(".sf-marker"); });
     await page.locator(".sf-marker").click();
     assert.equal(await page.locator(".sf-map-popup").isVisible(), true);
@@ -887,7 +921,10 @@ for (const engine of ["webkit", "chromium"]) {
         window.mapSnapshot.entries[0].status = value;
         window.mapController.update(window.mapSnapshot);
       }, status);
-      assert.equal(await page.locator(".sf-marker-open").count(), status === "CLOSED" ? 0 : 1);
+      assert.equal(await page.locator(".sf-marker-open").count(), status === "LIMITED" ? 1 : 0);
+      assert.equal(await page.locator(".sf-marker-access").count(), status === "ACCESS" ? 1 : 0);
+      assert.match(await page.locator(".sf-marker").getAttribute("aria-label"), new RegExp(`test pool.*${status}`, "i"));
+      assert.equal(await page.locator(".sf-marker").getAttribute("title"), await page.locator(".sf-marker").getAttribute("aria-label"));
     }
     await page.evaluate(() => {
       window.mapSnapshot.entries[0].hidden = true;
@@ -923,6 +960,7 @@ for (const engine of ["webkit", "chromium"]) {
     const { page, errors } = await boardPage(t, engine);
     const pill = await page.locator('[data-cell="status"] .status-pill').first().textContent();
     assert.notEqual(pill.trim(), "—", "status pills still show em-dash placeholders — JS never ran");
+    assert.deepEqual(await page.evaluate(() => Object.keys(window.SWIMFRANCISCO_DYNAMIC_LABELS)), ["closure_reason"]);
     assert.deepEqual(errors, []);
   });
 
@@ -1052,6 +1090,8 @@ test("[webkit/320px] conditions and filters remain visible and legible", async (
     isMobile: true,
     hasTouch: true,
   });
+  assert.equal(await page.getByRole("heading", { level: 1 }).count(), 1, "the mobile heading remains accessible");
+  assert.equal(await page.locator('tr:not([hidden]) .cost-badge').first().isVisible(), true);
   const layout = await page.evaluate(() => {
     const strip = document.querySelector(".bulletin-strip");
     const stripCells = [...strip.children].map((cell) => cell.getBoundingClientRect());
