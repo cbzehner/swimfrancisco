@@ -240,7 +240,7 @@ def _club_access_exception(holiday: date, start: str, end: str, reason: str,
     if not observed <= holiday < observed + timedelta(days=14):
         return None
     return {'date': holiday.isoformat(), 'start': start, 'end': end, 'label': 'Club hours',
-            'reason': reason, 'evidence': f'{holiday.isoformat()}: {start}–{end}; {reason}'}
+            'reason': reason, 'reason_code': 'holiday_hours', 'evidence': f'{holiday.isoformat()}: {start}–{end}; {reason}'}
 
 
 def _club_range(text: str) -> tuple[str, str]:

@@ -349,6 +349,10 @@
           "type": "string",
           "minLength": 1
         },
+        "reason_code": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
         "evidence": {
           "type": "string"
         },

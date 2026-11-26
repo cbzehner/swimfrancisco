@@ -335,7 +335,8 @@ def _derive_payload(inventory: dict, observed: date) -> dict:
                         override = fact['ranges'][1]
                         start, finish = override['start'] or start, override['end']
                 exceptions.append({'date': first.isoformat(), 'start': start, 'end': finish,
-                    'label': 'Holiday pool hours' if basis == 'pool_hours' else 'Holiday facility hours', 'reason': text, 'evidence': text})
+                    'label': 'Holiday pool hours' if basis == 'pool_hours' else 'Holiday facility hours',
+                    'reason': text, 'reason_code': 'holiday_hours', 'evidence': text})
     required_scopes = ['lap', 'rec'] if basis == 'swim_schedule' else ['pool' if slug == 'sfsu-mashouf' else 'facility']
     for scope in required_scopes:
         if sorted(seen_days.get(scope, [])) != sorted(DAY_ORDER):
@@ -503,7 +504,7 @@ def _chinatown_payload(inventory: dict, observed: date) -> dict:
                 'reason_code': _closure_reason(text), 'source_notices': [{'id': line['id'], 'text': line['text']} for line in record['lines']]})
         elif isinstance(pool, list):
             exceptions.extend({'date': holiday.isoformat(), 'start': window['start'], 'end': window['end'],
-                'label': 'Holiday pool hours', 'reason': text, 'evidence': text} for window in pool)
+                'label': 'Holiday pool hours', 'reason': text, 'reason_code': 'holiday_hours', 'evidence': text} for window in pool)
         else:
             raise DirectSourceError(f'Missing explicit pool holiday hours on {holiday}')
     for fact, line in notices:

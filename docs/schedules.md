@@ -793,7 +793,7 @@ and before promotion: twenty-two for promotion, twenty for live verification,
 and five for evidence upload. Every subprocess is bounded by the remaining job
 time minus that evidence reserve. The hosted deadline is recorded before
 dependency installation, so slow apt setup counts; local runs default to the
-same 110-minute lifetime. The main Workers Builds CI gate remains bounded at ten
+same 110-minute lifetime. The main Workers Builds CI gate remains bounded at fifteen
 minutes; it does not inherit the longer candidate-promotion wait.
 Run artifacts exclude credentials and raw transport logs.
 

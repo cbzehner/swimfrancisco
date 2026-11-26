@@ -26,7 +26,7 @@ from .pipeline import (
     parse_provider,
     run_pipeline,
 )
-from .automation import automate, open_closure_review_prs
+from .automation import CommandFailure, automate, open_closure_review_prs
 from .report import result_counts
 from .project import ProjectError, project as _project
 from .review import DecisionSet
@@ -272,8 +272,10 @@ def automate_command(mode: str, run_id: str) -> None:
     """Run bounded extraction and checked publication in isolated worktrees."""
     try:
         click.echo(json.dumps(automate(REPO_ROOT, mode=mode, run_id=run_id)))
+    except CommandFailure as error:
+        raise click.ClickException(f"Automation stopped: {error}") from None
     except Exception as error:
-        raise click.ClickException(f"Automation stopped ({type(error).__name__}); inspect its evidence") from error
+        raise click.ClickException(f"Automation stopped ({type(error).__name__}); inspect its evidence") from None
 
 
 @cli.command("detect-changes")

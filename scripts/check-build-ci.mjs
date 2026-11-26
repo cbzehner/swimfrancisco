@@ -8,7 +8,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = fileURLToPath(new URL("../", import.meta.url));
 const workflowURL = "https://api.github.com/repos/cbzehner/swimfrancisco/actions/workflows/ci.yml/runs";
-const deploymentWaitMilliseconds = 10 * 60_000;
+const deploymentWaitMilliseconds = 15 * 60_000;
 const promotionWaitMilliseconds = 20 * 60_000;
 const pollMilliseconds = 30_000;
 const secondaryRateLimitInitialDelayMilliseconds = 60_000;
