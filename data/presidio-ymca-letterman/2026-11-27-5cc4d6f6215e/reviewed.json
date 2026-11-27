@@ -1,0 +1,101 @@
+{
+  "pdf_sha256": "5cc4d6f6215e47fc23282e5e890d9c337e5d4331ca2dd432b842a8d69c8f8720",
+  "source_pdf_url": "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/",
+  "direct_source": {
+    "configuration": {
+      "capture": {
+        "browser_version": "152.0.7977.64",
+        "captured_at": "2026-11-27T23:55:18.151Z",
+        "configuration": {
+          "playwright_version": "1.61.1",
+          "script_sha256": "8e5c24db09d052cd63888ed77acc3a6a5273434b12f71ed7a2ac03e786535ae4"
+        },
+        "hashes": {
+          "rendered": "42e1dbb3966aaed41d1d3b0e6050cb4bc39ee607a1cf5f4ce4593b7c706d8c2b",
+          "screenshot": "0cfc4a50b00b0c659bf387bd804152b3b15aab0418613ca54c1032d9d8e90391",
+          "source": "5cc4d6f6215e47fc23282e5e890d9c337e5d4331ca2dd432b842a8d69c8f8720"
+        },
+        "method": "cloudflare_browser",
+        "requested_url": "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/",
+        "status": 200,
+        "url": "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"
+      },
+      "freshness_days": 14,
+      "libraries": {
+        "httpx": "0.28.1",
+        "openpyxl": "3.1.5"
+      },
+      "parser_sha256": "321d8c79d41d8a81e48bad93e270a838989bcf432bd8da56b82cbd1312da9091",
+      "python": "3.13.18",
+      "schema_sha256": "577ab4e6c0c30ee9ecdfe87c79e40eafd1ee81c3efe727d84fbc0019149a9877",
+      "source_identity": "original_bytes"
+    },
+    "freshness_days": 14,
+    "observed_on": "2026-11-27",
+    "requested_url": "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/",
+    "sha256": "5cc4d6f6215e47fc23282e5e890d9c337e5d4331ca2dd432b842a8d69c8f8720",
+    "url": "https://www.ymcasf.org/location/presidio-community-ymca/letterman-pool-gym/"
+  },
+  "slug": "presidio-ymca-letterman",
+  "reviewed_at": "2026-11-27",
+  "attested_by": "ci",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "20:30",
+        "evidence": "Monday: 5:30 am \u2013 8:30 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "tuesday",
+        "end": "20:30",
+        "evidence": "Tuesday: 5:30 am \u2013 8:30 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "wednesday",
+        "end": "20:30",
+        "evidence": "Wednesday: 5:30 am \u2013 8:30 pm",
+        "label": "Facility hours",
+        "start": "05:30"
+      },
+      {
+        "day": "thursday",
+        "end": "14:00",
+        "evidence": "Thursday: 7:00 am \u2013 2:00 pm",
+        "label": "Facility hours",
+        "start": "07:00"
+      },
+      {
+        "day": "friday",
+        "end": "14:00",
+        "evidence": "Friday: 7:00 am \u2013 2:00 pm",
+        "label": "Facility hours",
+        "start": "07:00"
+      },
+      {
+        "day": "saturday",
+        "end": "16:30",
+        "evidence": "Saturday: 7:00 am \u2013 4:30 pm",
+        "label": "Facility hours",
+        "start": "07:00"
+      },
+      {
+        "day": "sunday",
+        "end": "16:30",
+        "evidence": "Sunday: 7:00 am \u2013 4:30 pm",
+        "label": "Facility hours",
+        "start": "07:00"
+      }
+    ],
+    "closures": [],
+    "effective_end": "2026-12-10",
+    "effective_start": "2026-11-27",
+    "schedule_basis": "facility_hours",
+    "sessions": []
+  }
+}

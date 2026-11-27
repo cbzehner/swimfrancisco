@@ -71,8 +71,58 @@ sessions = []
 closures = []
 effective_start = "2026-11-26"
 schedule_basis = "facility_hours"
-effective_end = "2026-12-09"
+effective_end = "2026-11-26"
 last_verified_at = "2026-11-26"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "05:30"
+end = "20:30"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "05:30"
+end = "20:30"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "05:30"
+end = "20:30"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "07:00"
+end = "14:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "07:00"
+end = "14:00"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "07:00"
+end = "16:30"
+label = "Facility hours"
+
+[[extra.schedules.access_hours]]
+day = "sunday"
+start = "07:00"
+end = "16:30"
+label = "Facility hours"
+
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-11-27"
+schedule_basis = "facility_hours"
+effective_end = "2026-12-10"
+last_verified_at = "2026-11-27"
 
 [[extra.schedules.access_hours]]
 day = "monday"

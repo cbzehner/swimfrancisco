@@ -84,7 +84,7 @@ sessions = []
 closures = []
 effective_start = "2026-11-26"
 schedule_basis = "pool_hours"
-effective_end = "2026-12-09"
+effective_end = "2026-11-26"
 last_verified_at = "2026-11-26"
 
 [[extra.schedules.access_hours]]
@@ -136,6 +136,64 @@ end = "13:30"
 label = "Holiday pool hours"
 reason = "Thursday, November 26 (Thanksgiving) 7:00 a.m. – 2:00 p.m. Pool Hours: 8:00 a.m. – 1:30 p.m. Thursday, November 26 (Thanksgiving) Pool Hours: 8:00 a.m. – 1:30 p.m."
 reason_code = "holiday_hours"
+
+[[extra.schedules.access_exceptions]]
+date = "2026-11-27"
+start = "08:00"
+end = "13:30"
+label = "Holiday pool hours"
+reason = "Friday, November 27 (Holiday Hours) 7:00 a.m. – 2:00 p.m. Pool Hours: 8:00 a.m. – 1:30 p.m. Friday, November 27 (Holiday Hours) Pool Hours: 8:00 a.m. – 1:30 p.m."
+reason_code = "holiday_hours"
+
+[[extra.schedules]]
+sessions = []
+closures = []
+effective_start = "2026-11-27"
+schedule_basis = "pool_hours"
+effective_end = "2026-12-10"
+last_verified_at = "2026-11-27"
+
+[[extra.schedules.access_hours]]
+day = "monday"
+start = "08:00"
+end = "19:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "tuesday"
+start = "08:00"
+end = "14:00"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "wednesday"
+start = "08:00"
+end = "19:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "thursday"
+start = "08:00"
+end = "13:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "friday"
+start = "08:00"
+end = "13:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "saturday"
+start = "08:00"
+end = "15:30"
+label = "Pool hours"
+
+[[extra.schedules.access_hours]]
+day = "sunday"
+start = "08:00"
+end = "15:30"
+label = "Pool hours"
 
 [[extra.schedules.access_exceptions]]
 date = "2026-11-27"

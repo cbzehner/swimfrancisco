@@ -1,0 +1,94 @@
+{
+  "cost_estimate": "deterministic",
+  "details": {
+    "direct_source": {
+      "configuration": {
+        "freshness_days": 14,
+        "libraries": {
+          "httpx": "0.28.1",
+          "openpyxl": "3.1.5"
+        },
+        "parser_sha256": "321d8c79d41d8a81e48bad93e270a838989bcf432bd8da56b82cbd1312da9091",
+        "python": "3.13.18",
+        "schema_sha256": "577ab4e6c0c30ee9ecdfe87c79e40eafd1ee81c3efe727d84fbc0019149a9877",
+        "source_identity": "original_bytes"
+      },
+      "freshness_days": 14,
+      "observed_on": "2026-11-27",
+      "requested_url": "https://fitnesssf.com/location/fillmore",
+      "sha256": "878b9ce3a6d5e77fd1036f91874ee68fa27d067a856e44a698181bf928a5c0ce",
+      "url": "https://fitnesssf.com/location/fillmore"
+    },
+    "source_coverage": {
+      "issues": [],
+      "ok": true
+    }
+  },
+  "extracted_at": "2026-11-27T23:55:36.224433+00:00",
+  "model": "fitness-sf-html-v1",
+  "payload": {
+    "access_exceptions": [],
+    "access_hours": [
+      {
+        "day": "monday",
+        "end": "23:59",
+        "evidence": "Mon - Thu: 5 am - 12 am",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "tuesday",
+        "end": "23:59",
+        "evidence": "Mon - Thu: 5 am - 12 am",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "wednesday",
+        "end": "23:59",
+        "evidence": "Mon - Thu: 5 am - 12 am",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "thursday",
+        "end": "23:59",
+        "evidence": "Mon - Thu: 5 am - 12 am",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "friday",
+        "end": "23:00",
+        "evidence": "Fri: 5 am - 11 pm",
+        "label": "Club hours",
+        "start": "05:00"
+      },
+      {
+        "day": "saturday",
+        "end": "20:00",
+        "evidence": "Sat - Sun: 7 am - 8 pm",
+        "label": "Club hours",
+        "start": "07:00"
+      },
+      {
+        "day": "sunday",
+        "end": "20:00",
+        "evidence": "Sat - Sun: 7 am - 8 pm",
+        "label": "Club hours",
+        "start": "07:00"
+      }
+    ],
+    "closures": [],
+    "effective_end": "2026-12-10",
+    "effective_start": "2026-11-27",
+    "schedule_basis": "facility_hours",
+    "sessions": []
+  },
+  "pdf_sha256": "878b9ce3a6d5e77fd1036f91874ee68fa27d067a856e44a698181bf928a5c0ce",
+  "prompt_sha256": "2529b3401aac7f9b94d213be7af2b27264162b7f0941f293330790026c3b8ae7",
+  "provider": "direct",
+  "schema_sha256": "577ab4e6c0c30ee9ecdfe87c79e40eafd1ee81c3efe727d84fbc0019149a9877",
+  "source_pdf_url": "https://fitnesssf.com/location/fillmore",
+  "usage": {}
+}

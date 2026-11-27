@@ -14,13 +14,13 @@
       "source_identity": "original_bytes"
     },
     "freshness_days": 14,
-    "observed_on": "2026-11-26",
+    "observed_on": "2026-11-27",
     "requested_url": "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/news/2026-fitness-and-recreation-holiday-schedule",
     "sha256": "ac9c8ff46fd701c3bc91ecd1cd31ee909be109eb3b80356cf6a13aac8159dc66",
     "url": "https://campuslifeserviceshome.ucsf.edu/fitness-and-recreation/news/2026-fitness-and-recreation-holiday-schedule"
   },
   "slug": "ucsf-millberry",
-  "reviewed_at": "2026-11-26",
+  "reviewed_at": "2026-11-27",
   "attested_by": "ci",
   "payload": {
     "access_exceptions": [
@@ -85,22 +85,9 @@
         "start": "08:00"
       }
     ],
-    "closures": [
-      {
-        "end": "2026-11-26",
-        "reason": "November 26 (Thanksgiving Day): Closed",
-        "reason_code": "holiday",
-        "source_notices": [
-          {
-            "id": "holiday-11",
-            "text": "November 26 (Thanksgiving Day): Closed"
-          }
-        ],
-        "start": "2026-11-26"
-      }
-    ],
-    "effective_end": "2026-12-09",
-    "effective_start": "2026-11-26",
+    "closures": [],
+    "effective_end": "2026-12-10",
+    "effective_start": "2026-11-27",
     "schedule_basis": "facility_hours",
     "sessions": []
   }
